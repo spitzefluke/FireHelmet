@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+
+<meta charset="UTF-8">
+
+<title>Countdown</title>
+
+<style>
+
+body{
+background:black;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+font-family:Arial;
+}
+
+#countdown{
+color:white;
+font-size:100px;
+font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="countdown"></div>
+
+<script>
+
+const targetDate = new Date("2026-12-31T23:59:59");
+
+function updateCountdown(){
+
+const now = new Date();
+
+const difference = targetDate-now;
+
+if(difference<=0){
+
+document.getElementById("countdown").innerHTML="00:00:00";
+
+return;
+
+}
+
+const hours=Math.floor(difference/(1000*60*60));
+
+const minutes=Math.floor(difference/(1000*60))%60;
+
+const seconds=Math.floor(difference/1000)%60;
+
+document.getElementById("countdown").innerHTML=
+
+String(hours).padStart(2,"0")+":"+
+
+String(minutes).padStart(2,"0")+":"+
+
+String(seconds).padStart(2,"0");
+
+}
+
+updateCountdown();
+
+setInterval(updateCountdown,1000);
+
+</script>
+
+</body>
+
+</html>
