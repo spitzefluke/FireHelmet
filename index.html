@@ -16,8 +16,6 @@
 <body>
 
 
-<!-- Animierter Hintergrund -->
-
 <div class="stars"></div>
 <div class="stars2"></div>
 <div class="nebula"></div>
@@ -28,41 +26,46 @@
 
 <div class="menu-button" onclick="openMenu()">
 
-    <span></span>
-    <span></span>
-    <span></span>
+<span></span>
+<span></span>
+<span></span>
 
 </div>
 
 
 
-<!-- Seiten Menü -->
+
+<!-- Menü -->
 
 <nav class="sidebar" id="sidebar">
 
-    <div class="close-button" onclick="closeMenu()">
-        ×
-    </div>
+
+<div class="close-button" onclick="closeMenu()">
+×
+</div>
 
 
-    <h2>
-        MENU
-    </h2>
+<h2>MENU</h2>
 
 
-    <a href="#story" onclick="closeMenu()">
-        📖 Story
-    </a>
+<a onclick="changePage('home')">
+🏠 Home
+</a>
 
 
-    <a href="#characters" onclick="closeMenu()">
-        👤 Characters
-    </a>
+<a onclick="changePage('story')">
+📖 Story
+</a>
 
 
-    <a href="#socials" onclick="closeMenu()">
-        🌐 Socials
-    </a>
+<a onclick="changePage('characters')">
+👤 Characters
+</a>
+
+
+<a onclick="changePage('socials')">
+🌐 Socials
+</a>
 
 
 </nav>
@@ -70,13 +73,19 @@
 
 
 
-<!-- Hauptseite -->
 
 
 <main>
 
 
-<section class="hero">
+
+<!-- HOME -->
+
+
+<section id="home" class="page active-page">
+
+
+<div class="hero">
 
 
 <h1>
@@ -87,7 +96,6 @@ COUNTDOWN
 <p class="subtitle">
 The future begins soon
 </p>
-
 
 
 
@@ -122,7 +130,6 @@ Stunden
 
 
 
-
 <div class="time-box">
 
 <span id="minutes">
@@ -134,7 +141,6 @@ Minuten
 </small>
 
 </div>
-
 
 
 
@@ -155,6 +161,8 @@ Sekunden
 </div>
 
 
+</div>
+
 
 </section>
 
@@ -163,20 +171,31 @@ Sekunden
 
 
 
-<section id="story" class="content-section">
 
 
-<h2>
+<!-- STORY -->
+
+
+<section id="story" class="page">
+
+
+<div class="page-content">
+
+
+<h1>
 Story
-</h2>
+</h1>
 
 
 <p>
 
-Hier kommt später deine Geschichte hinein.
-Beschreibe die Welt, Ereignisse oder die Handlung deines Projekts.
+Hier kommt deine Geschichte hinein.
+Erzähle die Welt, die Handlung und die Ereignisse deines Projekts.
 
 </p>
+
+
+</div>
 
 
 </section>
@@ -187,12 +206,20 @@ Beschreibe die Welt, Ereignisse oder die Handlung deines Projekts.
 
 
 
-<section id="characters" class="content-section">
 
 
-<h2>
+<!-- CHARACTERS -->
+
+
+<section id="characters" class="page">
+
+
+<div class="page-content">
+
+
+<h1>
 Characters
-</h2>
+</h1>
 
 
 
@@ -201,30 +228,41 @@ Characters
 
 <div class="character-card">
 
-<h3>
+
+<h2>
 Character 01
-</h3>
+</h2>
+
 
 <p>
 Beschreibung des Charakters.
 </p>
 
+
 </div>
+
+
 
 
 
 <div class="character-card">
 
-<h3>
+
+<h2>
 Character 02
-</h3>
+</h2>
+
 
 <p>
 Beschreibung des Charakters.
 </p>
 
+
 </div>
 
+
+
+</div>
 
 
 </div>
@@ -238,12 +276,20 @@ Beschreibung des Charakters.
 
 
 
-<section id="socials" class="content-section">
 
 
-<h2>
+<!-- SOCIALS -->
+
+
+<section id="socials" class="page">
+
+
+<div class="page-content">
+
+
+<h1>
 Socials
-</h2>
+</h1>
 
 
 
@@ -274,8 +320,11 @@ Instagram
 </div>
 
 
-</section>
 
+</div>
+
+
+</section>
 
 
 
