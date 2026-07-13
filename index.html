@@ -16,14 +16,15 @@
 <body>
 
 
+<div id="transition"></div>
+
+
 <div class="stars"></div>
 <div class="stars2"></div>
 <div class="nebula"></div>
 
 
 
-
-<!-- Menü Button -->
 
 <div class="menu-button" onclick="openMenu()">
 
@@ -37,16 +38,12 @@
 
 
 
-<!-- Menü -->
-
-
 <nav class="sidebar" id="sidebar">
 
 
 <div class="close-button" onclick="closeMenu()">
 ×
 </div>
-
 
 
 <h2>
@@ -60,11 +57,9 @@ MENU
 </a>
 
 
-
 <a onclick="changePage('story')">
 📖 Story
 </a>
-
 
 
 <a onclick="changePage('characters')">
@@ -72,11 +67,14 @@ MENU
 </a>
 
 
+<a onclick="changePage('events')">
+📅 Events
+</a>
+
 
 <a onclick="changePage('socials')">
 🌐 Socials
 </a>
-
 
 
 <a onclick="changePage('partners')">
@@ -92,18 +90,8 @@ MENU
 
 
 
-
-
-
 <main>
 
-
-
-
-
-<!-- ======================
-HOME / COUNTDOWN
-====================== -->
 
 
 <section id="home" class="page active-page">
@@ -117,11 +105,9 @@ COUNTDOWN
 </h1>
 
 
-
 <p class="subtitle">
 The future begins soon
 </p>
-
 
 
 
@@ -129,59 +115,27 @@ The future begins soon
 
 
 <div class="time-box">
-
-<span id="days">
-00
-</span>
-
-<small>
-Tage
-</small>
-
+<span id="days">00</span>
+<small>Tage</small>
 </div>
-
 
 
 <div class="time-box">
-
-<span id="hours">
-00
-</span>
-
-<small>
-Stunden
-</small>
-
+<span id="hours">00</span>
+<small>Stunden</small>
 </div>
-
 
 
 <div class="time-box">
-
-<span id="minutes">
-00
-</span>
-
-<small>
-Minuten
-</small>
-
+<span id="minutes">00</span>
+<small>Minuten</small>
 </div>
-
 
 
 <div class="time-box">
-
-<span id="seconds">
-00
-</span>
-
-<small>
-Sekunden
-</small>
-
+<span id="seconds">00</span>
+<small>Sekunden</small>
 </div>
-
 
 
 </div>
@@ -197,12 +151,6 @@ Sekunden
 
 
 
-
-
-
-<!-- ======================
-STORY
-====================== -->
 
 
 <section id="story" class="page">
@@ -216,14 +164,9 @@ Story
 </h1>
 
 
-
 <p>
-
-Hier kommt die Geschichte deines Projekts hinein.
-Erzähle die Welt, die Handlung und die Ereignisse.
-
+Hier kommt deine Geschichte hinein.
 </p>
-
 
 
 </div>
@@ -236,12 +179,6 @@ Erzähle die Welt, die Handlung und die Ereignisse.
 
 
 
-
-
-
-<!-- ======================
-CHARACTERS
-====================== -->
 
 
 <section id="characters" class="page">
@@ -255,49 +192,75 @@ Characters
 </h1>
 
 
-
-
 <div class="character-container">
 
 
+<div class="character-card">
+<h2>Character 01</h2>
+<p>Beschreibung</p>
+</div>
+
 
 <div class="character-card">
-
-
-<h2>
-Character 01
-</h2>
-
-
-
-<p>
-Beschreibung des Charakters.
-</p>
-
+<h2>Character 02</h2>
+<p>Beschreibung</p>
+</div>
 
 
 </div>
 
 
+</div>
+
+
+</section>
 
 
 
-<div class="character-card">
+
+
+
+
+
+<section id="events" class="page">
+
+
+<div class="page-content">
+
+
+<h1>
+Events
+</h1>
+
+
+
+<div id="event-list"></div>
+
+
+
+
+<div class="email-box">
 
 
 <h2>
-Character 02
+Event Erinnerung
 </h2>
 
 
-
 <p>
-Beschreibung des Charakters.
+Trage deine E-Mail ein und erhalte Erinnerungen.
 </p>
 
 
+<input 
+type="email"
+placeholder="deine@email.de"
+>
 
-</div>
+
+<button>
+Benachrichtigungen aktivieren
+</button>
 
 
 
@@ -315,12 +278,6 @@ Beschreibung des Charakters.
 
 
 
-
-
-
-<!-- ======================
-SOCIALS
-====================== -->
 
 
 <section id="socials" class="page">
@@ -335,45 +292,27 @@ Socials
 
 
 
-
 <div class="social-container">
 
 
-
-<a href="https://www.youtube.com/@spitze_fluke" target="_blank">
-
+<a href="https://youtube.com/spitze_fluke" target="_blank">
 YouTube
-
 </a>
 
 
-
-
-<a href="https://www.tiktok.com/@spitze_fluke" target="_blank">
-
+<a href="https://tiktok.com/@spitze_fluke" target="_blank">
 TikTok
-
 </a>
-
-
 
 
 <a href="https://discord.gg/3FFy8Bjsv" target="_blank">
-
 Discord
-
 </a>
 
 
-
-
-<a href="https://www.instagram.com/spitze_fluke" target="_blank">
-
+<a href="https://instagram.com/@spitze_fluke" target="_blank">
 Instagram
-
 </a>
-
-
 
 
 </div>
@@ -390,12 +329,6 @@ Instagram
 
 
 
-
-
-
-<!-- ======================
-PARTNERS
-====================== -->
 
 
 <section id="partners" class="page">
@@ -409,50 +342,20 @@ Partners
 </h1>
 
 
-
-
-<p>
-
-Unsere Partner und Unterstützer.
-
-</p>
-
-
-
-
-
 <div class="social-container">
 
 
-
-<a href="https://www.youtube.com/@zugfahrer_dave" target="_blank">
-
-Zugfahrer_Dave (Youtuber und Streamer)
-
+<a href="#">
+Partner 01
 </a>
 
 
-
-
-<a href="#" target="_blank">
-
+<a href="#">
 Partner 02
-
 </a>
-
-
-
-
-<a href="#" target="_blank">
-
-Partner 03
-
-</a>
-
 
 
 </div>
-
 
 
 </div>
@@ -463,14 +366,7 @@ Partner 03
 
 
 
-
-
-
 </main>
-
-
-
-
 
 
 
