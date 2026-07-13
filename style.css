@@ -1,63 +1,50 @@
-/* ==========================
-   GRUNDLAYOUT
-========================== */
-
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial, Helvetica, sans-serif;
-    scroll-behavior:smooth;
+
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+
 }
 
 
 body{
 
-    background:#02030a;
-    color:white;
-
-    min-height:100vh;
-
-    overflow-x:hidden;
+background:#02030a;
+color:white;
+height:100vh;
+overflow:hidden;
 
 }
 
 
-/* ==========================
-   ANIMIERTER HINTERGRUND
-========================== */
+
+
+
+/* Hintergrund */
 
 
 .stars,
 .stars2{
 
-    position:fixed;
-
-    width:100%;
-    height:100%;
-
-    top:0;
-    left:0;
-
-    background-repeat:repeat;
-
-    z-index:-3;
+position:fixed;
+width:100%;
+height:100%;
+z-index:-3;
 
 }
 
 
 .stars{
 
-    background-image:
-    radial-gradient(circle,#ffffff 1px,transparent 1px);
+background-image:
+radial-gradient(circle,white 1px,transparent 1px);
 
-    background-size:
-    120px 120px;
+background-size:120px 120px;
 
-    animation:
-    moveStars 80s linear infinite;
+animation:stars 80s linear infinite;
 
-    opacity:.5;
+opacity:.5;
 
 }
 
@@ -65,30 +52,28 @@ body{
 
 .stars2{
 
-    background-image:
-    radial-gradient(circle,#6ea8ff 1px,transparent 1px);
+background-image:
+radial-gradient(circle,#4da3ff 1px,transparent 1px);
 
-    background-size:
-    200px 200px;
+background-size:200px 200px;
 
-    animation:
-    moveStars 120s linear infinite;
+animation:stars 120s linear infinite;
 
-    opacity:.3;
+opacity:.3;
 
 }
 
 
 
-@keyframes moveStars{
+@keyframes stars{
 
-    from{
-        transform:translateY(0);
-    }
+from{
+transform:translateY(0);
+}
 
-    to{
-        transform:translateY(1000px);
-    }
+to{
+transform:translateY(1000px);
+}
 
 }
 
@@ -97,28 +82,24 @@ body{
 
 .nebula{
 
-    position:fixed;
+position:fixed;
 
-    width:600px;
-    height:600px;
+width:700px;
+height:700px;
 
-    background:
-    radial-gradient(circle,
-    rgba(0,120,255,.25),
-    transparent 70%);
+top:20%;
+left:50%;
 
+transform:translateX(-50%);
 
-    top:20%;
-    left:50%;
+background:
+radial-gradient(circle,
+rgba(0,120,255,.3),
+transparent 70%);
 
-    transform:translateX(-50%);
+filter:blur(80px);
 
-    filter:blur(80px);
-
-    animation:
-    pulse 8s infinite alternate;
-
-    z-index:-2;
+animation:pulse 8s infinite alternate;
 
 }
 
@@ -126,15 +107,13 @@ body{
 
 @keyframes pulse{
 
-    from{
-        opacity:.4;
-        scale:1;
-    }
+from{
+opacity:.3;
+}
 
-    to{
-        opacity:.8;
-        scale:1.2;
-    }
+to{
+opacity:.8;
+}
 
 }
 
@@ -142,24 +121,19 @@ body{
 
 
 
-/* ==========================
-   MENU BUTTON
-========================== */
+/* Menü */
 
 
 .menu-button{
 
-    position:fixed;
+position:fixed;
 
-    top:30px;
-    left:30px;
+top:30px;
+left:30px;
 
-    width:45px;
-    height:40px;
+cursor:pointer;
 
-    cursor:pointer;
-
-    z-index:20;
+z-index:20;
 
 }
 
@@ -167,54 +141,44 @@ body{
 
 .menu-button span{
 
-    display:block;
+display:block;
 
-    height:4px;
+width:45px;
+height:4px;
 
-    background:white;
+background:white;
 
-    margin:8px 0;
+margin:8px;
 
-    border-radius:10px;
-
-    transition:.3s;
+border-radius:5px;
 
 }
 
 
 
 
-
-/* ==========================
-   SIDEBAR
-========================== */
-
-
 .sidebar{
 
-    position:fixed;
+position:fixed;
 
-    top:0;
-    left:-320px;
+left:-320px;
 
-    width:300px;
+top:0;
 
-    height:100vh;
+height:100vh;
 
-    background:
-    rgba(10,10,20,.9);
+width:300px;
 
-    backdrop-filter:blur(20px);
+background:
+rgba(10,10,20,.9);
 
-    border-right:
-    1px solid rgba(255,255,255,.15);
+backdrop-filter:blur(20px);
 
+padding:40px;
 
-    padding:40px;
+transition:.5s;
 
-    transition:.5s;
-
-    z-index:30;
+z-index:30;
 
 }
 
@@ -222,7 +186,7 @@ body{
 
 .sidebar.active{
 
-    left:0;
+left:0;
 
 }
 
@@ -230,11 +194,9 @@ body{
 
 .sidebar h2{
 
-    font-size:32px;
+font-size:35px;
 
-    margin-bottom:50px;
-
-    letter-spacing:5px;
+margin-bottom:40px;
 
 }
 
@@ -242,17 +204,17 @@ body{
 
 .sidebar a{
 
-    display:block;
+display:block;
 
-    color:white;
+color:white;
 
-    text-decoration:none;
+font-size:22px;
 
-    font-size:22px;
+padding:20px 0;
 
-    padding:20px 0;
+cursor:pointer;
 
-    transition:.3s;
+transition:.3s;
 
 }
 
@@ -260,9 +222,9 @@ body{
 
 .sidebar a:hover{
 
-    color:#4da3ff;
+color:#4da3ff;
 
-    transform:translateX(15px);
+transform:translateX(15px);
 
 }
 
@@ -271,15 +233,15 @@ body{
 
 .close-button{
 
-    position:absolute;
+font-size:40px;
 
-    right:25px;
+cursor:pointer;
 
-    top:20px;
+position:absolute;
 
-    font-size:40px;
+right:25px;
 
-    cursor:pointer;
+top:15px;
 
 }
 
@@ -287,38 +249,83 @@ body{
 
 
 
-/* ==========================
-   HERO
-========================== */
+
+
+/* Seiten */
+
+
+.page{
+
+display:none;
+
+height:100vh;
+
+}
+
+
+
+.active-page{
+
+display:block;
+
+animation:fade .6s;
+
+}
+
+
+
+@keyframes fade{
+
+from{
+
+opacity:0;
+transform:translateY(30px);
+
+}
+
+to{
+
+opacity:1;
+transform:translateY(0);
+
+}
+
+}
+
+
+
+
+
+
+/* Countdown */
 
 
 .hero{
 
-    height:100vh;
+height:100%;
 
-    display:flex;
+display:flex;
 
-    justify-content:center;
+justify-content:center;
 
-    align-items:center;
+align-items:center;
 
-    flex-direction:column;
+flex-direction:column;
 
-    text-align:center;
+text-align:center;
 
 }
-
 
 
 
 .hero h1{
 
-    font-size:70px;
+font-size:70px;
 
-    letter-spacing:15px;
+letter-spacing:15px;
 
-    text-shadow:
-    0 0 20px #4da3ff;
+text-shadow:
+0 0 25px #4da3ff;
 
 }
 
@@ -326,34 +333,23 @@ body{
 
 .subtitle{
 
-    margin-top:20px;
+font-size:22px;
 
-    font-size:22px;
+color:#aaa;
 
-    color:#aaa;
+margin-top:20px;
 
 }
 
 
 
-
-
-/* ==========================
-   COUNTDOWN
-========================== */
-
-
 .countdown{
 
-    display:flex;
+display:flex;
 
-    gap:30px;
+gap:30px;
 
-    margin-top:70px;
-
-    flex-wrap:wrap;
-
-    justify-content:center;
+margin-top:70px;
 
 }
 
@@ -361,42 +357,24 @@ body{
 
 .time-box{
 
+width:160px;
 
-    width:160px;
+height:150px;
 
-    height:150px;
+background:
+rgba(255,255,255,.08);
 
+backdrop-filter:blur(15px);
 
-    background:
-    rgba(255,255,255,.08);
+border-radius:25px;
 
+display:flex;
 
-    backdrop-filter:
-    blur(15px);
+justify-content:center;
 
+align-items:center;
 
-
-    border:
-
-    1px solid rgba(255,255,255,.2);
-
-
-
-    border-radius:25px;
-
-
-
-    display:flex;
-
-    flex-direction:column;
-
-    justify-content:center;
-
-
-
-    box-shadow:
-    0 0 30px rgba(0,100,255,.25);
-
+flex-direction:column;
 
 }
 
@@ -404,9 +382,9 @@ body{
 
 .time-box span{
 
-    font-size:65px;
+font-size:65px;
 
-    font-weight:bold;
+font-weight:bold;
 
 }
 
@@ -414,54 +392,59 @@ body{
 
 .time-box small{
 
-    margin-top:10px;
+font-size:18px;
 
-    font-size:18px;
-
-    color:#aaa;
+color:#aaa;
 
 }
 
 
 
 
-/* ==========================
-   CONTENT
-========================== */
 
 
-.content-section{
 
-    min-height:80vh;
+/* Unterseiten */
 
-    padding:100px 10%;
 
-    text-align:center;
+.page-content{
+
+height:100%;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+flex-direction:column;
+
+text-align:center;
+
+padding:40px;
 
 }
 
 
 
-.content-section h2{
+.page-content h1{
 
-    font-size:50px;
+font-size:70px;
 
-    margin-bottom:40px;
+text-shadow:
+0 0 25px #4da3ff;
 
 }
 
 
 
+.page-content p{
 
-.content-section p{
+font-size:22px;
 
-    max-width:700px;
+max-width:800px;
 
-    margin:auto;
-
-    color:#ccc;
-
-    font-size:22px;
+color:#ccc;
 
 }
 
@@ -471,14 +454,11 @@ body{
 .character-container,
 .social-container{
 
+display:flex;
 
-    display:flex;
+gap:30px;
 
-    justify-content:center;
-
-    gap:30px;
-
-    flex-wrap:wrap;
+margin-top:40px;
 
 }
 
@@ -487,23 +467,18 @@ body{
 .character-card,
 .social-container a{
 
+background:
+rgba(255,255,255,.08);
 
-    background:
-    rgba(255,255,255,.08);
+padding:40px;
 
+border-radius:25px;
 
-    padding:40px;
+color:white;
 
-    border-radius:25px;
+text-decoration:none;
 
-
-    text-decoration:none;
-
-    color:white;
-
-
-    transition:.3s;
-
+transition:.3s;
 
 }
 
@@ -512,21 +487,17 @@ body{
 .character-card:hover,
 .social-container a:hover{
 
+transform:translateY(-10px);
 
-    transform:translateY(-10px);
-
-    box-shadow:
-    0 0 30px #4da3ff;
-
+box-shadow:
+0 0 30px #4da3ff;
 
 }
 
 
 
 
-/* ==========================
-   MOBILE
-========================== */
+
 
 
 @media(max-width:700px){
@@ -536,7 +507,12 @@ body{
 
 font-size:40px;
 
-letter-spacing:8px;
+}
+
+
+.countdown{
+
+gap:15px;
 
 }
 
