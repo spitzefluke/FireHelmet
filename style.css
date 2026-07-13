@@ -1,14 +1,35 @@
+/* ==========================================================
+   COUNTDOWN WEBSITE V2
+   STYLE.CSS
+   TEIL 1
+========================================================== */
+
+
+
+/* ==========================================================
+   RESET
+========================================================== */
+
+
 *{
 
 margin:0;
 padding:0;
+
 box-sizing:border-box;
-font-family:Arial,Helvetica,sans-serif;
+
+font-family:
+
+'Segoe UI',
+Arial,
+sans-serif;
 
 }
 
 
-html,body{
+
+html,
+body{
 
 width:100%;
 height:100%;
@@ -24,13 +45,66 @@ color:white;
 
 
 
-/* ==========================
-   ANIMIERTER HINTERGRUND
-========================== */
+
+/* ==========================================================
+   BODY
+========================================================== */
+
+
+body{
+
+position:relative;
+
+}
+
+
+
+
+body.loaded{
+
+animation:
+
+fadeIn 1.5s ease;
+
+}
+
+
+
+@keyframes fadeIn{
+
+
+from{
+
+opacity:0;
+
+}
+
+
+to{
+
+opacity:1;
+
+}
+
+
+}
+
+
+
+
+
+
+
+
+/* ==========================================================
+   BACKGROUND
+========================================================== */
 
 
 .stars,
-.stars2{
+.stars2,
+.nebula{
+
 
 position:fixed;
 
@@ -40,165 +114,289 @@ left:0;
 width:100%;
 height:100%;
 
+pointer-events:none;
+
 z-index:-3;
 
 }
 
 
 
+
+
 .stars{
 
-background-image:
-radial-gradient(circle,white 1px,transparent 1px);
 
-background-size:120px 120px;
+background-image:
+
+radial-gradient(
+white 1px,
+transparent 1px
+);
+
+
+background-size:
+
+70px 70px;
+
+
 
 animation:
-moveStars 80s linear infinite;
 
-opacity:.5;
+starsMove 120s linear infinite;
+
+
+opacity:.35;
+
 
 }
+
+
+
 
 
 
 .stars2{
 
-background-image:
-radial-gradient(circle,#4da3ff 1px,transparent 1px);
 
-background-size:200px 200px;
+background-image:
+
+radial-gradient(
+#4da3ff 1px,
+transparent 2px
+);
+
+
+
+background-size:
+
+120px 120px;
+
+
 
 animation:
-moveStars 120s linear infinite;
 
-opacity:.3;
-
-}
+starsMove 80s linear infinite reverse;
 
 
+opacity:.25;
 
-@keyframes moveStars{
-
-from{
-
-transform:translateY(0);
 
 }
 
-to{
 
-transform:translateY(1000px);
-
-}
-
-}
 
 
 
 
 .nebula{
 
-position:fixed;
 
-width:700px;
+width:900px;
 
-height:700px;
+height:900px;
 
-top:20%;
+
+top:50%;
 
 left:50%;
 
 
-transform:translateX(-50%);
+
+transform:
+
+translate(-50%,-50%);
+
 
 
 background:
 
-radial-gradient(circle,
-rgba(0,120,255,.35),
-transparent 70%);
+radial-gradient(
+
+circle,
+
+rgba(0,160,255,.25),
+
+transparent 70%
+
+);
 
 
 
-filter:blur(90px);
+filter:
+
+blur(80px);
 
 
-animation:pulse 8s infinite alternate;
 
+animation:
 
-z-index:-2;
+nebulaMove 20s infinite alternate;
+
 
 }
 
 
 
-@keyframes pulse{
+
+
+@keyframes starsMove{
+
 
 from{
 
-opacity:.3;
-
-transform:translateX(-50%) scale(1);
+background-position:0 0;
 
 }
 
 
 to{
 
-opacity:.8;
-
-transform:translateX(-50%) scale(1.3);
-
-}
+background-position:
+1000px 1000px;
 
 }
 
 
+}
 
 
 
-/* ==========================
-   MENÜ BUTTON
-========================== */
+
+
+@keyframes nebulaMove{
+
+
+from{
+
+transform:
+
+translate(-55%,-50%)
+scale(1);
+
+}
+
+
+to{
+
+transform:
+
+translate(-45%,-50%)
+scale(1.2);
+
+}
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   TRANSITION
+========================================================== */
+
+
+#transition{
+
+
+position:fixed;
+
+inset:0;
+
+
+background:black;
+
+
+opacity:0;
+
+
+pointer-events:none;
+
+
+z-index:999;
+
+
+transition:.5s;
+
+
+}
+
+
+
+#transition.active{
+
+
+opacity:1;
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   MENU BUTTON
+========================================================== */
 
 
 .menu-button{
 
+
 position:fixed;
+
 
 top:30px;
 
 left:30px;
 
 
+width:60px;
+
+height:60px;
+
+
+
+border-radius:20px;
+
+
+background:
+
+rgba(255,255,255,.08);
+
+
+
+backdrop-filter:
+
+blur(20px);
+
+
+
+display:flex;
+
+flex-direction:column;
+
+justify-content:center;
+
+align-items:center;
+
+gap:7px;
+
+
 cursor:pointer;
 
 
-z-index:200;
-
-}
-
-
-
-.menu-button span{
-
-
-display:block;
-
-
-width:45px;
-
-height:4px;
-
-
-background:white;
-
-
-margin:8px 0;
-
-
-border-radius:10px;
+z-index:100;
 
 
 transition:.3s;
@@ -210,9 +408,51 @@ transition:.3s;
 
 
 
-/* ==========================
+.menu-button:hover{
+
+
+transform:
+
+scale(1.1);
+
+
+box-shadow:
+
+0 0 30px #4da3ff;
+
+
+}
+
+
+
+
+.menu-button span{
+
+
+width:30px;
+
+height:3px;
+
+
+background:white;
+
+
+border-radius:5px;
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
    SIDEBAR
-========================== */
+========================================================== */
 
 
 .sidebar{
@@ -223,35 +463,33 @@ position:fixed;
 
 top:0;
 
-left:-320px;
+left:-350px;
 
 
-width:300px;
+width:320px;
 
-
-height:100vh;
-
+height:100%;
 
 
 background:
 
-rgba(10,10,20,.92);
+rgba(10,15,35,.85);
 
 
 
-backdrop-filter:blur(20px);
+backdrop-filter:
+
+blur(30px);
 
 
 
-padding:40px;
+padding:50px 30px;
 
+
+z-index:200;
 
 
 transition:.5s;
-
-
-
-z-index:150;
 
 
 border-right:
@@ -263,23 +501,33 @@ border-right:
 
 
 
+
 .sidebar.active{
+
 
 left:0;
 
+
 }
+
+
 
 
 
 .sidebar h2{
 
-font-size:35px;
+
+font-size:40px;
+
+
+letter-spacing:10px;
+
 
 margin-bottom:50px;
 
-letter-spacing:5px;
 
 }
+
 
 
 
@@ -289,19 +537,22 @@ letter-spacing:5px;
 display:block;
 
 
+padding:20px;
+
+
+margin-bottom:15px;
+
+
+border-radius:15px;
+
+
+cursor:pointer;
+
+
 color:white;
 
 
 text-decoration:none;
-
-
-font-size:22px;
-
-
-padding:20px 0;
-
-
-cursor:pointer;
 
 
 transition:.3s;
@@ -311,16 +562,26 @@ transition:.3s;
 
 
 
-.sidebar a:hover{
 
 
-color:#4da3ff;
+.sidebar a:hover,
+.sidebar a.selected{
 
 
-transform:translateX(15px);
+background:
+
+rgba(77,163,255,.25);
+
+
+
+transform:
+
+translateX(10px);
 
 
 }
+
+
 
 
 
@@ -330,13 +591,12 @@ transform:translateX(15px);
 position:absolute;
 
 
-right:25px;
+right:30px;
+
+top:20px;
 
 
-top:15px;
-
-
-font-size:40px;
+font-size:45px;
 
 
 cursor:pointer;
@@ -348,41 +608,35 @@ cursor:pointer;
 
 
 
-/* ==========================
-   SEITEN SYSTEM
-========================== */
+
+
+
+
+/* ==========================================================
+   PAGES
+========================================================== */
 
 
 main{
 
-width:100%;
 
-height:100vh;
+width:100%;
+height:100%;
+
 
 }
-
 
 
 
 .page{
 
 
-position:fixed;
-
-
-top:0;
-
-left:0;
+display:none;
 
 
 width:100%;
 
-
-height:100vh;
-
-
-
-display:flex;
+height:100%;
 
 
 justify-content:center;
@@ -390,41 +644,57 @@ justify-content:center;
 align-items:center;
 
 
-opacity:0;
-
-
-visibility:hidden;
-
-
-transform:translateX(60px);
-
-
-
-transition:
-
-opacity .5s ease,
-
-transform .5s ease;
-
-
-
 }
+
 
 
 
 .active-page{
 
 
+display:flex;
+
+
+animation:
+
+pageIn .6s ease;
+
+
+}
+
+
+
+@keyframes pageIn{
+
+
+from{
+
+
+opacity:0;
+
+
+transform:
+
+scale(.95)
+translateY(20px);
+
+
+}
+
+
+to{
+
+
 opacity:1;
 
 
-visibility:visible;
+transform:
+
+scale(1)
+translateY(0);
 
 
-transform:translateX(0);
-
-
-z-index:10;
+}
 
 
 }
@@ -434,10 +704,12 @@ z-index:10;
 
 
 
-/* ==========================
-   COUNTDOWN
-========================== */
 
+
+
+/* ==========================================================
+   HOME
+========================================================== */
 
 
 .hero{
@@ -453,25 +725,31 @@ text-align:center;
 .hero h1{
 
 
-font-size:70px;
+font-size:
+
+100px;
 
 
-letter-spacing:15px;
+letter-spacing:
+
+20px;
 
 
 text-shadow:
 
-0 0 30px #4da3ff;
+0 0 50px #4da3ff;
 
 
 }
 
 
 
+
+
 .subtitle{
 
 
-font-size:22px;
+font-size:30px;
 
 
 color:#aaa;
@@ -485,6 +763,16 @@ margin-top:20px;
 
 
 
+
+
+
+
+
+/* ==========================================================
+   COUNTDOWN
+========================================================== */
+
+
 .countdown{
 
 
@@ -494,10 +782,15 @@ display:flex;
 gap:30px;
 
 
-margin-top:70px;
+margin-top:80px;
+
+
+justify-content:center;
 
 
 }
+
+
 
 
 
@@ -506,9 +799,7 @@ margin-top:70px;
 
 width:160px;
 
-
-height:150px;
-
+height:160px;
 
 
 background:
@@ -517,48 +808,39 @@ rgba(255,255,255,.08);
 
 
 
-backdrop-filter:blur(20px);
-
-
-
-border-radius:25px;
-
+border-radius:30px;
 
 
 display:flex;
 
+flex-direction:column;
 
 justify-content:center;
-
 
 align-items:center;
 
 
-flex-direction:column;
+
+backdrop-filter:
+
+blur(20px);
 
 
 
 border:
 
-1px solid rgba(255,255,255,.15);
-
-
-
-box-shadow:
-
-
-0 0 30px rgba(0,120,255,.25);
-
+1px solid rgba(255,255,255,.2);
 
 
 }
 
 
 
+
 .time-box span{
 
 
-font-size:65px;
+font-size:60px;
 
 
 font-weight:bold;
@@ -577,570 +859,11 @@ font-size:18px;
 color:#aaa;
 
 
-margin-top:10px;
-
-
 }
 
-
-
-
-
-/* ==========================
-   UNTERSEITEN
-========================== */
-
-
-.page-content{
-
-
-text-align:center;
-
-
-padding:40px;
-
-
-}
-
-
-
-.page-content h1{
-
-
-font-size:70px;
-
-
-margin-bottom:40px;
-
-
-text-shadow:
-
-0 0 30px #4da3ff;
-
-
-}
-
-
-
-.page-content p{
-
-
-font-size:22px;
-
-
-max-width:800px;
-
-
-color:#ccc;
-
-
-}
-
-
-
-
-.character-container,
-.social-container{
-
-
-display:flex;
-
-
-gap:30px;
-
-
-justify-content:center;
-
-
-}
-
-
-
-.character-card,
-.social-container a{
-
-
-background:
-
-rgba(255,255,255,.08);
-
-
-
-padding:40px;
-
-
-
-border-radius:25px;
-
-
-
-color:white;
-
-
-
-text-decoration:none;
-
-
-
-transition:.3s;
-
-
-}
-
-
-
-.character-card:hover,
-.social-container a:hover{
-
-
-transform:translateY(-10px);
-
-
-
-box-shadow:
-
-0 0 30px #4da3ff;
-
-
-}
-
-
-
-
-
-/* ==========================
-   HANDY
-========================== */
-
-
-@media(max-width:700px){
-
-
-
-.hero h1{
-
-
-font-size:40px;
-
-
-letter-spacing:8px;
-
-
-}
-
-
-
-
-.countdown{
-
-
-gap:15px;
-
-
-}
-
-
-
-
-.time-box{
-
-
-width:120px;
-
-height:120px;
-
-
-}
-
-
-
-.time-box span{
-
-
-font-size:45px;
-
-
-}
-
-
-
-.page-content h1{
-
-
-font-size:45px;
-
-
-}
-
-
-
-}
-
-/* ==========================
-   PAGE TRANSITION
-========================== */
-
-
-#transition{
-
-position:fixed;
-
-top:0;
-left:0;
-
-width:100%;
-height:100%;
-
-background:black;
-
-opacity:0;
-
-pointer-events:none;
-
-z-index:500;
-
-transition:.5s;
-
-}
-
-
-#transition.active{
-
-opacity:1;
-
-}
-
-/* ==========================
-   STORY PAGE
-========================== */
-
-
-.story-page{
-
-width:90%;
-
-height:90%;
-
-overflow-y:auto;
-
-padding:60px;
-
-
-text-align:center;
-
-}
-
-
-
-.story-header h1{
-
-
-font-size:80px;
-
-
-letter-spacing:15px;
-
-
-text-shadow:
-
-0 0 40px #4da3ff;
-
-
-animation:
-
-storyGlow 4s infinite alternate;
-
-
-}
-
-
-
-.story-header p{
-
-
-font-size:24px;
-
-
-color:#bbb;
-
-
-margin-top:20px;
-
-
-}
-
-
-
-@keyframes storyGlow{
-
-
-from{
-
-text-shadow:
-0 0 20px #4da3ff;
-
-}
-
-
-to{
-
-text-shadow:
-0 0 60px #00c8ff;
-
-}
-
-
-}
-
-
-
-
-
-.story-intro{
-
-
-margin:80px auto;
-
-
-max-width:900px;
-
-
-background:
-
-rgba(255,255,255,.08);
-
-
-
-padding:40px;
-
-
-border-radius:30px;
-
-
-backdrop-filter:blur(20px);
-
-
-
-}
-
-
-
-.story-intro h2{
-
-
-font-size:40px;
-
-
-margin-bottom:20px;
-
-
-}
-
-
-
-.story-intro p{
-
-
-font-size:20px;
-
-
-line-height:1.8;
-
-
-color:#ddd;
-
-
-}
-
-
-
-
-
-
-
-
-.story-timeline{
-
-
-display:flex;
-
-
-justify-content:center;
-
-
-gap:40px;
-
-
-flex-wrap:wrap;
-
-
-}
-
-
-
-
-
-.story-card{
-
-
-width:300px;
-
-
-min-height:300px;
-
-
-
-background:
-
-rgba(255,255,255,.08);
-
-
-
-border-radius:30px;
-
-
-padding:40px;
-
-
-position:relative;
-
-
-transition:.4s;
-
-
-
-border:
-
-1px solid rgba(255,255,255,.15);
-
-
-}
-
-
-
-.story-card:hover{
-
-
-transform:
-
-translateY(-20px)
-scale(1.05);
-
-
-
-box-shadow:
-
-0 0 40px #4da3ff;
-
-
-}
-
-
-
-
-
-.story-card span{
-
-
-position:absolute;
-
-
-top:20px;
-
-
-right:30px;
-
-
-
-font-size:60px;
-
-
-font-weight:bold;
-
-
-
-color:
-
-rgba(255,255,255,.15);
-
-
-
-}
-
-
-
-.story-card h2{
-
-
-margin-top:40px;
-
-
-font-size:30px;
-
-
-}
-
-
-
-.story-card p{
-
-
-margin-top:20px;
-
-
-color:#ccc;
-
-
-line-height:1.6;
-
-
-}
-
-
-
-
-
-
-
-.story-footer{
-
-
-margin:100px auto;
-
-
-max-width:800px;
-
-
-}
-
-
-
-.story-footer h2{
-
-
-font-size:45px;
-
-
-}
-
-
-.story-footer p{
-
-
-font-size:22px;
-
-
-color:#ccc;
-
-
-line-height:1.7;
-
-
-}
-
-/* ==========================
-   STORY LIBRARY
-========================== */
+/* ==========================================================
+   STORY ARCHIV
+========================================================== */
 
 
 .story-library{
@@ -1151,23 +874,25 @@ width:90%;
 height:90%;
 
 
-text-align:center;
-
-
 overflow:auto;
 
 
-padding:50px;
+text-align:center;
+
+
+padding:60px;
 
 
 }
 
 
 
+
+
 .story-library h1{
 
 
-font-size:80px;
+font-size:90px;
 
 
 letter-spacing:15px;
@@ -1175,7 +900,7 @@ letter-spacing:15px;
 
 text-shadow:
 
-0 0 40px #4da3ff;
+0 0 50px #4da3ff;
 
 
 }
@@ -1183,10 +908,11 @@ text-shadow:
 
 
 
+
 .story-subtitle{
 
 
-font-size:22px;
+font-size:25px;
 
 
 color:#aaa;
@@ -1196,6 +922,7 @@ margin-top:20px;
 
 
 }
+
 
 
 
@@ -1215,7 +942,6 @@ grid-template-columns:
 repeat(auto-fit,minmax(260px,1fr));
 
 
-
 gap:50px;
 
 
@@ -1225,48 +951,21 @@ gap:50px;
 
 
 
+
+
 .story-book{
 
 
-height:330px;
+height:350px;
+
+
+border-radius:30px;
+
 
 
 background:
 
-
-linear-gradient(
-
-145deg,
-
-rgba(255,255,255,.15),
-
-rgba(255,255,255,.05)
-
-);
-
-
-
-border-radius:20px;
-
-
-display:flex;
-
-
-justify-content:center;
-
-
-align-items:center;
-
-
-flex-direction:column;
-
-
-
-cursor:pointer;
-
-
-
-transition:.4s;
+rgba(255,255,255,.08);
 
 
 
@@ -1276,11 +975,34 @@ border:
 
 
 
+display:flex;
+
+
+flex-direction:column;
+
+
+justify-content:center;
+
+
+align-items:center;
+
+
+
+cursor:pointer;
+
+
+transition:.4s;
+
+
 position:relative;
 
 
-
 overflow:hidden;
+
+
+backdrop-filter:
+
+blur(20px);
 
 
 }
@@ -1289,8 +1011,7 @@ overflow:hidden;
 
 
 
-
-.story-book::before{
+.story-book::after{
 
 
 content:"";
@@ -1299,18 +1020,16 @@ content:"";
 position:absolute;
 
 
-width:150%;
+width:200%;
 
 
-height:50px;
+height:100px;
 
 
 background:
 
-rgba(255,255,255,.1);
+rgba(255,255,255,.08);
 
-
-top:50px;
 
 
 transform:
@@ -1318,60 +1037,8 @@ transform:
 rotate(-30deg);
 
 
-}
 
-
-
-
-
-.book-icon{
-
-
-font-size:90px;
-
-
-margin-bottom:30px;
-
-
-filter:
-
-drop-shadow(0 0 20px #4da3ff);
-
-
-
-z-index:2;
-
-
-}
-
-
-
-.story-book h2{
-
-
-font-size:30px;
-
-
-z-index:2;
-
-
-}
-
-
-
-.story-book p{
-
-
-color:#aaa;
-
-
-font-size:18px;
-
-
-margin-top:15px;
-
-
-z-index:2;
+top:40px;
 
 
 }
@@ -1392,9 +1059,967 @@ scale(1.05);
 
 box-shadow:
 
+0 0 50px #4da3ff;
+
+
+}
+
+
+
+
+.story-book.opening{
+
+
+animation:
+
+bookOpen .7s;
+
+
+}
+
+
+
+
+@keyframes bookOpen{
+
+
+0%{
+
+transform:
+
+rotateY(0);
+
+}
+
+
+50%{
+
+transform:
+
+rotateY(90deg);
+
+}
+
+
+100%{
+
+transform:
+
+rotateY(0);
+
+}
+
+
+}
+
+
+
+
+
+.book-icon{
+
+
+font-size:100px;
+
+
+z-index:2;
+
+
+filter:
+
+drop-shadow(
+0 0 20px #4da3ff
+);
+
+
+}
+
+
+
+
+.story-book h2{
+
+
+font-size:30px;
+
+
+margin-top:30px;
+
+
+z-index:2;
+
+
+}
+
+
+
+
+.story-book p{
+
+
+color:#aaa;
+
+
+font-size:18px;
+
+
+z-index:2;
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   STORY DETAILS
+========================================================== */
+
+
+.story-detail{
+
+
+width:80%;
+
+
+max-width:1000px;
+
+
+background:
+
+rgba(255,255,255,.08);
+
+
+
+border-radius:40px;
+
+
+
+padding:70px;
+
+
+text-align:center;
+
+
+
+backdrop-filter:
+
+blur(25px);
+
+
+
+border:
+
+1px solid rgba(255,255,255,.2);
+
+
+}
+
+
+
+
+
+.story-detail h1{
+
+
+font-size:80px;
+
+
+letter-spacing:10px;
+
+
+text-shadow:
+
+0 0 40px #4da3ff;
+
+
+}
+
+
+
+
+.story-detail h2{
+
+
+font-size:35px;
+
+
+margin:30px;
+
+
+color:#4da3ff;
+
+
+}
+
+
+
+
+
+.story-detail p{
+
+
+font-size:25px;
+
+
+line-height:1.8;
+
+
+color:#ddd;
+
+
+}
+
+
+
+
+.story-detail button{
+
+
+padding:15px 35px;
+
+
+border:none;
+
+
+border-radius:15px;
+
+
+
+background:
+
+rgba(77,163,255,.25);
+
+
+
+color:white;
+
+
+cursor:pointer;
+
+
+font-size:18px;
+
+
+transition:.3s;
+
+
+}
+
+
+
+.story-detail button:hover{
+
+
+background:#4da3ff;
+
+
+transform:
+
+translateY(-5px);
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   CHARACTERS
+========================================================== */
+
+
+.page-content{
+
+
+width:90%;
+
+
+text-align:center;
+
+
+}
+
+
+
+
+
+.page-content h1{
+
+
+font-size:80px;
+
+
+letter-spacing:10px;
+
+
+text-shadow:
+
+0 0 40px #4da3ff;
+
+
+}
+
+
+
+
+
+
+
+.character-container{
+
+
+margin-top:60px;
+
+
+display:flex;
+
+
+justify-content:center;
+
+
+gap:40px;
+
+
+flex-wrap:wrap;
+
+
+}
+
+
+
+
+
+.character-card{
+
+
+width:320px;
+
+
+height:400px;
+
+
+
+background:
+
+rgba(255,255,255,.08);
+
+
+
+border-radius:30px;
+
+
+padding:40px;
+
+
+transition:.4s;
+
+
+border:
+
+1px solid rgba(255,255,255,.2);
+
+
+backdrop-filter:
+
+blur(20px);
+
+
+}
+
+
+
+
+
+.character-card:hover{
+
+
+box-shadow:
 
 0 0 50px #4da3ff;
 
+
+transform:
+
+translateY(-20px);
+
+
+}
+
+
+
+
+
+.character-card h2{
+
+
+font-size:35px;
+
+
+}
+
+
+
+
+
+.character-card p{
+
+
+margin-top:30px;
+
+
+color:#bbb;
+
+
+font-size:18px;
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   SOCIALS + PARTNERS
+========================================================== */
+
+
+
+.social-container{
+
+
+margin-top:60px;
+
+
+display:flex;
+
+
+justify-content:center;
+
+
+gap:30px;
+
+
+flex-wrap:wrap;
+
+
+}
+
+
+
+
+.social-container a{
+
+
+width:250px;
+
+
+padding:30px;
+
+
+border-radius:25px;
+
+
+text-decoration:none;
+
+
+color:white;
+
+
+font-size:25px;
+
+
+background:
+
+rgba(255,255,255,.08);
+
+
+
+border:
+
+1px solid rgba(255,255,255,.2);
+
+
+transition:.4s;
+
+
+backdrop-filter:
+
+blur(20px);
+
+
+}
+
+
+
+
+
+.social-container a:hover{
+
+
+background:
+
+rgba(77,163,255,.3);
+
+
+
+transform:
+
+translateY(-15px);
+
+
+box-shadow:
+
+0 0 40px #4da3ff;
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   MOUSE LIGHT
+========================================================== */
+
+
+.mouse-light{
+
+
+position:fixed;
+
+
+width:250px;
+
+
+height:250px;
+
+
+border-radius:50%;
+
+
+
+background:
+
+radial-gradient(
+
+circle,
+
+rgba(77,163,255,.25),
+
+transparent 70%
+
+);
+
+
+
+pointer-events:none;
+
+
+transform:
+
+translate(-50%,-50%);
+
+
+z-index:-1;
+
+
+transition:.1s;
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   PARTICLES
+========================================================== */
+
+
+.particles{
+
+
+position:fixed;
+
+
+inset:0;
+
+
+pointer-events:none;
+
+
+z-index:-2;
+
+
+}
+
+
+
+.particle{
+
+
+position:absolute;
+
+
+width:3px;
+
+
+height:3px;
+
+
+background:white;
+
+
+border-radius:50%;
+
+
+
+animation:
+
+particleMove linear infinite;
+
+
+opacity:.7;
+
+
+}
+
+
+
+
+@keyframes particleMove{
+
+
+from{
+
+
+transform:
+
+translateY(0);
+
+
+opacity:0;
+
+
+}
+
+
+30%{
+
+
+opacity:1;
+
+
+}
+
+
+to{
+
+
+transform:
+
+translateY(-120vh);
+
+
+opacity:0;
+
+
+}
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   REVEAL ANIMATION
+========================================================== */
+
+
+.story-book,
+.character-card,
+.social-container a{
+
+
+opacity:0;
+
+
+transform:
+
+translateY(40px);
+
+
+}
+
+
+
+.story-book.show,
+.character-card.show,
+.social-container a.show{
+
+
+opacity:1;
+
+
+transform:
+
+translateY(0);
+
+
+transition:
+
+.8s;
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   RIPPLE EFFECT
+========================================================== */
+
+
+button{
+
+
+overflow:hidden;
+
+
+position:relative;
+
+
+}
+
+
+
+.ripple{
+
+
+position:absolute;
+
+
+width:100px;
+
+
+height:100px;
+
+
+background:
+
+rgba(255,255,255,.4);
+
+
+
+border-radius:50%;
+
+
+transform:
+
+translate(-50%,-50%);
+
+
+animation:
+
+ripple .6s;
+
+
+}
+
+
+
+
+
+@keyframes ripple{
+
+
+from{
+
+transform:
+
+scale(0);
+
+opacity:1;
+
+
+}
+
+
+to{
+
+
+transform:
+
+scale(4);
+
+opacity:0;
+
+
+}
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   MOBILE
+========================================================== */
+
+
+@media(max-width:900px){
+
+
+
+.hero h1{
+
+
+font-size:50px;
+
+
+letter-spacing:8px;
+
+
+}
+
+
+
+.countdown{
+
+
+gap:10px;
+
+
+flex-wrap:wrap;
+
+
+}
+
+
+
+
+.time-box{
+
+
+width:120px;
+
+
+height:120px;
+
+
+}
+
+
+
+.time-box span{
+
+
+font-size:40px;
+
+
+}
+
+
+
+
+
+.story-library h1,
+.page-content h1{
+
+
+font-size:50px;
+
+
+}
+
+
+
+
+
+.story-detail{
+
+
+width:90%;
+
+
+padding:35px;
+
+
+}
+
+
+
+.story-detail h1{
+
+
+font-size:45px;
+
+
+}
+
+
+
+.story-detail p{
+
+
+font-size:18px;
+
+
+}
+
+
+
+.sidebar{
+
+
+width:280px;
+
+
+}
 
 
 }
