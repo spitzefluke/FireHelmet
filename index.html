@@ -16,7 +16,13 @@
 <body>
 
 
+<!-- Übergangsanimation -->
+
 <div id="transition"></div>
+
+
+
+<!-- Hintergrund -->
 
 <div class="stars"></div>
 <div class="stars2"></div>
@@ -24,6 +30,9 @@
 
 
 
+
+
+<!-- Menü Button -->
 
 <div class="menu-button" onclick="openMenu()">
 
@@ -35,6 +44,10 @@
 
 
 
+
+
+
+<!-- Menü -->
 
 <nav class="sidebar" id="sidebar">
 
@@ -56,7 +69,7 @@ MENU
 
 
 <a onclick="changePage('story')">
-📖 Story
+📖 Stories
 </a>
 
 
@@ -84,11 +97,17 @@ MENU
 
 
 
+
+
 <main>
 
 
 
-<!-- HOME -->
+
+
+<!-- ======================
+HOME
+====================== -->
 
 
 <section id="home" class="page active-page">
@@ -103,39 +122,81 @@ COUNTDOWN
 
 
 <p class="subtitle">
-The new Story beginns soon ...
+The future begins soon
 </p>
+
+
 
 
 
 <div class="countdown">
 
 
-<div class="time-box">
-<span id="days">00</span>
-<small>Tage</small>
-</div>
-
 
 <div class="time-box">
-<span id="hours">00</span>
-<small>Stunden</small>
+
+<span id="days">
+00
+</span>
+
+<small>
+Tage
+</small>
+
 </div>
+
+
+
 
 
 <div class="time-box">
-<span id="minutes">00</span>
-<small>Minuten</small>
+
+<span id="hours">
+00
+</span>
+
+<small>
+Stunden
+</small>
+
 </div>
+
+
+
 
 
 <div class="time-box">
-<span id="seconds">00</span>
-<small>Sekunden</small>
+
+<span id="minutes">
+00
+</span>
+
+<small>
+Minuten
+</small>
+
 </div>
 
 
+
+
+
+<div class="time-box">
+
+<span id="seconds">
+00
+</span>
+
+<small>
+Sekunden
+</small>
+
 </div>
+
+
+
+</div>
+
 
 
 </div>
@@ -145,7 +206,15 @@ The new Story beginns soon ...
 
 
 
-<!-- STORY -->
+
+
+
+
+
+
+<!-- ======================
+STORY ARCHIV
+====================== -->
 
 
 <section id="story" class="page">
@@ -154,17 +223,14 @@ The new Story beginns soon ...
 <div class="story-library">
 
 
-
 <h1>
 STORIES
 </h1>
 
 
-
-
 <p class="story-subtitle">
 
-Wähle eine Geschichte aus.
+Wähle ein Logbuch aus dem Archiv.
 
 </p>
 
@@ -179,13 +245,12 @@ Wähle eine Geschichte aus.
 
 
 
-<div class="story-book">
+<div class="story-book"
+onclick="openStory('beginning')">
 
 
 <div class="book-icon">
-
 📖
-
 </div>
 
 
@@ -207,13 +272,13 @@ Kapitel 01
 
 
 
-<div class="story-book">
+
+<div class="story-book"
+onclick="openStory('lostworld')">
 
 
 <div class="book-icon">
-
 📖
-
 </div>
 
 
@@ -236,13 +301,12 @@ Kapitel 02
 
 
 
-<div class="story-book">
+<div class="story-book"
+onclick="openStory('secret')">
 
 
 <div class="book-icon">
-
 📖
-
 </div>
 
 
@@ -263,37 +327,60 @@ Kapitel 03
 
 
 
+</div>
 
-
-<div class="story-book">
-
-
-<div class="book-icon">
-
-📖
 
 </div>
+
+
+</section>
+
+
+
+
+
+
+
+
+
+<!-- ======================
+EINZELNE STORY 1
+====================== -->
+
+
+<section id="beginning" class="page">
+
+
+<div class="story-detail">
+
+
+<button onclick="changePage('story')">
+← Zurück
+</button>
+
+
+
+<h1>
+The Beginning
+</h1>
 
 
 <h2>
-Final Chapter
+Kapitel 01
 </h2>
 
 
+
 <p>
-Kapitel 04
+
+Am Anfang stand eine unbekannte Welt.
+
+Alte Geheimnisse erwachten und eine neue Ära begann.
+
+Doch niemand wusste,
+welche Veränderungen bevorstanden.
+
 </p>
-
-
-</div>
-
-
-
-
-
-
-</div>
-
 
 
 
@@ -302,7 +389,122 @@ Kapitel 04
 
 </section>
 
-<!-- CHARACTERS -->
+
+
+
+
+
+
+
+
+<!-- ======================
+EINZELNE STORY 2
+====================== -->
+
+
+<section id="lostworld" class="page">
+
+
+<div class="story-detail">
+
+
+<button onclick="changePage('story')">
+← Zurück
+</button>
+
+
+
+<h1>
+Lost World
+</h1>
+
+
+<h2>
+Kapitel 02
+</h2>
+
+
+
+<p>
+
+Eine vergessene Welt wird entdeckt.
+
+Mit ihr kommen Gefahren,
+die längst verschwunden schienen.
+
+</p>
+
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+
+
+<!-- ======================
+EINZELNE STORY 3
+====================== -->
+
+
+<section id="secret" class="page">
+
+
+<div class="story-detail">
+
+
+<button onclick="changePage('story')">
+← Zurück
+</button>
+
+
+
+<h1>
+The Secret
+</h1>
+
+
+<h2>
+Kapitel 03
+</h2>
+
+
+
+<p>
+
+Eine Wahrheit kommt ans Licht,
+die alles verändert.
+
+Die Vergangenheit ist nicht das,
+was sie zu sein scheint.
+
+</p>
+
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+
+
+<!-- ======================
+CHARACTERS
+====================== -->
 
 
 <section id="characters" class="page">
@@ -316,38 +518,57 @@ Characters
 </h1>
 
 
+
+
+
 <div class="character-container">
 
 
+
+
+
 <div class="character-card">
+
 
 <h2>
 Character 01
 </h2>
 
+
 <p>
-Beschreibung
+Beschreibung des Charakters.
 </p>
 
+
 </div>
+
+
+
+
 
 
 
 <div class="character-card">
 
+
 <h2>
 Character 02
 </h2>
 
+
 <p>
-Beschreibung
+Beschreibung des Charakters.
 </p>
 
-</div>
-
-
 
 </div>
+
+
+
+
+
+</div>
+
 
 
 </div>
@@ -362,7 +583,10 @@ Beschreibung
 
 
 
-<!-- SOCIALS -->
+
+<!-- ======================
+SOCIALS
+====================== -->
 
 
 <section id="socials" class="page">
@@ -380,22 +604,29 @@ Socials
 <div class="social-container">
 
 
-<a href="https://youtube.com/spitze_fluke" target="_blank">
+<a href="https://youtube.com/"
+target="_blank">
 YouTube
 </a>
 
 
-<a href="https://tiktok.com/@spitze_fluke" target="_blank">
+
+<a href="https://tiktok.com/"
+target="_blank">
 TikTok
 </a>
 
 
-<a href="https://discord.gg/3FFy8Bjsv" target="_blank">
+
+<a href="https://discord.com/"
+target="_blank">
 Discord
 </a>
 
 
-<a href="https://instagram.com/@spitze_fluke" target="_blank">
+
+<a href="https://instagram.com/"
+target="_blank">
 Instagram
 </a>
 
@@ -416,7 +647,10 @@ Instagram
 
 
 
-<!-- PARTNERS -->
+
+<!-- ======================
+PARTNERS
+====================== -->
 
 
 <section id="partners" class="page">
@@ -431,21 +665,25 @@ Partners
 
 
 
+
 <div class="social-container">
 
 
-<a href="#" target="_blank">
+
+<a href="#">
 Partner 01
 </a>
 
 
-<a href="#" target="_blank">
+
+<a href="#">
 Partner 02
 </a>
 
 
 
 </div>
+
 
 
 </div>
@@ -459,7 +697,9 @@ Partner 02
 
 
 
+
 </main>
+
 
 
 
