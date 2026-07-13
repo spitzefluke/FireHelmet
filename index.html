@@ -1,77 +1,218 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
 <meta charset="UTF-8">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Countdown</title>
 
 <style>
 
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
 body{
-background:black;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-margin:0;
-font-family:Arial;
+    background:#000;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    overflow:hidden;
+}
+
+/* Menübutton */
+
+.menu-btn{
+    position:absolute;
+    top:20px;
+    left:20px;
+    font-size:35px;
+    cursor:pointer;
+    user-select:none;
+}
+
+/* Seitenmenü */
+
+.sidebar{
+    position:fixed;
+    left:-260px;
+    top:0;
+    width:250px;
+    height:100%;
+    background:#111;
+    transition:.35s;
+    padding-top:70px;
+    border-right:2px solid #333;
+}
+
+.sidebar a{
+    display:block;
+    color:white;
+    text-decoration:none;
+    padding:18px 25px;
+    font-size:20px;
+}
+
+.sidebar a:hover{
+    background:#222;
+}
+
+.sidebar.active{
+    left:0;
+}
+
+/* Hauptbereich */
+
+.container{
+    text-align:center;
+}
+
+h1{
+    margin-bottom:60px;
+    font-size:42px;
 }
 
 #countdown{
-color:white;
-font-size:100px;
-font-weight:bold;
+    display:flex;
+    gap:25px;
+    justify-content:center;
+    flex-wrap:wrap;
+}
+
+.box{
+    width:150px;
+}
+
+.number{
+    font-size:70px;
+    font-weight:bold;
+    display:block;
+}
+
+.label{
+    margin-top:10px;
+    font-size:20px;
+    color:#bbb;
+    letter-spacing:1px;
+}
+
+@media(max-width:700px){
+
+.number{
+    font-size:48px;
+}
+
+.box{
+    width:110px;
+}
+
+.label{
+    font-size:16px;
+}
+
+h1{
+    font-size:30px;
+}
+
 }
 
 </style>
 
 </head>
-
 <body>
 
-<div id="countdown"></div>
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
+
+<div class="sidebar" id="sidebar">
+    <a href="#">🏠 Start</a>
+    <a href="#">📅 Countdowns</a>
+    <a href="#">⭐ Favoriten</a>
+    <a href="#">⚙ Einstellungen</a>
+    <a href="#">ℹ Impressum</a>
+</div>
+
+<div class="container">
+
+<h1>Countdown</h1>
+
+<div id="countdown">
+
+<div class="box">
+<span class="number" id="days">00</span>
+<div class="label">Tage</div>
+</div>
+
+<div class="box">
+<span class="number" id="hours">00</span>
+<div class="label">Stunden</div>
+</div>
+
+<div class="box">
+<span class="number" id="minutes">00</span>
+<div class="label">Minuten</div>
+</div>
+
+<div class="box">
+<span class="number" id="seconds">00</span>
+<div class="label">Sekunden</div>
+</div>
+
+</div>
+
+</div>
 
 <script>
 
-const targetDate = new Date("2026-08-10T23:59:59");
+// Zielzeit
+const targetDate = new Date("2026-08-10T00:00:00");
 
 function updateCountdown(){
 
 const now = new Date();
 
-const difference = targetDate-now;
+const difference = targetDate - now;
 
-if(difference<=0){
+if(difference <= 0){
 
-document.getElementById("countdown").innerHTML="00:00:00";
+document.getElementById("days").innerHTML="00";
+document.getElementById("hours").innerHTML="00";
+document.getElementById("minutes").innerHTML="00";
+document.getElementById("seconds").innerHTML="00";
 
 return;
 
 }
 
-const hours=Math.floor(difference/(1000*60*60));
+const days = Math.floor(difference/(1000*60*60*24));
 
-const minutes=Math.floor(difference/(1000*60))%60;
+const hours = Math.floor((difference%(1000*60*60*24))/(1000*60*60));
 
-const seconds=Math.floor(difference/1000)%60;
+const minutes = Math.floor((difference%(1000*60*60))/(1000*60));
 
-document.getElementById("countdown").innerHTML=
+const seconds = Math.floor((difference%(1000*60))/1000);
 
-String(hours).padStart(2,"0")+":"+
-
-String(minutes).padStart(2,"0")+":"+
-
-String(seconds).padStart(2,"0");
+document.getElementById("days").innerHTML=String(days).padStart(2,"0");
+document.getElementById("hours").innerHTML=String(hours).padStart(2,"0");
+document.getElementById("minutes").innerHTML=String(minutes).padStart(2,"0");
+document.getElementById("seconds").innerHTML=String(seconds).padStart(2,"0");
 
 }
 
+setInterval(updateCountdown,1000);
+
 updateCountdown();
 
-setInterval(updateCountdown,1000);
+function toggleMenu(){
+
+document.getElementById("sidebar").classList.toggle("active");
+
+}
 
 </script>
 
 </body>
-
 </html>
