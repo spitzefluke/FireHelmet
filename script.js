@@ -1,4 +1,6 @@
+// ==========================
 // COUNTDOWN
+// ==========================
 
 
 const targetDate =
@@ -17,7 +19,12 @@ targetDate-now;
 
 
 
-if(difference<=0){
+if(difference <= 0){
+
+document.getElementById("days").innerHTML="00";
+document.getElementById("hours").innerHTML="00";
+document.getElementById("minutes").innerHTML="00";
+document.getElementById("seconds").innerHTML="00";
 
 return;
 
@@ -34,7 +41,7 @@ difference/(1000*60*60*24)
 
 const hours =
 Math.floor(
-difference%(1000*60*60*24)
+(difference%(1000*60*60*24))
 /
 (1000*60*60)
 );
@@ -43,7 +50,7 @@ difference%(1000*60*60*24)
 
 const minutes =
 Math.floor(
-difference%(1000*60*60)
+(difference%(1000*60*60))
 /
 (1000*60)
 );
@@ -52,26 +59,26 @@ difference%(1000*60*60)
 
 const seconds =
 Math.floor(
-difference%(1000*60)
+(difference%(1000*60))
 /
 1000
 );
 
 
 
-document.getElementById("days").innerHTML=
+document.getElementById("days").innerHTML =
 String(days).padStart(2,"0");
 
 
-document.getElementById("hours").innerHTML=
+document.getElementById("hours").innerHTML =
 String(hours).padStart(2,"0");
 
 
-document.getElementById("minutes").innerHTML=
+document.getElementById("minutes").innerHTML =
 String(minutes).padStart(2,"0");
 
 
-document.getElementById("seconds").innerHTML=
+document.getElementById("seconds").innerHTML =
 String(seconds).padStart(2,"0");
 
 
@@ -87,10 +94,9 @@ updateCountdown();
 
 
 
-
-
-
+// ==========================
 // MENÜ
+// ==========================
 
 
 function openMenu(){
@@ -118,17 +124,20 @@ document
 
 
 
-
-
+// ==========================
 // SEITEN WECHSEL
+// ==========================
 
 
 function changePage(page){
 
 
-document
-.querySelectorAll(".page")
-.forEach(section=>{
+const pages =
+document.querySelectorAll(".page");
+
+
+
+pages.forEach(section=>{
 
 section.classList.remove("active-page");
 
