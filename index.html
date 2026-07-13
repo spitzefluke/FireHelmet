@@ -40,6 +40,8 @@
 
 
 
+
+
 <!-- Menü Button -->
 
 
@@ -50,6 +52,9 @@
 <span></span>
 
 </div>
+
+
+
 
 
 
@@ -69,38 +74,50 @@
 
 
 <h2>
+
 MENU
+
 </h2>
 
 
 
 
 <a onclick="changePage('home')">
+
 🏠 Home
+
 </a>
 
 
 
 <a onclick="changePage('story')">
+
 📖 Stories
+
 </a>
 
 
 
 <a onclick="changePage('characters')">
+
 👤 Characters
+
 </a>
 
 
 
 <a onclick="changePage('socials')">
+
 🌐 Socials
+
 </a>
 
 
 
 <a onclick="changePage('partners')">
+
 🤝 Partners
+
 </a>
 
 
@@ -113,7 +130,15 @@ MENU
 
 
 
+
+
 <main>
+
+
+
+
+
+
 
 
 
@@ -130,14 +155,19 @@ HOME
 
 
 <h1>
+
 COUNTDOWN
+
 </h1>
 
 
 
 <p class="subtitle">
-The new Story comes soon ...
+
+The future begins soon
+
 </p>
+
 
 
 
@@ -145,14 +175,21 @@ The new Story comes soon ...
 <div class="countdown">
 
 
+
 <div class="time-box">
+
 
 <span id="days">
+
 00
+
 </span>
 
+
 <small>
+
 Tage
+
 </small>
 
 
@@ -161,14 +198,23 @@ Tage
 
 
 
+
+
+
 <div class="time-box">
+
 
 <span id="hours">
+
 00
+
 </span>
 
+
 <small>
+
 Stunden
+
 </small>
 
 
@@ -178,18 +224,28 @@ Stunden
 
 
 
+
+
 <div class="time-box">
+
 
 <span id="minutes">
+
 00
+
 </span>
 
+
 <small>
+
 Minuten
+
 </small>
 
 
 </div>
+
+
 
 
 
@@ -197,12 +253,18 @@ Minuten
 
 <div class="time-box">
 
+
 <span id="seconds">
+
 00
+
 </span>
 
+
 <small>
+
 Sekunden
+
 </small>
 
 
@@ -215,10 +277,13 @@ Sekunden
 
 
 </div>
-
 
 
 </section>
+
+
+
+
 
 
 
@@ -239,16 +304,24 @@ STORY ARCHIV
 <div class="story-library">
 
 
+
 <h1>
+
 STORIES
+
 </h1>
+
+
 
 
 <p class="story-subtitle">
 
-Wähle ein Logbuch aus.
+Wähle ein Logbuch aus dem Archiv
 
 </p>
+
+
+
 
 
 
@@ -259,26 +332,36 @@ Wähle ein Logbuch aus.
 
 
 
+
+
 <div class="story-book"
 onclick="openStory('beginning')">
 
 
 <div class="book-icon">
+
 📖
+
 </div>
 
 
 <h2>
+
 The Beginning
+
 </h2>
 
 
 <p>
-Kapitel 01
+
+Logbuch 01
+
 </p>
 
 
 </div>
+
+
 
 
 
@@ -291,21 +374,29 @@ onclick="openStory('lostworld')">
 
 
 <div class="book-icon">
+
 📖
+
 </div>
 
 
 <h2>
+
 Lost World
+
 </h2>
 
 
 <p>
-Kapitel 02
+
+Logbuch 02
+
 </p>
 
 
 </div>
+
+
 
 
 
@@ -318,17 +409,23 @@ onclick="openStory('secret')">
 
 
 <div class="book-icon">
+
 📖
+
 </div>
 
 
 <h2>
+
 The Secret
+
 </h2>
 
 
 <p>
-Kapitel 03
+
+Logbuch 03
+
 </p>
 
 
@@ -338,10 +435,14 @@ Kapitel 03
 
 
 
+
+
+
 </div>
 
 
 </div>
+
 
 
 </section>
@@ -354,29 +455,65 @@ Kapitel 03
 
 
 
-<!-- STORY SEITEN -->
 
 
-<section id="beginning" class="page">
 
-<div class="story-detail">
+
+<!-- =====================
+BUCH LESER
+===================== -->
+
+
+<section id="book-reader" class="page">
+
+
+
+<div class="book">
+
+
+
+
+
+<h1 id="book-title">
+
+</h1>
+
+
+
+
+
+
+
+<div class="book-content">
+
+
+
+<p id="book-text">
+
+</p>
+
+
+
+</div>
+
+
+
+
+
 
 
 <button onclick="changePage('story')">
 
-← Zurück
+← Zurück zum Archiv
 
 </button>
 
 
-<h1></h1>
 
-<h2></h2>
-
-<p></p>
 
 
 </div>
+
 
 
 </section>
@@ -385,61 +522,6 @@ Kapitel 03
 
 
 
-
-<section id="lostworld" class="page">
-
-<div class="story-detail">
-
-
-<button onclick="changePage('story')">
-
-← Zurück
-
-</button>
-
-
-<h1></h1>
-
-<h2></h2>
-
-<p></p>
-
-
-</div>
-
-
-</section>
-
-
-
-
-
-
-
-<section id="secret" class="page">
-
-
-<div class="story-detail">
-
-
-<button onclick="changePage('story')">
-
-← Zurück
-
-</button>
-
-
-<h1></h1>
-
-<h2></h2>
-
-<p></p>
-
-
-</div>
-
-
-</section>
 
 
 
@@ -457,32 +539,50 @@ CHARACTERS
 <section id="characters" class="page">
 
 
+
 <div class="page-content">
 
 
+
 <h1>
+
 CHARACTERS
+
 </h1>
+
+
+
 
 
 
 <div class="character-container">
 
 
+
+
+
 <div class="character-card">
 
 
 <h2>
+
 Character 01
+
 </h2>
 
 
 <p>
-Beschreibung des Charakters
+
+Beschreibung des Charakters.
+
 </p>
 
 
+
 </div>
+
+
+
 
 
 
@@ -491,20 +591,30 @@ Beschreibung des Charakters
 
 
 <h2>
+
 Character 02
+
 </h2>
 
 
 <p>
-Beschreibung des Charakters
+
+Beschreibung des Charakters.
+
 </p>
 
 
-</div>
-
-
 
 </div>
+
+
+
+
+
+
+
+</div>
+
 
 
 </div>
@@ -512,6 +622,11 @@ Beschreibung des Charakters
 
 
 </section>
+
+
+
+
+
 
 
 
@@ -529,12 +644,20 @@ SOCIALS
 <section id="socials" class="page">
 
 
+
 <div class="page-content">
 
 
+
 <h1>
+
 SOCIALS
+
 </h1>
+
+
+
+
 
 
 
@@ -542,7 +665,10 @@ SOCIALS
 
 
 
-<a href="https://youtube.com/@spitze_fluke"
+
+
+<a href="https://youtube.com"
+
 target="_blank">
 
 YouTube
@@ -552,7 +678,11 @@ YouTube
 
 
 
-<a href="https://tiktok.com/spitze_fluke"
+
+
+
+<a href="https://tiktok.com"
+
 target="_blank">
 
 TikTok
@@ -562,7 +692,11 @@ TikTok
 
 
 
+
+
+
 <a href="https://discord.com"
+
 target="_blank">
 
 Discord
@@ -572,7 +706,11 @@ Discord
 
 
 
-<a href="https://instagram.com/@spitze_fluke"
+
+
+
+<a href="https://instagram.com"
+
 target="_blank">
 
 Instagram
@@ -581,14 +719,22 @@ Instagram
 
 
 
-</div>
 
 
 
 </div>
+
+
+
+</div>
+
 
 
 </section>
+
+
+
+
 
 
 
@@ -606,12 +752,18 @@ PARTNERS
 <section id="partners" class="page">
 
 
+
 <div class="page-content">
 
 
+
 <h1>
+
 PARTNERS
+
 </h1>
+
+
 
 
 
@@ -620,26 +772,43 @@ PARTNERS
 
 
 
+
+
 <a href="#">
+
 Partner 01
+
 </a>
+
+
+
 
 
 
 <a href="#">
+
 Partner 02
+
 </a>
 
 
 
-</div>
 
 
 
 </div>
+
+
+
+
+</div>
+
 
 
 </section>
+
+
+
 
 
 
@@ -653,11 +822,21 @@ Partner 02
 
 
 
+
+
+
+<!-- SCRIPTS -->
+
+
 <script src="scripts/countdown.js"></script>
+
+<script src="scripts/stories-data.js"></script>
 
 <script src="scripts/stories.js"></script>
 
 <script src="scripts/main.js"></script>
+
+
 
 
 
