@@ -1,89 +1,62 @@
-// ==========================
-// COUNTDOWN
-// ==========================
-
-
 const targetDate =
-new Date("2026-08-10T00:00:00");
+new Date("2026-08-20T00:00:00");
 
 
 
 function updateCountdown(){
 
+const now=new Date();
 
-const now = new Date();
-
-
-const difference =
-targetDate-now;
+const difference=targetDate-now;
 
 
-
-if(difference <= 0){
-
-document.getElementById("days").innerHTML="00";
-document.getElementById("hours").innerHTML="00";
-document.getElementById("minutes").innerHTML="00";
-document.getElementById("seconds").innerHTML="00";
-
-return;
-
-}
+if(difference<=0)return;
 
 
 
-const days =
-Math.floor(
+const days=Math.floor(
 difference/(1000*60*60*24)
 );
 
 
-
-const hours =
-Math.floor(
-(difference%(1000*60*60*24))
-/
+const hours=Math.floor(
+difference%(1000*60*60*24)/
 (1000*60*60)
 );
 
 
-
-const minutes =
-Math.floor(
-(difference%(1000*60*60))
-/
+const minutes=Math.floor(
+difference%(1000*60*60)/
 (1000*60)
 );
 
 
-
-const seconds =
-Math.floor(
-(difference%(1000*60))
-/
+const seconds=Math.floor(
+difference%(1000*60)/
 1000
 );
 
 
 
-document.getElementById("days").innerHTML =
+daysEl.innerHTML=
 String(days).padStart(2,"0");
 
-
-document.getElementById("hours").innerHTML =
+hoursEl.innerHTML=
 String(hours).padStart(2,"0");
 
-
-document.getElementById("minutes").innerHTML =
+minutesEl.innerHTML=
 String(minutes).padStart(2,"0");
 
-
-document.getElementById("seconds").innerHTML =
+secondsEl.innerHTML=
 String(seconds).padStart(2,"0");
-
 
 }
 
+
+const daysEl=document.getElementById("days");
+const hoursEl=document.getElementById("hours");
+const minutesEl=document.getElementById("minutes");
+const secondsEl=document.getElementById("seconds");
 
 
 setInterval(updateCountdown,1000);
@@ -94,17 +67,15 @@ updateCountdown();
 
 
 
-// ==========================
-// MENÜ
-// ==========================
+
+// MENU
 
 
 function openMenu(){
 
 document
 .getElementById("sidebar")
-.classList
-.add("active");
+.classList.add("active");
 
 }
 
@@ -114,8 +85,7 @@ function closeMenu(){
 
 document
 .getElementById("sidebar")
-.classList
-.remove("active");
+.classList.remove("active");
 
 }
 
@@ -124,22 +94,28 @@ document
 
 
 
-// ==========================
-// SEITEN WECHSEL
-// ==========================
+// SEITEN WECHSEL MIT ANIMATION
 
 
 function changePage(page){
 
 
-const pages =
-document.querySelectorAll(".page");
+const transition=
+document.getElementById("transition");
+
+
+transition.classList.add("active");
 
 
 
-pages.forEach(section=>{
+setTimeout(()=>{
 
-section.classList.remove("active-page");
+
+document
+.querySelectorAll(".page")
+.forEach(p=>{
+
+p.classList.remove("active-page");
 
 });
 
@@ -147,8 +123,14 @@ section.classList.remove("active-page");
 
 document
 .getElementById(page)
-.classList
-.add("active-page");
+.classList.add("active-page");
+
+
+
+transition.classList.remove("active");
+
+
+},500);
 
 
 
@@ -156,3 +138,78 @@ closeMenu();
 
 
 }
+
+
+
+
+
+
+
+// EVENTS
+
+
+const events=[
+
+
+{
+
+date:"10.08.2026",
+
+title:"Projekt Release",
+
+description:"Das große Projekt startet."
+
+},
+
+
+
+{
+
+date:"25.08.2026",
+
+title:"Community Event",
+
+description:"Gemeinsames Online Event."
+
+}
+
+
+
+];
+
+
+
+
+function loadEvents(){
+
+
+const list=
+document.getElementById("event-list");
+
+
+
+events.forEach(event=>{
+
+
+list.innerHTML += `
+
+<div class="event-card">
+
+<h2>${event.title}</h2>
+
+<p>${event.date}</p>
+
+<p>${event.description}</p>
+
+</div>
+
+`;
+
+
+});
+
+
+}
+
+
+loadEvents();
