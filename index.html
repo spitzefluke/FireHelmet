@@ -1,218 +1,294 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Countdown</title>
 
-<style>
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial, Helvetica, sans-serif;
-}
-
-body{
-    background:#000;
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    overflow:hidden;
-}
-
-/* Menübutton */
-
-.menu-btn{
-    position:absolute;
-    top:20px;
-    left:20px;
-    font-size:35px;
-    cursor:pointer;
-    user-select:none;
-}
-
-/* Seitenmenü */
-
-.sidebar{
-    position:fixed;
-    left:-260px;
-    top:0;
-    width:250px;
-    height:100%;
-    background:#111;
-    transition:.35s;
-    padding-top:70px;
-    border-right:2px solid #333;
-}
-
-.sidebar a{
-    display:block;
-    color:white;
-    text-decoration:none;
-    padding:18px 25px;
-    font-size:20px;
-}
-
-.sidebar a:hover{
-    background:#222;
-}
-
-.sidebar.active{
-    left:0;
-}
-
-/* Hauptbereich */
-
-.container{
-    text-align:center;
-}
-
-h1{
-    margin-bottom:60px;
-    font-size:42px;
-}
-
-#countdown{
-    display:flex;
-    gap:25px;
-    justify-content:center;
-    flex-wrap:wrap;
-}
-
-.box{
-    width:150px;
-}
-
-.number{
-    font-size:70px;
-    font-weight:bold;
-    display:block;
-}
-
-.label{
-    margin-top:10px;
-    font-size:20px;
-    color:#bbb;
-    letter-spacing:1px;
-}
-
-@media(max-width:700px){
-
-.number{
-    font-size:48px;
-}
-
-.box{
-    width:110px;
-}
-
-.label{
-    font-size:16px;
-}
-
-h1{
-    font-size:30px;
-}
-
-}
-
-</style>
+<link rel="stylesheet" href="style.css">
 
 </head>
+
+
 <body>
 
-<div class="menu-btn" onclick="toggleMenu()">☰</div>
 
-<div class="sidebar" id="sidebar">
-    <a href="#">🏠 Start</a>
-    <a href="#">📅 Countdowns</a>
-    <a href="#">⭐ Favoriten</a>
-    <a href="#">⚙ Einstellungen</a>
-    <a href="#">ℹ Impressum</a>
-</div>
+<!-- Animierter Hintergrund -->
 
-<div class="container">
+<div class="stars"></div>
+<div class="stars2"></div>
+<div class="nebula"></div>
 
-<h1>Countdown</h1>
 
-<div id="countdown">
 
-<div class="box">
-<span class="number" id="days">00</span>
-<div class="label">Tage</div>
-</div>
+<!-- Menü Button -->
 
-<div class="box">
-<span class="number" id="hours">00</span>
-<div class="label">Stunden</div>
-</div>
+<div class="menu-button" onclick="openMenu()">
 
-<div class="box">
-<span class="number" id="minutes">00</span>
-<div class="label">Minuten</div>
-</div>
-
-<div class="box">
-<span class="number" id="seconds">00</span>
-<div class="label">Sekunden</div>
-</div>
+    <span></span>
+    <span></span>
+    <span></span>
 
 </div>
 
+
+
+<!-- Seiten Menü -->
+
+<nav class="sidebar" id="sidebar">
+
+    <div class="close-button" onclick="closeMenu()">
+        ×
+    </div>
+
+
+    <h2>
+        MENU
+    </h2>
+
+
+    <a href="#story" onclick="closeMenu()">
+        📖 Story
+    </a>
+
+
+    <a href="#characters" onclick="closeMenu()">
+        👤 Characters
+    </a>
+
+
+    <a href="#socials" onclick="closeMenu()">
+        🌐 Socials
+    </a>
+
+
+</nav>
+
+
+
+
+<!-- Hauptseite -->
+
+
+<main>
+
+
+<section class="hero">
+
+
+<h1>
+COUNTDOWN
+</h1>
+
+
+<p class="subtitle">
+The future begins soon
+</p>
+
+
+
+
+<div class="countdown">
+
+
+<div class="time-box">
+
+<span id="days">
+00
+</span>
+
+<small>
+Tage
+</small>
+
 </div>
 
-<script>
 
-// Zielzeit
-const targetDate = new Date("2026-08-10T00:00:00");
 
-function updateCountdown(){
+<div class="time-box">
 
-const now = new Date();
+<span id="hours">
+00
+</span>
 
-const difference = targetDate - now;
+<small>
+Stunden
+</small>
 
-if(difference <= 0){
+</div>
 
-document.getElementById("days").innerHTML="00";
-document.getElementById("hours").innerHTML="00";
-document.getElementById("minutes").innerHTML="00";
-document.getElementById("seconds").innerHTML="00";
 
-return;
 
-}
 
-const days = Math.floor(difference/(1000*60*60*24));
+<div class="time-box">
 
-const hours = Math.floor((difference%(1000*60*60*24))/(1000*60*60));
+<span id="minutes">
+00
+</span>
 
-const minutes = Math.floor((difference%(1000*60*60))/(1000*60));
+<small>
+Minuten
+</small>
 
-const seconds = Math.floor((difference%(1000*60))/1000);
+</div>
 
-document.getElementById("days").innerHTML=String(days).padStart(2,"0");
-document.getElementById("hours").innerHTML=String(hours).padStart(2,"0");
-document.getElementById("minutes").innerHTML=String(minutes).padStart(2,"0");
-document.getElementById("seconds").innerHTML=String(seconds).padStart(2,"0");
 
-}
 
-setInterval(updateCountdown,1000);
 
-updateCountdown();
+<div class="time-box">
 
-function toggleMenu(){
+<span id="seconds">
+00
+</span>
 
-document.getElementById("sidebar").classList.toggle("active");
+<small>
+Sekunden
+</small>
 
-}
+</div>
 
-</script>
+
+
+</div>
+
+
+
+</section>
+
+
+
+
+
+
+<section id="story" class="content-section">
+
+
+<h2>
+Story
+</h2>
+
+
+<p>
+
+Hier kommt später deine Geschichte hinein.
+Beschreibe die Welt, Ereignisse oder die Handlung deines Projekts.
+
+</p>
+
+
+</section>
+
+
+
+
+
+
+
+<section id="characters" class="content-section">
+
+
+<h2>
+Characters
+</h2>
+
+
+
+<div class="character-container">
+
+
+<div class="character-card">
+
+<h3>
+Character 01
+</h3>
+
+<p>
+Beschreibung des Charakters.
+</p>
+
+</div>
+
+
+
+<div class="character-card">
+
+<h3>
+Character 02
+</h3>
+
+<p>
+Beschreibung des Charakters.
+</p>
+
+</div>
+
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+<section id="socials" class="content-section">
+
+
+<h2>
+Socials
+</h2>
+
+
+
+<div class="social-container">
+
+
+<a href="#">
+YouTube
+</a>
+
+
+<a href="#">
+TikTok
+</a>
+
+
+<a href="#">
+Discord
+</a>
+
+
+<a href="#">
+Instagram
+</a>
+
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+</main>
+
+
+
+
+
+<script src="script.js"></script>
+
 
 </body>
+
 </html>
