@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Countdown</title>
+<title>Countdown Project</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -16,29 +16,33 @@
 <body>
 
 
-<!-- Übergangsanimation -->
-
 <div id="transition"></div>
 
 
 
-<!-- Hintergrund -->
-
 <div class="stars"></div>
+
 <div class="stars2"></div>
+
 <div class="nebula"></div>
 
 
 
 
 
-<!-- Menü Button -->
+
+<!-- MENU BUTTON -->
+
 
 <div class="menu-button" onclick="openMenu()">
 
+
 <span></span>
+
 <span></span>
+
 <span></span>
+
 
 </div>
 
@@ -47,50 +51,72 @@
 
 
 
-<!-- Menü -->
+
+<!-- SIDEBAR -->
+
 
 <nav class="sidebar" id="sidebar">
 
 
 <div class="close-button" onclick="closeMenu()">
+
 ×
+
 </div>
 
 
+
 <h2>
+
 MENU
+
 </h2>
 
 
 
+
 <a onclick="changePage('home')">
+
 🏠 Home
+
 </a>
+
 
 
 <a onclick="changePage('story')">
+
 📖 Stories
+
 </a>
+
 
 
 <a onclick="changePage('characters')">
+
 👤 Characters
+
 </a>
+
 
 
 <a onclick="changePage('socials')">
+
 🌐 Socials
+
 </a>
+
 
 
 <a onclick="changePage('partners')">
+
 🤝 Partners
+
 </a>
+
 
 
 
 </nav>
-
 
 
 
@@ -105,25 +131,35 @@ MENU
 
 
 
-<!-- ======================
-HOME
-====================== -->
+
+
+<!-- HOME -->
 
 
 <section id="home" class="page active-page">
 
 
+
 <div class="hero">
 
 
+
 <h1>
+
 COUNTDOWN
+
 </h1>
 
 
+
+
 <p class="subtitle">
+
 The future begins soon
+
 </p>
+
+
 
 
 
@@ -136,12 +172,18 @@ The future begins soon
 <div class="time-box">
 
 <span id="days">
+
 00
+
 </span>
 
+
 <small>
+
 Tage
+
 </small>
+
 
 </div>
 
@@ -150,14 +192,21 @@ Tage
 
 
 <div class="time-box">
+
 
 <span id="hours">
+
 00
+
 </span>
 
+
 <small>
+
 Stunden
+
 </small>
+
 
 </div>
 
@@ -166,14 +215,21 @@ Stunden
 
 
 <div class="time-box">
+
 
 <span id="minutes">
+
 00
+
 </span>
 
+
 <small>
+
 Minuten
+
 </small>
+
 
 </div>
 
@@ -183,19 +239,28 @@ Minuten
 
 <div class="time-box">
 
+
 <span id="seconds">
+
 00
+
 </span>
 
+
 <small>
+
 Sekunden
+
 </small>
 
+
+</div>
+
+
+
 </div>
 
 
-
-</div>
 
 
 
@@ -212,20 +277,23 @@ Sekunden
 
 
 
-<!-- ======================
-STORY ARCHIV
-====================== -->
+<!-- STORIES -->
 
 
 <section id="story" class="page">
 
 
+
 <div class="story-library">
 
 
+
 <h1>
+
 STORIES
+
 </h1>
+
 
 
 <p class="story-subtitle">
@@ -238,29 +306,33 @@ Wähle ein Logbuch aus dem Archiv.
 
 
 
-
 <div class="story-books">
 
 
 
 
 
-<div class="story-book"
-onclick="openStory('beginning')">
+<div class="story-book" onclick="openStory('beginning')">
 
 
 <div class="book-icon">
+
 📖
+
 </div>
 
 
 <h2>
+
 The Beginning
+
 </h2>
 
 
 <p>
+
 Kapitel 01
+
 </p>
 
 
@@ -272,23 +344,27 @@ Kapitel 01
 
 
 
-
-<div class="story-book"
-onclick="openStory('lostworld')">
+<div class="story-book" onclick="openStory('lostworld')">
 
 
 <div class="book-icon">
+
 📖
+
 </div>
 
 
 <h2>
+
 Lost World
+
 </h2>
 
 
 <p>
+
 Kapitel 02
+
 </p>
 
 
@@ -300,23 +376,27 @@ Kapitel 02
 
 
 
-
-<div class="story-book"
-onclick="openStory('secret')">
+<div class="story-book" onclick="openStory('secret')">
 
 
 <div class="book-icon">
+
 📖
+
 </div>
 
 
 <h2>
+
 The Secret
+
 </h2>
 
 
 <p>
+
 Kapitel 03
+
 </p>
 
 
@@ -331,6 +411,7 @@ Kapitel 03
 
 
 </div>
+
 
 
 </section>
@@ -343,48 +424,55 @@ Kapitel 03
 
 
 
-<!-- ======================
-EINZELNE STORY 1
-====================== -->
+<!-- STORY 1 -->
 
 
 <section id="beginning" class="page">
 
 
+
 <div class="story-detail">
 
 
+
 <button onclick="changePage('story')">
+
 ← Zurück
+
 </button>
 
 
 
 <h1>
+
 The Beginning
+
 </h1>
 
 
 <h2>
+
 Kapitel 01
+
 </h2>
 
 
 
 <p>
 
-Am Anfang stand eine unbekannte Welt.
+Am Anfang entstand eine neue Welt.
 
-Alte Geheimnisse erwachten und eine neue Ära begann.
+Unbekannte Kräfte erwachten und veränderten alles.
 
-Doch niemand wusste,
-welche Veränderungen bevorstanden.
+Dies ist der Beginn einer größeren Geschichte.
 
 </p>
 
 
 
+
 </div>
+
 
 
 </section>
@@ -397,30 +485,38 @@ welche Veränderungen bevorstanden.
 
 
 
-<!-- ======================
-EINZELNE STORY 2
-====================== -->
+<!-- STORY 2 -->
 
 
 <section id="lostworld" class="page">
 
 
+
 <div class="story-detail">
 
 
+
 <button onclick="changePage('story')">
+
 ← Zurück
+
 </button>
 
 
 
+
 <h1>
+
 Lost World
+
 </h1>
 
 
+
 <h2>
+
 Kapitel 02
+
 </h2>
 
 
@@ -429,14 +525,16 @@ Kapitel 02
 
 Eine vergessene Welt wird entdeckt.
 
-Mit ihr kommen Gefahren,
-die längst verschwunden schienen.
+Doch mit ihr kehren Geheimnisse zurück,
+die niemals gefunden werden sollten.
 
 </p>
 
 
 
+
 </div>
+
 
 
 </section>
@@ -449,47 +547,56 @@ die längst verschwunden schienen.
 
 
 
-<!-- ======================
-EINZELNE STORY 3
-====================== -->
+<!-- STORY 3 -->
 
 
 <section id="secret" class="page">
 
 
+
 <div class="story-detail">
 
 
+
 <button onclick="changePage('story')">
+
 ← Zurück
+
 </button>
 
 
 
+
 <h1>
+
 The Secret
+
 </h1>
 
 
+
 <h2>
+
 Kapitel 03
+
 </h2>
 
 
 
 <p>
 
-Eine Wahrheit kommt ans Licht,
-die alles verändert.
+Eine Wahrheit verändert alles.
 
-Die Vergangenheit ist nicht das,
-was sie zu sein scheint.
+Die Vergangenheit ist näher,
+als alle glauben.
 
 </p>
 
 
 
+
 </div>
+
 
 
 </section>
@@ -502,20 +609,23 @@ was sie zu sein scheint.
 
 
 
-<!-- ======================
-CHARACTERS
-====================== -->
+<!-- CHARACTERS -->
 
 
 <section id="characters" class="page">
 
 
+
 <div class="page-content">
 
 
+
 <h1>
-Characters
+
+CHARACTERS
+
 </h1>
+
 
 
 
@@ -525,19 +635,23 @@ Characters
 
 
 
-
-
 <div class="character-card">
 
 
 <h2>
+
 Character 01
+
 </h2>
 
 
 <p>
-Beschreibung des Charakters.
+
+Beschreibung,
+Hintergrund und Rolle.
+
 </p>
+
 
 
 </div>
@@ -552,15 +666,27 @@ Beschreibung des Charakters.
 
 
 <h2>
+
 Character 02
+
 </h2>
 
 
 <p>
-Beschreibung des Charakters.
+
+Beschreibung,
+Hintergrund und Rolle.
+
 </p>
 
 
+
+</div>
+
+
+
+
+
 </div>
 
 
@@ -569,9 +695,6 @@ Beschreibung des Charakters.
 
 </div>
 
-
-
-</div>
 
 
 </section>
@@ -584,58 +707,78 @@ Beschreibung des Charakters.
 
 
 
-<!-- ======================
-SOCIALS
-====================== -->
+<!-- SOCIALS -->
 
 
 <section id="socials" class="page">
 
 
+
 <div class="page-content">
 
 
+
 <h1>
-Socials
+
+SOCIALS
+
 </h1>
+
+
+
 
 
 
 <div class="social-container">
 
 
-<a href="https://youtube.com/"
-target="_blank">
+
+<a href="https://youtube.com/" target="_blank">
+
 YouTube
+
 </a>
 
 
 
-<a href="https://tiktok.com/"
-target="_blank">
+
+<a href="https://tiktok.com/" target="_blank">
+
 TikTok
+
 </a>
 
 
 
-<a href="https://discord.com/"
-target="_blank">
+
+
+<a href="https://discord.com/" target="_blank">
+
 Discord
+
 </a>
 
 
 
-<a href="https://instagram.com/"
-target="_blank">
+
+
+<a href="https://instagram.com/" target="_blank">
+
 Instagram
+
 </a>
 
 
 
-</div>
 
 
 </div>
+
+
+
+</div>
+
+
 
 
 </section>
@@ -648,20 +791,23 @@ Instagram
 
 
 
-<!-- ======================
-PARTNERS
-====================== -->
+<!-- PARTNERS -->
 
 
 <section id="partners" class="page">
 
 
+
 <div class="page-content">
 
 
+
 <h1>
-Partners
+
+PARTNERS
+
 </h1>
+
 
 
 
@@ -671,13 +817,17 @@ Partners
 
 
 <a href="#">
+
 Partner 01
+
 </a>
 
 
 
 <a href="#">
+
 Partner 02
+
 </a>
 
 
@@ -687,6 +837,7 @@ Partner 02
 
 
 </div>
+
 
 
 </section>
@@ -699,6 +850,7 @@ Partner 02
 
 
 </main>
+
 
 
 
