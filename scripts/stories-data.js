@@ -7,7 +7,7 @@ const stories = [
 
 
 {
-id:"treasur",
+id:"treasure",
 
 title:"The Legendary Treasur",
 
