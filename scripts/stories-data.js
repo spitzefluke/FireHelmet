@@ -23,11 +23,13 @@ Zur heutigen Zeit würde man ihn als Rentner und durchgeknallten zerbrechlichen 
 Seine Crew nennt ihn auch Fliezpiepenheimer. 
 
 Heute ist es am Hafen etwas sonderbar, da die Crew das erstemal ein wichtige und gut bezahlte Fracht verschiffen sollen. 
-Die Crew schrubbt das Deck und bereitet schon alles auf diese wichtige Ladung vor. 
-Nach kurzem warten trifft die Ladung endlich ein, doch irgendwas ist komisch für den Captain. 
+Die Crew schrubbt das Deck und bereitet schon alles auf die Ankunft der wichtigen Ladung vor. 
+Nach kurzer Zeit trifft die erwartete Ladung ein und die Crew macht sich bereit sie zu transportieren.
+Doch der Caiptain hat ein mulmiges Gefühl bei der Sache. 
 Die Ladung ist in eine massive Metallbox mit 5 Schlössern verstaut. "Was da wohl drin ist?" denken sich alle. 
-Die zwei Männer die die Fracht hergebracht haben, warnten die Crew deutlich die Box unter keinen Umständen aufzumachen, da dies der Tod aller auf dem Schiff bedeutet. 
+Die zwei Männer die die Fracht hergebracht haben, warnten die Crew deutlich die Box unter keinen Umständen aufzumachen, da dies den Tod aller Crew Mitglieder bedeuten würde. 
 Dem Captain ist dies nicht ganz so geheuer, jedoch braucht die Crew dringend das Geld was es für die Auslieferung gibt, weshalb er die Fracht aufladen lässt. 
+Die Crew ist arm geworden, da Ändi, ein spielsüchtiges Crewmitglied, die Schiffskasse verspielt hat.
 Die zwei Männer verschwieden schnell und hinterlassen nur einen leeren Hafen.
 
 
@@ -53,17 +55,28 @@ cover:"📖",
 
 text:`
 
-Das Schiff legt ab und die seltsame Fracht wurde in den Frachtraum geladen. Ihre Reise durch die weiten der Meere beginnt und führt die Crew durch verschiedene Herausforderungen.
-Einer der Crewmitglieder Finjan Backbeard, der jüngste und frechste von allen auf dem Schiff, ist ihr wichtigster Mann. Er ägert den Caiptain oft, jedoch ist er der beste Beobachter seines Gebietes. 
-Oben auf dem Auskuck hat er schon oft dafür gesorgt, dass die Crew nicht in ein Monster oder ein feindliches Schiff geraten sind. Auch heute ist er wieder auf seinem Sitz und hält ausschau. 
-Die Flagge die direkt gegenüber, etwas weiter unten, gehist ist, hat Finjan selbst entworfen. Darauf ist ein Mann mit Muskeln zusehen und im Hintergund ein Schiff, welches dem ähnelt mit dem sie auch unterwegs sind. 
+Beladen mit der seltsamen Fracht stich das Schiff in See und ein neues Abenteuer beginnt. 
+Auf ihrer Reise über die weiten Meere stellt sich die Crew vielen Herausforderungen. 
+Finjan Backbeard, das jüngste und frechste Mitglied der Crew ist trotz dieser überaus sonderbaren Eigenschaften ihr wichtigster Mann.
+Er ärgert den Caiptain der Mannschaft und treibt viel Schabernack, ist aber ein Meister der Beobachtung.
+Oben auf seinem Auskuck überblickt er das weite, schon oft führten seine präzisen Beobachtungen dazu, dass die Crew Gefahren aus dem Weg gehen konnte.
+Sein Blick schweift über das weite Meer und die Flagge des Schiffes weht im Wind, durch sie erkennt man Daves Mannschaft schon auf weite Entfernung.
+Auch dies ist Finjan zu verdanken, denn er hat sie entworfen. 
+Abgebildet sind ein muskulöser Mann hinter dem ein Schiff zu erkennen ist, das ihrem täuschend ähnlich sieht.
 
-Die Nacht bricht langsam ein und der erste Tag ihrer Reise neigt sich dem Ende, die meisten der Crew gehen in ihre Cojen und versuchen zu schlafen. Der Seegang ist noch verhältnismäßig zu vergangenen Abenteuern ruhig.
-Caiptain Dave gibt den Befehl für das Senken des Ankers und geht in sein Zimmer, wo er noch über Mögliche Gefahren nachdenkt. Doch seine Gedanken werden durch einen plötzlichen Wellengang gestört, er huscht durch die Tür aufs Deck und entdeckt in der Ferne zwei "Sauluppen". 
-Diese Tiere sind eine Mischung aus Walen und einem Schwein, sie sind um die 2 Meter groß und ungefährliche Tiere. Doch diese beiden "Sauluppen" sind in einen Kampf untereinander verwickelt, da es sich um zwei Weibchen handelt.
-Die Weibchen dieser Tiere sind sehr streitbereit und sind oft in Kämpfe mit anderen Weibchen verwickelt. Nur dieser Kampf ist anders findet der Caiptain. 
-Auch die anderen von der Crew sind wach geworden und beobachten den Kampf. Finjan drückt dem Caiptain seinen Ellenbogen in die Seite und gibt lachend ab "Ey Caiptain sind das nicht ihre Vorfahren?". 
-Der Caiptain lacht nur und tätschelt mit der Hand auf die Schultern von Finjan. "Pass bloß auf das ich dich nicht über Board schmeiße" erwiedert Dave. 
+Langsam neigt sich der erste Tag ihrer Reise dem Ende zu, die Crew legt sich in ihre Kojen und als auch die letzten Sonnenstrahlen verblassen begibt sich auch Dave in seine Kajüte.
+Die See ist ausnahmsweise einmal ruhig und Dave gibt den Befehl den Anker zu senken.
+Gedankenverloren sitzt er  auf seinem Sessel und denkt über ihre Reise und die merkwürdige Fracht nach die sie geladen haben. 
+Doch seine Gedanken werden abrupt durch eine Erschütterung gestört, irgendetwas muss gegen das Schiff gestoßen sein. 
+Er greift seinen eisernen Säbel der mit der mit goldenen Gravierungen verziert ist und tritt kampfbereit auf das Deck des Schiffes. 
+Der Rest der Crew hat sich dort schon versammelt und Dave drängelt sich durch die Menge stinkender Seeleute. 
+Als er am vorderen Ende angekommen ist, sieht er sie zwei Meeresbewohner, sogenannte "Sauluppen" kämpfen miteinander. 
+Diese Tiere sind eine merkwürdige Mischung aus Wal und Schwein, grundsätzlich sind sie friedlich aber es handelt sich hier anscheinend um zwei Weibchen. 
+Diese sind aggressiver als ihre Männlichen Artgenossen und verteidigen ihr Territorium sehr wehemend. 
+Allerdings ist irgendwas bei diesen Exzemplaren anders, aber was nur? 
+Die Zeit darüber nachzudenken bleibt Dave verwehrt da Finjan ihn in die Seite stuppst. 
+Grinsend fragt ihn dieser: "Hey Captain eine gewisse ähnlichkeit haben sie schon mit diesen Tieren, sind das entfernte Verwandte von ihnen?" lachend tätscheld Dave Finjans Schulter und erwidert: "Pass auf deine Zunge auf sonst kannst du gleich Bekanntschaft mit meinen angeblichen Verwandten machen!". 
+Die Crew schaut noch ein bisschen dem Treiben der Sauluppen zu und verzieht sich danach wieder in ihre Kojen.
 
 ...
 
