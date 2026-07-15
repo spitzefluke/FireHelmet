@@ -2115,9 +2115,8 @@ font-size:18px;
 }
 
 /* =====================================
-   3D STORY BOOKS
+   REALISTIC 3D BOOK
 ===================================== */
-
 
 
 .book-3d{
@@ -2126,17 +2125,21 @@ font-size:18px;
 position:relative;
 
 
-width:180px;
+width:190px;
+
+height:280px;
 
 
-height:270px;
+perspective:1200px;
 
 
 transform-style:preserve-3d;
 
 
+cursor:pointer;
 
-transition:.6s;
+
+transition:.8s;
 
 
 }
@@ -2145,32 +2148,48 @@ transition:.6s;
 
 
 
-.book-cover{
-
-
-width:180px;
-
-
-height:270px;
-
-
-object-fit:cover;
-
-
-border-radius:8px;
-
+.book-cover-wrapper{
 
 
 position:absolute;
 
 
-z-index:3;
+width:100%;
 
+height:100%;
+
+
+transform-style:preserve-3d;
+
+
+z-index:5;
+
+
+}
+
+
+
+
+.book-cover{
+
+
+width:100%;
+
+height:100%;
+
+
+object-fit:cover;
+
+
+border-radius:5px;
+
+
+position:absolute;
 
 
 box-shadow:
 
-15px 20px 40px rgba(0,0,0,.6);
+15px 20px 40px rgba(0,0,0,.8);
 
 
 
@@ -2185,23 +2204,112 @@ translateZ(20px);
 
 
 
+/* Lichtreflex */
+
+
+.book-shine{
+
+
+position:absolute;
+
+
+inset:0;
+
+
+background:
+
+linear-gradient(
+
+120deg,
+
+transparent 30%,
+
+rgba(255,255,255,.45),
+
+transparent 70%
+
+);
+
+
+
+opacity:0;
+
+
+transition:.5s;
+
+
+z-index:10;
+
+
+}
+
+
+
+
+
+.story-book:hover .book-shine{
+
+
+opacity:1;
+
+
+animation:
+
+shine 1.2s;
+
+
+}
+
+
+
+
+@keyframes shine{
+
+
+from{
+
+transform:
+
+translateX(-150%);
+
+}
+
+
+to{
+
+transform:
+
+translateX(150%);
+
+}
+
+
+}
+
+
+
+
+
+
+/* Buchrücken */
+
+
 .book-spine{
 
 
 position:absolute;
 
 
-left:-20px;
+left:-25px;
 
 
 top:0;
 
 
-width:25px;
+width:30px;
 
 
-height:270px;
-
+height:280px;
 
 
 background:
@@ -2214,7 +2322,61 @@ linear-gradient(
 
 #555,
 
-#111
+#222
+
+);
+
+
+
+border-radius:5px;
+
+
+transform:
+
+rotateY(90deg)
+
+translateZ(15px);
+
+
+}
+
+
+
+
+
+/* Seitenkanten */
+
+
+.book-pages{
+
+
+position:absolute;
+
+
+right:-12px;
+
+
+top:8px;
+
+
+width:20px;
+
+
+height:264px;
+
+
+
+background:
+
+repeating-linear-gradient(
+
+to bottom,
+
+#f7e7c6,
+
+#f7e7c6 3px,
+
+#d8c39b 4px
 
 );
 
@@ -2224,28 +2386,20 @@ transform:
 
 rotateY(90deg)
 
-translateZ(12px);
+translateZ(5px);
 
 
 
-border-radius:5px;
-
-
-}
-
-
-
-
-
-.story-book{
-
-
-perspective:1200px;
+border-radius:3px;
 
 
 }
 
 
+
+
+
+/* Hover 3D */
 
 
 .story-book:hover .book-3d{
@@ -2253,8 +2407,10 @@ perspective:1200px;
 
 transform:
 
-rotateY(-25deg)
+rotateY(-35deg)
+
 rotateX(8deg)
+
 translateY(-20px);
 
 
@@ -2263,12 +2419,17 @@ translateY(-20px);
 
 
 
-.story-book:hover .book-cover{
 
 
-box-shadow:
+/* Öffnen Animation */
 
-30px 40px 70px rgba(0,0,0,.8);
+
+.book-opening{
+
+
+animation:
+
+bookOpen 1.2s forwards;
 
 
 }
@@ -2276,10 +2437,42 @@ box-shadow:
 
 
 
-.story-book:hover{
+@keyframes bookOpen{
 
 
-cursor:pointer;
+0%{
+
+
+transform:
+
+rotateY(0);
+
+
+}
+
+
+
+50%{
+
+
+transform:
+
+rotateY(-90deg);
+
+
+}
+
+
+
+100%{
+
+
+transform:
+
+rotateY(-180deg);
+
+
+}
 
 
 }
