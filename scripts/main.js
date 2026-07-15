@@ -305,3 +305,45 @@ document.body.classList.add(
 
 
 });
+
+/* =====================================
+   BOOK OPEN SOUND + ANIMATION
+===================================== */
+
+
+function openBook(book){
+
+
+book.classList.add(
+"book-opening"
+);
+
+
+
+const sound =
+new Audio(
+"scripts/book-open.mp3"
+);
+
+
+
+sound.volume = 0.5;
+
+
+sound.play();
+
+
+
+setTimeout(()=>{
+
+
+openStory(
+book.getAttribute("data-story")
+);
+
+
+},1000);
+
+
+
+}
