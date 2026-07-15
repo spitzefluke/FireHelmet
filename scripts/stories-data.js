@@ -12,7 +12,7 @@ id:"treasure",
 title:"The Legendary Treasur",
 
 
-cover: "stories/Legendary.png",
+cover: "scripts/Legendary.png",
 
 
 text:`
@@ -50,7 +50,7 @@ id:"treasure2",
 title:"The Legendary Treasur",
 
 
-cover: "stories/Legendary.png",
+cover: "scripts/Legendary.png",
 
 
 text:`
