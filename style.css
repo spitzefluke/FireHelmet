@@ -2114,377 +2114,300 @@ font-size:18px;
 
 }
 
-/* =====================================
-   REALISTIC 3D BOOK COVER V2
-===================================== */
+/* ======================================================
+   STORY LIBRARY
+====================================================== */
 
+.story-library{
 
-.book-3d{
+    width:90%;
+    max-width:1400px;
+    margin:auto;
 
-position:relative;
-
-width:200px;
-
-height:300px;
-
-perspective:1500px;
-
-transform-style:preserve-3d;
-
-cursor:pointer;
-
-transition:.8s;
-
-margin:40px;
-
+    text-align:center;
 
 }
 
+.story-library h1{
 
-
-
-/* gesamtes Buch */
-
-.book-cover-wrapper{
-
-
-position:absolute;
-
-width:200px;
-
-height:300px;
-
-
-transform-style:preserve-3d;
-
-
-z-index:5;
-
+    font-size:72px;
+    letter-spacing:8px;
+    margin-bottom:15px;
 
 }
 
+.story-subtitle{
 
-
-
-
-/* Vorderseite */
-
-.book-cover{
-
-
-position:absolute;
-
-
-width:200px;
-
-height:300px;
-
-
-object-fit:cover;
-
-
-border-radius:4px;
-
-
-
-transform:
-
-translateZ(25px);
-
-
-
-box-shadow:
-
-25px 35px 50px rgba(0,0,0,.8);
-
+    font-size:20px;
+    color:#bdbdbd;
+    margin-bottom:60px;
 
 }
 
+.story-grid{
 
+    display:grid;
 
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
 
-
-/* Buchdicke hinter dem Cover */
-
-
-.book-cover-wrapper::after{
-
-
-content:"";
-
-
-position:absolute;
-
-
-width:200px;
-
-height:300px;
-
-
-
-background:
-
-linear-gradient(
-
-90deg,
-
-#222,
-
-#111
-
-);
-
-
-
-border-radius:4px;
-
-
-
-transform:
-
-translateZ(0);
-
-
+    gap:40px;
 
 }
 
+.story-card{
 
+    background:#171717;
 
+    border-radius:18px;
 
+    overflow:hidden;
 
+    cursor:pointer;
 
+    transition:.35s;
 
-/* Buchrücken */
-
-
-.book-spine{
-
-
-position:absolute;
-
-
-left:-28px;
-
-
-top:0;
-
-
-width:28px;
-
-
-height:300px;
-
-
-
-background:
-
-linear-gradient(
-
-90deg,
-
-#0b0b0b,
-
-#555,
-
-#111
-
-);
-
-
-
-transform:
-
-rotateY(90deg)
-
-translateZ(14px);
-
-
-
-border-radius:4px;
-
-
-box-shadow:
-
--10px 0 20px rgba(0,0,0,.6);
-
+    border:1px solid rgba(255,255,255,.08);
 
 }
 
+.story-card:hover{
 
+    transform:
+    translateY(-10px);
 
-
-
-
-
-/* Seiten */
-
-.book-pages{
-
-
-position:absolute;
-
-
-right:-18px;
-
-
-top:8px;
-
-
-width:25px;
-
-
-height:284px;
-
-
-
-background:
-
-repeating-linear-gradient(
-
-to bottom,
-
-#fff1c9 0px,
-
-#fff1c9 3px,
-
-#d8c08c 4px
-
-);
-
-
-
-transform:
-
-rotateY(90deg)
-
-translateZ(8px);
-
-
-
-box-shadow:
-
-5px 0 20px rgba(0,0,0,.5);
-
+    box-shadow:
+    0 20px 40px rgba(0,0,0,.45);
 
 }
 
+.story-card img{
 
+    width:100%;
 
+    height:320px;
 
+    object-fit:cover;
 
-/* Lichtreflex */
-
-
-.book-shine{
-
-
-position:absolute;
-
-
-inset:0;
-
-
-z-index:10;
-
-
-background:
-
-linear-gradient(
-
-120deg,
-
-transparent 35%,
-
-rgba(255,255,255,.55),
-
-transparent 65%
-
-);
-
-
-
-transform:
-
-translateX(-120%);
-
-
-
-pointer-events:none;
-
+    display:block;
 
 }
 
+.story-card h2{
 
+    margin:20px 15px 8px;
 
-
-
-.story-book:hover .book-shine{
-
-
-animation:
-
-coverShine 1s;
-
+    font-size:24px;
 
 }
 
+.story-card p{
 
+    color:#a9a9a9;
 
-
-@keyframes coverShine{
-
-
-to{
-
-
-transform:
-
-translateX(120%);
-
+    margin:0 15px 25px;
 
 }
 
+/* ======================================================
+   STORY DETAIL
+====================================================== */
+
+.story-detail-container{
+
+    width:90%;
+    max-width:1200px;
+
+    margin:auto;
 
 }
 
+.story-header{
 
+    display:flex;
 
+    gap:40px;
 
+    align-items:center;
 
-
-/* Hover Bewegung */
-
-
-.story-book:hover .book-3d{
-
-
-transform:
-
-rotateY(-35deg)
-
-rotateX(12deg)
-
-translateY(-25px);
-
-
+    margin-bottom:50px;
 
 }
 
+.detail-cover{
 
+    width:230px;
 
+    border-radius:15px;
 
+    box-shadow:
+    0 20px 45px rgba(0,0,0,.45);
 
-/* Boden Schatten */
+}
 
+#detail-title{
 
-.story-book:hover{
+    font-size:56px;
 
+    margin-bottom:15px;
 
-filter:
+}
 
-drop-shadow(
-40px 40px 40px rgba(0,0,0,.8)
-);
+#detail-description{
 
+    font-size:20px;
+
+    color:#b7b7b7;
+
+}
+
+.chapter-list{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
+}
+
+.chapter-card{
+
+    background:#1b1b1b;
+
+    border-radius:15px;
+
+    padding:25px 30px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+    border:1px solid rgba(255,255,255,.08);
+
+}
+
+.chapter-card:hover{
+
+    background:#232323;
+
+    transform:
+    translateX(10px);
+
+}
+
+.chapter-card h3{
+
+    font-size:28px;
+
+    margin-bottom:12px;
+
+}
+
+.language{
+
+    display:inline-block;
+
+    padding:8px 16px;
+
+    border-radius:999px;
+
+    background:#2d5eff;
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:bold;
+
+}
+
+.book{
+
+    width:90%;
+    max-width:1100px;
+
+    margin:auto;
+
+    background:#181818;
+
+    border-radius:20px;
+
+    padding:50px;
+
+    box-shadow:
+    0 20px 60px rgba(0,0,0,.45);
+
+}
+
+#book-title{
+
+    font-size:52px;
+
+    margin-bottom:10px;
+
+}
+
+#book-language{
+
+    color:#9ec4ff;
+
+    margin-bottom:40px;
+
+}
+
+.book-content{
+
+    font-size:22px;
+
+    line-height:2;
+
+    white-space:pre-wrap;
+
+}
+
+.back-button{
+
+    padding:12px 22px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    margin-bottom:30px;
+
+    font-size:16px;
+
+}
+
+@media (max-width:900px){
+
+.story-header{
+
+    flex-direction:column;
+
+    text-align:center;
+
+}
+
+.detail-cover{
+
+    width:180px;
+
+}
+
+.story-library h1{
+
+    font-size:48px;
+
+}
+
+#detail-title{
+
+    font-size:36px;
+
+}
 
 }
