@@ -7,12 +7,20 @@
 
 const codes = [
   {
-    code: "flitzpiepen",
+    code: "Welcome",
     message: "Willkommen an Bord, Crewmitglied! 🏴‍☠️ Du hast den ersten Geheimcode geknackt.",
   },
   {
-    code: "schatzkarte",
-    message: "Du hast einen Hinweis auf die Schatzkarte gefunden. Die Reise geht weiter ...",
+    code: "12035",
+    message: "Du bist ein kluger Mensch hier dein nächster Vorteil: 11490",
+  },
+  {
+    code: "20891",
+    message: "Ich bin zwar nicht groß doch bin immer zu sehen",
+  },
+  {
+    code: "KEY",
+    message: "PS: Schau auf Youtube",
   },
 ];
 
