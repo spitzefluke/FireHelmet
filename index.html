@@ -283,295 +283,127 @@ Sekunden
 
 
 
-
-
-
-
-
-
-
-
-
-
-<!-- =====================
+<!-- ======================================================
 STORY ARCHIV
-===================== -->
-
+====================================================== -->
 
 <section id="story" class="page">
 
+    <div class="story-library">
 
-<div class="story-library">
+        <h1>STORIES</h1>
 
+        <p class="story-subtitle">
+            Wähle ein Logbuch aus dem Archiv
+        </p>
 
+        <!-- Wird automatisch gefüllt -->
+        <div id="story-grid" class="story-grid">
 
-<h1>
+        </div>
 
-STORIES
-
-</h1>
-
-
-
-
-<p class="story-subtitle">
-
-Wähle ein Logbuch aus dem Archiv
-
-</p>
-
-
-
-
-
-
-
-<div class="story-books">
-
-
-
-
-
-
-
-<div class="story-book"
-onclick="openStory('treasure')">
-
-<div class="book-3d"
-onclick="openBook(this)">
-
-
-<div class="book-cover-wrapper">
-
-
-<img 
-class="book-cover"
-src="scripts/Legendary.png"
-alt="The Legendary Treasure">
-
-
-<div class="book-shine"></div>
-
-
-</div>
-
-
-
-
-<div class="book-pages"></div>
-
-
-<div class="book-spine"></div>
-
-
-
-</div>
-
-
-
-
-
-<h2>
-
-The Legendary Treasure
-
-</h2>
-
-
-
-<p>
-
-Teil 01
-
-</p>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div class="story-book"
-onclick="openStory('treasure2')">
-
-
-<div class="book-3d"
-onclick="openBook(this)">
-
-
-<div class="book-cover-wrapper">
-
-
-<img 
-class="book-cover"
-src="scripts/Legendary.png"
-alt="The Legendary Treasure">
-
-
-<div class="book-shine"></div>
-
-
-</div>
-
-
-
-
-<div class="book-pages"></div>
-
-
-<div class="book-spine"></div>
-
-
-
-</div>
-
-
-
-<h2>
-
-The Legendary Treasure
-
-</h2>
-
-
-
-<p>
-
-Teil 02
-
-</p>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div class="story-book"
-onclick="openStory('secret')">
-
-
-<div class="book-icon">
-
-📖
-
-</div>
-
-
-<h2>
-
-The Secret
-
-</h2>
-
-
-<p>
-
-Logbuch 03
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-
-</div>
-
-
-</div>
-
-
+    </div>
 
 </section>
 
 
 
+<!-- ======================================================
+STORY DETAILS
+====================================================== -->
+
+<section id="story-detail" class="page">
+
+    <div class="story-detail-container">
+
+        <button class="back-button"
+                onclick="changePage('story')">
+
+            ← Zurück
+
+        </button>
+
+        <div class="story-header">
+
+            <img
+            id="detail-cover"
+            class="detail-cover">
+
+            <div>
+
+                <h1 id="detail-title">
+
+                </h1>
+
+                <p id="detail-description">
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <h2>
+
+            Kapitel
+
+        </h2>
+
+        <!-- Kapitel werden automatisch erzeugt -->
+
+        <div id="chapter-list"
+             class="chapter-list">
+
+        </div>
+
+    </div>
+
+</section>
 
 
 
-
-
-
-
-
-
-
-<!-- =====================
-BUCH LESER
-===================== -->
-
+<!-- ======================================================
+BOOK READER
+====================================================== -->
 
 <section id="book-reader" class="page">
 
+    <div class="book">
 
+        <button
+        class="back-button"
+        onclick="changePage('story-detail')">
 
-<div class="book">
+            ← Zurück
 
+        </button>
 
+        <h1 id="book-title">
 
+        </h1>
 
+        <h3 id="book-language">
 
-<h1 id="book-title">
+        </h3>
 
-</h1>
+        <div class="book-content">
 
+            <p id="book-text">
 
+            </p>
 
+        </div>
 
-
-
-
-<div class="book-content">
-
-
-
-<p id="book-text">
-
-</p>
-
-
-
-</div>
-
-
-
-
-
-
-
-<button onclick="changePage('story')">
-
-← Zurück zu den Stories
-
-</button>
-
-
-
-
-
-</div>
-
-
+    </div>
 
 </section>
+
+
+
+
+
+
 
 
 
