@@ -395,36 +395,3 @@ Chapter 12 content.
 
 
 ];
-
-
-
-
-{
-id:"secret",
-
-title:"The Secret",
-
-
-cover:"📖",
-
-
-text:`
-
-Eine Wahrheit kommt ans Licht.
-
-Eine Wahrheit,
-die alles verändert.
-
-
-Die Vergangenheit war nicht so,
-wie alle geglaubt hatten.
-
-
-`
-
-
-}
-
-
-
-];
