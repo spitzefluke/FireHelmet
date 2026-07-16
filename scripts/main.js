@@ -1,87 +1,24 @@
-/* =====================================================
-   MAIN SYSTEM
-===================================================== */
+/* ======================================================
+   MAIN WEBSITE SYSTEM
+====================================================== */
 
 
 
-
-
-const sidebar =
-document.getElementById("sidebar");
-
-
-
-const transition =
-document.getElementById("transition");
-
-
-
-
-
-
-
-/* ==========================
-   MENU
-========================== */
-
-
-
-function openMenu(){
-
-
-sidebar.classList.add(
-"active"
-);
-
-
-}
-
-
-
-
-
-function closeMenu(){
-
-
-sidebar.classList.remove(
-"active"
-);
-
-
-}
-
-
-
-
-
-
-
-
-
-/* ==========================
-   PAGE SYSTEM
-========================== */
-
+/* ======================================================
+   SEITENWECHSEL
+====================================================== */
 
 
 function changePage(pageID){
 
 
 
-transition.classList.add(
-"active"
-);
+const pages =
+document.querySelectorAll(".page");
 
 
 
-
-setTimeout(()=>{
-
-
-
-document
-.querySelectorAll(".page")
-.forEach(page=>{
+pages.forEach(page=>{
 
 
 page.classList.remove(
@@ -95,15 +32,15 @@ page.classList.remove(
 
 
 
-const page =
+const target =
 document.getElementById(pageID);
 
 
 
-if(page){
+if(target){
 
 
-page.classList.add(
+target.classList.add(
 "active-page"
 );
 
@@ -112,22 +49,10 @@ page.classList.add(
 
 
 
-
-
-transition.classList.remove(
-"active"
-);
-
-
-
 closeMenu();
 
 
 
-},500);
-
-
-
 }
 
 
@@ -138,136 +63,43 @@ closeMenu();
 
 
 
-/* ==========================
-   MOUSE PARALLAX
-========================== */
+/* ======================================================
+   MENÜ SYSTEM
+====================================================== */
 
 
-
-const nebula =
-document.querySelector(".nebula");
+function openMenu(){
 
 
+document
+.getElementById("sidebar")
+.classList.add(
+"open"
+);
 
-
-document.addEventListener(
-"mousemove",
-(e)=>{
-
-
-
-if(!nebula){
-
-return;
 
 }
 
 
 
-const x =
-(e.clientX /
-window.innerWidth -
-0.5)
-*20;
 
 
-
-const y =
-(e.clientY /
-window.innerHeight -
-0.5)
-*20;
+function closeMenu(){
 
 
-
-
-nebula.style.transform =
-
-`
-translate(
-calc(-50% + ${x}px),
-calc(-50% + ${y}px)
-)
-`;
-
-
-
-});
-
-
-
-
-
-
-
-
-
-/* ==========================
-   PARTICLES
-========================== */
-
-
-
-function createParticles(){
-
-
-
-const container =
-document.createElement(
-"div"
+const menu =
+document.getElementById(
+"sidebar"
 );
 
 
 
-container.className =
-"particles";
+if(menu){
 
 
-
-document.body.appendChild(
-container
+menu.classList.remove(
+"open"
 );
-
-
-
-
-for(let i=0;i<80;i++){
-
-
-
-const particle =
-document.createElement(
-"span"
-);
-
-
-
-particle.className =
-"particle";
-
-
-
-particle.style.left =
-Math.random()*100+"vw";
-
-
-
-particle.style.top =
-Math.random()*100+"vh";
-
-
-
-particle.style.animationDuration =
-(5+
-Math.random()*10)
-+"s";
-
-
-
-container.appendChild(
-particle
-);
-
 
 
 }
@@ -277,73 +109,28 @@ particle
 
 
 
-createParticles();
 
 
 
 
 
 
-
-
-
-/* ==========================
-   LOAD EFFECT
-========================== */
-
+/* ======================================================
+   START
+====================================================== */
 
 
 window.addEventListener(
-"load",
+
+"DOMContentLoaded",
+
 ()=>{
 
 
-document.body.classList.add(
-"loaded"
+changePage(
+"home"
 );
 
 
 
 });
-
-/* =====================================
-   BOOK OPEN SOUND + ANIMATION
-===================================== */
-
-
-function openBook(book){
-
-
-book.classList.add(
-"book-opening"
-);
-
-
-
-const sound =
-new Audio(
-"scripts/book-open.mp3"
-);
-
-
-
-sound.volume = 0.5;
-
-
-sound.play();
-
-
-
-setTimeout(()=>{
-
-
-openStory(
-book.getAttribute("data-story")
-);
-
-
-},1000);
-
-
-
-}
