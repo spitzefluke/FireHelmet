@@ -2,90 +2,399 @@
    STORY DATENBANK
 ====================================== */
 
-
 const stories = [
 
-
 {
-id:"treasure",
+    id: "treasure",
 
-title:"The Legendary Treasur",
+    title: "The Legendary Treasure",
 
+    cover: "scripts/Legendary.png",
 
-cover: "scripts/Legendary.png",
-
-
-text:`
-
-1540 an einem Hafen in einem kleinen Dorf namens Romna, liegt ein stark rot bemaltes Schiff. 
-Es hat schwarze Verzierungen und gehört dem Caiptain Schifffahrer Dave. 
-Zur heutigen Zeit würde man ihn als Rentner und durchgeknallten zerbrechlichen Mann beschreiben, doch zu dieser Zeit ist er ein ehrenvoller, abenteuerlustiger und erfahrener Schifffahrer.
-Seine Crew nennt ihn auch Fliezpiepenheimer. 
-
-Heute ist es am Hafen etwas sonderbar, da die Crew das erstemal ein wichtige und gut bezahlte Fracht verschiffen sollen. 
-Die Crew schrubbt das Deck und bereitet schon alles auf die Ankunft der wichtigen Ladung vor. 
-Nach kurzer Zeit trifft die erwartete Ladung ein und die Crew macht sich bereit sie zu transportieren.
-Doch der Caiptain hat ein mulmiges Gefühl bei der Sache. 
-Die Ladung ist in eine massive Metallbox mit 5 Schlössern verstaut. "Was da wohl drin ist?" denken sich alle. 
-Die zwei Männer die die Fracht hergebracht haben, warnten die Crew deutlich die Box unter keinen Umständen aufzumachen, da dies den Tod aller Crew Mitglieder bedeuten würde. 
-Dem Captain ist dies nicht ganz so geheuer, jedoch braucht die Crew dringend das Geld was es für die Auslieferung gibt, weshalb er die Fracht aufladen lässt. 
-Die Crew ist arm geworden, da Ändi, ein spielsüchtiges Crewmitglied, die Schiffskasse verspielt hat.
-Die zwei Männer verschwieden schnell und hinterlassen nur einen leeren Hafen.
+    description:
+    "Eine mysteriöse Reise auf der Suche nach einem legendären Schatz. Ein Abenteuer voller Geheimnisse, Gefahren und vergessener Geschichten.",
 
 
+    chapters: [
 
+        {
+            id:"treasure-de-01",
+
+            title:"Kapitel 1",
+
+            language:"Deutsch",
+
+            text:`
+
+Hier beginnt deine Geschichte.
+
+Schreibe hier deinen deutschen Kapiteltext hinein.
+
+Dieser Bereich kann beliebig lang werden.
 
 `
+        },
 
 
-},
+        {
+            id:"treasure-de-02",
 
+            title:"Kapitel 2",
 
+            language:"Deutsch",
 
+            text:`
 
+Kapitel 2 Inhalt.
 
-{
-id:"treasure2",
-
-title:"The Legendary Treasur",
-
-
-cover: "scripts/Legendary.png",
-
-
-text:`
-
-Beladen mit der seltsamen Fracht stich das Schiff in See und ein neues Abenteuer beginnt. 
-Auf ihrer Reise über die weiten Meere stellt sich die Crew vielen Herausforderungen. 
-Finjan Backbeard, das jüngste und frechste Mitglied der Crew ist trotz dieser überaus sonderbaren Eigenschaften ihr wichtigster Mann.
-Er ärgert den Caiptain der Mannschaft und treibt viel Schabernack, ist aber ein Meister der Beobachtung.
-Oben auf seinem Auskuck überblickt er das weite, schon oft führten seine präzisen Beobachtungen dazu, dass die Crew Gefahren aus dem Weg gehen konnte.
-Sein Blick schweift über das weite Meer und die Flagge des Schiffes weht im Wind, durch sie erkennt man Daves Mannschaft schon auf weite Entfernung.
-Auch dies ist Finjan zu verdanken, denn er hat sie entworfen. 
-Abgebildet sind ein muskulöser Mann hinter dem ein Schiff zu erkennen ist, das ihrem täuschend ähnlich sieht.
-
-Langsam neigt sich der erste Tag ihrer Reise dem Ende zu, die Crew legt sich in ihre Kojen und als auch die letzten Sonnenstrahlen verblassen begibt sich auch Dave in seine Kajüte.
-Die See ist ausnahmsweise einmal ruhig und Dave gibt den Befehl den Anker zu senken.
-Gedankenverloren sitzt er  auf seinem Sessel und denkt über ihre Reise und die merkwürdige Fracht nach die sie geladen haben. 
-Doch seine Gedanken werden abrupt durch eine Erschütterung gestört, irgendetwas muss gegen das Schiff gestoßen sein. 
-Er greift seinen eisernen Säbel der mit der mit goldenen Gravierungen verziert ist und tritt kampfbereit auf das Deck des Schiffes. 
-Der Rest der Crew hat sich dort schon versammelt und Dave drängelt sich durch die Menge stinkender Seeleute. 
-Als er am vorderen Ende angekommen ist, sieht er sie zwei Meeresbewohner, sogenannte "Sauluppen" kämpfen miteinander. 
-Diese Tiere sind eine merkwürdige Mischung aus Wal und Schwein, grundsätzlich sind sie friedlich aber es handelt sich hier anscheinend um zwei Weibchen. 
-Diese sind aggressiver als ihre Männlichen Artgenossen und verteidigen ihr Territorium sehr wehemend. 
-Allerdings ist irgendwas bei diesen Exzemplaren anders, aber was nur? 
-Die Zeit darüber nachzudenken bleibt Dave verwehrt da Finjan ihn in die Seite stuppst. 
-Grinsend fragt ihn dieser: "Hey Captain eine gewisse ähnlichkeit haben sie schon mit diesen Tieren, sind das entfernte Verwandte von ihnen?" lachend tätscheld Dave Finjans Schulter und erwidert: "Pass auf deine Zunge auf sonst kannst du gleich Bekanntschaft mit meinen angeblichen Verwandten machen!". 
-Die Crew schaut noch ein bisschen dem Treiben der Sauluppen zu und verzieht sich danach wieder in ihre Kojen.
-
-...
-
+Deine Geschichte geht hier weiter.
 
 `
+        },
 
 
-},
+        {
+            id:"treasure-de-03",
 
+            title:"Kapitel 3",
+
+            language:"Deutsch",
+
+            text:`
+
+Kapitel 3 Inhalt.
+
+`
+        },
+
+
+        {
+            id:"treasure-de-04",
+
+            title:"Kapitel 4",
+
+            language:"Deutsch",
+
+            text:`
+
+Kapitel 4 Inhalt.
+
+`
+        },
+
+
+        {
+            id:"treasure-de-05",
+
+            title:"Kapitel 5",
+
+            language:"Deutsch",
+
+            text:`
+
+Kapitel 5 Inhalt.
+
+`
+        },
+
+
+        {
+            id:"treasure-de-06",
+
+            title:"Kapitel 6",
+
+            language:"Deutsch",
+
+            text:`
+
+Kapitel 6 Inhalt.
+
+`
+        },
+
+
+        {
+            id:"treasure-de-07",
+
+            title:"Kapitel 7",
+
+            language:"Deutsch",
+
+            text:`
+
+Kapitel 7 Inhalt.
+
+`
+        },
+
+
+        {
+            id:"treasure-de-08",
+
+            title:"Kapitel 8",
+
+            language:"Deutsch",
+
+            text:`
+
+Kapitel 8 Inhalt.
+
+`
+        },
+
+
+        {
+            id:"treasure-de-09",
+
+            title:"Kapitel 9",
+
+            language:"Deutsch",
+
+            text:`
+
+Kapitel 9 Inhalt.
+
+`
+        },
+
+
+        {
+            id:"treasure-de-10",
+
+            title:"Kapitel 10",
+
+            language:"Deutsch",
+
+            text:`
+
+Kapitel 10 Inhalt.
+
+`
+        },
+
+
+        {
+            id:"treasure-de-11",
+
+            title:"Kapitel 11",
+
+            language:"Deutsch",
+
+            text:`
+
+Kapitel 11 Inhalt.
+
+`
+        },
+
+
+        {
+            id:"treasure-de-12",
+
+            title:"Kapitel 12",
+
+            language:"Deutsch",
+
+            text:`
+
+Kapitel 12 Inhalt.
+
+`
+        },
+
+
+
+
+
+
+        {
+            id:"treasure-en-01",
+
+            title:"Chapter 1",
+
+            language:"English",
+
+            text:`
+
+Your English story begins here.
+
+Write your chapter text here.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-02",
+
+            title:"Chapter 2",
+
+            language:"English",
+
+            text:`
+
+Chapter 2 content.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-03",
+
+            title:"Chapter 3",
+
+            language:"English",
+
+            text:`
+
+Chapter 3 content.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-04",
+
+            title:"Chapter 4",
+
+            language:"English",
+
+            text:`
+
+Chapter 4 content.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-05",
+
+            title:"Chapter 5",
+
+            language:"English",
+
+            text:`
+
+Chapter 5 content.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-06",
+
+            title:"Chapter 6",
+
+            language:"English",
+
+            text:`
+
+Chapter 6 content.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-07",
+
+            title:"Chapter 7",
+
+            language:"English",
+
+            text:`
+
+Chapter 7 content.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-08",
+
+            title:"Chapter 8",
+
+            language:"English",
+
+            text:`
+
+Chapter 8 content.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-09",
+
+            title:"Chapter 9",
+
+            language:"English",
+
+            text:`
+
+Chapter 9 content.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-10",
+
+            title:"Chapter 10",
+
+            language:"English",
+
+            text:`
+
+Chapter 10 content.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-11",
+
+            title:"Chapter 11",
+
+            language:"English",
+
+            text:`
+
+Chapter 11 content.
+
+`
+        },
+
+
+        {
+            id:"treasure-en-12",
+
+            title:"Chapter 12",
+
+            language:"English",
+
+            text:`
+
+Chapter 12 content.
+
+`
+        }
+
+
+    ]
+
+}
+
+
+];
 
 
 
