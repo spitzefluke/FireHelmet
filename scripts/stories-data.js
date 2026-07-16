@@ -13,32 +13,85 @@ const stories = [
     chapters: [
       {
         id: "treasure-de-01",
-        title: "Kapitel 1",
+        title: "Kapitel 1 - Die seltsame Fracht",
         language: "Deutsch",
         text: `
-Hier beginnt deine Geschichte.
+1540 an einem Hafen in einem kleinen Dorf namens Romna, liegt ein stark rot bemaltes Schiff. 
+Es hat schwarze Verzierungen und gehört dem Caiptain Schifffahrer Dave. 
+Zur heutigen Zeit würde man ihn als Rentner und durchgeknallten zerbrechlichen Mann beschreiben, doch zu dieser Zeit ist er ein ehrenvoller, abenteuerlustiger und erfahrener Schifffahrer.
+Seine Crew nennt ihn auch Fliezpiepenheimer. 
 
-Schreibe hier deinen deutschen Kapiteltext hinein.
+Heute ist es am Hafen etwas sonderbar, da die Crew das erstemal ein wichtige und gut bezahlte Fracht verschiffen sollen. 
+Die Crew schrubbt das Deck und bereitet schon alles auf die Ankunft der wichtigen Ladung vor. 
+Nach kurzer Zeit trifft die erwartete Ladung ein und die Crew macht sich bereit sie zu transportieren.
+Doch der Caiptain hat ein mulmiges Gefühl bei der Sache. 
+Die Ladung ist in eine massive Metallbox mit 5 Schlössern verstaut. "Was da wohl drin ist?" denken sich alle. 
+Die zwei Männer die die Fracht hergebracht haben, warnten die Crew deutlich die Box unter keinen Umständen aufzumachen, da dies den Tod aller Crew Mitglieder bedeuten würde. 
+Dem Captain ist dies nicht ganz so geheuer, jedoch braucht die Crew dringend das Geld was es für die Auslieferung gibt, weshalb er die Fracht aufladen lässt. 
+Die Crew ist arm geworden, da Ändi, ein spielsüchtiges Crewmitglied, die Schiffskasse verspielt hat.
+Die zwei Männer verschwieden schnell und hinterlassen nur einen leeren Hafen.
 
-Dieser Bereich kann beliebig lang werden.
 `,
       },
       {
         id: "treasure-de-02",
-        title: "Kapitel 2",
+        title: "Kapitel 2 - Ein neues Abenteuer",
         language: "Deutsch",
         text: `
 Kapitel 2 Inhalt.
 
-Deine Geschichte geht hier weiter.
+Beladen mit der seltsamen Fracht stich das Schiff in See und ein neues Abenteuer beginnt. 
+Auf ihrer Reise über die weiten Meere stellt sich die Crew vielen Herausforderungen. 
+Finjan Backbeard, das jüngste und frechste Mitglied der Crew ist trotz dieser überaus sonderbaren Eigenschaften ihr wichtigster Mann.
+Er ärgert den Caiptain der Mannschaft und treibt viel Schabernack, ist aber ein Meister der Beobachtung.
+Oben auf seinem Auskuck überblickt er das weite, schon oft führten seine präzisen Beobachtungen dazu, dass die Crew Gefahren aus dem Weg gehen konnte.
+Sein Blick schweift über das weite Meer und die Flagge des Schiffes weht im Wind, durch sie erkennt man Daves Mannschaft schon auf weite Entfernung.
+Auch dies ist Finjan zu verdanken, denn er hat sie entworfen. 
+Abgebildet sind ein muskulöser Mann hinter dem ein Schiff zu erkennen ist, das ihrem täuschend ähnlich sieht.
+
+Langsam neigt sich der erste Tag ihrer Reise dem Ende zu, die Crew legt sich in ihre Kojen und als auch die letzten Sonnenstrahlen verblassen begibt sich auch Dave in seine Kajüte.
+Die See ist ausnahmsweise einmal ruhig und Dave gibt den Befehl den Anker zu senken.
+Gedankenverloren sitzt er  auf seinem Sessel und denkt über ihre Reise und die merkwürdige Fracht nach die sie geladen haben. 
+Doch seine Gedanken werden abrupt durch eine Erschütterung gestört, irgendetwas muss gegen das Schiff gestoßen sein. 
+Er greift seinen eisernen Säbel der mit der mit goldenen Gravierungen verziert ist und tritt kampfbereit auf das Deck des Schiffes. 
+Der Rest der Crew hat sich dort schon versammelt und Dave drängelt sich durch die Menge stinkender Seeleute. 
+Als er am vorderen Ende angekommen ist, sieht er sie zwei Meeresbewohner, sogenannte "Sauluppen" kämpfen miteinander. 
+Diese Tiere sind eine merkwürdige Mischung aus Wal und Schwein, grundsätzlich sind sie friedlich aber es handelt sich hier anscheinend um zwei Weibchen. 
+Diese sind aggressiver als ihre Männlichen Artgenossen und verteidigen ihr Territorium sehr wehemend. 
+Allerdings ist irgendwas bei diesen Exzemplaren anders, aber was nur? 
+Die Zeit darüber nachzudenken bleibt Dave verwehrt da Finjan ihn in die Seite stuppst. 
+Grinsend fragt ihn dieser: "Hey Captain eine gewisse ähnlichkeit haben sie schon mit diesen Tieren, sind das entfernte Verwandte von ihnen?" lachend tätscheld Dave Finjans Schulter und erwidert: "Pass auf deine Zunge auf sonst kannst du gleich Bekanntschaft mit meinen angeblichen Verwandten machen!". 
+Die Crew schaut noch ein bisschen dem Treiben der Sauluppen zu und verzieht sich danach wieder in ihre Kojen.
+
 `,
       },
       {
         id: "treasure-de-03",
-        title: "Kapitel 3",
+        title: "Kapitel 3 - Ein ungewissener Weg",
         language: "Deutsch",
         text: `
-Kapitel 3 Inhalt.
+
+Als Dave am nächsten Morgen aufwacht scheint alles in Ordnung zu sein, das Schiff schaukelt ruhig in den Wellen und und die ersten Sonnestrahlen scheinen durch die Fenster seiner Kajüte. 
+Als Dave allerdings aus seiner Kajüte auf das Deck geht kommt ihm direkt sein Steuermann Dean Silentmouth entgegen. 
+Dean ist schon seit vielen Jahren Steuermann ihres Schiffes und einer von Daves engsten vertrauten, es gibt wenige die sich auf den Ozeanen der Welt sogut auskennen wie er. 
+Obwohl er nicht viel redet vertraut Dave ihm voll und ganz. 
+Dean zeigt mit seinem Finger aufgeregt zum Rand des Schiffes, er wirkt schon fast verängstigt. 
+Dies beunruhigt Dave aber er nimmt sich zusammen und schreitet langsam zum Rand des Deckes. 
+Als er dort ankommt verschlägt es ihm schon fast die Sprache, das Wasser hat sich in eine Rote fütze verwandelt, und in dieser schwimmen die Überreste von einem der Sauluppen. 
+Dave ist erschüttert in seinen langen Jahren als Seefahrer hat er noch nie gesehen das sich diese Tiere gegenseitig abmurksen und auch die Wunden am Kadaver des Tieres stimmen nicht mit denen überein die ein Sauluppen einem anderen zufügen kann. 
+Allerdings hat Dave keine Zeit sich darüber weiter Gedanken zu machen, er gibt den Befehl den Anker einzuziehen und die Segel zu hisen. 
+Ihre Reise geht weiter. 
+Gegen Mittag meldet sich Finjan aus dem Ausguck: "Hey Captain dahinten zieht ein echt mieses Unwetter auf... fast so mies wie ihre Laune manchmal.". 
+Dave in Gedanken versunken greift zum Fernglas um sich das einmal näher anzugucken: "Da müssen wir durch." Sagt er: "Zieht das Großsegel ein und vertaut alles was nicht niet und nagelfest ist!". 
+Finjan schaut ihn mit großen Augen an: "Na gut Captain wir sehen uns auf der anderen Seite... oder vielleicht auch nicht."
+Der Sturm tobt, Wasser spritzt an den Seiten des Deckes hoch und die Mannschaft taumelt benommen über das Deck. 
+Der Himmel ist von pechschwarzen Wolken überzogen die im Minutentakt von Blitzen durchbrochen werden. 
+Und zu allem Übel zieht nun auch noch Nebel auf, die Mannschaft verliert fast komplett die Orientierung, sie können nur erahnen wo sie langfahren, zum Glück haben sie einen Kompass der ihnen den Weg zeigt... aber wo ist der Kompass? 
+Gerade lag er noch neben Dave und Dean auf einem Pult doch nun ist er weg. 
+Dave prescht wie ein wilder Hengst übers Deck und sucht verzweifelt nach dem Kompass. 
+Es dauert zwar eine Zeit aber er findet ihn... oder zu mindest das was von ihm übrig ist, irgendwer muss in der Unruhe des Sturms auf den Kompass getreten sein, dieser liegt zerschmettert in seine Einzelteile am Boden. 
+"Wie sollen wir jetzt bloß weiterkommen?",denkt sich Dave. 
+
 `,
       },
       {
@@ -116,28 +169,83 @@ Kapitel 12 Inhalt.
 
       {
         id: "treasure-en-01",
-        title: "Chapter 1",
+        title: "Chapter 1 - The strange freight",
         language: "English",
         text: `
-Your English story begins here.
 
-Write your chapter text here.
+1540 at a port in a small village called Romna, lies a strongly red painted ship.
+It has black ornaments and belongs to the Caiptain boater Dave.
+In this day and age, he would be described as a pensioner and a crazy fragile man, but at that time he is an honorable, adventurous and experienced boatman.
+His crew also calls him Fliezpiepenheimer.
+Today it is a bit strange at the port, as the crew is to ship an important and well-paid cargo for the first time.
+The crew scrubs the deck and prepares everything for the arrival of the important load.
+After a short time, the expected load arrives and the crew prepares to transport it.
+But the Caiptain has a queasy feeling about the matter.
+The load is stowed in a massive metal box with 5 locks. "What's in there?" Everyone thinks.
+The two men who brought the cargo here clearly warned the crew not to open the box under any circumstances, as this would mean the death of all crew members.
+The captain is not so interested in this, but the crew urgently needs the money that is available for the delivery, which is why he has the cargo charged.
+The crew has become poor because Ändi, a game-addicted crew member, gambled away the ship's coffers.
+The two men quickly disappeared and left behind only an empty port.
+
 `,
       },
       {
         id: "treasure-en-02",
-        title: "Chapter 2",
+        title: "Chapter 2 - A new adventure",
         language: "English",
         text: `
-Chapter 2 content.
+
+Loaded with the strange cargo, the ship sets sail and a new adventure begins.
+On their journey across the vast seas, the crew faces many challenges.
+Finjan Backbeard, the youngest and cheekiest member of the crew, is their most important man despite these extremely strange qualities.
+He annoys the captain of the team and does a lot of mischief, but is a master of observation.
+On top of his look out, he overlooks the distance, his precise observations often led to the fact that the crew could avoid dangers.
+His gaze wanders over the wide sea and the flag of the ship flies in the wind, through it you can recognize Dave's crew from a distance.
+This is also thanks to Finjan, because he designed them.
+Pictured are a muscular man behind which there is a ship that looks deceptively similar to hers.
+Slowly the first day of their journey comes to an end, the crew lies down in their bunks and as the last rays of the sun fade, Dave also goes into his cabin.
+For once, the sea is calm and Dave gives the order to lower the anchor.
+Lost in thought, he sits in his armchair and thinks about their journey and the strange cargo they have loaded.
+But his thoughts are abruptly disturbed by a shock, something must have bumped into the ship.
+He grabs his iron saber decorated with gold engravings and steps on the deck of the ship ready for battle.
+The rest of the crew has already gathered there and Dave is pushing through the crowd of stinking sailors.
+When he arrives at the front end, he sees two sea creatures, so-called "saules" fighting with each other.
+These animals are a strange mixture of whale and pig, basically they are peaceful but these are apparently two females.
+These are more aggressive than their male conspecifics and defend their territory very weepingly.
+However, something is different with these exemplars, but what?
+The time to think about it is denied to Dave because Finjan pokes him in the side.
+Grinning, he asks him: "Hey Captain, do you already have a certain resemblance to these animals, are they distant relatives of theirs?" Laughing, Dave Finjan's shoulder and replies: "Watch your tongue or you can get to know my alleged relatives right away!".
+The crew watches the hustle and bustle of the Sauluppen and then gets back into their bunks.
+
 `,
       },
       {
         id: "treasure-en-03",
-        title: "Chapter 3",
+        title: "Chapter 3 - An uncertain way",
         language: "English",
         text: `
-Chapter 3 content.
+
+When Dave wakes up the next morning, everything seems to be fine, the ship rocks quietly in the waves and the first rays of sun shine through the windows of his cabin.
+However, when Dave goes out of his cabin onto the deck, his helmsman Dean Silentmouth comes directly to meet him.
+Dean has been the helmsman of her ship for many years and one of Dave's closest confidants, there are few who know the world's oceans as well as he does.
+Although he doesn't talk much, Dave trusts him completely.
+Dean points his finger excitedly at the edge of the ship, he seems almost scared.
+This worries Dave but he picks himself up and slowly walks to the edge of the ceiling.
+When he arrives there, he is almost speechless, the water has turned into a red fütze, and in it float the remains of one of the saups.
+Dave is shaken in his long years as a sailor, he has never seen these animals kill each other and also the wounds on the animal's carcass do not match those that one sale can inflict on another.
+However, Dave doesn't have time to think about it anymore, he gives the order to draw the anchor and hoist the sails.
+Your journey continues.
+Around noon, Finjan reports from the lookout: "Hey Captain over there is a really bad storm... almost as bad as her mood sometimes."
+Dave, lost in thought, reaches for the binoculars to take a closer look: "We have to go through that." He says: "Pull in the main sail and cover everything that is not rivet and nail-proof!".
+Finjan looks at him with wide eyes: "Well Captain, we'll see each other on the other side... or maybe not."
+The storm rages, water splashes up the sides of the deck and the crew staggers over the deck in a daze.
+The sky is covered with jet-black clouds that are broken by lightning every minute.
+And to make matters worse, fog now also raises, the team almost completely loses their orientation, they can only guess where they are driving, fortunately they have a compass that shows them the way... but where is the compass?
+He was just lying next to Dave and Dean on a desk, but now he's gone.
+Dave presses across the deck like a wild stallion, desperately searching for the compass.
+It takes a while but he finds it... or at least what is left of it, someone must have stepped on the compass in the restlessness of the storm, it lies smashed in its individual parts on the ground.
+"How are we supposed to move forward now?" Dave thought to himself.
+
 `,
       },
       {
