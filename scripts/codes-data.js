@@ -16,7 +16,7 @@ const codes = [
     message: "Willkommen an Bord, Crewmitglied! 🏴‍☠️ Du hast den ersten Geheimcode geknackt.",
   },
   {
-    code: "10123",
+    code: "13123",
     message: "Du bist ein kluger Mensch hier dein nächster Vorteil: 11490, löse ihn auf der Fortnite Map ein.",
   },
   {
@@ -31,6 +31,14 @@ const codes = [
   {
     code: "Dave",
     message: "Ah du bist also ein Mitglied der Flitzpiepen, dann bekommst du einen ersten Hinweis für einen Gewinn im Wert von 2500 VBucks !  Der Hinweis liegt im Twitch Account vom besten Mod vom Zugfahrer_Dave",
+  },
+   {
+    code: "10123",
+    message: "Den ersten Hinweis hast du also geknackt. Mal sehen wie alt du bist: XHMNKKKFMWJW",
+  },
+  {
+    code: "Schifffahrer",
+    message: "Du bist auf einem guten Weg, am 20.07. gehts weiter.",
   },
 ];
 
