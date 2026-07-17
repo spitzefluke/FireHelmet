@@ -7,5 +7,8 @@
 ====================================== */
 
 const musicPlaylist = [
-  "scripts/music/countdown-music.mp3",
+  "scripts/music/countdown-1.mp3",
+  "scripts/music/countdown-3.mp3",
+  "scripts/music/countdown-2.mp3",
+  "scripts/music/countdown-4.mp3",
 ];
