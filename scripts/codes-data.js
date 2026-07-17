@@ -16,8 +16,8 @@ const codes = [
     message: "Willkommen an Bord, Crewmitglied! 🏴‍☠️ Du hast den ersten Geheimcode geknackt.",
   },
   {
-    code: "12035",
-    message: "Du bist ein kluger Mensch hier dein nächster Vorteil: 11490",
+    code: "10123",
+    message: "Du bist ein kluger Mensch hier dein nächster Vorteil: 11490, löse ihn auf der Fortnite Map ein.",
   },
   {
     code: "20891",
