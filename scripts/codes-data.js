@@ -28,6 +28,10 @@ const codes = [
     message: "PS: Schau auf Youtube",
     // Beispiel: image: "scripts/images/key-hinweis.png",
   },
+  {
+    code: "Dave",
+    message: "Ah du bist also ein Mitglied der Flitzpiepen, dann bekommst du einen ersten Hinweis für einen Gewinn im Wert von 2500 VBucks !  Der Hinweis liegt im Twitch Account vom besten Mod vom Zugfahrer_Dave",
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
