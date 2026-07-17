@@ -40,6 +40,11 @@ const codes = [
     code: "Schifffahrer",
     message: "Du bist auf einem guten Weg, am 20.07. gehts weiter.",
   },
+  {
+    code: "Sturmflut",
+    message: "Glückwunsch, zu deinem Glücksradgewinn, merke dir diese 4 Ziffern für ein Game in Roblox: 9562",
+  },
+    
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
