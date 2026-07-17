@@ -29,12 +29,13 @@
 ====================================================== */
 
 const firebaseConfig = {
-  apiKey: "DEIN-API-KEY",
-  authDomain: "DEIN-PROJEKT.firebaseapp.com",
-  projectId: "DEIN-PROJEKT",
-  storageBucket: "DEIN-PROJEKT.appspot.com",
-  messagingSenderId: "DEINE-SENDER-ID",
-  appId: "DEINE-APP-ID",
+ apiKey: "AIzaSyDk0cZIdbqMiqxzvdAlNPYOVFnZtQ7d4z0",
+ authDomain: "firehelmet-60558.firebaseapp.com",
+ projectId: "firehelmet-60558",
+ storageBucket: "firehelmet-60558.firebasestorage.app",
+ messagingSenderId: "497064687245",
+ appId: "1:497064687245:web:61665ca2330047e0ba14c4",
+ measurementId: "G-PPX6F50M9M",
 };
 
 let wheelDb = null;
