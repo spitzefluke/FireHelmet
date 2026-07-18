@@ -47,7 +47,7 @@ const codes = [
   {
     code: "01864",
     message: "Glückwunsch Seemann nun etwas schwerer löse dieses Rätsel:", 
-    image: "scripts/images/raetsel1.png",
+    image: "scripts/image/raetsel1.png",
   },
   {
     code: "Roma",
