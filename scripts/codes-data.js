@@ -44,6 +44,19 @@ const codes = [
     code: "Sturmflut",
     message: "Glückwunsch, zu deinem Glücksradgewinn, merke dir diese 4 Ziffern für ein Game in Roblox: 9562",
   },
+  {
+    code: "01864",
+    message: "Glückwunsch Seemann nun etwas schwerer löse dieses Rätsel:", 
+    // image: "scripts/images/rätsel1.png",
+  },
+  {
+    code: "Roma",
+    message: "Wo liege ich genau, finde mich doch und trau dich mich zu suchen",
+  },
+  {
+    code: "4112",
+    message: "Du hast das nächste Tägliche geschafft, Glückwunsch",
+  },
     
 ];
 
