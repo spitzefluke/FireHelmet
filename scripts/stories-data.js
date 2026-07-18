@@ -38,7 +38,6 @@ Die zwei Männer verschwieden schnell und hinterlassen nur einen leeren Hafen.
         title: "Kapitel 2 - Ein neues Abenteuer",
         language: "Deutsch",
         text: `
-Kapitel 2 Inhalt.
 
 Beladen mit der seltsamen Fracht stich das Schiff in See und ein neues Abenteuer beginnt. 
 Auf ihrer Reise über die weiten Meere stellt sich die Crew vielen Herausforderungen. 
