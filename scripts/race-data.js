@@ -9,6 +9,6 @@ const raceConfig = {
   progressPerSpin: 10,   // Fortschritt pro Schatzrad-Drehung
   progressPerCode: 15,   // Fortschritt pro NEU geknacktem Code
   dailyBonusProgress: 8, // Fortschritt für den täglichen Rennen-Bonus
-  finishLine: 150,       // Fortschritt, bei dem die Strecke visuell "voll" ist
-  topPlayersShown: 8,    // Wie viele Plätze im Rennen angezeigt werden
+  finishLine: 300,       // Fortschritt, bei dem die Strecke visuell "voll" ist
+  topPlayersShown: 3,    // Wie viele Plätze im Rennen angezeigt werden
 };
