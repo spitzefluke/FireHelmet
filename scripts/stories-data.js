@@ -101,7 +101,7 @@ Ein Schatten bäugt sich über den Rumpf des Schiffes, zwei glühend rote Augen 
       },
       {
         id: "treasure-de-04",
-        title: "Kapitel 4",
+        title: "Kapitel 4 - Entführung",
         language: "Deutsch",
         text: `
 
@@ -121,7 +121,7 @@ Das Ungetüm bewegte sich durch die Höhle fast so als ob es etwas suchen würde
       },
       {
         id: "treasure-de-05",
-        title: "Kapitel 5",
+        title: "Kapitel 5 - Getrennte Wege",
         language: "Deutsch",
         text: `
 
@@ -280,7 +280,7 @@ A shadow leans over the ship's hull, two glowing red eyes staring into Dave's so
       },
       {
         id: "treasure-en-04",
-        title: "Chapter 4",
+        title: "Chapter 4 - Kidnapping",
         language: "English",
         text: `
 
@@ -299,7 +299,7 @@ The beast moved through the cave almost as if it were searching for something, b
       },
       {
         id: "treasure-en-05",
-        title: "Chapter 5",
+        title: "Chapter 5 - Separate Ways",
         language: "English",
         text: `
 
