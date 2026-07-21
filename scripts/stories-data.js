@@ -90,6 +90,12 @@ Gerade lag er noch neben Dave und Dean auf einem Pult doch nun ist er weg.
 Dave prescht wie ein wilder Hengst übers Deck und sucht verzweifelt nach dem Kompass. 
 Es dauert zwar eine Zeit aber er findet ihn... oder zu mindest das was von ihm übrig ist, irgendwer muss in der Unruhe des Sturms auf den Kompass getreten sein, dieser liegt zerschmettert in seine Einzelteile am Boden. 
 "Wie sollen wir jetzt bloß weiterkommen?",denkt sich Dave. 
+Der Storm tobt weiterhin und unter der Crew macht sich Panik breit. 
+In einer solchen Situation waren sie noch nie, ohne Kompass sind sie völlig orientierungslos. 
+Dave probiert in dem ganzen Chaos ruhig zu bleiben, allerdings fällt es auch ihm trotz seiner jahre langen Erfahrung schwer einen kühlen Kopf zu bewahren. 
+Durch das kreischen des Sturms hört die Crew plötzlich seltsame Geräusche, laute die ihnen das Blut in den Adern gefrieren lassen. 
+Ein Schatten bäugt sich über den Rumpf des Schiffes, zwei glühend rote Augen starren Dave in die Seele.
+
 
 `,
       },
@@ -98,7 +104,19 @@ Es dauert zwar eine Zeit aber er findet ihn... oder zu mindest das was von ihm �
         title: "Kapitel 4",
         language: "Deutsch",
         text: `
-Kapitel 4 Inhalt.
+
+Bevor sich Dave versieht packt ein riesiger Tentakel ihn und zieht ihn über das Deck, seine Männer versuchen verzweifelt mit Musketen und Kanonen das Ungetüm zu fall zu bringen und Dave aus dessen Tentakeln zu befreien. 
+Doch zur Verzweiflung aller haben ihre Angriffe so gut wie keine Wirkung auf das Monster. 
+Dave wärt sich mit allem was er hat, er tritt und schlägt auf den Tentakel ein aber es bringt nichts. 
+Das Ungetüm zieht in Unterwasser und entfernt sich von dem Schiff. Dave verliert langsam das Bewusstsein, die Luft wird knap und ihm wird schwarz vor Augen. 
+Als Dave wieder zusichkommte hatte er nur noch verschwommene Erinnerungen von dem was passiert war. 
+Das er nicht mehr auf dem Schiff war wusste er, aber wie lange er schon weg war wusste er nicht. 
+Geschichtsschreiber spekulieren heute noch ob diese plötzliche Erinnerungslücke durch das traumatische Erlebnis oder einfach nur durch Daves alter verursacht worden ist. 
+Dave jedenfalls fand sich nach seinem aufwachen in einer Höhle wieder, aber anders als man erwarten würde war es dort nicht dunkel, die Höhle wurde von einem bläulichem schimmer erleuchtet. 
+Dave tastete sich vorsichtig vorwärts, er erkannte die Umrisse von zerstörten Schiffen die überall in der Höhle verteilt waren.
+Plötzlich nahm er in der Dunkelheit eine Bewegung war ein großer Schatten der ihm schrecklicherweise bekannt vorkam. 
+Das Ungetüm bewegte sich durch die Höhle fast so als ob es etwas suchen würde, allerdings blieb Dave keine Zeit darüber nachzudenken er musste einen Ausgang finden.
+
 `,
       },
       {
@@ -106,7 +124,15 @@ Kapitel 4 Inhalt.
         title: "Kapitel 5",
         language: "Deutsch",
         text: `
-Kapitel 5 Inhalt.
+
+Die Crew war erschüttert. Erst ging ihr Kompass kaputt jetzt war auch noch ihr Captain weg. 
+Die Stimmung war im Keller und selbst Finians Scherze konnten sie wieder aufhellen. 
+Sie alle waren traurig, aber auch entschlossen keiner wollte Dave zurücklassen. 
+Dean setzte Kurs in Richtung Deadmansisland, das ist der einzige Ort wo das mistvieh Dave hinbringen könnte.
+Und so begab sich Daves Crew entschlossen auf eine Rettungsmission.
+Der Wind war gut und das Schiff schmiegte sich gleisend durch das blaue Wasser. 
+Alles wirkte ruhig bis Finian aus dem Ausguck meldung gab: "Insel voraus!"
+
 `,
       },
       {
@@ -244,6 +270,11 @@ He was just lying next to Dave and Dean on a desk, but now he's gone.
 Dave presses across the deck like a wild stallion, desperately searching for the compass.
 It takes a while but he finds it... or at least what is left of it, someone must have stepped on the compass in the restlessness of the storm, it lies smashed in its individual parts on the ground.
 "How are we supposed to move forward now?" Dave thought to himself.
+The storm is still raging, and panic is spreading among the crew.  
+They've never been in a situation like this before; without a compass, they're completely disoriented.  
+Dave tries to stay calm amidst all the chaos, but even for him, with all his years of experience, it's hard to keep a cool head.  
+Through the screaming of the storm, the crew suddenly hears strange noises, loud ones that make their blood freeze.  
+A shadow leans over the ship's hull, two glowing red eyes staring into Dave's soul.
 
 `,
       },
@@ -252,7 +283,18 @@ It takes a while but he finds it... or at least what is left of it, someone must
         title: "Chapter 4",
         language: "English",
         text: `
-Chapter 4 content.
+
+Before Dave can even realize it, a huge tentacle grabs him and drags him across the deck. His men desperately try to bring down the monster with muskets and cannons and to free Dave from its tentacles. 
+But to everyone's despair, their attacks hardly affect the creature. 
+Dave fights back with everything he has; he kicks and strikes the tentacle, but it does no good. The monster dives underwater and moves away from the ship. 
+Dave slowly loses consciousness, air becomes scarce, and his vision goes black. When Dave came to, he only had vague memories of what had happened. 
+He knew he was no longer on the ship, but he had no idea how long he had been gone. 
+Historians still speculate today whether this sudden memory gap was caused by the traumatic experience or simply by Dave's old age. 
+In any case, after waking up, Dave found himself in a cave again, but unlike what you would expect, it wasn't dark there; the cave was lit by a bluish glow. 
+Dave carefully made his way forward, noticing the outlines of destroyed ships scattered all over the cave. 
+Suddenly, he saw movement in the darkness—a large shadow that looked terrifyingly familiar. 
+The beast moved through the cave almost as if it were searching for something, but Dave didn't have time to think about that; he had to find an exit.
+
 `,
       },
       {
@@ -260,7 +302,15 @@ Chapter 4 content.
         title: "Chapter 5",
         language: "English",
         text: `
-Chapter 5 content.
+
+The crew was shaken. First their compass broke, and now their captain was gone too.  
+The mood was at rock bottom, and not even Finian's jokes could lift it again.  
+They were all sad, but also determined—none of them wanted to leave Dave behind.  
+Dean set course for Deadmansisland, the only place that bastard Dave could be taken to.  
+And so Dave's crew set off on a determined rescue mission.  
+The wind was good, and the ship glided gleaming through the blue water.  
+Everything seemed calm until Finian called out from the lookout: 'Island ahead!'
+
 `,
       },
       {
