@@ -60,7 +60,7 @@ const codes = [
   {
     code: "00357",
     message: "von oben...", 
-    image: "scripts/image/raetsel2.png",
+    image: "scripts/image/raetse2.png",
   },
   {
     code: "6119P",
