@@ -57,7 +57,15 @@ const codes = [
     code: "4112",
     message: "Du hast das nächste Tägliche geschafft, Glückwunsch",
   },
-    
+  {
+    code: "00357",
+    message: "von oben...", 
+    image: "scripts/image/raetsel2.png",
+  },
+  {
+    code: "6119P",
+    message: "Du hast dich für das erste Gewinnspiel registriert, Glückwunsch",
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
