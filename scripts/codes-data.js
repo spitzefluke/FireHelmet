@@ -58,9 +58,9 @@ const codes = [
     message: "Du hast das nächste Tägliche geschafft, Glückwunsch",
   },
   {
-    code: "00357",
+    code: "00387",
     message: "von oben...", 
-    image: "scripts/image/raetse2.png",
+    image: "scripts/image/raetsel2.png",
   },
   {
     code: "6119P",
