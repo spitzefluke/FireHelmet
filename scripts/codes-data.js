@@ -64,7 +64,7 @@ const codes = [
   },
   {
     code: "6119P",
-    message: "Du hast dich für das erste Gewinnspiel registriert, Glückwunsch",
+    message: "Du hast dich für das erste Gewinnspiel registriert, Glückwunsch. Schicke ein Bild an spitzefluke@gmail.com oder in den Discord Helme und Züge.",
   },
 ];
 
