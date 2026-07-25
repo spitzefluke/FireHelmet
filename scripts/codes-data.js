@@ -74,6 +74,10 @@ const codes = [
     message: "Du hast dich für das erste Gewinnspiel registriert, Glückwunsch. Schicke ein Bild an spitzefluke@gmail.com oder in den Discord Helme und Züge.",
     reward: "Gewinnspiel-Teilnahme",
   },
+  {
+    code: "MurderMystery",
+    message: "Secret....01.08.2026",
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
