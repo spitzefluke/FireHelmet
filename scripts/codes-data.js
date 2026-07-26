@@ -39,7 +39,7 @@ const codes = [
     reward: "2500 VBucks-Hinweis",
   },
   {
-    code: "010123",
+    code: "010124",
     message: "Den ersten Hinweis hast du also geknackt. Mal sehen wie alt du bist: XHMNKKKFMWJW",
   },
   {
