@@ -39,7 +39,7 @@ const codes = [
     reward: "2500 VBucks-Hinweis",
   },
   {
-    code: "010124",
+    code: "10124",
     message: "Den ersten Hinweis hast du also geknackt. Mal sehen wie alt du bist: XHMNKKKFMWJW",
   },
   {
@@ -57,7 +57,7 @@ const codes = [
     image: "scripts/image/raetsel1.png",
   },
   {
-    code: "Roma",
+    code: "Romina",
     message: "Wo liege ich genau, finde mich doch und trau dich mich zu suchen",
   },
   {
