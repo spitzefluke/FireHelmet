@@ -88,7 +88,7 @@ const codes = [
     reward: "Gewinnspiel-Teilnahme",
   },
   {
-    hash: "12e54f4500ede4fa789f81ad4ed512eb325f76e60e2c4f4322dcea14536edb82", // finja
+    hash: "12e54f4500ede4fa789f81ad4ed512eb325f76e60e2c4f4322dcea14536edb82", // finjan
     message: "das letze mal falsch...",
   },
   {
