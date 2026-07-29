@@ -87,6 +87,14 @@ const codes = [
     message: "Du hast dich für das erste Gewinnspiel registriert, Glückwunsch. Schicke ein Bild an spitzefluke@gmail.com oder in den Discord Helme und Züge.",
     reward: "Gewinnspiel-Teilnahme",
   },
+  {
+    hash: "12e54f4500ede4fa789f81ad4ed512eb325f76e60e2c4f4322dcea14536edb82", // finja
+    message: "das letze mal falsch...",
+  },
+  {
+    hash: "826dc1e2539ed559a1a6fe71935161bee0ddc4873522f8e027e6e6a8f57a1c91", // 700Follower
+    message: "Glückwunsch an Zugfahrer_DaveTV zu den 700Followern",
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
