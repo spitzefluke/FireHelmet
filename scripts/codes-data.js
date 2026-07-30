@@ -62,7 +62,6 @@ const codes = [
   {
     hash: "ec6820622d6388215f724a89365d214c25666a951f90b3322e730713bfbd1eec", // sturmflut
     message: "Glückwunsch, zu deinem Glücksradgewinn, merke dir diese 4 Ziffern für ein Game in Roblox: 9562",
-    reward: "Roblox-Code",
   },
   {
     hash: "099ef95be2a4db34c612f6326988690bd92b53c4b08d9b53f447c892597c7b5a", // 01864
@@ -88,12 +87,13 @@ const codes = [
     reward: "Gewinnspiel-Teilnahme",
   },
   {
-    hash: "12e54f4500ede4fa789f81ad4ed512eb325f76e60e2c4f4322dcea14536edb82", // finjan
-    message: "das letze mal falsch...",
+    hash: "192a2922fa6958ecaf24861449867356706becc629190522b609cb92851648ea", // 700follower
+    message: "Glückwunsch Zugfahrer_DaveTV zu den 700 Followern!",
+    reward: "Wenn verfügbar ein Goodie Schlüsselanhänger",
   },
   {
-    hash: "826dc1e2539ed559a1a6fe71935161bee0ddc4873522f8e027e6e6a8f57a1c91", // 700Follower
-    message: "Glückwunsch an Zugfahrer_DaveTV zu den 700Followern",
+    hash: "81421ec9a4cf874aff784e652bf6784a163364c2c90b95b40d58ab516b803167", // finian
+    message: "\"Ich hasse diesen Captain, weil er alt ist und laut schnarchst. Ich gehe jetzt mal auf meinen Auskuck und schaue nach dem Hörspiel\" 0Sp1ot0if9y",
   },
 ];
 
