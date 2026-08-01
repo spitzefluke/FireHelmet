@@ -5,7 +5,7 @@
    der Box aus.
 ===================================================== */
 
-const targetDate = new Date("2026-08-20T00:00:00");
+const targetDate = new Date("2026-09-20T00:00:00");
 
 // Merkt sich die zuletzt angezeigten Werte, um Änderungen zu erkennen
 const lastValues = {
