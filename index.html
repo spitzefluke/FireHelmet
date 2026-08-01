@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown Project</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Hintergrund -->
+  <div class="stars"></div>
+  <div class="stars2"></div>
+  <div class="nebula"></div>
+
+  <!-- Übergang -->
+  <div id="transition"></div>
+
+  <!-- Effekt-Layer, der beim erfolgreichen Einlösen eines NEUEN Codes aufblitzt -->
+  <div id="code-fx" class="code-fx"></div>
+
+  <!-- Hintergrundmusik: läuft nur auf der Home/Countdown-Seite (Playlist über main.js) -->
+  <audio id="bg-music"></audio>
+
+  <!-- Musik Mute-Button (nur sichtbar, wenn Musik läuft/laufen könnte) -->
+  <div class="music-toggle" id="music-toggle" onclick="toggleMusic()">🔊</div>
+
+  <!-- Menü Button -->
+  <div class="menu-button" onclick="openMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <!-- Abdunkelndes Overlay hinter dem Menü (zum Antippen-zum-Schließen) -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMenu()"></div>
+
+  <!-- Menü -->
+  <nav class="sidebar" id="sidebar">
+    <div class="close-button" onclick="closeMenu()">×</div>
+    <h2 data-i18n="menu.title">MENU</h2>
+
+    <div class="lang-switch">
+      <button id="lang-btn-de" class="lang-btn" onclick="setLanguage('de')">🇩🇪 DE</button>
+      <button id="lang-btn-en" class="lang-btn" onclick="setLanguage('en')">🇬🇧 EN</button>
+    </div>
+    <a onclick="changePage('login')" data-i18n="menu.login">🎮 Anmelden</a>
+    <a onclick="changePage('home')" data-i18n="menu.home">🏠 Home</a>
+    <a onclick="changePage('story')" data-i18n="menu.story">📖 Stories</a>
+    <a onclick="changePage('characters')" data-i18n="menu.characters">👤 Characters</a>
+    <a onclick="changePage('socials')" data-i18n="menu.socials">🌐 Socials</a>
+    <a onclick="changePage('code')" data-i18n="menu.code">🔑 Code</a>
+    <a onclick="changePage('wheel')" data-i18n="menu.wheel">🧭 Schatzrad</a>
+    <a onclick="changePage('leaderboard')" data-i18n="menu.leaderboard">🏆 Rangliste</a>
+    <a onclick="changePage('race')" data-i18n="menu.race">🏎️ Wochenrennen</a>
+    <a onclick="changePage('giveaway')" data-i18n="menu.giveaway">🎁 Gewinnspiel</a>
+    <a onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">🧩 Streamrätsel</a>
+  </nav>
+
+  <main>
+
+    <!-- =====================
+         HOME
+    ===================== -->
+    <section id="home" class="page active-page">
+      <div class="home-fx" id="home-fx">
+        <div class="home-dynamic" id="home-dynamic"></div>
+      </div>
+
+      <div class="hero">
+        <h1 data-i18n="home.title">COUNTDOWN</h1>
+        <p class="subtitle" data-i18n="home.subtitle">The new Story starts in ...</p>
+
+        <div class="countdown">
+          <div class="time-box">
+            <span id="days">00</span>
+            <small data-i18n="common.days">Tage</small>
+          </div>
+          <div class="time-box">
+            <span id="hours">00</span>
+            <small data-i18n="common.hours">Stunden</small>
+          </div>
+          <div class="time-box">
+            <span id="minutes">00</span>
+            <small data-i18n="common.minutes">Minuten</small>
+          </div>
+          <div class="time-box">
+            <span id="seconds">00</span>
+            <small data-i18n="common.seconds">Sekunden</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         STORY ARCHIV
+    ====================================================== -->
+    <section id="story" class="page">
+      <div class="story-library">
+        <h1 data-i18n="story.title">STORIES</h1>
+        <p class="story-subtitle" data-i18n="story.subtitle">Wähle ein Logbuch aus dem Archiv</p>
+
+        <!-- Wird automatisch gefüllt -->
+        <div id="story-grid" class="story-grid"></div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         STORY DETAILS
+    ====================================================== -->
+    <section id="story-detail" class="page">
+      <div class="story-detail-container">
+        <button class="back-button" onclick="changePage('story')" data-i18n="common.back">← Zurück</button>
+
+        <div class="story-header">
+          <img id="detail-cover" class="detail-cover">
+          <div>
+            <h1 id="detail-title"></h1>
+            <p id="detail-description"></p>
+          </div>
+        </div>
+
+        <h2 data-i18n="story.chapterHeading">Kapitel</h2>
+
+        <!-- Kapitel werden automatisch erzeugt -->
+        <div id="chapter-list" class="chapter-list"></div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         BOOK READER
+    ====================================================== -->
+    <section id="book-reader" class="page">
+      <div class="book">
+        <button class="back-button" onclick="changePage('story-detail')" data-i18n="common.back">← Zurück</button>
+
+        <h1 id="book-title"></h1>
+        <h3 id="book-language"></h3>
+
+        <div class="book-content">
+          <p id="book-text"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         CHARACTERS
+    ===================== -->
+    <section id="characters" class="page">
+      <div class="page-content">
+        <h1 data-i18n="characters.title">CHARACTERS</h1>
+
+        <div class="character-container">
+
+          <div class="character-card">
+            <h2>Schifffahrer Dave</h2>
+            <p>
+              Dave ist Captain der Crew "Flitzpiepen" und ein abenteuerlustiger,
+              freundlicher und erfahrener Schifffahrer. Im heutigen Sinne würde man
+              ihn als Rentner bezeichnen – zerbrechlich, aber durchgeknallt.
+            </p>
+          </div>
+
+          <div class="character-card">
+            <h2>Character 02</h2>
+            <p>Beschreibung des Charakters.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         SOCIALS
+    ===================== -->
+    <section id="socials" class="page">
+      <div class="page-content">
+        <h1 data-i18n="socials.title">SOCIALS</h1>
+
+        <div class="social-container">
+          <a href="https://youtube.com" target="_blank" class="social-btn social-youtube">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M23.5 6.2c-.3-1.1-1.1-1.9-2.2-2.2C19.3 3.5 12 3.5 12 3.5s-7.3 0-9.3.5c-1.1.3-1.9 1.1-2.2 2.2C0 8.2 0 12 0 12s0 3.8.5 5.8c.3 1.1 1.1 1.9 2.2 2.2 2 .5 9.3.5 9.3.5s7.3 0 9.3-.5c1.1-.3 1.9-1.1 2.2-2.2.5-2 .5-5.8.5-5.8s0-3.8-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+            <span>YouTube</span>
+          </a>
+          <a href="https://tiktok.com" target="_blank" class="social-btn social-tiktok">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M16.6 5.8c-.9-.9-1.4-2.1-1.4-3.4h-3.3v13.6c0 1.5-1.2 2.7-2.7 2.7-1.5 0-2.7-1.2-2.7-2.7s1.2-2.7 2.7-2.7c.3 0 .5 0 .8.1V10c-.3 0-.5-.1-.8-.1-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6V9.1c1.3.9 2.8 1.5 4.5 1.5V7.3c-1 0-2-.4-2.6-1c-.2-.2-.3-.3-.5-.5z"/></svg>
+            <span>TikTok</span>
+          </a>
+          <a href="https://discord.com" target="_blank" class="social-btn social-discord">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M20.3 4.4c-1.5-.7-3.1-1.2-4.7-1.4-.2.4-.4.9-.6 1.3-1.7-.3-3.5-.3-5.2 0-.2-.4-.4-.9-.6-1.3-1.6.3-3.2.7-4.7 1.4C1.5 8.4.8 12.4 1.1 16.3c1.8 1.3 3.5 2.1 5.2 2.7.4-.6.8-1.2 1.1-1.9-.6-.2-1.2-.5-1.7-.8.1-.1.3-.2.4-.3 3.3 1.5 6.9 1.5 10.2 0 .1.1.3.2.4.3-.6.3-1.1.6-1.7.8.3.7.7 1.3 1.1 1.9 1.7-.5 3.4-1.4 5.2-2.7.4-4.5-.8-8.4-2.9-11.9zM8.7 13.9c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9zm6.6 0c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9z"/></svg>
+            <span>Discord Channel</span>
+          </a>
+          <a href="https://instagram.com" target="_blank" class="social-btn social-instagram">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.9.3 2.3.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.3 1.1.4 2.3.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.9-.4 2.3-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1.1.3-2.3.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.9-.3-2.3-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.3-1.1-.4-2.3C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.9.4-2.3.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1.1-.3 2.3-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1 .1-1.6.2-1.9.4-.5.2-.8.4-1.2.8-.4.4-.6.7-.8 1.2-.1.3-.3.9-.4 1.9-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c.1 1 .2 1.6.4 1.9.2.5.4.8.8 1.2.4.4.7.6 1.2.8.3.1.9.3 1.9.4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1-.1 1.6-.2 1.9-.4.5-.2.8-.4 1.2-.8.4-.4.6-.7.8-1.2.1-.3.3-.9.4-1.9.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-1-.2-1.6-.4-1.9-.2-.5-.4-.8-.8-1.2-.4-.4-.7-.6-1.2-.8-.3-.1-.9-.3-1.9-.4-1.2-.1-1.6-.1-4.7-.1zm0 3.5c3 0 5.5 2.5 5.5 5.5s-2.5 5.5-5.5 5.5-5.5-2.5-5.5-5.5S9 7.5 12 7.5zm0 9.1c2 0 3.6-1.6 3.6-3.6S14 9.4 12 9.4 8.4 11 8.4 13s1.6 3.6 3.6 3.6zm5.7-9.3c0 .7-.6 1.3-1.3 1.3s-1.3-.6-1.3-1.3.6-1.3 1.3-1.3 1.3.6 1.3 1.3z"/></svg>
+            <span>Instagram</span>
+          </a>
+        </div>
+
+        <h2 class="social-subheading" data-i18n="socials.daveHeading">🚂 Socials von Zugfahrer_DaveTV</h2>
+
+        <div class="social-container">
+          <a href="https://twitch.tv/zugfahrer_davetv" target="_blank" class="social-btn social-twitch">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M4.3 2 3 5.4v14.2h4.9V22h2.8l2.6-2.4h4L21 15.4V2H4.3zm14.9 12.4-3 2.9h-4l-2.6 2.4v-2.4H6.1V3.9h13.1v10.5z"/><path d="M15.5 7.1h1.9v5.2h-1.9zM10.4 7.1h1.9v5.2h-1.9z"/></svg>
+            <span>Twitch</span>
+          </a>
+          <a href="https://youtube.com" target="_blank" class="social-btn social-youtube">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M23.5 6.2c-.3-1.1-1.1-1.9-2.2-2.2C19.3 3.5 12 3.5 12 3.5s-7.3 0-9.3.5c-1.1.3-1.9 1.1-2.2 2.2C0 8.2 0 12 0 12s0 3.8.5 5.8c.3 1.1 1.1 1.9 2.2 2.2 2 .5 9.3.5 9.3.5s7.3 0 9.3-.5c1.1-.3 1.9-1.1 2.2-2.2.5-2 .5-5.8.5-5.8s0-3.8-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+            <span>YouTube</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         ANMELDEN
+    ===================== -->
+    <section id="login" class="page">
+      <div class="page-content">
+        <h1 data-i18n="login.title">ANMELDUNG</h1>
+        <p class="story-subtitle" data-i18n="login.subtitle">Melde dich an, um in Rangliste und Wochenrennen zu erscheinen</p>
+
+        <div class="twitch-login-area">
+          <button id="twitch-login-btn" class="twitch-login-btn" onclick="loginWithTwitch()">
+            <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M4.3 2 3 5.4v14.2h4.9V22h2.8l2.6-2.4h4L21 15.4V2H4.3zm14.9 12.4-3 2.9h-4l-2.6 2.4v-2.4H6.1V3.9h13.1v10.5z"/><path d="M15.5 7.1h1.9v5.2h-1.9zM10.4 7.1h1.9v5.2h-1.9z"/></svg>
+            <span data-i18n="login.twitchButton">Mit Twitch anmelden</span>
+          </button>
+
+          <div id="twitch-logged-in" class="twitch-logged-in">
+            <img id="twitch-avatar" class="twitch-avatar" alt="">
+            <span id="twitch-logged-in-name"></span>
+            <button class="twitch-logout-btn" onclick="logoutTwitch()" data-i18n="common.logout">Abmelden</button>
+          </div>
+        </div>
+
+        <p class="login-divider" data-i18n="login.divider">— oder —</p>
+
+        <div id="wheel-nickname-box" class="wheel-nickname-box">
+          <input
+            type="text"
+            id="wheel-nickname-input"
+            class="code-input"
+            placeholder="Namen manuell eintragen" data-i18n-placeholder="login.namePlaceholder"
+            maxlength="18"
+            autocomplete="off">
+          <button class="code-button" onclick="saveNickname()" data-i18n="common.save">Speichern</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         CODE EINGABE
+    ===================== -->
+    <section id="code" class="page">
+      <div class="page-content code-content">
+        <h1 data-i18n="code.title">CODE</h1>
+        <p class="story-subtitle" data-i18n="code.subtitle">Gib deinen geheimen Code ein</p>
+
+        <div class="code-box">
+          <input
+            type="text"
+            id="code-input"
+            class="code-input"
+            placeholder="Code eingeben ..." data-i18n-placeholder="code.placeholder"
+            autocomplete="off"
+            onkeydown="if(event.key==='Enter') checkCode()">
+
+          <button class="code-button" onclick="checkCode()" data-i18n="code.confirm">Bestätigen</button>
+
+          <p id="code-message" class="code-message"></p>
+          <img id="code-image" class="code-image" alt="">
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         GLÜCKSRAD
+    ===================== -->
+    <section id="wheel" class="page">
+      <div class="page-content wheel-content">
+        <h1 data-i18n="wheel.title">SCHATZRAD</h1>
+        <p class="story-subtitle" data-i18n="wheel.subtitle">Einmal am Tag drehen und dein Glück bei der Schatzsuche versuchen</p>
+
+        <p id="wheel-login-hint" class="wheel-status wheel-login-hint">
+          <span data-i18n="wheel.loginHintPrefix">Noch nicht angemeldet? </span><a onclick="changePage('login')" data-i18n="wheel.loginHintLink">Hier geht's zur Anmeldung</a>
+        </p>
+
+        <p id="wheel-theme-label" class="wheel-theme-label"></p>
+
+        <div class="wheel-wrapper">
+          <div id="wheel-bulbs" class="wheel-bulbs"></div>
+          <div class="wheel-pointer"></div>
+          <div id="wheel-disc" class="wheel-disc"></div>
+          <div id="wheel-sparks" class="wheel-sparks"></div>
+        </div>
+
+        <button id="spin-button" class="code-button spin-button" onclick="spinWheel()" data-i18n="wheel.spinButton">Drehen</button>
+
+        <p id="wheel-status" class="wheel-status"></p>
+        <p id="wheel-countdown" class="wheel-countdown"></p>
+        <p id="wheel-result" class="code-message"></p>
+      </div>
+    </section>
+
+    <!-- =====================
+         RANGLISTE
+    ===================== -->
+    <section id="leaderboard" class="page">
+      <div class="page-content">
+        <h1 data-i18n="leaderboard.title">RANGLISTE</h1>
+        <p class="story-subtitle" data-i18n="leaderboard.subtitle">Wer hat die meisten Geheimcodes geknackt?</p>
+
+        <div id="leaderboard-list" class="leaderboard-list">
+          <p class="wheel-status" data-i18n="leaderboard.loading">Lade Rangliste ...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         WOCHENRENNEN
+    ===================== -->
+    <section id="race" class="page">
+      <div class="race-fx" id="race-fx"></div>
+
+      <div class="race-fullpage">
+        <h1 data-i18n="race.title">WOCHENRENNEN</h1>
+        <p class="story-subtitle" data-i18n="race.subtitle">Jede Woche neu: Fortschritt durch Schatzrad-Drehen und Codes-Knacken</p>
+
+        <p id="race-last-winner" class="wheel-status" data-i18n="race.loadingWinner">Lade Sieger der letzten Woche ...</p>
+        <p id="race-countdown" class="wheel-countdown" style="display:block;"></p>
+        <p id="race-own-progress" class="wheel-status"></p>
+
+        <div class="race-daily-box">
+          <button id="race-daily-button" class="code-button" onclick="claimDailyRaceBonus()" data-i18n="race.dailyBonusButton">Tagesbonus abholen 🎁</button>
+          <p id="race-daily-status" class="wheel-status"></p>
+        </div>
+
+        <p id="race-track-theme" class="race-track-theme"></p>
+
+        <div id="race-track-wrap" class="race-track-wrap">
+          <svg id="race-track-svg" class="race-track-svg" viewBox="0 0 600 300">
+            <defs>
+              <pattern id="race-checker" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(90)">
+                <rect width="5" height="5" fill="#111"></rect>
+                <rect x="5" y="5" width="5" height="5" fill="#111"></rect>
+                <rect x="5" width="5" height="5" fill="#eee"></rect>
+                <rect y="5" width="5" height="5" fill="#eee"></rect>
+              </pattern>
+
+              <!-- Kart-Verlaufsfarben (8 feste Slots, per colorIndex zugewiesen) -->
+              <radialGradient id="kart-grad-0" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff9b9b"/><stop offset="100%" stop-color="#ff5252"/></radialGradient>
+              <radialGradient id="kart-grad-1" cx="35%" cy="30%"><stop offset="0%" stop-color="#9ecfff"/><stop offset="100%" stop-color="#4da3ff"/></radialGradient>
+              <radialGradient id="kart-grad-2" cx="35%" cy="30%"><stop offset="0%" stop-color="#ffe9a8"/><stop offset="100%" stop-color="#ffd76b"/></radialGradient>
+              <radialGradient id="kart-grad-3" cx="35%" cy="30%"><stop offset="0%" stop-color="#c3b3ff"/><stop offset="100%" stop-color="#8a6bff"/></radialGradient>
+              <radialGradient id="kart-grad-4" cx="35%" cy="30%"><stop offset="0%" stop-color="#a6f4c1"/><stop offset="100%" stop-color="#4ade80"/></radialGradient>
+              <radialGradient id="kart-grad-5" cx="35%" cy="30%"><stop offset="0%" stop-color="#ffcda3"/><stop offset="100%" stop-color="#ff9f4d"/></radialGradient>
+              <radialGradient id="kart-grad-6" cx="35%" cy="30%"><stop offset="0%" stop-color="#ffb3d9"/><stop offset="100%" stop-color="#f472b6"/></radialGradient>
+              <radialGradient id="kart-grad-7" cx="35%" cy="30%"><stop offset="0%" stop-color="#a6e6ff"/><stop offset="100%" stop-color="#38bdf8"/></radialGradient>
+            </defs>
+
+            <!-- Gras -->
+            <rect id="race-grass" x="0" y="0" width="600" height="300" fill="#173a1e"></rect>
+
+            <!-- Curb (roter/farbiger Rand, der unter der Fahrbahn hervorschaut) -->
+            <path id="race-curb" fill="none" stroke="#4da3ff" stroke-width="62"
+                  stroke-linejoin="round" stroke-dasharray="14 10" opacity=".55"></path>
+
+            <!-- Fahrbahn -->
+            <path id="race-track-path" fill="none" stroke="#2b2b2b" stroke-width="54" stroke-linejoin="round"></path>
+            <path id="race-road-inner" fill="none" stroke="#3f3f3f" stroke-width="44" stroke-linejoin="round"></path>
+
+            <!-- Mittellinie -->
+            <path id="race-center-line" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-dasharray="10 14" opacity=".45"></path>
+
+            <!-- Ziellinie -->
+            <rect x="94" y="42" width="12" height="16" fill="url(#race-checker)"></rect>
+
+            <!-- Karts werden hier per JS eingefügt -->
+            <g id="race-karts-layer"></g>
+          </svg>
+
+          <p id="race-track-empty" class="wheel-status race-track-empty"></p>
+        </div>
+
+        <div id="race-results-list" class="race-results-list"></div>
+      </div>
+    </section>
+
+    <!-- =====================
+         STREAMRÄTSEL
+    ===================== -->
+    <section id="streamraetsel" class="page">
+      <div class="streamraetsel-fx" id="streamraetsel-fx"></div>
+
+      <div id="streamraetsel-locked" class="streamraetsel-locked">
+        <span class="streamraetsel-live" data-i18n="stream.liveLabel">🔴 LIVE COUNTDOWN</span>
+        <h1 class="streamraetsel-title" data-i18n="stream.title">🧩 STREAMRÄTSEL</h1>
+        <p class="streamraetsel-subtitle" data-i18n="stream.subtitle">Schaltet sich frei am 10.08.2026</p>
+        <p class="streamraetsel-teaser">📦 Paket is comming ...</p>
+
+        <div class="countdown streamraetsel-countdown">
+          <div class="time-box time-box-xl">
+            <span id="streamraetsel-days">00</span>
+            <small data-i18n="common.days">Tage</small>
+          </div>
+          <div class="time-box time-box-xl">
+            <span id="streamraetsel-hours">00</span>
+            <small data-i18n="common.hours">Stunden</small>
+          </div>
+          <div class="time-box time-box-xl">
+            <span id="streamraetsel-minutes">00</span>
+            <small data-i18n="common.minutes">Minuten</small>
+          </div>
+          <div class="time-box time-box-xl">
+            <span id="streamraetsel-seconds">00</span>
+            <small data-i18n="common.seconds">Sekunden</small>
+          </div>
+        </div>
+      </div>
+
+      <div id="streamraetsel-content" class="streamraetsel-unlocked"></div>
+    </section>
+
+    <!-- =====================
+         GEWINNSPIEL
+    ===================== -->
+    <section id="giveaway" class="page">
+      <div class="page-content giveaway-content">
+        <h1 data-i18n="giveaway.title">GEWINNSPIEL</h1>
+        <p class="story-subtitle" id="giveaway-prize-description"></p>
+
+        <p id="giveaway-pool-size" class="wheel-status" data-i18n="giveaway.loadingPool">Lade Teilnehmerkreis ...</p>
+        <p id="giveaway-countdown" class="wheel-countdown" style="display:block;"></p>
+        <p id="giveaway-current-winner" class="giveaway-winner" data-i18n="giveaway.loadingWinner">Lade letzte Ziehung ...</p>
+
+        <p class="giveaway-note" data-i18n="giveaway.note">
+          Jeder, der sich angemeldet hat (Twitch-Login oder Name im 🎮 Anmelden-Bereich),
+          ist automatisch im Lostopf. Nichts weiter zu tun!
+        </p>
+
+        <h2 class="giveaway-history-title" data-i18n="giveaway.historyTitle">Bisherige Ziehungen</h2>
+        <div id="giveaway-history" class="giveaway-history"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Firebase (für die globale Rangliste) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <!-- SCRIPTS -->
+  <script src="scripts/i18n.js"></script>
+  <script src="scripts/codes-data.js"></script>
+  <script src="scripts/music-data.js"></script>
+  <script src="scripts/wheel-data.js"></script>
+  <script src="scripts/race-data.js"></script>
+  <script src="scripts/giveaway-data.js"></script>
+  <script src="scripts/streamraetsel-data.js"></script>
+  <script src="scripts/twitch-config.js"></script>
+  <script src="scripts/twitch-auth.js"></script>
+  <script src="scripts/firebase-config.js"></script>
+  <script src="scripts/countdown.js"></script>
+  <script src="scripts/stories-data.js"></script>
+  <script src="scripts/stories.js"></script>
+  <script src="scripts/race.js"></script>
+  <script src="scripts/giveaway.js"></script>
+  <script src="scripts/wheel.js"></script>
+  <script src="scripts/streamraetsel.js"></script>
+  <script src="scripts/main.js"></script>
+
+</body>
+</html>
