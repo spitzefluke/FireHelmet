@@ -94,6 +94,11 @@ const codes = [
     message: "Du hast dich für das erste Gewinnspiel registriert, Glückwunsch. Schicke ein Bild an spitzefluke@gmail.com oder in den Discord Helme und Züge.",
     reward: "Gewinnspiel-Teilnahme",
   },
+  {
+    hash: "c478361e6869af25970682a2c53967adbc8a46e9429efdc64b96351cfd52e13f", // Story
+    message: "Arr ich freue mich schon die Fracht abzuladen und fröhlich nach Hause zu fahren.",
+    speak: true,
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
