@@ -20,6 +20,6 @@
 ====================================================== */
 
 const twitchConfig = {
-  clientId: "DEINE-TWITCH-CLIENT-ID",
+  clientId: "78l9p1pnw8f6mw7dn5ulgtrhnr4ygs",
   redirectUri: window.location.origin + window.location.pathname,
 };
