@@ -170,7 +170,7 @@ Das Biest hatte keine Wahl und zog sich weiter in die Höhle zurück und probier
 Im letzten Moment schaffte er es die Hand von zweien seiner Leute zu greifen. 
 Finian und Julian hielten seine Hand fest und sahen nicht so aus als ob sie loslassen würden:"Halt dich fest Captain sonst bist du gleich Monstertatar!"sagte Finian lässig. 
 Knapp aber in einem Stück schaften sie es das Schiff aus der Höhle zu manövrieren und enkamen dem Untier. 
-Dave, überglücklich darüber das er seine Crew wieder hatte rief:"Kurs setzten Männer  wir haben eine Fracht auszuliefern!"
+Dave, überglücklich darüber das er seine Crew wieder hatte rief:"Kurs setzten Männer wir haben eine Fracht auszuliefern!"
 
 `,
       },
