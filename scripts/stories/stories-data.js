@@ -16,6 +16,7 @@ const stories = [
         title: "Kapitel 1 - Die seltsame Fracht",
         language: "Deutsch",
         text: `
+        
 1540 an einem Hafen in einem kleinen Dorf namens Romna, liegt ein stark rot bemaltes Schiff. 
 Es hat schwarze Verzierungen und gehört dem Caiptain Schifffahrer Dave. 
 Zur heutigen Zeit würde man ihn als Rentner und durchgeknallten zerbrechlichen Mann beschreiben, doch zu dieser Zeit ist er ein ehrenvoller, abenteuerlustiger und erfahrener Schifffahrer.
@@ -137,18 +138,40 @@ Alles wirkte ruhig bis Finian aus dem Ausguck meldung gab: "Insel voraus!"
       },
       {
         id: "treasure-de-06",
-        title: "Kapitel 6",
+        title: "Kapitel 6 - Einer weniger?",
         language: "Deutsch",
         text: `
-Kapitel 6 Inhalt.
+        
+Die Crew war erschüttert. Erst ging ihr Kompass kaputt jetzt war auch noch ihr Captain weg. 
+Die Stimmung war im Keller und selbst Finians Scherze konnten sie wieder aufhellen. 
+Sie alle waren traurig, aber auch entschlossen keiner wollte Dave zurücklassen. 
+"Dean setzte Kurs in Richtung Deadmansisland, das ist der einzige Ort wo das mistvieh Dave hinbringen könnte." 
+Und so begab sich Daves Crew entschlossen auf eine Rettungsmission.
+Der Wind war gut und das Schiff schmiegte sich gleisend durch das blaue Wasser. 
+Alles wirkte ruhig bis Finian aus dem Ausguck meldung gab:"Insel voraus!"
+
 `,
       },
       {
         id: "treasure-de-07",
-        title: "Kapitel 7",
+        title: "Kapitel 7 - Die Rettung",
         language: "Deutsch",
         text: `
-Kapitel 7 Inhalt.
+
+Dave kriechte weiter über den Boden und suchte nach einem Ausgang das seltsame blaue Licht half ihm sich in der Höhle zurechtzufinden. 
+Mit der Zeit verlor er allerdings das zeitgefühl er wusste nicht ob er schon Stunden, Tage oder Wochen über den Boden krabbelte. 
+Seine Hände ertasteten etwas in der Dunkelheit etwas rundes als Dave sich das Objekt genauer anschaute durchlief ihn ein kurzer Freudenschock, es war ein Kompass! 
+Vor lauter Freude rollte sich Dave auf dem Boden... und rollte über einen Haufen Knochen. 
+Das knacken dieser war in der Stille der Höhle kaum zu überhören, und auch das Biest hörte es, es baute  sich vor Dave auf, seine roten Augen leuchteten bestiealisch. 
+Booooom ein krachen durchzog die Höhle und eine der Felswände fiel in sich zusammen, das Sonnenlicht blendete Dave, erst nach ein paar Sekunden sah er was da durch die Wand gekommen war. 
+Es war sein Schiff! Seine Crew! Sie hatten es wohl mit dem Schwarzpulver das noch auf dem Schiff war geschafft ein Loch in die Wand zu sprengen. 
+"Macht es fertig", schrie es vom Schiff und Dave hörte weitere Explosionen. 
+Das Biest hatte keine Wahl und zog sich weiter in die Höhle zurück und probierte mit seinen Tentakeln Dave zu packen, dieser rannte auf sein Schiff zu. 
+Im letzten Moment schaffte er es die Hand von zweien seiner Leute zu greifen. 
+Finian und Julian hielten seine Hand fest und sahen nicht so aus als ob sie loslassen würden:"Halt dich fest Captain sonst bist du gleich Monstertatar!"sagte Finian lässig. 
+Knapp aber in einem Stück schaften sie es das Schiff aus der Höhle zu manövrieren und enkamen dem Untier. 
+Dave, überglücklich darüber das er seine Crew wieder hatte rief:"Kurs setzten Männer  wir haben eine Fracht auszuliefern!"
+
 `,
       },
       {
@@ -315,18 +338,40 @@ Everything seemed calm until Finian called out from the lookout: 'Island ahead!'
       },
       {
         id: "treasure-en-06",
-        title: "Chapter 6",
+        title: "Chapter 6 - One less?",
         language: "English",
         text: `
-Chapter 6 content.
+        
+The crew was shaken. First their compass broke, and now their captain was gone too. 
+The mood was at rock bottom, and not even Finian’s jokes could cheer them up. 
+They were all sad, but also determined; no one wanted to leave Dave behind. 
+"Dean set course for Deadman's Island, that’s the only place that damn Dave could be taken to." 
+And so, Dave’s crew set off on a rescue mission with determination. The wind was favorable, and the ship slipped gleaming through the blue water. 
+Everything seemed calm until Finian called out from the lookout: "Island ahead!"
+
 `,
       },
       {
         id: "treasure-en-07",
-        title: "Chapter 7",
+        title: "Chapter 7 - The rescue",
         language: "English",
         text: `
-Chapter 7 content.
+
+Dave kept crawling across the ground, looking for an exit; the strange blue light helped him find his way through the cave. 
+Over time, however, he lost track of time; he didn’t know if he had been crawling for hours, days, or weeks. 
+His hands felt something in the darkness, something round. As Dave looked more closely at the object, a brief shock of joy ran through him—it was a compass! 
+Overjoyed, Dave rolled on the ground... and rolled over a pile of bones. 
+The cracking of them was almost impossible to miss in the silence of the cave, and the beast heard it too; it loomed over Dave, its red eyes glowing savagely.  
+Boom! A crash echoed through the cave, and one of the rock walls collapsed. 
+The sunlight blinded Dave, and only after a few seconds did he see what had come through the wall. 
+It was his ship! His crew! They had apparently managed to blast a hole through the wall with the black powder that was still on the ship.
+"Finish it off," it shouted from the ship, and Dave heard more explosions. 
+The beast had no choice and retreated further into the cave, trying to grab Dave with its tentacles as he ran toward his ship. 
+At the last moment, he managed to grab the hands of two of his crew. 
+Finian and Julian held on tight and didn’t look like they were going to let go: 'Hold on, Captain, or you’ll be Monster Tatar!' Finian said casually. 
+Barely, but in one piece, they managed to maneuver the ship out of the cave and escape the monster. 
+Dave, overjoyed to have his crew back, shouted: 'Set course, men! We’ve got cargo to deliver!'
+
 `,
       },
       {
