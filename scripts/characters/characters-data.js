@@ -15,7 +15,7 @@ const characters = [
   },
   {
     name: "Finjan Backbeard",
-    image: "",
+    image: "scripts/image/charakter-2.png",
     description:
       "Das jüngste und frechste Mitglied der Crew. Trotz seiner sonderbaren Art ist er ein Meister der Beobachtung und sitzt meistens oben im Ausguck. Er hat auch die Flagge des Schiffes entworfen.",
   },
