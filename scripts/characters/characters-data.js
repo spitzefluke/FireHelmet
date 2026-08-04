@@ -9,7 +9,7 @@
 const characters = [
   {
     name: "Schifffahrer Dave",
-    image: "",
+    image: "scripts/image/charakter-3.png",
     description:
       "Dave ist Captain der Crew \"Flitzpiepen\" und ein abenteuerlustiger, freundlicher und erfahrener Schifffahrer. Im heutigen Sinne würde man ihn als Rentner bezeichnen – zerbrechlich, aber durchgeknallt.",
   },
