@@ -21,7 +21,7 @@ const characters = [
   },
   {
     name: "Dean Silentmouth",
-    image: "scripts/image/charakter-1",
+    image: "scripts/image/charakter-1.png",
     description: "Der Steuermann des Schiffes und einer von Daves engsten Vertrauten. Redet nicht viel, aber kennt sich auf den Weltmeeren aus wie kaum ein anderer.",
   },
   {
