@@ -20,6 +20,6 @@
 ====================================================== */
 
 const discordConfig = {
-  clientId: "DEINE-DISCORD-CLIENT-ID",
+  clientId: "1533221770843131914",
   redirectUri: window.location.origin + window.location.pathname,
 };
