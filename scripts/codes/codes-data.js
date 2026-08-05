@@ -104,6 +104,35 @@ const codes = [
     hash: "31d8d90581a4e61fddd554f8278fbb51ecb4d52d75705fdef21594ab672d6979", // ausguck (versteckt bei den Stories)
     message: "Scharfe Augen! Du hast den winzigen Code bei den Stories entdeckt. 🔭",
   },
+  {
+    hash: "6700869c8ff7480e34a70a708b028700dbaa3a033b5652b903afe89f49a31456", // Ben
+    message: "Der beste und alte Bruder vom Dave.",
+  },
+  {
+    hash: "1deb056277cbf73bff5424e04fdc2a866a920e557568b4a6ca746311d2d96322", // 004100
+    message: "So alt ist der alte Dave und der Schifffahrer Dave schon.",
+  },
+  {
+    hash: "c35896745c9e780bc800b9601205cd8d0fd7e542b2a831b5884ba80f7f7f706f", // Zoey
+    message: "Tochter vom Zugfahrer",
+  },
+  {
+    hash: "4addb2791110e403d458977d8e4f3bc812de8d149e5a49f6f653564aa35ec27a", // Drache
+    message: "Feuer, Flügel und Lieblingsbegleiter vom Dave.",
+  },
+  {
+    hash: "59858c2960c57e08940d544225e998cdc3a21e7bb429a8d1832c052563eab2d4", // Saulappen
+    message: "Du bist nun ein Saulappen und Teil der Crew von den Saulappen des Daves.",
+  },
+  {
+    hash: "ed227bb0d191d168545bec592e8b9c1199ef4ffa122a7395ededa0cf888dc09f", // SixSeven
+    message: "Ist es 67 oder sixseven, egal beim Dave ist das Wort und die Zahl gesperrt.",
+  },
+  {
+    hash: "20cb2ba2653ca07b952ed0aeedad987e611188771380e5a50780248291bd7865", // Flietzpiepen
+    message: "Bin ich ein Wort, eine Gruppierung, eine Sekte oder doch ein Merch?",
+    reward: "???Tipp???",
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
