@@ -12,8 +12,8 @@ const streamRaetselConfig = {
   // im Vorschau-Modus, siehe unten)
   title: "Das Streamrätsel",
   description:
-    "Willkommen beim Streamrätsel! Trage hier den eigentlichen Rätseltext, " +
-    "Hinweise oder Bilder ein, sobald es losgeht.",
+    "Willkommen beim Streamraetsel, liebe Community und Zugfahrer Dave, diese Seite von der Webseite hilft euch die nächsten Zahlen herauszufinden und für Dave die Zahlen seines Pakets." +
+    "Den ersten Hinweis ließt Dave vor, da sich dieser im Paket befindet. Also viel Spaß",
 
   // Optional: Bild anzeigen (Pfad relativ zur index.html), sonst leer lassen
   image: "",
@@ -26,8 +26,8 @@ const streamRaetselConfig = {
      Schloss auf. Sind BEIDE offen, erscheint die Dankes-
      Animation mit deinem Text.
   ------------------------------------------------------ */
-  redLockCombination: "123",
-  blackLockCombination: "456",
+  redLockCombination: "736",
+  blackLockCombination: "925",
 
   // Text, der erscheint, wenn beide Schlösser offen sind
   finaleText: "Danke für alles Dave und Chat ihr seid die besten!",
