@@ -45,7 +45,7 @@ const streamRaetselConfig = {
   redLockMessages: [
     { message: "Erste Ziffer richtig. Zugfahrer_Dave besitzt 18 Sprites. Er verschenkt die Hälfte seiner Sprites an Spieler. Von den übrigen Sprites verschenkt er anschließend noch 4 weitere an andere Spieler. Danach erhält er 2 neue Sprites. Kurz darauf verdoppelt sich die Anzahl seiner Sprites durch einen besonderen Bonus. Zum Schluss verschenkt Zugfahrer_Dave noch 10 Sprites an Spieler. Frage: Wie viele Sprites hat Zugfahrer_Dave am Ende noch?" },
     { message: "Zweite Ziffer von Rot richtig! Die nächste Aufgabe erklärt dein Mod" },
-    { message: "Rotes Schloss geknackt! Weiter geht's mit Schwarz. Hier wird es einfach, die richtige Zahl weiß jemand aus deiner Community. Ruf einfach mal durch... - Hier der Insta: Jst0xn" },
+    { message: "Rotes Schloss geknackt! Weiter geht's mit Schwarz. Hier wird es einfach, die richtige Zahl weiß jemand aus deiner Community. Ruf einfach mal durch..." },
   ],
   blackLockMessages: [
     { message: "Erste Ziffer von Schwarz richtig!", audio: "audio/Mein_Audio.mp3" }, 
