@@ -6,7 +6,7 @@
 
 const streamRaetselConfig = {
   // Freischalt-Datum (Format: "JJJJ-MM-TTTHH:MM:SS")
-  unlockDate: "2026-08-10T00:00:00",
+  unlockDate: "2026-08-9T00:00:00",
 
   // Wird erst NACH dem Freischalten angezeigt (bzw. für dich
   // im Vorschau-Modus, siehe unten)
@@ -48,7 +48,7 @@ const streamRaetselConfig = {
     { message: "Rotes Schloss geknackt! Weiter geht's mit Schwarz. Hier wird es einfach, die richtige Zahl weiß jemand aus deiner Community. Ruf einfach mal durch..." },
   ],
   blackLockMessages: [
-    { message: "Erste Ziffer von Schwarz richtig!", audio: "audio/Mein_Audio.mp3" }, 
+    { message: "Erste Ziffer von Schwarz richtig!", audio: "scrips/audio/Mein_Audio.mp3" }, 
     { message: "Zweite Ziffer von Schwarz richtig! Nun für die Letzte gibt es ein Youtube video wo du zeichen musst." },
     { message: "Schwarzes Schloss geknackt! Glückwunsch alle sind offen" },
   ],
