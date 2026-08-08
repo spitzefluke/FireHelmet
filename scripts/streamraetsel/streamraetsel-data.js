@@ -6,7 +6,7 @@
 
 const streamRaetselConfig = {
   // Freischalt-Datum (Format: "JJJJ-MM-TTTHH:MM:SS")
-  unlockDate: "2026-08-9T00:00:00",
+  unlockDate: "2026-08-08T19:00:00",
 
   // Wird erst NACH dem Freischalten angezeigt (bzw. für dich
   // im Vorschau-Modus, siehe unten)
