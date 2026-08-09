@@ -192,44 +192,76 @@ function getAudioLevel() {
   if (!audioAnalyser || !audioDataArray) return 0;
 
   audioAnalyser.getByteFrequencyData(audioDataArray);
-  let sum = 0;
-  for (let i = 0; i < audioDataArray.length; i++) sum += audioDataArray[i];
-  const avg = sum / audioDataArray.length / 255;
 
-  // sanft glätten, damit die Effekte nicht hektisch flackern
-  audioLevelSmoothed += (avg - audioLevelSmoothed) * 0.15;
-  return audioLevelSmoothed;
+  // Bass-Bereich (die ersten paar Frequenzbänder) statt gesamtem
+  // Spektrum - das macht die Reaktion viel spürbarer/rhythmischer,
+  // näher am tatsächlichen Beat statt einem trägen Durchschnitt.
+  const bassBins = Math.max(4, Math.floor(audioDataArray.length * 0.22));
+  let sum = 0;
+  for (let i = 0; i < bassBins; i++) sum += audioDataArray[i];
+  const avg = sum / bassBins / 255;
+
+  // Betonung: leise Stellen bleiben ruhig, laute Stellen schlagen
+  // deutlich stärker aus
+  const emphasized = Math.pow(avg, 1.4) * 1.6;
+
+  // Schneller Attack (springt sofort mit hoch), langsamerer Release
+  // (fällt sanft wieder ab) - fühlt sich "punchy" an statt trägem Mittelwert
+  if (emphasized > audioLevelSmoothed) {
+    audioLevelSmoothed += (emphasized - audioLevelSmoothed) * 0.55;
+  } else {
+    audioLevelSmoothed += (emphasized - audioLevelSmoothed) * 0.08;
+  }
+
+  return Math.min(1, audioLevelSmoothed);
 }
 
 function applyAudioReactiveUI(level) {
   const heroTitle = document.querySelector(".hero h1");
   const timeBoxes = document.querySelectorAll(".time-box");
+  const heroBlock = document.querySelector(".hero");
 
   if (heroTitle) {
-    heroTitle.style.filter = `brightness(${(1 + level * 0.4).toFixed(3)})`;
-    heroTitle.style.textShadow = `0 0 ${Math.round(40 + level * 55)}px #4da3ff`;
+    heroTitle.style.filter = `brightness(${(1 + level * 0.9).toFixed(3)})`;
+    heroTitle.style.textShadow = `0 0 ${Math.round(40 + level * 110)}px #4da3ff`;
+  }
+
+  if (heroBlock) {
+    heroBlock.style.transform = `scale(${(1 + level * 0.035).toFixed(3)})`;
   }
 
   timeBoxes.forEach((box) => {
-    box.style.boxShadow = `0 0 ${Math.round(10 + level * 40)}px rgba(77,163,255,${(0.25 + level * 0.55).toFixed(2)})`;
-    box.style.transform = `scale(${(1 + level * 0.04).toFixed(3)})`;
+    box.style.boxShadow = `0 0 ${Math.round(10 + level * 75)}px rgba(77,163,255,${(0.25 + level * 0.7).toFixed(2)})`;
+    box.style.transform = `scale(${(1 + level * 0.09).toFixed(3)})`;
   });
 }
 
 /* ------------------------------------------------------
    PIRATENSCHIFF
-   Segelt langsam über den Horizont am unteren Rand des
-   Sternenhimmels, mit sanftem Wellengang und einer Laterne,
-   die im Takt der Musik heller/dunkler flackert.
+   Detailreiche Silhouette mit zwei Masten, Rigg-Seilen,
+   Krähennest, Bugspriet-Segel, Totenkopf-Flagge, leuchtenden
+   Bullaugen und einer Kielwasser-Spur. Reagiert auf die Musik
+   (Laternen-/Bullaugen-Glühen, Fahrtgeschwindigkeit).
 ------------------------------------------------------ */
 const homeShip = { x: 0, active: false };
+let homeShipWake = [];
+let homeShipWakeTimer = 0;
 
 function initHomeShip() {
   if (!homeCanvas) return;
   if (!homeShip.active) {
-    homeShip.x = homeCanvas.width + 220;
+    homeShip.x = homeCanvas.width + 260;
     homeShip.active = true;
   }
+}
+
+function drawSail(ctx, x, topY, bottomY, curve, flutter) {
+  ctx.beginPath();
+  ctx.moveTo(x, topY);
+  ctx.quadraticCurveTo(x + curve + flutter, (topY + bottomY) / 2, x, bottomY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
 }
 
 function drawHomeShip(time, level) {
@@ -237,62 +269,150 @@ function drawHomeShip(time, level) {
 
   const y = homeCanvas.height * 0.86;
   const bob = Math.sin(time / 850) * 5;
+  const tilt = Math.sin(time / 1400) * 0.02;
+  const wind = Math.sin(time / 260);
+  const lanternGlow = 0.55 + level * 0.45;
+
+  // Mond-Halo hinter dem Schiff für dramatische Silhouette
+  const haloGrad = homeCtx.createRadialGradient(homeShip.x, y - 40, 10, homeShip.x, y - 40, 130);
+  haloGrad.addColorStop(0, `rgba(255,244,214,${0.1 + level * 0.12})`);
+  haloGrad.addColorStop(1, "rgba(255,244,214,0)");
+  homeCtx.fillStyle = haloGrad;
+  homeCtx.beginPath();
+  homeCtx.arc(homeShip.x, y - 40, 130, 0, Math.PI * 2);
+  homeCtx.fill();
+
+  // Kielwasser: Schaum-Punkte, die hinterm Schiff ausblassen
+  homeShipWakeTimer++;
+  if (homeShipWakeTimer % 4 === 0) {
+    homeShipWake.push({ x: homeShip.x - 70, y: y + 26 + bob, life: 0, maxLife: 70 });
+  }
+  homeShipWake = homeShipWake.filter((w) => w.life < w.maxLife);
+  homeShipWake.forEach((w) => {
+    w.life++;
+    w.x -= 0.3;
+    const fade = 1 - w.life / w.maxLife;
+    homeCtx.beginPath();
+    homeCtx.arc(w.x, w.y + w.life * 0.15, 1.5 + w.life * 0.04, 0, Math.PI * 2);
+    homeCtx.fillStyle = `rgba(190,220,255,${(fade * 0.35).toFixed(2)})`;
+    homeCtx.fill();
+  });
 
   homeCtx.save();
   homeCtx.translate(homeShip.x, y + bob);
-  homeCtx.rotate(Math.sin(time / 1400) * 0.02);
+  homeCtx.rotate(tilt);
 
-  homeCtx.fillStyle = "rgba(8, 11, 24, 0.92)";
+  homeCtx.fillStyle = "rgba(6, 9, 20, 0.94)";
+  homeCtx.strokeStyle = "rgba(80, 110, 190, 0.35)";
+  homeCtx.lineWidth = 1;
 
-  // Rumpf
+  // Rumpf mit Deckkante
   homeCtx.beginPath();
-  homeCtx.moveTo(-72, 0);
-  homeCtx.quadraticCurveTo(-78, 24, -48, 28);
-  homeCtx.lineTo(48, 28);
-  homeCtx.quadraticCurveTo(78, 24, 72, 0);
+  homeCtx.moveTo(-78, 6);
+  homeCtx.quadraticCurveTo(-84, 26, -50, 30);
+  homeCtx.lineTo(50, 30);
+  homeCtx.quadraticCurveTo(84, 26, 78, 6);
+  homeCtx.quadraticCurveTo(40, -2, 0, 0);
+  homeCtx.quadraticCurveTo(-40, -2, -78, 6);
   homeCtx.closePath();
   homeCtx.fill();
+  homeCtx.stroke();
 
-  // Mast
-  homeCtx.fillRect(-2, -92, 4, 92);
-
-  // Hauptsegel
+  // Achterkastell (erhöhtes Heck, typisch für Piratenschiffe)
   homeCtx.beginPath();
-  homeCtx.moveTo(2, -90);
-  homeCtx.quadraticCurveTo(40, -58, 2, -18);
+  homeCtx.moveTo(-78, 6);
+  homeCtx.quadraticCurveTo(-88, -14, -66, -18);
+  homeCtx.lineTo(-46, -14);
+  homeCtx.lineTo(-46, 4);
   homeCtx.closePath();
   homeCtx.fill();
+  homeCtx.stroke();
 
-  // Vordersegel
-  homeCtx.beginPath();
-  homeCtx.moveTo(-2, -70);
-  homeCtx.quadraticCurveTo(-32, -48, -2, -24);
-  homeCtx.closePath();
-  homeCtx.fill();
-
-  // Flagge
-  homeCtx.beginPath();
-  homeCtx.moveTo(0, -92);
-  homeCtx.lineTo(16 + Math.sin(time / 300) * 3, -87);
-  homeCtx.lineTo(0, -82);
-  homeCtx.closePath();
-  homeCtx.fill();
-
-  // Laterne am Heck, flackert mit der Musik mit
-  const lanternGlow = 0.55 + level * 0.45;
-  homeCtx.beginPath();
-  homeCtx.arc(58, 6, 3 + level * 3, 0, Math.PI * 2);
-  homeCtx.fillStyle = `rgba(255,196,110,${lanternGlow.toFixed(2)})`;
-  homeCtx.shadowColor = "rgba(255,190,110,.9)";
-  homeCtx.shadowBlur = 10 + level * 22;
-  homeCtx.fill();
+  // Bullaugen, leuchten im Takt der Musik
+  [-64, -38, -14, 12].forEach((bx) => {
+    homeCtx.beginPath();
+    homeCtx.arc(bx, 14, 2.4, 0, Math.PI * 2);
+    homeCtx.fillStyle = `rgba(255,196,110,${(lanternGlow * 0.8).toFixed(2)})`;
+    homeCtx.shadowColor = "rgba(255,190,110,.9)";
+    homeCtx.shadowBlur = 6 + level * 12;
+    homeCtx.fill();
+  });
   homeCtx.shadowBlur = 0;
+
+  // Bugspriet mit kleinem Focksegel
+  homeCtx.beginPath();
+  homeCtx.moveTo(74, 2);
+  homeCtx.lineTo(104, -10);
+  homeCtx.lineTo(74, -6);
+  homeCtx.closePath();
+  homeCtx.fillStyle = "rgba(6, 9, 20, 0.94)";
+  homeCtx.fill();
+  homeCtx.stroke();
+
+  drawSail(homeCtx, 88, -8, 4, 16 + wind * 4, 0);
+
+  // Hauptmast (hinten, groß) + Focksegel-Mast (vorne, kleiner)
+  const masts = [
+    { x: -18, height: 108, sailW: 46 },
+    { x: 34, height: 78, sailW: 32 },
+  ];
+
+  masts.forEach((m, i) => {
+    homeCtx.fillStyle = "rgba(6, 9, 20, 0.94)";
+    homeCtx.fillRect(m.x - 2, -m.height, 4, m.height + 4);
+
+    // Rigg-Seilen vom Mast-Top zum Deck
+    homeCtx.strokeStyle = "rgba(90,110,150,.25)";
+    homeCtx.lineWidth = .7;
+    [-1, 1].forEach((dir) => {
+      homeCtx.beginPath();
+      homeCtx.moveTo(m.x, -m.height);
+      homeCtx.lineTo(m.x + dir * 22, 4);
+      homeCtx.stroke();
+    });
+    homeCtx.strokeStyle = "rgba(80, 110, 190, 0.35)";
+    homeCtx.lineWidth = 1;
+
+    // Krähennest oben auf dem Hauptmast
+    if (i === 0) {
+      homeCtx.beginPath();
+      homeCtx.ellipse(m.x, -m.height - 4, 7, 4, 0, 0, Math.PI * 2);
+      homeCtx.fillStyle = "rgba(6, 9, 20, 0.94)";
+      homeCtx.fill();
+      homeCtx.stroke();
+    }
+
+    // Segel mit Wind-Flatter-Kurve
+    const flutter = wind * (3 + level * 3);
+    homeCtx.fillStyle = "rgba(210, 205, 190, 0.9)";
+    homeCtx.strokeStyle = "rgba(80, 110, 190, 0.3)";
+    drawSail(homeCtx, m.x + 2, -m.height + 10, -14, m.sailW, flutter);
+    drawSail(homeCtx, m.x - 2, -m.height * 0.55, -8, -m.sailW * 0.7, -flutter);
+    homeCtx.fillStyle = "rgba(6, 9, 20, 0.94)";
+  });
+
+  // Totenkopf-Flagge auf dem Hauptmast
+  const flagFlutter = 18 + wind * 5;
+  homeCtx.beginPath();
+  homeCtx.moveTo(-18, -108);
+  homeCtx.quadraticCurveTo(-18 + flagFlutter * 0.6, -104, -18 + flagFlutter, -100);
+  homeCtx.quadraticCurveTo(-18 + flagFlutter * 0.6, -96, -18, -92);
+  homeCtx.closePath();
+  homeCtx.fillStyle = "rgba(6, 9, 20, 0.94)";
+  homeCtx.fill();
+
+  // winziger Totenkopf auf der Flagge
+  homeCtx.beginPath();
+  homeCtx.arc(-18 + flagFlutter * 0.4, -100, 2.6, 0, Math.PI * 2);
+  homeCtx.fillStyle = "rgba(230,230,220,.85)";
+  homeCtx.fill();
 
   homeCtx.restore();
 
   homeShip.x -= 0.3 + level * 0.35;
-  if (homeShip.x < -220) {
-    homeShip.x = homeCanvas.width + 220;
+  if (homeShip.x < -260) {
+    homeShip.x = homeCanvas.width + 260;
+    homeShipWake = [];
   }
 }
 
@@ -361,6 +481,7 @@ function drawHomeFrame(time) {
   });
 
   drawHomeShip(time, audioLevel);
+  drawHomeRipples();
   applyAudioReactiveUI(audioLevel);
 
   if (homeEffectsRunning) homeAnimationFrame = requestAnimationFrame(drawHomeFrame);
@@ -372,6 +493,7 @@ function startHomeEffects() {
 
   setupAudioReactivity();
   initHomeShip();
+  setupHomeTapEffect();
 
   homeEffectsRunning = true;
   drawHomeFrame(0);
@@ -384,6 +506,67 @@ function startHomeEffects() {
     homeResizeHandler = () => resizeHomeCanvas();
     window.addEventListener("resize", homeResizeHandler);
   }
+}
+
+/* ------------------------------------------------------
+   TIPP-/KLICK-EFFEKT AUF DEM HINTERGRUND
+   Beim Antippen des Sternenhimmels gibt es, sofern das Gerät
+   es unterstützt, eine kurze echte Vibration (navigator.vibrate
+   - "haptisches" Feedback auf dem Handy) UND eine sichtbare,
+   ausbreitende Ringwelle an der Tippstelle, für alle Geräte.
+------------------------------------------------------ */
+let homeRipples = [];
+let homeTapListenerBound = false;
+
+function spawnHomeRipple(x, y) {
+  homeRipples.push({ x, y, life: 0, maxLife: 45 });
+
+  if (navigator.vibrate) {
+    navigator.vibrate(18);
+  }
+}
+
+function drawHomeRipples() {
+  if (!homeCtx) return;
+
+  homeRipples = homeRipples.filter((r) => r.life < r.maxLife);
+  homeRipples.forEach((r) => {
+    r.life++;
+    const progress = r.life / r.maxLife;
+    const radius = progress * 90;
+    const fade = 1 - progress;
+
+    homeCtx.beginPath();
+    homeCtx.arc(r.x, r.y, radius, 0, Math.PI * 2);
+    homeCtx.strokeStyle = `rgba(255,255,255,${(fade * 0.55).toFixed(2)})`;
+    homeCtx.lineWidth = 2.5 * fade + 0.5;
+    homeCtx.shadowColor = "rgba(140,200,255,.8)";
+    homeCtx.shadowBlur = 14 * fade;
+    homeCtx.stroke();
+    homeCtx.shadowBlur = 0;
+
+    // zweiter, kleinerer Ring kurz dahinter für mehr "Wumms"
+    if (progress > 0.15) {
+      const innerProgress = Math.max(0, progress - 0.15);
+      homeCtx.beginPath();
+      homeCtx.arc(r.x, r.y, innerProgress * 90, 0, Math.PI * 2);
+      homeCtx.strokeStyle = `rgba(255,255,255,${(fade * 0.35).toFixed(2)})`;
+      homeCtx.lineWidth = 1.5;
+      homeCtx.stroke();
+    }
+  });
+}
+
+function setupHomeTapEffect() {
+  if (homeTapListenerBound || !homeFx) return;
+  homeTapListenerBound = true;
+
+  homeFx.addEventListener("pointerdown", (e) => {
+    const rect = homeCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    spawnHomeRipple(x, y);
+  });
 }
 
 // Wird von scripts/home/home-crack.js aufgerufen, wenn sich die
@@ -401,11 +584,17 @@ function stopHomeEffects() {
   clearTimeout(homeCometTimeout);
   homeCometTimeout = null;
   homeComets = [];
+  homeShipWake = [];
+  homeRipples = [];
 
   const heroTitle = document.querySelector(".hero h1");
   if (heroTitle) {
     heroTitle.style.filter = "";
     heroTitle.style.textShadow = "";
+  }
+  const heroBlock = document.querySelector(".hero");
+  if (heroBlock) {
+    heroBlock.style.transform = "";
   }
   document.querySelectorAll(".time-box").forEach((box) => {
     box.style.boxShadow = "";

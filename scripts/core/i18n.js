@@ -236,6 +236,8 @@ function applyTranslations() {
   });
 
   document.documentElement.setAttribute("lang", lang);
+  document.body.classList.toggle("lang-de", lang === "de");
+  document.body.classList.toggle("lang-en", lang === "en");
 
   const btnDe = document.getElementById("lang-btn-de");
   const btnEn = document.getElementById("lang-btn-en");
