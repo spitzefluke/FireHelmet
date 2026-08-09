@@ -32,20 +32,24 @@ const wheelThemes = [
     name: "Gold & Piraten",
     colors: ["#d4af37", "#3b2415", "#0e7c66", "#3b2415", "#7c2d12", "#d4af37", "#3b2415", "#0e7c66"],
     accent: "#d4af37",
+    icons: ["⚓", "💰", "🏴‍☠️", "🗺️"],
   },
   {
     name: "Ozean-Blau",
     colors: ["#4da3ff", "#0a1f33", "#38bdf8", "#0a1f33", "#1c4f8f", "#4da3ff", "#0a1f33", "#38bdf8"],
     accent: "#4da3ff",
+    icons: ["🌊", "🐚", "🐠", "⛵"],
   },
   {
     name: "Dschungel-Grün",
     colors: ["#4ade80", "#12241a", "#0e7c66", "#12241a", "#1f5c3a", "#4ade80", "#12241a", "#0e7c66"],
     accent: "#4ade80",
+    icons: ["🌴", "🦜", "🍃", "🐍"],
   },
   {
     name: "Mitternacht-Lila",
     colors: ["#9146ff", "#160a29", "#c084fc", "#160a29", "#5b2a99", "#9146ff", "#160a29", "#c084fc"],
     accent: "#9146ff",
+    icons: ["🔮", "⭐", "🌙", "✨"],
   },
 ];

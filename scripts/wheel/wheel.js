@@ -109,6 +109,42 @@ function applyWheelThemeAccent(theme) {
   if (themeLabel) {
     themeLabel.textContent = `Diese Woche: ${theme.name}`;
   }
+
+  buildWheelOrbitRing(theme);
+}
+
+/* ------------------------------------------------------
+   ORBIT-RING
+   Kreisende, zum Wochenthema passende Icons um das Rad
+   (z.B. Anker/Gold für "Gold & Piraten", Wellen/Fische für
+   "Ozean-Blau" usw.) - macht jede Woche optisch komplett neu.
+------------------------------------------------------ */
+function buildWheelOrbitRing(theme) {
+  const wrapper = document.querySelector(".wheel-wrapper");
+  if (!wrapper || !theme || !theme.icons) return;
+
+  let ring = wrapper.querySelector(".wheel-orbit-ring");
+  if (!ring) {
+    ring = document.createElement("div");
+    ring.className = "wheel-orbit-ring";
+    wrapper.insertBefore(ring, wrapper.firstChild);
+  }
+
+  ring.innerHTML = "";
+  const iconCount = 8;
+
+  for (let i = 0; i < iconCount; i++) {
+    const angle = (360 / iconCount) * i;
+    const icon = theme.icons[i % theme.icons.length];
+
+    const item = document.createElement("span");
+    item.className = "wheel-orbit-icon";
+    item.textContent = icon;
+    item.style.transform = `rotate(${angle}deg) translateY(-165px) rotate(${-angle}deg)`;
+    item.style.animationDelay = `${i * -1.5}s`;
+
+    ring.appendChild(item);
+  }
 }
 
 function buildWheel() {
@@ -604,10 +640,12 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
     ? `<img src="${player.avatar}" class="leaderboard-avatar" alt="">`
     : "";
 
+  const crownHtml = rank === 1 ? `<span class="leaderboard-crown">👑</span>` : "";
+
   return `
     <tr class="${classes.join(" ")}">
       <td class="leaderboard-rank">${medal}</td>
-      <td class="leaderboard-name">${avatarHtml}${escapeHtml(player.nickname || "Unbekannt")}${isOwnRow ? ' <span class="leaderboard-you-tag">(Du)</span>' : ""}</td>
+      <td class="leaderboard-name">${crownHtml}${avatarHtml}${escapeHtml(player.nickname || "Unbekannt")}${isOwnRow ? ' <span class="leaderboard-you-tag">(Du)</span>' : ""}</td>
       <td class="leaderboard-codes">${player.codesCracked} 🔑</td>
       <td class="leaderboard-rewards">${renderRewardBadges(player.rewards)}</td>
     </tr>
