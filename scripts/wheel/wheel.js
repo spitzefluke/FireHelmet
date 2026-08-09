@@ -690,17 +690,18 @@ function loadLeaderboard() {
 
       const ownIndex = ownUid ? players.findIndex((p) => p.uid === ownUid) : -1;
       const ownRank = ownIndex >= 0 ? ownIndex + 1 : null;
-      const topFive = players.slice(0, 5);
+      const topCount = 10;
+      const topPlayers = players.slice(0, topCount);
 
       let html = '<table class="leaderboard-table"><thead><tr><th>#</th><th>Name</th><th>Codes</th><th>Gewinne</th></tr></thead><tbody>';
 
-      topFive.forEach((player, i) => {
+      topPlayers.forEach((player, i) => {
         const rank = i + 1;
         html += buildLeaderboardRow(player, rank, player.uid === ownUid);
       });
 
-      // Falls der eigene Platz außerhalb der Top 5 liegt, extra anzeigen
-      if (ownRank && ownRank > 5) {
+      // Falls der eigene Platz außerhalb der Top 10 liegt, extra anzeigen
+      if (ownRank && ownRank > topCount) {
         html += `
           <tr class="leaderboard-gap">
             <td colspan="4">⋯</td>
