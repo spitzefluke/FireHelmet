@@ -853,7 +853,8 @@ main {
 }
 
 .character-card-v2:hover .character-card-inner,
-.character-card-v2:focus .character-card-inner {
+.character-card-v2:focus .character-card-inner,
+.character-card-v2.character-card-flipped .character-card-inner {
   transform: rotateY(180deg);
   animation-play-state: paused;
 }
@@ -1598,11 +1599,13 @@ main {
 .leaderboard-list {
   position: relative;
   margin-top: 50px;
-  max-width: 700px;
+  max-width: 920px;
   margin-left: auto;
   margin-right: auto;
-  padding: 10px;
-  border-radius: 24px;
+  padding: 16px;
+  border-radius: 28px;
+  border: 1px solid rgba(212,175,55,.25);
+  box-shadow: 0 0 60px rgba(212,175,55,.08);
 }
 
 /* Treibende Gold-Partikel im Hintergrund der Rangliste */
@@ -1611,9 +1614,9 @@ main {
   position: absolute;
   inset: -40px;
   z-index: -1;
-  font-size: 22px;
-  line-height: 90px;
-  letter-spacing: 90px;
+  font-size: 24px;
+  line-height: 100px;
+  letter-spacing: 100px;
   opacity: .12;
   overflow: hidden;
   white-space: nowrap;
@@ -1631,10 +1634,17 @@ main {
   width: 100%;
   border-collapse: collapse;
   background: rgba(255,255,255,.05);
-  border-radius: 20px;
+  border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0,0,0,.45), 0 0 0 1px rgba(212,175,55,.25);
+  box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(212,175,55,.3);
   isolation: isolate;
+  font-size: 16px;
+  animation: leaderboardFramePulse 4s ease-in-out infinite;
+}
+
+@keyframes leaderboardFramePulse {
+  0%, 100% { box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(212,175,55,.3), 0 0 25px rgba(212,175,55,.08); }
+  50%      { box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(212,175,55,.5), 0 0 45px rgba(212,175,55,.22); }
 }
 
 /* Wandernder Glanzstreifen, läuft periodisch über die ganze Tabelle */
@@ -1658,17 +1668,18 @@ main {
 
 .leaderboard-table th,
 .leaderboard-table td {
-  padding: 16px 18px;
+  padding: 18px 22px;
   text-align: left;
 }
 
 .leaderboard-table thead {
   position: relative;
-  background: linear-gradient(90deg, rgba(212,175,55,.35), rgba(212,175,55,.15));
+  background: linear-gradient(90deg, rgba(212,175,55,.4), rgba(212,175,55,.18));
   text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 13px;
+  letter-spacing: 2px;
+  font-size: 14px;
   color: #ffe9b0;
+  text-shadow: 0 0 12px rgba(255,233,176,.4);
 }
 
 .leaderboard-table tbody tr {
@@ -1677,13 +1688,17 @@ main {
   animation: leaderboardRowIn .5s cubic-bezier(0.22, 0.9, 0.32, 1.2) backwards;
 }
 
-.leaderboard-table tbody tr:nth-child(1) { animation-delay: .03s; }
-.leaderboard-table tbody tr:nth-child(2) { animation-delay: .08s; }
-.leaderboard-table tbody tr:nth-child(3) { animation-delay: .13s; }
-.leaderboard-table tbody tr:nth-child(4) { animation-delay: .18s; }
-.leaderboard-table tbody tr:nth-child(5) { animation-delay: .23s; }
-.leaderboard-table tbody tr:nth-child(6) { animation-delay: .28s; }
-.leaderboard-table tbody tr:nth-child(7) { animation-delay: .33s; }
+.leaderboard-table tbody tr:nth-child(1)  { animation-delay: .02s; }
+.leaderboard-table tbody tr:nth-child(2)  { animation-delay: .05s; }
+.leaderboard-table tbody tr:nth-child(3)  { animation-delay: .08s; }
+.leaderboard-table tbody tr:nth-child(4)  { animation-delay: .11s; }
+.leaderboard-table tbody tr:nth-child(5)  { animation-delay: .14s; }
+.leaderboard-table tbody tr:nth-child(6)  { animation-delay: .17s; }
+.leaderboard-table tbody tr:nth-child(7)  { animation-delay: .20s; }
+.leaderboard-table tbody tr:nth-child(8)  { animation-delay: .23s; }
+.leaderboard-table tbody tr:nth-child(9)  { animation-delay: .26s; }
+.leaderboard-table tbody tr:nth-child(10) { animation-delay: .29s; }
+.leaderboard-table tbody tr:nth-child(11) { animation-delay: .32s; }
 
 @keyframes leaderboardRowIn {
   0%   { opacity: 0; transform: translateX(-25px); }
@@ -1700,13 +1715,14 @@ main {
 }
 
 .leaderboard-rank {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: bold;
-  width: 50px;
+  width: 55px;
 }
 
 .leaderboard-name {
   font-weight: 600;
+  font-size: 17px;
   color: #fff;
 }
 
@@ -2522,11 +2538,11 @@ main {
 
 /* Avatar in der Rangliste */
 .leaderboard-avatar {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   vertical-align: middle;
-  margin-right: 8px;
+  margin-right: 10px;
   border: 2px solid rgba(255,255,255,.35);
   box-shadow: 0 0 8px rgba(255,255,255,.2);
   transition: transform .2s, box-shadow .2s;
