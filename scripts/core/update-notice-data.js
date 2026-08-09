@@ -14,12 +14,12 @@
 const updateNoticeConfig = {
   title: "🆕 Neuigkeiten",
   message:
-    "Willkommen! Trag hier dein aktuelles Update rein - was ist neu, " +
-    "was hat sich geändert, worauf sollen deine Zuschauer achten.",
+    "Willkommen auf meiner Webseite, Update 3.0 wurde in die Webseite gebaut. " +
+    "Damit wurde ein Fehler bei den Charakter Cards gefixxt, visuelle Effekte und Aussehne der Webseite überarbeitet und diese Neuigkeiten Message hinzugefügt.",
 
   // Optional: Bild anzeigen (Pfad relativ zur index.html), sonst leer lassen
   image: "",
 
   // Text auf dem Schließen-Button
-  buttonText: "Alles klar!",
+  buttonText: "Nice",
 };
