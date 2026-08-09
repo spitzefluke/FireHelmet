@@ -3397,3 +3397,128 @@ main {
   0%, 100% { transform: translateY(0) rotate(-6deg); }
   50%      { transform: translateY(-3px) rotate(6deg); }
 }
+
+/* =====================================================
+   UPDATE-MITTEILUNG (Popup beim ersten Besuch)
+===================================================== */
+.update-notice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(2, 3, 10, 0);
+  backdrop-filter: blur(0px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s ease, background .35s ease, backdrop-filter .35s ease;
+}
+
+.update-notice-overlay:empty {
+  display: none;
+}
+
+.update-notice-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(2, 3, 10, .75);
+  backdrop-filter: blur(8px);
+}
+
+.update-notice-box {
+  position: relative;
+  max-width: 460px;
+  width: 100%;
+  padding: 40px 32px 32px;
+  border-radius: 26px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(18,22,42,.96), rgba(8,10,22,.98));
+  border: 1px solid rgba(var(--menu-rgb1, 77,163,255), .35);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 60px rgba(var(--menu-rgb1, 77,163,255), .15);
+  transform: translateY(24px) scale(.94);
+  opacity: 0;
+  transition: transform .4s cubic-bezier(0.22, 0.9, 0.32, 1.2), opacity .4s;
+}
+
+.update-notice-overlay.visible .update-notice-box {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Rotierender Farbverlauf-Rahmen, wie beim Menü-Button */
+.update-notice-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 28px;
+  padding: 2px;
+  background: conic-gradient(from 0deg, var(--menu-hex1), var(--menu-hex2), var(--menu-hex3), var(--menu-hex2), var(--menu-hex1));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: menuBorderSpin 4s linear infinite;
+  opacity: .6;
+  z-index: -1;
+}
+
+.update-notice-title {
+  font-size: 26px;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  background: linear-gradient(90deg, #ffffff, var(--menu-hex1), var(--menu-hex2), #ffffff);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sidebarTitleShine 5s linear infinite;
+}
+
+.update-notice-image {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(255,255,255,.15);
+}
+
+.update-notice-message {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #d8dce6;
+  white-space: pre-line;
+  margin-bottom: 28px;
+}
+
+.update-notice-button {
+  padding: 14px 36px;
+  border: none;
+  border-radius: 15px;
+  background: linear-gradient(135deg, rgba(var(--menu-rgb1,77,163,255),.35), rgba(var(--menu-rgb2,145,70,255),.35));
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s, background .3s;
+}
+
+.update-notice-button:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(var(--menu-rgb1,77,163,255),.4);
+  background: linear-gradient(135deg, rgba(var(--menu-rgb1,77,163,255),.55), rgba(var(--menu-rgb2,145,70,255),.55));
+}
+
+@media (max-width: 600px) {
+  .update-notice-box {
+    padding: 32px 22px 26px;
+  }
+
+  .update-notice-title {
+    font-size: 21px;
+  }
+
+  .update-notice-message {
+    font-size: 14px;
+  }
+}
