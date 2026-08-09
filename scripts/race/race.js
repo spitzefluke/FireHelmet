@@ -246,52 +246,79 @@ function getRaceTrackLength() {
 
 const kartMarkup = `
     <g class="kart-inner">
-      <ellipse class="kart-shadow" cx="0" cy="9" rx="12" ry="4"></ellipse>
-      <g class="kart-wheel-group" transform="translate(-6,-7)">
-        <circle class="kart-wheel" r="2.6"></circle>
-        <rect class="kart-spoke" x="-2.2" y="-.5" width="4.4" height="1"></rect>
+      <ellipse class="kart-shadow" cx="0" cy="10" rx="13" ry="4"></ellipse>
+
+      <!-- Reifen: dickere, realistische 3D-Räder mit Felge -->
+      <g class="kart-wheel-group" transform="translate(-7,-7.5)">
+        <circle class="kart-tire" r="3"></circle>
+        <circle class="kart-rim" r="1.5"></circle>
+        <rect class="kart-spoke" x="-1.5" y="-.4" width="3" height=".8"></rect>
+        <rect class="kart-spoke" x="-.4" y="-1.5" width=".8" height="3"></rect>
         <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".4s" repeatCount="indefinite"></animateTransform>
       </g>
-      <g class="kart-wheel-group" transform="translate(-6,7)">
-        <circle class="kart-wheel" r="2.6"></circle>
-        <rect class="kart-spoke" x="-2.2" y="-.5" width="4.4" height="1"></rect>
+      <g class="kart-wheel-group" transform="translate(-7,7.5)">
+        <circle class="kart-tire" r="3"></circle>
+        <circle class="kart-rim" r="1.5"></circle>
+        <rect class="kart-spoke" x="-1.5" y="-.4" width="3" height=".8"></rect>
+        <rect class="kart-spoke" x="-.4" y="-1.5" width=".8" height="3"></rect>
         <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".4s" repeatCount="indefinite"></animateTransform>
       </g>
-      <g class="kart-wheel-group" transform="translate(6,-7)">
-        <circle class="kart-wheel" r="2.6"></circle>
-        <rect class="kart-spoke" x="-2.2" y="-.5" width="4.4" height="1"></rect>
+      <g class="kart-wheel-group" transform="translate(6.5,-7.5)">
+        <circle class="kart-tire" r="2.7"></circle>
+        <circle class="kart-rim" r="1.3"></circle>
+        <rect class="kart-spoke" x="-1.3" y="-.35" width="2.6" height=".7"></rect>
+        <rect class="kart-spoke" x="-.35" y="-1.3" width=".7" height="2.6"></rect>
         <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".4s" repeatCount="indefinite"></animateTransform>
       </g>
-      <g class="kart-wheel-group" transform="translate(6,7)">
-        <circle class="kart-wheel" r="2.6"></circle>
-        <rect class="kart-spoke" x="-2.2" y="-.5" width="4.4" height="1"></rect>
+      <g class="kart-wheel-group" transform="translate(6.5,7.5)">
+        <circle class="kart-tire" r="2.7"></circle>
+        <circle class="kart-rim" r="1.3"></circle>
+        <rect class="kart-spoke" x="-1.3" y="-.35" width="2.6" height=".7"></rect>
+        <rect class="kart-spoke" x="-.35" y="-1.3" width=".7" height="2.6"></rect>
         <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".4s" repeatCount="indefinite"></animateTransform>
       </g>
 
-      <!-- Spoiler am Heck -->
-      <rect class="kart-spoiler-post" x="-11" y="-3" width="2" height="6"></rect>
-      <rect class="kart-spoiler" x="-13" y="-5.5" width="3" height="11" rx="1"></rect>
+      <!-- Spoiler am Heck, mit Tragflächen-Profil -->
+      <rect class="kart-spoiler-post" x="-11.5" y="-3" width="1.8" height="6"></rect>
+      <rect class="kart-spoiler-post" x="-11.5" y="-3" width="1.8" height="1.2" opacity=".5"></rect>
+      <rect class="kart-spoiler" x="-13.5" y="-5.8" width="3" height="11.6" rx="1.2"></rect>
+      <rect class="kart-spoiler-shine" x="-13.5" y="-5.8" width="3" height="2.4" rx="1"></rect>
 
-      <!-- Karosserie -->
-      <rect class="kart-body" x="-9" y="-6.5" width="18" height="13" rx="4"></rect>
-      <rect class="kart-stripe" x="-9" y="-2" width="18" height="4"></rect>
-      <path class="kart-gloss" d="M-7,-6 Q0,-8 7,-6 L6,-4.5 Q0,-6.2 -6,-4.5 Z"></path>
+      <!-- Unterboden-Schatten für mehr Tiefe -->
+      <rect class="kart-underbody" x="-9.5" y="1" width="18" height="4" rx="2"></rect>
+
+      <!-- Karosserie mit Rundungen + Glanzlicht + Seitenkasten -->
+      <rect class="kart-body" x="-9.5" y="-6.8" width="19" height="13.6" rx="4.5"></rect>
+      <path class="kart-side-shade" d="M-9.5,3 Q0,5.5 9.5,3 L9.5,6.8 Q0,7.8 -9.5,6.8 Z"></path>
+      <rect class="kart-stripe" x="-9.5" y="-2.2" width="19" height="4.4"></rect>
+      <path class="kart-gloss" d="M-7.5,-6.2 Q0,-8.5 7.5,-6.2 L6.2,-4.4 Q0,-6.5 -6.2,-4.4 Z"></path>
+
+      <!-- Cockpit: Scheibe + Helm mit Visier -->
+      <path class="kart-windshield" d="M-4,-4.2 Q-1,-6.5 3,-5 L2,-1.5 L-3.5,-1.5 Z"></path>
+      <circle class="kart-helmet" cx="-1.5" cy="0" r="3.2"></circle>
+      <path class="kart-visor" d="M-3.6,-1 Q-1.5,-2.6 0.8,-1.2 L0.2,1 Q-1.7,1.9 -3.2,0.6 Z"></path>
+
       <text class="kart-number" x="-1" y="1.8" text-anchor="middle"></text>
-      <polygon class="kart-nose" points="9,-3.5 15,0 9,3.5"></polygon>
-      <circle class="kart-helmet" cx="-2" cy="0" r="3"></circle>
+
+      <!-- Nase + Frontflügel + Scheinwerfer -->
+      <polygon class="kart-nose" points="9.5,-3.8 15.5,0 9.5,3.8"></polygon>
+      <rect class="kart-front-wing" x="9" y="4" width="6" height="1.4" rx=".6"></rect>
+      <circle class="kart-headlight" cx="12" cy="-1.4" r=".9"></circle>
     </g>
   `;
 
 const boatMarkup = `
     <g class="kart-inner">
       <ellipse class="kart-shadow" cx="0" cy="9" rx="13" ry="3.5"></ellipse>
-      <!-- Rumpf -->
+      <!-- Rumpf mit Tiefen-Schattierung -->
       <path class="kart-body" d="M-11,3 L11,3 L8,9 Q0,11 -8,9 Z"></path>
+      <path class="kart-side-shade" d="M-8,6 L8,6 L7,9 Q0,10.3 -7,9 Z"></path>
       <path class="kart-gloss" d="M-9,3 L9,3 L7,5 L-7,5 Z"></path>
       <!-- Mast -->
       <line class="boat-mast" x1="-2" y1="3" x2="-2" y2="-16" stroke="#4a3420" stroke-width="1.4"></line>
-      <!-- Großsegel -->
-      <path class="kart-stripe boat-sail" d="M-2,-15 L9,2 L-2,2 Z"></path>
+      <!-- Großsegel mit Wölbung für 3D-Wirkung -->
+      <path class="kart-stripe boat-sail" d="M-2,-15 Q6,-8 9,2 L-2,2 Z"></path>
+      <path class="kart-gloss" d="M-2,-15 Q3,-8 4,0 L-2,0 Z" opacity=".4"></path>
       <!-- Vorsegel -->
       <path class="boat-sail-front" d="M-2,-9 L-9,2 L-2,2 Z"></path>
       <text class="kart-number" x="-2" y="7.5" text-anchor="middle"></text>
@@ -302,15 +329,18 @@ const boatMarkup = `
 const planeMarkup = `
     <g class="kart-inner">
       <ellipse class="kart-shadow" cx="0" cy="12" rx="10" ry="3" opacity=".25"></ellipse>
-      <!-- Tragflächen -->
+      <!-- Tragflächen mit Schattierung -->
       <polygon class="plane-wing" points="-2,-2 -8,-13 -1,-3"></polygon>
+      <polygon class="plane-wing-shade" points="-2,-2 -6,-10 -1.5,-3"></polygon>
       <polygon class="plane-wing" points="-2,2 -8,13 -1,3"></polygon>
+      <polygon class="plane-wing-shade" points="-2,2 -6,10 -1.5,3"></polygon>
       <!-- Leitwerk -->
       <polygon class="plane-tail" points="-9,-1.5 -14,-7 -8,-1"></polygon>
       <polygon class="plane-tail" points="-9,1.5 -14,7 -8,1"></polygon>
       <!-- Rumpf -->
       <path class="kart-body" d="M-9,-2.2 L7,-2.2 Q11,-2.2 11,0 Q11,2.2 7,2.2 L-9,2.2 Q-11,0 -9,-2.2 Z"></path>
       <path class="kart-gloss" d="M-8,-1.6 L6,-1.6 L6,-.6 L-8,-.6 Z"></path>
+      <ellipse class="kart-windshield" cx="5" cy="0" rx="2.4" ry="1.6"></ellipse>
       <text class="kart-number" x="0" y="1" text-anchor="middle"></text>
       <polygon class="kart-nose" points="11,0 15,0 11,-1.4"></polygon>
     </g>
@@ -325,7 +355,20 @@ function createKartElement(uid) {
   const vehicle = track ? track.vehicle : "car";
   const bodyMarkup = vehicle === "boat" ? boatMarkup : vehicle === "plane" ? planeMarkup : kartMarkup;
 
-  kart.innerHTML = `<text class="kart-crown" y="-26" text-anchor="middle">👑</text><text class="kart-label" y="-16" text-anchor="middle"></text>${bodyMarkup}`;
+  // Krone ist Teil von .kart-inner, damit sie WIRKLICH fest am Fahrzeug
+  // "verschweißt" ist - sie bewegt, dreht und bobt exakt mit dem Auto mit,
+  // statt separat zu schweben.
+  kart.innerHTML = `<text class="kart-label" y="-16" text-anchor="middle"></text>${bodyMarkup}`;
+  const innerGroup = kart.querySelector(".kart-inner");
+  if (innerGroup) {
+    const crown = document.createElementNS(svgNS, "text");
+    crown.setAttribute("class", "kart-crown");
+    crown.setAttribute("x", "-1.5");
+    crown.setAttribute("y", "-9.5");
+    crown.setAttribute("text-anchor", "middle");
+    crown.textContent = "👑";
+    innerGroup.appendChild(crown);
+  }
 
   document.getElementById("race-karts-layer").appendChild(kart);
   return kart;
