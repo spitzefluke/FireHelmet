@@ -66,6 +66,12 @@ function buildCharacters() {
       </div>
     `;
 
+    // Zusätzlich zum Hover (Desktop) per Antippen umdrehen, damit die
+    // Rückseite mit der Beschreibung auch auf Touch-Geräten erscheint
+    card.addEventListener("click", () => {
+      card.classList.toggle("character-card-flipped");
+    });
+
     container.appendChild(card);
   });
 }
