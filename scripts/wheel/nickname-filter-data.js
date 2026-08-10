@@ -29,4 +29,6 @@ const nicknameBlocklist = [
   "hurensohn",
   "wichser",
   "arschloch",
+  "fotze", 
+  "arsch",
 ];
