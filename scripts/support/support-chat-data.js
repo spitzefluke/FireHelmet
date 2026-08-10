@@ -10,5 +10,5 @@
 ====================================================== */
 
 const supportChatConfig = {
-  proxyUrl: "", // z.B. "https://streamraetsel-worker.deinname.workers.dev/support-chat"
+  proxyUrl: "https://webseiteadmin.spitzefluke.workers.dev/support-chat", // z.B. "https://streamraetsel-worker.deinname.workers.dev/support-chat"
 };
