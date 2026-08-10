@@ -6,9 +6,10 @@
 
    Zwei Arten von Einträgen sind möglich:
    - Ein Emoji als Text, z.B. "🏴‍☠️" - braucht keine Bilddatei
-   - Ein Bildpfad relativ zur index.html, z.B.
-     "scripts/image/avatars/pirat-1.png" - für eigene Bilder,
-     die du selbst erstellt hast
+   - Ein Bildpfad relativ zur index.html - für eigene Bilder,
+     die du selbst erstellt hast. Leg deine Bilder in den Ordner
+     scripts/avatare/ und trag hier den Pfad ein, z.B.:
+     "scripts/avatare/pirat-1.png"
 
    Trage hier beliebig viele Einträge ein, gerne mischen.
 ====================================== */
@@ -27,6 +28,7 @@ const wheelAvatarOptions = [
   "🦑",
   "🏝️",
 
-  // Eigene Bilder - hier deine Pfade eintragen, z.B.:
-  // "scripts/image/avatars/pirat-1.png",
+  // Eigene Bilder - liegen in scripts/avatare/, hier den Pfad eintragen:
+  // "scripts/avatare/pirat-1.png",
+  // "scripts/avatare/pirat-2.png",
 ];
