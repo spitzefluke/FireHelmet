@@ -16,7 +16,7 @@
 
 const discordNotifyConfig = {
   // Leer lassen = Funktion ist deaktiviert, bis du sie einträgst
-  proxyUrl: "", // z.B. "https://streamraetsel-worker.deinname.workers.dev/discord-notify"
+  proxyUrl: "https://webseiteadmin.spitzefluke.workers.dev/", // z.B. "https://streamraetsel-worker.deinname.workers.dev/discord-notify"
 
   enabled: true,
 };
