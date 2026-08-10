@@ -76,6 +76,7 @@ async function migrateCrackedCodesFormat() {
 
 window.addEventListener("DOMContentLoaded", () => {
   migrateCrackedCodesFormat();
+  renderAvatarPicker();
 });
 
 function isCodeAlreadyCracked(codeId) {
@@ -325,17 +326,112 @@ function refreshWheelStatus() {
 }
 
 /* ------------------------------------------------------
+   NAMENS-FILTER
+   Normalisiert den eingegebenen Namen (Kleinschreibung, gängige
+   Zahlen-Buchstaben-Vertauschungen aufgelöst, Sonderzeichen
+   entfernt) und prüft ihn gegen scripts/wheel/nickname-filter-data.js
+------------------------------------------------------ */
+function normalizeNicknameForFilter(name) {
+  return name
+    .toLowerCase()
+    .replace(/0/g, "o")
+    .replace(/1/g, "i")
+    .replace(/3/g, "e")
+    .replace(/4/g, "a")
+    .replace(/5/g, "s")
+    .replace(/7/g, "t")
+    .replace(/8/g, "b")
+    .replace(/\$/g, "s")
+    .replace(/@/g, "a")
+    .replace(/[^a-zäöüß]/g, "");
+}
+
+function isNicknameBlocked(name) {
+  if (typeof nicknameBlocklist === "undefined") return false;
+
+  const normalized = normalizeNicknameForFilter(name);
+  if (!normalized) return false;
+
+  return nicknameBlocklist.some((word) => {
+    const normalizedWord = normalizeNicknameForFilter(word);
+    return normalizedWord && normalized.includes(normalizedWord);
+  });
+}
+
+/* ------------------------------------------------------
+   AVATAR-AUSWAHL (nur bei der anonymen Anmeldung)
+------------------------------------------------------ */
+let selectedWheelAvatar = null;
+
+function isAvatarImagePath(value) {
+  return /\.(png|jpe?g|webp|gif|svg)$/i.test(value) || value.startsWith("http") || value.includes("/");
+}
+
+function buildAvatarPickerHtml(avatar) {
+  return isAvatarImagePath(avatar)
+    ? `<img src="${avatar}" alt="">`
+    : `<span>${avatar}</span>`;
+}
+
+function renderAvatarPicker() {
+  const picker = document.getElementById("wheel-avatar-picker");
+  if (!picker || typeof wheelAvatarOptions === "undefined") return;
+
+  const savedAvatar = localStorage.getItem("wheelAvatar");
+  selectedWheelAvatar = savedAvatar || wheelAvatarOptions[0] || null;
+
+  picker.innerHTML = wheelAvatarOptions
+    .map((avatar, i) => {
+      const isSelected = avatar === selectedWheelAvatar;
+      return `
+        <button type="button" class="avatar-option${isSelected ? " avatar-option-selected" : ""}"
+          data-avatar-index="${i}" onclick="selectWheelAvatar(${i})">
+          ${buildAvatarPickerHtml(avatar)}
+        </button>
+      `;
+    })
+    .join("");
+}
+
+function selectWheelAvatar(index) {
+  if (typeof wheelAvatarOptions === "undefined" || !wheelAvatarOptions[index]) return;
+
+  selectedWheelAvatar = wheelAvatarOptions[index];
+
+  document.querySelectorAll(".avatar-option").forEach((btn, i) => {
+    btn.classList.toggle("avatar-option-selected", i === index);
+  });
+}
+
+/* ------------------------------------------------------
    NAME SPEICHERN
 ------------------------------------------------------ */
 function saveNickname() {
   const input = document.getElementById("wheel-nickname-input");
+  const messageEl = document.getElementById("nickname-error");
   if (!input) return;
 
   const name = input.value.trim();
+  if (messageEl) messageEl.textContent = "";
+
   if (!name) return;
 
+  if (isNicknameBlocked(name)) {
+    if (messageEl) {
+      messageEl.textContent = "❌ Dieser Name ist leider nicht erlaubt. Bitte wähle einen anderen.";
+    }
+    return;
+  }
+
   localStorage.setItem("wheelNickname", name);
+  localStorage.setItem("loginProvider", "anonymous");
+
+  if (selectedWheelAvatar) {
+    localStorage.setItem("wheelAvatar", selectedWheelAvatar);
+  }
+
   refreshWheelStatus();
+  savePlayerData({ nickname: name });
   syncCodesToFirestore();
   showNicknameSuccess(name);
 }
@@ -422,10 +518,15 @@ function savePlayerData(fields) {
   if (!wheelDb) return;
 
   const provider = localStorage.getItem("loginProvider") || "";
-  const avatar =
-    (provider === "discord"
-      ? localStorage.getItem("discordAvatar")
-      : localStorage.getItem("twitchAvatar")) || null;
+  let avatar = null;
+
+  if (provider === "discord") {
+    avatar = localStorage.getItem("discordAvatar") || null;
+  } else if (provider === "twitch") {
+    avatar = localStorage.getItem("twitchAvatar") || null;
+  } else {
+    avatar = localStorage.getItem("wheelAvatar") || null;
+  }
 
   wheelAuthReady.then((uid) => {
     if (!uid) {
@@ -666,7 +767,9 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
   if (isOwnRow) classes.push("leaderboard-you");
 
   const avatarHtml = player.avatar
-    ? `<img src="${player.avatar}" class="leaderboard-avatar" alt="">`
+    ? isAvatarImagePath(player.avatar)
+      ? `<img src="${player.avatar}" class="leaderboard-avatar" alt="">`
+      : `<span class="leaderboard-avatar leaderboard-avatar-emoji">${player.avatar}</span>`
     : "";
 
   const crownHtml = rank === 1 ? `<span class="leaderboard-crown">👑</span>` : "";
