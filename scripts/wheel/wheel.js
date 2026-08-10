@@ -337,6 +337,35 @@ function saveNickname() {
   localStorage.setItem("wheelNickname", name);
   refreshWheelStatus();
   syncCodesToFirestore();
+  showNicknameSuccess(name);
+}
+
+/* ------------------------------------------------------
+   ERFOLGS-ANIMATION NACH DEM (ANONYMEN) REGISTRIEREN
+------------------------------------------------------ */
+function showNicknameSuccess(name) {
+  const box = document.getElementById("wheel-nickname-box");
+  const successEl = document.getElementById("nickname-success");
+  const textEl = successEl ? successEl.querySelector(".nickname-success-text") : null;
+  if (!box || !successEl) return;
+
+  if (textEl) {
+    textEl.textContent = `Willkommen, ${name}!`;
+  }
+
+  box.classList.add("nickname-just-saved");
+  successEl.classList.remove("visible");
+  void successEl.offsetWidth; // Reflow erzwingen, damit die Animation neu startet
+  successEl.classList.add("visible");
+
+  if (typeof triggerCodeSuccessEffect === "function") {
+    triggerCodeSuccessEffect();
+  }
+
+  setTimeout(() => {
+    box.classList.remove("nickname-just-saved");
+    successEl.classList.remove("visible");
+  }, 2600);
 }
 
 /* ------------------------------------------------------
