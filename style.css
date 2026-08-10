@@ -2909,6 +2909,52 @@ main {
   max-width: none;
 }
 
+.support-chat-input-row .code-input:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  border-color: rgba(255,109,109,.5);
+}
+
+.support-chat-input-row .code-button:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+/* Themen-Vorschläge, wenn der Bot keine passende Antwort fand */
+.support-suggestions {
+  align-self: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 85%;
+}
+
+.support-suggestion-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(77,163,255,.4);
+  background: rgba(77,163,255,.1);
+  color: #bcdfff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform .2s, background .2s;
+}
+
+.support-suggestion-btn:hover {
+  background: rgba(77,163,255,.3);
+  transform: translateY(-2px);
+}
+
+/* Kurzes Aufblitzen der Bot-Nachricht bei Verwarnung/Timeout */
+.support-msg-bot:last-child {
+  animation: supportMsgIn .3s ease;
+}
+
+@keyframes supportMsgIn {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 .support-report-box {
   margin-top: 40px;
   padding: 25px;
