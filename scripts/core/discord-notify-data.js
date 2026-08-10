@@ -8,12 +8,15 @@
    Discord-Webhook-Link (der bleibt geheim in Cloudflare
    hinterlegt, siehe discord-proxy/cloudflare-worker.js für
    die Einrichtung). Hier trägst du nur die harmlose Worker-
-   Adresse ein, die du nach dem Setup von Cloudflare bekommst.
+   Adresse ein, die du nach dem Setup von Cloudflare bekommst -
+   und zwar mit dem Zusatz "/discord-notify" am Ende (der Worker
+   kümmert sich jetzt auch um den KI-Support-Chat und muss
+   deshalb wissen, welche der beiden Aufgaben gemeint ist).
 ====================================================== */
 
 const discordNotifyConfig = {
   // Leer lassen = Funktion ist deaktiviert, bis du sie einträgst
-  proxyUrl: "https://streamraetsel-discord-proxy.firehelmet.workers.dev", // z.B. "https://streamraetsel-discord-proxy.deinname.workers.dev"
+  proxyUrl: "", // z.B. "https://streamraetsel-worker.deinname.workers.dev/discord-notify"
 
   enabled: true,
 };
