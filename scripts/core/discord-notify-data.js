@@ -13,7 +13,7 @@
 
 const discordNotifyConfig = {
   // Leer lassen = Funktion ist deaktiviert, bis du sie einträgst
-  proxyUrl: "", // z.B. "https://streamraetsel-discord-proxy.deinname.workers.dev"
+  proxyUrl: "https://streamraetsel-discord-proxy.firehelmet.workers.dev", // z.B. "https://streamraetsel-discord-proxy.deinname.workers.dev"
 
   enabled: true,
 };
