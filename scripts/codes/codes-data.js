@@ -51,10 +51,6 @@ const codes = [
     message: "Du bist ein kluger Mensch hier dein nächster Vorteil: 11490, löse ihn auf der Fortnite Map ein.",
   },
   {
-    hash: "e0af15d9ad392edc65976d234fa29fb509394a1fd4e3533acd0b22b72349d26f", // 20891
-    message: "Ich bin zwar nicht groß doch bin immer zu sehen",
-  },
-  {
     hash: "2c70e12b7a0646f92279f427c7b38e7334d8e5389cff167a1dc30e73f826b683", // key
     message: "PS: Schau auf Youtube",
     // Beispiel: image: "scripts/images/key-hinweis.png",
