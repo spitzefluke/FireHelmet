@@ -248,6 +248,7 @@
         <p class="login-divider" data-i18n="login.divider">— oder —</p>
 
         <div id="wheel-nickname-box" class="wheel-nickname-box">
+          <div id="wheel-avatar-picker" class="wheel-avatar-picker"></div>
           <input
             type="text"
             id="wheel-nickname-input"
@@ -256,6 +257,7 @@
             maxlength="18"
             autocomplete="off">
           <button class="code-button" onclick="saveNickname()" data-i18n="common.save">Speichern</button>
+          <p id="nickname-error" class="nickname-error"></p>
           <div id="nickname-success" class="nickname-success">
             <span class="nickname-success-check">✓</span>
             <span class="nickname-success-text"></span>
@@ -522,6 +524,8 @@
   <script src="scripts/music/music-data.js"></script>
   <script src="scripts/music/music-player.js"></script>
   <script src="scripts/wheel/wheel-data.js"></script>
+  <script src="scripts/wheel/avatars-data.js"></script>
+  <script src="scripts/wheel/nickname-filter-data.js"></script>
   <script src="scripts/race/race-data.js"></script>
   <script src="scripts/giveaway/giveaway-data.js"></script>
   <script src="scripts/streamraetsel/streamraetsel-data.js"></script>

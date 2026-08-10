@@ -1295,6 +1295,65 @@ main {
   100% { box-shadow: 0 0 0 rgba(80,255,140,0); }
 }
 
+/* Avatar-Auswahl für die anonyme Anmeldung */
+.wheel-avatar-picker {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.avatar-option {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform .2s, border-color .2s, box-shadow .2s;
+}
+
+.avatar-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-option:hover {
+  transform: scale(1.1);
+  border-color: rgba(77,163,255,.6);
+}
+
+.avatar-option-selected {
+  border-color: #50ff8c;
+  box-shadow: 0 0 16px rgba(80,255,140,.6);
+  transform: scale(1.08);
+}
+
+.nickname-error {
+  width: 100%;
+  text-align: center;
+  color: #ff8080;
+  font-size: 14px;
+  min-height: 20px;
+  margin: 0;
+}
+
+.leaderboard-avatar-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.08);
+  font-size: 16px;
+}
+
 /* Erfolgs-Badge: fliegt mit Bounce rein, verschwindet nach ein paar Sekunden wieder */
 .nickname-success {
   position: absolute;
