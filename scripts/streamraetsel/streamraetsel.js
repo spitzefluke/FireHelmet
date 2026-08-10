@@ -303,6 +303,88 @@ function checkBothLocksOpen() {
   if (typeof triggerCodeSuccessEffect === "function") {
     triggerCodeSuccessEffect();
   }
+
+  startPackageCountdown();
+}
+
+/* ------------------------------------------------------
+   PAKET-COUNTDOWN MIT LKW
+   Sobald BEIDE Schlösser geknackt sind, startet ein neuer
+   5-Tage-Countdown bis zur "Lieferung". Der Startzeitpunkt
+   wird beim ERSTEN Lösen gespeichert (pro Browser), damit er
+   bei einem erneuten Seitenaufruf nicht wieder von vorne
+   losläuft. Ein LKW-Symbol wandert dabei über einen
+   Fortschrittsbalken passend zum Lieferfortschritt.
+------------------------------------------------------ */
+const PACKAGE_COUNTDOWN_KEY = "streamraetselSolvedAt";
+const PACKAGE_COUNTDOWN_DAYS = 5;
+let packageCountdownInterval = null;
+
+function startPackageCountdown() {
+  const container = document.getElementById("package-countdown");
+  if (!container) return;
+
+  let solvedAt = null;
+  try {
+    solvedAt = localStorage.getItem(PACKAGE_COUNTDOWN_KEY);
+  } catch (err) {
+    // localStorage nicht verfügbar - Countdown läuft dann nur für
+    // diesen einen Seitenaufruf, ist aber kein harter Fehler
+  }
+
+  if (!solvedAt) {
+    solvedAt = String(Date.now());
+    try {
+      localStorage.setItem(PACKAGE_COUNTDOWN_KEY, solvedAt);
+    } catch (err) {
+      // s.o.
+    }
+  }
+
+  const startTime = parseInt(solvedAt, 10);
+  const targetTime = startTime + PACKAGE_COUNTDOWN_DAYS * 24 * 60 * 60 * 1000;
+  const totalDuration = targetTime - startTime;
+
+  container.classList.add("visible");
+  updatePackageCountdown(startTime, targetTime, totalDuration);
+
+  clearInterval(packageCountdownInterval);
+  packageCountdownInterval = setInterval(
+    () => updatePackageCountdown(startTime, targetTime, totalDuration),
+    1000
+  );
+}
+
+function updatePackageCountdown(startTime, targetTime, totalDuration) {
+  const now = Date.now();
+  const remaining = targetTime - now;
+  const elapsed = now - startTime;
+  const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+
+  const truck = document.getElementById("package-truck");
+  const fill = document.getElementById("package-progress-fill");
+  const label = document.getElementById("package-countdown-label");
+
+  if (truck) truck.style.left = `${progress}%`;
+  if (fill) fill.style.width = `${progress}%`;
+
+  if (remaining <= 0) {
+    clearInterval(packageCountdownInterval);
+    if (label) label.textContent = "📦 Dein Paket ist angekommen!";
+    if (truck) truck.textContent = "✅";
+    const container = document.getElementById("package-countdown");
+    if (container) container.classList.add("arrived");
+    return;
+  }
+
+  const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+  if (label) {
+    label.textContent = `🚚 Lieferung in ${days} Tag(en), ${padTwo(hours)}:${padTwo(minutes)}:${padTwo(seconds)}`;
+  }
 }
 
 function renderStreamRaetselContent() {
@@ -329,6 +411,16 @@ function renderStreamRaetselContent() {
     <div id="stream-finale" class="stream-finale">
       <p class="stream-finale-text">${streamRaetselConfig.finaleText}</p>
     </div>
+
+    <div id="package-countdown" class="package-countdown">
+      <p id="package-countdown-label" class="package-countdown-label"></p>
+      <div class="package-progress-track">
+        <div id="package-progress-fill" class="package-progress-fill"></div>
+        <div id="package-truck" class="package-truck">🚚</div>
+        <span class="package-flag package-flag-start">🏁</span>
+        <span class="package-flag package-flag-end">📦</span>
+      </div>
+    </div>
   `;
 
   // Zustand zurücksetzen, falls die Seite neu aufgebaut wird
@@ -344,6 +436,33 @@ function renderStreamRaetselContent() {
   comboProgress.lockedUntil = 0;
 
   refreshComboLockUI();
+
+  // War das Rätsel bei einem früheren Besuch schon gelöst, direkt das
+  // Finale + den laufenden Paket-Countdown zeigen, statt die Schlösser
+  // erneut zu verlangen
+  let alreadySolved = null;
+  try {
+    alreadySolved = localStorage.getItem(PACKAGE_COUNTDOWN_KEY);
+  } catch (err) {
+    // localStorage nicht verfügbar - dann eben normal von vorne lösen
+  }
+
+  if (alreadySolved) {
+    lockOpened.red = true;
+    lockOpened.black = true;
+    comboProgress.activeLock = "done";
+
+    const redLockEl = document.getElementById("combo-lock-red");
+    const blackLockEl = document.getElementById("combo-lock-black");
+    if (redLockEl) redLockEl.classList.add("combo-lock-open");
+    if (blackLockEl) blackLockEl.classList.add("combo-lock-open");
+
+    const finale = document.getElementById("stream-finale");
+    if (finale) finale.classList.add("visible");
+
+    refreshComboLockUI();
+    startPackageCountdown();
+  }
 }
 
 let streamRaetselContentRendered = false;
