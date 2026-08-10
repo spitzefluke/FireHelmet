@@ -171,6 +171,16 @@ function addSupportMessage(text, sender) {
   log.scrollTop = log.scrollHeight;
 }
 
+/* ------------------------------------------------------
+   GESPRÄCHSVERLAUF (für Kontext bei der KI)
+------------------------------------------------------ */
+let supportConversationHistory = [];
+
+/* ------------------------------------------------------
+   NACHRICHT SENDEN
+   Nutzt die KI (scripts/support/support-chat-data.js), falls
+   eingerichtet - sonst automatisch die alte Stichwortsuche.
+------------------------------------------------------ */
 function sendSupportMessage() {
   const input = document.getElementById("support-chat-input");
   if (!input) return;
@@ -186,6 +196,16 @@ function sendSupportMessage() {
   addSupportMessage(question, "user");
   input.value = "";
 
+  const useAi = typeof supportChatConfig !== "undefined" && supportChatConfig.proxyUrl;
+
+  if (useAi) {
+    sendSupportMessageViaAi(question);
+  } else {
+    sendSupportMessageViaKeywords(question);
+  }
+}
+
+function sendSupportMessageViaKeywords(question) {
   if (containsBadWord(question)) {
     registerSupportStrike();
     return;
@@ -201,6 +221,79 @@ function sendSupportMessage() {
       addSupportSuggestions();
     }
   }, 400);
+}
+
+async function sendSupportMessageViaAi(question) {
+  const typingEl = showSupportTyping();
+
+  try {
+    const response = await fetch(supportChatConfig.proxyUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: question, history: supportConversationHistory }),
+    });
+
+    const data = await response.json();
+    const reply = data.reply || "Dazu weiß ich gerade nichts.";
+
+    removeSupportTyping(typingEl);
+    addSupportMessage(reply, "bot");
+
+    supportConversationHistory.push({ role: "user", content: question });
+    supportConversationHistory.push({ role: "bot", content: reply });
+
+    logSupportChatForReview(question, reply, data.flagged);
+
+    if (data.flagged) {
+      registerSupportStrike();
+    }
+  } catch (err) {
+    console.warn("KI-Support-Chat nicht erreichbar, nutze Stichwortsuche als Rückfall:", err);
+    removeSupportTyping(typingEl);
+    sendSupportMessageViaKeywords(question);
+  }
+}
+
+function showSupportTyping() {
+  const log = document.getElementById("support-chat-log");
+  if (!log) return null;
+
+  const bubble = document.createElement("div");
+  bubble.className = "support-msg support-msg-bot support-msg-typing";
+  bubble.innerHTML = "<span></span><span></span><span></span>";
+  log.appendChild(bubble);
+  log.scrollTop = log.scrollHeight;
+  return bubble;
+}
+
+function removeSupportTyping(el) {
+  if (el) el.remove();
+}
+
+/* ------------------------------------------------------
+   GESPRÄCHE ZUM ÜBERPRÜFEN SPEICHERN ("Lernen")
+   Echtes automatisches Nachtrainieren ist auf einer normalen
+   Webseite nicht möglich - stattdessen werden Frage+Antwort
+   hier protokolliert, damit DU als Betreiber sehen kannst, was
+   Leute fragen, und den Systemprompt im Cloudflare-Worker bei
+   Bedarf von Hand verbessern kannst.
+------------------------------------------------------ */
+function logSupportChatForReview(question, reply, flagged) {
+  if (typeof wheelDb === "undefined" || !wheelDb || typeof wheelAuthReady === "undefined") return;
+
+  wheelAuthReady.then((uid) => {
+    wheelDb
+      .collection("support_chat_log")
+      .add({
+        uid: uid || null,
+        question,
+        reply,
+        flagged: !!flagged,
+        page: window.location.href,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      })
+      .catch((err) => console.warn("Chat-Protokoll konnte nicht gespeichert werden:", err));
+  });
 }
 
 /* ------------------------------------------------------
