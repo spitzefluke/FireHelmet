@@ -14,7 +14,7 @@
 const updateNoticeConfig = {
   title: "🆕 Neuigkeiten",
   message:
-    "Willkommen auf meiner Webseite, Update 3.0 wurde in die Webseite gebaut. " +
+    "Willkommen auf meiner Webseite, Update 3.1 wurde in die Webseite gebaut. " +
     "Damit wurde ein Fehler bei den Charakter Cards gefixxt, visuelle Effekte und Aussehne der Webseite überarbeitet und diese Neuigkeiten Message hinzugefügt.",
 
   // Optional: Bild anzeigen (Pfad relativ zur index.html), sonst leer lassen
