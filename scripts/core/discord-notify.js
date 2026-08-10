@@ -21,6 +21,14 @@ async function trySendDiscordUpdateNotice() {
   if (typeof updateNoticeConfig === "undefined") return;
   if (typeof hashUpdateNoticeText !== "function") return;
   if (typeof wheelDb === "undefined" || !wheelDb) return; // keine gemeinsame DB -> lieber nichts senden
+  if (typeof wheelAuthReady === "undefined") return;
+
+  // WICHTIG: erst warten, bis die anonyme Firebase-Anmeldung wirklich
+  // abgeschlossen ist - sonst lehnt Firestore den Zugriff ab
+  // ("Missing or insufficient permissions"), weil request.auth noch
+  // leer ist
+  const uid = await wheelAuthReady;
+  if (!uid) return;
 
   const currentHash = hashUpdateNoticeText(
     (updateNoticeConfig.title || "") + "||" + (updateNoticeConfig.message || "")
