@@ -347,14 +347,15 @@ function normalizeNicknameForFilter(name) {
 }
 
 function isNicknameBlocked(name) {
-  if (typeof nicknameBlocklist === "undefined") return false;
-
   const normalized = normalizeNicknameForFilter(name);
   if (!normalized) return false;
 
-  return nicknameBlocklist.some((word) => {
+  const ownList = typeof nicknameBlocklist !== "undefined" ? nicknameBlocklist : [];
+  const combinedList = [...ownList, ...externalBadWordsList];
+
+  return combinedList.some((word) => {
     const normalizedWord = normalizeNicknameForFilter(word);
-    return normalizedWord && normalized.includes(normalizedWord);
+    return normalizedWord && normalizedWord.length >= 3 && normalized.includes(normalizedWord);
   });
 }
 
@@ -373,6 +374,14 @@ function buildAvatarPickerHtml(avatar) {
     : `<span>${avatar}</span>`;
 }
 
+function getUnlockedAvatarIds() {
+  try {
+    return JSON.parse(localStorage.getItem("unlockedAvatars") || "[]");
+  } catch (err) {
+    return [];
+  }
+}
+
 function renderAvatarPicker() {
   const picker = document.getElementById("wheel-avatar-picker");
   if (!picker || typeof wheelAvatarOptions === "undefined") return;
@@ -380,33 +389,105 @@ function renderAvatarPicker() {
   const savedAvatar = localStorage.getItem("wheelAvatar");
   selectedWheelAvatar = savedAvatar || wheelAvatarOptions[0] || null;
 
-  picker.innerHTML = wheelAvatarOptions
+  const unlockedIds = getUnlockedAvatarIds();
+  const specials = typeof wheelSpecialAvatars !== "undefined" ? wheelSpecialAvatars : [];
+
+  // Immer verfügbare Standard-Avatare
+  let html = wheelAvatarOptions
     .map((avatar, i) => {
       const isSelected = avatar === selectedWheelAvatar;
       return `
         <button type="button" class="avatar-option${isSelected ? " avatar-option-selected" : ""}"
-          data-avatar-index="${i}" onclick="selectWheelAvatar(${i})">
+          data-avatar-value="${encodeURIComponent(avatar)}" onclick="selectWheelAvatar(this.dataset.avatarValue)">
           ${buildAvatarPickerHtml(avatar)}
         </button>
       `;
     })
     .join("");
+
+  // Freischaltbare Spezial-Avatare (gesperrt, bis der passende Code kam)
+  html += specials
+    .map((entry) => {
+      const unlocked = unlockedIds.includes(entry.id);
+      const isSelected = unlocked && entry.avatar === selectedWheelAvatar;
+
+      if (!unlocked) {
+        return `
+          <button type="button" class="avatar-option avatar-option-locked" disabled
+            title="Gesperrt - schalte '${entry.label}' durch einen passenden Code frei!">
+            <span class="avatar-lock-icon">🔒</span>
+          </button>
+        `;
+      }
+
+      return `
+        <button type="button" class="avatar-option avatar-option-unlocked${isSelected ? " avatar-option-selected" : ""}"
+          title="${entry.label}"
+          data-avatar-value="${encodeURIComponent(entry.avatar)}" onclick="selectWheelAvatar(this.dataset.avatarValue)">
+          ${buildAvatarPickerHtml(entry.avatar)}
+        </button>
+      `;
+    })
+    .join("");
+
+  picker.innerHTML = html;
 }
 
-function selectWheelAvatar(index) {
-  if (typeof wheelAvatarOptions === "undefined" || !wheelAvatarOptions[index]) return;
+function selectWheelAvatar(rawValue) {
+  const value = decodeURIComponent(rawValue);
+  selectedWheelAvatar = value;
 
-  selectedWheelAvatar = wheelAvatarOptions[index];
-
-  document.querySelectorAll(".avatar-option").forEach((btn, i) => {
-    btn.classList.toggle("avatar-option-selected", i === index);
+  document.querySelectorAll(".avatar-option[data-avatar-value]").forEach((btn) => {
+    btn.classList.toggle("avatar-option-selected", decodeURIComponent(btn.dataset.avatarValue) === value);
   });
+}
+
+/* ------------------------------------------------------
+   AVATAR PER CODE FREISCHALTEN
+   Wird von main.js aufgerufen, wenn ein Code mit einem
+   "avatarUnlock"-Feld erfolgreich (und zum ersten Mal)
+   eingelöst wurde.
+------------------------------------------------------ */
+function unlockAvatar(avatarId) {
+  if (typeof wheelSpecialAvatars === "undefined") return;
+
+  const entry = wheelSpecialAvatars.find((a) => a.id === avatarId);
+  if (!entry) return;
+
+  const unlockedIds = getUnlockedAvatarIds();
+  if (unlockedIds.includes(avatarId)) return; // schon freigeschaltet
+
+  unlockedIds.push(avatarId);
+  localStorage.setItem("unlockedAvatars", JSON.stringify(unlockedIds));
+
+  renderAvatarPicker();
+  showAvatarUnlockToast(entry);
+}
+
+function showAvatarUnlockToast(entry) {
+  const toast = document.createElement("div");
+  toast.className = "avatar-unlock-toast";
+  toast.innerHTML = `
+    <div class="avatar-unlock-toast-icon">${buildAvatarPickerHtml(entry.avatar)}</div>
+    <div class="avatar-unlock-toast-text">
+      <strong>Neuer Avatar freigeschaltet!</strong>
+      <span>${entry.label}</span>
+    </div>
+  `;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => toast.classList.add("visible"));
+
+  setTimeout(() => {
+    toast.classList.remove("visible");
+    setTimeout(() => toast.remove(), 400);
+  }, 4000);
 }
 
 /* ------------------------------------------------------
    NAME SPEICHERN
 ------------------------------------------------------ */
-function saveNickname() {
+async function saveNickname() {
   const input = document.getElementById("wheel-nickname-input");
   const messageEl = document.getElementById("nickname-error");
   if (!input) return;
@@ -415,6 +496,15 @@ function saveNickname() {
   if (messageEl) messageEl.textContent = "";
 
   if (!name) return;
+
+  // Sicherstellen, dass die externe Schimpfwort-Datenbank geladen ist,
+  // bevor geprüft wird (ist in aller Regel längst fertig, da das Laden
+  // schon beim Öffnen der Seite gestartet wurde)
+  if (messageEl) messageEl.textContent = "⏳ Name wird geprüft ...";
+  if (typeof loadExternalBadWords === "function") {
+    await loadExternalBadWords();
+  }
+  if (messageEl) messageEl.textContent = "";
 
   if (isNicknameBlocked(name)) {
     if (messageEl) {

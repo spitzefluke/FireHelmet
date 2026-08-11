@@ -32,3 +32,28 @@ const wheelAvatarOptions = [
   // "scripts/avatare/pirat-1.png",
   // "scripts/avatare/pirat-2.png",
 ];
+
+/* ======================================
+   FREISCHALTBARE SPEZIAL-AVATARE
+   Diese Avatare sind zu Beginn GESPERRT und erscheinen im
+   Auswahl-Menü mit einem Schloss-Symbol. Erst wer den
+   passenden Code einlöst, schaltet sie dauerhaft frei.
+
+   So verknüpfst du einen Code damit:
+   1. Trag hier einen Eintrag mit einer eigenen "id" ein
+      (frei wählbar, aber einmalig, z.B. "gold-pirat")
+   2. Geh in scripts/codes/codes-data.js zu dem Code, der den
+      Avatar freischalten soll, und ergänze dort das Feld
+      avatarUnlock: "gold-pirat"  (also genau dieselbe id)
+
+   "avatar" kann wieder ein Emoji ODER ein Bildpfad
+   (scripts/avatare/...) sein.
+====================================== */
+
+const wheelSpecialAvatars = [
+  { id: "gold-pirat", avatar: "🏆", label: "Gold-Pirat" },
+  { id: "kraken", avatar: "🐲", label: "Kraken-Bezwinger" },
+
+  // Eigene Beispiele:
+  // { id: "legendaer", avatar: "scripts/avatare/legendaer.png", label: "Legendärer Pirat" },
+];
