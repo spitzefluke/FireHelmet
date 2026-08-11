@@ -582,23 +582,23 @@ function spinWheel() {
   const fullSpins = 5;
   const finalRotation = fullSpins * 360 + (360 - targetMid);
 
-  // Rad sauber auf 0 zurücksetzen, damit jede Drehung gleich aussieht
+  // Komplette Drehung wird bewusst NUR über JS + inline "transform"
+  // gesteuert (keine CSS-Keyframe-Animation rührt "transform" an) -
+  // so kann nichts mehr mit der eigentlichen Drehung kollidieren.
   disc.style.transition = "none";
   disc.style.transform = "rotate(0deg)";
-  void disc.offsetWidth;
+  void disc.offsetWidth; // Reflow erzwingen
 
-  // Kurzes "Anlauf nehmen" gegen die Drehrichtung, dann volle Fahrt
-  if (wrapper) wrapper.classList.add("wheel-anticipating");
+  // Kurzes "Anlauf nehmen" gegen die Drehrichtung
+  disc.style.transition = "transform .35s ease-out";
+  disc.style.transform = "rotate(-14deg)";
 
   setTimeout(() => {
-    if (wrapper) {
-      wrapper.classList.remove("wheel-anticipating");
-      wrapper.classList.add("wheel-spinning");
-    }
+    if (wrapper) wrapper.classList.add("wheel-spinning");
 
-    disc.style.transition = "transform 4.5s cubic-bezier(0.15, 0.7, 0.15, 1)";
+    disc.style.transition = "transform 4.8s cubic-bezier(0.15, 0.7, 0.15, 1)";
     disc.style.transform = `rotate(${finalRotation}deg)`;
-  }, 350);
+  }, 360);
 
   setTimeout(() => {
     resultEl.textContent = prize.message;
@@ -611,7 +611,7 @@ function spinWheel() {
       wrapper.classList.add("wheel-landed");
       setTimeout(() => wrapper.classList.remove("wheel-landed"), 900);
     }
-  }, 4950);
+  }, 5200);
 }
 
 function finalizeSpin(state, today, prize) {
