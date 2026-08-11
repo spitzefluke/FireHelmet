@@ -15,13 +15,13 @@
 ====================================== */
 
 const wheelAvatarOptions = [
-  "🏴‍☠️",
-  "⚓",
-  "🦜",
-  "🗺️",
-  "💰",
-  "🔱",
-  "🐙",
+  "scripts/avatare/5.png",
+  "scripts/avatare/6.png",
+  "scripts/avatare/1.png",
+  "scripts/avatare/2.png",
+  "scripts/avatare/3.png",
+  "scripts/avatare/4.png",
+  "scripts/avatare/7.png",
   "⛵",
   "💀",
   "🌊",
