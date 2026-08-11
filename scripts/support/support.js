@@ -57,9 +57,15 @@ function normalizeSupportText(text) {
 }
 
 function containsBadWord(text) {
-  if (typeof supportBadWords === "undefined") return false;
   const normalized = normalizeSupportText(text);
-  return supportBadWords.some((word) => normalized.includes(normalizeSupportText(word)));
+  const ownList = typeof supportBadWords !== "undefined" ? supportBadWords : [];
+  const externalList = typeof externalBadWordsList !== "undefined" ? externalBadWordsList : [];
+  const combinedList = [...ownList, ...externalList];
+
+  return combinedList.some((word) => {
+    const normalizedWord = normalizeSupportText(word);
+    return normalizedWord && normalizedWord.length >= 3 && normalized.includes(normalizedWord);
+  });
 }
 
 function addSupportSuggestions() {
