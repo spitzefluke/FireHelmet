@@ -1421,26 +1421,28 @@ main {
 
 .wheel-wrapper {
   position: relative;
-  width: 280px;
-  height: 280px;
-  margin: 50px auto 30px;
 }
 
-/* Warmes Glühen im Hintergrund, Farbe je nach Wochenthema */
+/* Warmes Glühen + rotierender Strahlenkranz hinter dem Rad, Farbe je nach Wochenthema */
 .wheel-wrapper::before {
   content: "";
   position: absolute;
-  inset: -30px;
+  inset: -60px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--wheel-accent, #d4af37), transparent 70%);
-  filter: blur(20px);
+  background:
+    repeating-conic-gradient(from 0deg, rgba(255,230,140,.16) 0deg 6deg, transparent 6deg 18deg),
+    radial-gradient(circle, var(--wheel-accent, #d4af37), transparent 65%);
   z-index: -1;
-  animation: wheelGlowPulse 3.5s ease-in-out infinite;
+  animation: wheelGlowPulse 3.5s ease-in-out infinite, wheelRaysSpin 40s linear infinite;
 }
 
 @keyframes wheelGlowPulse {
   0%, 100% { opacity: .6; }
   50%      { opacity: 1; }
+}
+
+@keyframes wheelRaysSpin {
+  to { transform: rotate(360deg); }
 }
 
 /* Metallischer, langsam schimmernder Rahmen hinter dem Rad - Farbton je nach Wochenthema */
@@ -1503,17 +1505,17 @@ main {
 
 .wheel-bulb {
   position: absolute;
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   background: #fff3c4;
-  box-shadow: 0 0 8px 2px rgba(255,230,140,.9);
+  box-shadow: 0 0 10px 3px rgba(255,230,140,.9);
   animation: wheelBulbBlink 1s ease-in-out infinite;
 }
 
 @keyframes wheelBulbBlink {
-  0%, 100% { background: #fff3c4; box-shadow: 0 0 10px 3px rgba(255,230,140,1); }
+  0%, 100% { background: #fff3c4; box-shadow: 0 0 12px 4px rgba(255,230,140,1); }
   50%      { background: #a9761f; box-shadow: 0 0 3px 1px rgba(169,118,31,.5); }
 }
 
@@ -1547,10 +1549,11 @@ main {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 6px solid #6b4423;
+  border: 8px solid #6b4423;
   box-shadow:
-    0 0 45px rgba(212,175,55,.5),
-    inset 0 0 25px rgba(0,0,0,.5);
+    0 0 60px rgba(212,175,55,.55),
+    0 20px 45px rgba(0,0,0,.6),
+    inset 0 0 30px rgba(0,0,0,.55);
   position: relative;
   overflow: hidden;
   z-index: 2;
@@ -1566,18 +1569,43 @@ main {
   pointer-events: none;
 }
 
+/* Glanz-Sweep, wandert langsam übers Rad für einen "poliert"-Effekt */
+.wheel-disc-gloss {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.wheel-disc-gloss::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.22) 48%, transparent 60%);
+  background-size: 260% 100%;
+  animation: wheelGlossSweep 6s ease-in-out infinite;
+}
+
+@keyframes wheelGlossSweep {
+  0%   { background-position: 200% 0; }
+  55%  { background-position: -60% 0; }
+  100% { background-position: -60% 0; }
+}
+
 .wheel-label {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 130px;
+  width: 150px;
   margin-top: -1px;
   transform-origin: 0 0;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: #fdf1d6;
   text-align: right;
-  padding-right: 16px;
+  padding-right: 18px;
   text-shadow: 0 0 6px rgba(0,0,0,.8);
   pointer-events: none;
 }
@@ -1585,19 +1613,19 @@ main {
 /* Kompass-Nadel statt einfachem Zeiger */
 .wheel-pointer {
   position: absolute;
-  top: -20px;
+  top: -26px;
   left: 50%;
   transform: translateX(-50%);
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   z-index: 5;
-  filter: drop-shadow(0 0 8px rgba(212,175,55,.8));
+  filter: drop-shadow(0 0 10px rgba(212,175,55,.9));
   animation: wheelPointerGlow 1.6s ease-in-out infinite;
 }
 
 @keyframes wheelPointerGlow {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(212,175,55,.8)); }
-  50%      { filter: drop-shadow(0 0 16px rgba(255,230,140,1)); }
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(212,175,55,.8)); transform: translateX(-50%) scale(1); }
+  50%      { filter: drop-shadow(0 0 20px rgba(255,230,140,1)); transform: translateX(-50%) scale(1.08); }
 }
 
 .wheel-pointer::before,
@@ -1608,55 +1636,52 @@ main {
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 9px solid transparent;
-  border-right: 9px solid transparent;
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
 }
 
 .wheel-pointer::before {
   top: 0;
-  border-top: 20px solid var(--wheel-accent, #d4af37);
+  border-top: 24px solid var(--wheel-accent, #d4af37);
 }
 
 .wheel-pointer::after {
-  top: 4px;
-  border-top: 12px solid #7c2d12;
+  top: 5px;
+  border-top: 15px solid #7c2d12;
 }
 
-/* 3D-Tiefe fürs Rad, sanftes Idle-Wackeln */
+/* 3D-Tiefe fürs Rad, größer als zuvor */
 .wheel-wrapper {
+  position: relative;
+  width: 340px;
+  height: 340px;
+  margin: 60px auto 30px;
   perspective: 800px;
 }
 
+/* WICHTIG: .wheel-disc bekommt bewusst KEINE eigene CSS-Animation
+   mehr (auch keine, die nur box-shadow o.ä. animiert) - die Drehung
+   wird komplett per JS über "transform" gesteuert (siehe wheel.js
+   spinWheel()). So kann NICHTS mehr mit der eigentlichen Drehung
+   kollidieren, egal was hier später noch ergänzt wird. Der weiche
+   Leucht-Puls läuft stattdessen über die Bezel-Schicht (::after
+   vom Wrapper) und den Strahlenkranz oben. */
 .wheel-disc {
-  transition: transform 4.5s cubic-bezier(0.15, 0.7, 0.15, 1), filter .3s;
-  animation: wheelIdleSway 4s ease-in-out infinite;
+  transition: transform 4.8s cubic-bezier(0.15, 0.7, 0.15, 1), filter .3s;
 }
 
-@keyframes wheelIdleSway {
-  0%, 100% { box-shadow: 0 0 45px rgba(212,175,55,.5), inset 0 0 25px rgba(0,0,0,.5); }
-  50%      { box-shadow: 0 0 65px rgba(212,175,55,.75), inset 0 0 25px rgba(0,0,0,.5); }
-}
-
-/* Kurzes Anlaufholen gegen die Drehrichtung, bevor es richtig losgeht */
-.wheel-wrapper.wheel-anticipating .wheel-disc {
-  animation: wheelAnticipation .35s ease-out;
-}
-
-@keyframes wheelAnticipation {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(-12deg); }
-}
-
-/* Bewegungsunschärfe + Radial-Streaks während der vollen Drehung */
+/* Bewegungsunschärfe während der vollen Drehung (nur "filter", nie "transform") */
 .wheel-wrapper.wheel-spinning .wheel-disc {
-  filter: blur(1.5px) brightness(1.15);
+  filter: blur(2px) brightness(1.2);
 }
 
 .wheel-wrapper.wheel-spinning::before {
-  animation: wheelGlowPulse .4s ease-in-out infinite;
+  animation: wheelRaysSpin 1.2s linear infinite;
+  opacity: 1;
 }
 
-/* Schockwellen-Ring + kurzer Kamera-Pulse, wenn das Rad landet */
+/* Schockwellen-Ring + kurzer Leucht-Puls beim Landen - rührt
+   bewusst NUR "filter"/"box-shadow" an, NIE "transform" */
 .wheel-wrapper.wheel-landed .wheel-disc {
   animation: wheelLandingPulse .5s ease;
 }
@@ -1666,35 +1691,40 @@ main {
 }
 
 @keyframes wheelLandingPulse {
-  0%   { transform: scale(1); }
-  30%  { transform: scale(1.06); }
-  100% { transform: scale(1); }
+  0%   { filter: brightness(1) blur(0); }
+  30%  { filter: brightness(1.5) blur(0); }
+  100% { filter: brightness(1) blur(0); }
 }
 
 @keyframes wheelLandingRing {
   0%   { box-shadow: 0 0 0 0 var(--wheel-accent, #d4af37); }
-  100% { box-shadow: 0 0 0 40px rgba(212,175,55,0); }
+  100% { box-shadow: 0 0 0 50px rgba(212,175,55,0); }
 }
 
 .spin-button {
-  font-size: 20px;
-  padding: 18px 50px;
+  font-size: 21px;
+  padding: 20px 54px;
   background: linear-gradient(135deg, var(--wheel-accent, #d4af37), #7c2d12);
   border: 1px solid rgba(253,241,214,.4);
   color: #fdf1d6;
   font-weight: bold;
   letter-spacing: 1px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  transition: transform .2s, filter .2s, box-shadow .2s;
 }
 
-.spin-button:hover {
+.spin-button:hover:not(:disabled) {
   filter: brightness(1.15);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 14px 40px rgba(212,175,55,.35);
 }
 
 .wheel-theme-label {
   margin-top: 15px;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: bold;
   color: var(--wheel-accent, #d4af37);
+  text-shadow: 0 0 14px rgba(212,175,55,.4);
 }
 
 .spin-button:disabled {
@@ -3719,6 +3749,7 @@ main {
   backdrop-filter: blur(0px);
   opacity: 0;
   pointer-events: none;
+  perspective: 1200px;
   transition: opacity .35s ease, background .35s ease, backdrop-filter .35s ease;
 }
 
@@ -3729,47 +3760,137 @@ main {
 .update-notice-overlay.visible {
   opacity: 1;
   pointer-events: auto;
-  background: rgba(2, 3, 10, .75);
-  backdrop-filter: blur(8px);
+  background: rgba(2, 3, 10, .8);
+  backdrop-filter: blur(10px);
 }
 
 .update-notice-box {
   position: relative;
-  max-width: 460px;
+  max-width: 480px;
   width: 100%;
-  padding: 40px 32px 32px;
-  border-radius: 26px;
+  padding: 46px 36px 36px;
+  border-radius: 28px;
   text-align: center;
-  background: linear-gradient(180deg, rgba(18,22,42,.96), rgba(8,10,22,.98));
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(20,24,46,.97), rgba(8,10,22,.99));
   border: 1px solid rgba(var(--menu-rgb1, 77,163,255), .35);
-  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 60px rgba(var(--menu-rgb1, 77,163,255), .15);
-  transform: translateY(24px) scale(.94);
+  box-shadow: 0 40px 100px rgba(0,0,0,.65), 0 0 80px rgba(var(--menu-rgb1, 77,163,255), .2);
+  transform: translateY(40px) scale(.85) rotateX(8deg);
   opacity: 0;
-  transition: transform .4s cubic-bezier(0.22, 0.9, 0.32, 1.2), opacity .4s;
+  transition: transform .55s cubic-bezier(0.22, 1.3, 0.36, 1), opacity .45s;
 }
 
 .update-notice-overlay.visible .update-notice-box {
-  transform: translateY(0) scale(1);
+  transform: translateY(0) scale(1) rotateX(0deg);
   opacity: 1;
+  animation: updateNoticeFloat 5s ease-in-out 1s infinite;
+}
+
+@keyframes updateNoticeFloat {
+  0%, 100% { transform: translateY(0) scale(1) rotateX(0deg); }
+  50%      { transform: translateY(-6px) scale(1) rotateX(0deg); }
 }
 
 /* Rotierender Farbverlauf-Rahmen, wie beim Menü-Button */
 .update-notice-glow {
   position: absolute;
   inset: -2px;
-  border-radius: 28px;
+  border-radius: 30px;
   padding: 2px;
   background: conic-gradient(from 0deg, var(--menu-hex1), var(--menu-hex2), var(--menu-hex3), var(--menu-hex2), var(--menu-hex1));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   animation: menuBorderSpin 4s linear infinite;
-  opacity: .6;
+  opacity: .7;
   z-index: -1;
 }
 
+/* Konfetti-Partikel, die im Hintergrund der Box hochsteigen */
+.update-notice-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.update-notice-confetti span {
+  position: absolute;
+  bottom: -20px;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--menu-hex1);
+  opacity: 0;
+  animation: updateNoticeConfettiRise 3.5s ease-in infinite;
+}
+
+.update-notice-confetti span:nth-child(odd)  { background: var(--menu-hex2); }
+.update-notice-confetti span:nth-child(3n)   { background: var(--menu-hex3); }
+.update-notice-confetti span:nth-child(1)  { left: 4%;  animation-delay: .1s; }
+.update-notice-confetti span:nth-child(2)  { left: 11%; animation-delay: 1.3s; }
+.update-notice-confetti span:nth-child(3)  { left: 19%; animation-delay: .6s; }
+.update-notice-confetti span:nth-child(4)  { left: 27%; animation-delay: 2.1s; }
+.update-notice-confetti span:nth-child(5)  { left: 35%; animation-delay: .3s; }
+.update-notice-confetti span:nth-child(6)  { left: 43%; animation-delay: 1.7s; }
+.update-notice-confetti span:nth-child(7)  { left: 52%; animation-delay: .9s; }
+.update-notice-confetti span:nth-child(8)  { left: 60%; animation-delay: 2.4s; }
+.update-notice-confetti span:nth-child(9)  { left: 68%; animation-delay: .4s; }
+.update-notice-confetti span:nth-child(10) { left: 76%; animation-delay: 1.9s; }
+.update-notice-confetti span:nth-child(11) { left: 83%; animation-delay: .8s; }
+.update-notice-confetti span:nth-child(12) { left: 90%; animation-delay: 2.7s; }
+.update-notice-confetti span:nth-child(13) { left: 96%; animation-delay: 1.2s; }
+.update-notice-confetti span:nth-child(14) { left: 58%; animation-delay: 3.1s; }
+
+@keyframes updateNoticeConfettiRise {
+  0%   { transform: translateY(0) rotate(0deg);      opacity: 0; }
+  15%  { opacity: .9; }
+  85%  { opacity: .7; }
+  100% { transform: translateY(-420px) rotate(340deg); opacity: 0; }
+}
+
+/* "NEU"-Badge oben rechts */
+.update-notice-badge {
+  position: absolute;
+  top: 18px;
+  right: -34px;
+  width: 140px;
+  transform: rotate(35deg);
+  background: linear-gradient(90deg, var(--menu-hex1), var(--menu-hex2));
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-align: center;
+  padding: 5px 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,.4);
+  animation: updateNoticeBadgePulse 1.6s ease-in-out infinite;
+  z-index: 2;
+}
+
+@keyframes updateNoticeBadgePulse {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.3); }
+}
+
+/* Großes, hüpfendes Icon oben */
+.update-notice-icon {
+  position: relative;
+  font-size: 46px;
+  margin-bottom: 6px;
+  animation: updateNoticeIconBounce 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px rgba(var(--menu-rgb1,77,163,255),.6));
+}
+
+@keyframes updateNoticeIconBounce {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50%      { transform: translateY(-8px) rotate(6deg); }
+}
+
 .update-notice-title {
-  font-size: 26px;
+  position: relative;
+  font-size: 28px;
   letter-spacing: 1px;
   margin-bottom: 16px;
   background: linear-gradient(90deg, #ffffff, var(--menu-hex1), var(--menu-hex2), #ffffff);
@@ -3781,6 +3902,7 @@ main {
 }
 
 .update-notice-image {
+  position: relative;
   width: 100%;
   max-height: 220px;
   object-fit: cover;
@@ -3790,42 +3912,62 @@ main {
 }
 
 .update-notice-message {
+  position: relative;
   font-size: 16px;
   line-height: 1.6;
   color: #d8dce6;
   white-space: pre-line;
-  margin-bottom: 28px;
+  margin-bottom: 30px;
 }
 
 .update-notice-button {
-  padding: 14px 36px;
+  position: relative;
+  padding: 15px 40px;
   border: none;
   border-radius: 15px;
-  background: linear-gradient(135deg, rgba(var(--menu-rgb1,77,163,255),.35), rgba(var(--menu-rgb2,145,70,255),.35));
+  background: linear-gradient(135deg, rgba(var(--menu-rgb1,77,163,255),.4), rgba(var(--menu-rgb2,145,70,255),.4));
   color: white;
   font-size: 16px;
   font-weight: 600;
+  letter-spacing: .5px;
   cursor: pointer;
+  box-shadow: 0 8px 25px rgba(0,0,0,.35);
+  animation: updateNoticeButtonPulse 2.2s ease-in-out infinite;
   transition: transform .2s, box-shadow .2s, background .3s;
 }
 
+@keyframes updateNoticeButtonPulse {
+  0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,.35), 0 0 0 rgba(var(--menu-rgb1,77,163,255),0); }
+  50%      { box-shadow: 0 8px 25px rgba(0,0,0,.35), 0 0 25px rgba(var(--menu-rgb1,77,163,255),.5); }
+}
+
 .update-notice-button:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 8px 25px rgba(var(--menu-rgb1,77,163,255),.4);
-  background: linear-gradient(135deg, rgba(var(--menu-rgb1,77,163,255),.55), rgba(var(--menu-rgb2,145,70,255),.55));
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 35px rgba(var(--menu-rgb1,77,163,255),.5);
+  background: linear-gradient(135deg, rgba(var(--menu-rgb1,77,163,255),.6), rgba(var(--menu-rgb2,145,70,255),.6));
+  animation-play-state: paused;
 }
 
 @media (max-width: 600px) {
   .update-notice-box {
-    padding: 32px 22px 26px;
+    padding: 38px 24px 28px;
+  }
+
+  .update-notice-icon {
+    font-size: 36px;
   }
 
   .update-notice-title {
-    font-size: 21px;
+    font-size: 22px;
   }
 
   .update-notice-message {
     font-size: 14px;
+  }
+
+  .update-notice-badge {
+    width: 120px;
+    font-size: 10px;
   }
 }
 
