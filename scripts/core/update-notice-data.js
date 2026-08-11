@@ -14,8 +14,8 @@
 const updateNoticeConfig = {
   title: "🆕 Neuigkeiten",
   message:
-    "Willkommen auf meiner Webseite, Update 3.3 wurde in die Webseite gebaut. " +
-    "Support Bot wurde verbessert und kleine Fehler wurden behoben. Sowie Glücksrad verbessert und aussehen des Neuigkeitsbild.",
+    "Willkommen auf meiner Webseite, Update 3.4 wurde in die Webseite gebaut. " +
+    "In diesem Update wurde kleine Fehler gefixxt, neue Fehler erkannt und Avatarbilder hinzugefügt. Die Sicherheit bei den Namen wurde verbessert und der Support-Bot wird verbessert.",
 
   // Optional: Bild anzeigen (Pfad relativ zur index.html), sonst leer lassen
   image: "",
