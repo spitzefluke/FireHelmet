@@ -889,6 +889,10 @@ async function checkCode() {
         recordCodeCrack(codeId, match.reward || null);
       }
 
+      if (match.avatarUnlock && typeof unlockAvatar === "function") {
+        unlockAvatar(match.avatarUnlock);
+      }
+
       if (typeof triggerCodeSuccessEffect === "function") {
         triggerCodeSuccessEffect();
       }
