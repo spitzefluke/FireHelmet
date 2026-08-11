@@ -34,6 +34,11 @@ function buildUpdateNoticeMarkup() {
   overlay.innerHTML = `
     <div class="update-notice-box">
       <div class="update-notice-glow"></div>
+      <div class="update-notice-confetti">
+        ${Array.from({ length: 14 }).map(() => '<span></span>').join("")}
+      </div>
+      <span class="update-notice-badge">NEU</span>
+      <div class="update-notice-icon">📢</div>
       <h2 class="update-notice-title">${updateNoticeConfig.title}</h2>
       ${imageHtml}
       <p class="update-notice-message">${updateNoticeConfig.message}</p>
