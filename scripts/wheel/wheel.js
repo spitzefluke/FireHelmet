@@ -331,9 +331,25 @@ function refreshWheelStatus() {
    Zahlen-Buchstaben-Vertauschungen aufgelöst, Sonderzeichen
    entfernt) und prüft ihn gegen scripts/wheel/nickname-filter-data.js
 ------------------------------------------------------ */
+// Kyrillische/griechische Buchstaben, die optisch wie lateinische
+// aussehen, werden hierauf abgebildet - sonst würden sie beim
+// Filtern einfach nur entfernt, statt das Wort zu enttarnen
+// (z.B. würde ein kyrillisches "а" in "аrschloch" sonst einfach
+// verschwinden und "rschloch" übrig bleiben, statt "arschloch"
+// zu ergeben).
+const NICKNAME_HOMOGLYPHS = {
+  а: "a", е: "e", о: "o", р: "p", с: "c", у: "y", х: "x", і: "i", ѕ: "s", // kyrillisch
+  α: "a", ε: "e", ο: "o", ρ: "p", υ: "y", χ: "x", ι: "i", // griechisch
+};
+
 function normalizeNicknameForFilter(name) {
-  return name
-    .toLowerCase()
+  let text = name.toLowerCase();
+
+  for (const [from, to] of Object.entries(NICKNAME_HOMOGLYPHS)) {
+    text = text.split(from).join(to);
+  }
+
+  text = text
     .replace(/0/g, "o")
     .replace(/1/g, "i")
     .replace(/3/g, "e")
@@ -344,6 +360,14 @@ function normalizeNicknameForFilter(name) {
     .replace(/\$/g, "s")
     .replace(/@/g, "a")
     .replace(/[^a-zäöüß]/g, "");
+
+  // Wiederholte/gestreckte Buchstaben zusammenziehen, z.B.
+  // "arrrschloch" oder "aaarschloch" -> "arschloch", damit sich
+  // niemand durch Buchstaben-Wiederholung mitten im Wort
+  // vorbeimogeln kann
+  text = text.replace(/(.)\1+/g, "$1");
+
+  return text;
 }
 
 function isNicknameBlocked(name) {
