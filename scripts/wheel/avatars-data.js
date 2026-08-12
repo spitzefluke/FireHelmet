@@ -22,11 +22,10 @@ const wheelAvatarOptions = [
   "scripts/avatare/3.png",
   "scripts/avatare/4.png",
   "scripts/avatare/7.png",
-  "⛵",
-  "💀",
+  "scripts/avatare/8.png",
+  "scripts/avatare/10.png",
   "🌊",
   "🦑",
-  "🏝️",
 
   // Eigene Bilder - liegen in scripts/avatare/, hier den Pfad eintragen:
   // "scripts/avatare/pirat-1.png",
@@ -53,6 +52,7 @@ const wheelAvatarOptions = [
 const wheelSpecialAvatars = [
   { id: "gold-pirat", avatar: "🏆", label: "Gold-Pirat" },
   { id: "kraken", avatar: "🐲", label: "Kraken-Bezwinger" },
+  { id: "Evoli", avatar: "scripts/avatare/9.png", label: "Evoli" },
 
   // Eigene Beispiele:
   // { id: "legendaer", avatar: "scripts/avatare/legendaer.png", label: "Legendärer Pirat" },
