@@ -129,6 +129,11 @@ const codes = [
     message: "Bin ich ein Wort, eine Gruppierung, eine Sekte oder doch ein Merch?",
     reward: "???Tipp???",
   },
+  {
+    hash: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", // ADMIN
+    message: "Avatar wurde freigeschaltet",
+    avatarUnlock: "Admin",
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
