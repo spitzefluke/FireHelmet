@@ -25,8 +25,8 @@ function changePage(pageID) {
     updateCodeAmbientPage(pageID);
   }
 
-  if (typeof updateGiveawayPage === "function") {
-    updateGiveawayPage(pageID);
+  if (typeof updateCommunityBossPage === "function") {
+    updateCommunityBossPage(pageID);
   }
 
   if (typeof updateCharactersPage === "function") {

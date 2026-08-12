@@ -26,7 +26,7 @@ const translations = {
     "menu.wheel": "🧭 Schatzrad",
     "menu.leaderboard": "🏆 Rangliste",
     "menu.race": "🏎️ Wochenrennen",
-    "menu.giveaway": "🎁 Gewinnspiel",
+    "menu.communityBoss": "🐙 Community-Boss",
     "menu.streamraetsel": "🧩 Streamrätsel",
     "menu.support": "🆘 Support",
 
@@ -98,9 +98,8 @@ const translations = {
     "stream.subtitle": "Schaltet sich frei am 10.08.2026",
     "stream.teaser": "📦 Paket kommt bald ...",
 
-    "giveaway.title": "GEWINNSPIEL",
-    "giveaway.inactive": "Gerade läuft kein Gewinnspiel - schau später nochmal vorbei!",
-    "giveaway.joinButton": "Teilnehmen",
+    "boss.title": "COMMUNITY-BOSS",
+    "boss.subtitle": "Gemeinsam besiegen, bevor der Monat endet!",
   },
 
   en: {
@@ -114,7 +113,7 @@ const translations = {
     "menu.wheel": "🧭 Treasure Wheel",
     "menu.leaderboard": "🏆 Leaderboard",
     "menu.race": "🏎️ Weekly Race",
-    "menu.giveaway": "🎁 Giveaway",
+    "menu.communityBoss": "🐙 Community Boss",
     "menu.streamraetsel": "🧩 Stream Puzzle",
     "menu.support": "🆘 Support",
 
@@ -186,9 +185,8 @@ const translations = {
     "stream.subtitle": "Unlocks on 08/10/2026",
     "stream.teaser": "📦 Package coming soon ...",
 
-    "giveaway.title": "GIVEAWAY",
-    "giveaway.inactive": "No giveaway running right now - check back later!",
-    "giveaway.joinButton": "Join",
+    "boss.title": "COMMUNITY BOSS",
+    "boss.subtitle": "Defeat it together before the month ends!",
   },
 };
 
