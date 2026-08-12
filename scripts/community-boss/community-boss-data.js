@@ -19,6 +19,7 @@ const communityBossConfig = {
 const communityBosses = [
   {
     name: "Krake Morgrath",
+    type: "kraken",
     emoji: "🐙",
     flavorText: "Ein uralter Krake, der seit Ewigkeiten die Handelsrouten terrorisiert.",
     defeatMessage: "Krake Morgrath sinkt zurück in die Tiefe - die Handelsrouten sind wieder frei! 🏆",
@@ -26,6 +27,7 @@ const communityBosses = [
   },
   {
     name: "Der Sturmdämon",
+    type: "storm",
     emoji: "🌪️",
     flavorText: "Er braut die schlimmsten Stürme der sieben Meere zusammen.",
     defeatMessage: "Der Sturmdämon ist vertrieben - klarer Himmel voraus! ⛅",
@@ -33,6 +35,7 @@ const communityBosses = [
   },
   {
     name: "Kapitän Blackgold",
+    type: "ghost-captain",
     emoji: "💀",
     flavorText: "Ein verfluchter Rivalen-Kapitän, der es auf euren Schatz abgesehen hat.",
     defeatMessage: "Kapitän Blackgold ist geentert - sein Gold gehört jetzt euch! 💰",
@@ -40,6 +43,7 @@ const communityBosses = [
   },
   {
     name: "Die Meeresschlange",
+    type: "serpent",
     emoji: "🐍",
     flavorText: "Riesig, giftig, und immer hungrig auf Schiffe.",
     defeatMessage: "Die Meeresschlange taucht ab - ruhige Gewässer für diesen Monat! 🌊",
