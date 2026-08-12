@@ -134,6 +134,10 @@ const codes = [
     message: "Avatar wurde freigeschaltet",
     avatarUnlock: "Admin",
   },
+  {
+    hash: "cac24f302a4a4945ae50be622c14407102347c6527c127d530f16fbbdf9c9da9", // Hörspiel
+    message: "Morgen 18:00 auf Spotify",
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
