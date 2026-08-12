@@ -619,6 +619,39 @@ function claimDailyRaceBonus() {
   localStorage.setItem("raceDailyBonusDate", today);
   addRaceProgress(raceConfig.dailyBonusProgress);
   refreshRaceDailyStatus();
+  playDailyBonusAnimation(raceConfig.dailyBonusProgress);
+}
+
+/* ------------------------------------------------------
+   TAGESBONUS-ANIMATION
+   Kurzes "Geschenk aufgeht"-Feuerwerk am Button, damit man
+   deutlich sieht, dass der Bonus wirklich abgeholt wurde.
+------------------------------------------------------ */
+function playDailyBonusAnimation(points) {
+  const btn = document.getElementById("race-daily-button");
+  if (!btn) return;
+
+  const burst = document.createElement("div");
+  burst.className = "daily-bonus-burst";
+  burst.innerHTML = `
+    <span class="daily-bonus-points">+${points}</span>
+    ${Array.from({ length: 10 })
+      .map((_, i) => `<span class="daily-bonus-spark" style="--i:${i}"></span>`)
+      .join("")}
+  `;
+
+  btn.style.position = "relative";
+  btn.appendChild(burst);
+
+  btn.classList.remove("daily-bonus-pop");
+  void btn.offsetWidth;
+  btn.classList.add("daily-bonus-pop");
+
+  if (typeof triggerCodeSuccessEffect === "function") {
+    triggerCodeSuccessEffect();
+  }
+
+  setTimeout(() => burst.remove(), 1400);
 }
 
 /* ------------------------------------------------------
