@@ -169,11 +169,28 @@ function addSupportMessage(text, sender) {
   const log = document.getElementById("support-chat-log");
   if (!log) return;
 
-  const bubble = document.createElement("div");
-  bubble.className = sender === "user" ? "support-msg support-msg-user" : "support-msg support-msg-bot";
-  bubble.textContent = text;
+  if (sender === "user") {
+    const bubble = document.createElement("div");
+    bubble.className = "support-msg support-msg-user";
+    bubble.textContent = text;
+    log.appendChild(bubble);
+  } else {
+    const row = document.createElement("div");
+    row.className = "support-msg-row";
 
-  log.appendChild(bubble);
+    const avatar = document.createElement("div");
+    avatar.className = "support-msg-avatar";
+    avatar.textContent = "🦜";
+
+    const bubble = document.createElement("div");
+    bubble.className = "support-msg support-msg-bot";
+    bubble.textContent = text;
+
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    log.appendChild(row);
+  }
+
   log.scrollTop = log.scrollHeight;
 }
 
@@ -264,12 +281,22 @@ function showSupportTyping() {
   const log = document.getElementById("support-chat-log");
   if (!log) return null;
 
+  const row = document.createElement("div");
+  row.className = "support-msg-row";
+
+  const avatar = document.createElement("div");
+  avatar.className = "support-msg-avatar";
+  avatar.textContent = "🦜";
+
   const bubble = document.createElement("div");
   bubble.className = "support-msg support-msg-bot support-msg-typing";
   bubble.innerHTML = "<span></span><span></span><span></span>";
-  log.appendChild(bubble);
+
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  log.appendChild(row);
   log.scrollTop = log.scrollHeight;
-  return bubble;
+  return row;
 }
 
 function removeSupportTyping(el) {
