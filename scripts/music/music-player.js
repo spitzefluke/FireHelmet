@@ -88,6 +88,41 @@
     bgMusic.src = musicPlaylist[currentTrackIndex];
   }
 
+  const TARGET_VOLUME = 1;
+  const FADE_MS = 900;
+  let fadeInterval = null;
+
+  function fadeAudioTo(targetVolume, duration, onComplete) {
+    if (!bgMusic) return;
+
+    clearInterval(fadeInterval);
+
+    const startVolume = bgMusic.volume;
+    const diff = targetVolume - startVolume;
+    if (diff === 0) {
+      if (onComplete) onComplete();
+      return;
+    }
+
+    const steps = 30;
+    const stepTime = duration / steps;
+    let currentStep = 0;
+
+    fadeInterval = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / steps;
+      // sanfte Kurve statt linear, wirkt natürlicher
+      const eased = 1 - Math.pow(1 - progress, 2);
+      bgMusic.volume = Math.min(1, Math.max(0, startVolume + diff * eased));
+
+      if (currentStep >= steps) {
+        clearInterval(fadeInterval);
+        bgMusic.volume = Math.min(1, Math.max(0, targetVolume));
+        if (onComplete) onComplete();
+      }
+    }, stepTime);
+  }
+
   function attemptPlay() {
     if (!bgMusic || musicMuted) return;
 
@@ -108,7 +143,9 @@
   function playNextTrack() {
     if (!hasPlaylist()) return;
     loadRandomNextTrack();
+    bgMusic.volume = 0;
     attemptPlay();
+    fadeAudioTo(TARGET_VOLUME, FADE_MS);
   }
 
   function updateToggleIcon() {
@@ -118,6 +155,7 @@
 
   function updateMusicForPage(pageID) {
     if (!bgMusic) return;
+    const wasOnHomePage = onHomePage;
     onHomePage = pageID === "home";
 
     if (!musicToggle) musicToggle = document.getElementById("music-toggle");
@@ -127,14 +165,26 @@
 
       if (!bgMusic.src) {
         loadRandomNextTrack();
+        bgMusic.volume = 0;
       }
 
-      attemptPlay();
+      // Kam man gerade erst auf Home (oder war die Musik pausiert),
+      // erst leise starten und dann sanft einblenden
+      if (!wasOnHomePage || bgMusic.paused) {
+        bgMusic.volume = 0;
+        attemptPlay();
+      }
+      fadeAudioTo(TARGET_VOLUME, FADE_MS);
+
       startWatchdog();
     } else {
-      bgMusic.pause();
       if (musicToggle) musicToggle.style.display = "none";
       stopWatchdog();
+
+      // Sanft ausblenden statt hart zu stoppen, dann erst pausieren
+      fadeAudioTo(0, FADE_MS, () => {
+        if (bgMusic && !onHomePage) bgMusic.pause();
+      });
     }
   }
 
@@ -145,10 +195,14 @@
     updateToggleIcon();
 
     if (musicMuted) {
-      bgMusic.pause();
+      fadeAudioTo(0, FADE_MS, () => {
+        if (bgMusic) bgMusic.pause();
+      });
     } else {
       if (!bgMusic.src) loadRandomNextTrack();
+      bgMusic.volume = 0;
       attemptPlay();
+      fadeAudioTo(TARGET_VOLUME, FADE_MS);
     }
   }
 
