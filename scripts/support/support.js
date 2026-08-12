@@ -43,9 +43,22 @@ function randomFromArray(arr) {
    TEXT NORMALISIEREN + SCHIMPFWORT-ERKENNUNG
    (löst gängige Zahlen-Buchstaben-Tricks wie "4rschloch" auf)
 ------------------------------------------------------ */
+// Kyrillische/griechische Buchstaben, die optisch wie lateinische
+// aussehen (siehe ausführlicher Kommentar in scripts/wheel/wheel.js
+// bei normalizeNicknameForFilter)
+const SUPPORT_HOMOGLYPHS = {
+  а: "a", е: "e", о: "o", р: "p", с: "c", у: "y", х: "x", і: "i", ѕ: "s",
+  α: "a", ε: "e", ο: "o", ρ: "p", υ: "y", χ: "x", ι: "i",
+};
+
 function normalizeSupportText(text) {
-  return text
-    .toLowerCase()
+  let result = text.toLowerCase();
+
+  for (const [from, to] of Object.entries(SUPPORT_HOMOGLYPHS)) {
+    result = result.split(from).join(to);
+  }
+
+  result = result
     .replace(/0/g, "o")
     .replace(/1/g, "i")
     .replace(/3/g, "e")
@@ -53,7 +66,12 @@ function normalizeSupportText(text) {
     .replace(/5/g, "s")
     .replace(/7/g, "t")
     .replace(/\$/g, "s")
-    .replace(/@/g, "a");
+    .replace(/@/g, "a")
+    .replace(/[^a-zäöüß]/g, "");
+
+  // Wiederholte/gestreckte Buchstaben zusammenziehen (z.B.
+  // "arrrschloch" -> "arschloch")
+  return result.replace(/(.)\1+/g, "$1");
 }
 
 function containsBadWord(text) {
