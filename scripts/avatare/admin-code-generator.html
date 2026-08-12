@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code-Generator (nur für dich)</title>
+<style>
+  * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+  body {
+    background: #0a0e1a;
+    color: #fff;
+    padding: 40px 20px;
+    max-width: 700px;
+    margin: auto;
+  }
+  h1 { font-size: 28px; margin-bottom: 6px; }
+  p.hint { color: #999; margin-bottom: 30px; font-size: 14px; }
+  label { display: block; margin-top: 18px; margin-bottom: 6px; font-weight: bold; font-size: 14px; color: #ffd76b; }
+  label.optional-label { color: #7ee0a3; }
+  small.field-hint { display: block; margin-top: 4px; color: #777; font-size: 12px; }
+  input, textarea, select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #333;
+    background: #151a2c;
+    color: #fff;
+    font-size: 15px;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #4da3ff;
+    box-shadow: 0 0 0 3px rgba(77,163,255,.2);
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  fieldset {
+    margin-top: 30px;
+    padding: 18px 18px 6px;
+    border-radius: 14px;
+    border: 1px dashed #333;
+  }
+  fieldset legend {
+    padding: 0 8px;
+    font-size: 13px;
+    color: #d4af37;
+    font-weight: bold;
+  }
+  button {
+    margin-top: 25px;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    background: #d4af37;
+    color: #1a1200;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  button:hover { background: #e6c454; }
+  #output {
+    margin-top: 30px;
+    background: #05060c;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 13px;
+    color: #9effa0;
+    display: none;
+  }
+  #copyBtn {
+    display: none;
+    margin-top: 12px;
+    background: #4da3ff;
+    color: #fff;
+  }
+  #copyBtn:hover { background: #6fb6ff; }
+  .status { margin-top: 10px; font-size: 13px; color: #4ade80; display: none; }
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 560px) {
+    .row-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>🔑 Code-Generator</h1>
+  <p class="hint">
+    Nur für dich zum Erstellen neuer Codes für <code>scripts/codes/codes-data.js</code>.
+    Diese Datei ist NICHT Teil deiner Webseite und muss auch nicht hochgeladen werden -
+    öffne sie einfach lokal in deinem Browser, wenn du einen neuen Code brauchst.
+  </p>
+
+  <label for="code">Der geheime Code (das, was Besucher eintippen müssen)</label>
+  <input type="text" id="code" placeholder="z.B. Leuchtturm">
+
+  <label for="message">Nachricht, die nach richtigem Code erscheint</label>
+  <textarea id="message" placeholder="z.B. Glückwunsch, du hast den Leuchtturm gefunden!"></textarea>
+
+  <fieldset>
+    <legend>Optional: Belohnungen</legend>
+
+    <label for="reward" class="optional-label">Gewinn (erscheint in der Rangliste-Spalte "Gewinne")</label>
+    <input type="text" id="reward" placeholder="z.B. Roblox-Code (leer lassen, wenn kein echter Gewinn)">
+
+    <label for="avatarUnlock" class="optional-label">Avatar freischalten</label>
+    <select id="avatarUnlock">
+      <option value="">— keinen Avatar freischalten —</option>
+      <option value="gold-pirat">gold-pirat (🏆 Gold-Pirat)</option>
+      <option value="kraken">kraken (🐲 Kraken-Bezwinger)</option>
+      <option value="__custom__">Eigene ID eingeben ...</option>
+    </select>
+    <input type="text" id="avatarUnlockCustom" placeholder="eigene id, z.B. legendaer" style="display:none; margin-top:10px;">
+    <small class="field-hint">
+      Muss exakt einer "id" aus scripts/wheel/avatars-data.js (wheelSpecialAvatars) entsprechen,
+      sonst passiert beim Einlösen einfach nichts.
+    </small>
+  </fieldset>
+
+  <fieldset>
+    <legend>Optional: Medien</legend>
+
+    <div class="row-2">
+      <div>
+        <label for="image" class="optional-label">Bild-Pfad</label>
+        <input type="text" id="image" placeholder="scripts/image/hinweis3.png">
+      </div>
+      <div>
+        <label for="audio" class="optional-label">Audio-Datei</label>
+        <input type="text" id="audio" placeholder="scripts/audio/hinweis3.mp3">
+      </div>
+    </div>
+
+    <label style="display:flex; align-items:center; gap:10px; margin-top:20px;">
+      <input type="checkbox" id="speak" style="width:auto;">
+      Nur falls KEINE Audio-Datei: Nachricht mit einfacher Browser-Stimme vorlesen
+    </label>
+  </fieldset>
+
+  <button onclick="generateCode()">Code-Block generieren</button>
+
+  <div id="output"></div>
+  <button id="copyBtn" onclick="copyOutput()">📋 In Zwischenablage kopieren</button>
+  <p class="status" id="status">Kopiert! Jetzt einfach in das "codes"-Array in codes-data.js einfügen.</p>
+
+<script>
+document.getElementById("avatarUnlock").addEventListener("change", (e) => {
+  const customInput = document.getElementById("avatarUnlockCustom");
+  customInput.style.display = e.target.value === "__custom__" ? "block" : "none";
+});
+
+async function sha256Hex(text) {
+  const data = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(hashBuffer)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function getAvatarUnlockValue() {
+  const select = document.getElementById("avatarUnlock").value;
+  if (select === "__custom__") {
+    return document.getElementById("avatarUnlockCustom").value.trim();
+  }
+  return select;
+}
+
+async function generateCode() {
+  const code = document.getElementById("code").value.trim();
+  const message = document.getElementById("message").value.trim();
+  const reward = document.getElementById("reward").value.trim();
+  const avatarUnlock = getAvatarUnlockValue();
+  const image = document.getElementById("image").value.trim();
+  const audio = document.getElementById("audio").value.trim();
+  const speak = document.getElementById("speak").checked;
+
+  const output = document.getElementById("output");
+  const copyBtn = document.getElementById("copyBtn");
+  const status = document.getElementById("status");
+  status.style.display = "none";
+
+  if (!code || !message) {
+    output.style.display = "block";
+    output.textContent = "⚠️ Bitte mindestens den Code und die Nachricht ausfüllen.";
+    copyBtn.style.display = "none";
+    return;
+  }
+
+  const hash = await sha256Hex(code.toLowerCase());
+
+  let block = `  {\n`;
+  block += `    hash: "${hash}", // ${code}\n`;
+  block += `    message: "${message.replace(/"/g, '\\"')}",\n`;
+  if (reward) block += `    reward: "${reward.replace(/"/g, '\\"')}",\n`;
+  if (avatarUnlock) block += `    avatarUnlock: "${avatarUnlock.replace(/"/g, '\\"')}",\n`;
+  if (image) block += `    image: "${image.replace(/"/g, '\\"')}",\n`;
+  if (audio) block += `    audio: "${audio.replace(/"/g, '\\"')}",\n`;
+  if (speak && !audio) block += `    speak: true,\n`;
+  block += `  },`;
+
+  output.style.display = "block";
+  output.textContent = block;
+  copyBtn.style.display = "inline-block";
+}
+
+function copyOutput() {
+  const output = document.getElementById("output");
+  const status = document.getElementById("status");
+
+  navigator.clipboard.writeText(output.textContent).then(() => {
+    status.style.display = "block";
+  });
+}
+</script>
+
+</body>
+</html>
