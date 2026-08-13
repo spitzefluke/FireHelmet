@@ -54,6 +54,7 @@ const wheelSpecialAvatars = [
   { id: "kraken", avatar: "🐲", label: "Kraken-Bezwinger" },
   { id: "Evoli", avatar: "scripts/avatare/9.png", label: "Evoli" },
   { id: "Admin", avatar: "scripts/avatare/11.png", label: "Admin" },
+  { id: "boss-slayer", avatar: "🏅", label: "Boss-Bezwinger (Top 3 Schaden)" },
 
   // Eigene Beispiele:
   // { id: "legendaer", avatar: "scripts/avatare/legendaer.png", label: "Legendärer Pirat" },
