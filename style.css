@@ -4446,3 +4446,111 @@ img, svg, video, canvas {
   0%   { transform: rotate(calc(var(--i) * 36deg)) translateX(0);   opacity: 1; }
   100% { transform: rotate(calc(var(--i) * 36deg)) translateX(60px); opacity: 0; }
 }
+
+/* =====================================================
+   BOSS-GEGENANGRIFF: ROTER BILDSCHIRM-BLITZ
+===================================================== */
+.boss-counter-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255,30,30,.05), rgba(180,0,0,.55) 120%);
+  opacity: 0;
+}
+
+.boss-counter-flash.active {
+  animation: bossCounterFlash .7s ease-out;
+}
+
+@keyframes bossCounterFlash {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* =====================================================
+   BOSS-RANGLISTE (Top-Angreifer)
+===================================================== */
+.boss-leaderboard-title {
+  margin-top: 55px;
+  font-size: 22px;
+  color: #d4af37;
+  text-shadow: 0 0 14px rgba(212,175,55,.4);
+}
+
+.boss-leaderboard-hint {
+  font-size: 13px;
+  color: #999;
+  margin-top: 4px;
+  margin-bottom: 22px;
+}
+
+.boss-leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.boss-leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  animation: leaderboardRowIn .4s cubic-bezier(0.22, 0.9, 0.32, 1.2) backwards;
+}
+
+.boss-leaderboard-row:nth-child(1) { animation-delay: .02s; }
+.boss-leaderboard-row:nth-child(2) { animation-delay: .06s; }
+.boss-leaderboard-row:nth-child(3) { animation-delay: .10s; }
+.boss-leaderboard-row:nth-child(4) { animation-delay: .14s; }
+.boss-leaderboard-row:nth-child(5) { animation-delay: .18s; }
+
+.boss-leaderboard-top {
+  background: linear-gradient(90deg, rgba(212,175,55,.16), rgba(212,175,55,.03));
+  border-color: rgba(212,175,55,.35);
+}
+
+.boss-leaderboard-own {
+  outline: 2px solid rgba(77,163,255,.6);
+  outline-offset: -2px;
+}
+
+.boss-leaderboard-rank {
+  font-size: 17px;
+  font-weight: bold;
+  width: 30px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.boss-leaderboard-name {
+  flex: 1;
+  text-align: left;
+  font-weight: 600;
+  color: #fff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.boss-leaderboard-damage {
+  font-size: 13px;
+  color: #ff9d9d;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .boss-leaderboard-name {
+    font-size: 13px;
+  }
+
+  .boss-leaderboard-damage {
+    font-size: 11px;
+  }
+}

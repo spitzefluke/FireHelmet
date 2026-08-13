@@ -478,8 +478,15 @@
 
         <button id="boss-attack-btn" class="code-button boss-attack-btn" onclick="attackCommunityBoss()">⚔️ Angreifen</button>
         <p id="boss-status" class="wheel-status"></p>
+
+        <h2 class="boss-leaderboard-title">🏅 Top-Angreifer diesen Monat</h2>
+        <p class="boss-leaderboard-hint">Die besten 3 am Monatsende erhalten einen exklusiven Avatar!</p>
+        <div id="boss-leaderboard" class="boss-leaderboard"></div>
       </div>
     </section>
+
+    <!-- Rot-Blitz-Overlay: der Boss schlägt alle paar Minuten zurück -->
+    <div id="boss-counter-flash" class="boss-counter-flash"></div>
 
     <!-- =====================
          SUPPORT
