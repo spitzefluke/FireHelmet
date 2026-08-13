@@ -44,6 +44,7 @@ let bossParticles = [];
 let bossEffects = []; // aktive Angriffs-Effekte (Schuss/Säbel)
 let bossShakeUntil = 0;
 let bossHitFlashUntil = 0;
+let bossCounterAuraUntil = 0;
 
 function setupBossCanvas() {
   const stage = document.getElementById("boss-stage");
@@ -172,6 +173,33 @@ function drawBossCreature(time, w, h, boss) {
   const bob = Math.sin(time / 700) * 6;
   const breathe = 1 + Math.sin(time / 900) * 0.03;
 
+  // Energie-Ring hinterm Boss: pulsiert leise, flammt beim
+  // Gegenangriff kurz kräftig auf
+  const counterBoost = Math.max(0, (bossCounterAuraUntil - time) / 700);
+  const ringPulse = 0.5 + Math.sin(time / 500) * 0.2 + counterBoost * 0.8;
+  const ringGrad = bossCtx.createRadialGradient(cx, cy, 10, cx, cy, 150);
+  ringGrad.addColorStop(0, hexToRgba(boss.color, 0.05 + counterBoost * 0.25));
+  ringGrad.addColorStop(0.7, hexToRgba(boss.color, 0.12 * ringPulse));
+  ringGrad.addColorStop(1, hexToRgba(boss.color, 0));
+  bossCtx.fillStyle = ringGrad;
+  bossCtx.beginPath();
+  bossCtx.arc(cx, cy, 150, 0, Math.PI * 2);
+  bossCtx.fill();
+
+  // Dünner, rotierender Rune-Ring am Boden für mehr "Boss-Fight"-Gefühl
+  bossCtx.save();
+  bossCtx.translate(cx, cy + 95);
+  bossCtx.scale(1, 0.32);
+  bossCtx.rotate(time / 4000);
+  bossCtx.strokeStyle = hexToRgba(boss.color, 0.35 + counterBoost * 0.4);
+  bossCtx.lineWidth = 3;
+  bossCtx.setLineDash([14, 10]);
+  bossCtx.beginPath();
+  bossCtx.arc(0, 0, 118, 0, Math.PI * 2);
+  bossCtx.stroke();
+  bossCtx.setLineDash([]);
+  bossCtx.restore();
+
   bossCtx.save();
   bossCtx.translate(cx, cy + bob);
   bossCtx.scale(breathe, breathe);
@@ -182,6 +210,15 @@ function drawBossCreature(time, w, h, boss) {
   else drawKraken(time, boss);
 
   bossCtx.restore();
+}
+
+function hexToRgba(hex, alpha) {
+  const clean = hex.replace("#", "");
+  const bigint = parseInt(clean, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 function drawGlowEyes(offsets, glowColor, size) {
@@ -541,6 +578,13 @@ async function renderCommunityBossPage() {
 
   applyBossHpDisplay(state.data, hpTextEl, hpFillEl, boss, defeatedBanner, attackBtn);
 
+  const monthId = getCurrentMonthId();
+  renderBossLeaderboard(monthId);
+  if (state.data.defeated) {
+    checkBossSlayerReward(monthId);
+  }
+  startBossCounterattackTimer();
+
   const nickname = localStorage.getItem("wheelNickname") || "";
 
   if (!nickname) {
@@ -611,6 +655,8 @@ async function attackCommunityBoss() {
       hp: firebase.firestore.FieldValue.increment(-damage),
     });
 
+    await recordBossDamage(monthId, nickname, damage);
+
     localStorage.setItem(getBossDailyAttackKey(), todayStr());
     spawnBossHitEffect(damage);
 
@@ -623,10 +669,126 @@ async function attackCommunityBoss() {
     }
 
     setTimeout(renderCommunityBossPage, 600);
+    setTimeout(() => renderBossLeaderboard(monthId), 700);
   } catch (err) {
     console.warn("Angriff konnte nicht gespeichert werden:", err);
     if (statusEl) statusEl.textContent = "⚠️ Angriff ist fehlgeschlagen, versuch's nochmal.";
     if (attackBtn) attackBtn.disabled = false;
+  }
+}
+
+/* ------------------------------------------------------
+   SCHADEN PRO SPIELER MERKEN (für Rangliste + Top-3-Belohnung)
+------------------------------------------------------ */
+async function recordBossDamage(monthId, nickname, damage) {
+  if (!wheelDb) return;
+
+  const uid = await wheelAuthReady;
+  if (!uid) return;
+
+  const provider = localStorage.getItem("loginProvider") || "";
+  let avatar = null;
+  if (provider === "discord") avatar = localStorage.getItem("discordAvatar") || null;
+  else if (provider === "twitch") avatar = localStorage.getItem("twitchAvatar") || null;
+  else avatar = localStorage.getItem("wheelAvatar") || null;
+
+  const docRef = wheelDb.collection("community_boss_damage").doc(`${monthId}_${uid}`);
+  const snap = await docRef.get();
+
+  if (snap.exists) {
+    await docRef.update({
+      totalDamage: firebase.firestore.FieldValue.increment(damage),
+      nickname,
+      avatar,
+    });
+  } else {
+    await docRef.set({ month: monthId, uid, nickname, avatar, totalDamage: damage });
+  }
+}
+
+/* ------------------------------------------------------
+   RANGLISTE DER TOP-ANGREIFER
+------------------------------------------------------ */
+async function renderBossLeaderboard(monthId) {
+  const container = document.getElementById("boss-leaderboard");
+  if (!container || !wheelDb) return;
+
+  try {
+    const snap = await wheelDb
+      .collection("community_boss_damage")
+      .where("month", "==", monthId)
+      .orderBy("totalDamage", "desc")
+      .limit(10)
+      .get();
+
+    if (snap.empty) {
+      container.innerHTML = `<p class="wheel-status">Noch niemand hat angegriffen - sei der/die Erste!</p>`;
+      return;
+    }
+
+    const ownUid = typeof wheelAuthReady !== "undefined" ? await wheelAuthReady : null;
+
+    let html = "";
+    snap.docs.forEach((doc, i) => {
+      const p = doc.data();
+      const rank = i + 1;
+      const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
+      const isOwn = p.uid === ownUid;
+      const avatarHtml =
+        p.avatar && typeof isAvatarImagePath === "function"
+          ? isAvatarImagePath(p.avatar)
+            ? `<img src="${p.avatar}" class="leaderboard-avatar" alt="">`
+            : `<span class="leaderboard-avatar leaderboard-avatar-emoji">${p.avatar}</span>`
+          : "";
+
+      html += `
+        <div class="boss-leaderboard-row${rank <= 3 ? " boss-leaderboard-top" : ""}${isOwn ? " boss-leaderboard-own" : ""}">
+          <span class="boss-leaderboard-rank">${medal}</span>
+          <span class="boss-leaderboard-name">${avatarHtml}${escapeHtmlBoss(p.nickname || "Unbekannt")}${isOwn ? " (Du)" : ""}</span>
+          <span class="boss-leaderboard-damage">${(p.totalDamage || 0).toLocaleString("de-DE")} Schaden</span>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  } catch (err) {
+    console.warn("Boss-Rangliste konnte nicht geladen werden:", err);
+  }
+}
+
+function escapeHtmlBoss(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/* ------------------------------------------------------
+   TOP-3-BELOHNUNG BEI BESIEGTEM BOSS
+   Wer gerade die Seite besucht UND zu den Top 3 Schaden-
+   Verursachern des Monats gehört, bekommt den Boss-Bezwinger-
+   Avatar freigeschaltet (passiert also beim nächsten Besuch
+   nach dem Sieg, nicht zwingend live in dem Moment).
+------------------------------------------------------ */
+async function checkBossSlayerReward(monthId) {
+  if (!wheelDb) return;
+
+  try {
+    const ownUid = typeof wheelAuthReady !== "undefined" ? await wheelAuthReady : null;
+    if (!ownUid) return;
+
+    const snap = await wheelDb
+      .collection("community_boss_damage")
+      .where("month", "==", monthId)
+      .orderBy("totalDamage", "desc")
+      .limit(3)
+      .get();
+
+    const isTopThree = snap.docs.some((doc) => doc.data().uid === ownUid);
+    if (isTopThree && typeof unlockAvatar === "function") {
+      unlockAvatar("boss-slayer");
+    }
+  } catch (err) {
+    console.warn("Top-3-Prüfung fehlgeschlagen:", err);
   }
 }
 
@@ -667,7 +829,58 @@ function spawnBossHitEffect(damage) {
 function updateCommunityBossPage(pageID) {
   if (pageID !== "community-boss") {
     stopBossRender();
+    stopBossCounterattackTimer();
     return;
   }
   renderCommunityBossPage();
+}
+
+/* ------------------------------------------------------
+   BOSS-GEGENANGRIFF
+   Alle 5 Minuten, solange man auf der Boss-Seite ist, schlägt
+   der Boss zurück: der Bildschirm blitzt rot auf, damit sich
+   der Kampf auch dann noch "lebendig" anfühlt, wenn man länger
+   auf der Seite bleibt. Rein atmosphärisch, kostet keine HP.
+------------------------------------------------------ */
+const BOSS_COUNTERATTACK_INTERVAL = 5 * 60 * 1000;
+let bossCounterattackTimer = null;
+
+function startBossCounterattackTimer() {
+  if (bossCounterattackTimer) return;
+  bossCounterattackTimer = setInterval(triggerBossCounterattack, BOSS_COUNTERATTACK_INTERVAL);
+}
+
+function stopBossCounterattackTimer() {
+  clearInterval(bossCounterattackTimer);
+  bossCounterattackTimer = null;
+}
+
+function triggerBossCounterattack() {
+  const flash = document.getElementById("boss-counter-flash");
+  const stage = document.getElementById("boss-stage");
+  const statusEl = document.getElementById("boss-status");
+  if (!flash) return;
+
+  flash.classList.remove("active");
+  void flash.offsetWidth;
+  flash.classList.add("active");
+
+  // Boss-Kreatur reagiert im selben Moment (Augen/Aura kurz greller)
+  bossHitFlashUntil = performance.now() + 0; // kein Weißblitz im Canvas, nur Aura
+  bossCounterAuraUntil = performance.now() + 700;
+  bossShakeUntil = performance.now() + 350;
+
+  if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+
+  if (statusEl) {
+    const prevText = statusEl.textContent;
+    statusEl.textContent = "💥 Der Boss schlägt zurück!";
+    setTimeout(() => {
+      if (statusEl.textContent === "💥 Der Boss schlägt zurück!") {
+        statusEl.textContent = prevText;
+      }
+    }, 2200);
+  }
+
+  setTimeout(() => flash.classList.remove("active"), 700);
 }
