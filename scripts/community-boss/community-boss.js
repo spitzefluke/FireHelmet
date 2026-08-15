@@ -825,6 +825,8 @@ async function recordBossDamage(monthId, nickname, damage) {
   else if (provider === "twitch") avatar = localStorage.getItem("twitchAvatar") || null;
   else avatar = localStorage.getItem("wheelAvatar") || null;
 
+  const equippedFrame = localStorage.getItem("equippedFrame") || null;
+
   const docRef = wheelDb.collection("community_boss_damage").doc(`${monthId}_${uid}`);
   const snap = await docRef.get();
 
@@ -833,9 +835,10 @@ async function recordBossDamage(monthId, nickname, damage) {
       totalDamage: firebase.firestore.FieldValue.increment(damage),
       nickname,
       avatar,
+      equippedFrame,
     });
   } else {
-    await docRef.set({ month: monthId, uid, nickname, avatar, totalDamage: damage });
+    await docRef.set({ month: monthId, uid, nickname, avatar, equippedFrame, totalDamage: damage });
   }
 }
 
@@ -867,12 +870,16 @@ async function renderBossLeaderboard(monthId) {
       const rank = i + 1;
       const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
       const isOwn = p.uid === ownUid;
-      const avatarHtml =
+      let avatarHtml =
         p.avatar && typeof isAvatarImagePath === "function"
           ? isAvatarImagePath(p.avatar)
             ? `<img src="${p.avatar}" class="leaderboard-avatar" alt="">`
             : `<span class="leaderboard-avatar leaderboard-avatar-emoji">${p.avatar}</span>`
           : "";
+
+      if (typeof wrapAvatarWithFrame === "function" && typeof frameStyleFromId === "function") {
+        avatarHtml = wrapAvatarWithFrame(avatarHtml, frameStyleFromId(p.equippedFrame));
+      }
 
       html += `
         <div class="boss-leaderboard-row${rank <= 3 ? " boss-leaderboard-top" : ""}${isOwn ? " boss-leaderboard-own" : ""}">
@@ -916,9 +923,20 @@ async function checkBossSlayerReward(monthId) {
       .limit(3)
       .get();
 
-    const isTopThree = snap.docs.some((doc) => doc.data().uid === ownUid);
-    if (isTopThree && typeof unlockAvatar === "function") {
+    const ownIndex = snap.docs.findIndex((doc) => doc.data().uid === ownUid);
+    if (ownIndex >= 0 && typeof unlockAvatar === "function") {
       unlockAvatar("boss-slayer");
+    }
+
+    // Dublonen nach Platzierung, einmal pro Monat (localStorage-Sperre)
+    const claimKey = `bossRewardClaimed_${monthId}`;
+    if (!localStorage.getItem(claimKey)) {
+      localStorage.setItem(claimKey, "1");
+
+      const rewardsByRank = [200, 120, 70];
+      if (ownIndex >= 0 && rewardsByRank[ownIndex] && typeof addCurrency === "function") {
+        addCurrency(rewardsByRank[ownIndex]);
+      }
     }
   } catch (err) {
     console.warn("Top-3-Prüfung fehlgeschlagen:", err);
