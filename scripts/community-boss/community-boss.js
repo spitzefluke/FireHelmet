@@ -45,6 +45,7 @@ let bossEffects = []; // aktive Angriffs-Effekte (Schuss/Säbel)
 let bossShakeUntil = 0;
 let bossHitFlashUntil = 0;
 let bossCounterAuraUntil = 0;
+let bossRageLevel = 0; // 0 (volle HP) bis 1 (fast besiegt) - steuert die Aura-Intensität
 
 function setupBossCanvas() {
   const stage = document.getElementById("boss-stage");
@@ -174,16 +175,18 @@ function drawBossCreature(time, w, h, boss) {
   const breathe = 1 + Math.sin(time / 900) * 0.03;
 
   // Energie-Ring hinterm Boss: pulsiert leise, flammt beim
-  // Gegenangriff kurz kräftig auf
+  // Gegenangriff kurz kräftig auf UND wird bei sinkender HP
+  // dauerhaft kräftiger + rötlicher (wie im v0-Referenzdesign)
   const counterBoost = Math.max(0, (bossCounterAuraUntil - time) / 700);
   const ringPulse = 0.5 + Math.sin(time / 500) * 0.2 + counterBoost * 0.8;
-  const ringGrad = bossCtx.createRadialGradient(cx, cy, 10, cx, cy, 150);
-  ringGrad.addColorStop(0, hexToRgba(boss.color, 0.05 + counterBoost * 0.25));
-  ringGrad.addColorStop(0.7, hexToRgba(boss.color, 0.12 * ringPulse));
-  ringGrad.addColorStop(1, hexToRgba(boss.color, 0));
+  const rageColor = mixHexColors(boss.color, "#d9431e", bossRageLevel);
+  const ringGrad = bossCtx.createRadialGradient(cx, cy, 10, cx, cy, 150 + bossRageLevel * 40);
+  ringGrad.addColorStop(0, hexToRgba(rageColor, 0.05 + counterBoost * 0.25 + bossRageLevel * 0.18));
+  ringGrad.addColorStop(0.7, hexToRgba(rageColor, (0.12 + bossRageLevel * 0.18) * ringPulse));
+  ringGrad.addColorStop(1, hexToRgba(rageColor, 0));
   bossCtx.fillStyle = ringGrad;
   bossCtx.beginPath();
-  bossCtx.arc(cx, cy, 150, 0, Math.PI * 2);
+  bossCtx.arc(cx, cy, 150 + bossRageLevel * 40, 0, Math.PI * 2);
   bossCtx.fill();
 
   // Dünner, rotierender Rune-Ring am Boden für mehr "Boss-Fight"-Gefühl
@@ -191,7 +194,7 @@ function drawBossCreature(time, w, h, boss) {
   bossCtx.translate(cx, cy + 95);
   bossCtx.scale(1, 0.32);
   bossCtx.rotate(time / 4000);
-  bossCtx.strokeStyle = hexToRgba(boss.color, 0.35 + counterBoost * 0.4);
+  bossCtx.strokeStyle = hexToRgba(rageColor, 0.35 + counterBoost * 0.4);
   bossCtx.lineWidth = 3;
   bossCtx.setLineDash([14, 10]);
   bossCtx.beginPath();
@@ -219,6 +222,22 @@ function hexToRgba(hex, alpha) {
   const g = (bigint >> 8) & 255;
   const b = bigint & 255;
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Blendet zwei Hex-Farben ineinander (t=0 -> colorA, t=1 -> colorB) -
+// genutzt, um die Boss-Aura bei sinkender HP allmählich Richtung Rot
+// (Rage-Farbe) wandern zu lassen
+function mixHexColors(colorA, colorB, t) {
+  const a = colorA.replace("#", "");
+  const b = colorB.replace("#", "");
+  const ai = parseInt(a, 16);
+  const bi = parseInt(b, 16);
+  const ar = (ai >> 16) & 255, ag = (ai >> 8) & 255, ab = ai & 255;
+  const br = (bi >> 16) & 255, bg = (bi >> 8) & 255, bb = bi & 255;
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const bl = Math.round(ab + (bb - ab) * t);
+  return `#${[r, g, bl].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
 function drawGlowEyes(offsets, glowColor, size) {
@@ -417,7 +436,7 @@ function spawnBossAttackEffect(kind, w, h) {
       toX: cx + (Math.random() - 0.5) * 60,
       toY: cy + (Math.random() - 0.5) * 40,
     });
-  } else {
+  } else if (kind === "saber") {
     const angle = -0.6 + Math.random() * 1.2;
     bossEffects.push({
       kind: "saber",
@@ -428,8 +447,31 @@ function spawnBossAttackEffect(kind, w, h) {
       angle,
       length: Math.min(w, h) * 0.55,
     });
+  } else if (kind === "harpoon") {
+    bossEffects.push({
+      kind: "harpoon",
+      startTime: performance.now(),
+      duration: 320,
+      fromX: cx + (Math.random() < 0.5 ? -1 : 1) * w * 0.6,
+      fromY: h * 1.05,
+      toX: cx + (Math.random() - 0.5) * 50,
+      toY: cy + (Math.random() - 0.5) * 30,
+    });
+  } else {
+    // curse: Fluch-Projektil, das sich spiralförmig zum Boss zieht
+    bossEffects.push({
+      kind: "curse",
+      startTime: performance.now(),
+      duration: 420,
+      fromX: cx + (Math.random() < 0.5 ? -0.75 : 0.75) * w * 0.55,
+      fromY: h * 0.15,
+      toX: cx,
+      toY: cy,
+    });
   }
 }
+
+const BOSS_ATTACK_KINDS = ["shot", "saber", "harpoon", "curse"];
 
 function drawBossEffects(time, w, h) {
   const now = performance.now();
@@ -460,16 +502,8 @@ function drawBossEffects(time, w, h) {
       bossCtx.fill();
       bossCtx.shadowBlur = 0;
 
-      // Einschlag am Ziel
-      if (t > 0.9) {
-        const impactT = (t - 0.9) / 0.1;
-        bossCtx.beginPath();
-        bossCtx.arc(fx.toX, fx.toY, 10 + impactT * 35, 0, Math.PI * 2);
-        bossCtx.strokeStyle = `rgba(255,180,80,${1 - impactT})`;
-        bossCtx.lineWidth = 4;
-        bossCtx.stroke();
-      }
-    } else {
+      drawBossImpactRing(fx.toX, fx.toY, t, "rgba(255,180,80,");
+    } else if (fx.kind === "saber") {
       // Säbel-Hieb: heller Bogen, der über den Boss schwingt
       const ease = 1 - Math.pow(1 - t, 3);
       const sweep = (ease - 0.5) * 2.4; // -1.2 .. 1.2 rad Schwungbereich
@@ -507,8 +541,78 @@ function drawBossEffects(time, w, h) {
           bossCtx.fill();
         }
       }
+    } else if (fx.kind === "harpoon") {
+      const x = fx.fromX + (fx.toX - fx.fromX) * t;
+      const y = fx.fromY + (fx.toY - fx.fromY) * t;
+      const angle = Math.atan2(fx.toY - fx.fromY, fx.toX - fx.fromX);
+
+      // Seil, das hinter der Harpune herzieht
+      bossCtx.strokeStyle = "rgba(180,150,100,.5)";
+      bossCtx.lineWidth = 2;
+      bossCtx.beginPath();
+      bossCtx.moveTo(fx.fromX, fx.fromY);
+      bossCtx.lineTo(x, y);
+      bossCtx.stroke();
+
+      // Speerspitze
+      bossCtx.save();
+      bossCtx.translate(x, y);
+      bossCtx.rotate(angle);
+      bossCtx.fillStyle = "#c9c9c9";
+      bossCtx.beginPath();
+      bossCtx.moveTo(16, 0);
+      bossCtx.lineTo(-6, -5);
+      bossCtx.lineTo(-2, 0);
+      bossCtx.lineTo(-6, 5);
+      bossCtx.closePath();
+      bossCtx.fill();
+      bossCtx.strokeStyle = "#8a8a8a";
+      bossCtx.lineWidth = 3;
+      bossCtx.beginPath();
+      bossCtx.moveTo(-6, 0);
+      bossCtx.lineTo(-30, 0);
+      bossCtx.stroke();
+      bossCtx.restore();
+
+      drawBossImpactRing(fx.toX, fx.toY, t, "rgba(220,220,220,");
+    } else if (fx.kind === "curse") {
+      // Fluch-Projektil: spiralt sich zum Boss, mit violettem Partikelschweif
+      const ease = t * t;
+      const spiralR = (1 - ease) * 70;
+      const spiralAngle = time / 90 + t * 14;
+      const x = fx.fromX + (fx.toX - fx.fromX) * ease + Math.cos(spiralAngle) * spiralR;
+      const y = fx.fromY + (fx.toY - fx.fromY) * ease + Math.sin(spiralAngle) * spiralR;
+
+      bossCtx.beginPath();
+      bossCtx.arc(x, y, 7, 0, Math.PI * 2);
+      bossCtx.fillStyle = "rgba(190,110,255,.9)";
+      bossCtx.shadowColor = "rgba(190,110,255,1)";
+      bossCtx.shadowBlur = 18;
+      bossCtx.fill();
+      bossCtx.shadowBlur = 0;
+
+      for (let i = 0; i < 2; i++) {
+        bossCtx.beginPath();
+        bossCtx.arc(x + (Math.random() - 0.5) * 14, y + (Math.random() - 0.5) * 14, 2, 0, Math.PI * 2);
+        bossCtx.fillStyle = "rgba(220,180,255,.7)";
+        bossCtx.fill();
+      }
+
+      drawBossImpactRing(fx.toX, fx.toY, t, "rgba(190,110,255,");
     }
   });
+}
+
+// Gemeinsamer, sich ausbreitender Einschlag-Ring am Ende jeder
+// Angriffs-Animation (letzte 10% der Laufzeit)
+function drawBossImpactRing(x, y, t, rgbPrefix) {
+  if (t <= 0.9) return;
+  const impactT = (t - 0.9) / 0.1;
+  bossCtx.beginPath();
+  bossCtx.arc(x, y, 10 + impactT * 35, 0, Math.PI * 2);
+  bossCtx.strokeStyle = `${rgbPrefix}${1 - impactT})`;
+  bossCtx.lineWidth = 4;
+  bossCtx.stroke();
 }
 
 /* ------------------------------------------------------
@@ -602,13 +706,42 @@ async function renderCommunityBossPage() {
   }
 }
 
+function getBossPhase(percent) {
+  if (percent > 75) return { label: "PHASE I", index: 0 };
+  if (percent > 50) return { label: "PHASE II", index: 1 };
+  if (percent > 25) return { label: "PHASE III", index: 2 };
+  return { label: "PHASE IV", index: 3 };
+}
+
 function applyBossHpDisplay(data, hpTextEl, hpFillEl, boss, defeatedBanner, attackBtn) {
   const hp = Math.max(0, data.hp);
   const maxHp = data.maxHp || 1;
   const percent = Math.max(0, Math.min(100, (hp / maxHp) * 100));
 
-  if (hpTextEl) hpTextEl.textContent = `${hp.toLocaleString("de-DE")} / ${maxHp.toLocaleString("de-DE")} HP`;
+  const ghostEl = document.getElementById("boss-hp-ghost");
+  const numericEl = document.getElementById("boss-hp-numeric");
+  const phaseBadgeEl = document.getElementById("boss-phase-badge");
+  const phase = getBossPhase(percent);
+
+  if (hpTextEl) hpTextEl.textContent = `${percent.toFixed(1)}%`;
   if (hpFillEl) hpFillEl.style.width = `${percent}%`;
+
+  // Geister-Balken zieht bewusst verzögert nach (klassischer
+  // RPG-"Schaden genommen"-Effekt) - CSS-Transition macht die
+  // Verzögerung, hier nur der Zielwert
+  if (ghostEl) {
+    setTimeout(() => {
+      ghostEl.style.width = `${percent}%`;
+    }, 150);
+  }
+
+  if (numericEl) numericEl.textContent = `${hp.toLocaleString("de-DE")} / ${maxHp.toLocaleString("de-DE")} HP`;
+  if (phaseBadgeEl) phaseBadgeEl.textContent = phase.label;
+
+  // Roter Rand-Glow hinter dem Boss wird intensiver, je weniger
+  // HP übrig sind
+  bossRageLevel = 1 - percent / 100;
+  document.documentElement.style.setProperty("--boss-rage", bossRageLevel.toFixed(2));
 
   const isDefeated = data.defeated || hp <= 0;
 
@@ -797,12 +930,15 @@ function spawnBossHitEffect(damage) {
   if (!stage || !bossCanvas) return;
 
   const now = performance.now();
-  const kind = Math.random() < 0.5 ? "shot" : "saber";
+  const kind = BOSS_ATTACK_KINDS[Math.floor(Math.random() * BOSS_ATTACK_KINDS.length)];
 
   spawnBossAttackEffect(kind, bossCanvas.width, bossCanvas.height);
 
-  // Bildschirm-Wackler + kurzer Weißblitz, zeitlich an den Effekt angepasst
-  const impactDelay = kind === "shot" ? 230 : 130;
+  // Bildschirm-Wackler + kurzer Weißblitz, zeitlich an den jeweiligen
+  // Effekt angepasst (jeder Angriffstyp braucht unterschiedlich lang,
+  // bis er "einschlägt")
+  const impactDelayByKind = { shot: 230, saber: 130, harpoon: 290, curse: 380 };
+  const impactDelay = impactDelayByKind[kind] || 200;
   bossShakeUntil = now + impactDelay + 220;
   setTimeout(() => {
     bossHitFlashUntil = performance.now() + 180;
