@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Countdown Project</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -59,6 +62,71 @@
     <a onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 Community-Boss</a>
     <a onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">🧩 Streamrätsel</a>
     <a onclick="changePage('support')" data-i18n="menu.support">🆘 Support</a>
+  </nav>
+
+  <!-- ============================================================
+       FESTE DESKTOP-SIDEBAR (v0-Design-Referenz)
+       Nur ab ca. 1024px sichtbar (siehe .fh-sidebar CSS). Auf
+       kleineren Bildschirmen bleibt das bestehende Hamburger-Menü
+       oben die einzige Navigation (wird in Phase 5 zusätzlich durch
+       eine untere Tab-Leiste ergänzt).
+  ============================================================ -->
+  <aside class="fh-sidebar" id="fh-sidebar">
+    <div class="fh-sidebar-logo">
+      <div class="fh-sidebar-flame">🔥</div>
+      <div class="fh-sidebar-brand">
+        <p class="fh-sidebar-title">FIRE<span>HELMET</span></p>
+        <p class="fh-sidebar-subtitle">Pirate Saga</p>
+      </div>
+    </div>
+
+    <nav class="fh-sidebar-nav">
+      <a class="fh-nav-item" data-page="home" onclick="changePage('home')" data-i18n="menu.home">🏠 <span>Home</span></a>
+      <a class="fh-nav-item" data-page="community-boss" onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 <span>Community-Boss</span></a>
+      <a class="fh-nav-item" data-page="race" onclick="changePage('race')" data-i18n="menu.race">🏎️ <span>Wochenrennen</span></a>
+      <a class="fh-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')" data-i18n="menu.leaderboard">🏆 <span>Rangliste</span></a>
+      <a class="fh-nav-item" data-page="story" onclick="changePage('story')" data-i18n="menu.story">📖 <span>Stories</span></a>
+      <a class="fh-nav-item" data-page="characters" onclick="changePage('characters')" data-i18n="menu.characters">👤 <span>Characters</span></a>
+      <a class="fh-nav-item" data-page="wheel" onclick="changePage('wheel')" data-i18n="menu.wheel">🧭 <span>Schatzrad</span></a>
+      <a class="fh-nav-item" data-page="code" onclick="changePage('code')" data-i18n="menu.code">🔑 <span>Code</span></a>
+      <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">🧩 <span>Streamrätsel</span></a>
+      <a class="fh-nav-item" data-page="socials" onclick="changePage('socials')" data-i18n="menu.socials">🌐 <span>Socials</span></a>
+      <a class="fh-nav-item" data-page="support" onclick="changePage('support')" data-i18n="menu.support">🆘 <span>Support</span></a>
+      <a class="fh-nav-item" data-page="login" onclick="changePage('login')" data-i18n="menu.login">🎮 <span>Anmelden</span></a>
+    </nav>
+
+    <div class="fh-sidebar-footer">
+      <p class="fh-sidebar-footer-label">Crew</p>
+      <p class="fh-sidebar-footer-status"><span class="fh-status-dot"></span> Flitzpiepen · Online</p>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       UNTERE TAB-LEISTE (Mobile/Tablet, unter 1024px)
+       Bestehendes Hamburger-Menü bleibt als "Mehr"-Schublade
+       für alle restlichen Seiten erhalten (openMenu()).
+  ============================================================ -->
+  <nav class="fh-bottom-nav" id="fh-bottom-nav">
+    <a class="fh-bottom-nav-item" data-page="home" onclick="changePage('home')">
+      <span class="fh-bottom-nav-icon">🏠</span>
+      <span class="fh-bottom-nav-label" data-i18n="menu.home">Home</span>
+    </a>
+    <a class="fh-bottom-nav-item" data-page="community-boss" onclick="changePage('community-boss')">
+      <span class="fh-bottom-nav-icon">🐙</span>
+      <span class="fh-bottom-nav-label" data-i18n="menu.communityBoss">Boss</span>
+    </a>
+    <a class="fh-bottom-nav-item" data-page="race" onclick="changePage('race')">
+      <span class="fh-bottom-nav-icon">🏎️</span>
+      <span class="fh-bottom-nav-label" data-i18n="menu.race">Rennen</span>
+    </a>
+    <a class="fh-bottom-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')">
+      <span class="fh-bottom-nav-icon">🏆</span>
+      <span class="fh-bottom-nav-label" data-i18n="menu.leaderboard">Rangliste</span>
+    </a>
+    <button type="button" class="fh-bottom-nav-item fh-bottom-nav-more" onclick="openMenu()">
+      <span class="fh-bottom-nav-icon">☰</span>
+      <span class="fh-bottom-nav-label">Mehr</span>
+    </button>
   </nav>
 
   <main>
@@ -332,6 +400,8 @@
         <h1 data-i18n="leaderboard.title">RANGLISTE</h1>
         <p class="story-subtitle" data-i18n="leaderboard.subtitle">Wer hat die meisten Geheimcodes geknackt?</p>
 
+        <div id="leaderboard-podium" class="fh-podium"></div>
+
         <div id="leaderboard-list" class="leaderboard-list">
           <p class="wheel-status" data-i18n="leaderboard.loading">Lade Rangliste ...</p>
         </div>
@@ -415,6 +485,7 @@
           <p id="race-track-empty" class="wheel-status race-track-empty"></p>
         </div>
 
+        <div id="race-leaderboard-podium" class="fh-podium"></div>
         <div id="race-results-list" class="race-results-list"></div>
       </div>
     </section>
@@ -470,8 +541,13 @@
         <p id="boss-flavor" class="boss-flavor"></p>
 
         <div class="boss-hp-track">
+          <div id="boss-hp-ghost" class="boss-hp-ghost"></div>
           <div id="boss-hp-fill" class="boss-hp-fill"></div>
           <span id="boss-hp-text" class="boss-hp-text"></span>
+        </div>
+        <div class="boss-hp-meta">
+          <span id="boss-hp-numeric" class="boss-hp-numeric"></span>
+          <span id="boss-phase-badge" class="boss-phase-badge"></span>
         </div>
 
         <p id="boss-defeated-banner" class="boss-defeated-banner" style="display:none;"></p>

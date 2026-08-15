@@ -115,6 +115,37 @@ body.loaded {
   --menu-hex1: #4da3ff;
   --menu-hex2: #9146ff;
   --menu-hex3: #8fd9ff;
+
+  /* ---- Neue Design-Tokens (aus dem v0-Referenzdesign übernommen) ----
+     Rein additiv - bestehende Sektions-Variablen (--menu-*, --wheel-accent,
+     --boss-accent, --char-accent usw.) bleiben unangetastet und werden
+     NICHT automatisch ersetzt. Diese Tokens werden gezielt dort genutzt,
+     wo wir Elemente im v0-Stil neu aufbauen (Sidebar, Rangliste, Boss-UI). */
+  --fh-bg: #05070b;
+  --fh-fg: #e8edf4;
+  --fh-surface: #0d1520;
+  --fh-surface-2: #111a26;
+  --fh-border: #1c2a3a;
+  --fh-border-strong: #2c3f56;
+  --fh-muted: #162231;
+  --fh-muted-fg: #8296ad;
+
+  --fh-gold: #d6a84f;
+  --fh-gold-bright: #f0c96a;
+  --fh-fire: #ff6a2a;
+  --fh-fire-deep: #d9431e;
+  --fh-danger: #e53935;
+  --fh-success: #55c878;
+  --fh-cold: #42b8ff;
+
+  --fh-font-display: 'Oswald', ui-sans-serif, sans-serif;
+  --fh-font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+@keyframes fhEmberRise {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  10%  { opacity: .8; }
+  100% { transform: translateY(-120px) translateX(var(--drift, 10px)); opacity: 0; }
 }
 
 body.lang-en {
@@ -436,6 +467,14 @@ body.lang-en {
 main {
   width: 100%;
   height: 100%;
+  transition: margin-left .3s ease;
+}
+
+@media (min-width: 1024px) {
+  main {
+    margin-left: 248px;
+    width: calc(100% - 248px);
+  }
 }
 
 .page {
@@ -2890,22 +2929,24 @@ main {
 /* Statischer, weich pulsierender Glow hinter der Bühne (nur
    opacity/filter, rührt nie an "transform" - das Zittern beim
    Treffer läuft komplett im Canvas selbst, damit sich hier
-   nichts in die Quere kommt) */
+   nichts in die Quere kommt). Wird bei sinkender HP automatisch
+   kräftiger und rötlicher, siehe --boss-rage (von JS gesetzt). */
 .boss-stage::before {
   content: "";
   position: absolute;
   inset: -30px;
   border-radius: 50%;
   background: radial-gradient(circle, var(--boss-accent), transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--boss-accent), var(--fh-danger) calc(var(--boss-rage, 0) * 100%)), transparent 70%);
   filter: blur(30px);
-  opacity: .5;
+  opacity: calc(.35 + var(--boss-rage, 0) * .35);
   animation: bossGlowPulse 3s ease-in-out infinite;
   z-index: 0;
 }
 
 @keyframes bossGlowPulse {
-  0%, 100% { opacity: .35; }
-  50%      { opacity: .65; }
+  0%, 100% { opacity: calc(.35 + var(--boss-rage, 0) * .35); }
+  50%      { opacity: calc(.65 + var(--boss-rage, 0) * .35); }
 }
 
 .boss-canvas {
@@ -2933,7 +2974,9 @@ main {
 }
 
 .boss-name {
+  font-family: var(--fh-font-display);
   font-size: 32px;
+  letter-spacing: .02em;
   color: #fff;
   text-shadow: 0 0 20px var(--boss-accent);
   margin-bottom: 8px;
@@ -2947,7 +2990,11 @@ main {
   line-height: 1.5;
 }
 
-/* HP-Leiste */
+/* HP-Leiste mit Metallrahmen + verzögertem "Geister"-Balken
+   dahinter (klassischer RPG-Schaden-Effekt: der helle Hauptbalken
+   springt sofort, der dunklere Geister-Balken zieht erst danach
+   sanft nach - so sieht man genau, wie viel gerade weggenommen
+   wurde) */
 .boss-hp-track {
   position: relative;
   max-width: 480px;
@@ -2955,9 +3002,20 @@ main {
   margin: 0 auto;
   border-radius: 999px;
   background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.15);
-  box-shadow: inset 0 3px 8px rgba(0,0,0,.5);
+  border: 1px solid var(--fh-border-strong);
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,.5),
+    0 0 0 3px rgba(0,0,0,.35),
+    0 0 18px -4px rgba(214,168,79,.4);
   overflow: hidden;
+}
+
+.boss-hp-ghost {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  background: rgba(210, 60, 40, .55);
+  transition: width .9s ease-out;
 }
 
 .boss-hp-fill {
@@ -2966,7 +3024,7 @@ main {
   width: 100%;
   background: linear-gradient(90deg, #ff6d6d, #ffb020);
   box-shadow: 0 0 16px rgba(255,109,109,.5);
-  transition: width 1s cubic-bezier(0.22, 0.9, 0.32, 1);
+  transition: width .35s ease-out;
 }
 
 .boss-hp-text {
@@ -2980,6 +3038,30 @@ main {
   font-weight: bold;
   color: #fff;
   text-shadow: 0 1px 3px rgba(0,0,0,.8);
+}
+
+.boss-hp-meta {
+  max-width: 480px;
+  margin: 10px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.boss-hp-numeric {
+  color: var(--fh-muted-fg);
+}
+
+.boss-phase-badge {
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(214,168,79,.5);
+  background: rgba(214,168,79,.12);
+  color: var(--fh-gold-bright);
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  letter-spacing: .1em;
 }
 
 .boss-defeated-banner {
@@ -4552,5 +4634,350 @@ img, svg, video, canvas {
 
   .boss-leaderboard-damage {
     font-size: 11px;
+  }
+}
+
+/* =====================================================
+   FESTE DESKTOP-SIDEBAR (v0-Design-Referenz)
+   Nur ab 1024px sichtbar. Darunter bleibt das bisherige
+   Hamburger-Menü (.menu-button/.sidebar) die Navigation.
+===================================================== */
+@media (min-width: 1024px) {
+  .menu-button {
+    display: none;
+  }
+}
+
+.fh-sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .fh-sidebar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 248px;
+    height: 100dvh;
+    z-index: 250;
+    background: rgba(13, 21, 32, .85);
+    backdrop-filter: blur(14px);
+    border-right: 1px solid var(--fh-border);
+  }
+}
+
+.fh-sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 22px;
+}
+
+.fh-sidebar-flame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  font-size: 22px;
+  background: linear-gradient(135deg, var(--fh-fire), var(--fh-fire-deep));
+  box-shadow: 0 0 22px -4px rgba(255,106,42,.8);
+  flex-shrink: 0;
+}
+
+.fh-sidebar-brand {
+  line-height: 1.1;
+}
+
+.fh-sidebar-title {
+  font-family: var(--fh-font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  color: var(--fh-gold-bright);
+  text-shadow: 0 0 18px rgba(240,201,106,.5);
+}
+
+.fh-sidebar-title span {
+  color: var(--fh-gold);
+}
+
+.fh-sidebar-subtitle {
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+.fh-sidebar-nav {
+  margin-top: 8px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 12px;
+  overflow-y: auto;
+}
+
+.fh-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-family: var(--fh-font-display);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+  cursor: pointer;
+  transition: color .2s, background .2s;
+  text-decoration: none;
+}
+
+.fh-nav-item:hover {
+  color: var(--fh-fg);
+  background: rgba(255,255,255,.04);
+}
+
+.fh-nav-item.fh-nav-active {
+  color: var(--fh-fg);
+  background: linear-gradient(90deg, rgba(214,168,79,.15), transparent);
+  border: 1px solid rgba(214,168,79,.4);
+}
+
+.fh-nav-item.fh-nav-active::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: var(--fh-gold);
+  box-shadow: 0 0 12px rgba(240,201,106,.9);
+}
+
+.fh-sidebar-footer {
+  padding: 18px;
+}
+
+.fh-sidebar-footer-label {
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+.fh-sidebar-footer-status {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--fh-border);
+  background: rgba(255,255,255,.03);
+  font-size: 13px;
+  color: var(--fh-fg);
+}
+
+.fh-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--fh-success);
+  box-shadow: 0 0 8px var(--fh-success);
+  flex-shrink: 0;
+}
+
+/* =====================================================
+   RANGLISTEN-PODEST (v0-Design-Referenz)
+   Ergänzt die bestehende Tabelle, ersetzt sie nicht.
+===================================================== */
+.fh-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+  max-width: 480px;
+  margin: 35px auto 45px;
+}
+
+.fh-podium-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  animation: leaderboardRowIn .5s cubic-bezier(0.22, 0.9, 0.32, 1.2) backwards;
+}
+
+.fh-podium-rank-2 { animation-delay: .05s; }
+.fh-podium-rank-1 { animation-delay: .15s; }
+.fh-podium-rank-3 { animation-delay: .25s; }
+
+.fh-podium-crown {
+  font-size: 20px;
+  margin-bottom: 4px;
+  animation: leaderboardCrownFloat 1.6s ease-in-out infinite;
+}
+
+.fh-podium-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  overflow: hidden;
+  background: rgba(255,255,255,.06);
+  border: 2px solid var(--fh-border-strong);
+  margin-bottom: 8px;
+}
+
+.fh-podium-rank-1 .fh-podium-avatar {
+  width: 72px;
+  height: 72px;
+  font-size: 32px;
+  border-color: var(--fh-gold-bright);
+  box-shadow: 0 0 22px rgba(240,201,106,.6);
+}
+
+.fh-podium-rank-2 .fh-podium-avatar { border-color: #c8c8dc; }
+.fh-podium-rank-3 .fh-podium-avatar { border-color: #cd7f32; }
+
+.fh-podium-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fh-podium-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fh-podium-score {
+  font-size: 12px;
+  color: var(--fh-muted-fg);
+  margin-bottom: 8px;
+}
+
+.fh-podium-pedestal {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  font-family: var(--fh-font-display);
+  font-weight: 700;
+  font-size: 20px;
+  color: rgba(255,255,255,.5);
+  border-radius: 8px 8px 0 0;
+}
+
+.fh-podium-rank-1 .fh-podium-pedestal {
+  height: 90px;
+  background: linear-gradient(180deg, rgba(240,201,106,.35), rgba(240,201,106,.08));
+  border: 1px solid rgba(240,201,106,.5);
+  border-bottom: none;
+  color: var(--fh-gold-bright);
+}
+
+.fh-podium-rank-2 .fh-podium-pedestal {
+  height: 65px;
+  background: linear-gradient(180deg, rgba(200,200,220,.3), rgba(200,200,220,.06));
+  border: 1px solid rgba(200,200,220,.4);
+  border-bottom: none;
+}
+
+.fh-podium-rank-3 .fh-podium-pedestal {
+  height: 48px;
+  background: linear-gradient(180deg, rgba(205,127,50,.3), rgba(205,127,50,.06));
+  border: 1px solid rgba(205,127,50,.4);
+  border-bottom: none;
+}
+
+@media (max-width: 600px) {
+  .fh-podium-avatar { width: 44px; height: 44px; font-size: 20px; }
+  .fh-podium-rank-1 .fh-podium-avatar { width: 58px; height: 58px; font-size: 26px; }
+  .fh-podium-name { font-size: 11px; max-width: 75px; }
+}
+
+/* =====================================================
+   UNTERE TAB-LEISTE (Mobile/Tablet)
+===================================================== */
+.fh-bottom-nav {
+  display: flex;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 260;
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  background: rgba(10, 14, 24, .92);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--fh-border);
+}
+
+@media (min-width: 1024px) {
+  .fh-bottom-nav {
+    display: none;
+  }
+}
+
+.fh-bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 2px;
+  border: none;
+  background: none;
+  color: var(--fh-muted-fg);
+  cursor: pointer;
+  border-radius: 10px;
+  transition: color .2s, background .2s;
+  text-decoration: none;
+  font-family: var(--fh-font-sans);
+}
+
+.fh-bottom-nav-item:active {
+  background: rgba(255,255,255,.06);
+}
+
+.fh-bottom-nav-item.fh-nav-active {
+  color: var(--fh-gold-bright);
+}
+
+.fh-bottom-nav-icon {
+  font-size: 19px;
+}
+
+.fh-bottom-nav-label {
+  font-size: 10px;
+  letter-spacing: .02em;
+}
+
+/* Platz am Seitenende lassen, damit Inhalte nicht hinter der
+   Tab-Leiste verschwinden */
+@media (max-width: 1023px) {
+  .page {
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
   }
 }
