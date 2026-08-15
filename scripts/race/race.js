@@ -29,6 +29,11 @@ function getISOWeekId(date) {
   return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, "0")}`;
 }
 
+// Dublonen-Belohnung für Platz 1/2/3 beim Wochenrennen - wird
+// sowohl für die tatsächliche Vergabe als auch für die Anzeige
+// in der Ergebnisliste genutzt
+const RACE_REWARDS_BY_RANK = [150, 90, 50];
+
 function getCurrentWeekId() {
   return getISOWeekId(new Date());
 }
@@ -478,11 +483,13 @@ function renderRaceResultsList(entries) {
   let html = "";
   entries.forEach((entry, i) => {
     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
+    const rewardHtml = i < 3 ? `<span class="race-result-reward">🏆 +${RACE_REWARDS_BY_RANK[i]} 💰</span>` : "";
     html += `
       <div class="race-result-row">
         <span class="race-result-rank">${medal}</span>
         <span class="race-result-name">${escapeHtml(entry.nickname || "Unbekannt")}</span>
         <span class="race-result-points">${entry.progress} Pkt</span>
+        ${rewardHtml}
       </div>
     `;
   });
@@ -611,7 +618,7 @@ async function grantWeeklyRaceCurrency(weekId, topDocs) {
   const ownUid = await wheelAuthReady;
   if (!ownUid) return;
 
-  const rewardsByRank = [150, 90, 50];
+  const rewardsByRank = RACE_REWARDS_BY_RANK;
   const ownIndex = topDocs.findIndex((doc) => doc.data().uid === ownUid);
 
   localStorage.setItem(claimKey, "1"); // merken, egal ob getroffen oder nicht
