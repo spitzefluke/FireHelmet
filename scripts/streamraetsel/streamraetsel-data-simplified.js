@@ -24,7 +24,8 @@ const streamRaetselConfig = {
   // alle einmal dran waren), dann mischt sich die nächste Runde
   // neu. Pfade relativ zur index.html.
   musicPlaylist: [
-    // "scripts/streamraetsel/musik-1.mp3",
-    // "scripts/streamraetsel/musik-2.mp3",
+    "scripts/streamraetsel/musik/Nebel_über_Kiel.mp3",
+    "scripts/streamraetsel/musik/Nachtkasse.mp3",
+    "scripts/streamraetsel/musik/Unter_dem_Siegel.mp3",
   ],
 };
