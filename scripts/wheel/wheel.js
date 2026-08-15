@@ -898,8 +898,42 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
   `;
 }
 
+function buildLeaderboardPodiumEntry(player, rank) {
+  const avatarHtml = player.avatar
+    ? isAvatarImagePath(player.avatar)
+      ? `<img src="${player.avatar}" alt="">`
+      : `<span>${player.avatar}</span>`
+    : `<span>🏴‍☠️</span>`;
+
+  const crownHtml = rank === 1 ? `<span class="fh-podium-crown">👑</span>` : "";
+
+  return `
+    <div class="fh-podium-col fh-podium-rank-${rank}">
+      ${crownHtml}
+      <div class="fh-podium-avatar">${avatarHtml}</div>
+      <p class="fh-podium-name">${escapeHtml(player.nickname || "Unbekannt")}</p>
+      <p class="fh-podium-score">${player.codesCracked || 0} 🔑</p>
+      <div class="fh-podium-pedestal">${rank}</div>
+    </div>
+  `;
+}
+
+function buildLeaderboardPodium(topThree) {
+  if (!topThree.length) return "";
+
+  // Visuelle Reihenfolge wie im Referenzdesign: 2. - 1. - 3.
+  return `
+    <div class="fh-podium">
+      ${topThree[1] ? buildLeaderboardPodiumEntry(topThree[1], 2) : ""}
+      ${topThree[0] ? buildLeaderboardPodiumEntry(topThree[0], 1) : ""}
+      ${topThree[2] ? buildLeaderboardPodiumEntry(topThree[2], 3) : ""}
+    </div>
+  `;
+}
+
 function loadLeaderboard() {
   const container = document.getElementById("leaderboard-list");
+  const podiumContainer = document.getElementById("leaderboard-podium");
   if (!container) return;
 
   if (!wheelDb) {
@@ -929,9 +963,14 @@ function loadLeaderboard() {
       players.sort((a, b) => (b.codesCracked || 0) - (a.codesCracked || 0));
 
       if (!players.length) {
+        if (podiumContainer) podiumContainer.innerHTML = "";
         container.innerHTML =
           '<p class="wheel-status">Noch niemand ist registriert – sei der Erste!</p>';
         return;
+      }
+
+      if (podiumContainer) {
+        podiumContainer.innerHTML = buildLeaderboardPodium(players.slice(0, 3));
       }
 
       const ownIndex = ownUid ? players.findIndex((p) => p.uid === ownUid) : -1;
