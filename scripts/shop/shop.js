@@ -1,10 +1,12 @@
 /* ======================================================
    SHOP
    - Zeigt den Katalog aus scripts/shop/shop-data.js als Grid
-   - Kauf zieht Dublonen ab (Firestore) und schaltet den Rahmen
-     dauerhaft frei (players/{uid}.ownedFrames)
-   - Der ausgerüstete Rahmen wird in localStorage gemerkt und
-     überall dort verwendet, wo Avatare angezeigt werden
+   - Zwei Kategorien: Avatar-Rahmen UND kaufbare Avatare
+   - Kauf zieht Dublonen ab (Firestore-Transaktion) und schaltet
+     den Artikel dauerhaft frei (players/{uid}.ownedShopItems)
+   - Rahmen werden zusätzlich "ausgerüstet" (equippedFrame),
+     Avatare erscheinen einfach im normalen Avatar-Picker
+     (genau wie ein per Code freigeschalteter Avatar)
 ====================================================== */
 
 let shopActiveTab = "frame";
@@ -17,9 +19,9 @@ function switchShopTab(tab) {
   renderShopGrid();
 }
 
-function getOwnedFrames() {
+function getOwnedShopItems() {
   try {
-    return JSON.parse(localStorage.getItem("ownedFrames") || "[]");
+    return JSON.parse(localStorage.getItem("ownedShopItems") || "[]");
   } catch (err) {
     return [];
   }
@@ -49,27 +51,32 @@ function renderShopGrid() {
   const grid = document.getElementById("shop-grid");
   if (!grid || typeof shopItems === "undefined") return;
 
-  const owned = getOwnedFrames();
+  const owned = getOwnedShopItems();
   const equipped = getEquippedFrame();
   const items = shopItems.filter((item) => item.type === shopActiveTab);
 
   grid.innerHTML = items
     .map((item) => {
       const isOwned = owned.includes(item.id);
-      const isEquipped = equipped === item.id;
+      const isFrame = item.type === "frame";
+      const isEquipped = isFrame && equipped === item.id;
 
       let buttonHtml;
       if (isEquipped) {
         buttonHtml = `<button type="button" class="shop-item-btn shop-item-equipped" onclick="equipFrame('${item.id}')">✓ Ausgerüstet</button>`;
-      } else if (isOwned) {
+      } else if (isOwned && isFrame) {
         buttonHtml = `<button type="button" class="shop-item-btn shop-item-equip" onclick="equipFrame('${item.id}')">Ausrüsten</button>`;
+      } else if (isOwned) {
+        buttonHtml = `<button type="button" class="shop-item-btn shop-item-equipped" disabled>✓ Freigeschaltet</button>`;
       } else {
         buttonHtml = `<button type="button" class="shop-item-btn" onclick="buyShopItem('${item.id}')">${item.price} 💰 Kaufen</button>`;
       }
 
+      const previewClass = isFrame ? `avatar-frame-${item.style}` : "";
+
       return `
         <div class="shop-item ${isOwned ? "shop-item-owned" : ""}">
-          <div class="shop-item-preview avatar-frame-${item.style}">
+          <div class="shop-item-preview ${previewClass}">
             <span class="shop-item-emoji">${item.emoji}</span>
           </div>
           <p class="shop-item-name">${item.name}</p>
@@ -106,7 +113,7 @@ async function buyShopItem(itemId) {
       const snap = await tx.get(docRef);
       const data = snap.exists ? snap.data() : {};
       const currentCurrency = data.currency || 0;
-      const owned = data.ownedFrames || [];
+      const owned = data.ownedShopItems || [];
 
       if (owned.includes(itemId)) {
         throw new Error("already-owned");
@@ -119,15 +126,21 @@ async function buyShopItem(itemId) {
         docRef,
         {
           currency: currentCurrency - item.price,
-          ownedFrames: [...owned, itemId],
+          ownedShopItems: [...owned, itemId],
         },
         { merge: true }
       );
     });
 
-    const owned = getOwnedFrames();
+    const owned = getOwnedShopItems();
     owned.push(itemId);
-    localStorage.setItem("ownedFrames", JSON.stringify(owned));
+    localStorage.setItem("ownedShopItems", JSON.stringify(owned));
+
+    // Avatare direkt im normalen Avatar-Picker freischalten (nutzt
+    // dieselbe Mechanik wie ein per Code freigeschalteter Avatar)
+    if (item.type === "avatar" && item.avatarId && typeof unlockAvatar === "function") {
+      unlockAvatar(item.avatarId);
+    }
 
     if (statusEl) statusEl.textContent = `✅ ${item.name} gekauft!`;
     refreshShopCurrencyDisplay();
@@ -176,14 +189,14 @@ function updateShopPage(pageID) {
   renderShopGrid();
   refreshShopCurrencyDisplay();
 
-  // Eigene Firestore-Kopie der freigeschalteten Rahmen mit dem
+  // Eigene Firestore-Kopie der freigeschalteten Artikel mit dem
   // lokalen Speicher abgleichen (z.B. wenn man auf einem neuen
   // Gerät eingeloggt ist)
-  syncOwnedFramesFromServer();
+  syncOwnedShopItemsFromServer();
 }
 
-async function syncOwnedFramesFromServer() {
-  if (!wheelDb) return;
+async function syncOwnedShopItemsFromServer() {
+  if (!wheelDb || typeof shopItems === "undefined") return;
 
   try {
     const uid = await wheelAuthReady;
@@ -193,14 +206,22 @@ async function syncOwnedFramesFromServer() {
     if (!snap.exists) return;
 
     const data = snap.data();
-    if (Array.isArray(data.ownedFrames)) {
-      localStorage.setItem("ownedFrames", JSON.stringify(data.ownedFrames));
+    if (Array.isArray(data.ownedShopItems)) {
+      localStorage.setItem("ownedShopItems", JSON.stringify(data.ownedShopItems));
+
+      // Gekaufte Avatare auch im Picker verfügbar machen
+      data.ownedShopItems.forEach((itemId) => {
+        const item = shopItems.find((i) => i.id === itemId);
+        if (item && item.type === "avatar" && item.avatarId && typeof unlockAvatar === "function") {
+          unlockAvatar(item.avatarId);
+        }
+      });
     }
     if (data.equippedFrame) {
       localStorage.setItem("equippedFrame", data.equippedFrame);
     }
     renderShopGrid();
   } catch (err) {
-    console.warn("Rahmen-Abgleich fehlgeschlagen:", err);
+    console.warn("Shop-Abgleich fehlgeschlagen:", err);
   }
 }

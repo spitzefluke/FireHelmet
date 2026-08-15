@@ -66,4 +66,43 @@ const shopItems = [
     style: "legend",
     emoji: "👑",
   },
+
+  /* ------------------------------------------------------
+     KAUFBARE AVATARE
+     "avatarId" muss exakt einer "id" aus wheelSpecialAvatars
+     in scripts/wheel/avatars-data.js entsprechen - der Kauf
+     schaltet diesen Avatar dann genau wie ein Code frei.
+  ------------------------------------------------------ */
+  {
+    id: "avatar-papagei",
+    name: "Papagei-Avatar",
+    price: 100,
+    type: "avatar",
+    avatarId: "shop-papagei",
+    emoji: "🦜",
+  },
+  {
+    id: "avatar-kompass",
+    name: "Kompass-Avatar",
+    price: 100,
+    type: "avatar",
+    avatarId: "shop-kompass",
+    emoji: "🧭",
+  },
+  {
+    id: "avatar-anker",
+    name: "Anker-Avatar",
+    price: 120,
+    type: "avatar",
+    avatarId: "shop-anker",
+    emoji: "⚓",
+  },
+  {
+    id: "avatar-totenkopf",
+    name: "Totenkopf-Avatar",
+    price: 200,
+    type: "avatar",
+    avatarId: "shop-totenkopf",
+    emoji: "💀",
+  },
 ];
