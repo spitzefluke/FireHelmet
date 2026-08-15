@@ -64,6 +64,7 @@
     <a onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">❓ ???</a>
     <a onclick="changePage('socials')" data-i18n="menu.socials">🌐 Socials</a>
     <a onclick="changePage('support')" data-i18n="menu.support">🆘 Support</a>
+    <a onclick="changePage('rating')" data-i18n="menu.rating">⭐ Bewertung</a>
   </nav>
 
   <!-- ============================================================
@@ -102,6 +103,7 @@
       <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">❓ <span>???</span></a>
       <a class="fh-nav-item" data-page="socials" onclick="changePage('socials')" data-i18n="menu.socials">🌐 <span>Socials</span></a>
       <a class="fh-nav-item" data-page="support" onclick="changePage('support')" data-i18n="menu.support">🆘 <span>Support</span></a>
+      <a class="fh-nav-item" data-page="rating" onclick="changePage('rating')" data-i18n="menu.rating">⭐ <span>Bewertung</span></a>
     </nav>
 
     <div class="fh-sidebar-footer">
@@ -364,6 +366,7 @@
 
         <div class="shop-tabs">
           <button type="button" class="shop-tab shop-tab-active" data-shop-tab="frame" onclick="switchShopTab('frame')" data-i18n="shop.tabFrames">Avatar-Rahmen</button>
+          <button type="button" class="shop-tab" data-shop-tab="avatar" onclick="switchShopTab('avatar')" data-i18n="shop.tabAvatars">Avatare</button>
         </div>
 
         <div id="shop-grid" class="shop-grid"></div>
@@ -647,6 +650,36 @@
       </div>
     </section>
 
+    <!-- =====================
+         BEWERTUNG
+    ===================== -->
+    <section id="rating" class="page">
+      <div class="page-content rating-content">
+        <h1 data-i18n="rating.title">⭐ BEWERTUNG</h1>
+        <p class="story-subtitle" data-i18n="rating.subtitle">Wie gefällt dir die Seite? Deine Meinung hilft uns weiter!</p>
+
+        <div class="rating-average" id="rating-average" style="display:none;">
+          <span id="rating-average-stars" class="rating-average-stars"></span>
+          <span id="rating-average-text" class="rating-average-text"></span>
+        </div>
+
+        <div class="rating-box">
+          <div id="rating-stars" class="rating-stars">
+            <span class="rating-star" data-value="1">★</span>
+            <span class="rating-star" data-value="2">★</span>
+            <span class="rating-star" data-value="3">★</span>
+            <span class="rating-star" data-value="4">★</span>
+            <span class="rating-star" data-value="5">★</span>
+          </div>
+
+          <textarea id="rating-comment" class="support-report-textarea" placeholder="Was gefällt dir, was können wir besser machen? (optional)" data-i18n-placeholder="rating.commentPlaceholder"></textarea>
+
+          <button class="code-button" onclick="submitRating()" data-i18n="rating.submitButton">Bewertung abschicken</button>
+          <p id="rating-status" class="wheel-status"></p>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- Firebase (für die globale Rangliste) -->
@@ -691,6 +724,7 @@
   <script src="scripts/shop/shop.js"></script>
   <script src="scripts/streamraetsel/streamraetsel.js"></script>
   <script src="scripts/support/support.js"></script>
+  <script src="scripts/rating/rating.js"></script>
   <script src="scripts/core/main.js"></script>
   <script src="scripts/codes/code-button-effect.js"></script>
   <script src="scripts/codes/code-ambient-fx.js"></script>
