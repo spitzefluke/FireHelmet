@@ -46,22 +46,23 @@
     <div class="close-button" onclick="closeMenu()">×</div>
     <h2 data-i18n="menu.title">MENU</h2>
 
-    <div class="lang-switch">
-      <button id="lang-btn-de" class="lang-btn" onclick="setLanguage('de')">🇩🇪 DE</button>
-      <button id="lang-btn-en" class="lang-btn" onclick="setLanguage('en')">🇬🇧 EN</button>
-    </div>
-    <a onclick="changePage('login')" data-i18n="menu.login">🎮 Anmelden</a>
+    <button type="button" class="lang-switch" id="lang-switch" onclick="toggleLanguage()" aria-label="Sprache wechseln">
+      <span class="lang-switch-label lang-switch-label-de">🇩🇪 DE</span>
+      <span class="lang-switch-label lang-switch-label-en">🇬🇧 EN</span>
+      <span class="lang-switch-knob"></span>
+    </button>
     <a onclick="changePage('home')" data-i18n="menu.home">🏠 Home</a>
+    <a onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 Community-Boss</a>
+    <a onclick="changePage('race')" data-i18n="menu.race">🏎️ Wochenrennen</a>
+    <a onclick="changePage('leaderboard')" data-i18n="menu.leaderboard">🏆 Rangliste</a>
     <a onclick="changePage('story')" data-i18n="menu.story">📖 Stories</a>
     <a onclick="changePage('characters')" data-i18n="menu.characters">👤 Characters</a>
-    <a onclick="changePage('socials')" data-i18n="menu.socials">🌐 Socials</a>
-    <a onclick="changePage('code')" data-i18n="menu.code">🔑 Code</a>
     <a onclick="changePage('wheel')" data-i18n="menu.wheel">🧭 Schatzrad</a>
-    <a onclick="changePage('leaderboard')" data-i18n="menu.leaderboard">🏆 Rangliste</a>
-    <a onclick="changePage('race')" data-i18n="menu.race">🏎️ Wochenrennen</a>
-    <a onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 Community-Boss</a>
+    <a onclick="changePage('code')" data-i18n="menu.code">🔑 Code</a>
     <a onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">🧩 Streamrätsel</a>
+    <a onclick="changePage('socials')" data-i18n="menu.socials">🌐 Socials</a>
     <a onclick="changePage('support')" data-i18n="menu.support">🆘 Support</a>
+    <a onclick="changePage('login')" data-i18n="menu.login">🎮 Anmelden</a>
   </nav>
 
   <!-- ============================================================
