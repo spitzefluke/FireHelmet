@@ -11,6 +11,12 @@
    zwischen zwei Effekten: Kanonenschuss oder Säbel-Hieb.
 ====================================================== */
 
+// Dublonen-Belohnung für Platz 1/2/3 beim Sieg über den Boss -
+// wird sowohl für die tatsächliche Vergabe als auch für die
+// Anzeige in der Rangliste genutzt (siehe checkBossSlayerReward
+// und renderBossLeaderboard)
+const BOSS_REWARDS_BY_RANK = [200, 120, 70];
+
 function getCurrentMonthId() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -886,6 +892,7 @@ async function renderBossLeaderboard(monthId) {
           <span class="boss-leaderboard-rank">${medal}</span>
           <span class="boss-leaderboard-name">${avatarHtml}${escapeHtmlBoss(p.nickname || "Unbekannt")}${isOwn ? " (Du)" : ""}</span>
           <span class="boss-leaderboard-damage">${(p.totalDamage || 0).toLocaleString("de-DE")} Schaden</span>
+          ${rank <= 3 ? `<span class="boss-leaderboard-reward">🏆 +${BOSS_REWARDS_BY_RANK[rank - 1]} 💰</span>` : ""}
         </div>
       `;
     });
@@ -933,7 +940,7 @@ async function checkBossSlayerReward(monthId) {
     if (!localStorage.getItem(claimKey)) {
       localStorage.setItem(claimKey, "1");
 
-      const rewardsByRank = [200, 120, 70];
+      const rewardsByRank = BOSS_REWARDS_BY_RANK;
       if (ownIndex >= 0 && rewardsByRank[ownIndex] && typeof addCurrency === "function") {
         addCurrency(rewardsByRank[ownIndex]);
       }
