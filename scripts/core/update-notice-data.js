@@ -14,12 +14,12 @@
 const updateNoticeConfig = {
   title: "🆕 Neuigkeiten",
   message:
-    "Willkommen auf meiner Webseite, Update 3.4 wurde in die Webseite gebaut. " +
-    "In diesem Update wurde kleine Fehler gefixxt, neue Fehler erkannt und Avatarbilder hinzugefügt. Die Sicherheit bei den Namen wurde verbessert und der Support-Bot wird verbessert.",
+    "Neu dabei: Shop mit Dublonen, Avatar-Rahmen, kaufbare Avatare, überarbeitete " +
+    "Ranglisten mit Belohnungs-Anzeige und eine neue Bewertungs-Seite unter Support!",
 
   // Optional: Bild anzeigen (Pfad relativ zur index.html), sonst leer lassen
   image: "",
 
   // Text auf dem Schließen-Button
-  buttonText: "Nice",
+  buttonText: "Alles klar!",
 };
