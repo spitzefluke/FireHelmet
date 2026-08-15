@@ -40,7 +40,20 @@ function changePage(pageID) {
   if (typeof updateLoginPage === "function") {
     updateLoginPage(pageID);
   }
+
+  updateActiveNavHighlight(pageID);
   closeMenu();
+}
+
+/* ------------------------------------------------------
+   AKTIVE SEITE IN DER NAVIGATION MARKIEREN
+   Betrifft die feste Desktop-Sidebar UND die untere
+   Tab-Leiste auf Mobile (beide nutzen dieselbe Klasse).
+------------------------------------------------------ */
+function updateActiveNavHighlight(pageID) {
+  document.querySelectorAll("[data-page]").forEach((el) => {
+    el.classList.toggle("fh-nav-active", el.dataset.page === pageID);
+  });
 }
 
 /* ------------------------------------------------------
