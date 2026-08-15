@@ -30,6 +30,7 @@ const translations = {
     "menu.communityBoss": "🐙 Community-Boss",
     "menu.streamraetsel": "❓ ???",
     "menu.support": "🆘 Support",
+    "menu.rating": "⭐ Bewertung",
 
     "support.title": "SUPPORT",
     "support.subtitle": "Frag den Bot oder melde ein Problem",
@@ -38,11 +39,17 @@ const translations = {
     "support.reportPlaceholder": "Beschreibe kurz, was los ist ...",
     "support.reportSend": "Absenden",
 
+    "rating.title": "⭐ BEWERTUNG",
+    "rating.subtitle": "Wie gefällt dir die Seite? Deine Meinung hilft uns weiter!",
+    "rating.commentPlaceholder": "Was gefällt dir, was können wir besser machen? (optional)",
+    "rating.submitButton": "Bewertung abschicken",
+
     "shop.title": "🛒 SHOP",
     "shop.subtitle": "Gib deine Dublonen für Rahmen und Extras aus",
     "shop.currencyLabel": "Dublonen",
     "shop.earnHint": "Dublonen bekommst du durchs Einlösen bestimmter Codes, gute Platzierungen beim Wochenrennen und viel Schaden gegen den Community-Boss.",
     "shop.tabFrames": "Avatar-Rahmen",
+    "shop.tabAvatars": "Avatare",
 
     "common.days": "Tage",
     "common.hours": "Stunden",
@@ -124,6 +131,7 @@ const translations = {
     "menu.communityBoss": "🐙 Community Boss",
     "menu.streamraetsel": "❓ ???",
     "menu.support": "🆘 Support",
+    "menu.rating": "⭐ Rating",
 
     "support.title": "SUPPORT",
     "support.subtitle": "Ask the bot or report a problem",
@@ -132,11 +140,17 @@ const translations = {
     "support.reportPlaceholder": "Briefly describe what's going on ...",
     "support.reportSend": "Submit",
 
+    "rating.title": "⭐ RATING",
+    "rating.subtitle": "How do you like the site? Your feedback helps us improve!",
+    "rating.commentPlaceholder": "What do you like, what could be better? (optional)",
+    "rating.submitButton": "Submit rating",
+
     "shop.title": "🛒 SHOP",
     "shop.subtitle": "Spend your doubloons on frames and extras",
     "shop.currencyLabel": "Doubloons",
     "shop.earnHint": "You earn doubloons by redeeming certain codes, placing well in the weekly race, and dealing lots of damage to the community boss.",
     "shop.tabFrames": "Avatar Frames",
+    "shop.tabAvatars": "Avatars",
 
     "common.days": "Days",
     "common.hours": "Hours",

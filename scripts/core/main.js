@@ -33,6 +33,10 @@ function changePage(pageID) {
     updateShopPage(pageID);
   }
 
+  if (typeof updateRatingPage === "function") {
+    updateRatingPage(pageID);
+  }
+
   if (typeof updateCharactersPage === "function") {
     updateCharactersPage(pageID);
   }
