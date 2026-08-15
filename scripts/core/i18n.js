@@ -237,11 +237,10 @@ function applyTranslations() {
   document.body.classList.toggle("lang-de", lang === "de");
   document.body.classList.toggle("lang-en", lang === "en");
 
-  const btnDe = document.getElementById("lang-btn-de");
-  const btnEn = document.getElementById("lang-btn-en");
-  if (btnDe && btnEn) {
-    btnDe.classList.toggle("lang-active", lang === "de");
-    btnEn.classList.toggle("lang-active", lang === "en");
+  const switchEl = document.getElementById("lang-switch");
+  if (switchEl) {
+    switchEl.classList.toggle("is-en", lang === "en");
+    switchEl.setAttribute("aria-pressed", lang === "en" ? "true" : "false");
   }
 }
 
@@ -255,6 +254,12 @@ function setLanguage(lang) {
   if (typeof loadLeaderboard === "function" && document.getElementById("leaderboard")?.classList.contains("active-page")) {
     loadLeaderboard();
   }
+}
+
+// Vom neuen Toggle-Switch im Menü aufgerufen - wechselt einfach
+// zwischen den beiden Sprachen hin und her
+function toggleLanguage() {
+  setLanguage(getCurrentLang() === "de" ? "en" : "de");
 }
 
 window.addEventListener("DOMContentLoaded", () => {
