@@ -237,11 +237,10 @@ function applyTranslations() {
   document.body.classList.toggle("lang-de", lang === "de");
   document.body.classList.toggle("lang-en", lang === "en");
 
-  const switchEl = document.getElementById("lang-switch");
-  if (switchEl) {
+  document.querySelectorAll(".lang-switch").forEach((switchEl) => {
     switchEl.classList.toggle("is-en", lang === "en");
     switchEl.setAttribute("aria-pressed", lang === "en" ? "true" : "false");
-  }
+  });
 }
 
 function setLanguage(lang) {

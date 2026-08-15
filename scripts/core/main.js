@@ -234,6 +234,19 @@ function applyAudioReactiveUI(level) {
   const timeBoxes = document.querySelectorAll(".time-box");
   const heroBlock = document.querySelector(".hero");
 
+  // Beim allerersten Hover eine Box freiräumen: der bisherige
+  // Inline-Style (von den Frames davor) muss weg, sonst blockiert er
+  // die CSS-":hover"-Regel weiterhin, obwohl wir unten aufhören ihn
+  // neu zu setzen
+  timeBoxes.forEach((box) => {
+    if (box.dataset.hoverBound) return;
+    box.dataset.hoverBound = "1";
+    box.addEventListener("mouseenter", () => {
+      box.style.boxShadow = "";
+      box.style.transform = "";
+    });
+  });
+
   if (heroTitle) {
     heroTitle.style.filter = `brightness(${(1 + level * 0.9).toFixed(3)})`;
     heroTitle.style.textShadow = `0 0 ${Math.round(40 + level * 110)}px #4da3ff`;
@@ -244,6 +257,11 @@ function applyAudioReactiveUI(level) {
   }
 
   timeBoxes.forEach((box) => {
+    // Box unterm Mauszeiger lassen wir in Ruhe, damit die CSS-Hover-
+    // Animation (:hover { transform, box-shadow }) sichtbar bleibt -
+    // sonst überschreibt dieser Style hier jeden Frame den Hover-Effekt
+    if (box.matches(":hover")) return;
+
     box.style.boxShadow = `0 0 ${Math.round(10 + level * 75)}px rgba(77,163,255,${(0.25 + level * 0.7).toFixed(2)})`;
     box.style.transform = `scale(${(1 + level * 0.09).toFixed(3)})`;
   });
