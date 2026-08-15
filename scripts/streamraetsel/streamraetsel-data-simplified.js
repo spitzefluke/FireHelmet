@@ -18,8 +18,13 @@ const streamRaetselConfig = {
   // Optional: Bild anzeigen (Pfad relativ zur index.html), sonst leer lassen
   image: "",
 
-  // Mysteriöse Hintergrundmusik für diese Seite (Pfad relativ zur
-  // index.html), z.B. "scripts/streamraetsel/mystery-musik.mp3".
-  // Leer lassen = keine Musik.
-  musicSrc: "",
+  // Mysteriöse Hintergrundmusik für diese Seite - genau wie bei
+  // der Home-Playlist: beliebig viele Songs eintragen, sie werden
+  // in zufälliger Reihenfolge gespielt (kein Song doppelt, bis
+  // alle einmal dran waren), dann mischt sich die nächste Runde
+  // neu. Pfade relativ zur index.html.
+  musicPlaylist: [
+    // "scripts/streamraetsel/musik-1.mp3",
+    // "scripts/streamraetsel/musik-2.mp3",
+  ],
 };

@@ -12,34 +12,7 @@ function padTwo(value) {
   return String(value).padStart(2, "0");
 }
 
-/* ------------------------------------------------------
-   ERSTELLER-VORSCHAU (Gate)
-   Aufruf mit ?admin=DEIN-SCHLÜSSEL in der URL schaltet die
-   Vorschau NUR in diesem Browser dauerhaft frei - andere
-   Besucher sehen weiterhin ganz normal den Countdown.
------------------------------------------------------- */
-function checkStreamRaetselPreviewKey() {
-  const params = new URLSearchParams(window.location.search);
-  const key = params.get("admin");
-
-  if (key && typeof streamRaetselConfig !== "undefined" && key === streamRaetselConfig.previewKey) {
-    localStorage.setItem("streamRaetselPreview", "1");
-
-    // Schlüssel aus der sichtbaren URL entfernen
-    params.delete("admin");
-    const newUrl =
-      window.location.pathname + (params.toString() ? "?" + params.toString() : "") + window.location.hash;
-    history.replaceState(null, "", newUrl);
-  }
-}
-
-function isStreamRaetselPreview() {
-  return localStorage.getItem("streamRaetselPreview") === "1";
-}
-
 function isStreamRaetselUnlocked() {
-  if (isStreamRaetselPreview()) return true;
-
   const target = new Date(streamRaetselConfig.unlockDate);
   return new Date() >= target;
 }
@@ -81,19 +54,73 @@ function stopStreamRaetselParticles() {
 let streamRaetselParticleInterval = null;
 
 /* ------------------------------------------------------
-   MYSTERIÖSE HINTERGRUNDMUSIK
-   Eigener, unabhängiger Player (nicht derselbe wie die
-   Home-Musik) - spielt nur, solange man auf der ???-Seite
-   ist, mit sanftem Fade-In/Fade-Out beim Betreten/Verlassen.
+   MYSTERIÖSE HINTERGRUNDMUSIK - PLAYLIST
+   Genau wie bei der Home-Seite: zufällige Reihenfolge, kein Song
+   doppelt hintereinander, bis alle einmal dran waren. Eigener,
+   unabhängiger Player (nicht derselbe wie die Home-Musik) - läuft
+   nur, solange man auf der ???-Seite ist, mit sanftem Fade-In/
+   Fade-Out beim Betreten/Verlassen.
 ------------------------------------------------------ */
 let streamRaetselMusicEl = null;
 let streamRaetselMusicFade = null;
+let streamRaetselShuffleBag = [];
+let streamRaetselLastPlayed = -1;
+let streamRaetselMusicBound = false;
 
 function getStreamRaetselMusicEl() {
   if (streamRaetselMusicEl) return streamRaetselMusicEl;
 
   streamRaetselMusicEl = document.getElementById("streamraetsel-music");
   return streamRaetselMusicEl;
+}
+
+function hasStreamRaetselPlaylist() {
+  return typeof streamRaetselConfig !== "undefined"
+    && Array.isArray(streamRaetselConfig.musicPlaylist)
+    && streamRaetselConfig.musicPlaylist.length > 0;
+}
+
+function shuffleStreamRaetselArray(array) {
+  const result = array.slice();
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function refillStreamRaetselShuffleBag() {
+  if (!hasStreamRaetselPlaylist()) return;
+
+  const playlist = streamRaetselConfig.musicPlaylist;
+  const indices = playlist.map((_, i) => i);
+  let shuffled = shuffleStreamRaetselArray(indices);
+
+  // Vermeiden, dass der letzte Song der vorigen Runde direkt
+  // nochmal als erster der neuen Runde kommt
+  if (playlist.length > 1 && shuffled[0] === streamRaetselLastPlayed) {
+    const swapWith = 1 + Math.floor(Math.random() * (shuffled.length - 1));
+    [shuffled[0], shuffled[swapWith]] = [shuffled[swapWith], shuffled[0]];
+  }
+
+  streamRaetselShuffleBag = shuffled;
+}
+
+function pickStreamRaetselNextIndex() {
+  if (streamRaetselShuffleBag.length === 0) {
+    refillStreamRaetselShuffleBag();
+  }
+  const next = streamRaetselShuffleBag.shift();
+  streamRaetselLastPlayed = next;
+  return next;
+}
+
+function loadStreamRaetselRandomTrack() {
+  const el = getStreamRaetselMusicEl();
+  if (!el || !hasStreamRaetselPlaylist()) return;
+
+  const index = pickStreamRaetselNextIndex();
+  el.src = streamRaetselConfig.musicPlaylist[index];
 }
 
 function fadeStreamRaetselMusic(el, targetVolume, duration, onComplete) {
@@ -123,14 +150,27 @@ function fadeStreamRaetselMusic(el, targetVolume, duration, onComplete) {
 
 function startStreamRaetselMusic() {
   const el = getStreamRaetselMusicEl();
-  if (!el) return;
+  if (!el || !hasStreamRaetselPlaylist()) return;
 
-  const musicSrc = typeof streamRaetselConfig !== "undefined" ? streamRaetselConfig.musicSrc : "";
-  if (!musicSrc) return; // noch keine Musik hinterlegt
+  // Beim ersten Mal: automatischen Sprung zum nächsten Song
+  // einhängen, sobald einer zu Ende ist
+  if (!streamRaetselMusicBound) {
+    streamRaetselMusicBound = true;
+    el.addEventListener("ended", () => {
+      loadStreamRaetselRandomTrack();
+      el.play().catch(() => {});
+    });
+    // Springt automatisch weiter, falls ein Song mal fehlt/kaputt ist
+    el.addEventListener("error", () => {
+      if (document.getElementById("streamraetsel")?.classList.contains("active-page")) {
+        loadStreamRaetselRandomTrack();
+        el.play().catch(() => {});
+      }
+    });
+  }
 
-  if (!el.dataset.srcSet) {
-    el.src = musicSrc;
-    el.dataset.srcSet = "1";
+  if (!el.src) {
+    loadStreamRaetselRandomTrack();
   }
 
   el.volume = 0;
@@ -156,7 +196,7 @@ function stopStreamRaetselMusic() {
 // der ???-Seite ist
 document.addEventListener("click", () => {
   const el = getStreamRaetselMusicEl();
-  if (el && el.dataset.srcSet && el.paused && document.getElementById("streamraetsel")?.classList.contains("active-page")) {
+  if (el && el.src && el.paused && document.getElementById("streamraetsel")?.classList.contains("active-page")) {
     el.play().catch(() => {});
   }
 });
@@ -250,6 +290,4 @@ function updateStreamRaetselPage(pageID) {
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => {
-  checkStreamRaetselPreviewKey();
-});
+
