@@ -628,6 +628,51 @@ function syncCodesToFirestore() {
    (merge:true, damit Glücksrad-, Code- und Rennen-Statistiken
    sich nicht gegenseitig überschreiben)
 ------------------------------------------------------ */
+/* ------------------------------------------------------
+   DUBLONEN (Shop-Währung) VERGEBEN
+   Wird von main.js (Codes), race.js (Wochenrennen-Platzierung)
+   und community-boss.js (Top-Angreifer) aufgerufen.
+------------------------------------------------------ */
+async function addCurrency(amount) {
+  if (!wheelDb || !amount) return;
+
+  try {
+    const uid = await wheelAuthReady;
+    if (!uid) return;
+
+    await wheelDb
+      .collection("players")
+      .doc(uid)
+      .set(
+        { currency: firebase.firestore.FieldValue.increment(amount) },
+        { merge: true }
+      );
+
+    if (typeof refreshShopCurrencyDisplay === "function") {
+      refreshShopCurrencyDisplay();
+    }
+    if (typeof showCurrencyToast === "function") {
+      showCurrencyToast(amount);
+    }
+  } catch (err) {
+    console.warn("Dublonen konnten nicht vergeben werden:", err);
+  }
+}
+
+function showCurrencyToast(amount) {
+  const toast = document.createElement("div");
+  toast.className = "currency-toast";
+  toast.innerHTML = `<span class="currency-toast-icon">💰</span> +${amount} Dublonen`;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => toast.classList.add("visible"));
+
+  setTimeout(() => {
+    toast.classList.remove("visible");
+    setTimeout(() => toast.remove(), 400);
+  }, 3200);
+}
+
 function savePlayerData(fields) {
   if (!wheelDb) return;
 
@@ -873,6 +918,24 @@ function renderRewardBadges(rewards) {
     .join("");
 }
 
+/* ------------------------------------------------------
+   AVATAR MIT RAHMEN UMWICKELN
+   Wird überall dort genutzt, wo ein Spieler-Avatar angezeigt
+   wird (Rangliste, Boss-Rangliste, Wochenrennen-Rangliste).
+------------------------------------------------------ */
+function wrapAvatarWithFrame(avatarHtml, frameStyle) {
+  if (!avatarHtml) return avatarHtml;
+  if (!frameStyle) return avatarHtml;
+
+  return `<span class="avatar-frame-wrap avatar-frame-${frameStyle}">${avatarHtml}</span>`;
+}
+
+function frameStyleFromId(frameId) {
+  if (!frameId || typeof shopItems === "undefined") return "";
+  const item = shopItems.find((i) => i.id === frameId);
+  return item ? item.style : "";
+}
+
 function buildLeaderboardRow(player, rank, isOwnRow) {
   const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
   const classes = [];
@@ -880,11 +943,13 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
   if (rank <= 3) classes.push(`leaderboard-top leaderboard-top-${rank}`);
   if (isOwnRow) classes.push("leaderboard-you");
 
-  const avatarHtml = player.avatar
+  let avatarHtml = player.avatar
     ? isAvatarImagePath(player.avatar)
       ? `<img src="${player.avatar}" class="leaderboard-avatar" alt="">`
       : `<span class="leaderboard-avatar leaderboard-avatar-emoji">${player.avatar}</span>`
     : "";
+
+  avatarHtml = wrapAvatarWithFrame(avatarHtml, frameStyleFromId(player.equippedFrame));
 
   const crownHtml = rank === 1 ? `<span class="leaderboard-crown">👑</span>` : "";
 
@@ -906,11 +971,13 @@ function buildLeaderboardPodiumEntry(player, rank) {
     : `<span>🏴‍☠️</span>`;
 
   const crownHtml = rank === 1 ? `<span class="fh-podium-crown">👑</span>` : "";
+  const frameStyle = frameStyleFromId(player.equippedFrame);
+  const frameClass = frameStyle ? ` avatar-frame-${frameStyle}` : "";
 
   return `
     <div class="fh-podium-col fh-podium-rank-${rank}">
       ${crownHtml}
-      <div class="fh-podium-avatar">${avatarHtml}</div>
+      <div class="fh-podium-avatar${frameClass}">${avatarHtml}</div>
       <p class="fh-podium-name">${escapeHtml(player.nickname || "Unbekannt")}</p>
       <p class="fh-podium-score">${player.codesCracked || 0} 🔑</p>
       <div class="fh-podium-pedestal">${rank}</div>
