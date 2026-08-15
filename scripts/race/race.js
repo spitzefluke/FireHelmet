@@ -449,11 +449,30 @@ function removeStaleKarts(activeUids) {
 
 function renderRaceResultsList(entries) {
   const list = document.getElementById("race-results-list");
+  const podiumContainer = document.getElementById("race-leaderboard-podium");
   if (!list) return;
 
   if (!entries.length) {
     list.innerHTML = "";
+    if (podiumContainer) podiumContainer.innerHTML = "";
     return;
+  }
+
+  // Podest für die Top 3 (nutzt denselben Baustein wie die Haupt-
+  // Rangliste, siehe scripts/wheel/wheel.js) - rein additiv, die
+  // Zeilenliste darunter bleibt unverändert bestehen
+  if (podiumContainer && typeof buildLeaderboardPodiumEntry === "function") {
+    const topThree = entries.slice(0, 3);
+    podiumContainer.innerHTML = `
+      <div class="fh-podium">
+        ${topThree[1] ? buildLeaderboardPodiumEntry({ ...topThree[1], codesCracked: topThree[1].progress }, 2) : ""}
+        ${topThree[0] ? buildLeaderboardPodiumEntry({ ...topThree[0], codesCracked: topThree[0].progress }, 1) : ""}
+        ${topThree[2] ? buildLeaderboardPodiumEntry({ ...topThree[2], codesCracked: topThree[2].progress }, 3) : ""}
+      </div>
+    `;
+    podiumContainer.querySelectorAll(".fh-podium-score").forEach((el) => {
+      el.textContent = el.textContent.replace("🔑", "Punkte");
+    });
   }
 
   let html = "";
