@@ -5028,3 +5028,8 @@ img, svg, video, canvas {
     padding-bottom: calc(78px + env(safe-area-inset-bottom));
   }
 }
+
+/* Sprach-Switch in der festen Desktop-Sidebar zentriert einpassen */
+.fh-sidebar-lang-switch {
+  margin: 0 auto 18px;
+}
