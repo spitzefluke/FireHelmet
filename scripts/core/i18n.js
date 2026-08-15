@@ -18,6 +18,7 @@ const translations = {
   de: {
     "menu.title": "MENU",
     "menu.login": "🎮 Anmelden",
+    "menu.shop": "🛒 Shop",
     "menu.home": "🏠 Home",
     "menu.story": "📖 Stories",
     "menu.characters": "👤 Characters",
@@ -36,6 +37,12 @@ const translations = {
     "support.reportTitle": "🐞 Fehler melden / Anliegen",
     "support.reportPlaceholder": "Beschreibe kurz, was los ist ...",
     "support.reportSend": "Absenden",
+
+    "shop.title": "🛒 SHOP",
+    "shop.subtitle": "Gib deine Dublonen für Rahmen und Extras aus",
+    "shop.currencyLabel": "Dublonen",
+    "shop.earnHint": "Dublonen bekommst du durchs Einlösen bestimmter Codes, gute Platzierungen beim Wochenrennen und viel Schaden gegen den Community-Boss.",
+    "shop.tabFrames": "Avatar-Rahmen",
 
     "common.days": "Tage",
     "common.hours": "Stunden",
@@ -105,6 +112,7 @@ const translations = {
   en: {
     "menu.title": "MENU",
     "menu.login": "🎮 Login",
+    "menu.shop": "🛒 Shop",
     "menu.home": "🏠 Home",
     "menu.story": "📖 Stories",
     "menu.characters": "👤 Characters",
@@ -123,6 +131,12 @@ const translations = {
     "support.reportTitle": "🐞 Report a bug / issue",
     "support.reportPlaceholder": "Briefly describe what's going on ...",
     "support.reportSend": "Submit",
+
+    "shop.title": "🛒 SHOP",
+    "shop.subtitle": "Spend your doubloons on frames and extras",
+    "shop.currencyLabel": "Doubloons",
+    "shop.earnHint": "You earn doubloons by redeeming certain codes, placing well in the weekly race, and dealing lots of damage to the community boss.",
+    "shop.tabFrames": "Avatar Frames",
 
     "common.days": "Days",
     "common.hours": "Hours",

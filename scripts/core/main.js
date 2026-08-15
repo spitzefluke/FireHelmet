@@ -29,6 +29,10 @@ function changePage(pageID) {
     updateCommunityBossPage(pageID);
   }
 
+  if (typeof updateShopPage === "function") {
+    updateShopPage(pageID);
+  }
+
   if (typeof updateCharactersPage === "function") {
     updateCharactersPage(pageID);
   }
@@ -922,6 +926,10 @@ async function checkCode() {
 
       if (match.avatarUnlock && typeof unlockAvatar === "function") {
         unlockAvatar(match.avatarUnlock);
+      }
+
+      if (match.currencyReward && typeof addCurrency === "function") {
+        addCurrency(match.currencyReward);
       }
 
       if (typeof triggerCodeSuccessEffect === "function") {
