@@ -48,7 +48,7 @@ function isStreamRaetselUnlocked() {
 /* ------------------------------------------------------
    SCHWEBENDE RÄTSEL-SYMBOLE IM HINTERGRUND
 ------------------------------------------------------ */
-const streamRaetselSymbols = ["🧩", "❓", "🎮", "🔍"];
+const streamRaetselSymbols = ["❓", "🌫️", "👁️", "🔮"];
 
 function spawnStreamRaetselParticle() {
   const fx = document.getElementById("streamraetsel-fx");

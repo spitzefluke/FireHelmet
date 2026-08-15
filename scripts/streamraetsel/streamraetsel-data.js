@@ -6,7 +6,7 @@
 
 const streamRaetselConfig = {
   // Freischalt-Datum (Format: "JJJJ-MM-TTTHH:MM:SS")
-  unlockDate: "2026-08-14T19:30:00",
+  unlockDate: "2026-08-25T00:00:00",
 
   // Wird erst NACH dem Freischalten angezeigt (bzw. für dich
   // im Vorschau-Modus, siehe unten)
@@ -43,13 +43,13 @@ const streamRaetselConfig = {
      erscheint. Kann danach nur 3x abgespielt werden.
   ------------------------------------------------------ */
   redLockMessages: [
-    { message: "Erste Ziffer richtig. Zugfahrer_Dave besitzt 18 Sprites. Er verschenkt die Hälfte seiner Sprites an Spieler. Von den übrigen Sprites verschenkt er anschließend noch 4 weitere an andere Spieler. Danach erhält er 2 neue Sprites. Kurz darauf verdoppelt sich die Anzahl seiner Sprites durch einen besonderen Bonus. Zum Schluss verschenkt Zugfahrer_Dave noch 11 Sprites an Spieler. Frage: Wie viele Sprites hat Zugfahrer_Dave am Ende noch?" },
+    { message: "Erste Ziffer richtig. Zugfahrer_Dave besitzt 18 Sprites. Er verschenkt die Hälfte seiner Sprites an Spieler. Von den übrigen Sprites verschenkt er anschließend noch 4 weitere an andere Spieler. Danach erhält er 2 neue Sprites. Kurz darauf verdoppelt sich die Anzahl seiner Sprites durch einen besonderen Bonus. Zum Schluss verschenkt Zugfahrer_Dave noch 10 Sprites an Spieler. Frage: Wie viele Sprites hat Zugfahrer_Dave am Ende noch?" },
     { message: "Zweite Ziffer von Rot richtig! Die nächste Aufgabe erklärt dein Mod" },
     { message: "Rotes Schloss geknackt! Weiter geht's mit Schwarz. Hier wird es einfach, die richtige Zahl weiß jemand aus deiner Community. Ruf einfach mal durch..." },
   ],
   blackLockMessages: [
     { message: "Erste Ziffer von Schwarz richtig!", audio: "audio/Mein_Audio.mp3" }, 
-    { message: "Zweite Ziffer von Schwarz richtig! Nun für die Letzte gibt es ein Youtube video wo du zeichnen musst." },
+    { message: "Zweite Ziffer von Schwarz richtig! Nun für die Letzte gibt es ein Youtube video wo du zeichen musst." },
     { message: "Schwarzes Schloss geknackt! Glückwunsch alle sind offen" },
   ],
 
