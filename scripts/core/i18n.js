@@ -27,7 +27,7 @@ const translations = {
     "menu.leaderboard": "🏆 Rangliste",
     "menu.race": "🏎️ Wochenrennen",
     "menu.communityBoss": "🐙 Community-Boss",
-    "menu.streamraetsel": "🧩 Streamrätsel",
+    "menu.streamraetsel": "❓ ???",
     "menu.support": "🆘 Support",
 
     "support.title": "SUPPORT",
@@ -94,9 +94,9 @@ const translations = {
     "race.dailyBonusButton": "Tagesbonus abholen 🎁",
 
     "stream.liveLabel": "🔴 LIVE COUNTDOWN",
-    "stream.title": "🧩 STREAMRÄTSEL",
-    "stream.subtitle": "Schaltet sich frei am 10.08.2026",
-    "stream.teaser": "📦 Paket kommt bald ...",
+    "stream.title": "❓ ???",
+    "stream.subtitle": "Etwas Großes braut sich zusammen ...",
+    "stream.teaser": "🌫️ Niemand weiß, was hier erscheinen wird ...",
 
     "boss.title": "COMMUNITY-BOSS",
     "boss.subtitle": "Gemeinsam besiegen, bevor der Monat endet!",
@@ -114,7 +114,7 @@ const translations = {
     "menu.leaderboard": "🏆 Leaderboard",
     "menu.race": "🏎️ Weekly Race",
     "menu.communityBoss": "🐙 Community Boss",
-    "menu.streamraetsel": "🧩 Stream Puzzle",
+    "menu.streamraetsel": "❓ ???",
     "menu.support": "🆘 Support",
 
     "support.title": "SUPPORT",
@@ -181,9 +181,9 @@ const translations = {
     "race.dailyBonusButton": "Claim daily bonus 🎁",
 
     "stream.liveLabel": "🔴 LIVE COUNTDOWN",
-    "stream.title": "🧩 STREAM PUZZLE",
-    "stream.subtitle": "Unlocks on 08/10/2026",
-    "stream.teaser": "📦 Package coming soon ...",
+    "stream.title": "❓ ???",
+    "stream.subtitle": "Something big is brewing ...",
+    "stream.teaser": "🌫️ Nobody knows what will appear here ...",
 
     "boss.title": "COMMUNITY BOSS",
     "boss.subtitle": "Defeat it together before the month ends!",
