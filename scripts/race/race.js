@@ -579,7 +579,7 @@ function loadLastWeekWinner() {
     .collection("raceProgress")
     .where("week", "==", previousWeek)
     .orderBy("progress", "desc")
-    .limit(1)
+    .limit(3)
     .get()
     .then((snapshot) => {
       if (snapshot.empty) {
@@ -589,10 +589,36 @@ function loadLastWeekWinner() {
 
       const winner = snapshot.docs[0].data();
       el.textContent = `🏆 Sieger der letzten Woche: ${winner.nickname} mit ${winner.progress} Punkten!`;
+
+      grantWeeklyRaceCurrency(previousWeek, snapshot.docs);
     })
     .catch((err) => {
       console.error("Vorwochen-Sieger konnte nicht geladen werden:", err);
     });
+}
+
+/* ------------------------------------------------------
+   DUBLONEN FÜR TOP-3 DER VORWOCHE
+   Wird einmal pro Woche vergeben (localStorage-Sperre), sobald
+   ein Top-3-Platz beim Besuch dieser Seite erkannt wird - man
+   muss also nach Wochenende einmal auf der Seite vorbeischauen.
+------------------------------------------------------ */
+async function grantWeeklyRaceCurrency(weekId, topDocs) {
+  const claimKey = `raceRewardClaimed_${weekId}`;
+  if (localStorage.getItem(claimKey)) return;
+  if (typeof addCurrency !== "function" || typeof wheelAuthReady === "undefined") return;
+
+  const ownUid = await wheelAuthReady;
+  if (!ownUid) return;
+
+  const rewardsByRank = [150, 90, 50];
+  const ownIndex = topDocs.findIndex((doc) => doc.data().uid === ownUid);
+
+  localStorage.setItem(claimKey, "1"); // merken, egal ob getroffen oder nicht
+
+  if (ownIndex >= 0 && rewardsByRank[ownIndex]) {
+    addCurrency(rewardsByRank[ownIndex]);
+  }
 }
 
 /* ------------------------------------------------------
