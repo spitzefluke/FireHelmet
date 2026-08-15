@@ -403,9 +403,10 @@ body.lang-en {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(var(--menu-rgb1),.45), rgba(var(--menu-rgb2),.4), rgba(var(--menu-rgb3),.35));
-  transform: translateX(-100%);
-  transition: transform .35s ease;
+  background: linear-gradient(180deg, rgba(var(--menu-rgb3),.4), rgba(var(--menu-rgb1),.45), rgba(var(--menu-rgb2),.4));
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform .5s cubic-bezier(0.65, 0, 0.35, 1);
   z-index: -1;
   border-radius: 15px;
 }
@@ -433,7 +434,7 @@ body.lang-en {
 
 .sidebar a:hover::before,
 .sidebar a:active::before {
-  transform: translateX(0);
+  transform: scaleY(1);
 }
 
 .sidebar a:hover::after,
@@ -4788,6 +4789,25 @@ img, svg, video, canvas {
   100% { opacity: 1; transform: translateX(0); }
 }
 
+/* Flüssigkeits-artiger "Pour"-Effekt: steigt beim Hover von unten
+   hoch, in der Farbe der aktuell aktiven Sprache (--menu-rgb*
+   wechselt automatisch zwischen Blau/DE und Orange/EN) */
+.fh-nav-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(var(--menu-rgb3),.3), rgba(var(--menu-rgb1),.35), rgba(var(--menu-rgb2),.3));
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform .5s cubic-bezier(0.65, 0, 0.35, 1);
+  z-index: -1;
+  border-radius: 10px;
+}
+
+.fh-nav-item:hover::before {
+  transform: scaleY(1);
+}
+
 /* Wandernder Glanzstreifen beim Hover */
 .fh-nav-item::after {
   content: "";
@@ -5018,6 +5038,7 @@ img, svg, video, canvas {
 }
 
 .fh-bottom-nav-item {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -5029,9 +5050,28 @@ img, svg, video, canvas {
   color: var(--fh-muted-fg);
   cursor: pointer;
   border-radius: 10px;
+  overflow: hidden;
   transition: color .2s, background .2s, transform .15s;
   text-decoration: none;
   font-family: var(--fh-font-sans);
+}
+
+.fh-bottom-nav-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(var(--menu-rgb3),.3), rgba(var(--menu-rgb1),.35), rgba(var(--menu-rgb2),.3));
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform .4s cubic-bezier(0.65, 0, 0.35, 1);
+  z-index: -1;
+  border-radius: 10px;
+}
+
+.fh-bottom-nav-item:hover::before,
+.fh-bottom-nav-item:active::before,
+.fh-bottom-nav-item.fh-nav-active::before {
+  transform: scaleY(1);
 }
 
 .fh-bottom-nav-item:hover {
