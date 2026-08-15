@@ -56,6 +56,13 @@ const wheelSpecialAvatars = [
   { id: "Admin", avatar: "scripts/avatare/11.png", label: "Admin" },
   { id: "boss-slayer", avatar: "🏅", label: "Boss-Bezwinger (Top 3 Schaden)" },
 
+  // Im Shop kaufbare Avatare (siehe scripts/shop/shop-data.js, dort
+  // referenziert per "avatarId" - genau dieselbe id wie hier)
+  { id: "shop-papagei", avatar: "🦜", label: "Papagei" },
+  { id: "shop-kompass", avatar: "🧭", label: "Kompass" },
+  { id: "shop-totenkopf", avatar: "💀", label: "Totenkopf" },
+  { id: "shop-anker", avatar: "⚓", label: "Anker" },
+
   // Eigene Beispiele:
   // { id: "legendaer", avatar: "scripts/avatare/legendaer.png", label: "Legendärer Pirat" },
 ];
