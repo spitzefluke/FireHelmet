@@ -876,6 +876,8 @@ async function renderBossLeaderboard(monthId) {
       const rank = i + 1;
       const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
       const isOwn = p.uid === ownUid;
+      const frameStyle = typeof frameStyleFromId === "function" ? frameStyleFromId(p.equippedFrame) : "";
+      const frameRowClass = typeof rowFrameClass === "function" ? rowFrameClass(frameStyle) : "";
       let avatarHtml =
         p.avatar && typeof isAvatarImagePath === "function"
           ? isAvatarImagePath(p.avatar)
@@ -883,12 +885,12 @@ async function renderBossLeaderboard(monthId) {
             : `<span class="leaderboard-avatar leaderboard-avatar-emoji">${p.avatar}</span>`
           : "";
 
-      if (typeof wrapAvatarWithFrame === "function" && typeof frameStyleFromId === "function") {
-        avatarHtml = wrapAvatarWithFrame(avatarHtml, frameStyleFromId(p.equippedFrame));
+      if (typeof wrapAvatarWithFrame === "function") {
+        avatarHtml = wrapAvatarWithFrame(avatarHtml, frameStyle);
       }
 
       html += `
-        <div class="boss-leaderboard-row${rank <= 3 ? " boss-leaderboard-top" : ""}${isOwn ? " boss-leaderboard-own" : ""}">
+        <div class="boss-leaderboard-row ${frameRowClass}${rank <= 3 ? " boss-leaderboard-top" : ""}${isOwn ? " boss-leaderboard-own" : ""}">
           <span class="boss-leaderboard-rank">${medal}</span>
           <span class="boss-leaderboard-name">${avatarHtml}${escapeHtmlBoss(p.nickname || "Unbekannt")}${isOwn ? " (Du)" : ""}</span>
           <span class="boss-leaderboard-damage">${(p.totalDamage || 0).toLocaleString("de-DE")} Schaden</span>
