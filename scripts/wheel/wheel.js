@@ -936,9 +936,14 @@ function frameStyleFromId(frameId) {
   return item ? item.style : "";
 }
 
+function rowFrameClass(frameStyle) {
+  return frameStyle ? `row-frame row-frame-${frameStyle}` : "";
+}
+
 function buildLeaderboardRow(player, rank, isOwnRow) {
   const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
-  const classes = [];
+  const frameStyle = frameStyleFromId(player.equippedFrame);
+  const classes = [rowFrameClass(frameStyle)];
 
   if (rank <= 3) classes.push(`leaderboard-top leaderboard-top-${rank}`);
   if (isOwnRow) classes.push("leaderboard-you");
@@ -949,7 +954,7 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
       : `<span class="leaderboard-avatar leaderboard-avatar-emoji">${player.avatar}</span>`
     : "";
 
-  avatarHtml = wrapAvatarWithFrame(avatarHtml, frameStyleFromId(player.equippedFrame));
+  avatarHtml = wrapAvatarWithFrame(avatarHtml, frameStyle);
 
   const crownHtml = rank === 1 ? `<span class="leaderboard-crown">👑</span>` : "";
 
@@ -975,7 +980,7 @@ function buildLeaderboardPodiumEntry(player, rank) {
   const frameClass = frameStyle ? ` avatar-frame-${frameStyle}` : "";
 
   return `
-    <div class="fh-podium-col fh-podium-rank-${rank}">
+    <div class="fh-podium-col fh-podium-rank-${rank} ${rowFrameClass(frameStyle)}">
       ${crownHtml}
       <div class="fh-podium-avatar${frameClass}">${avatarHtml}</div>
       <p class="fh-podium-name">${escapeHtml(player.nickname || "Unbekannt")}</p>
