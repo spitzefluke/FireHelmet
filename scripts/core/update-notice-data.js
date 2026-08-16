@@ -14,8 +14,8 @@
 const updateNoticeConfig = {
   title: "🆕 Neuigkeiten",
   message:
-    "Neu dabei: Shop mit Dublonen, Avatar-Rahmen, kaufbare Avatare, überarbeitete " +
-    "Ranglisten mit Belohnungs-Anzeige und eine neue Bewertungs-Seite unter Support!",
+    "Update 4.0 ist da und damit auch viele funktionen und Upgrades." +
+    "Shop ist endlich da und du kannst dir mit Dublonen etwas kaufen. Ein mysteriöser Countdown ist erschienen und irgendwas passiert auf der Seite... Update /Sh000IFF56547FAHRE kommt....",
 
   // Optional: Bild anzeigen (Pfad relativ zur index.html), sonst leer lassen
   image: "",
