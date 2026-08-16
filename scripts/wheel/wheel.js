@@ -977,12 +977,11 @@ function buildLeaderboardPodiumEntry(player, rank) {
 
   const crownHtml = rank === 1 ? `<span class="fh-podium-crown">👑</span>` : "";
   const frameStyle = frameStyleFromId(player.equippedFrame);
-  const frameClass = frameStyle ? ` avatar-frame-${frameStyle}` : "";
 
   return `
     <div class="fh-podium-col fh-podium-rank-${rank} ${rowFrameClass(frameStyle)}">
       ${crownHtml}
-      <div class="fh-podium-avatar${frameClass}">${avatarHtml}</div>
+      <div class="fh-podium-avatar">${avatarHtml}</div>
       <p class="fh-podium-name">${escapeHtml(player.nickname || "Unbekannt")}</p>
       <p class="fh-podium-score">${player.codesCracked || 0} 🔑</p>
       <div class="fh-podium-pedestal">${rank}</div>
