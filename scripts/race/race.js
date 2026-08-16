@@ -193,6 +193,7 @@ function addRaceProgress(amount) {
           uid: uid,
           nickname: nickname,
           progress: newProgress,
+          equippedFrame: localStorage.getItem("equippedFrame") || null,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         },
         { merge: true }
@@ -484,8 +485,11 @@ function renderRaceResultsList(entries) {
   entries.forEach((entry, i) => {
     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
     const rewardHtml = i < 3 ? `<span class="race-result-reward">🏆 +${RACE_REWARDS_BY_RANK[i]} 💰</span>` : "";
+    const frameRowClass = typeof rowFrameClass === "function" && typeof frameStyleFromId === "function"
+      ? rowFrameClass(frameStyleFromId(entry.equippedFrame))
+      : "";
     html += `
-      <div class="race-result-row">
+      <div class="race-result-row ${frameRowClass}">
         <span class="race-result-rank">${medal}</span>
         <span class="race-result-name">${escapeHtml(entry.nickname || "Unbekannt")}</span>
         <span class="race-result-points">${entry.progress} Pkt</span>
