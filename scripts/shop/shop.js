@@ -40,26 +40,55 @@ function equipFrame(frameId) {
     savePlayerData({ equippedFrame: getEquippedFrame() });
   }
 
-  renderShopGrid();
+  renderShopGrid({ quiet: true });
   if (typeof renderAvatarPicker === "function") renderAvatarPicker();
 }
 
 /* ------------------------------------------------------
-   GRID AUFBAUEN
+   SELTENHEIT: Anzeige-Infos aus der zentralen Konfiguration
+   (scripts/core/fire-helmet-config.js) holen, mit robustem
+   Fallback falls ein Artikel (noch) keine "rarity" hat.
 ------------------------------------------------------ */
-function renderShopGrid() {
+function getRarityInfo(rarityKey) {
+  const fallback = { order: 0, color: "#9aa4b2", glow: "154,164,178", label: { de: "Gewöhnlich", en: "Common" }, desc: { de: "", en: "" } };
+  if (typeof FIRE_HELMET_CONFIG === "undefined") return fallback;
+  return FIRE_HELMET_CONFIG.rarities[rarityKey] || fallback;
+}
+
+/* ------------------------------------------------------
+   GRID AUFBAUEN
+   options.quiet = true unterdrückt die Eintritts-Animation der
+   Karten (siehe style.css .shop-grid-quiet) - genutzt bei Kauf/
+   Ausrüsten, damit nicht bei jeder Kleinigkeit die komplette
+   Eingangsanimation erneut abläuft. Ohne "quiet" (Seitenaufruf,
+   Tab-Wechsel, Rotationswechsel) spielt sie ganz bewusst.
+------------------------------------------------------ */
+function renderShopGrid(options) {
   const grid = document.getElementById("shop-grid");
   if (!grid || typeof shopItems === "undefined") return;
 
+  const quiet = !!(options && options.quiet);
+  grid.classList.toggle("shop-grid-quiet", quiet);
+
   const owned = getOwnedShopItems();
   const equipped = getEquippedFrame();
-  const items = shopItems.filter((item) => item.type === shopActiveTab);
+  const lang = typeof getCurrentLang === "function" ? getCurrentLang() : "de";
+
+  const rotation = typeof getShopRotation === "function" ? getShopRotation(Date.now()) : { itemIds: null };
+  const inRotation = (id) => !rotation.itemIds || rotation.itemIds.includes(id);
+
+  // Bereits besessene Artikel bleiben IMMER sichtbar (verwaltbar/
+  // ausrüstbar), unabhängig von der aktuellen Rotation - nur noch
+  // nicht besessene Artikel werden durch die Rotation gefiltert.
+  const items = shopItems.filter((item) => item.type === shopActiveTab && (owned.includes(item.id) || inRotation(item.id)));
 
   grid.innerHTML = items
     .map((item) => {
       const isOwned = owned.includes(item.id);
       const isFrame = item.type === "frame";
       const isEquipped = isFrame && equipped === item.id;
+      const rarity = getRarityInfo(item.rarity);
+      const rarityLabel = rarity.label[lang] || rarity.label.de;
 
       let buttonHtml;
       if (isEquipped) {
@@ -69,19 +98,48 @@ function renderShopGrid() {
       } else if (isOwned) {
         buttonHtml = `<button type="button" class="shop-item-btn shop-item-equipped" disabled>✓ Freigeschaltet</button>`;
       } else {
-        buttonHtml = `<button type="button" class="shop-item-btn" onclick="buyShopItem('${item.id}')">${item.price} 💰 Kaufen</button>`;
+        buttonHtml = `<button type="button" class="shop-item-btn" onclick="buyShopItem('${item.id}')">${item.price.toLocaleString("de-DE")} 💰 Kaufen</button>`;
       }
 
       const previewClass = isFrame ? `avatar-frame-${item.style}` : "";
 
       return `
-        <div class="shop-item ${isOwned ? "shop-item-owned" : ""}">
+        <div class="shop-item shop-item-rarity-${item.rarity || "common"} ${isOwned ? "shop-item-owned" : ""}" style="--rarity-color:${rarity.color};--rarity-glow:${rarity.glow};">
+          <span class="shop-item-rarity-badge">${rarityLabel}</span>
           <div class="shop-item-preview ${previewClass}">
             <span class="shop-item-emoji">${item.emoji}</span>
           </div>
           <p class="shop-item-name">${item.name}</p>
           ${buttonHtml}
         </div>
+      `;
+    })
+    .join("");
+}
+
+/* ------------------------------------------------------
+   SELTENHEITEN-LEGENDE
+   Baut die Erklärungs-Chips aus FIRE_HELMET_CONFIG.rarities.
+   Beschreibung erscheint bei Hover/Fokus (siehe CSS) - Chips
+   sind echte <button>, damit sie auch per Tastatur/Touch
+   erreichbar sind (kein reines Hover-Feature).
+------------------------------------------------------ */
+function renderRarityLegend() {
+  const el = document.getElementById("shop-rarity-legend");
+  if (!el || typeof FIRE_HELMET_CONFIG === "undefined") return;
+
+  const lang = typeof getCurrentLang === "function" ? getCurrentLang() : "de";
+  const entries = Object.entries(FIRE_HELMET_CONFIG.rarities).sort((a, b) => a[1].order - b[1].order);
+
+  el.innerHTML = entries
+    .map(([key, r]) => {
+      const label = r.label[lang] || r.label.de;
+      const desc = r.desc[lang] || r.desc.de;
+      return `
+        <button type="button" class="fh-rarity-chip" style="--rarity-color:${r.color};--rarity-glow:${r.glow};" title="${desc}">
+          <span class="fh-rarity-chip-label">${label}</span>
+          <span class="fh-rarity-chip-desc">${desc}</span>
+        </button>
       `;
     })
     .join("");
@@ -144,13 +202,13 @@ async function buyShopItem(itemId) {
 
     if (statusEl) statusEl.textContent = `✅ ${item.name} gekauft!`;
     refreshShopCurrencyDisplay();
-    renderShopGrid();
+    renderShopGrid({ quiet: true });
   } catch (err) {
     if (err.message === "not-enough-currency") {
       if (statusEl) statusEl.textContent = "❌ Nicht genug Dublonen dafür.";
     } else if (err.message === "already-owned") {
       if (statusEl) statusEl.textContent = "Den hast du schon.";
-      renderShopGrid();
+      renderShopGrid({ quiet: true });
     } else {
       console.warn("Kauf fehlgeschlagen:", err);
       if (statusEl) statusEl.textContent = "⚠️ Kauf ist fehlgeschlagen, versuch's nochmal.";
@@ -181,13 +239,48 @@ async function refreshShopCurrencyDisplay() {
 }
 
 /* ------------------------------------------------------
+   EINGANGSANIMATION
+   Spielt nur einmal pro Seitenbesuch (nicht bei jedem
+   Firestore-Refresh) - der Flag wird zurückgesetzt, sobald man
+   den Shop verlässt, siehe updateShopPage unten.
+------------------------------------------------------ */
+let shopEntranceShown = false;
+
+function playShopEntrance() {
+  const overlay = document.getElementById("shop-intro-overlay");
+  const content = document.querySelector("#shop .shop-content");
+
+  if (overlay) {
+    overlay.classList.remove("fh-shop-intro-play");
+    void overlay.offsetWidth;
+    overlay.classList.add("fh-shop-intro-play");
+  }
+  if (content) {
+    content.classList.remove("fh-shop-content-in");
+    void content.offsetWidth;
+    content.classList.add("fh-shop-content-in");
+  }
+}
+
+/* ------------------------------------------------------
    SEITENWECHSEL-HOOK
 ------------------------------------------------------ */
 function updateShopPage(pageID) {
-  if (pageID !== "shop") return;
+  if (pageID !== "shop") {
+    stopShopRotationCountdown();
+    shopEntranceShown = false;
+    return;
+  }
 
+  if (!shopEntranceShown) {
+    shopEntranceShown = true;
+    playShopEntrance();
+  }
+
+  renderRarityLegend();
   renderShopGrid();
   refreshShopCurrencyDisplay();
+  if (typeof startShopRotationCountdown === "function") startShopRotationCountdown();
 
   // Eigene Firestore-Kopie der freigeschalteten Artikel mit dem
   // lokalen Speicher abgleichen (z.B. wenn man auf einem neuen
@@ -220,7 +313,7 @@ async function syncOwnedShopItemsFromServer() {
     if (data.equippedFrame) {
       localStorage.setItem("equippedFrame", data.equippedFrame);
     }
-    renderShopGrid();
+    renderShopGrid({ quiet: true });
   } catch (err) {
     console.warn("Shop-Abgleich fehlgeschlagen:", err);
   }

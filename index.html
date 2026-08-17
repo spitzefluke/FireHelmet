@@ -425,6 +425,15 @@
           </a>
         </div>
 
+        <a class="fh-audiobook-card" id="fh-audiobook-card" href="#" target="_blank" rel="noopener noreferrer" aria-label="Fire Helmet Hörspiel auf Spotify anhören">
+          <span class="fh-audiobook-icon">🎧</span>
+          <span class="fh-audiobook-copy">
+            <span class="fh-audiobook-title" data-i18n="socials.audiobookTitle">🎧 Das Fire-Helmet-Hörspiel</span>
+            <span class="fh-audiobook-text" data-i18n="socials.audiobookText">Tauche noch tiefer in die Geschichte ein.</span>
+          </span>
+          <span class="fh-audiobook-button" data-i18n="socials.audiobookButton">Auf Spotify anhören</span>
+        </a>
+
         <h2 class="social-subheading" data-i18n="socials.daveHeading">🚂 Socials von Zugfahrer_DaveTV</h2>
 
         <div class="social-container">
@@ -494,9 +503,11 @@
          SHOP
     ===================== -->
     <section id="shop" class="page">
+      <div id="shop-intro-overlay" class="fh-shop-intro-overlay" aria-hidden="true"></div>
+
       <div class="page-content shop-content">
-        <h1 data-i18n="shop.title">🛒 SHOP</h1>
-        <p class="story-subtitle" data-i18n="shop.subtitle">Gib deine Dublonen für Rahmen und Extras aus</p>
+        <h1 data-i18n="shop.title">🛒 SCHWARZMARKT DER FLITZPIEPEN</h1>
+        <p class="story-subtitle" data-i18n="shop.subtitle">Jede Stunde neue Ware - gib deine Dublonen für Rahmen und Extras aus</p>
 
         <div class="shop-currency-bar">
           <span class="shop-currency-icon">💰</span>
@@ -504,10 +515,18 @@
           <span data-i18n="shop.currencyLabel">Dublonen</span>
         </div>
 
+        <p class="shop-rotation-label">
+          <span data-i18n="shop.rotationLabel">Neuer Schwarzmarkt in</span>
+          <span id="shop-rotation-countdown" class="shop-rotation-countdown">00:00:00</span>
+        </p>
+
         <p class="shop-earn-hint" data-i18n="shop.earnHint">
           Dublonen bekommst du durchs Einlösen bestimmter Codes, gute Platzierungen beim Wochenrennen
           und viel Schaden gegen den Community-Boss.
         </p>
+
+        <h2 class="shop-rarities-heading" data-i18n="shop.raritiesHeading">Seltenheiten</h2>
+        <div id="shop-rarity-legend" class="fh-rarity-legend"></div>
 
         <div class="shop-tabs">
           <button type="button" class="shop-tab shop-tab-active" data-shop-tab="frame" onclick="switchShopTab('frame')" data-i18n="shop.tabFrames">Avatar-Rahmen</button>
@@ -517,6 +536,11 @@
         <div id="shop-grid" class="shop-grid"></div>
 
         <p id="shop-status" class="wheel-status"></p>
+      </div>
+
+      <div id="shop-rotation-toast" class="currency-toast shop-rotation-toast">
+        <span class="currency-toast-icon">⚓</span>
+        <span data-i18n="shop.rotationToast">Der Schwarzmarkt hat neue Ware erhalten!</span>
       </div>
     </section>
 
@@ -833,7 +857,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <!-- SCRIPTS -->
+  <script src="scripts/core/fire-helmet-config.js"></script>
   <script src="scripts/core/i18n.js"></script>
+  <script src="scripts/core/audiobook-link.js"></script>
   <script src="scripts/core/update-notice-data.js"></script>
   <script src="scripts/core/update-notice.js"></script>
   <script src="scripts/codes/codes-data.js"></script>
@@ -867,6 +893,7 @@
   <script src="scripts/community-boss/community-boss.js"></script>
   <script src="scripts/wheel/wheel.js"></script>
   <script src="scripts/shop/shop-data.js"></script>
+  <script src="scripts/shop/shop-rotation.js"></script>
   <script src="scripts/shop/shop.js"></script>
   <script src="scripts/streamraetsel/streamraetsel.js"></script>
   <script src="scripts/support/support.js"></script>
