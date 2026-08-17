@@ -58,10 +58,11 @@
     <a onclick="changePage('characters')" data-i18n="menu.characters">👤 Characters</a>
     <a onclick="changePage('code')" data-i18n="menu.code">🔑 Code</a>
     <a onclick="changePage('wheel')" data-i18n="menu.wheel">🧭 Schatzrad</a>
+    <a onclick="changePage('spielothek')" data-i18n="menu.spielothek">🎰 Ändiis Spielothek</a>
     <a onclick="changePage('leaderboard')" data-i18n="menu.leaderboard">🏆 Rangliste</a>
     <a onclick="changePage('race')" data-i18n="menu.race">🏎️ Wochenrennen</a>
     <a onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 Community-Boss</a>
-    <a onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">⚒ REPARIERE DAS SCHIFF</a>
+    <a onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">❓ ???</a>
     <a onclick="changePage('socials')" data-i18n="menu.socials">🌐 Socials</a>
     <a onclick="changePage('support')" data-i18n="menu.support">🆘 Support</a>
     <a onclick="changePage('rating')" data-i18n="menu.rating">⭐ Bewertung</a>
@@ -98,10 +99,11 @@
       <a class="fh-nav-item" data-page="characters" onclick="changePage('characters')" data-i18n="menu.characters">👤 <span>Characters</span></a>
       <a class="fh-nav-item" data-page="code" onclick="changePage('code')" data-i18n="menu.code">🔑 <span>Code</span></a>
       <a class="fh-nav-item" data-page="wheel" onclick="changePage('wheel')" data-i18n="menu.wheel">🧭 <span>Schatzrad</span></a>
+      <a class="fh-nav-item" data-page="spielothek" onclick="changePage('spielothek')">🎰 <span data-i18n="menu.spielothekShort">Spielothek</span></a>
       <a class="fh-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')" data-i18n="menu.leaderboard">🏆 <span>Rangliste</span></a>
       <a class="fh-nav-item" data-page="race" onclick="changePage('race')" data-i18n="menu.race">🏎️ <span>Wochenrennen</span></a>
       <a class="fh-nav-item" data-page="community-boss" onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 <span>Community-Boss</span></a>
-      <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')">⚒ <span data-i18n="menu.streamraetselShort">Schiff</span></a>
+      <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')">❓ <span data-i18n="menu.streamraetselShort">???</span></a>
       <a class="fh-nav-item" data-page="socials" onclick="changePage('socials')" data-i18n="menu.socials">🌐 <span>Socials</span></a>
       <a class="fh-nav-item" data-page="support" onclick="changePage('support')" data-i18n="menu.support">🆘 <span>Support</span></a>
       <a class="fh-nav-item" data-page="rating" onclick="changePage('rating')" data-i18n="menu.rating">⭐ <span>Bewertung</span></a>
@@ -562,10 +564,13 @@
     ===================== -->
     <section id="shop" class="page">
       <div id="shop-intro-overlay" class="fh-shop-intro-overlay" aria-hidden="true">
+        <div class="fh-shop-intro-rays"></div>
+        <div class="fh-shop-intro-fog"></div>
         <div class="fh-shop-intro-parchment">
           <span class="fh-shop-intro-compass">🧭</span>
           <span class="fh-shop-intro-title" data-i18n="shop.introTitle">DER SCHWARZMARKT</span>
         </div>
+        <div class="fh-shop-intro-particles" id="fh-shop-intro-particles"></div>
       </div>
 
       <div class="page-content shop-content">
@@ -659,6 +664,20 @@
         <p id="wheel-status" class="wheel-status"></p>
         <p id="wheel-countdown" class="wheel-countdown"></p>
         <p id="wheel-result" class="code-message"></p>
+      </div>
+    </section>
+
+    <!-- =====================
+         ÄNDIIS SPIELOTHEK
+         Rein virtuelles Feature - nutzt ausschließlich die
+         bestehende Dublonen-Währung (players/{uid}.currency),
+         siehe scripts/spielothek/spielothek.js.
+    ===================== -->
+    <section id="spielothek" class="page">
+      <div class="page-content spielothek-page-content">
+        <h1 data-i18n="spielothek.title">🎰 ÄNDIIS SPIELOTHEK</h1>
+        <p class="story-subtitle" data-i18n="spielothek.subtitle">Jeden Monat ein anderes Spiel - rein spielerisch, nur mit Dublonen.</p>
+        <div id="spielothek-content" class="spielothek-content"></div>
       </div>
     </section>
 
@@ -772,10 +791,10 @@
       <div class="streamraetsel-fx" id="streamraetsel-fx"></div>
 
       <div id="streamraetsel-locked" class="streamraetsel-locked streamraetsel-mystery">
-        <span class="streamraetsel-live" data-i18n="ship.badge">⚓ EVENT</span>
-        <h1 class="streamraetsel-title streamraetsel-title-mystery" data-i18n="ship.lockedTitle">REPARIERE DAS SCHIFF</h1>
-        <p class="streamraetsel-subtitle" data-i18n="ship.lockedLead">Das Schiff wurde zerstört. Die Crew braucht dich.</p>
-        <p class="streamraetsel-teaser" data-i18n="ship.lockedSub">Das Abenteuer beginnt in:</p>
+        <span class="streamraetsel-live" data-i18n="stream.liveLabel">🔴 LIVE COUNTDOWN</span>
+        <h1 class="streamraetsel-title streamraetsel-title-mystery" data-i18n="stream.title">❓ ???</h1>
+        <p class="streamraetsel-subtitle" data-i18n="stream.subtitle">Etwas Großes braut sich zusammen ...</p>
+        <p class="streamraetsel-teaser" data-i18n="stream.teaser">🌫️ Niemand weiß, was hier erscheinen wird ...</p>
 
         <div class="countdown streamraetsel-countdown">
           <div class="time-box time-box-xl">
@@ -1004,6 +1023,9 @@
   <script src="scripts/race/race.js"></script>
   <script src="scripts/community-boss/community-boss.js"></script>
   <script src="scripts/wheel/wheel.js"></script>
+  <script src="scripts/spielothek/spielothek-data.js"></script>
+  <script src="scripts/spielothek/games/slot.js"></script>
+  <script src="scripts/spielothek/spielothek.js"></script>
   <script src="scripts/shop/shop-data.js"></script>
   <script src="scripts/shop/shop-rotation.js"></script>
   <script src="scripts/shop/shop.js"></script>

@@ -213,6 +213,90 @@ async function buildGatewayShipStatusHtml() {
   }
 }
 
+/* ------------------------------------------------------
+   SPIELOTHEK-VERWALTUNG
+   Nur wirklich fertige Spiele (implemented: true in
+   spielothek-data.js) lassen sich hier ueberhaupt an-/
+   abschalten - halbfertige Spiele erscheinen im Gateway gar
+   nicht erst, damit niemand aus Versehen ein kaputtes Spiel
+   live schaltet.
+------------------------------------------------------ */
+function buildGatewaySpielothekHtml() {
+  if (typeof SPIELOTHEK_GAMES === "undefined") return "";
+  const disabled = Array.isArray(siteConfig.disabledGameIds) ? siteConfig.disabledGameIds : [];
+  const implemented = SPIELOTHEK_GAMES.filter((g) => g.implemented);
+  const current = typeof getCurrentSpielothekGame === "function" ? getCurrentSpielothekGame() : null;
+
+  const rows = implemented
+    .map((game) => {
+      const isDisabled = disabled.includes(game.id);
+      return `
+        <label class="gateway-chapter-row">
+          <input type="checkbox" ${isDisabled ? "" : "checked"} onchange="toggleGatewaySpielothekGame('${game.id}', !this.checked)">
+          <span>${game.emoji} ${game.name.de}</span>
+        </label>
+      `;
+    })
+    .join("");
+
+  return `
+    <p class="gateway-status-sub">${current ? `Aktuelles Spiel des Monats: ${current.emoji} ${current.name.de}` : "Kein aktives Spiel diesen Monat (alle deaktiviert oder noch keins fertig)."}</p>
+    <div class="gateway-chapter-list">${rows || "<p class=\"wheel-status\">Noch kein fertiges Spiel vorhanden.</p>"}</div>
+  `;
+}
+
+async function toggleGatewaySpielothekGame(gameId, disabled) {
+  if (!wheelDb) return;
+  const current = Array.isArray(siteConfig.disabledGameIds) ? [...siteConfig.disabledGameIds] : [];
+  const withoutGame = current.filter((id) => id !== gameId);
+  const next = disabled ? [...withoutGame, gameId] : withoutGame;
+
+  try {
+    await wheelDb.collection("site_config").doc("main").set({ disabledGameIds: next }, { merge: true });
+  } catch (err) {
+    console.error("Spiel konnte nicht umgeschaltet werden:", err);
+  }
+}
+
+/* ------------------------------------------------------
+   SCHIFFSREPARATUR <-> STORY-VERKNUEPFUNG
+   Welches Kapitel (falls ueberhaupt eins) automatisch entsperrt
+   wird, sobald das Schiff fertig repariert ist - siehe
+   maybeUnlockChapterAfterShipRepair() in ship-repair.js.
+------------------------------------------------------ */
+function buildGatewayShipUnlockSelectHtml() {
+  const groups = getChapterGroupsForGateway();
+  const current = Array.isArray(siteConfig.shipRepairUnlockChapterIds) ? siteConfig.shipRepairUnlockChapterIds : [];
+  const currentGroup = groups.find((g) => g.ids.some((id) => current.includes(id)));
+
+  const options = groups
+    .map((g) => `<option value="${g.key}" ${currentGroup && currentGroup.key === g.key ? "selected" : ""}>${g.displayTitle} (${g.storyTitle})</option>`)
+    .join("");
+
+  return `
+    <label class="gateway-form-row">
+      <span>Kapitel nach abgeschlossener Schiffsreparatur automatisch freischalten:</span><br>
+      <select id="gateway-ship-unlock-chapter" class="code-input" onchange="saveGatewayShipUnlockChapter(this.value)">
+        <option value="">- keins -</option>
+        ${options}
+      </select>
+    </label>
+  `;
+}
+
+async function saveGatewayShipUnlockChapter(groupKey) {
+  if (!wheelDb) return;
+  const group = getChapterGroupsForGateway().find((g) => g.key === groupKey);
+  try {
+    await wheelDb
+      .collection("site_config")
+      .doc("main")
+      .set({ shipRepairUnlockChapterIds: group ? group.ids : [] }, { merge: true });
+  } catch (err) {
+    console.error("Konnte nicht gespeichert werden:", err);
+  }
+}
+
 function buildGatewayChapterListHtml() {
   const locked = Array.isArray(siteConfig.lockedChapterIds) ? siteConfig.lockedChapterIds : [];
   return getChapterGroupsForGateway()
@@ -287,6 +371,10 @@ async function renderGatewayPage() {
 
       <h2 class="fh-ship-section-heading">Kapitel aktivieren/deaktivieren</h2>
       <div class="gateway-chapter-list">${buildGatewayChapterListHtml()}</div>
+      ${buildGatewayShipUnlockSelectHtml()}
+
+      <h2 class="fh-ship-section-heading">Ändiis Spielothek</h2>
+      ${buildGatewaySpielothekHtml()}
 
       <h2 class="fh-ship-section-heading">Vorschau</h2>
       <p class="gateway-preview-hint">So sieht die normale Website gerade aus (aktualisiert sich live mit deinen Änderungen):</p>

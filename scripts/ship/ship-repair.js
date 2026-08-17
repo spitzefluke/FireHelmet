@@ -371,24 +371,17 @@ function renderShipPreRepairView() {
   lockedEl.style.display = "flex";
   if (contentEl) contentEl.style.display = "none";
 
-  lockedEl.classList.add("fh-ship-locked");
+  // Bewusst KEIN Schiffs-Motiv/Spoiler mehr hier (siehe Auftrag: die
+  // Seite soll vor dem Ablauf wieder generisch "???" zeigen, ohne zu
+  // verraten, dass es um das Schiff geht - genau wie vor der letzten
+  // Erweiterung). Die eigentliche "REPARIERE DAS SCHIFF"-Ansicht
+  // erscheint erst NACH dem Ablauf, siehe renderShipRepairPage().
+  lockedEl.classList.remove("fh-ship-locked");
   lockedEl.innerHTML = `
-    <div class="fh-ship-wreck-scene" aria-hidden="true">
-      <div class="fh-ship-wreck-fog"></div>
-      <svg viewBox="0 0 500 260" class="fh-ship-wreck-svg" preserveAspectRatio="xMidYMax meet">
-        <ellipse cx="250" cy="230" rx="210" ry="16" fill="#020306" opacity=".6"/>
-        <path d="M60,190 Q80,160 130,168 L370,168 Q420,160 440,190 Q400,215 250,215 Q100,215 60,190 Z" fill="#12181f" stroke="#1c2a3a" stroke-width="2"/>
-        <line x1="250" y1="60" x2="235" y2="168" stroke="#1c2a3a" stroke-width="6"/>
-        <line x1="200" y1="95" x2="250" y2="60" stroke="#1c2a3a" stroke-width="5"/>
-        <path d="M250,60 L290,85 L245,100 Z" fill="#0d1420" opacity=".8"/>
-        <circle cx="150" cy="150" r="10" fill="#020306"/>
-        <circle cx="300" cy="158" r="13" fill="#020306"/>
-      </svg>
-    </div>
-    <span class="streamraetsel-live fh-ship-badge" data-i18n="ship.badge">⚓ EVENT</span>
-    <h1 class="streamraetsel-title fh-ship-title" data-i18n="ship.lockedTitle">REPARIERE DAS SCHIFF</h1>
-    <p class="streamraetsel-subtitle fh-ship-lead" data-i18n="ship.lockedLead">Das Schiff wurde zerstört. Die Crew braucht dich.</p>
-    <p class="streamraetsel-teaser" data-i18n="ship.lockedSub">Das Abenteuer beginnt in:</p>
+    <span class="streamraetsel-live" data-i18n="stream.liveLabel">🔴 LIVE COUNTDOWN</span>
+    <h1 class="streamraetsel-title streamraetsel-title-mystery" data-i18n="stream.title">❓ ???</h1>
+    <p class="streamraetsel-subtitle" data-i18n="stream.subtitle">Etwas Großes braut sich zusammen ...</p>
+    <p class="streamraetsel-teaser" data-i18n="stream.teaser">🌫️ Niemand weiß, was hier erscheinen wird ...</p>
 
     <div class="countdown streamraetsel-countdown">
       <div class="time-box time-box-xl"><span id="streamraetsel-days">00</span><small data-i18n="common.days">Tage</small></div>
@@ -411,7 +404,7 @@ async function renderShipRepairPage() {
   contentEl.style.display = "block";
 
   if (!wheelDb) {
-    contentEl.innerHTML = `<h1 data-i18n="ship.title">⚒ REPARIERE DAS SCHIFF</h1><p class="wheel-status">⚠️ Verbindung nicht verfügbar - versuch's später nochmal.</p>`;
+    contentEl.innerHTML = `<h1 data-i18n="ship.title">⚓ SCHIFF REPARIEREN</h1><p class="wheel-status">⚠️ Verbindung nicht verfügbar - versuch's später nochmal.</p>`;
     if (typeof applyTranslations === "function") applyTranslations();
     return;
   }
@@ -482,7 +475,7 @@ async function renderShipRepairPage() {
   }
 
   contentEl.innerHTML = `
-    <h1 data-i18n="ship.title">⚒ REPARIERE DAS SCHIFF</h1>
+    <h1 data-i18n="ship.title">⚓ SCHIFF REPARIEREN</h1>
     <p class="story-subtitle" data-i18n="ship.subtitle">Gemeinsam bringt die Crew die Flitzpiepen zurück aufs Wasser.</p>
     ${isShipPreviewActive() ? renderShipDevPanel() : ""}
 
@@ -705,8 +698,43 @@ async function checkShipStatusForHomeReveal() {
     if (captainEl && data.namedBy) captainEl.textContent = data.namedBy;
     reveal.classList.add("fh-ship-return-visible");
     document.getElementById("fh-ship-rig")?.classList.add("fh-ship-repaired");
+
+    maybeUnlockChapterAfterShipRepair();
   } catch (err) {
     console.warn("Schiffsstatus für Home konnte nicht geladen werden:", err);
+  }
+}
+
+/* ------------------------------------------------------
+   SCHIFFSREPARATUR <-> STORY-VERKNUEPFUNG (Punkt 4/17)
+   ---------------------------------------------------
+   Rein additiv und standardmaessig ein No-Op: nur wenn der Admin
+   im Gateway ein Kapitel als "nach Schiffsreparatur freischalten"
+   markiert hat (siteConfig.shipRepairUnlockChapterIds), wird genau
+   DIESES Kapitel automatisch aus lockedChapterIds entfernt, sobald
+   das Schiff einen Namen hat (= vollstaendig repariert). Laeuft bei
+   jedem Aufruf von checkShipStatusForHomeReveal() erneut (jeder
+   Home-Besuch) - selbstheilend, falls ein einzelner Versuch mal
+   fehlschlaegt, und ein reines No-Op, sobald das Kapitel schon
+   freigeschaltet ist.
+------------------------------------------------------ */
+async function maybeUnlockChapterAfterShipRepair() {
+  if (!wheelDb || typeof siteConfig === "undefined") return;
+
+  const targetIds = siteConfig.shipRepairUnlockChapterIds || [];
+  if (!targetIds.length) return;
+
+  const locked = siteConfig.lockedChapterIds || [];
+  const stillLocked = targetIds.filter((id) => locked.includes(id));
+  if (!stillLocked.length) return;
+
+  try {
+    await wheelDb
+      .collection("site_config")
+      .doc("main")
+      .set({ lockedChapterIds: locked.filter((id) => !targetIds.includes(id)) }, { merge: true });
+  } catch (err) {
+    console.warn("Kapitel konnte nach Schiffsreparatur nicht automatisch freigeschaltet werden:", err);
   }
 }
 
