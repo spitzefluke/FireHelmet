@@ -10,6 +10,11 @@ const stories = [
     description:
       "Eine mysteriöse Reise auf der Suche nach einem legendären Schatz. Ein Abenteuer voller Geheimnisse, Gefahren und vergessener Geschichten.",
 
+    // Welche Charaktere aus CHARACTER_DATABASE (siehe
+    // scripts/characters/characters-data.js) in diesem Logbuch
+    // vorkommen - daraus baut sich die Characters-Seite automatisch.
+    characters: ["dave", "finjan", "dean", "andi", "julian"],
+
     chapters: [
       {
         id: "treasure-de-01",
@@ -433,6 +438,8 @@ Chapter 12 content.
     cover: "scripts/image/logbook-ii-cover.svg",
     description:
       "Die Fracht ist geliefert, doch der geflickte Kompass der Flitzpiepen zeigt seither auf einen Ort, den keine Karte kennt. Eine Fortsetzung voller alter Rivalen, verschwiegener Kartografen und einer Route, die die Welt absichtlich vergessen hat.",
+
+    characters: ["dave", "finjan", "dean", "andi", "corwyn", "rosalind"],
 
     chapters: [
       {

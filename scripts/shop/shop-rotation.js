@@ -49,6 +49,55 @@ function seededShuffle(array, rng) {
 }
 
 /* ------------------------------------------------------
+   GEWICHTETE SELTENHEITS-AUSWAHL
+   Kein "items.sort(() => Math.random()-0.5)" - stattdessen wird
+   zuerst (gewichtet nach FIRE_HELMET_CONFIG.rarities[*].weight)
+   eine Seltenheitsstufe gezogen, danach ein zufälliges Item
+   genau dieser Stufe. Je seltener die Stufe, desto kleiner ihr
+   Gewicht und desto unwahrscheinlicher taucht sie auf.
+------------------------------------------------------ */
+function getRarityWeight(rarityKey) {
+  if (typeof FIRE_HELMET_CONFIG === "undefined") return 1;
+  const info = FIRE_HELMET_CONFIG.rarities[rarityKey];
+  return info && typeof info.weight === "number" ? info.weight : 1;
+}
+
+function weightedPickRarity(rng, rarityKeys) {
+  const total = rarityKeys.reduce((sum, key) => sum + getRarityWeight(key), 0);
+  if (total <= 0) return rarityKeys[0] || null;
+
+  let roll = rng() * total;
+  for (const key of rarityKeys) {
+    const w = getRarityWeight(key);
+    if (roll < w) return key;
+    roll -= w;
+  }
+  return rarityKeys[rarityKeys.length - 1];
+}
+
+/* Wählt "slots" Artikel aus "pool" (schon nach Kategorie gefiltert):
+   pro Slot wird erst eine verfügbare Seltenheit gewichtet gezogen,
+   dann ein zufälliges Item genau dieser Seltenheit - jeweils ohne
+   Zurücklegen, damit keine Duplikate entstehen. Deterministisch,
+   solange derselbe (seed-bare) rng verwendet wird. */
+function weightedPickItems(pool, slots, rng) {
+  const remaining = pool.slice();
+  const picked = [];
+
+  while (picked.length < slots && remaining.length > 0) {
+    const rarityKeys = [...new Set(remaining.map((item) => item.rarity || "common"))];
+    const rarity = weightedPickRarity(rng, rarityKeys);
+    const candidates = remaining.filter((item) => (item.rarity || "common") === rarity);
+    const chosen = candidates[Math.floor(rng() * candidates.length)];
+
+    picked.push(chosen);
+    remaining.splice(remaining.indexOf(chosen), 1);
+  }
+
+  return picked;
+}
+
+/* ------------------------------------------------------
    ZYKLUS AUS ZEITSTEMPEL BERECHNEN
    Exportiert für Tests, siehe Punkt 35 des Auftrags:
    getShopRotation(new Date("...").getTime()) lässt sich mit
@@ -94,8 +143,7 @@ function getShopRotation(timestamp) {
     const rng = mulberry32(cycle * 1000 + typeIndex * 37 + 7);
     const pool = shopItems.filter((item) => item.type === type);
     const slots = Math.min(slotsPerType[type] || pool.length, pool.length);
-    const shuffled = seededShuffle(pool, rng);
-    shuffled.slice(0, slots).forEach((item) => itemIds.push(item.id));
+    weightedPickItems(pool, slots, rng).forEach((item) => itemIds.push(item.id));
   });
 
   return { cycle, itemIds };
@@ -124,8 +172,9 @@ function tickShopRotation() {
     shopRotationLastCycle = rotation.cycle;
   } else if (rotation.cycle !== shopRotationLastCycle) {
     shopRotationLastCycle = rotation.cycle;
-    if (typeof renderShopGrid === "function") renderShopGrid();
+    if (typeof renderShopGrid === "function") renderShopGrid({ quiet: true });
     showShopRotationToast();
+    flashShopContentRefresh();
   }
 
   if (countdownEl) {
@@ -142,6 +191,17 @@ function startShopRotationCountdown() {
 function stopShopRotationCountdown() {
   clearInterval(shopRotationInterval);
   shopRotationInterval = null;
+}
+
+// Kurzer Aufhell-Puls auf dem Shop-Inhalt bei Rotationswechsel -
+// bewusst deutlich kürzer/leiser als die volle Eingangssequenz
+// (siehe Punkt 11: nicht bei jedem Update die große Animation).
+function flashShopContentRefresh() {
+  const content = document.querySelector("#shop .shop-content");
+  if (!content) return;
+  content.classList.remove("fh-shop-content-refresh");
+  void content.offsetWidth;
+  content.classList.add("fh-shop-content-refresh");
 }
 
 function showShopRotationToast() {

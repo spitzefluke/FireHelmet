@@ -1,6 +1,13 @@
 /* ======================================================
    CHARAKTER-SYSTEM
-   Baut die Charakter-Karten aus scripts/characters-data.js -
+   Baut die Charakter-Karten NICHT mehr aus einer manuell
+   gepflegten Liste, sondern automatisch aus den "characters"-
+   Referenzen in scripts/stories/stories-data.js, aufgelöst
+   gegen die zentrale CHARACTER_DATABASE (scripts/characters/
+   characters-data.js). Neue Charaktere in neuen/bestehenden
+   Logbüchern erscheinen dadurch ohne weitere Änderung an dieser
+   Datei automatisch auf der Characters-Seite - keine Duplikate,
+   da über eine ID-Liste dedupliziert wird.
    3D-Flip-Karten (Bild vorne, Beschreibung hinten), jede mit
    einem individuell passenden Farb-Theme + Emblem.
 ====================================================== */
@@ -32,15 +39,55 @@ function pickCharacterEmblem(description, fallback) {
   return fallback;
 }
 
+/* ------------------------------------------------------
+   CHARAKTERE AUS DEN STORIES ABLEITEN
+   Bevorzugt: die explizite "characters"-Liste jeder Story.
+   Fallback (falls eine Story mal keine solche Liste pflegt):
+   Charakternamen aus CHARACTER_DATABASE im Fließtext der
+   Kapitel suchen. Ergebnis ist eine deduplizierte Liste von
+   IDs in der Reihenfolge ihres ersten Auftretens.
+------------------------------------------------------ */
+function deriveCharacterIdsFromStories() {
+  const ids = [];
+  if (typeof stories === "undefined") return ids;
+
+  const addId = (id) => {
+    if (id && !ids.includes(id) && typeof CHARACTER_DATABASE !== "undefined" && CHARACTER_DATABASE[id]) {
+      ids.push(id);
+    }
+  };
+
+  stories.forEach((story) => {
+    if (Array.isArray(story.characters) && story.characters.length) {
+      story.characters.forEach(addId);
+      return;
+    }
+
+    if (typeof CHARACTER_DATABASE === "undefined" || !Array.isArray(story.chapters)) return;
+
+    const combinedText = story.chapters.map((c) => c.text || "").join(" \n ").toLowerCase();
+    Object.keys(CHARACTER_DATABASE).forEach((id) => {
+      const firstName = (CHARACTER_DATABASE[id].name || "").split(" ")[0].toLowerCase();
+      if (firstName.length > 2 && combinedText.includes(firstName)) addId(id);
+    });
+  });
+
+  return ids;
+}
+
 function buildCharacters() {
   const container = document.getElementById("character-container");
-  if (!container || typeof characters === "undefined") return;
+  if (!container || typeof CHARACTER_DATABASE === "undefined") return;
+
+  const entries = deriveCharacterIdsFromStories()
+    .map((id) => ({ id, ...CHARACTER_DATABASE[id] }))
+    .filter((char) => char.name);
 
   container.innerHTML = "";
 
-  characters.forEach((char, index) => {
+  entries.forEach((char, index) => {
     const theme = CHARACTER_THEMES[index % CHARACTER_THEMES.length];
-    const emblem = pickCharacterEmblem(char.description, theme.emblem);
+    const emblem = pickCharacterEmblem(char.role || char.description, theme.emblem);
 
     const card = document.createElement("div");
     card.className = "character-card-v2";
@@ -51,16 +98,23 @@ function buildCharacters() {
       ? `<img src="${char.image}" class="character-image" alt="${char.name}">`
       : `<div class="character-image character-image-placeholder">${emblem}</div>`;
 
+    const quoteHtml = char.quote ? `<p class="character-quote">&bdquo;${char.quote}&ldquo;</p>` : "";
+
     card.innerHTML = `
       <div class="character-card-inner">
         <div class="character-face character-face-front">
           ${imageHtml}
           <span class="character-emblem-badge">${emblem}</span>
-          <span class="character-name-tag">${char.name}</span>
+          <span class="character-name-tag">
+            <span class="character-name-tag-name">${char.name}</span>
+            ${char.role ? `<span class="character-name-tag-role">${char.role}</span>` : ""}
+          </span>
         </div>
         <div class="character-face character-face-back">
           <span class="character-emblem-back">${emblem}</span>
           <h2>${char.name}</h2>
+          ${char.role ? `<p class="character-role">${char.role}</p>` : ""}
+          ${quoteHtml}
           <p>${char.description}</p>
         </div>
       </div>

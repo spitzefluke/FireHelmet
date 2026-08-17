@@ -712,11 +712,50 @@ async function renderCommunityBossPage() {
   }
 }
 
+/* Rein visuelle Phasen anhand der vorhandenen HP-Prozentzahl
+   (kein neues Backend-Feld nötig - siehe Punkt 7: "wenn das
+   Backend aktuell keine Phasen unterstützt, zunächst nur visuell
+   anhand der vorhandenen HP darstellen"). "key" steuert zusätzlich
+   eine CSS-Klasse auf der Arena (siehe applyBossPhaseVisuals). */
 function getBossPhase(percent) {
-  if (percent > 75) return { label: "PHASE I", index: 0 };
-  if (percent > 50) return { label: "PHASE II", index: 1 };
-  if (percent > 25) return { label: "PHASE III", index: 2 };
-  return { label: "PHASE IV", index: 3 };
+  const t = typeof window.t === "function" ? window.t : (k, f) => f;
+  if (percent > 70) return { label: t("boss.phaseNormal", "NORMAL"), index: 0, key: "normal" };
+  if (percent > 40) return { label: t("boss.phaseEnraged", "ENRAGED"), index: 1, key: "enraged" };
+  if (percent > 15) return { label: t("boss.phaseCritical", "CRITICAL"), index: 2, key: "critical" };
+  return { label: t("boss.phaseFinal", "FINAL PHASE"), index: 3, key: "final" };
+}
+
+function applyBossPhaseVisuals(phaseKey) {
+  const panel = document.getElementById("fh-boss-panel");
+  const arenaBg = document.getElementById("fh-boss-arena-bg");
+  [panel, arenaBg].forEach((el) => {
+    if (!el) return;
+    el.classList.remove("fh-boss-phase-normal", "fh-boss-phase-enraged", "fh-boss-phase-critical", "fh-boss-phase-final");
+    el.classList.add(`fh-boss-phase-${phaseKey}`);
+  });
+}
+
+/* ------------------------------------------------------
+   DAMAGE/ATTACKERS-STATISTIK
+   "Damage" ergibt sich direkt aus maxHp-hp (kein Extra-Feld
+   nötig). "Attackers" ist eine Firestore Aggregations-Query
+   (count()) - schlägt sie fehl (älterer SDK-Stand o.ä.), bleibt
+   einfach ein Platzhalter stehen statt die Seite zu zerstören
+   (siehe Punkt 36: Fehlerzustand statt leerer Seite).
+------------------------------------------------------ */
+async function updateBossStatsRow(monthId, hp, maxHp) {
+  const dmgEl = document.getElementById("boss-stat-damage");
+  if (dmgEl) dmgEl.textContent = Math.max(0, maxHp - hp).toLocaleString("de-DE");
+
+  const atkEl = document.getElementById("boss-stat-attackers");
+  if (!atkEl || !wheelDb) return;
+
+  try {
+    const snap = await wheelDb.collection("community_boss_damage").where("month", "==", monthId).count().get();
+    atkEl.textContent = snap.data().count.toLocaleString("de-DE");
+  } catch (err) {
+    atkEl.textContent = "–";
+  }
 }
 
 function applyBossHpDisplay(data, hpTextEl, hpFillEl, boss, defeatedBanner, attackBtn) {
@@ -743,6 +782,9 @@ function applyBossHpDisplay(data, hpTextEl, hpFillEl, boss, defeatedBanner, atta
 
   if (numericEl) numericEl.textContent = `${hp.toLocaleString("de-DE")} / ${maxHp.toLocaleString("de-DE")} HP`;
   if (phaseBadgeEl) phaseBadgeEl.textContent = phase.label;
+  phaseBadgeEl?.setAttribute("data-phase", phase.key);
+  applyBossPhaseVisuals(phase.key);
+  updateBossStatsRow(getCurrentMonthId(), hp, maxHp);
 
   // Roter Rand-Glow hinter dem Boss wird intensiver, je weniger
   // HP übrig sind
@@ -984,6 +1026,79 @@ function spawnBossHitEffect(damage) {
   if (typeof triggerCodeSuccessEffect === "function") {
     setTimeout(() => triggerCodeSuccessEffect(), impactDelay);
   }
+
+  setTimeout(triggerBossArenaImpact, impactDelay);
+}
+
+/* ------------------------------------------------------
+   DOM-WEITER IMPACT (zusätzlich zum Canvas-internen Zittern)
+   Kurzer Arena-weiter Screen-Shake + Treffer-Flash, sehr kurz
+   (< 400ms) und ausschließlich über transform/opacity - siehe
+   Punkt 6/33 (kein Dauer-Effekt, keine top/left-Animation).
+------------------------------------------------------ */
+function triggerBossArenaImpact() {
+  const panel = document.getElementById("fh-boss-panel");
+  const wrap = document.getElementById("fh-boss-stage-wrap");
+  [panel, wrap].forEach((el) => {
+    if (!el) return;
+    el.classList.remove("fh-boss-impact");
+    void el.offsetWidth;
+    el.classList.add("fh-boss-impact");
+  });
+}
+
+/* ------------------------------------------------------
+   ARENA-GLUT-PARTIKEL
+   Wiederverwendet die bereits vorhandene .fh-ember-Klasse/
+   Keyframe-Animation (siehe scripts/home/cinematic.js /
+   style.css) - spawnt sie einmalig in den Arena-Hintergrund.
+------------------------------------------------------ */
+let bossEmbersSpawned = false;
+
+function spawnBossArenaEmbers() {
+  const layer = document.getElementById("fh-boss-embers");
+  if (!layer || bossEmbersSpawned || layer.childElementCount) return;
+  bossEmbersSpawned = true;
+
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion) return;
+
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 640px)").matches;
+  const count = isMobile ? 7 : 16;
+
+  for (let i = 0; i < count; i++) {
+    const ember = document.createElement("span");
+    ember.className = "fh-ember";
+    ember.style.setProperty("--fh-ember-x", `${Math.random() * 100}%`);
+    ember.style.setProperty("--fh-ember-delay", `${(Math.random() * 6).toFixed(2)}s`);
+    ember.style.setProperty("--fh-ember-duration", `${(5 + Math.random() * 5).toFixed(2)}s`);
+    layer.appendChild(ember);
+  }
+}
+
+/* ------------------------------------------------------
+   BOSS-EINTRITTSSEQUENZ (Punkt 5)
+   Spielt nur einmal pro Seitenbesuch: Hintergrund dunkelt ab
+   und Nebel bewegt sich (CSS-Klasse auf der Arena), die Bühne
+   skaliert/scaled ein, danach Name/HP-Bar/UI zeitversetzt.
+   Wird zurückgesetzt, sobald man die Seite verlässt.
+------------------------------------------------------ */
+let bossEntranceShown = false;
+
+function playBossEntrance() {
+  const arenaBg = document.getElementById("fh-boss-arena-bg");
+  const panel = document.getElementById("boss-content-panel");
+
+  if (arenaBg) {
+    arenaBg.classList.remove("fh-boss-arena-play");
+    void arenaBg.offsetWidth;
+    arenaBg.classList.add("fh-boss-arena-play");
+  }
+  if (panel) {
+    panel.classList.remove("fh-boss-entrance-play");
+    void panel.offsetWidth;
+    panel.classList.add("fh-boss-entrance-play");
+  }
 }
 
 /* ------------------------------------------------------
@@ -993,8 +1108,16 @@ function updateCommunityBossPage(pageID) {
   if (pageID !== "community-boss") {
     stopBossRender();
     stopBossCounterattackTimer();
+    bossEntranceShown = false;
     return;
   }
+
+  if (!bossEntranceShown) {
+    bossEntranceShown = true;
+    playBossEntrance();
+  }
+  spawnBossArenaEmbers();
+
   renderCommunityBossPage();
 }
 
