@@ -181,10 +181,24 @@ Dave, überglücklich darüber das er seine Crew wieder hatte rief:"Kurs setzten
       },
       {
         id: "treasure-de-08",
-        title: "Kapitel 8",
+        title: "Kapitel 8 - Eine Krabbische Begegnung",
         language: "Deutsch",
         text: `
-Kapitel 8 Inhalt.
+        
+Nachdem Dave und seiner Crew die Flucht gelungen ist machen diese sich auf den Weg zu ihrem Ziel.
+Das Schiff schaukelt gemächlich über das Meer links und rechts nichts weiter als die ruhige See. 
+Dave sitzt in seiner Kajüte und macht sich Gedanken seit sie sich auf den Weg gemacht haben sind sie schon vielen gefahren begegnet, ob das etwas mit der mysteriösen Fracht zu tun hat? Dave weiß nicht mehr weiter.
+Oben im Krähennest beobachtet Finian die Azurblaue See, es ist außer ein paar Tung Tung Talahons nichts zu sehen, bei diesen handelt es sich um einen Art Seevogel dessen Federn der Struktur eines Stückes Holz täuschend ähnlich sieht. Sie sind nicht gefährlich aber klauen den Seeleuten oft ihr Essen. 
+Alles ist ruhig und die Crew hat nach diesem anstrengenden Teil der Fahrt endlich Zeit für eine Verschnaufpause. 
+Als Dave allerdings das Deck betritt ertönt ein markerschüternder Schrei: Nicht noch so ein Vieh denkt sich Dave, und greift zu seinem Säbel. 
+Er eilt ins untere Deck den von dort kam der Schrei. Als er dort ankommt lacht er sich kaputt eine Krabe hat sich in das Hinterteil von einem der Seeleute verzwickt.
+"Macht das Vieh weg! Macht das Vieh weg", schrie der gezwickte Seemann bei dem es sich um Dr. Janne Noname handelte.
+"Selber schuld wenn du dich auf mich drauf setzt!", erwiderte plötzlich die Krabbe, die Crew zuckte erschrocken zurück:"Was ist das für ein Hexenwerk",sagte einer der Seeleute.
+"Hexenwerk?! Noch nie eine sprechende Krabbe gesehen was? Ich bin FollowingCrab und ihr seid ziemlich am arsch."
+"Warum den das?" fragte Dave die wunderliche Krabbe.
+"Ich hab mich hier mal umgeschaut bevor sich dieser Typ auf mich drauf gesetzt hat und ihr habt da so eine Fracht geladen die ziemlich fragwürdig ist," sagte die Krabbe:" Das was ihr geladen habt ist ein verfluchter Schatz jede Crew die ihn bis jetzt geladen hatte erfur unglaubliches Pech und scheiterte bei dem Versuch die Fracht auszuliefern." 
+Auf Daves Gesicht zeichnete sich ein deutliches Lächeln ab:"Noch ein Grund mehr für uns diese Fracht auszuliefern",sagte Dave lächelnd.
+
 `,
       },
       {
@@ -381,10 +395,21 @@ Dave, overjoyed to have his crew back, shouted: 'Set course, men! We’ve got ca
       },
       {
         id: "treasure-en-08",
-        title: "Chapter 8",
+        title: "Chapter 8 - A Crabby Encounter",
         language: "English",
         text: `
-Chapter 8 content.
+
+After Dave and his crew managed to escape, they set off towards their destination.  
+The ship gently rocks over the sea, nothing to the left or right but the calm water.  
+Dave sits in his cabin, lost in thought. Since they set off, they’ve already encountered many dangers—could it have something to do with the mysterious cargo? Dave doesn’t know what to do next.  
+Up in the crow’s nest, Finian watches the azure sea. There’s nothing in sight except a few Tung Tung Talahons, a type of seabird whose feathers eerily resemble the texture of a piece of wood. They aren’t dangerous, but they often steal food from the sailors.  
+Everything is calm, and after this exhausting part of the journey, the crew finally has time to take a breather.  
+But as soon as Dave steps onto the deck, a blood-curdling scream rings out: 'Not another one of those creatures,' Dave thinks, grabbing his saber.  
+He rushes to the lower deck—that's where the scream came from. When he gets there, he bursts out laughing: a crab had pinched the backside of one of the sailors. "Get this thing off! Get this thing off!" shouted the pinched sailor, who happened to be Dr. Janne Noname. 
+"Serves you right for sitting on me!" replied the crab. The crew recoiled in shock. "What kind of witchcraft is that?" said one of the sailors. "Witchcraft?! Never seen a talking crab before, huh? I'm FollowingCrab, and you guys are pretty screwed." "Why's that?" asked Dave, the peculiar crab.
+"I had a look around here before this guy sat on me, and you guys have loaded up some cargo that's pretty shady," said the crab. "What you've loaded is a cursed treasure. Every crew that carried it so far has had unbelievable bad luck and failed to deliver the cargo.
+A clear smile appeared on Dave's face: 'All the more reason for us to deliver this cargo,' Dave said, smiling.
+
 `,
       },
       {
