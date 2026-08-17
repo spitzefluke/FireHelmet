@@ -21,6 +21,10 @@ function changePage(pageID) {
   updateRacePage(pageID);
   updateStreamRaetselPage(pageID);
 
+  if (typeof updateShipRepairPage === "function") {
+    updateShipRepairPage(pageID);
+  }
+
   if (typeof updateCodeAmbientPage === "function") {
     updateCodeAmbientPage(pageID);
   }
@@ -930,6 +934,10 @@ async function checkCode() {
 
       if (match.avatarUnlock && typeof unlockAvatar === "function") {
         unlockAvatar(match.avatarUnlock);
+      }
+
+      if (match.toolUnlock && typeof unlockShipTool === "function") {
+        unlockShipTool(match.toolUnlock);
       }
 
       if (match.currencyReward && typeof addCurrency === "function") {

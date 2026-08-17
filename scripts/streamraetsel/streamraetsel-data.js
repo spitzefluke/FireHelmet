@@ -6,8 +6,14 @@
 ====================================== */
 
 const streamRaetselConfig = {
-  // Freischalt-Datum (Format: "JJJJ-MM-TTTHH:MM:SS")
-  unlockDate: "2026-08-25T00:00:00",
+  // Freischalt-Datum: liest zentral aus FIRE_HELMET_CONFIG.shipEventUnlockDate
+  // (scripts/core/fire-helmet-config.js), damit diese Seite ("???" ->
+  // "Repariere das Schiff", siehe scripts/ship/ship-repair.js) und das
+  // Event-System niemals unterschiedliche Zeitpunkte haben können.
+  unlockDate:
+    typeof FIRE_HELMET_CONFIG !== "undefined" && FIRE_HELMET_CONFIG.shipEventUnlockDate
+      ? FIRE_HELMET_CONFIG.shipEventUnlockDate
+      : "2026-08-25T00:00:00",
 
   // Wird erst NACH dem Freischalten angezeigt
   title: "Das Geheimnis",

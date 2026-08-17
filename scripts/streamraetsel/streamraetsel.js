@@ -271,6 +271,17 @@ let streamRaetselInterval = null;
 
 /* ------------------------------------------------------
    SEITENWECHSEL-HOOK
+   ---------------------------------------------------
+   Die "???"-Seite wurde durch das Event "Repariere das Schiff"
+   ersetzt (siehe scripts/ship/ship-repair.js). Sobald dessen
+   updateShipRepairPage() geladen ist, übernimmt DIESES die
+   komplette Anzeige (Locked-Ansicht + Inhalt) - sonst würden
+   beide Systeme gleichzeitig in dieselben DOM-Elemente
+   (#streamraetsel-days usw.) schreiben. Die Musik/Partikel/
+   generische Inhaltsanzeige dieser Datei bleiben als sauberer
+   Fallback erhalten, falls ship-repair.js einmal nicht geladen
+   werden sollte (z.B. Skript-Fehler) - dann läuft wenigstens
+   noch der alte, bewährte Countdown-Mechanismus.
 ------------------------------------------------------ */
 function updateStreamRaetselPage(pageID) {
   if (pageID !== "streamraetsel") {
@@ -281,8 +292,16 @@ function updateStreamRaetselPage(pageID) {
     return;
   }
 
-  updateStreamRaetselView();
+  // Die mysteriöse Hintergrundmusik passt weiterhin zum Schiffs-Event
+  // und läuft daher unverändert weiter, auch wenn ship-repair.js die
+  // eigentliche Anzeige übernimmt (siehe Kommentar oben).
   startStreamRaetselMusic();
+
+  if (typeof updateShipRepairPage === "function") {
+    return;
+  }
+
+  updateStreamRaetselView();
 
   if (!isStreamRaetselUnlocked()) {
     streamRaetselInterval = setInterval(updateStreamRaetselView, 1000);

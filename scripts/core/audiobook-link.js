@@ -12,7 +12,7 @@ function initAudiobookLink() {
   const card = document.getElementById("fh-audiobook-card");
   if (!card || typeof FIRE_HELMET_CONFIG === "undefined") return;
 
-  const url = FIRE_HELMET_CONFIG.spotifyAudiobookUrl || "https://open.spotify.com/episode/4HwcXrFhMIOGXARtDKAVWV?si=xDwsPpJTTggjm_L3bqY3Qw&utm_source=copy-link";
+  const url = FIRE_HELMET_CONFIG.spotifyAudiobookUrl || "";
   const isRealUrl = /^https?:\/\//i.test(url);
 
   if (isRealUrl) {
