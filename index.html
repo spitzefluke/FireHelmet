@@ -65,6 +65,7 @@
     <a onclick="changePage('socials')" data-i18n="menu.socials">🌐 Socials</a>
     <a onclick="changePage('support')" data-i18n="menu.support">🆘 Support</a>
     <a onclick="changePage('rating')" data-i18n="menu.rating">⭐ Bewertung</a>
+    <a onclick="changePage('gateway')" class="fh-gateway-link">⚙ Gateway</a>
   </nav>
 
   <!-- ============================================================
@@ -109,6 +110,7 @@
     <div class="fh-sidebar-footer">
       <p class="fh-sidebar-footer-label">Crew</p>
       <p class="fh-sidebar-footer-status"><span class="fh-status-dot"></span> Flitzpiepen · Online</p>
+      <a class="fh-gateway-link fh-sidebar-gateway-link" onclick="changePage('gateway')" title="Admin-Gateway">⚙</a>
     </div>
   </aside>
 
@@ -362,6 +364,27 @@
           </div>
         </div>
       </div>
+
+      <!-- ======================================================
+           SCHIFFSREPARATUR - ZUSAMMENFASSUNG
+           Direkt unter dem bestehenden Haupt-Countdown, wie
+           gewünscht (als eigener Block NACH .fh-hero-section, da
+           dieses ein overflow:hidden Flex-Viewport ist - Inhalte
+           innerhalb davon würden nebeneinander statt darunter
+           erscheinen). Zeigt den ECHTEN, gemeinsamen Fortschritt aus
+           scripts/ship/ship-repair.js (ship_repair/main in
+           Firestore) - kein zweites, unabhängiges System, nur eine
+           kompakte Zusammenfassung mit Link zur vollständigen
+           Schiff-Seite. Bestehender Haupt-Countdown/Musik bleiben
+           oben unverändert.
+      ====================================================== -->
+      <div class="fh-home-ship-repair" id="fh-home-ship-repair">
+        <span class="fh-home-ship-repair-icon" aria-hidden="true">⚓</span>
+        <h2 class="fh-home-ship-repair-title" data-i18n="homeShip.title">REPARATUR DES SCHIFFES</h2>
+        <p class="fh-home-ship-repair-lead" data-i18n="homeShip.lead">Das Schiff ist beschädigt. Bevor die Reise weitergehen kann, muss es repariert werden.</p>
+        <div class="fh-home-ship-repair-body" id="fh-home-ship-repair-body"></div>
+        <button type="button" class="code-button fh-home-ship-repair-link" onclick="changePage('streamraetsel')">⚒ <span data-i18n="homeShip.linkButton">Zur Reparatur</span></button>
+      </div>
     </section>
 
     <!-- ======================================================
@@ -393,6 +416,12 @@
             <p id="detail-description"></p>
           </div>
         </div>
+
+        <!-- Expeditions-Fortschritt: wie viele der (nicht gesperrten)
+             Kapitel dieses Logbuchs dieser Besucher schon geöffnet hat -
+             rein lokal (localStorage), siehe loadChapters() in
+             scripts/stories/stories.js. -->
+        <div class="story-progress" id="story-progress"></div>
 
         <h2 data-i18n="story.chapterHeading">Kapitel</h2>
 
@@ -915,6 +944,22 @@
       </div>
     </section>
 
+    <!-- ======================================================
+         ADMIN-GATEWAY
+         Nicht in der Hauptnavigation prominent beworben, aber
+         auch nicht "versteckt" im Sinne von Security-through-
+         obscurity - der eigentliche Schutz ist die Google-Anmeldung
+         + E-Mail-Prüfung in scripts/core/admin-gateway.js, nicht
+         die Auffindbarkeit dieser Seite selbst.
+    ====================================================== -->
+    <section id="gateway" class="page">
+      <div class="page-content gateway-page-content">
+        <h1>⚙ ADMIN-GATEWAY</h1>
+        <p class="story-subtitle">Countdown, Story-Kapitel und Status verwalten.</p>
+        <div id="gateway-content" class="gateway-content"></div>
+      </div>
+    </section>
+
   </main>
 
   <!-- Firebase (für die globale Rangliste) -->
@@ -945,6 +990,7 @@
   <script src="scripts/auth/discord-config.js"></script>
   <script src="scripts/auth/discord-auth.js"></script>
   <script src="scripts/auth/firebase-config.js"></script>
+  <script src="scripts/core/site-config.js"></script>
   <script src="scripts/core/discord-notify-data.js"></script>
   <script src="scripts/core/discord-notify.js"></script>
   <script src="scripts/core/countdown.js"></script>
@@ -964,6 +1010,7 @@
   <script src="scripts/streamraetsel/streamraetsel.js"></script>
   <script src="scripts/ship/ship-repair-data.js"></script>
   <script src="scripts/ship/ship-repair.js"></script>
+  <script src="scripts/core/admin-gateway.js"></script>
   <script src="scripts/support/support.js"></script>
   <script src="scripts/rating/rating.js"></script>
   <script src="scripts/core/main.js"></script>

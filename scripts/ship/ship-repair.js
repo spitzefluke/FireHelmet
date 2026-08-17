@@ -59,7 +59,8 @@ function isShipPreviewActive() {
    "10 Tage" (Punkt 4 des Auftrags).
 ------------------------------------------------------ */
 function getShipEventUnlockDate() {
-  return new Date(FIRE_HELMET_CONFIG.shipEventUnlockDate);
+  const override = typeof siteConfig !== "undefined" ? siteConfig.shipEventUnlockDate : null;
+  return new Date(override || FIRE_HELMET_CONFIG.shipEventUnlockDate);
 }
 
 function isShipEventUnlocked() {
@@ -710,6 +711,142 @@ async function checkShipStatusForHomeReveal() {
 }
 
 /* ------------------------------------------------------
+   HOME-ZUSAMMENFASSUNG: "REPARATUR DES SCHIFFES"
+   ---------------------------------------------------
+   Sitzt direkt unter dem bestehenden Haupt-Countdown auf der
+   Startseite (siehe #fh-home-ship-repair in index.html). Zeigt
+   den ECHTEN, gemeinsamen Fortschritt aus ship_repair/main -
+   KEIN zweites, unabhängiges Reparatursystem, nur eine kompakte
+   Zusammenfassung mit Link zur vollständigen Schiff-Seite.
+
+   Eigene Timer-Variablen (homeShip*), bewusst getrennt von den
+   Timern der vollständigen Schiff-Seite (shipCountdownInterval /
+   window._shipTimerTick) und vom bestehenden Haupt-Countdown
+   (countdown.js) - keine gemeinsame Variable, keine Konflikte.
+------------------------------------------------------ */
+let homeShipCountdownInterval = null;
+let homeShipTickerInterval = null;
+
+function stopHomeShipRepairTimers() {
+  clearInterval(homeShipCountdownInterval);
+  clearInterval(homeShipTickerInterval);
+  homeShipCountdownInterval = null;
+  homeShipTickerInterval = null;
+}
+
+function tickHomeShipCountdown() {
+  const bodyEl = document.getElementById("fh-home-ship-repair-body");
+  if (!bodyEl) {
+    stopHomeShipRepairTimers();
+    return;
+  }
+
+  if (isShipEventUnlocked()) {
+    renderHomeShipRepairSummary();
+    return;
+  }
+
+  const diff = getShipEventUnlockDate() - new Date();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  const daysEl = document.getElementById("home-ship-days");
+  const hoursEl = document.getElementById("home-ship-hours");
+  const minutesEl = document.getElementById("home-ship-minutes");
+  const secondsEl = document.getElementById("home-ship-seconds");
+  if (daysEl) daysEl.textContent = padShipCountdown(days);
+  if (hoursEl) hoursEl.textContent = padShipCountdown(hours);
+  if (minutesEl) minutesEl.textContent = padShipCountdown(minutes);
+  if (secondsEl) secondsEl.textContent = padShipCountdown(seconds);
+}
+
+function buildHomeShipChecklistHtml(completedPhases) {
+  return SHIP_REPAIR_PHASES.map((phase) => {
+    const done = completedPhases.includes(phase.id);
+    return `
+      <li class="fh-home-ship-checklist-item ${done ? "fh-home-ship-checklist-done" : ""}">
+        <span class="fh-home-ship-checklist-mark">${done ? "✓" : "○"}</span>
+        <span>${phase.label.de}</span>
+      </li>
+    `;
+  }).join("");
+}
+
+async function renderHomeShipRepairSummary() {
+  const bodyEl = document.getElementById("fh-home-ship-repair-body");
+  if (!bodyEl) return;
+
+  stopHomeShipRepairTimers();
+
+  if (!isShipEventUnlocked()) {
+    bodyEl.innerHTML = `
+      <div class="fh-home-ship-countdown-label" data-i18n="homeShip.countdownLabel">SCHIFFSREPARATUR</div>
+      <div class="countdown fh-home-ship-countdown">
+        <div class="time-box"><span id="home-ship-days">00</span><small data-i18n="common.days">Tage</small></div>
+        <div class="time-box"><span id="home-ship-hours">00</span><small data-i18n="common.hours">Stunden</small></div>
+        <div class="time-box"><span id="home-ship-minutes">00</span><small data-i18n="common.minutes">Minuten</small></div>
+        <div class="time-box"><span id="home-ship-seconds">00</span><small data-i18n="common.seconds">Sekunden</small></div>
+      </div>
+    `;
+    if (typeof applyTranslations === "function") applyTranslations();
+    tickHomeShipCountdown();
+    homeShipCountdownInterval = setInterval(tickHomeShipCountdown, 1000);
+    return;
+  }
+
+  if (!wheelDb) {
+    bodyEl.innerHTML = `<p class="wheel-status">⚠️ <span data-i18n="homeShip.unavailable">Verbindung nicht verfügbar - versuch's später nochmal.</span></p>`;
+    if (typeof applyTranslations === "function") applyTranslations();
+    return;
+  }
+
+  await checkAndCompleteActiveRepair();
+  const state = await loadShipState();
+  if (!state) return;
+
+  const completed = state.data.completedPhases || [];
+  const percent = Math.round((completed.length / SHIP_REPAIR_PHASES.length) * 100);
+
+  if (completed.length >= SHIP_REPAIR_PHASES.length) {
+    bodyEl.innerHTML = `
+      <p class="fh-home-ship-complete" data-i18n="homeShip.complete">⚓ REPARATUR ABGESCHLOSSEN</p>
+      ${state.data.shipName ? `<p class="fh-home-ship-complete-name">${state.data.shipName}</p>` : ""}
+    `;
+    if (typeof applyTranslations === "function") applyTranslations();
+    return;
+  }
+
+  bodyEl.innerHTML = `
+    <p class="fh-home-ship-progress-label" data-i18n="homeShip.progressLabel">Reparaturfortschritt</p>
+    <div class="fh-home-ship-progress-bar">
+      <div class="fh-home-ship-progress-fill" style="width:${percent}%"></div>
+    </div>
+    <p class="fh-home-ship-progress-percent">${percent}%</p>
+    <ul class="fh-home-ship-checklist">${buildHomeShipChecklistHtml(completed)}</ul>
+  `;
+  if (typeof applyTranslations === "function") applyTranslations();
+
+  if (state.data.activeRepair) {
+    homeShipTickerInterval = setInterval(async () => {
+      const bodyStillHere = document.getElementById("fh-home-ship-repair-body");
+      if (!bodyStillHere) {
+        stopHomeShipRepairTimers();
+        return;
+      }
+      await checkAndCompleteActiveRepair();
+      const fresh = await loadShipState();
+      if (!fresh) return;
+      const freshCompleted = fresh.data.completedPhases || [];
+      if (freshCompleted.length !== completed.length) {
+        renderHomeShipRepairSummary();
+      }
+    }, 5000);
+  }
+}
+
+/* ------------------------------------------------------
    COUNTDOWN-ANZEIGE (gesperrte Ansicht)
    Selbes Prinzip wie das alte updateStreamRaetselView(): jede
    Sekunde neu aus dem echten Zeitstempel berechnet (kein
@@ -770,6 +907,9 @@ function updateShipRepairPage(pageID) {
     // schon auf der Home-Seite war/dorthin zurückkehrt (Punkt 26: Reveal
     // bleibt danach dauerhaft sichtbar, nicht nur beim allerersten Laden).
     checkShipStatusForHomeReveal();
+    renderHomeShipRepairSummary();
+  } else {
+    stopHomeShipRepairTimers();
   }
 
   if (pageID !== "streamraetsel") {
@@ -790,4 +930,5 @@ function updateShipRepairPage(pageID) {
 window.addEventListener("DOMContentLoaded", () => {
   initShipPreviewGate();
   checkShipStatusForHomeReveal();
+  renderHomeShipRepairSummary();
 });

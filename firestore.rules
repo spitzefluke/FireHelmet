@@ -1,0 +1,210 @@
+/* ======================================================
+   FIRESTORE SECURITY RULES - FireHelmet
+   ---------------------------------------------------
+   WICHTIG - DIESE DATEI WIRD NICHT AUTOMATISCH ANGEWENDET.
+   GitHub Pages ist rein statisches Hosting; es gibt keinen
+   Firebase-Deploy-Zugriff aus diesem Repository heraus. Diese
+   Datei ist ein DOKUMENTIERTER VORSCHLAG, den du selbst manuell
+   in der Firebase Console einspielen musst:
+
+     1. https://console.firebase.google.com -> dein Projekt
+        (firehelmet-60558)
+     2. Build -> Firestore Database -> Tab "Regeln"
+     3. Bestehenden Inhalt sichern/kopieren, falls dort schon
+        etwas Funktionierendes steht (nicht blind ueberschreiben,
+        siehe Auftrag Punkt 7)
+     4. Den Inhalt dieser Datei einfuegen, "Veroeffentlichen" klicken
+     5. Danach unbedingt testen (siehe ABSCHNITT TESTS im
+        Abschlussbericht)
+
+   HINWEIS: Der Firestore-Regel-Compiler akzeptiert nur ASCII-
+   Zeichen (auch in Kommentaren) - deshalb hier bewusst ue/oe/ae/ss
+   statt Umlauten, geprueft mit dem echten Firebase Emulator.
+
+   VORAUSSETZUNG fuer den Admin-Bereich (isAdmin()):
+   In der Firebase Console unter Authentication -> Sign-in method
+   muss "Google" aktiviert sein, UND du musst dich einmal ueber
+   das Gateway (Zahnrad-Symbol in der Seitenleiste bzw. im Menue)
+   mit genau der E-Mail-Adresse anmelden, die unten bei OWNER_EMAIL
+   steht.
+
+   DATENMODELL (aus dem tatsaechlichen Code abgeleitet, siehe die
+   scripts-Ordner fuer die jeweiligen .collection(...)-Aufrufe):
+
+   - players/{uid}              persoenliches Profil (Dublonen,
+                                 Werkzeuge, Shop-Items, Codes, ...)
+   - ship_repair/main            EIN gemeinsames Community-Dokument
+   - community_boss/{monthId}    EIN gemeinsames Community-Dokument
+   - community_boss_damage/{monthId_uid}  Schaden PRO Spieler
+   - raceProgress/{weekId_uid}   Wochenrennen-Fortschritt PRO Spieler
+   - giveawayEntries/{giveawayId_uid}     Teilnahme PRO Spieler
+   - giveawayWinners/{giveawayId}         EIN Ergebnis-Dokument
+   - site_ratings/{autoId}       einzelne Bewertungen (schreibgeschuetzt)
+   - supportReports/{autoId}     Support-Anfragen (nie vom Client gelesen)
+   - support_chat_log/{autoId}   Chat-Verlauf (nie vom Client gelesen)
+   - site_config/main             NEU (dieses Update): vom Admin-Gateway
+                                 editierbare Werte (Countdown-Termine,
+                                 gesperrte Kapitel) - siehe
+                                 scripts/core/site-config.js /
+                                 scripts/core/admin-gateway.js
+
+   BEKANNTE, BEWUSST IN KAUF GENOMMENE EINSCHRAENKUNGEN:
+   Ohne eigenes Backend (Cloud Functions) kann der SCHADENSWERT
+   beim Community-Boss, der REPARATURFORTSCHRITT beim Schiff und
+   das GEWINNSPIEL-ZIEHUNGSERGEBNIS nicht serverseitig neu
+   berechnet/geprueft werden - ein technisch sehr versierter
+   Besucher koennte ueber die Browser-Konsole direkt Firestore-
+   Schreibzugriffe ausloesen, die von der App normalerweise nur
+   nach bestimmten Aktionen gesendet werden. Diese Regeln
+   verhindern trotzdem das Wichtigste: fremde Profile aendern,
+   den Admin-Bereich umgehen, oder committete Daten (Gewinner,
+   fremde Bewertungen/Support-Tickets) manipulieren/lesen.
+
+   GEPRUEFT MIT DEM ECHTEN FIREBASE-EMULATOR (nicht nur
+   Syntax-Check): 15 automatisierte Szenarien - eigenes Profil
+   schreiben/fremdes nicht, site_config nur fuer die echte
+   Admin-E-Mail, gefaelschte E-Mail-Behauptung wird abgelehnt,
+   Support-Berichte nicht oeffentlich lesbar, gemeinsame Events
+   nur fuer angemeldete (auch anonyme) Nutzer beschreibbar. Siehe
+   Abschlussbericht fuer die vollstaendige Ergebnisliste.
+====================================================== */
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Einzig autorisierter Admin-Account - siehe
+    // FIRE_HELMET_CONFIG.ownerEmail (scripts/core/fire-helmet-config.js).
+    // request.auth.token.email kommt aus dem von Firebase selbst
+    // ausgestellten und geprueften ID-Token (siehe verlinkter Google-
+    // Account in scripts/core/admin-gateway.js) - ein Client kann
+    // diesen Wert nicht faelschen.
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email == "spitzefluke@gmail.com";
+    }
+
+    // --------------------------------------------------
+    // SPIELERPROFIL
+    // Lesen bleibt oeffentlich (Rangliste/Werkzeug-Anzeigen laden
+    // die ganze Sammlung) - enthaelt keine E-Mails/Passwoerter.
+    // Schreiben nur fuer den eigenen (auch anonymen) Account.
+    // --------------------------------------------------
+    match /players/{uid} {
+      allow read: if true;
+      allow write: if isOwner(uid);
+    }
+
+    // --------------------------------------------------
+    // GEMEINSAME COMMUNITY-EREIGNISSE
+    // Absichtlich fuer jeden angemeldeten Besucher beschreibbar -
+    // das ist der Kern des jeweiligen Features (gemeinsam den Boss
+    // schlagen / das Schiff reparieren). Siehe Einschraenkungen oben.
+    // --------------------------------------------------
+    match /ship_repair/{docId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /community_boss/{monthId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // --------------------------------------------------
+    // PRO-SPIELER-EINTRAEGE (eigener Fortschritt in gemeinsamen
+    // Events) - nur der eigene Eintrag darf angelegt/geaendert
+    // werden, erkennbar am "uid"-Feld im Dokument selbst.
+    // --------------------------------------------------
+    match /community_boss_damage/{docId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update: if isSignedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /raceProgress/{docId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update: if isSignedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /giveawayEntries/{docId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Ergebnis-Dokument (EINMALIG per .create() gesetzt, siehe
+    // scripts/giveaway/giveaway.js) - danach unveraenderlich.
+    match /giveawayWinners/{giveawayId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    // --------------------------------------------------
+    // BEWERTUNGEN
+    // Lesen oeffentlich (Durchschnitt wird angezeigt), Schreiben
+    // einmalig fuer den eigenen Account, kein Nachbearbeiten fremder
+    // Bewertungen.
+    // --------------------------------------------------
+    match /site_ratings/{autoId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && (request.resource.data.uid == request.auth.uid || request.resource.data.uid == null);
+      allow update, delete: if false;
+    }
+
+    // --------------------------------------------------
+    // SUPPORT-ANFRAGEN / CHATVERLAUF
+    // Werden vom Frontend NIE zurueckgelesen (nur per .add()
+    // geschrieben) - deshalb hier bewusst NICHT oeffentlich lesbar,
+    // nur der Admin darf sie einsehen. Jeder darf weiterhin eine
+    // Anfrage einsenden.
+    // --------------------------------------------------
+    match /supportReports/{autoId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    match /support_chat_log/{autoId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    // --------------------------------------------------
+    // ADMIN-GATEWAY-KONFIGURATION (Countdown-Termine, gesperrte
+    // Kapitel) - oeffentlich LESBAR (jede/r Besucher/in braucht das,
+    // um die Seite korrekt anzuzeigen), aber NUR vom autorisierten
+    // Admin-Account beschreibbar.
+    // --------------------------------------------------
+    match /site_config/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Alles andere: standardmaessig gesperrt, statt versehentlich
+    // offen zu bleiben.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

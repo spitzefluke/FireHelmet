@@ -88,6 +88,8 @@ const translations = {
     "story.title": "STORIES",
     "story.subtitle": "Wähle ein Logbuch aus dem Archiv",
     "story.chapterHeading": "Kapitel",
+    "story.expeditionProgress": "EXPEDITION-FORTSCHRITT",
+    "story.chapterLockedMessage": "Dieses Kapitel ist noch nicht freigeschaltet.",
 
     "characters.title": "CHARACTERS",
 
@@ -150,6 +152,14 @@ const translations = {
     "ship.puzzlesHeading": "⚓ Rätsel des Kapitäns",
     "ship.returnEyebrow": "DEIN SCHIFF IST ZURÜCK",
     "ship.returnCaptainLabel": "Kapitän",
+
+    "homeShip.title": "REPARATUR DES SCHIFFES",
+    "homeShip.lead": "Das Schiff ist beschädigt. Bevor die Reise weitergehen kann, muss es repariert werden.",
+    "homeShip.linkButton": "Zur Reparatur",
+    "homeShip.countdownLabel": "SCHIFFSREPARATUR",
+    "homeShip.progressLabel": "Reparaturfortschritt",
+    "homeShip.complete": "⚓ REPARATUR ABGESCHLOSSEN",
+    "homeShip.unavailable": "Verbindung nicht verfügbar - versuch's später nochmal.",
 
     "boss.title": "COMMUNITY-BOSS",
     "boss.subtitle": "Gemeinsam besiegen, bevor der Monat endet!",
@@ -236,6 +246,8 @@ const translations = {
     "story.title": "STORIES",
     "story.subtitle": "Choose a logbook from the archive",
     "story.chapterHeading": "Chapters",
+    "story.expeditionProgress": "EXPEDITION PROGRESS",
+    "story.chapterLockedMessage": "This chapter hasn't been unlocked yet.",
 
     "characters.title": "CHARACTERS",
 
@@ -298,6 +310,14 @@ const translations = {
     "ship.puzzlesHeading": "⚓ Captain's Riddles",
     "ship.returnEyebrow": "YOUR SHIP IS BACK",
     "ship.returnCaptainLabel": "Captain",
+
+    "homeShip.title": "SHIP REPAIR",
+    "homeShip.lead": "The ship is damaged. Before the journey can continue, it must be repaired.",
+    "homeShip.linkButton": "Go to repair",
+    "homeShip.countdownLabel": "SHIP REPAIR",
+    "homeShip.progressLabel": "Repair progress",
+    "homeShip.complete": "⚓ REPAIR COMPLETE",
+    "homeShip.unavailable": "Connection unavailable - try again later.",
 
     "boss.title": "COMMUNITY BOSS",
     "boss.subtitle": "Defeat it together before the month ends!",
