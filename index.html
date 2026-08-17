@@ -146,45 +146,190 @@
          HOME
     ===================== -->
     <section id="home" class="page active-page">
-      <div class="home-fx" id="home-fx">
-        <div class="home-dynamic" id="home-dynamic"></div>
+
+      <!-- ============================================================
+           FH CINEMATIC HOME EXPERIENCE
+           Scroll-gebundene Eroeffnungssequenz: Schiff, das man beim
+           Scrollen ueber Nebel und Meer hinweg verfolgt, bis das Ziel
+           enthuellt wird. Rein additiv vor dem bestehenden Hero
+           (Countdown, #home-fx Schiff-Canvas, Riss-Effekt) - dieser
+           bleibt unveraendert unten als letzte Phase erhalten. Logik in
+           scripts/home/cinematic.js, faehrt ausschliesslich per
+           CSS-Variable --fh-progress (siehe style.css).
+      ============================================================ -->
+      <div class="fh-cinematic-home" id="fh-cinematic-home">
+        <div class="fh-journey-track" id="fh-journey-track">
+          <div class="fh-journey-scene" id="fh-journey-scene" aria-hidden="true">
+            <div class="fh-layer fh-layer-sky"></div>
+            <div class="fh-layer fh-layer-stars"></div>
+            <div class="fh-layer fh-layer-moon"></div>
+            <div class="fh-layer fh-layer-far-fog"></div>
+
+            <div class="fh-layer fh-layer-ocean">
+              <div class="fh-ocean-sheen"></div>
+            </div>
+
+            <div class="fh-layer fh-layer-mid-fog"></div>
+
+            <div class="fh-ship-rig" id="fh-ship-rig">
+              <div class="fh-ship-bob">
+                <svg viewBox="0 0 200 140" preserveAspectRatio="xMidYMid meet">
+                  <defs>
+                    <linearGradient id="fh-ship-hull" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#2c3a4d"/>
+                      <stop offset="100%" stop-color="#0c1420"/>
+                    </linearGradient>
+                    <linearGradient id="fh-ship-sail" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#e9e2cf"/>
+                      <stop offset="100%" stop-color="#b9ad8f"/>
+                    </linearGradient>
+                    <radialGradient id="fh-ship-lantern" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#ffe6b0"/>
+                      <stop offset="60%" stop-color="#ffb04d" stop-opacity=".85"/>
+                      <stop offset="100%" stop-color="#ffb04d" stop-opacity="0"/>
+                    </radialGradient>
+                  </defs>
+
+                  <!-- Wasserreflexion -->
+                  <ellipse cx="100" cy="128" rx="60" ry="6" fill="#4da3ff" opacity=".12"/>
+
+                  <!-- Rumpf -->
+                  <path d="M28,96 Q30,116 60,120 L140,120 Q170,116 172,96 Q140,104 100,104 Q60,104 28,96 Z" fill="url(#fh-ship-hull)" stroke="#4da3ff" stroke-opacity=".35" stroke-width="1"/>
+
+                  <!-- Hauptmast + Grosssegel -->
+                  <line x1="100" y1="18" x2="100" y2="104" stroke="#5a4a34" stroke-width="2.5"/>
+                  <path d="M100,24 C130,30 134,58 130,78 C120,72 108,70 100,70 Z" fill="url(#fh-ship-sail)"/>
+                  <path d="M100,24 C72,30 66,58 72,80 C82,72 92,70 100,70 Z" fill="url(#fh-ship-sail)" opacity=".92"/>
+
+                  <!-- Vordermast + Focksegel -->
+                  <line x1="52" y1="42" x2="52" y2="100" stroke="#5a4a34" stroke-width="2"/>
+                  <path d="M52,46 C70,50 72,68 68,82 C62,76 56,74 52,74 Z" fill="url(#fh-ship-sail)" opacity=".85"/>
+
+                  <!-- Flagge -->
+                  <path d="M100,18 L100,8 L118,13 L100,18 Z" fill="#c8392a"/>
+
+                  <!-- Laterne am Heck -->
+                  <circle cx="164" cy="92" r="14" fill="url(#fh-ship-lantern)"/>
+                  <circle cx="164" cy="92" r="3" fill="#ffe6b0"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="fh-layer fh-layer-fg-fog"></div>
+            <div class="fh-layer fh-layer-particles" id="fh-particle-layer"></div>
+
+            <div class="fh-destination" id="fh-destination">
+              <div class="fh-destination-glow"></div>
+              <svg viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  <linearGradient id="fh-island-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#233448"/>
+                    <stop offset="100%" stop-color="#0a1018"/>
+                  </linearGradient>
+                  <linearGradient id="fh-lighthouse-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f0c96a"/>
+                    <stop offset="100%" stop-color="#d6a84f"/>
+                  </linearGradient>
+                  <radialGradient id="fh-lighthouse-beam" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#ffe9b0" stop-opacity=".9"/>
+                    <stop offset="100%" stop-color="#ffe9b0" stop-opacity="0"/>
+                  </radialGradient>
+                </defs>
+
+                <ellipse cx="150" cy="188" rx="140" ry="8" fill="#4da3ff" opacity=".1"/>
+                <path d="M20,180 Q60,110 120,130 Q160,90 210,120 Q260,100 280,170 Q260,190 40,190 Z" fill="url(#fh-island-grad)"/>
+                <circle cx="215" cy="95" r="55" fill="url(#fh-lighthouse-beam)"/>
+                <rect x="205" y="60" width="20" height="70" fill="url(#fh-lighthouse-grad)"/>
+                <path d="M200,60 L230,60 L223,46 L207,46 Z" fill="#e8edf4"/>
+                <rect x="211" y="48" width="8" height="8" fill="#ffe9b0"/>
+                <path d="M214,42 L219,30 L209,30 Z" fill="#c8392a"/>
+              </svg>
+            </div>
+
+            <div class="fh-cinematic-copy fh-copy-opening" id="fh-copy-opening">
+              <p class="fh-cinematic-eyebrow" data-i18n="home.cinematicEyebrow">Eine Reise beginnt</p>
+              <h1 class="fh-cinematic-title" data-i18n="home.cinematicTitle">FIREHELMET</h1>
+              <p class="fh-cinematic-lead" data-i18n="home.cinematicLead">Irgendwo da draussen, jenseits von Nebel und Sternenhimmel, wartet die naechste Geschichte der Crew.</p>
+            </div>
+
+            <div class="fh-cinematic-copy fh-copy-destination" id="fh-copy-destination">
+              <p class="fh-cinematic-eyebrow" data-i18n="home.destinationEyebrow">Das Ziel</p>
+              <h2 class="fh-cinematic-title" data-i18n="home.destinationTitle">DAS ZIEL</h2>
+              <p class="fh-cinematic-lead" data-i18n="home.destinationLead">Was erwartet die Crew hinter dem Horizont? Der Nebel lichtet sich - und ein Licht zeigt den Weg.</p>
+
+              <div class="fh-cinematic-meta">
+                <div class="fh-cinematic-meta-item">
+                  <span class="fh-cinematic-meta-label" data-i18n="home.metaLocationLabel">Location</span>
+                  <span class="fh-cinematic-meta-value" data-i18n="home.metaLocationValue">Unknown</span>
+                </div>
+                <div class="fh-cinematic-meta-item">
+                  <span class="fh-cinematic-meta-label" data-i18n="home.metaStatusLabel">Status</span>
+                  <span class="fh-cinematic-meta-value" data-i18n="home.metaStatusValue">Active</span>
+                </div>
+                <div class="fh-cinematic-meta-item">
+                  <span class="fh-cinematic-meta-label" data-i18n="home.metaMissionLabel">Mission</span>
+                  <span class="fh-cinematic-meta-value" data-i18n="home.metaMissionValue">Discover</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="fh-scroll-cue" id="fh-scroll-cue">
+              <span data-i18n="home.scrollCue">Scroll</span>
+              <span class="fh-scroll-cue-arrow"></span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="home-crack-layer" id="home-crack-layer">
-        <img id="home-reveal-image" class="home-reveal-image" alt="">
+      <!-- ============================================================
+           BESTEHENDER HERO (Countdown + Schiff-Canvas + Riss-Effekt)
+           Unveraendert: alle IDs/Klassen bleiben exakt erhalten, damit
+           main.js / home-crack.js unveraendert weiterlaufen. Nur der
+           umschliessende .fh-hero-section Wrapper ist neu, damit
+           .home-fx{position:absolute;inset:0} weiterhin exakt einen
+           Viewport fuellt - jetzt als Abschluss der Cinematic Experience.
+      ============================================================ -->
+      <div class="fh-hero-section" id="fh-hero-section">
+        <div class="home-fx" id="home-fx">
+          <div class="home-dynamic" id="home-dynamic"></div>
+        </div>
 
-        <svg class="home-crack-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
-          <path id="crack-1" class="home-crack tier-3-crack" d="M500,300 L430,220 L460,150 L410,80 L440,10" />
-          <path id="crack-2" class="home-crack tier-3-crack" d="M500,300 L580,230 L550,160 L600,90 L570,20" />
-          <path id="crack-3" class="home-crack tier-4-crack" d="M500,300 L420,360 L370,420 L400,500 L340,580" />
-          <path id="crack-4" class="home-crack tier-4-crack" d="M500,300 L590,370 L640,430 L610,510 L670,590" />
-          <path id="crack-5" class="home-crack tier-5-crack" d="M500,300 L300,280 L150,300 L20,260" />
-          <path id="crack-6" class="home-crack tier-5-crack" d="M500,300 L700,320 L850,290 L980,330" />
-          <path id="crack-7" class="home-crack tier-5-crack" d="M500,300 L520,150 L480,60 L510,-20" />
-          <path id="crack-8" class="home-crack tier-5-crack" d="M500,300 L460,450 L510,540 L470,620" />
-        </svg>
-      </div>
+        <div class="home-crack-layer" id="home-crack-layer">
+          <img id="home-reveal-image" class="home-reveal-image" alt="">
 
-      <div class="hero">
-        <h1 data-i18n="home.title">COUNTDOWN</h1>
-        <p class="subtitle" data-i18n="home.subtitle">The new Story starts in ...</p>
+          <svg class="home-crack-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
+            <path id="crack-1" class="home-crack tier-3-crack" d="M500,300 L430,220 L460,150 L410,80 L440,10" />
+            <path id="crack-2" class="home-crack tier-3-crack" d="M500,300 L580,230 L550,160 L600,90 L570,20" />
+            <path id="crack-3" class="home-crack tier-4-crack" d="M500,300 L420,360 L370,420 L400,500 L340,580" />
+            <path id="crack-4" class="home-crack tier-4-crack" d="M500,300 L590,370 L640,430 L610,510 L670,590" />
+            <path id="crack-5" class="home-crack tier-5-crack" d="M500,300 L300,280 L150,300 L20,260" />
+            <path id="crack-6" class="home-crack tier-5-crack" d="M500,300 L700,320 L850,290 L980,330" />
+            <path id="crack-7" class="home-crack tier-5-crack" d="M500,300 L520,150 L480,60 L510,-20" />
+            <path id="crack-8" class="home-crack tier-5-crack" d="M500,300 L460,450 L510,540 L470,620" />
+          </svg>
+        </div>
 
-        <div class="countdown">
-          <div class="time-box">
-            <span id="days">00</span>
-            <small data-i18n="common.days">Tage</small>
-          </div>
-          <div class="time-box">
-            <span id="hours">00</span>
-            <small data-i18n="common.hours">Stunden</small>
-          </div>
-          <div class="time-box">
-            <span id="minutes">00</span>
-            <small data-i18n="common.minutes">Minuten</small>
-          </div>
-          <div class="time-box">
-            <span id="seconds">00</span>
-            <small data-i18n="common.seconds">Sekunden</small>
+        <div class="hero">
+          <h1 data-i18n="home.title">COUNTDOWN</h1>
+          <p class="subtitle" data-i18n="home.subtitle">The new Story starts in ...</p>
+
+          <div class="countdown">
+            <div class="time-box">
+              <span id="days">00</span>
+              <small data-i18n="common.days">Tage</small>
+            </div>
+            <div class="time-box">
+              <span id="hours">00</span>
+              <small data-i18n="common.hours">Stunden</small>
+            </div>
+            <div class="time-box">
+              <span id="minutes">00</span>
+              <small data-i18n="common.minutes">Minuten</small>
+            </div>
+            <div class="time-box">
+              <span id="seconds">00</span>
+              <small data-i18n="common.seconds">Sekunden</small>
+            </div>
           </div>
         </div>
       </div>
@@ -713,6 +858,7 @@
   <script src="scripts/core/countdown.js"></script>
   <script src="scripts/home/home-crack-data.js"></script>
   <script src="scripts/home/home-crack.js"></script>
+  <script src="scripts/home/cinematic.js"></script>
   <script src="scripts/stories/stories-data.js"></script>
   <script src="scripts/characters/characters-data.js"></script>
   <script src="scripts/stories/stories.js"></script>
