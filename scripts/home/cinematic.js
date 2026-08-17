@@ -147,8 +147,47 @@
     }
   }
 
+  /* ------------------------------------------------------
+     3) DEZENTES CURSOR-LICHT (nur Desktop mit echter Maus)
+     Ein Radial-Glow in der Ship-Scene folgt leicht dem
+     Mauszeiger (Punkt 32) - auf Touch-Geräten und bei
+     reduzierter Bewegung deaktiviert, rAF-entprellt wie der
+     Scroll-Fortschritt, schreibt nur zwei CSS-Variablen.
+  ------------------------------------------------------ */
+  function fhInitCursorParallax() {
+    const canHover = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (!canHover || prefersReducedMotion.matches) return;
+
+    const scene = document.getElementById("fh-journey-scene");
+    if (!scene) return;
+
+    let ticking = false;
+    let lastX = 50;
+    let lastY = 50;
+
+    function apply() {
+      ticking = false;
+      scene.style.setProperty("--fh-cursor-x", `${lastX}%`);
+      scene.style.setProperty("--fh-cursor-y", `${lastY}%`);
+    }
+
+    scene.addEventListener(
+      "pointermove",
+      (e) => {
+        const rect = scene.getBoundingClientRect();
+        lastX = ((e.clientX - rect.left) / rect.width) * 100;
+        lastY = ((e.clientY - rect.top) / rect.height) * 100;
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(apply);
+      },
+      { passive: true }
+    );
+  }
+
   window.addEventListener("DOMContentLoaded", () => {
     fhInitReveal();
     fhInitShipJourney();
+    fhInitCursorParallax();
   });
 })();

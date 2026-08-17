@@ -25,8 +25,13 @@ const FIRE_HELMET_CONFIG = {
     avatar: 3,
   },
 
-  // Seltenheitsstufen: Farbe, Glow-Farbe (für CSS-Variablen) und
-  // DE/EN-Bezeichnung + Kurzbeschreibung für die Legende im Shop.
+  // Seltenheitsstufen: Farbe, Glow-Farbe (für CSS-Variablen),
+  // DE/EN-Bezeichnung + Kurzbeschreibung für die Legende im Shop,
+  // und "weight" = relative Wahrscheinlichkeit, mit der ein Artikel
+  // dieser Stufe bei der stündlichen Rotation gezogen wird (siehe
+  // scripts/shop/shop-rotation.js, weightedPickRarity()). Je höher
+  // die Zahl, desto häufiger taucht die Stufe im Schaufenster auf -
+  // legendary/mythic sind bewusst sehr selten.
   rarities: {
     common: {
       order: 1,
@@ -38,6 +43,7 @@ const FIRE_HELMET_CONFIG = {
         en: "Ordinary items.",
       },
       priceRange: [500, 1000],
+      weight: 60,
     },
     uncommon: {
       order: 2,
@@ -49,6 +55,7 @@ const FIRE_HELMET_CONFIG = {
         en: "A bit harder to come by.",
       },
       priceRange: [1000, 2500],
+      weight: 25,
     },
     rare: {
       order: 3,
@@ -60,6 +67,7 @@ const FIRE_HELMET_CONFIG = {
         en: "Rare collector's items.",
       },
       priceRange: [2500, 5000],
+      weight: 10,
     },
     epic: {
       order: 4,
@@ -71,6 +79,7 @@ const FIRE_HELMET_CONFIG = {
         en: "Extremely rare items.",
       },
       priceRange: [5000, 10000],
+      weight: 4,
     },
     legendary: {
       order: 5,
@@ -82,6 +91,7 @@ const FIRE_HELMET_CONFIG = {
         en: "Extraordinary items.",
       },
       priceRange: [10000, 25000],
+      weight: 0.9,
     },
     mythic: {
       order: 6,
@@ -93,6 +103,7 @@ const FIRE_HELMET_CONFIG = {
         en: "The rarest items on the black market.",
       },
       priceRange: [25000, 50000],
+      weight: 0.1,
     },
   },
 };

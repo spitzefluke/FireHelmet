@@ -28,6 +28,7 @@
 const shopItems = [
   {
     id: "frame-bronze",
+    description: "Ein einfacher, aber ehrlicher Rahmen für frische Crew-Mitglieder.",
     name: "Bronze-Rahmen",
     price: 600,
     rarity: "common",
@@ -37,6 +38,7 @@ const shopItems = [
   },
   {
     id: "frame-silver",
+    description: "Poliert genug, um selbst im Mondlicht zu glänzen.",
     name: "Silber-Rahmen",
     price: 1400,
     rarity: "uncommon",
@@ -46,6 +48,7 @@ const shopItems = [
   },
   {
     id: "frame-gold",
+    description: "Zeigt jedem sofort: Hier fährt ein Kapitän mit.",
     name: "Gold-Rahmen",
     price: 3200,
     rarity: "rare",
@@ -55,6 +58,7 @@ const shopItems = [
   },
   {
     id: "frame-fire",
+    description: "Brennt, ohne jemals zu verlöschen.",
     name: "Feuer-Rahmen",
     price: 6500,
     rarity: "epic",
@@ -64,6 +68,7 @@ const shopItems = [
   },
   {
     id: "frame-kraken",
+    description: "Riecht immer ein bisschen nach Tang und altem Seil.",
     name: "Kraken-Rahmen",
     price: 14000,
     rarity: "legendary",
@@ -73,6 +78,7 @@ const shopItems = [
   },
   {
     id: "frame-legend",
+    description: "Nur für jene, deren Name schon Legende ist.",
     name: "Legendärer Rahmen",
     price: 28000,
     rarity: "mythic",
@@ -89,6 +95,7 @@ const shopItems = [
   ------------------------------------------------------ */
   {
     id: "avatar-papagei",
+    description: "Wiederholt jeden Fluch, den du sagst - gleich dreimal.",
     name: "Papagei-Avatar",
     price: 700,
     rarity: "common",
@@ -98,6 +105,7 @@ const shopItems = [
   },
   {
     id: "avatar-kompass",
+    description: "Zeigt selten nach Norden, dafür fast immer Richtung Ärger.",
     name: "Kompass-Avatar",
     price: 800,
     rarity: "common",
@@ -107,6 +115,7 @@ const shopItems = [
   },
   {
     id: "avatar-anker",
+    description: "Schwer wie ein schlechtes Gewissen, verlässlich wie kein anderer.",
     name: "Anker-Avatar",
     price: 1600,
     rarity: "uncommon",
@@ -116,6 +125,7 @@ const shopItems = [
   },
   {
     id: "avatar-totenkopf",
+    description: "Ein Souvenir aus einer Höhle, über die niemand gern spricht.",
     name: "Totenkopf-Avatar",
     price: 3500,
     rarity: "rare",

@@ -102,19 +102,57 @@ function renderShopGrid(options) {
       }
 
       const previewClass = isFrame ? `avatar-frame-${item.style}` : "";
+      const categoryLabel = isFrame
+        ? (lang === "en" ? "Avatar Frame" : "Avatar-Rahmen")
+        : (lang === "en" ? "Avatar" : "Avatar");
 
       return `
         <div class="shop-item shop-item-rarity-${item.rarity || "common"} ${isOwned ? "shop-item-owned" : ""}" style="--rarity-color:${rarity.color};--rarity-glow:${rarity.glow};">
           <span class="shop-item-rarity-badge">${rarityLabel}</span>
+          <button type="button" class="shop-item-info-btn" aria-expanded="false" aria-label="Info" onclick="toggleShopItemInfo(this)">i</button>
+
           <div class="shop-item-preview ${previewClass}">
             <span class="shop-item-emoji">${item.emoji}</span>
           </div>
           <p class="shop-item-name">${item.name}</p>
           ${buttonHtml}
+
+          <div class="shop-item-info-panel" role="tooltip">
+            <p class="shop-item-info-name">${item.emoji} ${item.name}</p>
+            <p class="shop-item-info-rarity">${rarityLabel}</p>
+            ${item.description ? `<p class="shop-item-info-desc">&bdquo;${item.description}&ldquo;</p>` : ""}
+            <p class="shop-item-info-meta"><span>${categoryLabel}</span><span>${item.price.toLocaleString("de-DE")} 💰</span></p>
+          </div>
         </div>
       `;
     })
     .join("");
+}
+
+/* ------------------------------------------------------
+   ITEM-INFO EIN-/AUSBLENDEN (Touch/Klick)
+   Auf Desktop erscheint das Panel zusätzlich schon bei :hover
+   (siehe style.css) - dieser Klick-Toggle ist der verlässliche
+   Weg für Touch-Geräte ohne echten Hover-Zustand.
+------------------------------------------------------ */
+function toggleShopItemInfo(btn) {
+  const card = btn.closest(".shop-item");
+  if (!card) return;
+
+  const isOpen = card.classList.toggle("shop-item-info-open");
+  btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+
+  // Nur ein offenes Info-Panel gleichzeitig, damit sich auf Mobile
+  // nicht mehrere Panels überlappen
+  if (isOpen) {
+    document.querySelectorAll("#shop-grid .shop-item.shop-item-info-open").forEach((other) => {
+      if (other !== card) {
+        other.classList.remove("shop-item-info-open");
+        const otherBtn = other.querySelector(".shop-item-info-btn");
+        if (otherBtn) otherBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
 }
 
 /* ------------------------------------------------------

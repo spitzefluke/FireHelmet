@@ -50,6 +50,7 @@ const translations = {
     "shop.earnHint": "Dublonen bekommst du durchs Einlösen bestimmter Codes, gute Platzierungen beim Wochenrennen und viel Schaden gegen den Community-Boss.",
     "shop.tabFrames": "Avatar-Rahmen",
     "shop.tabAvatars": "Avatare",
+    "shop.introTitle": "DER SCHWARZMARKT",
     "shop.rotationLabel": "Neuer Schwarzmarkt in",
     "shop.rotationToast": "⚓ Der Schwarzmarkt hat neue Ware erhalten!",
     "shop.raritiesHeading": "Seltenheiten",
@@ -135,6 +136,12 @@ const translations = {
 
     "boss.title": "COMMUNITY-BOSS",
     "boss.subtitle": "Gemeinsam besiegen, bevor der Monat endet!",
+    "boss.statDamage": "Schaden",
+    "boss.statAttackers": "Angreifer",
+    "boss.phaseNormal": "NORMAL",
+    "boss.phaseEnraged": "ENRAGED",
+    "boss.phaseCritical": "CRITICAL",
+    "boss.phaseFinal": "FINALE PHASE",
   },
 
   en: {
@@ -172,6 +179,7 @@ const translations = {
     "shop.earnHint": "You earn doubloons by redeeming certain codes, placing well in the weekly race, and dealing lots of damage to the community boss.",
     "shop.tabFrames": "Avatar Frames",
     "shop.tabAvatars": "Avatars",
+    "shop.introTitle": "THE BLACK MARKET",
     "shop.rotationLabel": "New black market in",
     "shop.rotationToast": "⚓ The black market just got fresh stock!",
     "shop.raritiesHeading": "Rarities",
@@ -257,6 +265,12 @@ const translations = {
 
     "boss.title": "COMMUNITY BOSS",
     "boss.subtitle": "Defeat it together before the month ends!",
+    "boss.statDamage": "Damage",
+    "boss.statAttackers": "Attackers",
+    "boss.phaseNormal": "NORMAL",
+    "boss.phaseEnraged": "ENRAGED",
+    "boss.phaseCritical": "CRITICAL",
+    "boss.phaseFinal": "FINAL PHASE",
   },
 };
 
