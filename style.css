@@ -6218,3 +6218,446 @@ tr.row-frame {
     padding: 22px 18px;
   }
 }
+
+/* =====================================================
+   FIRE HELMET - MASSIVES REDESIGN-UPGRADE
+   Schwarzmarkt-Rotation + Seltenheiten, Spotify-Karte,
+   Boss-Arena-Hintergrund, Logbuch-Papier-Optik. Alles
+   additiv unter einem eigenen "fh-" bzw. "shop-*" Namespace,
+   bestehende Klassen/IDs bleiben unangetastet.
+===================================================== */
+
+/* #shop braucht position:relative, damit .fh-shop-intro-overlay
+   (position:absolute;inset:0) exakt die Shop-Seite abdeckt statt
+   sich am nächsten positionierten Vorfahren (z.B. main) zu
+   orientieren. */
+#shop {
+  position: relative;
+}
+
+/* ---------- SCHWARZMARKT: ROTATION + SELTENHEITEN ---------- */
+.shop-rotation-label {
+  margin-top: 14px;
+  font-family: var(--fh-font-display);
+  font-size: 14px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+.shop-rotation-countdown {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(214,168,79,.4);
+  background: rgba(214,168,79,.1);
+  color: var(--fh-gold-bright);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+
+.shop-rarities-heading {
+  margin-top: 34px;
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fh-text);
+}
+
+.fh-rarity-legend {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.fh-rarity-chip {
+  --rarity-color: #9aa4b2;
+  --rarity-glow: 154,164,178;
+  position: relative;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--rarity-color) 55%, transparent);
+  background: rgba(255,255,255,.03);
+  color: var(--rarity-color);
+  font-family: var(--fh-font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  cursor: help;
+  transition: transform .2s var(--fh-ease), box-shadow .25s ease, background .25s ease;
+}
+
+.fh-rarity-chip:hover,
+.fh-rarity-chip:focus-visible {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,.06);
+  box-shadow: 0 0 18px rgba(var(--rarity-glow),.45);
+  outline: none;
+}
+
+.fh-rarity-chip-desc {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translate(-50%, 6px);
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(6,9,15,.96);
+  border: 1px solid color-mix(in srgb, var(--rarity-color) 50%, transparent);
+  color: var(--fh-text);
+  font-family: var(--fh-font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-align: center;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 12px 30px rgba(0,0,0,.5);
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.fh-rarity-chip:hover .fh-rarity-chip-desc,
+.fh-rarity-chip:focus-visible .fh-rarity-chip-desc {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-rarity-chip:hover,
+  .fh-rarity-chip:focus-visible {
+    transform: none;
+  }
+}
+
+/* Seltenheits-Rand/-Glow + Badge je Shop-Artikel. Die konkrete
+   Farbe kommt per Inline-Style (--rarity-color/--rarity-glow,
+   siehe renderShopGrid in shop.js) direkt aus der zentralen
+   Konfiguration - hier nur die generische Optik. */
+.shop-item {
+  --rarity-color: #9aa4b2;
+  --rarity-glow: 154,164,178;
+  border: 1px solid color-mix(in srgb, var(--rarity-color) 40%, rgba(255,255,255,.1));
+}
+
+.shop-item:hover {
+  border-color: var(--rarity-color);
+  box-shadow: 0 20px 45px rgba(0,0,0,.45), 0 0 26px rgba(var(--rarity-glow),.35);
+}
+
+.shop-item-rarity-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--rarity-color);
+  border: 1px solid color-mix(in srgb, var(--rarity-color) 55%, transparent);
+  background: color-mix(in srgb, var(--rarity-color) 16%, rgba(6,9,15,.75));
+}
+
+/* Legendary/Mythic Artikel bekommen zusätzlich einen dezent
+   pulsierenden Rand-Glow, damit sie im Grid sofort auffallen -
+   passend zu Punkt 7 ("seltene Gegenstände bekommen stärkere
+   Effekte"). */
+.shop-item-rarity-legendary,
+.shop-item-rarity-mythic {
+  animation: fhRarityPulse 2.6s ease-in-out infinite;
+}
+
+@keyframes fhRarityPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(var(--rarity-glow),0); }
+  50%      { box-shadow: 0 0 24px rgba(var(--rarity-glow),.4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-item-rarity-legendary,
+  .shop-item-rarity-mythic {
+    animation: none;
+  }
+}
+
+/* Eingangsanimation (spielt nur bei echtem Seitenaufruf/Tab-
+   Wechsel/Rotationswechsel, siehe shop-grid-quiet unten) */
+.shop-item {
+  animation-name: shopItemReveal;
+}
+
+@keyframes shopItemReveal {
+  0%   { opacity: 0; transform: translateY(26px) scale(.92); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* "quiet" = nach Kauf/Ausrüsten neu gerendert: keine erneute
+   Eingangsanimation, Karten stehen sofort da (Punkt 11:
+   "darf nicht bei jedem State-Update erneut abgespielt werden") */
+.shop-grid-quiet .shop-item {
+  animation: none !important;
+}
+
+/* Ganzer Shop-"Öffnen"-Moment: Bildschirm dunkelt kurz ab,
+   darunter fährt der Inhalt hoch/fällt in Fokus. */
+.fh-shop-intro-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 20%, rgba(214,168,79,.18), rgba(2,3,10,.92) 70%);
+  opacity: 0;
+}
+
+.fh-shop-intro-overlay.fh-shop-intro-play {
+  animation: fhShopIntroFade 1.1s ease forwards;
+}
+
+@keyframes fhShopIntroFade {
+  0%   { opacity: 0; }
+  25%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.shop-content {
+  opacity: 1;
+}
+
+.shop-content.fh-shop-content-in {
+  animation: fhShopContentIn .7s var(--fh-ease) both;
+}
+
+@keyframes fhShopContentIn {
+  0%   { opacity: 0; transform: translateY(24px) scale(.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-shop-intro-overlay.fh-shop-intro-play,
+  .shop-content.fh-shop-content-in {
+    animation: none;
+  }
+}
+
+/* Toast bei Rotationswechsel - nutzt dieselbe Optik wie die
+   bestehende Dublonen-Toast-Benachrichtigung */
+.shop-rotation-toast {
+  top: auto;
+  bottom: 30px;
+}
+
+@media (max-width: 600px) {
+  .shop-rotation-toast {
+    bottom: 16px;
+  }
+}
+
+/* ---------- SOCIALS: SPOTIFY-HÖRSPIEL-KARTE ---------- */
+.fh-audiobook-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  max-width: 640px;
+  margin: 40px auto 0;
+  padding: 22px 28px;
+  border-radius: var(--fh-radius-lg, 24px);
+  background: linear-gradient(135deg, rgba(30,185,84,.14), rgba(13,21,32,.9));
+  border: 1px solid rgba(30,185,84,.4);
+  box-shadow: var(--fh-shadow);
+  text-decoration: none;
+  color: var(--fh-text);
+  overflow: hidden;
+  transition: transform .25s var(--fh-ease), box-shadow .25s ease, border-color .25s ease;
+}
+
+.fh-audiobook-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,.04) 0 2px, transparent 2px 40px);
+  opacity: .5;
+  pointer-events: none;
+}
+
+.fh-audiobook-card:hover {
+  transform: translateY(-4px);
+  border-color: #1eb954;
+  box-shadow: 0 20px 50px rgba(0,0,0,.5), 0 0 30px rgba(30,185,84,.3);
+}
+
+.fh-audiobook-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 26px;
+  background: radial-gradient(circle at 35% 30%, rgba(30,185,84,.4), rgba(6,9,15,.9));
+  border: 1px solid rgba(30,185,84,.5);
+}
+
+.fh-audiobook-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  min-width: 0;
+}
+
+.fh-audiobook-title {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1rem, 2.4vw, 1.2rem);
+  font-weight: 700;
+  color: var(--fh-text);
+}
+
+.fh-audiobook-text {
+  font-size: 13px;
+  color: var(--fh-text-muted);
+}
+
+.fh-audiobook-button {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: #1eb954;
+  color: #04170c;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+.fh-audiobook-card-soon {
+  cursor: default;
+  opacity: .75;
+}
+
+.fh-audiobook-card-soon:hover {
+  transform: none;
+  border-color: rgba(30,185,84,.4);
+  box-shadow: var(--fh-shadow);
+}
+
+.fh-audiobook-card-soon .fh-audiobook-button {
+  background: rgba(255,255,255,.12);
+  color: var(--fh-text-muted);
+}
+
+body.lang-de .fh-audiobook-card-soon .fh-audiobook-button::after { content: " · bald verfügbar"; }
+body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " · coming soon"; }
+
+@media (max-width: 600px) {
+  .fh-audiobook-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 22px 20px;
+  }
+
+  .fh-audiobook-copy {
+    text-align: center;
+  }
+}
+
+/* ---------- COMMUNITY-BOSS: ARENA-HINTERGRUND ---------- */
+.boss-content {
+  position: relative;
+  padding: 10px 10px 30px;
+}
+
+.boss-content::before {
+  content: "";
+  position: absolute;
+  inset: -30px -8vw;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 18%, color-mix(in srgb, var(--boss-accent, #7c2d12) 30%, transparent), transparent 70%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0,0,0,.6), transparent 70%);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+/* Dekorativer Arena-Ring ÜBER dem Canvas (::after wird nach dem
+   per JS eingefügten <canvas> gemalt, also oben drauf) - rahmt
+   die Boss-Kreatur wie eine Kampf-Arena, ohne Angriffs-Effekte
+   im Canvas selbst zu beschneiden. */
+.boss-stage::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--boss-accent, #7c2d12) 55%, transparent);
+  box-shadow:
+    0 0 40px color-mix(in srgb, var(--boss-accent, #7c2d12) 45%, transparent),
+    inset 0 0 50px rgba(0,0,0,.55);
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .boss-stage {
+    width: 380px;
+    height: 380px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .boss-stage {
+    width: 440px;
+    height: 440px;
+  }
+}
+
+/* ---------- STORIES: LOGBUCH-PAPIER-OPTIK ---------- */
+.book {
+  position: relative;
+  background:
+    radial-gradient(ellipse 120% 60% at 50% -10%, rgba(214,168,79,.08), transparent 60%),
+    linear-gradient(160deg, #1c1712, #100d0a 60%, #0a0807);
+  border: 1px solid rgba(214,168,79,.25);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), inset 0 0 120px rgba(0,0,0,.5);
+}
+
+.book::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 4% 6%, rgba(0,0,0,.55), transparent 22%),
+    radial-gradient(circle at 96% 8%, rgba(0,0,0,.5), transparent 24%),
+    radial-gradient(circle at 8% 96%, rgba(0,0,0,.5), transparent 22%),
+    radial-gradient(circle at 95% 94%, rgba(0,0,0,.55), transparent 24%);
+  mix-blend-mode: multiply;
+}
+
+.book-content {
+  position: relative;
+  background: rgba(255,247,225,.04);
+  border: 1px solid rgba(214,168,79,.18);
+}
+
+.book-content p {
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #f1e6cf;
+  text-shadow: 0 1px 0 rgba(0,0,0,.4);
+}
+
+#book-title {
+  font-family: var(--fh-font-display);
+  color: var(--fh-gold-bright);
+  text-shadow: 0 0 24px rgba(240,201,106,.35);
+}

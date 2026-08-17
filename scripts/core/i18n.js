@@ -44,12 +44,19 @@ const translations = {
     "rating.commentPlaceholder": "Was gefällt dir, was können wir besser machen? (optional)",
     "rating.submitButton": "Bewertung abschicken",
 
-    "shop.title": "🛒 SHOP",
-    "shop.subtitle": "Gib deine Dublonen für Rahmen und Extras aus",
+    "shop.title": "🛒 SCHWARZMARKT DER FLITZPIEPEN",
+    "shop.subtitle": "Jede Stunde neue Ware - gib deine Dublonen für Rahmen und Extras aus",
     "shop.currencyLabel": "Dublonen",
     "shop.earnHint": "Dublonen bekommst du durchs Einlösen bestimmter Codes, gute Platzierungen beim Wochenrennen und viel Schaden gegen den Community-Boss.",
     "shop.tabFrames": "Avatar-Rahmen",
     "shop.tabAvatars": "Avatare",
+    "shop.rotationLabel": "Neuer Schwarzmarkt in",
+    "shop.rotationToast": "⚓ Der Schwarzmarkt hat neue Ware erhalten!",
+    "shop.raritiesHeading": "Seltenheiten",
+
+    "socials.audiobookTitle": "🎧 Das Fire-Helmet-Hörspiel",
+    "socials.audiobookText": "Tauche noch tiefer in die Geschichte ein.",
+    "socials.audiobookButton": "Auf Spotify anhören",
 
     "common.days": "Tage",
     "common.hours": "Stunden",
@@ -159,12 +166,19 @@ const translations = {
     "rating.commentPlaceholder": "What do you like, what could be better? (optional)",
     "rating.submitButton": "Submit rating",
 
-    "shop.title": "🛒 SHOP",
-    "shop.subtitle": "Spend your doubloons on frames and extras",
+    "shop.title": "🛒 THE FLITZPIEPEN BLACK MARKET",
+    "shop.subtitle": "New stock every hour - spend your doubloons on frames and extras",
     "shop.currencyLabel": "Doubloons",
     "shop.earnHint": "You earn doubloons by redeeming certain codes, placing well in the weekly race, and dealing lots of damage to the community boss.",
     "shop.tabFrames": "Avatar Frames",
     "shop.tabAvatars": "Avatars",
+    "shop.rotationLabel": "New black market in",
+    "shop.rotationToast": "⚓ The black market just got fresh stock!",
+    "shop.raritiesHeading": "Rarities",
+
+    "socials.audiobookTitle": "🎧 The Fire Helmet Audio Drama",
+    "socials.audiobookText": "Dive even deeper into the story.",
+    "socials.audiobookButton": "Listen on Spotify",
 
     "common.days": "Days",
     "common.hours": "Hours",
@@ -308,6 +322,10 @@ function setLanguage(lang) {
   if (typeof refreshWheelStatus === "function") refreshWheelStatus();
   if (typeof loadLeaderboard === "function" && document.getElementById("leaderboard")?.classList.contains("active-page")) {
     loadLeaderboard();
+  }
+  if (typeof renderRarityLegend === "function") renderRarityLegend();
+  if (typeof renderShopGrid === "function" && document.getElementById("shop")?.classList.contains("active-page")) {
+    renderShopGrid({ quiet: true });
   }
 }
 

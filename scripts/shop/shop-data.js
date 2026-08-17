@@ -17,11 +17,20 @@
      style.css ergänzen
 ====================================== */
 
+/* ------------------------------------------------------
+   Jeder Artikel bekommt zusätzlich eine "rarity" (siehe
+   FIRE_HELMET_CONFIG.rarities in scripts/core/fire-helmet-config.js
+   für Farbe/Beschreibung je Stufe) und einen daran angepassten,
+   deutlich höheren Preis. IDs, "type", "style" und "avatarId"
+   bleiben unverändert - bestehende Käufe/Freischaltungen (per
+   ID gespeichert) sind davon nicht betroffen.
+------------------------------------------------------ */
 const shopItems = [
   {
     id: "frame-bronze",
     name: "Bronze-Rahmen",
-    price: 50,
+    price: 600,
+    rarity: "common",
     type: "frame",
     style: "bronze",
     emoji: "🥉",
@@ -29,7 +38,8 @@ const shopItems = [
   {
     id: "frame-silver",
     name: "Silber-Rahmen",
-    price: 150,
+    price: 1400,
+    rarity: "uncommon",
     type: "frame",
     style: "silver",
     emoji: "🥈",
@@ -37,7 +47,8 @@ const shopItems = [
   {
     id: "frame-gold",
     name: "Gold-Rahmen",
-    price: 350,
+    price: 3200,
+    rarity: "rare",
     type: "frame",
     style: "gold",
     emoji: "🥇",
@@ -45,7 +56,8 @@ const shopItems = [
   {
     id: "frame-fire",
     name: "Feuer-Rahmen",
-    price: 500,
+    price: 6500,
+    rarity: "epic",
     type: "frame",
     style: "fire",
     emoji: "🔥",
@@ -53,7 +65,8 @@ const shopItems = [
   {
     id: "frame-kraken",
     name: "Kraken-Rahmen",
-    price: 750,
+    price: 14000,
+    rarity: "legendary",
     type: "frame",
     style: "kraken",
     emoji: "🐙",
@@ -61,7 +74,8 @@ const shopItems = [
   {
     id: "frame-legend",
     name: "Legendärer Rahmen",
-    price: 1200,
+    price: 28000,
+    rarity: "mythic",
     type: "frame",
     style: "legend",
     emoji: "👑",
@@ -76,7 +90,8 @@ const shopItems = [
   {
     id: "avatar-papagei",
     name: "Papagei-Avatar",
-    price: 100,
+    price: 700,
+    rarity: "common",
     type: "avatar",
     avatarId: "shop-papagei",
     emoji: "🦜",
@@ -84,7 +99,8 @@ const shopItems = [
   {
     id: "avatar-kompass",
     name: "Kompass-Avatar",
-    price: 100,
+    price: 800,
+    rarity: "common",
     type: "avatar",
     avatarId: "shop-kompass",
     emoji: "🧭",
@@ -92,7 +108,8 @@ const shopItems = [
   {
     id: "avatar-anker",
     name: "Anker-Avatar",
-    price: 120,
+    price: 1600,
+    rarity: "uncommon",
     type: "avatar",
     avatarId: "shop-anker",
     emoji: "⚓",
@@ -100,7 +117,8 @@ const shopItems = [
   {
     id: "avatar-totenkopf",
     name: "Totenkopf-Avatar",
-    price: 200,
+    price: 3500,
+    rarity: "rare",
     type: "avatar",
     avatarId: "shop-totenkopf",
     emoji: "💀",
