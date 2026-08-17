@@ -25,6 +25,10 @@ function changePage(pageID) {
     updateShipRepairPage(pageID);
   }
 
+  if (typeof updateGatewayPage === "function") {
+    updateGatewayPage(pageID);
+  }
+
   if (typeof updateCodeAmbientPage === "function") {
     updateCodeAmbientPage(pageID);
   }

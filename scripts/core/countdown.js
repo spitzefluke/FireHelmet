@@ -5,7 +5,16 @@
    der Box aus.
 ===================================================== */
 
-const targetDate = new Date("2026-10-10T20:00:00");
+// Fallback bleibt exakt wie bisher fest im Code. Ist über das
+// Admin-Gateway ein eigener Termin in Firestore hinterlegt
+// (siteConfig.mainCountdownTarget, siehe scripts/core/site-config.js),
+// wird DER stattdessen verwendet - siehe getTargetDate() unten.
+const fallbackTargetDate = new Date("2026-10-10T20:00:00");
+
+function getTargetDate() {
+  const override = typeof siteConfig !== "undefined" ? siteConfig.mainCountdownTarget : null;
+  return override ? new Date(override) : fallbackTargetDate;
+}
 
 // Merkt sich die zuletzt angezeigten Werte, um Änderungen zu erkennen
 const lastValues = {
@@ -44,7 +53,7 @@ function setValue(id, newValue) {
 
 function updateCountdown() {
   const now = new Date();
-  const difference = targetDate - now;
+  const difference = getTargetDate() - now;
 
   if (difference <= 0) {
     setValue("days", 0);

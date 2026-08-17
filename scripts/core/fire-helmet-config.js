@@ -20,6 +20,20 @@ const FIRE_HELMET_CONFIG = {
   // ein Reload springt dadurch nie wieder auf "10 Tage" zurück.
   shipEventUnlockDate: "2026-08-27T18:00:00",
 
+  // Fallback für den Haupt-Countdown (siehe scripts/core/countdown.js),
+  // falls in Firestore (site_config/main, siehe scripts/core/
+  // site-config.js) noch kein eigener Wert gesetzt wurde. Verhält
+  // sich dadurch exakt wie bisher, solange niemand über das
+  // Admin-Gateway einen neuen Termin einträgt.
+  mainCountdownFallback: "2026-10-10T20:00:00",
+
+  // Admin-Gateway (scripts/core/admin-gateway.js): einzig
+  // autorisierter Account. Kein Passwort, kein Secret - Firebase
+  // selbst bestätigt kryptografisch, welche E-Mail zu einem Login
+  // gehört. Dafür muss in der Firebase Console unter Authentication
+  // -> Sign-in method die Google-Anmeldung aktiviert sein.
+  ownerEmail: "spitzefluke@gmail.com",
+
   // Wie oft sich der Schwarzmarkt neu bestückt (in Minuten).
   shopRotationMinutes: 60,
 
