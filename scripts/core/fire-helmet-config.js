@@ -10,9 +10,15 @@
 ====================================================== */
 
 const FIRE_HELMET_CONFIG = {
-  // Hörspiel-Link für die Socials-Seite (Punkt 18 des Auftrags).
-  // Trag hier die echte Spotify-URL ein, sobald sie feststeht.
-  spotifyAudiobookUrl: "HIER_SPOTIFY_URL_EINTRAGEN",
+  // Hörspiel-Link für die Socials-Seite. Zentral hier eintragen -
+  // wird NUR von scripts/core/audiobook-link.js gelesen, nirgends
+  // sonst hart im Code verteilt.
+  spotifyAudiobookUrl: "https://open.spotify.com/episode/4HwcXrFhMIOGXARtDKAVWV?si=xDwsPpJTTggjm_L3bqY3Qw&utm_source=copy-link",
+
+  // "Repariere das Schiff"-Event (siehe scripts/ship/*): fester
+  // Endzeitpunkt statt eines im Browser herunterzählenden Timers -
+  // ein Reload springt dadurch nie wieder auf "10 Tage" zurück.
+  shipEventUnlockDate: "2026-08-27T18:00:00",
 
   // Wie oft sich der Schwarzmarkt neu bestückt (in Minuten).
   shopRotationMinutes: 60,

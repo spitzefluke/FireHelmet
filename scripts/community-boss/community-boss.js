@@ -52,6 +52,9 @@ let bossShakeUntil = 0;
 let bossHitFlashUntil = 0;
 let bossCounterAuraUntil = 0;
 let bossRageLevel = 0; // 0 (volle HP) bis 1 (fast besiegt) - steuert die Aura-Intensität
+let bossRecoilUntil = 0; // Kreatur wird kurz zurückgestoßen (echtes Recoil, nicht nur Bildschirm-Zittern)
+let bossRecoilDir = 1;
+let bossSmoke = []; // dunkle Rauchwolken, die bei jedem Treffer aufsteigen (Punkt 22)
 
 function setupBossCanvas() {
   const stage = document.getElementById("boss-stage");
@@ -85,6 +88,7 @@ function stopBossRender() {
   cancelAnimationFrame(bossAnimFrame);
   bossParticles = [];
   bossEffects = [];
+  bossSmoke = [];
 }
 
 function drawBossFrame(time) {
@@ -103,6 +107,7 @@ function drawBossFrame(time) {
 
   drawBossAmbientParticles(time, w, h, boss);
   drawBossCreature(time, w, h, boss);
+  drawBossSmoke();
   drawBossEffects(time, w, h);
 
   if (time < bossHitFlashUntil) {
@@ -150,6 +155,52 @@ function drawBossAmbientParticles(time, w, h, boss) {
       bossCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       bossCtx.fill();
     }
+  });
+  bossCtx.globalAlpha = 1;
+}
+
+/* ------------------------------------------------------
+   RAUCH BEIM TREFFER (Punkt 22)
+   Eigenständig von den Themen-Partikeln (Blasen/Blitze/Nebel) -
+   dunkle, langsam aufsteigende Rauchwolken, die bei jedem
+   Treffer aus der Kreatur aufsteigen. Menge/Dichte wächst mit
+   sinkenden HP (bossRageLevel), damit der Boss sichtbar
+   "mitgenommener" wirkt, je knapper er dran ist.
+------------------------------------------------------ */
+function spawnBossSmokeBurst(w, h) {
+  const count = 4 + Math.round(bossRageLevel * 6);
+  const cx = w / 2;
+  const cy = h / 2 + 10;
+
+  for (let i = 0; i < count; i++) {
+    bossSmoke.push({
+      life: 0,
+      maxLife: 55 + Math.random() * 40,
+      x: cx + (Math.random() - 0.5) * 90,
+      y: cy - 20 + (Math.random() - 0.5) * 60,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: -0.5 - Math.random() * 0.6,
+      size: 10 + Math.random() * 16,
+      growth: 0.25 + Math.random() * 0.3,
+      baseAlpha: 0.22 + bossRageLevel * 0.18,
+    });
+  }
+}
+
+function drawBossSmoke() {
+  bossSmoke = bossSmoke.filter((p) => p.life < p.maxLife);
+  bossSmoke.forEach((p) => {
+    p.life++;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.size += p.growth;
+    const fade = 1 - p.life / p.maxLife;
+
+    bossCtx.globalAlpha = Math.max(0, fade) * p.baseAlpha;
+    bossCtx.fillStyle = "rgba(35,32,30,.9)";
+    bossCtx.beginPath();
+    bossCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    bossCtx.fill();
   });
   bossCtx.globalAlpha = 1;
 }
@@ -209,8 +260,20 @@ function drawBossCreature(time, w, h, boss) {
   bossCtx.setLineDash([]);
   bossCtx.restore();
 
+  // Echtes Recoil (Punkt 22): die Kreatur selbst wird kurz nach hinten
+  // gestoßen und leicht gekippt, statt nur den ganzen Bildschirm zu
+  // schütteln (das übernimmt weiterhin .fh-boss-impact separat) -
+  // klingt quadratisch ab, damit der Rückstoß hart einsetzt und
+  // weich ausläuft.
+  const recoilT = Math.max(0, Math.min(1, (bossRecoilUntil - time) / 260));
+  const recoilEase = recoilT * recoilT;
+  const recoilX = recoilEase * 16 * bossRecoilDir;
+  const recoilY = recoilEase * 9;
+  const recoilTilt = recoilEase * 0.05 * bossRecoilDir;
+
   bossCtx.save();
-  bossCtx.translate(cx, cy + bob);
+  bossCtx.translate(cx + recoilX, cy + bob + recoilY);
+  bossCtx.rotate(recoilTilt);
   bossCtx.scale(breathe, breathe);
 
   if (boss.type === "storm") drawStormDemon(time, boss);
@@ -717,12 +780,17 @@ async function renderCommunityBossPage() {
    Backend aktuell keine Phasen unterstützt, zunächst nur visuell
    anhand der vorhandenen HP darstellen"). "key" steuert zusätzlich
    eine CSS-Klasse auf der Arena (siehe applyBossPhaseVisuals). */
+/* Sechs visuelle Zustände genau an den geforderten HP-Schwellen
+   100/75/50/25/10/0% (Punkt 22) - jede Schwelle markiert den
+   ÜBERGANG in die jeweils nächste, sichtbar eskalierende Stufe. */
 function getBossPhase(percent) {
   const t = typeof window.t === "function" ? window.t : (k, f) => f;
-  if (percent > 70) return { label: t("boss.phaseNormal", "NORMAL"), index: 0, key: "normal" };
-  if (percent > 40) return { label: t("boss.phaseEnraged", "ENRAGED"), index: 1, key: "enraged" };
-  if (percent > 15) return { label: t("boss.phaseCritical", "CRITICAL"), index: 2, key: "critical" };
-  return { label: t("boss.phaseFinal", "FINAL PHASE"), index: 3, key: "final" };
+  if (percent <= 0) return { label: t("boss.phaseDefeated", "BESIEGT"), index: 5, key: "defeated" };
+  if (percent <= 10) return { label: t("boss.phaseFinal", "FINAL PHASE"), index: 4, key: "final" };
+  if (percent <= 25) return { label: t("boss.phaseCritical", "CRITICAL"), index: 3, key: "critical" };
+  if (percent <= 50) return { label: t("boss.phaseEnraged", "ENRAGED"), index: 2, key: "enraged" };
+  if (percent <= 75) return { label: t("boss.phaseWounded", "WOUNDED"), index: 1, key: "wounded" };
+  return { label: t("boss.phaseNormal", "NORMAL"), index: 0, key: "normal" };
 }
 
 function applyBossPhaseVisuals(phaseKey) {
@@ -730,7 +798,14 @@ function applyBossPhaseVisuals(phaseKey) {
   const arenaBg = document.getElementById("fh-boss-arena-bg");
   [panel, arenaBg].forEach((el) => {
     if (!el) return;
-    el.classList.remove("fh-boss-phase-normal", "fh-boss-phase-enraged", "fh-boss-phase-critical", "fh-boss-phase-final");
+    el.classList.remove(
+      "fh-boss-phase-normal",
+      "fh-boss-phase-wounded",
+      "fh-boss-phase-enraged",
+      "fh-boss-phase-critical",
+      "fh-boss-phase-final",
+      "fh-boss-phase-defeated"
+    );
     el.classList.add(`fh-boss-phase-${phaseKey}`);
   });
 }
@@ -1010,7 +1085,11 @@ function spawnBossHitEffect(damage) {
   const impactDelay = impactDelayByKind[kind] || 200;
   bossShakeUntil = now + impactDelay + 220;
   setTimeout(() => {
-    bossHitFlashUntil = performance.now() + 180;
+    const impactTime = performance.now();
+    bossHitFlashUntil = impactTime + 180;
+    bossRecoilUntil = impactTime + 260;
+    bossRecoilDir = Math.random() < 0.5 ? -1 : 1;
+    spawnBossSmokeBurst(bossCanvas.width, bossCanvas.height);
   }, impactDelay);
 
   // Schwebende Schadenszahl (bleibt DOM-basiert, gut lesbar)
@@ -1045,6 +1124,15 @@ function triggerBossArenaImpact() {
     void el.offsetWidth;
     el.classList.add("fh-boss-impact");
   });
+
+  // Kurzer "Kamera-Ruck" (Skalier-Punch, unabhängig vom Zittern oben) -
+  // nur auf der Bühne selbst, damit es wie ein Treffer aus Kamerasicht
+  // wirkt statt nur wie ein wackelnder Rahmen.
+  if (wrap) {
+    wrap.classList.remove("fh-boss-camera-jolt");
+    void wrap.offsetWidth;
+    wrap.classList.add("fh-boss-camera-jolt");
+  }
 }
 
 /* ------------------------------------------------------
