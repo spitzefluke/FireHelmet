@@ -60,6 +60,23 @@
    den Admin-Bereich umgehen, oder committete Daten (Gewinner,
    fremde Bewertungen/Support-Tickets) manipulieren/lesen.
 
+   DASSELBE GILT FUER players/{uid}.currency (Duplonen), das jetzt
+   zusaetzlich von Aendiis Spielothek genutzt wird (siehe scripts/
+   spielothek/spielothek.js): die App liest/schreibt currency immer
+   ueber eine Firestore-Transaktion (Einsatz nur abziehen, wenn
+   genug vorhanden ist, Auszahlung im selben Schritt), NIE
+   clientseitig "vertrauensvoll" hochgezaehlt. Diese Regeln stellen
+   sicher, dass NUR der eigene Account das eigene players/{uid}-
+   Dokument ueberhaupt beschreiben darf - sie koennen aber (ohne
+   Cloud Functions) nicht technisch erzwingen, DASS eine Aenderung
+   an "currency" wirklich aus einer echten Spielrunde stammt und
+   nicht aus einem direkten Schreibzugriff ueber die Browser-Konsole.
+   Das ist eine grundsaetzliche Grenze von rein clientseitigen
+   Firestore-Apps ohne eigenes Backend, keine neue Schwachstelle
+   durch die Spielothek - derselbe Spielraum bestand vorher schon
+   fuer Schwarzmarkt-Kaeufe/Schatzrad-Gewinne, die ebenfalls ueber
+   dasselbe Feld laufen.
+
    GEPRUEFT MIT DEM ECHTEN FIREBASE-EMULATOR (nicht nur
    Syntax-Check): 15 automatisierte Szenarien - eigenes Profil
    schreiben/fremdes nicht, site_config nur fuer die echte

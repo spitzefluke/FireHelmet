@@ -36,6 +36,7 @@ function pickCharacterEmblem(description, fallback) {
   if (text.includes("captain") || text.includes("kapitän")) return "⚓";
   if (text.includes("ausguck") || text.includes("beobacht")) return "🔭";
   if (text.includes("steuermann") || text.includes("steuer")) return "🧭";
+  if (text.includes("würfler") || text.includes("spielsüchtig") || text.includes("gambler")) return "🎲";
   return fallback;
 }
 

@@ -28,6 +28,14 @@ let siteConfig = {
   mainCountdownTarget: null, // ISO-String oder null = Fallback aus FIRE_HELMET_CONFIG
   shipEventUnlockDate: null, // ISO-String oder null = Fallback aus FIRE_HELMET_CONFIG
   lockedChapterIds: [], // Kapitel-IDs (siehe stories-data.js), die (noch) gesperrt sind
+  disabledGameIds: [], // Spielothek-Spiele-IDs (siehe spielothek-data.js), die der Admin deaktiviert hat
+
+  // Kapitel-IDs (beide Sprachvarianten), die automatisch aus
+  // lockedChapterIds entfernt werden, sobald das Schiff vollstaendig
+  // repariert ist (siehe maybeUnlockChapterAfterShipRepair() in
+  // scripts/ship/ship-repair.js). Leeres Array = keine automatische
+  // Freischaltung konfiguriert.
+  shipRepairUnlockChapterIds: [],
 };
 
 let siteConfigReady = false;
@@ -53,6 +61,8 @@ function applySiteConfigSnapshot(data) {
     mainCountdownTarget: typeof data.mainCountdownTarget === "string" ? data.mainCountdownTarget : null,
     shipEventUnlockDate: typeof data.shipEventUnlockDate === "string" ? data.shipEventUnlockDate : null,
     lockedChapterIds: Array.isArray(data.lockedChapterIds) ? data.lockedChapterIds : [],
+    disabledGameIds: Array.isArray(data.disabledGameIds) ? data.disabledGameIds : [],
+    shipRepairUnlockChapterIds: Array.isArray(data.shipRepairUnlockChapterIds) ? data.shipRepairUnlockChapterIds : [],
   };
   markSiteConfigReady();
   window.dispatchEvent(new CustomEvent("siteConfigUpdated", { detail: siteConfig }));

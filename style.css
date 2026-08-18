@@ -6712,17 +6712,100 @@ tr.row-frame {
   pointer-events: none;
   background: radial-gradient(ellipse at 50% 20%, rgba(214,168,79,.18), rgba(2,3,10,.92) 70%);
   opacity: 0;
+  overflow: hidden;
 }
 
 .fh-shop-intro-overlay.fh-shop-intro-play {
-  animation: fhShopIntroFade 1.8s ease forwards;
+  animation: fhShopIntroFade 2.3s ease forwards;
 }
 
 @keyframes fhShopIntroFade {
-  0%   { opacity: 0; }
-  14%  { opacity: 1; }
-  78%  { opacity: 1; }
-  100% { opacity: 0; }
+  0%   { opacity: 0; transform: scale(1.06); }
+  14%  { opacity: 1; transform: scale(1); }
+  80%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+
+/* Langsam driftender Nebel hinter dem Pergament - reine
+   CSS-Ebene, keine Partikel, kostet praktisch nichts. */
+.fh-shop-intro-fog {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(ellipse 40% 30% at 30% 60%, rgba(180,190,210,.10), transparent 70%),
+    radial-gradient(ellipse 45% 32% at 72% 45%, rgba(180,190,210,.08), transparent 70%);
+  filter: blur(18px);
+  opacity: 0;
+}
+
+.fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-fog {
+  animation: fhShopIntroFogDrift 2.3s ease-out forwards;
+}
+
+@keyframes fhShopIntroFogDrift {
+  0%   { opacity: 0; transform: translate3d(-2%, 1%, 0) scale(1); }
+  25%  { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(3%, -2%, 0) scale(1.12); }
+}
+
+/* Kurze, geheimnisvolle Lichtstrahlen die einmalig hinter dem
+   Pergament aufblenden und langsam weiterdrehen. */
+.fh-shop-intro-rays {
+  position: absolute;
+  width: 140%;
+  height: 140%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(240,201,106,.12) 4deg,
+    transparent 10deg,
+    transparent 96deg,
+    rgba(240,201,106,.09) 100deg,
+    transparent 108deg,
+    transparent 190deg,
+    rgba(240,201,106,.1) 195deg,
+    transparent 202deg,
+    transparent 360deg
+  );
+  opacity: 0;
+}
+
+.fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-rays {
+  animation: fhShopIntroRays 2.3s ease-out forwards;
+}
+
+@keyframes fhShopIntroRays {
+  0%   { opacity: 0; transform: rotate(-8deg) scale(.9); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(10deg) scale(1.05); }
+}
+
+/* Einzelne, einmalig aufsteigende Goldstaub-Partikel (JS-gespawnt,
+   siehe spawnShopIntroParticles() in shop.js) - eigene, NICHT
+   endlos laufende Animation, damit nichts dauerhaft rechnet. */
+.fh-shop-intro-particles {
+  position: absolute;
+  inset: 0;
+}
+
+.fh-shop-intro-particle {
+  position: absolute;
+  bottom: 30%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--fh-gold-bright);
+  box-shadow: 0 0 6px rgba(240,201,106,.8);
+  opacity: 0;
+  left: var(--fh-particle-x, 50%);
+  animation: fhShopIntroParticleDrift var(--fh-particle-duration, 2s) ease-out forwards;
+  animation-delay: var(--fh-particle-delay, 0s);
+}
+
+@keyframes fhShopIntroParticleDrift {
+  0%   { opacity: 0; transform: translateY(0) scale(.6); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-90px) scale(1); }
 }
 
 .fh-shop-intro-parchment {
@@ -6822,6 +6905,9 @@ tr.row-frame {
   .fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-parchment,
   .fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-compass,
   .fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-title,
+  .fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-fog,
+  .fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-rays,
+  .fh-shop-intro-particle,
   .shop-content.fh-shop-content-in,
   .shop-content.fh-shop-content-refresh {
     animation: none;
@@ -8151,4 +8237,212 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 @media (max-width: 600px) {
   .gateway-form-row { flex-direction: column; }
   .gateway-preview-frame { height: 340px; }
+}
+
+/* =====================================================
+   ÄNDIIS SPIELOTHEK
+   Piraten-/Schatz-Stil (Holz, Gold, dunkle Karten) statt
+   modernem Casino-Look - siehe scripts/spielothek/*.
+===================================================== */
+.spielothek-page-content {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+  text-align: center;
+}
+
+.spielothek-game-heading {
+  margin-top: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.spielothek-game-emoji {
+  font-size: 34px;
+  filter: drop-shadow(0 0 14px rgba(240,201,106,.4));
+}
+
+.spielothek-game-name {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.2rem, 3.4vw, 1.7rem);
+  letter-spacing: 2px;
+  color: var(--fh-gold-bright);
+  text-shadow: 0 0 24px rgba(240,201,106,.35);
+}
+
+.spielothek-bet-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.spielothek-stage {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: stretch;
+  justify-content: center;
+  padding: 28px 24px;
+  border-radius: var(--fh-radius-lg);
+  background:
+    linear-gradient(160deg, rgba(58,44,28,.55), rgba(15,10,6,.9)),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, transparent 2px 22px);
+  border: 1px solid rgba(214,168,79,.35);
+  box-shadow: 0 30px 70px rgba(0,0,0,.55), inset 0 0 50px rgba(0,0,0,.35);
+  transition: box-shadow .4s ease;
+}
+
+.spielothek-stage-win {
+  animation: spielothekStageWinFlash 1s ease-out;
+}
+
+.spielothek-stage-lose {
+  animation: spielothekStageLoseFlash .6s ease-out;
+}
+
+@keyframes spielothekStageWinFlash {
+  0%   { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
+  30%  { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 60px rgba(240,201,106,.55); }
+  100% { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
+}
+
+@keyframes spielothekStageLoseFlash {
+  0%   { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(220,50,50,0); }
+  35%  { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 40px rgba(220,50,50,.45); }
+  100% { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(220,50,50,0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-stage-win,
+  .spielothek-stage-lose {
+    animation: none;
+  }
+}
+
+.spielothek-andi {
+  flex: 0 0 auto;
+  width: min(200px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.spielothek-andi-image {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(214,168,79,.55);
+  box-shadow: 0 0 30px rgba(0,0,0,.5);
+}
+
+.spielothek-andi-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 54px;
+  background: radial-gradient(circle, rgba(214,168,79,.22), rgba(20,14,8,.9));
+}
+
+.spielothek-andi-quote {
+  position: relative;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(10,7,5,.6);
+  border: 1px solid rgba(214,168,79,.3);
+  color: var(--fh-fg);
+  font-size: 14px;
+  font-style: italic;
+  min-height: 3.4em;
+}
+
+.spielothek-game-area {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.spielothek-result {
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.spielothek-slot-reels {
+  display: flex;
+  gap: 10px;
+}
+
+.spielothek-slot-symbol {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #2a1f14, #14100a);
+  border: 2px solid rgba(214,168,79,.5);
+  box-shadow: inset 0 0 12px rgba(0,0,0,.6);
+}
+
+.spielothek-result-line {
+  font-family: var(--fh-font-display);
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+.spielothek-result-win {
+  color: var(--fh-success);
+}
+
+.spielothek-result-lose {
+  color: var(--fh-danger);
+}
+
+.spielothek-rules {
+  margin: 26px auto 0;
+  max-width: 480px;
+  text-align: left;
+  padding: 14px 18px;
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  color: var(--fh-text-muted);
+  font-size: 14px;
+}
+
+.spielothek-rules summary {
+  cursor: pointer;
+  font-family: var(--fh-font-display);
+  color: var(--fh-gold-bright);
+  letter-spacing: 1px;
+}
+
+.spielothek-rules ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .spielothek-stage {
+    flex-direction: column;
+    align-items: center;
+  }
+  .spielothek-slot-symbol {
+    width: 52px;
+    height: 52px;
+    font-size: 28px;
+  }
 }

@@ -29,6 +29,10 @@ function changePage(pageID) {
     updateGatewayPage(pageID);
   }
 
+  if (typeof updateSpielothekPage === "function") {
+    updateSpielothekPage(pageID);
+  }
+
   if (typeof updateCodeAmbientPage === "function") {
     updateCodeAmbientPage(pageID);
   }

@@ -298,6 +298,39 @@ function playShopEntrance() {
     void content.offsetWidth;
     content.classList.add("fh-shop-content-in");
   }
+
+  spawnShopIntroParticles();
+}
+
+/* ------------------------------------------------------
+   GOLDSTAUB-PARTIKEL BEIM SHOP-EINTRITT
+   Spielt genau EINMAL zusammen mit playShopEntrance() - eigene,
+   NICHT endlos laufende Animation je Partikel (siehe
+   fhShopIntroParticleDrift in style.css), räumt sich danach
+   selbst über setTimeout ab. Auf Mobilgeräten und bei
+   "reduced motion" bewusst weniger/keine Partikel (Punkt 20:
+   Performance).
+------------------------------------------------------ */
+function spawnShopIntroParticles() {
+  const layer = document.getElementById("fh-shop-intro-particles");
+  if (!layer) return;
+  layer.innerHTML = "";
+
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion) return;
+
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 640px)").matches;
+  const count = isMobile ? 5 : 10;
+
+  for (let i = 0; i < count; i++) {
+    const particle = document.createElement("span");
+    particle.className = "fh-shop-intro-particle";
+    particle.style.setProperty("--fh-particle-x", `${30 + Math.random() * 40}%`);
+    particle.style.setProperty("--fh-particle-delay", `${(0.3 + Math.random() * 1.3).toFixed(2)}s`);
+    particle.style.setProperty("--fh-particle-duration", `${(1.6 + Math.random() * 1.2).toFixed(2)}s`);
+    layer.appendChild(particle);
+    setTimeout(() => particle.remove(), 3200);
+  }
 }
 
 /* ------------------------------------------------------

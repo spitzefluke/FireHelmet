@@ -13,7 +13,7 @@ const FIRE_HELMET_CONFIG = {
   // Hörspiel-Link für die Socials-Seite. Zentral hier eintragen -
   // wird NUR von scripts/core/audiobook-link.js gelesen, nirgends
   // sonst hart im Code verteilt.
-  spotifyAudiobookUrl: "https://open.spotify.com/episode/4HwcXrFhMIOGXARtDKAVWV?si=xDwsPpJTTggjm_L3bqY3Qw&utm_source=copy-link",
+  spotifyAudiobookUrl: "https://open.spotify.com/show/0344PKuCA83ISk3t0R3ZkO",
 
   // "Repariere das Schiff"-Event (siehe scripts/ship/*): fester
   // Endzeitpunkt statt eines im Browser herunterzählenden Timers -
