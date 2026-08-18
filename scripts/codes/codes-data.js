@@ -180,6 +180,11 @@ const codes = [
     message: "🖌️ Ein zweiter Pinsel, für die letzten Details.",
     toolUnlock: "brush",
   },
+  {
+    hash: "516f8d0acea001b6c788aab67b70f88c7c18eca88fb1a61cf922bb77a8af2769", // fire100
+    message: "🪙 +100 Dublonen für dich!",
+    currencyReward: 100,
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde

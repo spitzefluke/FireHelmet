@@ -747,47 +747,17 @@ async function maybeUnlockChapterAfterShipRepair() {
    KEIN zweites, unabhängiges Reparatursystem, nur eine kompakte
    Zusammenfassung mit Link zur vollständigen Schiff-Seite.
 
-   Eigene Timer-Variablen (homeShip*), bewusst getrennt von den
-   Timern der vollständigen Schiff-Seite (shipCountdownInterval /
-   window._shipTimerTick) und vom bestehenden Haupt-Countdown
-   (countdown.js) - keine gemeinsame Variable, keine Konflikte.
+   Eigene Timer-Variable (homeShipTickerInterval), bewusst getrennt
+   von den Timern der vollständigen Schiff-Seite
+   (shipCountdownInterval / window._shipTimerTick) und vom
+   bestehenden Haupt-Countdown (countdown.js) - keine gemeinsame
+   Variable, keine Konflikte.
 ------------------------------------------------------ */
-let homeShipCountdownInterval = null;
 let homeShipTickerInterval = null;
 
 function stopHomeShipRepairTimers() {
-  clearInterval(homeShipCountdownInterval);
   clearInterval(homeShipTickerInterval);
-  homeShipCountdownInterval = null;
   homeShipTickerInterval = null;
-}
-
-function tickHomeShipCountdown() {
-  const bodyEl = document.getElementById("fh-home-ship-repair-body");
-  if (!bodyEl) {
-    stopHomeShipRepairTimers();
-    return;
-  }
-
-  if (isShipEventUnlocked()) {
-    renderHomeShipRepairSummary();
-    return;
-  }
-
-  const diff = getShipEventUnlockDate() - new Date();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-  const daysEl = document.getElementById("home-ship-days");
-  const hoursEl = document.getElementById("home-ship-hours");
-  const minutesEl = document.getElementById("home-ship-minutes");
-  const secondsEl = document.getElementById("home-ship-seconds");
-  if (daysEl) daysEl.textContent = padShipCountdown(days);
-  if (hoursEl) hoursEl.textContent = padShipCountdown(hours);
-  if (minutesEl) minutesEl.textContent = padShipCountdown(minutes);
-  if (secondsEl) secondsEl.textContent = padShipCountdown(seconds);
 }
 
 function buildHomeShipChecklistHtml(completedPhases) {
@@ -808,19 +778,12 @@ async function renderHomeShipRepairSummary() {
 
   stopHomeShipRepairTimers();
 
+  // Countdown auf der Home-Zusammenfassung bewusst entfernt (siehe
+  // Auftrag) - der "Zur Reparatur"-Button (statisch in index.html)
+  // bleibt unverändert bestehen und funktioniert weiterhin, hier wird
+  // in der gesperrten Ansicht einfach nichts mehr angezeigt.
   if (!isShipEventUnlocked()) {
-    bodyEl.innerHTML = `
-      <div class="fh-home-ship-countdown-label" data-i18n="homeShip.countdownLabel">SCHIFFSREPARATUR</div>
-      <div class="countdown fh-home-ship-countdown">
-        <div class="time-box"><span id="home-ship-days">00</span><small data-i18n="common.days">Tage</small></div>
-        <div class="time-box"><span id="home-ship-hours">00</span><small data-i18n="common.hours">Stunden</small></div>
-        <div class="time-box"><span id="home-ship-minutes">00</span><small data-i18n="common.minutes">Minuten</small></div>
-        <div class="time-box"><span id="home-ship-seconds">00</span><small data-i18n="common.seconds">Sekunden</small></div>
-      </div>
-    `;
-    if (typeof applyTranslations === "function") applyTranslations();
-    tickHomeShipCountdown();
-    homeShipCountdownInterval = setInterval(tickHomeShipCountdown, 1000);
+    bodyEl.innerHTML = "";
     return;
   }
 
