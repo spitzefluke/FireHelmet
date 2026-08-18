@@ -117,7 +117,23 @@ async function playSpielothekGame() {
       const spin = handler.play();
       const newCurrency = currentCurrency - betCost + spin.payout;
 
-      tx.set(docRef, { currency: Math.max(0, newCurrency) }, { merge: true });
+      // Lebenslange Zähler, Grundlage der täglichen Reparatur-Quests
+      // (siehe DAILY_QUESTS in ship-repair-data.js) - unabhängig vom
+      // Kontostand, der durch Einsätze/Käufe auch wieder sinkt.
+      const currentGamesPlayed = data.gamesPlayed || 0;
+      const currentGamesWon = data.gamesWon || 0;
+      const currentTotalEarned = data.totalCurrencyEarned || 0;
+
+      tx.set(
+        docRef,
+        {
+          currency: Math.max(0, newCurrency),
+          gamesPlayed: currentGamesPlayed + 1,
+          gamesWon: spin.win ? currentGamesWon + 1 : currentGamesWon,
+          totalCurrencyEarned: spin.payout > 0 ? currentTotalEarned + spin.payout : currentTotalEarned,
+        },
+        { merge: true }
+      );
       return spin;
     });
 

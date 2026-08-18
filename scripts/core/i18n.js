@@ -184,6 +184,7 @@ const translations = {
     "ship.needLogin": "Melde dich zuerst an, um mitzureparieren!",
     "ship.repairButton": "Reparieren",
     "ship.toolsHeading": "Deine Werkzeuge",
+    "ship.stagesHeading": "Reparatur-Etappen",
     "ship.puzzlesHeading": "⚓ Rätsel des Kapitäns",
 
     "menu.shipRepair": "⚒ Repariere das Schiff",
@@ -369,6 +370,7 @@ const translations = {
     "ship.needLogin": "Log in first to help with repairs!",
     "ship.repairButton": "Repair",
     "ship.toolsHeading": "Your Tools",
+    "ship.stagesHeading": "Repair Stages",
     "ship.puzzlesHeading": "⚓ Captain's Riddles",
 
     "menu.shipRepair": "⚒ Repair the Ship",

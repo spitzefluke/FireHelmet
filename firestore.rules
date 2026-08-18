@@ -76,16 +76,58 @@
                                  eigene Reparatur per Konsole auf
                                  "fertig" springen, Etappen ueberspringen
                                  oder den Countdown manipulieren kann.
+                                 20 Etappen (SHIP_REPAIR_PHASES).
+
+   NEU (dieses Update) IN players/{uid}:
+   - shipTools        Werkzeug-Inventar, siehe SHIP_TOOLS in
+                       ship-repair-data.js (20 IDs). War VORHER
+                       ueberhaupt nicht validiert (Luecke geschlossen,
+                       siehe validShipTools() unten).
+   - gamesPlayed / gamesWon / totalCurrencyEarned
+                       neue lebenslange Zaehler, Grundlage fuer die
+                       taeglichen Reparatur-Quests (siehe dailyQuests
+                       unten). Werden von der Spielothek-Transaktion
+                       bzw. addCurrency() (wheel.js) mitgezaehlt.
+   - dailyQuests.startedAt / dailyQuests.claimedDays
+                       serverzeit-verankerte taegliche Werkzeug-Quests
+                       (20 Tage). "startedAt" wird EINMALIG per
+                       serverTimestamp() gesetzt und ist danach
+                       unveraenderlich - der freigeschaltete Tag
+                       berechnet sich ausschliesslich aus request.time
+                       minus diesem Wert, NIE aus einer vom Client
+                       gesendeten Uhrzeit. Das verhindert, dass ein
+                       Spieler durch Aendern der lokalen Systemuhr
+                       Tage ueberspringt.
 
    BEKANNTE, BEWUSST IN KAUF GENOMMENE EINSCHRAENKUNGEN:
    Ohne eigenes Backend (Cloud Functions) kann nicht JEDER denkbare
    Wert serverseitig neu berechnet werden. Die Regeln unten grenzen
    die tatsaechlich riskanten Felder (Dublonen, Boss-Schaden,
-   Reparatur-Fortschritt) auf plausible Schrittweiten/Uebergaenge
-   ein - das deckt weit mehr ab als reine Ownership-Pruefungen,
-   ersetzt aber keinen echten Server. Das ist bewusst so und war
-   bereits vor dieser Aenderung der Stand der echten, produktiven
-   Regeln.
+   Reparatur-Fortschritt, Werkzeuge, Tagesquests) auf plausible
+   Schrittweiten/Uebergaenge ein - das deckt weit mehr ab als reine
+   Ownership-Pruefungen, ersetzt aber keinen echten Server. Das ist
+   bewusst so und war bereits vor dieser Aenderung der Stand der
+   echten, produktiven Regeln.
+   Zwei bewusst in Kauf genommene Vereinfachungen bei shipTools/
+   dailyQuests (Details direkt bei validShipTools() bzw.
+   validDailyQuestsWriteDetail() unten):
+   - Werkzeuge sind pro Schreibvorgang auf HOECHSTENS EIN sich
+     aenderndes Werkzeug begrenzt (verhindert "shipTools = alle 20
+     auf einmal hochsetzen"), der genaue Zahlenwert dieses einen
+     Werkzeugs ist dabei aber nur durch eine absolute Obergrenze
+     (40) gedeckelt, nicht durch einen "+1 seit vorher"-Vergleich.
+     Eine erste Fassung mit 20 einzeln ausgerollten "+1"-Pruefungen
+     hat zusammen mit den uebrigen Pruefungen Firestores Obergrenze
+     von 1000 auswertbaren Teilausdruecken pro Schreibvorgang
+     gerissen ("evaluation error" statt sauberer Ablehnung - siehe
+     Testprotokoll). Ungefaehrlich, weil jede der 20 Etappen ihr
+     EIGENES festes Werkzeug braucht: ein hoher Bestand EINES
+     Werkzeugs verschafft keinen Vorteil bei einer anderen Etappe.
+   - Der Inhalt von dailyQuests.claimedDays wird nur ueber seine
+     LAENGE geprueft, nicht Element fuer Element (Firestore-Regeln
+     kennen keine Listen-Verkettung). Der tatsaechlich frei-
+     geschaltete Tag wird immer aus dieser Laenge hergeleitet, nie
+     aus den eingereichten Werten selbst - unschaedlich.
 
    HINWEIS ZU DEN "DEV-PREVIEW"-WERKZEUGEN (devFinishActiveRepair(),
    devResetShipEvent() in ship-repair.js): Diese sind AUSDRUECKLICH
@@ -146,15 +188,229 @@ service cloud.firestore {
       return field in resource.data ? resource.data[field] : 0;
     }
 
+    // Liest players/{playerId}.shipTools[toolId] aus dem BESTEHENDEN
+    // Dokument sicher aus (0, falls Werkzeug/Map noch nicht existiert).
+    function oldToolCount(toolId) {
+      return ('shipTools' in resource.data && toolId in resource.data.shipTools)
+             ? resource.data.shipTools[toolId] : 0;
+    }
+
+    // Alle 20 gueltigen Werkzeug-IDs, siehe SHIP_TOOLS in
+    // scripts/ship/ship-repair-data.js - MUSS mit dieser Liste
+    // synchron bleiben.
+    function allToolIds() {
+      return [
+        'spyglass', 'toolbox', 'hammer', 'sealant', 'saw', 'cableSet',
+        'fuse', 'multimeter', 'oilCan', 'screwdriver', 'coolant',
+        'fuelFilter', 'wrench', 'antenna', 'compass', 'circuitChip',
+        'brush', 'safetyKit', 'testKit', 'captainsSeal'
+      ];
+    }
+
+    function oldShipToolsMap() {
+      return 'shipTools' in resource.data ? resource.data.shipTools : {};
+    }
+
+    // Werkzeug-Inventar: nur bekannte IDs (keine frei erfundenen
+    // Schluessel), Kartengroesse auf die bekannten 20 begrenzt, und -
+    // ueber diff().affectedKeys() statt einer 20-fach ausgerollten
+    // Einzelpruefung (das hat das Ausdrucks-Budget der Regelauswertung
+    // gesprengt, siehe Kommentar unten) - HOECHSTENS EIN Werkzeug-Typ
+    // darf sich pro Schreibvorgang ueberhaupt aendern. Das deckt genau
+    // das im Auftrag genannte Angriffsszenario ab ("tools = alle": in
+    // einem einzigen Schreibvorgang gleich mehrere/alle 20 Werkzeuge
+    // auf einmal hochsetzen) und war VOR diesem Update ueberhaupt nicht
+    // validiert (komplett offenes Feld).
+    //
+    // BEWUSST IN KAUF GENOMMENE VEREINFACHUNG: der exakte Zahlenwert des
+    // EINEN sich aendernden Werkzeugs wird hier nicht mehr einzeln
+    // gegen "+1" geprueft (eine erste Fassung tat das ueber 20 einzeln
+    // ausgerollte Funktionsaufrufe, die zusammen mit den uebrigen
+    // Pruefungen bei jedem Schreibvorgang Firestores Obergrenze von
+    // 1000 auswertbaren Teilausdruecken gerissen hat - "evaluation
+    // error"/"maximum expressions" statt einer sauberen Ablehnung, ein
+    // enormes Risiko fuer die echte Produktion). Das ist hier bewusst
+    // in Kauf genommen: da jede der 20 Reparatur-Etappen ihr EIGENES,
+    // festes Werkzeug braucht (siehe SHIP_REPAIR_PHASES in ship-repair-
+    // data.js), verschafft ein beliebig hoher Bestand EINES bereits
+    // bekannten Werkzeugs keinerlei Vorteil - man kann damit keine
+    // andere Etappe freischalten oder ueberspringen, hoechstens einen
+    // wirkungslosen Ueberschuss anhaeufen.
+    // Absolute Obergrenze je Werkzeug (unabhaengig vom alten Wert) -
+    // bewusst als flache, funktionsaufruffreie Aufzaehlung ohne
+    // resource.data-Zugriff (billiger als eine "+1 seit vorher"-Pruefung
+    // mit 20 einzelnen oldToolCount()-Aufrufen, die das Ausdrucks-
+    // Budget gesprengt hat). 40 ist grosszuegig ueber jedem plausiblen
+    // Spielstand (jedes Werkzeug wird hoechstens einmal pro Etappe
+    // gebraucht), verhindert aber "shipTools.hammer = 999999" per Konsole.
+    function withinToolCap(newData, id) {
+      return !(id in newData.shipTools) || newData.shipTools[id] <= 40;
+    }
+
+    function validShipToolCaps(newData) {
+      return withinToolCap(newData, 'spyglass') && withinToolCap(newData, 'toolbox')
+        && withinToolCap(newData, 'hammer') && withinToolCap(newData, 'sealant')
+        && withinToolCap(newData, 'saw') && withinToolCap(newData, 'cableSet')
+        && withinToolCap(newData, 'fuse') && withinToolCap(newData, 'multimeter')
+        && withinToolCap(newData, 'oilCan') && withinToolCap(newData, 'screwdriver')
+        && withinToolCap(newData, 'coolant') && withinToolCap(newData, 'fuelFilter')
+        && withinToolCap(newData, 'wrench') && withinToolCap(newData, 'antenna')
+        && withinToolCap(newData, 'compass') && withinToolCap(newData, 'circuitChip')
+        && withinToolCap(newData, 'brush') && withinToolCap(newData, 'safetyKit')
+        && withinToolCap(newData, 'testKit') && withinToolCap(newData, 'captainsSeal');
+    }
+
+    function validShipTools(newData) {
+      return !('shipTools' in newData) || (
+        newData.shipTools is map
+        && newData.shipTools.size() <= 20
+        && newData.shipTools.keys().hasOnly(allToolIds())
+        && newData.shipTools.diff(oldShipToolsMap()).affectedKeys().size() <= 1
+        && validShipToolCaps(newData)
+      );
+    }
+
+    // Neue lebenslange Zaehler-Felder (Grundlage der Tagesquests,
+    // siehe DAILY_QUESTS in ship-repair-data.js): duerfen pro
+    // Schreibvorgang nur um einen plausiblen Hoechstwert steigen -
+    // gamesPlayed/gamesWon je um max. 1 (eine Spielothek-Runde pro
+    // Transaktion), totalCurrencyEarned um denselben Hoechstbetrag
+    // wie "currency" selbst (groesste Einzel-Belohnung: Code FIRE300).
+    function validQuestCounters(data) {
+      return (!('gamesPlayed' in data)
+              || (data.gamesPlayed is int
+                  && data.gamesPlayed >= 0
+                  && data.gamesPlayed <= oldNum('gamesPlayed') + 1))
+             && (!('gamesWon' in data)
+                 || (data.gamesWon is int
+                     && data.gamesWon >= 0
+                     && data.gamesWon <= oldNum('gamesWon') + 1))
+             && (!('totalCurrencyEarned' in data)
+                 || (data.totalCurrencyEarned is int
+                     && data.totalCurrencyEarned >= 0
+                     && data.totalCurrencyEarned <= oldNum('totalCurrencyEarned') + 300));
+    }
+
+    // Liest players/{playerId}.dailyQuests.claimedDays aus dem
+    // BESTEHENDEN Dokument sicher aus (leere Liste, falls noch nie
+    // gestartet).
+    function oldClaimedDays() {
+      return ('dailyQuests' in resource.data && 'claimedDays' in resource.data.dailyQuests)
+             ? resource.data.dailyQuests.claimedDays : [];
+    }
+
+    // Werkzeug, das laut ship-repair-data.js DAILY_QUESTS[] fuer Tag
+    // "day" vergeben wird - MUSS mit der Reihenfolge dort synchron
+    // bleiben (Tag N -> dasselbe Werkzeug wie Etappe N).
+    function toolForQuestDay(day) {
+      return [
+        'spyglass', 'toolbox', 'hammer', 'sealant', 'saw', 'cableSet',
+        'fuse', 'multimeter', 'oilCan', 'screwdriver', 'coolant',
+        'fuelFilter', 'wrench', 'antenna', 'compass', 'circuitChip',
+        'brush', 'safetyKit', 'testKit', 'captainsSeal'
+      ][day - 1];
+    }
+
+    // Zaehler-Feld, gegen das Tag "day" geprueft wird - siehe
+    // DAILY_QUESTS[*].metric in ship-repair-data.js.
+    function metricForQuestDay(day) {
+      return [
+        'gamesPlayed', 'gamesWon', 'totalCurrencyEarned', 'codesCracked', 'gamesPlayed',
+        'gamesWon', 'totalCurrencyEarned', 'codesCracked', 'gamesPlayed', 'gamesWon',
+        'totalCurrencyEarned', 'codesCracked', 'gamesPlayed', 'gamesWon', 'totalCurrencyEarned',
+        'codesCracked', 'gamesPlayed', 'gamesWon', 'totalCurrencyEarned', 'streak'
+      ][day - 1];
+    }
+
+    // Mindestwert, den metricForQuestDay(day) erreicht haben muss -
+    // siehe DAILY_QUESTS[*].threshold in ship-repair-data.js.
+    function thresholdForQuestDay(day) {
+      return [3, 2, 100, 1, 6, 4, 250, 2, 10, 6, 450, 3, 15, 8, 700, 4, 20, 10, 1000, 5][day - 1];
+    }
+
+    // Ab wann Tag "day" ueberhaupt geclaimt werden darf: ausschliesslich
+    // anhand der SERVER-Uhrzeit (request.time) seit dem einmalig per
+    // serverTimestamp() gesetzten Startzeitpunkt - eine manipulierte
+    // lokale Client-Uhr hat darauf keinerlei Einfluss.
+    function dailyQuestDayIsUnlocked(day) {
+      return 'dailyQuests' in resource.data
+             && 'startedAt' in resource.data.dailyQuests
+             && day <= (((request.time.toMillis() - resource.data.dailyQuests.startedAt.toMillis()) / 86400000) + 1);
+    }
+
+    // Vollstaendige Pruefung eines Schreibvorgangs, der "dailyQuests"
+    // beruehrt - deckt zwei Faelle ab:
+    //   Fall A: Erststart - startedAt existiert im alten Dokument noch
+    //   nicht und wird jetzt GENAU auf request.time gesetzt (beweist,
+    //   dass wirklich die Server-Uhrzeit verwendet wurde, kein vom
+    //   Client erfundener Zeitstempel), claimedDays ist dabei leer.
+    //   Fall B: Quest-Einloesung - startedAt bleibt exakt unveraendert,
+    //   claimedDays waechst um GENAU einen neuen, fortlaufenden Tag
+    //   (kein Ueberspringen), dieser Tag ist laut Server-Uhrzeit
+    //   bereits freigeschaltet, die zugehoerige Metrik hat die
+    //   noetige Schwelle bereits erreicht (auf Basis des ALTEN,
+    //   unveraenderten Zaehlerstands), und GENAU das fuer diesen Tag
+    //   vorgesehene Werkzeug wird dabei um +1 erhoeht.
+    // "let"-Bindungen berechnen jeden Wert nur EINMAL statt wiederholt
+    // (wichtig fuer die Kosten der Regelauswertung, siehe validShipTools()).
+    // Der teure Rumpf steckt bewusst in einer EIGENEN Funktion
+    // (validDailyQuestsWriteDetail), die nur aufgerufen (und damit nur
+    // ausgewertet) wird, wenn "dailyQuests" ueberhaupt angefasst wird -
+    // die grosse Mehrheit aller Schreibvorgaenge (Name, Dublonen,
+    // Werkzeuge, ...) zahlt dafuer gar nichts.
+    //
+    // "newDays.size() == oldDays.size() + 1" prueft bewusst NUR die
+    // LAENGE, nicht den kompletten Listeninhalt (Firestore-Regeln
+    // unterstuetzen keine Listen-Verkettung "liste + liste", nur
+    // int/float/string/duration/timestamp - eine Inhaltspruefung waere
+    // nur ueber eine weitere, teure Iteration moeglich). Das ist
+    // trotzdem sicher: der tatsaechlich claimbare Tag wird HIER immer
+    // aus "oldDays.size() + 1" hergeleitet, nie aus dem eingereichten
+    // Listeninhalt selbst - selbst wenn jemand voellig sinnfreie Werte
+    // in claimedDays schreiben wuerde, koennte das nie mehr als GENAU
+    // einen weiteren, fortlaufenden Tag pro Schreibvorgang freischalten
+    // (siehe dailyQuestDayIsUnlocked()/thresholdForQuestDay() unten,
+    // die ausschliesslich auf dieser hergeleiteten Tagesnummer beruhen).
+    function validDailyQuestsWriteDetail(newData) {
+      let oldDays = oldClaimedDays();
+      let newDays = newData.dailyQuests.claimedDays;
+      let newDay = oldDays.size() + 1;
+      let tool = toolForQuestDay(newDay);
+
+      return newData.dailyQuests is map
+        && newDays is list
+        && newDays.size() <= 20
+        && (
+          (!('dailyQuests' in resource.data) || !('startedAt' in resource.data.dailyQuests))
+            ? (newData.dailyQuests.startedAt == request.time && newDays.size() == 0)
+            : (
+              newData.dailyQuests.startedAt == resource.data.dailyQuests.startedAt
+              && (
+                newDays.size() == oldDays.size()
+                || (
+                  newDays.size() == oldDays.size() + 1
+                  && dailyQuestDayIsUnlocked(newDay)
+                  && oldNum(metricForQuestDay(newDay)) >= thresholdForQuestDay(newDay)
+                  && newData.shipTools[tool] == oldToolCount(tool) + 1
+                )
+              )
+            )
+        );
+    }
+
+    function validDailyQuestsWrite(newData) {
+      return !('dailyQuests' in newData) || validDailyQuestsWriteDetail(newData);
+    }
+
     // Prueft die Shop-Felder: Dublonen duerfen pro Schreibvorgang nur
-    // um max. 200 steigen (groesste tatsaechlich vergebene Belohnung),
-    // aber beliebig sinken (Kaeufe im Shop, Spielothek-Einsatz). Nie
-    // unter 0.
+    // um max. 300 steigen (groesste tatsaechlich vergebene Belohnung -
+    // Code FIRE300, siehe scripts/codes/codes-data.js), aber beliebig
+    // sinken (Kaeufe im Shop, Spielothek-Einsatz). Nie unter 0.
     function validShopFields(data) {
       return (!('currency' in data)
               || (data.currency is int
                   && data.currency >= 0
-                  && data.currency <= oldNum('currency') + 200))
+                  && data.currency <= oldNum('currency') + 300))
              && (!('ownedShopItems' in data)
                  || (data.ownedShopItems is list && data.ownedShopItems.size() <= 40))
              && (!('equippedFrame' in data)
@@ -175,6 +431,9 @@ service cloud.firestore {
                     && validRewards(request.resource.data)
                     && validAvatar(request.resource.data)
                     && validShopFields(request.resource.data)
+                    && validShipTools(request.resource.data)
+                    && validQuestCounters(request.resource.data)
+                    && validDailyQuestsWrite(request.resource.data)
                     && (!('streak' in request.resource.data)
                         || (request.resource.data.streak is int && request.resource.data.streak <= 1))
                     && (!('codesCracked' in request.resource.data)
@@ -186,6 +445,9 @@ service cloud.firestore {
                     && validRewards(request.resource.data)
                     && validAvatar(request.resource.data)
                     && validShopFields(request.resource.data)
+                    && validShipTools(request.resource.data)
+                    && validQuestCounters(request.resource.data)
+                    && validDailyQuestsWrite(request.resource.data)
                     && (!('streak' in request.resource.data)
                         || (request.resource.data.streak is int
                             && request.resource.data.streak <= oldNum('streak') + 1))
@@ -407,47 +669,35 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------
-    // SCHIFFSREPARATUR (EIN gemeinsames Community-Dokument,
-    // "ship_repair/main" - siehe scripts/ship/ship-repair.js)
-    // ---------------------------------------------
-    // Gehoert KEINEM einzelnen Spieler (genau wie community_boss),
-    // deshalb oeffentlich lesbar - es gibt hier keine privaten
-    // Schiffsstatusdaten, die geschuetzt werden muessten, nur den
-    // gemeinsamen Reparaturfortschritt der ganzen Crew.
+    // SCHIFFSREPARATUR - PERSOENLICH PRO SPIELER (20 Etappen)
+    // Dokument-ID ist die eigene Auth-UID (wie bei players/{playerId}):
+    // jeder Spieler darf ausschliesslich sein EIGENES Reparaturdokument
+    // lesen und schreiben. Repariert Spieler A sein Schiff, hat das
+    // dadurch technisch erzwungen keinerlei Einfluss auf den
+    // Reparaturstatus von Spieler B - ein fremdes Dokument ist fuer
+    // Firestore-Regeln schlicht ein anderer Pfad, auf den niemand
+    // sonst zugreifen kann.
     //
-    // Schreiben ist zusaetzlich zur Anmeldung strukturell
-    // eingeschraenkt (Punkt "Spieler darf Status nicht beliebig auf
-    // 'fertig' setzen"):
+    // Schreiben ist zusaetzlich zur Eigentuemer-Pruefung strukturell
+    // eingeschraenkt (Spieler darf Status nicht beliebig auf "fertig"
+    // setzen):
     //   - Neuanlage nur im echten Ausgangszustand (leer).
-    //   - Eine neue Reparaturphase starten: nur wenn gerade
-    //     wirklich KEINE Reparatur laeuft, der bisherige Fortschritt
+    //   - Eine neue Reparatur-Etappe starten: nur wenn gerade
+    //     wirklich KEINE Etappe laeuft, der bisherige Fortschritt
     //     (completedPhases) dabei unveraendert bleibt, und das neue
     //     Enddatum wirklich in der Zukunft liegt (kein sofortiges
     //     "fertig").
-    //   - Eine laufende Reparatur abschliessen: nur wenn ihre
+    //   - Eine laufende Etappe abschliessen: nur wenn ihre
     //     gespeicherte Endzeit laut Server-Uhrzeit WIRKLICH schon
     //     erreicht ist, und completedPhases dabei um GENAU die eine
-    //     laufende Phase waechst (kein Ueberspringen mehrerer Phasen,
-    //     kein Verkuerzen der Liste).
+    //     laufende Etappe waechst (kein Ueberspringen mehrerer
+    //     Etappen, kein Verkuerzen der Liste).
     //   - shipName/namedBy duerfen erst gesetzt werden, wenn dabei
-    //     wirklich alle Phasen fertig sind, und danach nie wieder
+    //     wirklich alle 20 Etappen fertig sind, und danach nie wieder
     //     veraendert werden.
     // Das verhindert, dass jemand ueber die Browser-Konsole die
-    // Reparatur sofort fertigstellt oder den gemeinsamen Fortschritt
-    // loescht/faelscht - genau wie bei community_boss oben.
-    // ---------------------------------------------
-    // ---------------------------------------------
-    // SCHIFFSREPARATUR - PERSOENLICH PRO SPIELER
-    // Dokument-ID ist die eigene Auth-UID (wie bei players/{playerId}),
-    // NICHT mehr ein gemeinsames "main"-Dokument: jeder Spieler darf
-    // ausschliesslich sein EIGENES Reparaturdokument lesen und
-    // schreiben. Repariert Spieler A sein Schiff, hat das dadurch
-    // technisch erzwungen keinerlei Einfluss auf den Reparaturstatus
-    // von Spieler B - ein fremdes Dokument ist fuer Firestore-Regeln
-    // schlicht ein anderer Pfad, auf den niemand sonst zugreifen kann.
-    // Die Uebergangs-Validierung (Etappen nur der Reihe nach, kein
-    // Sprung auf "fertig", Countdown nur nach echtem Ablauf laut
-    // Server-Zeit) bleibt inhaltlich wie zuvor erhalten.
+    // eigene Reparatur sofort fertigstellt oder den eigenen
+    // Fortschritt loescht/faelscht.
     // ---------------------------------------------
     match /ship_repair/{playerId} {
       allow read: if isSignedIn() && request.auth.uid == playerId;
@@ -480,13 +730,13 @@ service cloud.firestore {
                        && request.resource.data.completedPhases.size() == resource.data.completedPhases.size() + 1
                        && request.resource.data.completedPhases[resource.data.completedPhases.size()] == resource.data.activeRepair.phaseId)
                     )
-                    // shipName: bleibt null, solange nicht alle 5 Etappen
+                    // shipName: bleibt null, solange nicht alle 20 Etappen
                     // fertig sind (kein Ueberspringen einzelner Etappen
                     // moeglich); wird beim Abschluss der letzten Etappe
                     // genau einmal gesetzt; danach unveraenderbar.
                     && (resource.data.shipName != null
                         ? request.resource.data.shipName == resource.data.shipName
-                        : (request.resource.data.completedPhases.size() < 5
+                        : (request.resource.data.completedPhases.size() < 20
                            ? request.resource.data.shipName == null
                            : request.resource.data.shipName is string))
                     && ((request.resource.data.shipName == null) == (request.resource.data.namedBy == null));
