@@ -185,6 +185,16 @@ const codes = [
     message: "🪙 +100 Dublonen für dich!",
     currencyReward: 100,
   },
+  {
+    hash: "a32e56ce3c0d998093891aec8d03f5c3a4baa9d058acd81f40571d75792e86d4", // beutel25
+    message: "🪙 +25 Dublonen für dich!",
+    currencyReward: 25,
+  },
+  {
+    hash: "8bfe3282c066093f84dc23ea2215dff3eae0c7bb2a0d7a11585800adc3d7efb1", // kleinerbeutel
+    message: "🪙 +25 Dublonen für dich!",
+    currencyReward: 25,
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
