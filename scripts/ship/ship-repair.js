@@ -8,17 +8,19 @@
    "Countdown"-Instanz ist die Dauer einer bereits gestarteten
    Reparaturphase (activeRepair.endsAt) - siehe startShipRepairTicker().
 
-   ARCHITEKTUR (Punkt 22/39 des Auftrags):
-   - Das SCHIFF selbst ist EIN gemeinsames Community-Objekt,
-     genau wie der Community-Boss (eine Firestore-Instanz für
-     alle: Sammlung "ship_repair", Dokument "main"). Reparatur-
-     phasen/-fortschritt sind dadurch ECHT global synchronisiert.
-   - WERKZEUGE sind dagegen persönliches Inventar pro Spieler
+   ARCHITEKTUR (persönliche Reparatur, siehe Auftrag):
+   - Das SCHIFF ist PERSÖNLICH pro Spieler: eine eigene Firestore-
+     Instanz je Nutzer (Sammlung "ship_repair", Dokument-ID = die
+     eigene Auth-UID, genau wie bei "players/{uid}"). Repariert
+     Spieler A sein Schiff, hat das NULL Einfluss auf den
+     Reparaturstatus von Spieler B - jeder sieht und ändert
+     ausschließlich sein eigenes Dokument (siehe firestore.rules:
+     isOwner(playerId) auf ship_repair/{playerId}).
+   - WERKZEUGE sind ebenfalls persönliches Inventar pro Spieler
      (players/{uid}.shipTools), genau wie Dublonen/ownedShopItems.
-   - Ohne Login/Firebase (wheelDb nicht verfügbar) läuft die Seite
-     im reinen Lesemodus mit klarer Meldung, statt einen zweiten,
-     nur-lokalen Fortschritt vorzutäuschen (Punkt 22: "nicht
-     vortäuschen, dass es global synchronisiert ist").
+   - Ohne Login/Firebase (wheelDb nicht verfügbar oder keine UID)
+     läuft die Seite im reinen Lesemodus mit klarer Meldung, statt
+     einen zweiten, nur-lokalen Fortschritt vorzutäuschen.
 ====================================================== */
 
 /* ------------------------------------------------------
@@ -62,15 +64,16 @@ function getRandomRepairDurationMs() {
 }
 
 /* ------------------------------------------------------
-   GEMEINSAMER SCHIFFS-ZUSTAND (Firestore, EIN Dokument für
-   die ganze Community - siehe loadBossState() in
-   community-boss.js für dasselbe Muster)
+   PERSÖNLICHER SCHIFFS-ZUSTAND (Firestore, EIN Dokument PRO
+   SPIELER - ship_repair/{uid}, siehe players/{uid} für dasselbe
+   Muster). Jeder Spieler repariert sein eigenes Schiff; die
+   Reparatur eines anderen Spielers hat darauf keinerlei
+   Einfluss (Punkt 3 des Auftrags).
 ------------------------------------------------------ */
-async function loadShipState() {
-  if (!wheelDb) return null;
-  if (typeof wheelAuthReady !== "undefined") await wheelAuthReady;
+async function loadShipState(uid) {
+  if (!wheelDb || !uid) return null;
 
-  const docRef = wheelDb.collection("ship_repair").doc("main");
+  const docRef = wheelDb.collection("ship_repair").doc(uid);
   const snap = await docRef.get();
 
   if (snap.exists) return { ref: docRef, data: snap.data() };
@@ -79,7 +82,7 @@ async function loadShipState() {
   try {
     await docRef.set(initialData);
   } catch (err) {
-    // ein anderer Besucher war evtl. eine Millisekunde schneller
+    // ein anderer Tab desselben Spielers war evtl. eine Millisekunde schneller
   }
   const freshSnap = await docRef.get();
   return { ref: docRef, data: freshSnap.exists ? freshSnap.data() : initialData };
@@ -95,10 +98,10 @@ function getNextPhase(completedPhases) {
    Event-Countdown selbst - überlebt Reload/Seitenverlassen
    (Punkt 18/19).
 ------------------------------------------------------ */
-async function checkAndCompleteActiveRepair() {
-  if (!wheelDb) return;
+async function checkAndCompleteActiveRepair(uid) {
+  if (!wheelDb || !uid) return;
 
-  const docRef = wheelDb.collection("ship_repair").doc("main");
+  const docRef = wheelDb.collection("ship_repair").doc(uid);
 
   try {
     await wheelDb.runTransaction(async (tx) => {
@@ -159,7 +162,7 @@ async function startShipRepair(phaseId) {
     if (!uid) return;
 
     const playerRef = wheelDb.collection("players").doc(uid);
-    const shipRef = wheelDb.collection("ship_repair").doc("main");
+    const shipRef = wheelDb.collection("ship_repair").doc(uid);
 
     // 1) Werkzeug serverseitig abziehen (schlägt fehl, wenn nicht genug da ist)
     await wheelDb.runTransaction(async (tx) => {
@@ -312,17 +315,21 @@ async function devGrantAllShipTools() {
 
 async function devFinishActiveRepair() {
   if (!isShipPreviewActive() || !wheelDb) return;
-  const shipRef = wheelDb.collection("ship_repair").doc("main");
+  const uid = await wheelAuthReady;
+  if (!uid) return;
+  const shipRef = wheelDb.collection("ship_repair").doc(uid);
   const snap = await shipRef.get();
   if (!snap.exists || !snap.data().activeRepair) return;
   await shipRef.update({ "activeRepair.endsAt": Date.now() });
-  await checkAndCompleteActiveRepair();
+  await checkAndCompleteActiveRepair(uid);
   renderShipRepairPage();
 }
 
 async function devResetShipEvent() {
   if (!isShipPreviewActive() || !wheelDb) return;
-  await wheelDb.collection("ship_repair").doc("main").set({ completedPhases: [], activeRepair: null, shipName: null, namedBy: null });
+  const uid = await wheelAuthReady;
+  if (!uid) return;
+  await wheelDb.collection("ship_repair").doc(uid).set({ completedPhases: [], activeRepair: null, shipName: null, namedBy: null });
   renderShipRepairPage();
 }
 
@@ -357,8 +364,17 @@ async function renderShipRepairPage() {
     return;
   }
 
-  await checkAndCompleteActiveRepair();
-  const state = await loadShipState();
+  const nickname = localStorage.getItem("wheelNickname") || "";
+  const uid = typeof wheelAuthReady !== "undefined" ? await wheelAuthReady : null;
+
+  if (!uid) {
+    contentEl.innerHTML = `<h1 data-i18n="ship.title">⚓ SCHIFF REPARIEREN</h1><p class="wheel-status" data-i18n="ship.needLogin">Melde dich zuerst an, um mitzureparieren!</p>`;
+    if (typeof applyTranslations === "function") applyTranslations();
+    return;
+  }
+
+  await checkAndCompleteActiveRepair(uid);
+  const state = await loadShipState(uid);
   if (!state) return;
   const data = state.data;
   const completed = data.completedPhases || [];
@@ -368,14 +384,10 @@ async function renderShipRepairPage() {
   // statt eine eigene, zusaetzliche Abfrage zu machen.
   if (data.shipName) maybeUnlockChapterAfterShipRepair();
   const next = getNextPhase(completed);
-  const nickname = localStorage.getItem("wheelNickname") || "";
 
   let tools = { hammer: 0, saw: 0, brush: 0 };
-  const uid = typeof wheelAuthReady !== "undefined" ? await wheelAuthReady : null;
-  if (uid) {
-    const pSnap = await wheelDb.collection("players").doc(uid).get();
-    if (pSnap.exists) tools = { ...tools, ...(pSnap.data().shipTools || {}) };
-  }
+  const pSnap = await wheelDb.collection("players").doc(uid).get();
+  if (pSnap.exists) tools = { ...tools, ...(pSnap.data().shipTools || {}) };
   window._shipToolsCache = tools;
 
   const stageClasses = SHIP_REPAIR_PHASES.map((p) => (completed.includes(p.id) ? `fh-phase-${p.id}-done` : "")).join(" ");
@@ -389,7 +401,7 @@ async function renderShipRepairPage() {
         <p class="fh-ship-complete-eyebrow" data-i18n="ship.completeEyebrow">⚓ DIE FLITZPIEPEN IST WIEDER SEETÜCHTIG!</p>
         <h2 class="fh-ship-complete-name">${data.shipName || "???"}</h2>
         ${data.namedBy ? `<p class="fh-ship-complete-captain">${(typeof getCurrentLang === "function" && getCurrentLang() === "en") ? "Captain" : "Kapitän"}: ${data.namedBy}</p>` : ""}
-        <p class="fh-ship-complete-hint" data-i18n="ship.completeHint">Schau auf der Home-Seite vorbei - dein Schiff wartet dort auf dich.</p>
+        <p class="fh-ship-complete-hint" data-i18n="ship.completeHint">Deine Flitzpiepen ist wieder seetüchtig und bereit für die nächste Reise.</p>
       </div>
     `;
   } else {
@@ -400,11 +412,14 @@ async function renderShipRepairPage() {
 
     let actionHtml;
     if (activeRepair) {
+      const totalMs = Math.max(1, activeRepair.endsAt - activeRepair.startedAt);
+      const elapsedMs = Math.min(totalMs, Date.now() - activeRepair.startedAt);
+      const pct = Math.round((elapsedMs / totalMs) * 100);
       actionHtml = `
         <div class="fh-ship-phase-timer">
           <p data-i18n="ship.repairRunning">🔧 REPARATUR LÄUFT ...</p>
+          <div class="fh-ship-phase-progress-bar"><div class="fh-ship-phase-progress-fill" id="ship-repair-progress-fill" style="width:${pct}%"></div></div>
           <p class="fh-ship-phase-timer-value" id="ship-repair-timer">${formatShipCountdown(activeRepair.endsAt - Date.now())}</p>
-          <p class="fh-ship-phase-timer-by">${(typeof getCurrentLang === "function" && getCurrentLang() === "en") ? "Started by" : "Gestartet von"} ${activeRepair.startedBy}</p>
         </div>
       `;
     } else if (!nickname) {
@@ -417,7 +432,7 @@ async function renderShipRepairPage() {
 
     mainPanelHtml = `
       <div class="fh-ship-phase-card">
-        <p class="fh-ship-phase-progress">${completed.length} / ${SHIP_REPAIR_PHASES.length}</p>
+        <p class="fh-ship-phase-progress">${(typeof getCurrentLang === "function" && getCurrentLang() === "en") ? `Stage ${next.stageNumber} of ${SHIP_REPAIR_PHASES.length}` : `Etappe ${next.stageNumber} von ${SHIP_REPAIR_PHASES.length}`}</p>
         <h2 class="fh-ship-phase-label">${next.label.de}</h2>
         <p class="fh-ship-phase-desc">${next.description.de}</p>
         <p class="fh-ship-phase-tool-req">${(typeof getCurrentLang === "function" && getCurrentLang() === "en") ? "Requires" : "Benötigt"}: ${tool.emoji} ${tool.label.de}</p>
@@ -448,7 +463,7 @@ async function renderShipRepairPage() {
   renderShipToolInventory(tools);
   if (typeof applyTranslations === "function") applyTranslations();
 
-  if (data.activeRepair) startShipRepairTicker(data.activeRepair.phaseId);
+  if (data.activeRepair) startShipRepairTicker(uid, data.activeRepair.phaseId);
 }
 
 function renderShipDevPanel() {
@@ -593,7 +608,7 @@ function playShipRepairCompleteEffect(phase) {
 
 let shipRepairTickerPhaseId = null;
 
-function startShipRepairTicker(activePhaseId) {
+function startShipRepairTicker(uid, activePhaseId) {
   stopShipRepairTicker();
   if (activePhaseId) shipRepairTickerPhaseId = activePhaseId;
 
@@ -604,8 +619,8 @@ function startShipRepairTicker(activePhaseId) {
       return;
     }
 
-    await checkAndCompleteActiveRepair();
-    const state = await loadShipState();
+    await checkAndCompleteActiveRepair(uid);
+    const state = await loadShipState(uid);
     if (!state) return;
 
     if (!state.data.activeRepair) {
@@ -617,6 +632,12 @@ function startShipRepairTicker(activePhaseId) {
     }
 
     el.textContent = formatShipCountdown(state.data.activeRepair.endsAt - Date.now());
+    const fillEl = document.getElementById("ship-repair-progress-fill");
+    if (fillEl) {
+      const totalMs = Math.max(1, state.data.activeRepair.endsAt - state.data.activeRepair.startedAt);
+      const elapsedMs = Math.min(totalMs, Date.now() - state.data.activeRepair.startedAt);
+      fillEl.style.width = Math.round((elapsedMs / totalMs) * 100) + "%";
+    }
   }, 1000);
 }
 

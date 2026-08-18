@@ -65,4 +65,4 @@ const SPIELOTHEK_GAMES = [
 ------------------------------------------------------ */
 const ANDII_IDLE_QUOTE_COUNT = 6;
 const ANDII_WIN_QUOTE_COUNT = 3;
-const ANDII_LOSE_QUOTE_COUNT = 4;
+const ANDII_LOSE_QUOTE_COUNT = 20;
