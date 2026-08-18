@@ -644,7 +644,13 @@ async function addCurrency(amount) {
       .collection("players")
       .doc(uid)
       .set(
-        { currency: firebase.firestore.FieldValue.increment(amount) },
+        {
+          currency: firebase.firestore.FieldValue.increment(amount),
+          // Lebenslanger Zaehler, unabhaengig vom (auch wieder sinkenden)
+          // Kontostand - Grundlage fuer die taeglichen Reparatur-Quests
+          // (siehe DAILY_QUESTS in ship-repair-data.js).
+          totalCurrencyEarned: firebase.firestore.FieldValue.increment(amount),
+        },
         { merge: true }
       );
 

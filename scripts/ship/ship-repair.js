@@ -138,6 +138,109 @@ function generateShipName(nickname) {
 }
 
 /* ------------------------------------------------------
+   TÄGLICHE QUESTS (20 Tage, je ein Werkzeug)
+   ---------------------------------------------------
+   Sicherheitskritischer Kern: welcher Tag freigeschaltet ist, wird
+   ANSCHLIESSEND SERVERSEITIG per firestore.rules (dailyQuestDayIsUnlocked())
+   anhand von request.time minus dem einmalig per serverTimestamp()
+   gesetzten dailyQuests.startedAt geprüft - die hier im Client
+   berechnete "unlockedDay" dient NUR der Anzeige (z. B. "🔒 Tag 5"),
+   niemals als alleinige Zugriffsprüfung. Ein Spieler kann also seine
+   lokale Uhr beliebig verstellen, ohne dadurch echte Tage freizuschalten.
+------------------------------------------------------ */
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+async function ensureDailyQuestsStarted(uid, data) {
+  if (data.dailyQuests && data.dailyQuests.startedAt) return data.dailyQuests;
+
+  const playerRef = wheelDb.collection("players").doc(uid);
+  try {
+    await playerRef.set(
+      { dailyQuests: { startedAt: firebase.firestore.FieldValue.serverTimestamp(), claimedDays: [] } },
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn("Tagesquest konnte nicht gestartet werden:", err);
+    return data.dailyQuests || null;
+  }
+  const snap = await playerRef.get();
+  return snap.exists && snap.data().dailyQuests ? snap.data().dailyQuests : null;
+}
+
+function getUnlockedDailyQuestDay(dailyQuests) {
+  if (!dailyQuests || !dailyQuests.startedAt || typeof dailyQuests.startedAt.toMillis !== "function") return 1;
+  const elapsedMs = Date.now() - dailyQuests.startedAt.toMillis();
+  return Math.min(DAILY_QUESTS.length, Math.floor(elapsedMs / DAY_MS) + 1);
+}
+
+function buildDailyQuestDescription(quest, lang) {
+  const template = DAILY_QUEST_METRIC_TEXT[quest.metric];
+  if (!template) return "";
+  return (lang === "en" ? template.en : template.de)(quest.threshold);
+}
+
+/* ------------------------------------------------------
+   TAGESQUEST EINLÖSEN
+   Prüft serverseitig (Firestore-Transaktion + Security Rules), dass
+   der Tag wirklich der Reihe nach dran ist, laut Server-Uhrzeit
+   bereits freigeschaltet ist, die Anforderung wirklich erreicht wurde
+   UND dass diese Quest noch nicht eingelöst wurde - ein erneutes
+   Klicken oder ein Reload kann das Werkzeug daher nie doppelt
+   vergeben (siehe validDailyQuestsWrite() in firestore.rules).
+------------------------------------------------------ */
+async function claimDailyQuest(day) {
+  const statusEl = document.getElementById("ship-quest-status");
+  const uid = await wheelAuthReady;
+  if (!uid) return;
+
+  const quest = DAILY_QUESTS.find((q) => q.day === day);
+  if (!quest) return;
+
+  const playerRef = wheelDb.collection("players").doc(uid);
+  try {
+    await wheelDb.runTransaction(async (tx) => {
+      const snap = await tx.get(playerRef);
+      const data = snap.exists ? snap.data() : {};
+      const dq = data.dailyQuests || {};
+      const claimed = dq.claimedDays || [];
+
+      if (claimed.includes(day)) throw new Error("already-claimed");
+      if (claimed.length + 1 !== day) throw new Error("wrong-order");
+      if (!dq.startedAt) throw new Error("not-started");
+      if (day > getUnlockedDailyQuestDay(dq)) throw new Error("locked");
+      if ((data[quest.metric] || 0) < quest.threshold) throw new Error("not-met");
+
+      tx.set(
+        playerRef,
+        {
+          dailyQuests: { startedAt: dq.startedAt, claimedDays: firebase.firestore.FieldValue.arrayUnion(day) },
+          shipTools: { [quest.toolId]: firebase.firestore.FieldValue.increment(1) },
+        },
+        { merge: true }
+      );
+    });
+
+    showShipToolToast(quest.toolId);
+    renderShipRepairPage();
+  } catch (err) {
+    if (!statusEl) return;
+    const lang = typeof getCurrentLang === "function" ? getCurrentLang() : "de";
+    const isEn = lang === "en";
+    if (err.message === "already-claimed") {
+      statusEl.textContent = isEn ? "✅ You already completed this quest." : "✅ Diese Quest hast du bereits abgeschlossen.";
+    } else if (err.message === "locked" || err.message === "wrong-order" || err.message === "not-started") {
+      statusEl.textContent = isEn ? "🔒 This quest isn't unlocked yet." : "🔒 Diese Quest ist noch nicht freigeschaltet.";
+      renderShipRepairPage();
+    } else if (err.message === "not-met") {
+      statusEl.textContent = isEn ? "⏳ Not quite there yet - keep playing!" : "⏳ Noch nicht geschafft - weiterspielen!";
+    } else {
+      console.warn("Quest konnte nicht abgeschlossen werden:", err);
+      statusEl.textContent = isEn ? "⚠️ That didn't work, try again." : "⚠️ Das hat nicht geklappt, versuch's nochmal.";
+    }
+  }
+}
+
+/* ------------------------------------------------------
    REPARATUR STARTEN
    Prüft serverseitig (Firestore-Transaktionen), dass wirklich
    noch kein Team gerade repariert UND dass der Spieler das
@@ -297,19 +400,16 @@ async function devGrantAllShipTools() {
   if (!isShipPreviewActive() || !wheelDb) return;
   const uid = await wheelAuthReady;
   if (!uid) return;
-  await wheelDb
-    .collection("players")
-    .doc(uid)
-    .set(
-      {
-        shipTools: {
-          hammer: firebase.firestore.FieldValue.increment(3),
-          saw: firebase.firestore.FieldValue.increment(3),
-          brush: firebase.firestore.FieldValue.increment(3),
-        },
-      },
-      { merge: true }
-    );
+  const playerRef = wheelDb.collection("players").doc(uid);
+  const increments = {};
+  Object.keys(SHIP_TOOLS).forEach((id) => (increments[id] = firebase.firestore.FieldValue.increment(1)));
+  // 3 einzelne Schreibvorgänge statt einem einzigen "+3" - die Security
+  // Rules erlauben pro Werkzeug bewusst nur max. +1 pro Schreibvorgang
+  // (siehe validToolDelta() in firestore.rules), damit auch dieses reine
+  // Test-Werkzeug denselben echten Regeln unterliegt.
+  for (let i = 0; i < 3; i++) {
+    await playerRef.set({ shipTools: increments }, { merge: true });
+  }
   renderShipRepairPage();
 }
 
@@ -344,13 +444,19 @@ function formatShipCountdown(ms) {
   return `${h}:${m}:${s}`;
 }
 
+function emptyShipToolsInventory() {
+  const empty = {};
+  Object.keys(SHIP_TOOLS).forEach((id) => (empty[id] = 0));
+  return empty;
+}
+
 function renderShipToolInventory(tools) {
   const el = document.getElementById("ship-tool-inventory");
   if (!el) return;
-  const t = tools || window._shipToolsCache || { hammer: 0, saw: 0, brush: 0 };
+  const t = tools || window._shipToolsCache || emptyShipToolsInventory();
 
   el.innerHTML = Object.values(SHIP_TOOLS)
-    .map((tool) => `<span class="ship-tool-chip"><span class="ship-tool-chip-emoji">${tool.emoji}</span> ${tool.label.de} ×${t[tool.id] || 0}</span>`)
+    .map((tool) => `<span class="ship-tool-chip ${(t[tool.id] || 0) > 0 ? "ship-tool-chip-owned" : ""}"><span class="ship-tool-chip-emoji">${tool.emoji}</span> ${tool.label.de} ×${t[tool.id] || 0}</span>`)
     .join("");
 }
 
@@ -385,10 +491,13 @@ async function renderShipRepairPage() {
   if (data.shipName) maybeUnlockChapterAfterShipRepair();
   const next = getNextPhase(completed);
 
-  let tools = { hammer: 0, saw: 0, brush: 0 };
+  let tools = emptyShipToolsInventory();
   const pSnap = await wheelDb.collection("players").doc(uid).get();
-  if (pSnap.exists) tools = { ...tools, ...(pSnap.data().shipTools || {}) };
+  const playerData = pSnap.exists ? pSnap.data() : {};
+  tools = { ...tools, ...(playerData.shipTools || {}) };
   window._shipToolsCache = tools;
+
+  const dailyQuests = await ensureDailyQuestsStarted(uid, playerData);
 
   const stageClasses = SHIP_REPAIR_PHASES.map((p) => (completed.includes(p.id) ? `fh-phase-${p.id}-done` : "")).join(" ");
 
@@ -451,10 +560,17 @@ async function renderShipRepairPage() {
       ${buildShipRepairSvg()}
     </div>
 
+    ${buildOverallProgressHtml(completed.length)}
+
     ${mainPanelHtml}
+
+    ${buildDailyQuestCardHtml(dailyQuests, playerData)}
 
     <h2 class="fh-ship-section-heading" data-i18n="ship.toolsHeading">Deine Werkzeuge</h2>
     <div id="ship-tool-inventory" class="ship-tool-inventory"></div>
+
+    <h2 class="fh-ship-section-heading" data-i18n="ship.stagesHeading">Reparatur-Etappen</h2>
+    <div class="fh-ship-stage-list">${buildStageChecklistHtml(completed, next)}</div>
 
     <h2 class="fh-ship-section-heading" data-i18n="ship.puzzlesHeading">⚓ Rätsel des Kapitäns</h2>
     <div class="ship-puzzle-list">${buildShipPuzzlesHtml()}</div>
@@ -464,6 +580,98 @@ async function renderShipRepairPage() {
   if (typeof applyTranslations === "function") applyTranslations();
 
   if (data.activeRepair) startShipRepairTicker(uid, data.activeRepair.phaseId);
+}
+
+/* ------------------------------------------------------
+   GESAMT-FORTSCHRITTSBALKEN (Punkt 15: "8 / 20")
+------------------------------------------------------ */
+function buildOverallProgressHtml(completedCount) {
+  const total = SHIP_REPAIR_PHASES.length;
+  const pct = Math.round((completedCount / total) * 100);
+  const isEn = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  return `
+    <div class="fh-ship-overall-progress">
+      <p class="fh-ship-overall-progress-label">${isEn ? "Progress" : "Fortschritt"}</p>
+      <div class="fh-ship-overall-progress-bar"><div class="fh-ship-overall-progress-fill" style="width:${pct}%"></div></div>
+      <p class="fh-ship-overall-progress-count">${completedCount} / ${total}</p>
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------
+   ETAPPEN-CHECKLISTE (Punkt 15)
+   Fertige Etappen eindeutig markiert, die aktuelle hervorgehoben,
+   alle danach sichtbar als "gesperrt" - Namen bleiben lesbar (reiner
+   Fortschrittsstatus, keine Spoiler-Mechanik nötig), nur der
+   Zugriff/Status unterscheidet sich optisch.
+------------------------------------------------------ */
+function buildStageChecklistHtml(completed, next) {
+  const isEn = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  return SHIP_REPAIR_PHASES.map((phase) => {
+    const isDone = completed.includes(phase.id);
+    const isActive = next && next.id === phase.id;
+    const label = phase.label[isEn ? "en" : "de"] || phase.label.de;
+    const status = isDone ? "done" : isActive ? "active" : "locked";
+    const icon = isDone ? "✓" : isActive ? "🔧" : "🔒";
+    return `
+      <div class="fh-ship-stage-row fh-ship-stage-row-${status}">
+        <span class="fh-ship-stage-row-icon">${icon}</span>
+        <span class="fh-ship-stage-row-number">${isEn ? "Stage" : "Etappe"} ${phase.stageNumber}</span>
+        <span class="fh-ship-stage-row-label">${label}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+/* ------------------------------------------------------
+   TAGESQUEST-KARTE (Punkt 15/5/6)
+   Zeigt die naechste NOCH NICHT eingeloeste Quest - alle vorherigen
+   Tage sind entweder schon eingeloest oder (falls verpasst) weiterhin
+   nachholbar, aber immer nur EINE nach der anderen (kein Ueberspringen,
+   siehe claimDailyQuest()/validDailyQuestsWrite() in firestore.rules).
+------------------------------------------------------ */
+function buildDailyQuestCardHtml(dailyQuests, playerData) {
+  const isEn = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  const claimed = (dailyQuests && dailyQuests.claimedDays) || [];
+
+  if (claimed.length >= DAILY_QUESTS.length) {
+    return `
+      <div class="fh-daily-quest-card fh-daily-quest-card-done">
+        <p class="fh-daily-quest-heading">${isEn ? "🗓️ Daily quests" : "🗓️ Tagesquests"}</p>
+        <p class="fh-daily-quest-complete">${isEn ? "✅ All 20 daily quests completed!" : "✅ Alle 20 Tagesquests abgeschlossen!"}</p>
+      </div>
+    `;
+  }
+
+  const day = claimed.length + 1;
+  const quest = DAILY_QUESTS.find((q) => q.day === day);
+  if (!quest) return "";
+
+  const tool = SHIP_TOOLS[quest.toolId];
+  const unlockedDay = getUnlockedDailyQuestDay(dailyQuests);
+  const isUnlocked = day <= unlockedDay;
+  const progressValue = playerData[quest.metric] || 0;
+  const isMet = progressValue >= quest.threshold;
+  const description = buildDailyQuestDescription(quest, isEn ? "en" : "de");
+
+  let actionHtml;
+  if (!isUnlocked) {
+    actionHtml = `<p class="wheel-status">🔒 ${isEn ? "Unlocks tomorrow" : "Schaltet sich morgen frei"}</p>`;
+  } else if (!isMet) {
+    actionHtml = `<p class="fh-daily-quest-progress">${Math.min(progressValue, quest.threshold)} / ${quest.threshold}</p>`;
+  } else {
+    actionHtml = `<button type="button" class="code-button" onclick="claimDailyQuest(${day})">${tool.emoji} <span>${isEn ? "Claim tool" : "Werkzeug abholen"}</span></button>`;
+  }
+
+  return `
+    <div class="fh-daily-quest-card">
+      <p class="fh-daily-quest-heading">${isEn ? `🗓️ Day ${day} of ${DAILY_QUESTS.length}` : `🗓️ Tag ${day} von ${DAILY_QUESTS.length}`}</p>
+      <p class="fh-daily-quest-desc">${description}</p>
+      <p class="fh-daily-quest-reward">${isEn ? "Reward" : "Belohnung"}: ${tool.emoji} ${tool.label[isEn ? "en" : "de"]}</p>
+      <div id="ship-quest-status" class="wheel-status"></div>
+      ${actionHtml}
+    </div>
+  `;
 }
 
 function renderShipDevPanel() {
