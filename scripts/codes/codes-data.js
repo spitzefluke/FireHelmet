@@ -200,6 +200,11 @@ const codes = [
     message: "🪙 +300 Dublonen für dich!",
     currencyReward: 300,
   },
+  {
+    hash: "d422fd99131807e57e4c5b71defeeab9544b77d9d9201cf36a922f14bf5f226d", // coins300
+    message: "🪙 +300 Dublonen für dich!",
+    currencyReward: 300,
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
