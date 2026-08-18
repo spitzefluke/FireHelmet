@@ -933,6 +933,68 @@ async function checkCode() {
         imageEl.classList.remove("visible");
         imageEl.removeAttribute("src");
       }
+    } else if (match.currencyReward) {
+      // Währungscodes (FIRE100/FIRE300/COINS300/BEUTEL25/KLEINERBEUTEL/...):
+      // ERST die atomare, server-verifizierte Transaktion abwarten - NUR
+      // bei bestätigtem Erfolg gilt der Code als eingelöst. Vorher wurde
+      // hier sofort lokal "eingelöst" markiert UND unabhängig davon
+      // versucht, Dublonen gutzuschreiben; schlug Letzteres fehl, zeigte
+      // die Seite trotzdem Erfolg, aber es kamen nie Dublonen an und der
+      // Code ließ sich nie wieder versuchen (siehe redeemCurrencyCode()
+      // in wheel.js für die genaue Erklärung).
+      if (typeof redeemCurrencyCode !== "function") {
+        messageEl.classList.remove("code-success");
+        messageEl.classList.add("code-error");
+        messageEl.textContent = "⚠️ Code-System ist noch nicht bereit.";
+        return;
+      }
+
+      try {
+        await redeemCurrencyCode(codeId, match.currencyReward);
+      } catch (err) {
+        if (err.message === "already-redeemed") {
+          if (typeof markCodeCrackedLocally === "function") {
+            markCodeCrackedLocally(codeId, match.reward || null);
+          }
+          messageEl.textContent = typeof t === "function" ? t("code.alreadyRedeemed") : "✅ Diesen Code hast du bereits eingelöst.";
+        } else {
+          console.warn("Code konnte nicht eingelöst werden:", err);
+          messageEl.classList.remove("code-success");
+          messageEl.classList.add("code-error");
+          messageEl.textContent = "⚠️ Das hat nicht geklappt, bitte versuch's gleich nochmal.";
+        }
+        return;
+      }
+
+      // Transaktion bestätigt erfolgreich - jetzt erst lokal markieren
+      // (Firestore hat codesCracked bereits in derselben Transaktion
+      // erhöht, deshalb NUR die lokale Buchhaltung, nicht recordCodeCrack()
+      // mit seinem eigenen, zusätzlichen Firestore-Schreibvorgang).
+      if (typeof markCodeCrackedLocally === "function") {
+        markCodeCrackedLocally(codeId, match.reward || null);
+      }
+
+      messageEl.textContent = match.message;
+
+      if (typeof refreshShopCurrencyDisplay === "function") {
+        refreshShopCurrencyDisplay();
+      }
+      if (typeof showCurrencyToast === "function") {
+        showCurrencyToast(match.currencyReward);
+      }
+      if (typeof triggerCodeSuccessEffect === "function") {
+        triggerCodeSuccessEffect();
+      }
+
+      playCodeAudio(match);
+
+      if (match.image && imageEl) {
+        imageEl.src = match.image;
+        imageEl.classList.add("visible");
+      } else if (imageEl) {
+        imageEl.classList.remove("visible");
+        imageEl.removeAttribute("src");
+      }
     } else {
       messageEl.textContent = match.message;
 
@@ -946,10 +1008,6 @@ async function checkCode() {
 
       if (match.toolUnlock && typeof unlockShipTool === "function") {
         unlockShipTool(match.toolUnlock);
-      }
-
-      if (match.currencyReward && typeof addCurrency === "function") {
-        addCurrency(match.currencyReward);
       }
 
       if (typeof triggerCodeSuccessEffect === "function") {
