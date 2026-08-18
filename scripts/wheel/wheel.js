@@ -394,7 +394,7 @@ function isAvatarImagePath(value) {
 
 function buildAvatarPickerHtml(avatar) {
   return isAvatarImagePath(avatar)
-    ? `<img src="${avatar}" alt="">`
+    ? `<img src="${avatar}" alt="" loading="lazy" decoding="async">`
     : `<span>${avatar}</span>`;
 }
 
@@ -950,7 +950,7 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
 
   let avatarHtml = player.avatar
     ? isAvatarImagePath(player.avatar)
-      ? `<img src="${player.avatar}" class="leaderboard-avatar" alt="">`
+      ? `<img src="${player.avatar}" class="leaderboard-avatar" alt="" loading="lazy" decoding="async">`
       : `<span class="leaderboard-avatar leaderboard-avatar-emoji">${player.avatar}</span>`
     : "";
 
@@ -971,7 +971,7 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
 function buildLeaderboardPodiumEntry(player, rank) {
   const avatarHtml = player.avatar
     ? isAvatarImagePath(player.avatar)
-      ? `<img src="${player.avatar}" alt="">`
+      ? `<img src="${player.avatar}" alt="" loading="lazy" decoding="async">`
       : `<span>${player.avatar}</span>`
     : `<span>🏴‍☠️</span>`;
 

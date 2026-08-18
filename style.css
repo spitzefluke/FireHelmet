@@ -624,8 +624,8 @@ main {
 
 .hero h1 {
   font-family: var(--fh-font-display);
-  font-size: clamp(2.6rem, 8vw, 6.4rem);
-  letter-spacing: clamp(3px, 2vw, 20px);
+  font-size: clamp(1.9rem, 8vw, 6.4rem);
+  letter-spacing: clamp(1px, 1.3vw, 20px);
   text-shadow: 0 0 60px rgba(240,201,106,.4);
   transition: filter .12s ease-out, text-shadow .12s ease-out;
 }
@@ -965,8 +965,8 @@ main {
 
 .fh-cinematic-title {
   font-family: var(--fh-font-display);
-  font-size: clamp(2.2rem, 7vw, 6rem);
-  letter-spacing: clamp(2px, 1.4vw, 14px);
+  font-size: clamp(1.6rem, 7vw, 6rem);
+  letter-spacing: clamp(1px, 1vw, 14px);
   color: var(--fh-text, #fff);
   text-shadow: 0 0 50px rgba(240,201,106,.4);
   margin: 0;
@@ -1105,8 +1105,8 @@ main {
 
 .story-library h1 {
   font-family: var(--fh-font-display);
-  font-size: clamp(2.2rem, 6vw, 4.6rem);
-  letter-spacing: clamp(2px, 1vw, 8px);
+  font-size: clamp(1.6rem, 6vw, 4.6rem);
+  letter-spacing: clamp(1px, 0.8vw, 8px);
   margin-bottom: 15px;
   text-shadow: 0 0 50px rgba(240,201,106,.35);
 }
@@ -1357,8 +1357,8 @@ main {
 
 .page-content h1 {
   font-family: var(--fh-font-display);
-  font-size: clamp(2.4rem, 6vw, 5rem);
-  letter-spacing: clamp(2px, 1vw, 10px);
+  font-size: clamp(1.7rem, 6vw, 5rem);
+  letter-spacing: clamp(1px, 0.8vw, 10px);
   text-shadow: 0 0 40px rgba(240,201,106,.35);
   color: var(--fh-text, #fff);
 }
@@ -1806,8 +1806,8 @@ main {
 ========================= */
 @media (max-width: 900px) {
   .hero h1 {
-    font-size: 50px;
-    letter-spacing: 8px;
+    font-size: clamp(1.9rem, 8vw, 50px);
+    letter-spacing: clamp(1px, 1.3vw, 8px);
   }
 
   .boss-stage {
@@ -1835,7 +1835,7 @@ main {
 
   .story-library h1,
   .page-content h1 {
-    font-size: 50px;
+    font-size: clamp(1.7rem, 8vw, 50px);
   }
 
   .sidebar {
@@ -5045,8 +5045,17 @@ main {
 ===================================================== */
 @media (max-width: 400px) {
   .hero h1 {
-    font-size: 38px;
-    letter-spacing: 4px;
+    font-size: clamp(26px, 9.5vw, 38px);
+    letter-spacing: clamp(1px, 0.5vw, 4px);
+  }
+
+  /* "WOCHENRENNEN" nutzt (anders als die uebrigen Seiten) keine der
+     .hero/.page-content/.story-library-Ueberschriften-Regeln, daher
+     hier ein eigener, minimaler Fix nur fuer sehr schmale Displays -
+     Schrift/Look bleibt sonst unveraendert, nur die Groesse schrumpft
+     genug, damit der Text nicht abgeschnitten wird. */
+  .race-fullpage h1 {
+    font-size: clamp(22px, 8vw, 32px);
   }
 
   .time-box {
@@ -5060,8 +5069,8 @@ main {
 
   .page-content h1,
   .story-library h1 {
-    font-size: 38px;
-    letter-spacing: 4px;
+    font-size: clamp(26px, 9.5vw, 38px);
+    letter-spacing: clamp(1px, 0.5vw, 4px);
   }
 
   .menu-button {
@@ -5720,10 +5729,15 @@ img, svg, video, canvas {
   letter-spacing: .02em;
 }
 
-/* Platz am Seitenende lassen, damit Inhalte nicht hinter der
-   Tab-Leiste verschwinden */
+/* Platz am Seitenanfang/-ende lassen, damit Inhalte nicht hinter dem
+   festen Hamburger-Button bzw. der unteren Tab-Leiste verschwinden
+   (Punkt 1: Texte duerfen nicht von anderen Elementen ueberdeckt
+   werden - betraf bisher v.a. Seiten mit wenig/kurzem Inhalt, bei
+   denen die Ueberschrift durch die vertikale Zentrierung von .page
+   zu nah am oberen Rand landete). */
 @media (max-width: 1023px) {
   .page {
+    padding-top: calc(90px + env(safe-area-inset-top));
     padding-bottom: calc(78px + env(safe-area-inset-bottom));
   }
 }
@@ -5993,7 +6007,8 @@ img, svg, video, canvas {
 .shop-item-btn {
   position: relative;
   width: 100%;
-  padding: 10px;
+  padding: 12px;
+  min-height: 44px;
   border-radius: 12px;
   border: none;
   background: linear-gradient(135deg, rgba(214,168,79,.45), rgba(214,168,79,.22));
@@ -6430,7 +6445,8 @@ tr.row-frame {
   --rarity-color: #9aa4b2;
   --rarity-glow: 154,164,178;
   position: relative;
-  padding: 8px 16px;
+  padding: 12px 16px;
+  min-height: 40px;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--rarity-color) 55%, transparent);
   background: rgba(255,255,255,.03);
@@ -6595,6 +6611,16 @@ tr.row-frame {
   font-style: italic;
   cursor: pointer;
   transition: color .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+/* Groesserer, unsichtbarer Treffbereich fuer Touch (Punkt 1: Buttons
+   muessen auf kleinen Bildschirmen gut erreichbar sein) - das
+   sichtbare Icon bleibt klein/dezent, nur die tatsaechliche Tippflaeche
+   waechst auf ca. 44x44px, siehe https://web.dev/accessible-tap-targets/ */
+.shop-item-info-btn::after {
+  content: "";
+  position: absolute;
+  inset: -11px;
 }
 
 .shop-item-info-btn:hover,
@@ -7543,6 +7569,13 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 
 .fh-home-ship-checklist-done .fh-home-ship-checklist-mark {
   color: var(--fh-success);
+}
+
+/* Eigene Menüseite "Repariere das Schiff": Button unter der (inline-
+   flex-basierten) Checklist braucht einen eigenen Block-Container,
+   damit er darunter statt daneben landet. */
+.fh-ship-repair-page-cta {
+  margin-top: 22px;
 }
 
 .fh-home-ship-complete {
