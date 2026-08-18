@@ -417,6 +417,83 @@ service cloud.firestore {
                  || (data.equippedFrame is string && data.equippedFrame.size() <= 50));
     }
 
+    // Bekannte Dublonen-Code-Hashes und ihr jeweiliger Betrag - MUSS mit
+    // den currencyReward-Eintraegen in scripts/codes/codes-data.js
+    // synchron bleiben (fire100/beutel25/kleinerbeutel/fire300/coins300).
+    // Diese Pruefung ist der eigentliche Fix fuer das kaputte Codesystem:
+    // vorher gab es fuer Dublonen-Codes GAR KEINE serverseitige Dopplungs-
+    // pruefung (nur einen lokalen localStorage-Eintrag) - ein Code liess
+    // sich beliebig oft (neuer Browser, gelöschter Speicher) erneut
+    // einloesen. Jetzt darf "currency" nur zusammen mit genau einem NEUEN
+    // Eintrag in redeemedCurrencyCodes um GENAU den zu diesem Hash
+    // gehoerenden Betrag steigen - ein frei erfundener Hash oder ein
+    // frei erfundener Betrag (z.B. per Konsole "currency = 50000") wird
+    // dadurch abgelehnt, ein bereits vorhandener Hash kann nicht erneut
+    // Dublonen ausloesen.
+    //
+    // BEWUSST SPARSAM AN AUSDRUECKEN (wichtig!): eine erste Fassung mit
+    // einer eigenen matchesCodeRedemption()-Hilfsfunktion (5x aufgerufen)
+    // plus diff().affectedKeys() hat zusammen mit den uebrigen Pruefungen
+    // (validShipTools, validDailyQuestsWrite, ...) Firestores Obergrenze
+    // von 1000 auswertbaren Teilausdruecken pro Schreibvorgang gerissen -
+    // und zwar nicht nur bei Code-Einloesungen selbst, sondern bei JEDEM
+    // players/{uid}-Schreibvorgang ("evaluation error" statt sauberer
+    // Ablehnung, siehe Testprotokoll). Diese Fassung berechnet oldMap/
+    // newMap/delta EINMAL per "let" und vergleicht nur noch ueber
+    // guenstige "in"-Pruefungen + eine einzige Groessenpruefung - kein
+    // diff(), kein Funktionsaufruf pro Kandidat. totalCurrencyEarned wird
+    // hier bewusst NICHT nochmal exakt gegengeprueft (nur ein lebenslanger
+    // Zaehler fuer Tagesquests, keine Dublonen) - validQuestCounters()
+    // deckelt es bereits auf +300 pro Schreibvorgang, das reicht.
+    // Statt oldNum()/eigener Helper-Funktion: oldNum() wird an vielen
+    // anderen Stellen in dieser Datei wiederverwendet, eine zusaetzliche
+    // "resource == null"-Pruefung DORT wuerde sich additiv ueberall
+    // niederschlagen und hat beim Testen Firestores 1000er-Ausdrucksbudget
+    // gerissen (siehe Testprotokoll) - deshalb hier EIN gemeinsamer,
+    // einmaliger "isNewDoc"-Check statt zwei getrennter. Ein Code kann
+    // jetzt auch VOR dem allerersten Profil-Schreibvorgang eingeloest
+    // werden (siehe redeemCurrencyCode()-Fallback in wheel.js), dann ist
+    // "resource" selbst noch null ("resource.data" wuerde sonst einen
+    // "Null value error" werfen). Fuer alle ANDEREN Felder (shipTools,
+    // dailyQuests, ...) bleibt oldNum() unveraendert, weil deren
+    // allererste Schreiboperation im echten Ablauf immer separat und
+    // feldfrei ist.
+    function validCodeRedemptionDetail(newData) {
+      let isNewDoc = resource == null;
+      let oldMap = (!isNewDoc && 'redeemedCurrencyCodes' in resource.data) ? resource.data.redeemedCurrencyCodes : {};
+      let oldCurrency = (!isNewDoc && 'currency' in resource.data) ? resource.data.currency : 0;
+      let newMap = newData.redeemedCurrencyCodes;
+      let delta = ('currency' in newData) ? newData.currency - oldCurrency : -1;
+
+      // "newMap == oldMap && delta <= 0" statt einem unbedingten
+      // "newMap == oldMap": ein Schreibvorgang, der redeemedCurrencyCodes
+      // UNVERAENDERT erneut mitsendet, darf dabei NICHT trotzdem Dublonen
+      // gutschreiben - sonst koennte ein manipulierter Client denselben,
+      // bereits eingeloesten Code wiederholt mitsenden und "huckepack"
+      // ueber die allgemeine (fuer andere Faelle bewusst grosszuegige)
+      // +300-Obergrenze in validShopFields() weiter Dublonen kassieren,
+      // ohne dass validCodeRedemptionDetail() das je bemerkt.
+      return newMap is map
+        && newMap.size() <= 50
+        && (
+          (newMap == oldMap && delta <= 0)
+          || (
+            newMap.size() == oldMap.size() + 1
+            && (
+              ('516f8d0acea001b6c788aab67b70f88c7c18eca88fb1a61cf922bb77a8af2769' in newMap && !('516f8d0acea001b6c788aab67b70f88c7c18eca88fb1a61cf922bb77a8af2769' in oldMap) && delta == 100)
+              || ('a32e56ce3c0d998093891aec8d03f5c3a4baa9d058acd81f40571d75792e86d4' in newMap && !('a32e56ce3c0d998093891aec8d03f5c3a4baa9d058acd81f40571d75792e86d4' in oldMap) && delta == 25)
+              || ('8bfe3282c066093f84dc23ea2215dff3eae0c7bb2a0d7a11585800adc3d7efb1' in newMap && !('8bfe3282c066093f84dc23ea2215dff3eae0c7bb2a0d7a11585800adc3d7efb1' in oldMap) && delta == 25)
+              || ('8f42ea772af5c16d5b27feb56aae75e6407d8b85e9174e79e468320b9ed88dba' in newMap && !('8f42ea772af5c16d5b27feb56aae75e6407d8b85e9174e79e468320b9ed88dba' in oldMap) && delta == 300)
+              || ('d422fd99131807e57e4c5b71defeeab9544b77d9d9201cf36a922f14bf5f226d' in newMap && !('d422fd99131807e57e4c5b71defeeab9544b77d9d9201cf36a922f14bf5f226d' in oldMap) && delta == 300)
+            )
+          )
+        );
+    }
+
+    function validCodeRedemption(newData) {
+      return !('redeemedCurrencyCodes' in newData) || validCodeRedemptionDetail(newData);
+    }
+
     // ---------------------------------------------
     // RANGLISTE (Streak + geknackte Codes) / SPIELERPROFIL
     // Enthaelt auch Dublonen, Werkzeuge, Shop-Items - siehe
@@ -434,6 +511,7 @@ service cloud.firestore {
                     && validShipTools(request.resource.data)
                     && validQuestCounters(request.resource.data)
                     && validDailyQuestsWrite(request.resource.data)
+                    && validCodeRedemption(request.resource.data)
                     && (!('streak' in request.resource.data)
                         || (request.resource.data.streak is int && request.resource.data.streak <= 1))
                     && (!('codesCracked' in request.resource.data)
@@ -448,6 +526,7 @@ service cloud.firestore {
                     && validShipTools(request.resource.data)
                     && validQuestCounters(request.resource.data)
                     && validDailyQuestsWrite(request.resource.data)
+                    && validCodeRedemption(request.resource.data)
                     && (!('streak' in request.resource.data)
                         || (request.resource.data.streak is int
                             && request.resource.data.streak <= oldNum('streak') + 1))

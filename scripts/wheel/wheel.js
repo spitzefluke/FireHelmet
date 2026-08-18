@@ -851,7 +851,15 @@ function triggerCodeSuccessEffect() {
   }
 }
 
-function recordCodeCrack(codeId, reward) {
+/* ------------------------------------------------------
+   NUR die lokale Buchhaltung (localStorage) - keine Firestore-
+   Schreibvorgänge. Ausgelagert aus recordCodeCrack(), damit
+   redeemCurrencyCode() (siehe unten) dieselbe lokale Markierung
+   nutzen kann, OHNE "codesCracked" ein zweites Mal in Firestore
+   hochzuzählen (die atomare Transaktion hat das dort bereits
+   erledigt - siehe Kommentar bei redeemCurrencyCode()).
+------------------------------------------------------ */
+function markCodeCrackedLocally(codeId, reward) {
   const cracked = getCrackedCodes();
 
   if (cracked.includes(codeId)) {
@@ -863,8 +871,6 @@ function recordCodeCrack(codeId, reward) {
   localStorage.setItem("codesCracked", String(cracked.length));
   localStorage.setItem("codesSyncedCount", String(cracked.length));
 
-  const nickname = localStorage.getItem("wheelNickname") || "";
-
   if (reward) {
     const rewards = getCodeRewards();
     if (!rewards.includes(reward)) {
@@ -872,6 +878,19 @@ function recordCodeCrack(codeId, reward) {
       localStorage.setItem("codeRewards", JSON.stringify(rewards));
     }
   }
+
+  // Fortschritt fürs Wochenrennen
+  if (typeof addRaceProgress === "function" && typeof raceConfig !== "undefined") {
+    addRaceProgress(raceConfig.progressPerCode);
+  }
+
+  return true;
+}
+
+function recordCodeCrack(codeId, reward) {
+  if (!markCodeCrackedLocally(codeId, reward)) return false;
+
+  const nickname = localStorage.getItem("wheelNickname") || "";
 
   if (nickname && wheelDb) {
     wheelAuthReady.then((uid) => {
@@ -897,12 +916,92 @@ function recordCodeCrack(codeId, reward) {
     });
   }
 
-  // Fortschritt fürs Wochenrennen
-  if (typeof addRaceProgress === "function" && typeof raceConfig !== "undefined") {
-    addRaceProgress(raceConfig.progressPerCode);
-  }
-
   return true;
+}
+
+/* ------------------------------------------------------
+   WÄHRUNGS-CODES SICHER (ATOMAR) EINLÖSEN
+   ---------------------------------------------------
+   Betrifft ausschließlich Codes mit "currencyReward" in
+   codes-data.js (z.B. FIRE100, FIRE300, COINS300, BEUTEL25,
+   KLEINERBEUTEL). Ersetzt für diese Codes den früheren Ablauf
+   "sofort lokal als eingelöst markieren, dann UNABHÄNGIG und
+   OHNE Rückmeldung versuchen, Dublonen gutzuschreiben (addCurrency)":
+   Schlug Letzteres fehl (Netzwerk, veraltete/nicht veröffentlichte
+   Security Rules, Offline, ...), zeigte die Seite trotzdem
+   "eingelöst" an, UND der Code ließ sich nie wieder versuchen -
+   ohne dass jemals Dublonen ankamen. Das war die tatsächliche
+   Ursache der gemeldeten FIRE300/COINS300-Unzuverlässigkeit.
+
+   Jetzt: EINE Firestore-Transaktion
+   - liest den aktuellen Spielstand,
+   - prüft SERVERSEITIG (players/{uid}.redeemedCurrencyCodes, nicht
+     nur localStorage - das sich leicht löschen/umgehen lässt bzw.
+     auf einem zweiten Gerät gar nicht existiert), ob DIESER Code
+     für DIESEN Account schon eingelöst wurde,
+   - schreibt Dublonen + codesCracked + Markierung gemeinsam in
+     einem einzigen atomaren Schritt (siehe firestore.rules:
+     validCodeRedemption() prüft zusätzlich, dass der Betrag exakt
+     zum jeweiligen Code passt - ein erfundener Code-Hash oder ein
+     falscher Betrag wird serverseitig abgelehnt).
+
+   localStorage wird NUR NACH bestätigtem Erfolg aktualisiert
+   (schnelle "schon eingelöst"-Anzeige beim nächsten Versuch, ohne
+   jedes Mal auf das Netzwerk warten zu müssen) - nie vorher.
+
+   Wirft bei bereits eingelöstem Code einen Error mit
+   message === "already-redeemed"; bei jedem anderen Fehler den
+   echten Fehler (der Aufrufer zeigt dann eine ehrliche Fehler-
+   meldung statt eines vorgetäuschten Erfolgs).
+------------------------------------------------------ */
+async function redeemCurrencyCode(codeId, amount) {
+  if (!wheelDb) throw new Error("no-db");
+  const uid = await wheelAuthReady;
+  if (!uid) throw new Error("no-uid");
+
+  const playerRef = wheelDb.collection("players").doc(uid);
+  const nickname = localStorage.getItem("wheelNickname") || "";
+
+  await wheelDb.runTransaction(async (tx) => {
+    const snap = await tx.get(playerRef);
+    const data = snap.exists ? snap.data() : {};
+    const redeemed = data.redeemedCurrencyCodes || {};
+
+    if (redeemed[codeId]) {
+      throw new Error("already-redeemed");
+    }
+
+    const base = {
+      currency: firebase.firestore.FieldValue.increment(amount),
+      totalCurrencyEarned: firebase.firestore.FieldValue.increment(amount),
+      codesCracked: firebase.firestore.FieldValue.increment(1),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    if (nickname) base.nickname = nickname;
+
+    if (snap.exists) {
+      // Dot-Notation-Feldpfad statt "redeemedCurrencyCodes: {[codeId]: true}"
+      // via set()/merge: set()+merge ERSETZT ein verschachteltes Map-Feld
+      // KOMPLETT statt es zusammenzuführen - ein zweiter Code-Fund hätte
+      // sonst den ERSTEN wieder aus der Map entfernt und dadurch erneut
+      // einlösbar gemacht. Nur tx.update() (nicht set-mit-merge) löst
+      // "a.b"-Feldnamen als echten verschachtelten Pfad auf, alle anderen
+      // bereits eingelösten Codes bleiben dabei unangetastet erhalten.
+      tx.update(playerRef, {
+        ...base,
+        [`redeemedCurrencyCodes.${codeId}`]: true,
+      });
+    } else {
+      // Dokument existiert noch gar nicht (Code eingelöst, bevor je ein
+      // Spitzname gesetzt wurde) - update() würde hier fehlschlagen, also
+      // per set() ganz neu anlegen. Kein Dot-Pfad nötig, da es noch keine
+      // vorherigen Eintraege gibt, die erhalten bleiben müssten.
+      tx.set(playerRef, {
+        ...base,
+        redeemedCurrencyCodes: { [codeId]: true },
+      });
+    }
+  });
 }
 
 /* ------------------------------------------------------
