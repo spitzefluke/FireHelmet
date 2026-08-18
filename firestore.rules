@@ -1,119 +1,110 @@
 /* ======================================================
-   FIRESTORE SECURITY RULES - FireHelmet
+   FIRESTORE SICHERHEITSREGELN - FireHelmet
    ---------------------------------------------------
    WICHTIG - DIESE DATEI WIRD NICHT AUTOMATISCH ANGEWENDET.
    GitHub Pages ist rein statisches Hosting; es gibt keinen
-   Firebase-Deploy-Zugriff aus diesem Repository heraus. Diese
-   Datei ist ein DOKUMENTIERTER VORSCHLAG, den du selbst manuell
-   in der Firebase Console einspielen musst:
+   Firebase-Deploy-Zugriff aus diesem Repository heraus. So
+   traegst du diese Regeln ein:
 
      1. https://console.firebase.google.com -> dein Projekt
         (firehelmet-60558)
      2. Build -> Firestore Database -> Tab "Regeln"
-     3. Bestehenden Inhalt sichern/kopieren, falls dort schon
-        etwas Funktionierendes steht (nicht blind ueberschreiben,
-        siehe Auftrag Punkt 7)
-     4. Den Inhalt dieser Datei einfuegen, "Veroeffentlichen" klicken
-     5. Danach unbedingt testen (siehe ABSCHNITT TESTS im
-        Abschlussbericht)
+     3. Kompletten Inhalt der Editor-Box mit dem Text unten
+        ersetzen -> "Veroeffentlichen" klicken
+     4. Danach unbedingt testen (siehe ABSCHNITT TESTS im
+        Abschlussbericht dieser Aenderung)
 
    HINWEIS: Der Firestore-Regel-Compiler akzeptiert nur ASCII-
    Zeichen (auch in Kommentaren) - deshalb hier bewusst ue/oe/ae/ss
-   statt Umlauten, geprueft mit dem echten Firebase Emulator.
+   statt Umlauten.
+
+   HERKUNFT DIESER DATEI (wichtig fuer die Zukunft!):
+   Diese Fassung basiert auf den ECHTEN, aktuell in der Firebase
+   Console veroeffentlichten Regeln (Stand: Export der Konsolen-
+   Seite durch den Betreiber) - NICHT auf einer frueheren Version
+   dieser Datei im Repository. Der bisherige Repo-Stand war leider
+   veraltet/abweichend vom echten Deployment (u.a. fehlte site_meta
+   komplett, und die einfachere players-Regel ohne Feld-Validierung
+   haette die staerkeren Anti-Cheat-Grenzen der echten Produktiv-
+   Regeln ersetzt). Ab jetzt gilt: diese Datei IST die Quelle der
+   Wahrheit, wird bei jeder Aenderung mit dem echten Firebase-
+   Emulator getestet (nicht nur auf Syntax) und muss nach jedem
+   Update erneut in die Firebase Console eingespielt werden.
 
    SIEHST DU IN DER BROWSER-KONSOLE GENAU DIESE FEHLER?
      "site_config konnte nicht geladen werden ... Missing or
       insufficient permissions"
      "Schiffsstatus ... konnte nicht geladen werden ... Missing or
       insufficient permissions"
-   Der Code selbst ist dafuer NICHT die Ursache: site_config/main
-   und ship_repair/main sind hier unten bereits mit "allow read: if
-   true" (also oeffentlich, ohne Login) freigegeben, und der Code
-   fragt exakt diese Pfade ab, mit korrekt abgewartetem Auth-Status.
-   Diese Fehler bedeuten fast immer, dass in der Firebase Console
-   noch eine AELTERE Version dieser Regeln aktiv ist (z.B. ohne den
-   site_config-Block, oder noch mit dem Standard-"alles gesperrt"-
-   Regelwerk) - schau in Schritt 1-4 oben nach und veroeffentliche
-   diese aktuelle Version. Die Fehler verschwinden von selbst,
-   sobald die Regeln synchron sind - es ist NICHT noetig (und auch
-   nicht sicher), die Regeln stattdessen offener zu machen.
-
-   VORAUSSETZUNG fuer den Admin-Bereich (isAdmin()):
-   In der Firebase Console unter Authentication -> Sign-in method
-   muss "Google" aktiviert sein, UND du musst dich einmal ueber
-   das Gateway (Zahnrad-Symbol in der Seitenleiste bzw. im Menue)
-   mit genau der E-Mail-Adresse anmelden, die unten bei OWNER_EMAIL
-   steht.
+   Das lag daran, dass site_config UND ship_repair in den bisher
+   veroeffentlichten Regeln komplett fehlten (kein "match"-Block,
+   Firestore lehnt unbekannte Pfade standardmaessig ab). Diese
+   Fassung ergaenzt beide - der Fehler verschwindet, sobald diese
+   Datei veroeffentlicht wird. Es ist NICHT noetig (und auch nicht
+   sicher), die Regeln stattdessen offener zu machen.
 
    DATENMODELL (aus dem tatsaechlichen Code abgeleitet, siehe die
    scripts-Ordner fuer die jeweiligen .collection(...)-Aufrufe):
 
    - players/{uid}              persoenliches Profil (Dublonen,
                                  Werkzeuge, Shop-Items, Codes, ...)
-   - ship_repair/main            EIN gemeinsames Community-Dokument
-   - community_boss/{monthId}    EIN gemeinsames Community-Dokument
-   - community_boss_damage/{monthId_uid}  Schaden PRO Spieler
    - raceProgress/{weekId_uid}   Wochenrennen-Fortschritt PRO Spieler
    - giveawayEntries/{giveawayId_uid}     Teilnahme PRO Spieler
    - giveawayWinners/{giveawayId}         EIN Ergebnis-Dokument
-   - site_ratings/{autoId}       einzelne Bewertungen (schreibgeschuetzt)
-   - supportReports/{autoId}     Support-Anfragen (nie vom Client gelesen)
-   - support_chat_log/{autoId}   Chat-Verlauf (nie vom Client gelesen)
-   - site_config/main             NEU (dieses Update): vom Admin-Gateway
+   - supportReports/{autoId}    Support-Anfragen (nie vom Client gelesen)
+   - site_meta/{docId}          Technischer Zustand (z.B. zuletzt an
+                                 Discord gesendeter Update-Text-Hash,
+                                 siehe scripts/core/discord-notify.js)
+   - support_chat_log/{autoId}  KI-Support-Chatverlauf (nie vom Client
+                                 gelesen)
+   - community_boss/{monthId}   EIN gemeinsames Community-Dokument
+   - community_boss_damage/{monthId_uid}  Schaden PRO Spieler
+   - site_ratings/{autoId}      einzelne Bewertungen (schreibgeschuetzt)
+   - site_config/main           NEU (dieses Update): vom Admin-Gateway
                                  editierbare Werte (Countdown-Termine,
-                                 gesperrte Kapitel) - siehe
-                                 scripts/core/site-config.js /
+                                 gesperrte Kapitel, deaktivierte Spiele)
+                                 - siehe scripts/core/site-config.js /
                                  scripts/core/admin-gateway.js
+   - ship_repair/main            NEU (dieses Update): EIN gemeinsames
+                                 Community-Dokument fuer den Fortschritt
+                                 der Schiffsreparatur - siehe scripts/
+                                 ship/ship-repair.js. Gehoert KEINEM
+                                 einzelnen Spieler (genau wie
+                                 community_boss), daher oeffentlich
+                                 lesbar; Schreiben ist zusaetzlich zur
+                                 Anmeldung durch die Struktur unten
+                                 eingeschraenkt, damit niemand die
+                                 Reparatur per Konsole einfach auf
+                                 "fertig" springen lassen oder den
+                                 gemeinsamen Fortschritt loeschen kann.
 
    BEKANNTE, BEWUSST IN KAUF GENOMMENE EINSCHRAENKUNGEN:
-   Ohne eigenes Backend (Cloud Functions) kann der SCHADENSWERT
-   beim Community-Boss, der REPARATURFORTSCHRITT beim Schiff und
-   das GEWINNSPIEL-ZIEHUNGSERGEBNIS nicht serverseitig neu
-   berechnet/geprueft werden - ein technisch sehr versierter
-   Besucher koennte ueber die Browser-Konsole direkt Firestore-
-   Schreibzugriffe ausloesen, die von der App normalerweise nur
-   nach bestimmten Aktionen gesendet werden. Diese Regeln
-   verhindern trotzdem das Wichtigste: fremde Profile aendern,
-   den Admin-Bereich umgehen, oder committete Daten (Gewinner,
-   fremde Bewertungen/Support-Tickets) manipulieren/lesen.
+   Ohne eigenes Backend (Cloud Functions) kann nicht JEDER denkbare
+   Wert serverseitig neu berechnet werden. Die Regeln unten grenzen
+   die tatsaechlich riskanten Felder (Dublonen, Boss-Schaden,
+   Reparatur-Fortschritt) auf plausible Schrittweiten/Uebergaenge
+   ein - das deckt weit mehr ab als reine Ownership-Pruefungen,
+   ersetzt aber keinen echten Server. Das ist bewusst so und war
+   bereits vor dieser Aenderung der Stand der echten, produktiven
+   Regeln.
 
-   DASSELBE GILT FUER players/{uid}.currency (Duplonen), das jetzt
-   zusaetzlich von Aendiis Spielothek genutzt wird (siehe scripts/
-   spielothek/spielothek.js): die App liest/schreibt currency immer
-   ueber eine Firestore-Transaktion (Einsatz nur abziehen, wenn
-   genug vorhanden ist, Auszahlung im selben Schritt), NIE
-   clientseitig "vertrauensvoll" hochgezaehlt. Diese Regeln stellen
-   sicher, dass NUR der eigene Account das eigene players/{uid}-
-   Dokument ueberhaupt beschreiben darf - sie koennen aber (ohne
-   Cloud Functions) nicht technisch erzwingen, DASS eine Aenderung
-   an "currency" wirklich aus einer echten Spielrunde stammt und
-   nicht aus einem direkten Schreibzugriff ueber die Browser-Konsole.
-   Das ist eine grundsaetzliche Grenze von rein clientseitigen
-   Firestore-Apps ohne eigenes Backend, keine neue Schwachstelle
-   durch die Spielothek - derselbe Spielraum bestand vorher schon
-   fuer Schwarzmarkt-Kaeufe/Schatzrad-Gewinne, die ebenfalls ueber
-   dasselbe Feld laufen.
-
-   GEPRUEFT MIT DEM ECHTEN FIREBASE-EMULATOR (nicht nur
-   Syntax-Check): 15 automatisierte Szenarien - eigenes Profil
-   schreiben/fremdes nicht, site_config nur fuer die echte
-   Admin-E-Mail, gefaelschte E-Mail-Behauptung wird abgelehnt,
-   Support-Berichte nicht oeffentlich lesbar, gemeinsame Events
-   nur fuer angemeldete (auch anonyme) Nutzer beschreibbar. Siehe
-   Abschlussbericht fuer die vollstaendige Ergebnisliste.
+   HINWEIS ZU DEN "DEV-PREVIEW"-WERKZEUGEN (devFinishActiveRepair(),
+   devResetShipEvent() in ship-repair.js): Diese sind AUSDRUECKLICH
+   KEIN echter Zugriffsschutz (nur ein URL-Parameter/localStorage-
+   Flag, siehe Kommentar dort). Die Regeln unten pruefen ship_repair-
+   Schreibvorgaenge unabhaengig davon, WER sie absendet, rein anhand
+   der Werte selbst - dadurch werden auch diese Dev-Werkzeuge jetzt
+   korrekt von echten Spielern abgelehnt (sie koennen weiterhin lokal
+   gegen den Firebase-Emulator verwendet werden). Das ist beabsichtigt
+   und kein Fehler.
 ====================================================== */
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function isSignedIn() {
       return request.auth != null;
-    }
-
-    function isOwner(uid) {
-      return isSignedIn() && request.auth.uid == uid;
     }
 
     // Einzig autorisierter Admin-Account - siehe
@@ -128,111 +119,361 @@ service cloud.firestore {
         && request.auth.token.email == "spitzefluke@gmail.com";
     }
 
-    // --------------------------------------------------
-    // SPIELERPROFIL
-    // Lesen bleibt oeffentlich (Rangliste/Werkzeug-Anzeigen laden
-    // die ganze Sammlung) - enthaelt keine E-Mails/Passwoerter.
-    // Schreiben nur fuer den eigenen (auch anonymen) Account.
-    // --------------------------------------------------
-    match /players/{uid} {
-      allow read: if true;
-      allow write: if isOwner(uid);
+    function validNickname(data) {
+      return data.nickname is string
+             && data.nickname.size() > 0
+             && data.nickname.size() <= 30;
     }
 
-    // --------------------------------------------------
-    // GEMEINSAME COMMUNITY-EREIGNISSE
-    // Absichtlich fuer jeden angemeldeten Besucher beschreibbar -
-    // das ist der Kern des jeweiligen Features (gemeinsam den Boss
-    // schlagen / das Schiff reparieren). Siehe Einschraenkungen oben.
-    // --------------------------------------------------
-    match /ship_repair/{docId} {
-      allow read: if true;
-      allow write: if isSignedIn();
+    // Prueft das "rewards"-Feld, falls vorhanden: muss eine Liste
+    // aus max. 50 Eintraegen sein (arrayUnion haengt jeweils nur an)
+    function validRewards(data) {
+      return !('rewards' in data)
+             || (data.rewards is list && data.rewards.size() <= 50);
     }
 
-    match /community_boss/{monthId} {
-      allow read: if true;
-      allow write: if isSignedIn();
+    // Prueft das "avatar"-Feld, falls vorhanden: muss ein kurzer
+    // Text (URL) sein, oder null
+    function validAvatar(data) {
+      return !('avatar' in data)
+             || data.avatar == null
+             || (data.avatar is string && data.avatar.size() <= 300);
     }
 
-    // --------------------------------------------------
-    // PRO-SPIELER-EINTRAEGE (eigener Fortschritt in gemeinsamen
-    // Events) - nur der eigene Eintrag darf angelegt/geaendert
-    // werden, erkennbar am "uid"-Feld im Dokument selbst.
-    // --------------------------------------------------
-    match /community_boss_damage/{docId} {
+    // Liest ein Zahlenfeld aus dem BESTEHENDEN Dokument sicher aus,
+    // auch wenn es dort noch nicht existiert (dann 0)
+    function oldNum(field) {
+      return field in resource.data ? resource.data[field] : 0;
+    }
+
+    // Prueft die Shop-Felder: Dublonen duerfen pro Schreibvorgang nur
+    // um max. 200 steigen (groesste tatsaechlich vergebene Belohnung),
+    // aber beliebig sinken (Kaeufe im Shop, Spielothek-Einsatz). Nie
+    // unter 0.
+    function validShopFields(data) {
+      return (!('currency' in data)
+              || (data.currency is int
+                  && data.currency >= 0
+                  && data.currency <= oldNum('currency') + 200))
+             && (!('ownedShopItems' in data)
+                 || (data.ownedShopItems is list && data.ownedShopItems.size() <= 40))
+             && (!('equippedFrame' in data)
+                 || (data.equippedFrame is string && data.equippedFrame.size() <= 50));
+    }
+
+    // ---------------------------------------------
+    // RANGLISTE (Streak + geknackte Codes) / SPIELERPROFIL
+    // Enthaelt auch Dublonen, Werkzeuge, Shop-Items - siehe
+    // validShopFields() oben.
+    // ---------------------------------------------
+    match /players/{playerId} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+
+      allow create: if isSignedIn()
+                    && request.auth.uid == playerId
+                    && validNickname(request.resource.data)
+                    && validRewards(request.resource.data)
+                    && validAvatar(request.resource.data)
+                    && validShopFields(request.resource.data)
+                    && (!('streak' in request.resource.data)
+                        || (request.resource.data.streak is int && request.resource.data.streak <= 1))
+                    && (!('codesCracked' in request.resource.data)
+                        || (request.resource.data.codesCracked is int && request.resource.data.codesCracked <= 1));
+
       allow update: if isSignedIn()
-        && resource.data.uid == request.auth.uid
-        && request.resource.data.uid == request.auth.uid;
+                    && request.auth.uid == playerId
+                    && validNickname(request.resource.data)
+                    && validRewards(request.resource.data)
+                    && validAvatar(request.resource.data)
+                    && validShopFields(request.resource.data)
+                    && (!('streak' in request.resource.data)
+                        || (request.resource.data.streak is int
+                            && request.resource.data.streak <= oldNum('streak') + 1))
+                    && (!('codesCracked' in request.resource.data)
+                        || (request.resource.data.codesCracked is int
+                            && request.resource.data.codesCracked <= oldNum('codesCracked') + 1));
+
       allow delete: if false;
     }
 
+    // ---------------------------------------------
+    // WOCHENRENNEN
+    // Dokument-ID ist immer "<Wochenkennung>_<eigeneUID>",
+    // z.B. "2026-W29_abc123" - das prueft gleichzeitig, dass
+    // die Woche im Feld zur ID passt UND man nur sein eigenes
+    // Dokument bearbeitet.
+    // ---------------------------------------------
     match /raceProgress/{docId} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+
+      allow create: if isSignedIn()
+                    && docId == (request.resource.data.week + '_' + request.auth.uid)
+                    && validNickname(request.resource.data)
+                    && request.resource.data.progress is int
+                    && request.resource.data.progress <= 15;
+
       allow update: if isSignedIn()
-        && resource.data.uid == request.auth.uid
-        && request.resource.data.uid == request.auth.uid;
+                    && docId == (request.resource.data.week + '_' + request.auth.uid)
+                    && validNickname(request.resource.data)
+                    && request.resource.data.progress is int
+                    && request.resource.data.progress <= oldNum('progress') + 15;
+
       allow delete: if false;
     }
 
-    match /giveawayEntries/{docId} {
+    // ---------------------------------------------
+    // GEWINNSPIEL: TEILNAHME
+    // Jeder darf sich selbst eintragen (Dokument-ID enthaelt
+    // die eigene Auth-ID), aber niemand darf fuer andere
+    // teilnehmen oder sich wieder austragen.
+    // ---------------------------------------------
+    match /giveawayEntries/{entryId} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
-    }
 
-    // Ergebnis-Dokument (EINMALIG per .create() gesetzt, siehe
-    // scripts/giveaway/giveaway.js) - danach unveraenderlich.
-    match /giveawayWinners/{giveawayId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if false;
-    }
-
-    // --------------------------------------------------
-    // BEWERTUNGEN
-    // Lesen oeffentlich (Durchschnitt wird angezeigt), Schreiben
-    // einmalig fuer den eigenen Account, kein Nachbearbeiten fremder
-    // Bewertungen.
-    // --------------------------------------------------
-    match /site_ratings/{autoId} {
-      allow read: if true;
       allow create: if isSignedIn()
-        && (request.resource.data.uid == request.auth.uid || request.resource.data.uid == null);
-      allow update, delete: if false;
+                    && entryId == (request.resource.data.giveawayId + '_' + request.auth.uid)
+                    && validNickname(request.resource.data);
+
+      allow update: if false;
+      allow delete: if false;
     }
 
-    // --------------------------------------------------
-    // SUPPORT-ANFRAGEN / CHATVERLAUF
-    // Werden vom Frontend NIE zurueckgelesen (nur per .add()
-    // geschrieben) - deshalb hier bewusst NICHT oeffentlich lesbar,
-    // nur der Admin darf sie einsehen. Jeder darf weiterhin eine
-    // Anfrage einsenden.
-    // --------------------------------------------------
-    match /supportReports/{autoId} {
-      allow read: if isAdmin();
-      allow create: if isSignedIn();
-      allow update, delete: if false;
+    // ---------------------------------------------
+    // GEWINNSPIEL-ZIEHUNGEN
+    // Wird nur EINMAL pro Runde geschrieben (der erste Besucher
+    // nach dem Enddatum "zieht" die Gewinner) und danach nie
+    // wieder veraendert - so kann niemand nachtraeglich ein
+    // Ergebnis manipulieren.
+    // ---------------------------------------------
+    match /giveawayWinners/{roundId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.id is string
+                    && request.resource.data.winners is list
+                    && request.resource.data.winners.size() <= 10;
+
+      allow update: if false;
+      allow delete: if false;
     }
 
-    match /support_chat_log/{autoId} {
-      allow read: if isAdmin();
-      allow create: if isSignedIn();
-      allow update, delete: if false;
+    // ---------------------------------------------
+    // SUPPORT-MELDUNGEN
+    // Jeder darf eine Meldung abschicken, aber niemand darf
+    // fremde Meldungen lesen (nur der Betreiber sieht sie, direkt
+    // in der Firebase Console unter Firestore Data - die Konsole
+    // umgeht diese Regeln, weil man dort als Projekt-Owner
+    // eingeloggt ist).
+    // ---------------------------------------------
+    match /supportReports/{reportId} {
+      allow read: if false;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() > 0
+                    && request.resource.data.message.size() <= 2000;
+
+      allow update: if false;
+      allow delete: if false;
     }
 
-    // --------------------------------------------------
+    // ---------------------------------------------
+    // SITE_META: DISCORD-BENACHRICHTIGUNG
+    // Merkt sich, welcher Update-Text zuletzt an Discord
+    // gesendet wurde, damit nicht jeder Besucher erneut sendet
+    // (siehe scripts/core/discord-notify.js). Jeder darf lesen
+    // (zum Vergleichen) und schreiben (wer zuerst den geaenderten
+    // Text sieht, markiert ihn als "gesendet") - das ist bewusst
+    // offen, da hier keine persoenlichen Daten drinstehen, nur ein
+    // Text-Hash plus Zeitstempel.
+    // ---------------------------------------------
+    match /site_meta/{docId} {
+      allow read: if true;
+
+      allow create, update: if isSignedIn()
+                    && request.resource.data.lastSentHash is string
+                    && request.resource.data.lastSentHash.size() <= 50;
+
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------
+    // SUPPORT-CHAT-PROTOKOLL (fuer die KI-Antworten)
+    // Genau wie supportReports: jeder darf einen Eintrag
+    // anlegen, aber niemand darf fremde Chatverlaeufe lesen -
+    // nur der Betreiber sieht sie in der Firebase Console.
+    // ---------------------------------------------
+    match /support_chat_log/{logId} {
+      allow read: if false;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.question is string
+                    && request.resource.data.question.size() <= 500
+                    && request.resource.data.reply is string
+                    && request.resource.data.reply.size() <= 800;
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------
+    // COMMUNITY-BOSS
+    // Jeder darf lesen (oeffentlicher HP-Balken). Ein Angriff
+    // darf die HP nur um einen kleinen, festen Hoechstbetrag
+    // verringern (verhindert, dass jemand den Boss per Konsole
+    // auf einen Schlag besiegt) und nie unter 0 fallen.
+    // ---------------------------------------------
+    match /community_boss/{monthId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.hp is int
+                    && request.resource.data.maxHp is int
+                    && request.resource.data.hp == request.resource.data.maxHp;
+
+      allow update: if isSignedIn()
+                    && request.resource.data.hp is int
+                    && request.resource.data.hp >= 0
+                    && request.resource.data.hp >= oldNum('hp') - 45;
+
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------
+    // COMMUNITY-BOSS: SCHADEN PRO SPIELER
+    // Fuer die Top-Angreifer-Rangliste + Top-3-Belohnung. Jeder
+    // darf lesen (oeffentliche Rangliste), aber nur den eigenen
+    // Eintrag schreiben (Dokument-ID enthaelt die eigene Auth-ID),
+    // und der Schaden darf pro Schreibvorgang nur um denselben
+    // Hoechstbetrag wie ein einzelner Angriff steigen.
+    // ---------------------------------------------
+    match /community_boss_damage/{docId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                    && docId == (request.resource.data.month + '_' + request.auth.uid)
+                    && request.resource.data.uid == request.auth.uid
+                    && validNickname(request.resource.data)
+                    && request.resource.data.totalDamage is int
+                    && request.resource.data.totalDamage <= 45;
+
+      allow update: if isSignedIn()
+                    && docId == (request.resource.data.month + '_' + request.auth.uid)
+                    && request.resource.data.uid == request.auth.uid
+                    && validNickname(request.resource.data)
+                    && request.resource.data.totalDamage is int
+                    && request.resource.data.totalDamage <= oldNum('totalDamage') + 45;
+
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------
+    // SEITEN-BEWERTUNGEN
+    // Jeder darf lesen (fuer den oeffentlichen Durchschnitt) und
+    // eine neue Bewertung anlegen. Bewertungen werden NIE mehr
+    // geaendert oder geloescht (jede Abstimmung zaehlt nur einmal,
+    // das Doppel-Abstimmen wird zusaetzlich per localStorage im
+    // Browser verhindert).
+    // ---------------------------------------------
+    match /site_ratings/{ratingId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.value is int
+                    && request.resource.data.value >= 1
+                    && request.resource.data.value <= 5
+                    && request.resource.data.nickname is string
+                    && request.resource.data.nickname.size() <= 30
+                    && (!('comment' in request.resource.data)
+                        || (request.resource.data.comment is string
+                            && request.resource.data.comment.size() <= 500));
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------
     // ADMIN-GATEWAY-KONFIGURATION (Countdown-Termine, gesperrte
-    // Kapitel) - oeffentlich LESBAR (jede/r Besucher/in braucht das,
-    // um die Seite korrekt anzuzeigen), aber NUR vom autorisierten
-    // Admin-Account beschreibbar.
-    // --------------------------------------------------
+    // Kapitel, deaktivierte Spielothek-Spiele) - siehe scripts/
+    // core/site-config.js (liest) / scripts/core/admin-gateway.js
+    // (schreibt). Oeffentlich LESBAR (jede/r Besucher/in braucht
+    // das, um die Seite korrekt anzuzeigen - Countdown-Ziel,
+    // gesperrte Kapitel usw. sind keine privaten Daten), aber NUR
+    // vom autorisierten Admin-Account beschreibbar.
+    // ---------------------------------------------
     match /site_config/{docId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------
+    // SCHIFFSREPARATUR (EIN gemeinsames Community-Dokument,
+    // "ship_repair/main" - siehe scripts/ship/ship-repair.js)
+    // ---------------------------------------------
+    // Gehoert KEINEM einzelnen Spieler (genau wie community_boss),
+    // deshalb oeffentlich lesbar - es gibt hier keine privaten
+    // Schiffsstatusdaten, die geschuetzt werden muessten, nur den
+    // gemeinsamen Reparaturfortschritt der ganzen Crew.
+    //
+    // Schreiben ist zusaetzlich zur Anmeldung strukturell
+    // eingeschraenkt (Punkt "Spieler darf Status nicht beliebig auf
+    // 'fertig' setzen"):
+    //   - Neuanlage nur im echten Ausgangszustand (leer).
+    //   - Eine neue Reparaturphase starten: nur wenn gerade
+    //     wirklich KEINE Reparatur laeuft, der bisherige Fortschritt
+    //     (completedPhases) dabei unveraendert bleibt, und das neue
+    //     Enddatum wirklich in der Zukunft liegt (kein sofortiges
+    //     "fertig").
+    //   - Eine laufende Reparatur abschliessen: nur wenn ihre
+    //     gespeicherte Endzeit laut Server-Uhrzeit WIRKLICH schon
+    //     erreicht ist, und completedPhases dabei um GENAU die eine
+    //     laufende Phase waechst (kein Ueberspringen mehrerer Phasen,
+    //     kein Verkuerzen der Liste).
+    //   - shipName/namedBy duerfen erst gesetzt werden, wenn dabei
+    //     wirklich alle Phasen fertig sind, und danach nie wieder
+    //     veraendert werden.
+    // Das verhindert, dass jemand ueber die Browser-Konsole die
+    // Reparatur sofort fertigstellt oder den gemeinsamen Fortschritt
+    // loescht/faelscht - genau wie bei community_boss oben.
+    // ---------------------------------------------
+    match /ship_repair/{docId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.completedPhases is list
+                    && request.resource.data.completedPhases.size() == 0
+                    && request.resource.data.activeRepair == null
+                    && request.resource.data.shipName == null;
+
+      allow update: if isSignedIn() && (
+                      // Fall A: neue Reparaturphase wird gestartet.
+                      (resource.data.activeRepair == null
+                       && request.resource.data.activeRepair != null
+                       && request.resource.data.activeRepair.endsAt is number
+                       && request.resource.data.activeRepair.endsAt > request.time.toMillis()
+                       && request.resource.data.completedPhases == resource.data.completedPhases
+                       && request.resource.data.shipName == resource.data.shipName)
+                      ||
+                      // Fall B: laufende Reparatur wird abgeschlossen -
+                      // nur wenn ihre Endzeit laut Server wirklich
+                      // schon erreicht ist.
+                      (resource.data.activeRepair != null
+                       && resource.data.activeRepair.endsAt <= request.time.toMillis()
+                       && request.resource.data.activeRepair == null
+                       && request.resource.data.completedPhases.size() == resource.data.completedPhases.size() + 1
+                       && request.resource.data.completedPhases[resource.data.completedPhases.size()] == resource.data.activeRepair.phaseId)
+                    )
+                    // shipName: bleibt null, solange nicht alle 6 Phasen
+                    // fertig sind; wird beim Abschluss der letzten Phase
+                    // genau einmal gesetzt; danach unveraendbar.
+                    && (resource.data.shipName != null
+                        ? request.resource.data.shipName == resource.data.shipName
+                        : (request.resource.data.completedPhases.size() < 6
+                           ? request.resource.data.shipName == null
+                           : request.resource.data.shipName is string))
+                    && ((request.resource.data.shipName == null) == (request.resource.data.namedBy == null));
+
+      allow delete: if false;
     }
 
     // Alles andere: standardmaessig gesperrt, statt versehentlich
