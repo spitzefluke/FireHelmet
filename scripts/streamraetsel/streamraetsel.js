@@ -48,6 +48,10 @@ function spawnStreamRaetselParticle() {
 
 function startStreamRaetselParticles() {
   stopStreamRaetselParticles();
+  // Lief bisher dauerhaft alle 900ms, ohne auf reduzierte Bewegung
+  // Ruecksicht zu nehmen - eine der wenigen wirklich fortlaufenden
+  // Hintergrundanimationen der Seite (siehe Performance-Hinweis).
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   streamRaetselParticleInterval = setInterval(spawnStreamRaetselParticle, 900);
 }
 

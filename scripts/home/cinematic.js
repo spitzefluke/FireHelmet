@@ -43,33 +43,61 @@
   /* ------------------------------------------------------
      1) ZENTRALES SCROLL-REVEAL (".fh-reveal")
   ------------------------------------------------------ */
-  function fhInitReveal() {
-    const targets = document.querySelectorAll(".fh-reveal");
+  // Observer lebt auf Modul-Ebene (nicht mehr nur innerhalb der Funktion),
+  // damit fhScanReveals() ihn spaeter WIEDERVERWENDEN kann - noetig, weil
+  // Karten-Raster wie Rangliste/Shop/Stories/Characters/Community-Boss/
+  // Support erst BEIM SEITENWECHSEL per JS neu gerendert werden (die
+  // urspruengliche fhInitReveal() lief nur einmal beim allerersten Laden
+  // und haette diese spaeter eingefuegten .fh-reveal-Elemente nie erfasst).
+  let fhRevealObserver = null;
+
+  function fhScanReveals() {
+    // Nur Elemente, die noch nicht behandelt wurden (frisch eingefuegt) -
+    // "data-fh-reveal-bound" markiert bereits erfasste Elemente, damit
+    // wiederholte Aufrufe (z.B. bei jedem Seitenwechsel) nichts doppelt
+    // beobachten oder den Delay-Versatz neu verwuerfeln.
+    const targets = document.querySelectorAll(".fh-reveal:not([data-fh-reveal-bound])");
     if (!targets.length) return;
 
     if (!("IntersectionObserver" in window) || prefersReducedMotion.matches) {
       // Kein Observer verfügbar oder reduzierte Bewegung gewünscht:
       // Inhalte sofort vollständig sichtbar machen, nichts animieren.
-      targets.forEach((el) => el.classList.add("fh-reveal-visible"));
+      targets.forEach((el) => {
+        el.classList.add("fh-reveal-visible");
+        el.setAttribute("data-fh-reveal-bound", "1");
+      });
       return;
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("fh-reveal-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.2, rootMargin: "0px 0px -8% 0px" }
-    );
+    if (!fhRevealObserver) {
+      fhRevealObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("fh-reveal-visible");
+              fhRevealObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.2, rootMargin: "0px 0px -8% 0px" }
+      );
+    }
 
     targets.forEach((el, i) => {
       el.style.setProperty("--fh-reveal-delay", `${Math.min(i * 0.08, 0.4)}s`);
-      observer.observe(el);
+      el.setAttribute("data-fh-reveal-bound", "1");
+      fhRevealObserver.observe(el);
     });
+  }
+
+  // Global aufrufbar, damit andere Render-Funktionen (Rangliste, Shop,
+  // Stories, Characters, Community-Boss, Support, ...) nach dem Einfuegen
+  // neuer .fh-reveal-Karten einfach fhScanReveals() nachrufen koennen -
+  // kein neues eigenes Observer-System pro Bereich noetig.
+  window.fhScanReveals = fhScanReveals;
+
+  function fhInitReveal() {
+    fhScanReveals();
   }
 
   /* ------------------------------------------------------

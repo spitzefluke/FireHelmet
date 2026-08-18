@@ -687,11 +687,13 @@ function playDailyBonusAnimation(points) {
   const btn = document.getElementById("race-daily-button");
   if (!btn) return;
 
+  const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const burst = document.createElement("div");
   burst.className = "daily-bonus-burst";
   burst.innerHTML = `
     <span class="daily-bonus-points">+${points}</span>
-    ${Array.from({ length: 10 })
+    ${reducedMotion ? "" : Array.from({ length: 10 })
       .map((_, i) => `<span class="daily-bonus-spark" style="--i:${i}"></span>`)
       .join("")}
   `;
