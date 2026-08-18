@@ -12,9 +12,19 @@ function padTwo(value) {
   return String(value).padStart(2, "0");
 }
 
+// Admin-Override aus dem Gateway (siteConfig.shipEventUnlockDate, siehe
+// scripts/core/site-config.js) hat Vorrang vor dem statischen Fallback aus
+// streamRaetselConfig.unlockDate - genau das Prinzip, das vorher in
+// ship-repair.js verwendet wurde, jetzt hier direkt an der Stelle, die
+// dieses Datum tatsaechlich noch verwendet ("???"-Seite, siehe Auftrag:
+// Schiffsreparatur haengt nicht mehr an diesem Datum).
+function getStreamRaetselUnlockDate() {
+  const override = typeof siteConfig !== "undefined" ? siteConfig.shipEventUnlockDate : null;
+  return new Date(override || streamRaetselConfig.unlockDate);
+}
+
 function isStreamRaetselUnlocked() {
-  const target = new Date(streamRaetselConfig.unlockDate);
-  return new Date() >= target;
+  return new Date() >= getStreamRaetselUnlockDate();
 }
 
 /* ------------------------------------------------------
@@ -175,9 +185,15 @@ function startStreamRaetselMusic() {
 
   el.volume = 0;
   el.play().catch((err) => {
-    // Autoplay evtl. vom Browser blockiert - startet beim nächsten
-    // Klick irgendwo auf der Seite automatisch nach
-    console.warn("Mystery-Musik konnte nicht automatisch starten:", err);
+    // "AbortError" bedeutet nur, dass play() durch ein fast zeitgleiches
+    // pause() unterbrochen wurde (z.B. sehr schnelles Verlassen der Seite,
+    // siehe stopStreamRaetselMusic()) - ein normaler, harmloser Vorgang
+    // im Browser, kein echter Fehler, deshalb hier bewusst nicht geloggt.
+    // Ein vom Browser blockiertes Autoplay startet ohnehin automatisch
+    // beim nächsten Klick irgendwo auf der Seite nach (siehe unten).
+    if (err.name !== "AbortError") {
+      console.warn("Mystery-Musik konnte nicht automatisch starten:", err);
+    }
   });
   fadeStreamRaetselMusic(el, 0.6, 900);
 }
@@ -248,7 +264,7 @@ function updateStreamRaetselView() {
   contentEl.style.display = "none";
 
   const now = new Date();
-  const target = new Date(streamRaetselConfig.unlockDate);
+  const target = getStreamRaetselUnlockDate();
   const diff = target - now;
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -272,16 +288,11 @@ let streamRaetselInterval = null;
 /* ------------------------------------------------------
    SEITENWECHSEL-HOOK
    ---------------------------------------------------
-   Die "???"-Seite wurde durch das Event "Repariere das Schiff"
-   ersetzt (siehe scripts/ship/ship-repair.js). Sobald dessen
-   updateShipRepairPage() geladen ist, übernimmt DIESES die
-   komplette Anzeige (Locked-Ansicht + Inhalt) - sonst würden
-   beide Systeme gleichzeitig in dieselben DOM-Elemente
-   (#streamraetsel-days usw.) schreiben. Die Musik/Partikel/
-   generische Inhaltsanzeige dieser Datei bleiben als sauberer
-   Fallback erhalten, falls ship-repair.js einmal nicht geladen
-   werden sollte (z.B. Skript-Fehler) - dann läuft wenigstens
-   noch der alte, bewährte Countdown-Mechanismus.
+   Die "???"-Seite ist eine eigenstaendige Mystery-Seite, komplett
+   unabhaengig von der Schiffsreparatur (siehe scripts/ship/
+   ship-repair.js, Auftrag: Reparatur darf nicht an "???" gekoppelt
+   sein). Diese Datei ist wieder alleine fuer ihre eigene Locked-
+   Ansicht + Inhalt zustaendig.
 ------------------------------------------------------ */
 function updateStreamRaetselPage(pageID) {
   if (pageID !== "streamraetsel") {
@@ -292,15 +303,7 @@ function updateStreamRaetselPage(pageID) {
     return;
   }
 
-  // Die mysteriöse Hintergrundmusik passt weiterhin zum Schiffs-Event
-  // und läuft daher unverändert weiter, auch wenn ship-repair.js die
-  // eigentliche Anzeige übernimmt (siehe Kommentar oben).
   startStreamRaetselMusic();
-
-  if (typeof updateShipRepairPage === "function") {
-    return;
-  }
-
   updateStreamRaetselView();
 
   if (!isStreamRaetselUnlocked()) {

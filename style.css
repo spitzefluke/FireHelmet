@@ -944,16 +944,6 @@ main {
   opacity: clamp(0, calc((var(--fh-progress) - .72) * 3.6), 1);
 }
 
-/* Sobald das reparierte Schiff (weiter unten im selben Track) bereit
-   ist zu erscheinen, macht die Ziel-Anzeige wieder Platz dafür, statt
-   beide dauerhaft übereinander stehen zu lassen (Punkt 26). */
-.fh-copy-destination:has(~ .fh-ship-return.fh-ship-return-visible) {
-  opacity: min(
-    clamp(0, calc((var(--fh-progress) - .68) * 10), 1),
-    clamp(0, calc((.9 - var(--fh-progress)) * 10), 1)
-  );
-}
-
 .fh-cinematic-eyebrow {
   font-family: var(--fh-font-display);
   letter-spacing: 6px;
@@ -7450,152 +7440,6 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 
 /* =====================================================
-   SCHIFFSREPARATUR - ZUSAMMENFASSUNG (Home, unter dem
-   bestehenden Haupt-Countdown). Nutzt bewusst dieselbe
-   .countdown/.time-box-Optik wie der Haupt-Countdown darüber -
-   siehe .hero/.countdown weiter oben - statt eigene Boxen zu
-   erfinden.
-===================================================== */
-.fh-home-ship-repair {
-  position: relative;
-  z-index: 1;
-  width: min(640px, 92vw);
-  margin: 0 auto;
-  padding: clamp(2.5rem, 6vw, 4.5rem) 1rem clamp(3.5rem, 7vw, 5.5rem);
-  text-align: center;
-}
-
-.fh-home-ship-repair-icon {
-  display: inline-block;
-  font-size: clamp(28px, 5vw, 40px);
-  filter: drop-shadow(0 0 18px rgba(240,201,106,.4));
-}
-
-.fh-home-ship-repair-title {
-  margin-top: 10px;
-  font-family: var(--fh-font-display);
-  font-size: clamp(1.6rem, 4vw, 2.4rem);
-  letter-spacing: 4px;
-  color: var(--fh-gold-bright);
-  text-shadow: 0 0 40px rgba(240,201,106,.35);
-}
-
-.fh-home-ship-repair-lead {
-  margin-top: 14px;
-  color: var(--fh-text-muted, #aaa);
-  font-size: clamp(.95rem, 2vw, 1.15rem);
-  line-height: 1.5;
-}
-
-.fh-home-ship-repair-body {
-  margin-top: clamp(1.6rem, 4vw, 2.5rem);
-  min-height: 40px;
-}
-
-.fh-home-ship-countdown-label {
-  font-family: var(--fh-font-display);
-  letter-spacing: 3px;
-  font-size: 14px;
-  color: var(--fh-muted-fg);
-  margin-bottom: 14px;
-}
-
-.fh-home-ship-countdown .time-box {
-  width: clamp(56px, 14vw, 100px);
-  height: clamp(56px, 14vw, 100px);
-  border-color: rgba(240,201,106,.35);
-}
-
-.fh-home-ship-countdown .time-box span {
-  font-size: clamp(1.1rem, 4vw, 1.8rem);
-}
-
-.fh-home-ship-progress-label {
-  font-family: var(--fh-font-display);
-  letter-spacing: 2px;
-  color: var(--fh-gold-bright);
-  font-size: 15px;
-}
-
-.fh-home-ship-progress-bar {
-  margin: 10px auto 0;
-  width: min(420px, 100%);
-  height: 14px;
-  border-radius: 999px;
-  background: var(--fh-muted);
-  border: 1px solid var(--fh-border);
-  overflow: hidden;
-}
-
-.fh-home-ship-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--fh-gold), var(--fh-fire));
-  transition: width .6s var(--fh-ease);
-}
-
-.fh-home-ship-progress-percent {
-  margin-top: 8px;
-  font-family: var(--fh-font-display);
-  font-size: 14px;
-  color: var(--fh-muted-fg);
-}
-
-.fh-home-ship-checklist {
-  list-style: none;
-  margin: 18px auto 0;
-  padding: 0;
-  display: inline-flex;
-  flex-direction: column;
-  gap: 8px;
-  text-align: left;
-}
-
-.fh-home-ship-checklist-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--fh-muted-fg);
-  font-size: 14px;
-}
-
-.fh-home-ship-checklist-mark {
-  font-family: var(--fh-font-display);
-  color: var(--fh-muted-fg);
-}
-
-.fh-home-ship-checklist-done {
-  color: var(--fh-fg);
-}
-
-.fh-home-ship-checklist-done .fh-home-ship-checklist-mark {
-  color: var(--fh-success);
-}
-
-/* Eigene Menüseite "Repariere das Schiff": Button unter der (inline-
-   flex-basierten) Checklist braucht einen eigenen Block-Container,
-   damit er darunter statt daneben landet. */
-.fh-ship-repair-page-cta {
-  margin-top: 22px;
-}
-
-.fh-home-ship-complete {
-  font-family: var(--fh-font-display);
-  letter-spacing: 2px;
-  color: var(--fh-gold-bright);
-  font-size: clamp(1.1rem, 3vw, 1.5rem);
-  text-shadow: 0 0 30px rgba(240,201,106,.4);
-}
-
-.fh-home-ship-complete-name {
-  margin-top: 8px;
-  color: var(--fh-muted-fg);
-}
-
-.fh-home-ship-repair-link {
-  margin-top: clamp(1.6rem, 4vw, 2.4rem);
-}
-
-/* =====================================================
    "REPARIERE DAS SCHIFF" - EVENT
    Baut bewusst auf den bestehenden .streamraetsel-* Klassen
    (Layout/Countdown) auf und überschreibt nur die Farbgebung
@@ -7969,120 +7813,11 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   max-width: 360px;
 }
 
-/* --- Home-Reveal: repariertes Schiff auf der Startseite --- */
-.fh-ship-return {
-  display: none;
-  position: absolute;
-  left: 50%;
-  top: 86%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  width: min(520px, 88vw);
-  z-index: 6;
-  padding: 10px 1rem;
-}
-
-.fh-ship-return.fh-ship-return-visible {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  opacity: clamp(0, calc((var(--fh-progress) - .8) * 6.6), 1);
-}
-
-.fh-ship-return-fog {
-  position: absolute;
-  inset: -30% -20% 10% -20%;
-  background: radial-gradient(ellipse 60% 50% at 50% 55%, rgba(230,220,200,.28), transparent 72%);
-  filter: blur(18px);
-  opacity: 0;
-  animation: fhReturnFogIn 2.6s ease-out forwards;
-}
-
-.fh-ship-return-light {
-  position: absolute;
-  inset: -20% -10% 30% -10%;
-  z-index: -1;
-  background: radial-gradient(circle, rgba(255,171,64,.35), transparent 70%);
-  filter: blur(20px);
-  opacity: 0;
-  animation: fhReturnLightIn 2.4s ease-out .5s forwards;
-}
-
-.fh-ship-return-svg {
-  display: block;
-  width: min(220px, 60vw);
-  height: auto;
-  margin: 0 auto;
-  filter: drop-shadow(0 16px 20px rgba(0,0,0,.5)) drop-shadow(0 0 24px rgba(240,201,106,.5));
-  opacity: 0;
-  transform: translateY(14px) scale(.94);
-  animation: fhReturnShipIn 1.6s var(--fh-ease) 1s forwards;
-}
-
-.fh-ship-return-eyebrow {
-  margin-top: 16px;
-  font-family: var(--fh-font-display);
-  letter-spacing: 4px;
-  font-size: 15px;
-  color: var(--fh-gold-bright);
-  text-shadow: 0 0 24px rgba(240,201,106,.4);
-  opacity: 0;
-  animation: fhReturnTextIn 1s ease-out 1.8s forwards;
-}
-
-.fh-ship-return-name {
-  margin-top: 8px;
-  font-family: var(--fh-font-display);
-  font-size: 34px;
-  color: #fff2d6;
-  opacity: 0;
-  animation: fhReturnTextIn 1s ease-out 2.2s forwards;
-}
-
-.fh-ship-return-captain-line {
-  margin-top: 6px;
-  font-size: 14px;
-  color: var(--fh-muted-fg);
-  opacity: 0;
-  animation: fhReturnTextIn 1s ease-out 2.6s forwards;
-}
-
-.fh-ship-return-captain {
-  color: var(--fh-gold-bright);
-  font-weight: 700;
-}
-
-@keyframes fhReturnFogIn   { 0% { opacity: 0; } 100% { opacity: 1; } }
-@keyframes fhReturnLightIn { 0% { opacity: 0; } 100% { opacity: 1; } }
-@keyframes fhReturnShipIn  { 0% { opacity: 0; transform: translateY(14px) scale(.94); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-@keyframes fhReturnTextIn  { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
-
-@media (prefers-reduced-motion: reduce) {
-  .fh-ship-return-fog,
-  .fh-ship-return-light,
-  .fh-ship-return-svg,
-  .fh-ship-return-eyebrow,
-  .fh-ship-return-name,
-  .fh-ship-return-captain-line {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Das Haupt-Schiff der Cinematic-Szene bekommt nach vollständiger
-   Reparatur einen dauerhaften goldenen Glanz. */
-.fh-ship-rig.fh-ship-repaired svg {
-  filter: drop-shadow(0 16px 20px rgba(0,0,0,.5)) drop-shadow(0 0 26px rgba(240,201,106,.55));
-}
-
 @media (max-width: 900px) {
   .fh-ship-complete-name   { font-size: 26px; }
   .fh-ship-phase-label     { font-size: 21px; }
   .fh-ship-phase-timer-value { font-size: 26px; }
   .ship-puzzle-list        { grid-template-columns: 1fr; }
-  .fh-ship-return          { top: 90%; }
-  .fh-ship-return-name     { font-size: 24px; }
 }
 
 @media (max-width: 600px) {
@@ -8284,6 +8019,44 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   text-align: center;
 }
 
+/* ------------------------------------------------------
+   OEFFNUNGS-ANIMATION
+   ---------------------------------------------------
+   renderSpielothekPage() baut #spielothek-content bei JEDEM
+   Seitenaufruf komplett neu auf (siehe spielothek.js) - dadurch
+   sind es immer frische DOM-Elemente und die Animation spielt
+   automatisch bei jedem erneuten Oeffnen erneut ab, ganz ohne
+   zusaetzlichen JS-Aufwand. Rein CSS (transform/opacity), leicht
+   gestaffelt, dezent statt spektakulaer.
+------------------------------------------------------ */
+.spielothek-game-heading,
+.spielothek-currency-bar,
+.spielothek-bet-hint,
+.spielothek-stage,
+.spielothek-rules {
+  animation: spielothekEnter .5s cubic-bezier(.22, .9, .32, 1.1) backwards;
+}
+
+.spielothek-currency-bar { animation-delay: .05s; }
+.spielothek-bet-hint     { animation-delay: .1s; }
+.spielothek-stage        { animation-delay: .16s; }
+.spielothek-rules        { animation-delay: .26s; }
+
+@keyframes spielothekEnter {
+  0%   { opacity: 0; transform: translateY(16px) scale(.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-game-heading,
+  .spielothek-currency-bar,
+  .spielothek-bet-hint,
+  .spielothek-stage,
+  .spielothek-rules {
+    animation: none;
+  }
+}
+
 .spielothek-game-heading {
   margin-top: 26px;
   display: flex;
@@ -8417,16 +8190,67 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 
 .spielothek-slot-symbol {
-  width: 64px;
-  height: 64px;
+  --slot-symbol-size: 64px;
+  width: var(--slot-symbol-size);
+  height: var(--slot-symbol-size);
   display: flex;
-  align-items: center;
+  /* Wichtig: NICHT vertikal zentrieren (align-items: center wuerde den
+     hochkant liegenden .spielothek-slot-strip mittig statt oben
+     ausrichten und damit die translateY-Zielposition der Dreh-
+     Animation verschieben - das Fenster muss oben am Streifen
+     "andocken", damit die Animation exakt auf dem letzten/echten
+     Symbol landet). */
+  align-items: flex-start;
   justify-content: center;
   font-size: 34px;
   border-radius: 10px;
   background: linear-gradient(160deg, #2a1f14, #14100a);
   border: 2px solid rgba(214,168,79,.5);
   box-shadow: inset 0 0 12px rgba(0,0,0,.6);
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------
+   WALZEN-DREH-ANIMATION (Punkt 6)
+   ---------------------------------------------------
+   Klassischer Slot-Machine-Trick, rein per CSS transform: jede
+   Walze ist ein "Fenster" (.spielothek-slot-symbol, overflow:
+   hidden) mit einem senkrechten Streifen aus mehreren Symbolen
+   darin (.spielothek-slot-strip) - das ECHTE Ergebnis steht ganz
+   unten im Streifen. Der Streifen faehrt per @keyframes genau bis
+   dahin und wird langsamer (Ease-Out) statt abrupt zu stoppen.
+   Kein JS-Intervall noetig, keine Dauerschleife - die Animation
+   laeuft genau einmal pro Spielrunde und endet dann von selbst.
+------------------------------------------------------ */
+.spielothek-slot-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.spielothek-slot-strip > span {
+  height: var(--slot-symbol-size);
+  width: var(--slot-symbol-size);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spielothek-slot-spin .spielothek-slot-strip {
+  animation: spielothekReelSpin .9s cubic-bezier(.13, .82, .22, 1) both;
+}
+
+@keyframes spielothekReelSpin {
+  from { transform: translateY(0); }
+  to   { transform: translateY(calc(-6 * var(--slot-symbol-size))); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-slot-spin .spielothek-slot-strip {
+    animation: none;
+    transform: translateY(calc(-6 * var(--slot-symbol-size)));
+  }
 }
 
 .spielothek-result-line {
@@ -8474,8 +8298,9 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
     align-items: center;
   }
   .spielothek-slot-symbol {
-    width: 52px;
-    height: 52px;
+    --slot-symbol-size: 52px;
+    width: var(--slot-symbol-size);
+    height: var(--slot-symbol-size);
     font-size: 28px;
   }
 }

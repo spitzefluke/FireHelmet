@@ -1,11 +1,12 @@
 /* ======================================================
    "REPARIERE DAS SCHIFF" - EVENT-LOGIK
    ---------------------------------------------------
-   Baut auf der bestehenden ???-Seite (#streamraetsel, siehe
-   scripts/streamraetsel/streamraetsel.js) auf: derselbe
-   Locked/Unlocked-Mechanismus, derselbe echte Zeitstempel-
-   Vergleich (kein im Browser herunterzählender Timer), nur mit
-   neuem Inhalt statt des generischen Rätsel-Textes.
+   Eigene, direkt aus dem Hauptmenü erreichbare Seite (#ship-repair,
+   siehe index.html) - UNABHÄNGIG von der "???"-Seite
+   (#streamraetsel, scripts/streamraetsel/streamraetsel.js). Die
+   Reparatur ist NICHT an ein Freischalt-Datum gekoppelt: einzige
+   "Countdown"-Instanz ist die Dauer einer bereits gestarteten
+   Reparaturphase (activeRepair.endsAt) - siehe startShipRepairTicker().
 
    ARCHITEKTUR (Punkt 22/39 des Auftrags):
    - Das SCHIFF selbst ist EIN gemeinsames Community-Objekt,
@@ -24,15 +25,15 @@
    OWNER-/PREVIEW-GATE (Punkt 5 des Auftrags)
    ---------------------------------------------------
    WICHTIG - das ist AUSDRÜCKLICH KEIN echter Zugriffsschutz:
-   Es ist eine reine Frontend-Komfortfunktion, damit der
-   Entwickler das Event vor dem echten Ablaufdatum ansehen kann.
-   Jeder, der den Quelltext liest (oder einfach diesen Kommentar),
-   kann den Query-Parameter unten selbst setzen. Es gibt in einer
-   rein statischen GitHub-Pages-Seite ohne eigenes Backend keine
-   Möglichkeit, ein "echtes" Passwort sicher zu prüfen - siehe
-   Abschlussbericht für die ausführliche Einordnung.
-   Aktivierung: index.html?fhpreview=1 einmal aufrufen (merkt sich
-   das per localStorage) - ?fhpreview=0 schaltet es wieder aus.
+   Es ist eine reine Frontend-Komfortfunktion, die im Reparatur-
+   Dev-Panel (renderShipDevPanel()) ein paar Testwerkzeuge
+   einblendet. Jeder, der den Quelltext liest (oder einfach diesen
+   Kommentar), kann den Query-Parameter unten selbst setzen. Es
+   gibt in einer rein statischen GitHub-Pages-Seite ohne eigenes
+   Backend keine Möglichkeit, ein "echtes" Passwort sicher zu
+   prüfen. Aktivierung: index.html?fhpreview=1 einmal aufrufen
+   (merkt sich das per localStorage) - ?fhpreview=0 schaltet es
+   wieder aus.
 ------------------------------------------------------ */
 const FH_PREVIEW_STORAGE_KEY = "fhDevPreview";
 
@@ -49,23 +50,6 @@ function initShipPreviewGate() {
 
 function isShipPreviewActive() {
   return localStorage.getItem(FH_PREVIEW_STORAGE_KEY) === "1";
-}
-
-/* ------------------------------------------------------
-   FREISCHALT-ZUSTAND
-   Exakt dasselbe Prinzip wie isStreamRaetselUnlocked(): fester
-   Zeitstempel aus der Konfiguration, kein im Browser
-   herunterzählender Wert - ein Reload springt nie zurück auf
-   "10 Tage" (Punkt 4 des Auftrags).
------------------------------------------------------- */
-function getShipEventUnlockDate() {
-  const override = typeof siteConfig !== "undefined" ? siteConfig.shipEventUnlockDate : null;
-  return new Date(override || FIRE_HELMET_CONFIG.shipEventUnlockDate);
-}
-
-function isShipEventUnlocked() {
-  if (isShipPreviewActive()) return true;
-  return new Date() >= getShipEventUnlockDate();
 }
 
 /* ------------------------------------------------------
@@ -363,45 +347,9 @@ function renderShipToolInventory(tools) {
     .join("");
 }
 
-function renderShipPreRepairView() {
-  const lockedEl = document.getElementById("streamraetsel-locked");
-  const contentEl = document.getElementById("streamraetsel-content");
-  if (!lockedEl) return;
-
-  lockedEl.style.display = "flex";
-  if (contentEl) contentEl.style.display = "none";
-
-  // Bewusst KEIN Schiffs-Motiv/Spoiler mehr hier (siehe Auftrag: die
-  // Seite soll vor dem Ablauf wieder generisch "???" zeigen, ohne zu
-  // verraten, dass es um das Schiff geht - genau wie vor der letzten
-  // Erweiterung). Die eigentliche "REPARIERE DAS SCHIFF"-Ansicht
-  // erscheint erst NACH dem Ablauf, siehe renderShipRepairPage().
-  lockedEl.classList.remove("fh-ship-locked");
-  lockedEl.innerHTML = `
-    <span class="streamraetsel-live" data-i18n="stream.liveLabel">🔴 LIVE COUNTDOWN</span>
-    <h1 class="streamraetsel-title streamraetsel-title-mystery" data-i18n="stream.title">❓ ???</h1>
-    <p class="streamraetsel-subtitle" data-i18n="stream.subtitle">Etwas Großes braut sich zusammen ...</p>
-    <p class="streamraetsel-teaser" data-i18n="stream.teaser">🌫️ Niemand weiß, was hier erscheinen wird ...</p>
-
-    <div class="countdown streamraetsel-countdown">
-      <div class="time-box time-box-xl"><span id="streamraetsel-days">00</span><small data-i18n="common.days">Tage</small></div>
-      <div class="time-box time-box-xl"><span id="streamraetsel-hours">00</span><small data-i18n="common.hours">Stunden</small></div>
-      <div class="time-box time-box-xl"><span id="streamraetsel-minutes">00</span><small data-i18n="common.minutes">Minuten</small></div>
-      <div class="time-box time-box-xl"><span id="streamraetsel-seconds">00</span><small data-i18n="common.seconds">Sekunden</small></div>
-    </div>
-    ${isShipPreviewActive() ? '<p class="fh-dev-badge">🔧 PREVIEW-MODUS (nur für dich sichtbar, kein echter Schutz)</p>' : ""}
-  `;
-
-  if (typeof applyTranslations === "function") applyTranslations();
-}
-
 async function renderShipRepairPage() {
-  const contentEl = document.getElementById("streamraetsel-content");
+  const contentEl = document.getElementById("ship-repair-page-body");
   if (!contentEl) return;
-
-  const lockedEl = document.getElementById("streamraetsel-locked");
-  if (lockedEl) lockedEl.style.display = "none";
-  contentEl.style.display = "block";
 
   if (!wheelDb) {
     contentEl.innerHTML = `<h1 data-i18n="ship.title">⚓ SCHIFF REPARIEREN</h1><p class="wheel-status">⚠️ Verbindung nicht verfügbar - versuch's später nochmal.</p>`;
@@ -414,6 +362,11 @@ async function renderShipRepairPage() {
   if (!state) return;
   const data = state.data;
   const completed = data.completedPhases || [];
+
+  // Kapitel-Freischaltung pruefen (siehe maybeUnlockChapterAfterShipRepair()
+  // weiter unten) - nutzt die hier ohnehin schon geladenen Daten mit,
+  // statt eine eigene, zusaetzliche Abfrage zu machen.
+  if (data.shipName) maybeUnlockChapterAfterShipRepair();
   const next = getNextPhase(completed);
   const nickname = localStorage.getItem("wheelNickname") || "";
 
@@ -674,38 +627,6 @@ function stopShipRepairTicker() {
 }
 
 /* ------------------------------------------------------
-   HOME-REVEAL: repariertes Schiff auf der Homepage
-   Prüft einmalig beim Laden (unabhängig von changePage, siehe
-   Kommentar oben), ob das Schiff bereits fertig ist, und
-   blendet dann den Reveal-Block in der Cinematic-Sequenz ein
-   (siehe .fh-copy-destination in index.html). Bleibt danach
-   dauerhaft sichtbar (Punkt 27).
------------------------------------------------------- */
-async function checkShipStatusForHomeReveal() {
-  if (!wheelDb) return;
-  try {
-    const snap = await wheelDb.collection("ship_repair").doc("main").get();
-    if (!snap.exists) return;
-    const data = snap.data();
-    if (!data.shipName) return;
-
-    const reveal = document.getElementById("fh-ship-return");
-    const nameEl = document.getElementById("fh-ship-return-name");
-    const captainEl = document.getElementById("fh-ship-return-captain");
-    if (!reveal) return;
-
-    if (nameEl) nameEl.textContent = data.shipName;
-    if (captainEl && data.namedBy) captainEl.textContent = data.namedBy;
-    reveal.classList.add("fh-ship-return-visible");
-    document.getElementById("fh-ship-rig")?.classList.add("fh-ship-repaired");
-
-    maybeUnlockChapterAfterShipRepair();
-  } catch (err) {
-    console.warn("Schiffsstatus für Home konnte nicht geladen werden:", err);
-  }
-}
-
-/* ------------------------------------------------------
    SCHIFFSREPARATUR <-> STORY-VERKNUEPFUNG (Punkt 4/17)
    ---------------------------------------------------
    Rein additiv und standardmaessig ein No-Op: nur wenn der Admin
@@ -713,10 +634,10 @@ async function checkShipStatusForHomeReveal() {
    markiert hat (siteConfig.shipRepairUnlockChapterIds), wird genau
    DIESES Kapitel automatisch aus lockedChapterIds entfernt, sobald
    das Schiff einen Namen hat (= vollstaendig repariert). Laeuft bei
-   jedem Aufruf von checkShipStatusForHomeReveal() erneut (jeder
-   Home-Besuch) - selbstheilend, falls ein einzelner Versuch mal
-   fehlschlaegt, und ein reines No-Op, sobald das Kapitel schon
-   freigeschaltet ist.
+   jedem Aufruf von renderShipRepairPage() erneut (jeder Besuch der
+   "Repariere das Schiff"-Seite) - selbstheilend, falls ein
+   einzelner Versuch mal fehlschlaegt, und ein reines No-Op, sobald
+   das Kapitel schon freigeschaltet ist.
 ------------------------------------------------------ */
 async function maybeUnlockChapterAfterShipRepair() {
   if (!wheelDb || typeof siteConfig === "undefined") return;
@@ -739,248 +660,24 @@ async function maybeUnlockChapterAfterShipRepair() {
 }
 
 /* ------------------------------------------------------
-   HOME-ZUSAMMENFASSUNG: "REPARATUR DES SCHIFFES"
-   ---------------------------------------------------
-   Sitzt direkt unter dem bestehenden Haupt-Countdown auf der
-   Startseite (siehe #fh-home-ship-repair in index.html). Zeigt
-   den ECHTEN, gemeinsamen Fortschritt aus ship_repair/main -
-   KEIN zweites, unabhängiges Reparatursystem, nur eine kompakte
-   Zusammenfassung mit Link zur vollständigen Schiff-Seite.
-
-   Eigene Timer-Variable (homeShipTickerInterval), bewusst getrennt
-   von den Timern der vollständigen Schiff-Seite
-   (shipCountdownInterval / window._shipTimerTick) und vom
-   bestehenden Haupt-Countdown (countdown.js) - keine gemeinsame
-   Variable, keine Konflikte.
------------------------------------------------------- */
-let homeShipTickerInterval = null;
-
-function stopHomeShipRepairTimers() {
-  clearInterval(homeShipTickerInterval);
-  homeShipTickerInterval = null;
-}
-
-function buildHomeShipChecklistHtml(completedPhases) {
-  return SHIP_REPAIR_PHASES.map((phase) => {
-    const done = completedPhases.includes(phase.id);
-    return `
-      <li class="fh-home-ship-checklist-item ${done ? "fh-home-ship-checklist-done" : ""}">
-        <span class="fh-home-ship-checklist-mark">${done ? "✓" : "○"}</span>
-        <span>${phase.label.de}</span>
-      </li>
-    `;
-  }).join("");
-}
-
-async function renderHomeShipRepairSummary() {
-  const bodyEl = document.getElementById("fh-home-ship-repair-body");
-  if (!bodyEl) return;
-
-  stopHomeShipRepairTimers();
-
-  // Countdown auf der Home-Zusammenfassung bewusst entfernt (siehe
-  // Auftrag) - der "Zur Reparatur"-Button (statisch in index.html)
-  // bleibt unverändert bestehen und funktioniert weiterhin, hier wird
-  // in der gesperrten Ansicht einfach nichts mehr angezeigt.
-  if (!isShipEventUnlocked()) {
-    bodyEl.innerHTML = "";
-    return;
-  }
-
-  if (!wheelDb) {
-    bodyEl.innerHTML = `<p class="wheel-status">⚠️ <span data-i18n="homeShip.unavailable">Verbindung nicht verfügbar - versuch's später nochmal.</span></p>`;
-    if (typeof applyTranslations === "function") applyTranslations();
-    return;
-  }
-
-  await checkAndCompleteActiveRepair();
-  const state = await loadShipState();
-  if (!state) return;
-
-  const completed = state.data.completedPhases || [];
-  const percent = Math.round((completed.length / SHIP_REPAIR_PHASES.length) * 100);
-
-  if (completed.length >= SHIP_REPAIR_PHASES.length) {
-    bodyEl.innerHTML = `
-      <p class="fh-home-ship-complete" data-i18n="homeShip.complete">⚓ REPARATUR ABGESCHLOSSEN</p>
-      ${state.data.shipName ? `<p class="fh-home-ship-complete-name">${state.data.shipName}</p>` : ""}
-    `;
-    if (typeof applyTranslations === "function") applyTranslations();
-    return;
-  }
-
-  bodyEl.innerHTML = `
-    <p class="fh-home-ship-progress-label" data-i18n="homeShip.progressLabel">Reparaturfortschritt</p>
-    <div class="fh-home-ship-progress-bar">
-      <div class="fh-home-ship-progress-fill" style="width:${percent}%"></div>
-    </div>
-    <p class="fh-home-ship-progress-percent">${percent}%</p>
-    <ul class="fh-home-ship-checklist">${buildHomeShipChecklistHtml(completed)}</ul>
-  `;
-  if (typeof applyTranslations === "function") applyTranslations();
-
-  if (state.data.activeRepair) {
-    homeShipTickerInterval = setInterval(async () => {
-      const bodyStillHere = document.getElementById("fh-home-ship-repair-body");
-      if (!bodyStillHere) {
-        stopHomeShipRepairTimers();
-        return;
-      }
-      await checkAndCompleteActiveRepair();
-      const fresh = await loadShipState();
-      if (!fresh) return;
-      const freshCompleted = fresh.data.completedPhases || [];
-      if (freshCompleted.length !== completed.length) {
-        renderHomeShipRepairSummary();
-      }
-    }, 5000);
-  }
-}
-
-/* ------------------------------------------------------
-   EIGENE MENÜSEITE "REPARIERE DAS SCHIFF"
-   ---------------------------------------------------
-   Direkt aus dem Hauptmenü erreichbar (siehe index.html, Menüpunkt
-   unterhalb von "???"). Zeigt denselben echten, gemeinsamen
-   Fortschritt wie die Home-Zusammenfassung (ship_repair/main) -
-   KEIN neues, paralleles Reparatursystem, nur eine weitere Ansicht
-   auf dieselben Daten. Die vollständige interaktive Reparatur
-   (Werkzeuge, Rätsel, Reparieren-Button) bleibt bewusst exklusiv
-   auf der "???"-Seite (renderShipRepairPage()), um doppelte
-   Element-IDs zwischen beiden Seiten zu vermeiden - ein Link führt
-   von hier aus dorthin.
------------------------------------------------------- */
-async function renderShipRepairMenuPage() {
-  const bodyEl = document.getElementById("ship-repair-page-body");
-  if (!bodyEl) return;
-
-  if (!isShipEventUnlocked()) {
-    bodyEl.innerHTML = `<p class="wheel-status" data-i18n="shipRepairPage.locked">Die Reparatur beginnt, sobald „???“ enthüllt ist.</p>`;
-    if (typeof applyTranslations === "function") applyTranslations();
-    return;
-  }
-
-  if (!wheelDb) {
-    bodyEl.innerHTML = `<p class="wheel-status" data-i18n="homeShip.unavailable">Verbindung nicht verfügbar - versuch's später nochmal.</p>`;
-    if (typeof applyTranslations === "function") applyTranslations();
-    return;
-  }
-
-  await checkAndCompleteActiveRepair();
-  const state = await loadShipState();
-  if (!state) return;
-
-  const completed = state.data.completedPhases || [];
-  const percent = Math.round((completed.length / SHIP_REPAIR_PHASES.length) * 100);
-
-  if (completed.length >= SHIP_REPAIR_PHASES.length) {
-    bodyEl.innerHTML = `
-      <p class="fh-home-ship-complete" data-i18n="homeShip.complete">⚓ REPARATUR ABGESCHLOSSEN</p>
-      ${state.data.shipName ? `<p class="fh-home-ship-complete-name">${state.data.shipName}</p>` : ""}
-    `;
-  } else {
-    bodyEl.innerHTML = `
-      <p class="fh-home-ship-progress-label" data-i18n="homeShip.progressLabel">Reparaturfortschritt</p>
-      <div class="fh-home-ship-progress-bar">
-        <div class="fh-home-ship-progress-fill" style="width:${percent}%"></div>
-      </div>
-      <p class="fh-home-ship-progress-percent">${percent}%</p>
-      <ul class="fh-home-ship-checklist">${buildHomeShipChecklistHtml(completed)}</ul>
-      <div class="fh-ship-repair-page-cta">
-        <button type="button" class="code-button" onclick="changePage('streamraetsel')">⚒ <span data-i18n="shipRepairPage.goToFull">Zur vollständigen Reparatur</span></button>
-      </div>
-    `;
-  }
-  if (typeof applyTranslations === "function") applyTranslations();
-}
-
-/* ------------------------------------------------------
-   COUNTDOWN-ANZEIGE (gesperrte Ansicht)
-   Selbes Prinzip wie das alte updateStreamRaetselView(): jede
-   Sekunde neu aus dem echten Zeitstempel berechnet (kein
-   Session-Zähler), schaltet automatisch auf die freigeschaltete
-   Ansicht um, sobald die Zeit erreicht ist - auch ohne Reload.
------------------------------------------------------- */
-let shipCountdownInterval = null;
-
-function padShipCountdown(value) {
-  return String(Math.max(0, value)).padStart(2, "0");
-}
-
-function tickShipCountdown() {
-  if (isShipEventUnlocked()) {
-    stopShipCountdown();
-    renderShipRepairPage();
-    return;
-  }
-
-  const diff = getShipEventUnlockDate() - new Date();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-  const daysEl = document.getElementById("streamraetsel-days");
-  const hoursEl = document.getElementById("streamraetsel-hours");
-  const minutesEl = document.getElementById("streamraetsel-minutes");
-  const secondsEl = document.getElementById("streamraetsel-seconds");
-  if (daysEl) daysEl.textContent = padShipCountdown(days);
-  if (hoursEl) hoursEl.textContent = padShipCountdown(hours);
-  if (minutesEl) minutesEl.textContent = padShipCountdown(minutes);
-  if (secondsEl) secondsEl.textContent = padShipCountdown(seconds);
-}
-
-function startShipCountdown() {
-  stopShipCountdown();
-  tickShipCountdown();
-  shipCountdownInterval = setInterval(tickShipCountdown, 1000);
-}
-
-function stopShipCountdown() {
-  clearInterval(shipCountdownInterval);
-  shipCountdownInterval = null;
-}
-
-/* ------------------------------------------------------
    SEITENWECHSEL-HOOK
-   Ersetzt/ergänzt updateStreamRaetselPage() NICHT - läuft
-   eigenständig daneben und reagiert nur auf denselben
-   pageID-Wert, den main.js sowieso schon bei jedem
-   Seitenwechsel an alle *Page()-Hooks weiterreicht.
+   ---------------------------------------------------
+   Reagiert nur noch auf die eigene Menüseite (#ship-repair) - die
+   Reparatur zeigt/versteckt sich NICHT mehr abhängig von "???"
+   oder der Home-Seite (siehe Auftrag: keine Kopplung an "???",
+   kein Reparatur-Hinweis mehr auf Home). Einziger noch relevanter
+   "Countdown" ist der einer bereits laufenden Reparaturphase
+   (startShipRepairTicker()), der ohnehin nur läuft, waehrend die
+   Seite selbst aktiv ist.
 ------------------------------------------------------ */
 function updateShipRepairPage(pageID) {
-  if (pageID === "home") {
-    // Erneut prüfen (nicht nur einmalig beim ersten Laden) - falls das
-    // Schiff erst in DIESER Sitzung fertig repariert wurde, während man
-    // schon auf der Home-Seite war/dorthin zurückkehrt (Punkt 26: Reveal
-    // bleibt danach dauerhaft sichtbar, nicht nur beim allerersten Laden).
-    checkShipStatusForHomeReveal();
-    renderHomeShipRepairSummary();
-  } else {
-    stopHomeShipRepairTimers();
-  }
-
   if (pageID === "ship-repair") {
-    renderShipRepairMenuPage();
-  }
-
-  if (pageID !== "streamraetsel") {
-    stopShipRepairTicker();
-    stopShipCountdown();
-    return;
-  }
-
-  if (isShipEventUnlocked()) {
-    stopShipCountdown();
     renderShipRepairPage();
   } else {
-    renderShipPreRepairView();
-    startShipCountdown();
+    stopShipRepairTicker();
   }
 }
 
 window.addEventListener("DOMContentLoaded", () => {
   initShipPreviewGate();
-  checkShipStatusForHomeReveal();
-  renderHomeShipRepairSummary();
 });

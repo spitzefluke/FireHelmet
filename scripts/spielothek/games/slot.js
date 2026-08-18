@@ -68,9 +68,28 @@ function spinSlot() {
   return { reels, win: payout > 0, payout };
 }
 
+/* Rein kosmetische Fuellsymbole fuer die Dreh-Optik VOR dem echten
+   Ergebnis (siehe .spielothek-slot-spin/-strip in style.css) - das
+   tatsaechliche Ergebnis (result.reels) steht bereits fest und ist
+   immer das LETZTE Symbol im Streifen, auf dem die CSS-Animation
+   landet. Die Fuellsymbole selbst haben keinerlei Einfluss auf das
+   Ergebnis, rein visuell. */
+const SLOT_SPIN_FILLER_COUNT = 6;
+
+function buildSlotReelStripHtml(finalSymbol) {
+  const fillers = Array.from({ length: SLOT_SPIN_FILLER_COUNT }, () => pickWeightedSlotSymbol());
+  return [...fillers, finalSymbol].map((s) => `<span>${s.emoji}</span>`).join("");
+}
+
 function buildSlotResultHtml(result) {
-  const symbols = result.reels.map((s) => `<span class="spielothek-slot-symbol">${s.emoji}</span>`).join("");
-  return `<div class="spielothek-slot-reels">${symbols}</div>`;
+  const reels = result.reels
+    .map((symbol, i) => `
+      <span class="spielothek-slot-symbol spielothek-slot-spin">
+        <span class="spielothek-slot-strip" style="animation-delay:${i * 140}ms">${buildSlotReelStripHtml(symbol)}</span>
+      </span>
+    `)
+    .join("");
+  return `<div class="spielothek-slot-reels">${reels}</div>`;
 }
 
 function getSlotRulesHtml(lang) {
@@ -96,4 +115,10 @@ window.SPIELOTHEK_GAME_HANDLERS.slot = {
   play: spinSlot,
   buildResultHtml: buildSlotResultHtml,
   getRulesHtml: getSlotRulesHtml,
+  // Muss mindestens so lange sein, wie die laengste Walzen-Dreh-
+  // Animation braucht (letzte Walze: 2 x 140ms Versatz + 900ms Dauer,
+  // siehe .spielothek-slot-spin in style.css), plus ein kurzer Beat -
+  // sonst wuerde der Gewinn/Verlust-Text erscheinen, waehrend die
+  // Walzen sichtbar noch drehen.
+  resultRevealDelayMs: 1300,
 };

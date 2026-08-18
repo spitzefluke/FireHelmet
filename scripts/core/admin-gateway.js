@@ -180,7 +180,11 @@ function formatDateForInput(isoOrConfigValue) {
 
 function buildGatewayStatusHtml() {
   const mainTarget = (siteConfig.mainCountdownTarget) || FIRE_HELMET_CONFIG.mainCountdownFallback;
-  const shipTarget = getShipEventUnlockDate();
+  // Dieses Datum steuert nur noch die "???"-Seite (siehe scripts/
+  // streamraetsel/streamraetsel.js) - die Schiffsreparatur haengt davon
+  // NICHT mehr ab (eigener Reparatur-Countdown pro Phase, siehe
+  // scripts/ship/ship-repair.js).
+  const streamTarget = typeof getStreamRaetselUnlockDate === "function" ? getStreamRaetselUnlockDate() : null;
   const lockedCount = Array.isArray(siteConfig.lockedChapterIds) ? siteConfig.lockedChapterIds.length : 0;
 
   return `
@@ -190,8 +194,8 @@ function buildGatewayStatusHtml() {
         <p class="gateway-status-value">${new Date(mainTarget).toLocaleString("de-DE")}</p>
       </div>
       <div class="gateway-status-card">
-        <p class="gateway-status-label">Schiffsreparatur-Countdown</p>
-        <p class="gateway-status-value">${shipTarget.toLocaleString("de-DE")} ${isShipEventUnlocked() ? "(bereits freigeschaltet)" : ""}</p>
+        <p class="gateway-status-label">„???“-Freischaltung</p>
+        <p class="gateway-status-value">${streamTarget ? streamTarget.toLocaleString("de-DE") : "-"} ${streamTarget && typeof isStreamRaetselUnlocked === "function" && isStreamRaetselUnlocked() ? "(bereits freigeschaltet)" : ""}</p>
       </div>
       <div class="gateway-status-card">
         <p class="gateway-status-label">Gesperrte Kapitel</p>
@@ -362,7 +366,7 @@ async function renderGatewayPage() {
         <label>Haupt-Countdown Endzeit<br>
           <input type="datetime-local" id="gateway-main-countdown" class="code-input" value="${formatDateForInput(mainTarget)}">
         </label>
-        <label>Schiffsreparatur Endzeit<br>
+        <label>„???“-Freischaltung Endzeit<br>
           <input type="datetime-local" id="gateway-ship-countdown" class="code-input" value="${formatDateForInput(shipTarget)}">
         </label>
       </div>

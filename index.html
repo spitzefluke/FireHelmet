@@ -280,30 +280,6 @@
               </div>
             </div>
 
-            <!-- Erscheint erst, sobald das Schiffs-Reparatur-Event
-                 (scripts/ship/ship-repair.js) vollständig abgeschlossen
-                 und benannt wurde - siehe checkShipStatusForHomeReveal().
-                 Danach dauerhaft sichtbar, kein einmaliger Effekt. -->
-            <div class="fh-ship-return" id="fh-ship-return" aria-hidden="true">
-              <div class="fh-ship-return-fog"></div>
-              <div class="fh-ship-return-light"></div>
-              <svg viewBox="0 0 200 140" class="fh-ship-return-svg" preserveAspectRatio="xMidYMid meet">
-                <ellipse cx="100" cy="128" rx="60" ry="6" fill="#4da3ff" opacity=".18"/>
-                <path d="M28,96 Q30,116 60,120 L140,120 Q170,116 172,96 Q140,104 100,104 Q60,104 28,96 Z" fill="url(#fh-ship-hull)" stroke="#f0c96a" stroke-opacity=".5" stroke-width="1"/>
-                <line x1="100" y1="18" x2="100" y2="104" stroke="#5a4a34" stroke-width="2.5"/>
-                <path d="M100,24 C130,30 134,58 130,78 C120,72 108,70 100,70 Z" fill="url(#fh-ship-sail)"/>
-                <path d="M100,24 C72,30 66,58 72,80 C82,72 92,70 100,70 Z" fill="url(#fh-ship-sail)" opacity=".92"/>
-                <path d="M100,18 L100,8 L118,13 L100,18 Z" fill="#f0c96a"/>
-                <circle cx="164" cy="92" r="16" fill="url(#fh-ship-lantern)"/>
-              </svg>
-              <p class="fh-ship-return-eyebrow" data-i18n="ship.returnEyebrow">DEIN SCHIFF IST ZURÜCK</p>
-              <h2 class="fh-ship-return-name" id="fh-ship-return-name">???</h2>
-              <p class="fh-ship-return-captain-line">
-                <span data-i18n="ship.returnCaptainLabel">Kapitän</span>:
-                <span class="fh-ship-return-captain" id="fh-ship-return-captain">???</span>
-              </p>
-            </div>
-
             <div class="fh-scroll-cue" id="fh-scroll-cue">
               <span data-i18n="home.scrollCue">Scroll</span>
               <span class="fh-scroll-cue-arrow"></span>
@@ -369,26 +345,6 @@
         </div>
       </div>
 
-      <!-- ======================================================
-           SCHIFFSREPARATUR - ZUSAMMENFASSUNG
-           Direkt unter dem bestehenden Haupt-Countdown, wie
-           gewünscht (als eigener Block NACH .fh-hero-section, da
-           dieses ein overflow:hidden Flex-Viewport ist - Inhalte
-           innerhalb davon würden nebeneinander statt darunter
-           erscheinen). Zeigt den ECHTEN, gemeinsamen Fortschritt aus
-           scripts/ship/ship-repair.js (ship_repair/main in
-           Firestore) - kein zweites, unabhängiges System, nur eine
-           kompakte Zusammenfassung mit Link zur vollständigen
-           Schiff-Seite. Bestehender Haupt-Countdown/Musik bleiben
-           oben unverändert.
-      ====================================================== -->
-      <div class="fh-home-ship-repair" id="fh-home-ship-repair">
-        <span class="fh-home-ship-repair-icon" aria-hidden="true">⚓</span>
-        <h2 class="fh-home-ship-repair-title" data-i18n="homeShip.title">REPARATUR DES SCHIFFES</h2>
-        <p class="fh-home-ship-repair-lead" data-i18n="homeShip.lead">Das Schiff ist beschädigt. Bevor die Reise weitergehen kann, muss es repariert werden.</p>
-        <div class="fh-home-ship-repair-body" id="fh-home-ship-repair-body"></div>
-        <button type="button" class="code-button fh-home-ship-repair-link" onclick="changePage('streamraetsel')">⚒ <span data-i18n="homeShip.linkButton">Zur Reparatur</span></button>
-      </div>
     </section>
 
     <!-- ======================================================
@@ -823,16 +779,15 @@
 
     <!-- =====================
          REPARIERE DAS SCHIFF (eigene Menüseite)
-         Zeigt den echten, gemeinsamen Reparaturfortschritt aus
-         ship_repair/main (siehe scripts/ship/ship-repair.js) - kein
-         neues, paralleles Reparatursystem. Die vollständige
-         interaktive Reparatur (Werkzeuge, Rätsel, Reparieren-Button)
-         bleibt bewusst auf der "???"-Seite, ein Link führt dorthin.
+         Zeigt die vollständige, interaktive Reparatur (Werkzeuge,
+         Rätsel, Reparieren-Button) aus scripts/ship/ship-repair.js
+         (ship_repair/main in Firestore) - komplett unabhängig von
+         der "???"-Seite, immer erreichbar. Einzige Überschrift kommt
+         aus dem gerenderten Inhalt selbst (renderShipRepairPage()),
+         daher hier bewusst kein zusätzliches statisches <h1>.
     ===================== -->
     <section id="ship-repair" class="page">
       <div class="page-content">
-        <h1 data-i18n="shipRepairPage.title">⚓ Repariere das Schiff</h1>
-        <p class="story-subtitle" data-i18n="shipRepairPage.subtitle">Der gemeinsame Reparaturfortschritt der ganzen Crew.</p>
         <div id="ship-repair-page-body"></div>
       </div>
     </section>

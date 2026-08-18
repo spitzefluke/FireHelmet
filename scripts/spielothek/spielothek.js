@@ -121,8 +121,8 @@ async function playSpielothekGame() {
       return spin;
     });
 
-    renderSpielothekResult(game, handler, result);
     refreshSpielothekCurrencyDisplay();
+    await renderSpielothekResult(game, handler, result);
   } catch (err) {
     if (err.message === "not-enough-currency") {
       if (statusEl) statusEl.textContent = typeof t === "function" ? t("spielothek.notEnoughCurrency", "❌ Nicht genug Dublonen dafür.") : "❌ Nicht genug Dublonen dafür.";
@@ -154,7 +154,20 @@ async function refreshSpielothekCurrencyDisplay() {
   }
 }
 
-function renderSpielothekResult(game, handler, result) {
+/* ------------------------------------------------------
+   ERGEBNIS ANZEIGEN (Punkt 6/7 - Ablauf statt Sofort-Ergebnis)
+   ---------------------------------------------------
+   Das Ergebnis steht (aus der Transaktion) zwar schon fest, wird dem
+   Spieler aber bewusst nicht sofort verraten: zuerst zeigt
+   handler.buildResultHtml() die spielspezifische Ablauf-Animation
+   (z.B. drehende Walzen beim Slot, rein per CSS transform, siehe
+   .spielothek-slot-spin in style.css), danach - nach einer kurzen
+   Pause - erscheinen Gewinn/Verlust-Text, Ändiis Kommentar und der
+   Leuchteffekt am Spieltisch. Respektiert prefers-reduced-motion
+   (keine Pause, sofortige Anzeige). Async/await statt setInterval,
+   also keine dauerhafte JS-Animation-Schleife.
+------------------------------------------------------ */
+async function renderSpielothekResult(game, handler, result) {
   const resultEl = document.getElementById("spielothek-result");
   const andiEl = document.getElementById("spielothek-andi-quote");
   const stageEl = document.getElementById("spielothek-stage");
@@ -163,18 +176,25 @@ function renderSpielothekResult(game, handler, result) {
   const lang = typeof getCurrentLang === "function" ? getCurrentLang() : "de";
   const isEn = lang === "en";
 
+  resultEl.innerHTML = handler.buildResultHtml(result);
+
+  const reduceMotion = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const revealDelay = reduceMotion ? 0 : (typeof handler.resultRevealDelayMs === "number" ? handler.resultRevealDelayMs : 1150);
+  if (revealDelay > 0) {
+    await new Promise((resolve) => setTimeout(resolve, revealDelay));
+  }
+
   // Immer der ECHTE Kontostand-Unterschied (Auszahlung minus Einsatz),
   // nie nur die Bruttoauszahlung - sonst würde die Anzeige bei einem
   // Gewinn einen höheren Zuwachs suggerieren, als tatsächlich gutgeschrieben
   // wurde (Punkt 14: keine manipulierte/irreführende Darstellung).
   const netDelta = result.payout - handler.betCost;
 
-  resultEl.innerHTML = `
-    ${handler.buildResultHtml(result)}
+  resultEl.insertAdjacentHTML("beforeend", `
     <p class="spielothek-result-line ${result.win ? "spielothek-result-win" : "spielothek-result-lose"}">
       ${result.win ? (isEn ? "Win" : "Gewinn") : (isEn ? "Loss" : "Verlust")}: ${netDelta >= 0 ? "+" : ""}${netDelta} 🪙
     </p>
-  `;
+  `);
 
   if (andiEl) andiEl.textContent = getRandomAndiResultQuote(result.win);
   if (stageEl) {

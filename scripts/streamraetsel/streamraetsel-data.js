@@ -6,10 +6,12 @@
 ====================================== */
 
 const streamRaetselConfig = {
-  // Freischalt-Datum: liest zentral aus FIRE_HELMET_CONFIG.shipEventUnlockDate
-  // (scripts/core/fire-helmet-config.js), damit diese Seite ("???" ->
-  // "Repariere das Schiff", siehe scripts/ship/ship-repair.js) und das
-  // Event-System niemals unterschiedliche Zeitpunkte haben können.
+  // Freischalt-Datum: statischer Fallback aus
+  // FIRE_HELMET_CONFIG.shipEventUnlockDate (scripts/core/fire-helmet-
+  // config.js). Kann live per Admin-Gateway ueberschrieben werden
+  // (siteConfig.shipEventUnlockDate, siehe getStreamRaetselUnlockDate()
+  // in streamraetsel.js) - rein die "???"-Seite selbst, UNABHAENGIG
+  // von der Schiffsreparatur (scripts/ship/ship-repair.js).
   unlockDate:
     typeof FIRE_HELMET_CONFIG !== "undefined" && FIRE_HELMET_CONFIG.shipEventUnlockDate
       ? FIRE_HELMET_CONFIG.shipEventUnlockDate
