@@ -407,15 +407,49 @@ function getUnlockedAvatarIds() {
   }
 }
 
+// Zeitlich befristete Avatare (siehe redeemWheelPrize()/tempAvatar):
+// Ablaufzeit kommt IMMER aus dem serverzeit-verankerten Firestore-Feld
+// (ueber syncTempAvatarFromServer() nach localStorage gespiegelt),
+// nicht aus einem separaten, frei erfundenen "gueltig bis"-Wert - ein
+// Vergleich gegen die eigene (moeglicherweise verstellte) Client-Uhr
+// kann hier bestenfalls die ANZEIGE, nie den tatsaechlich gespeicherten
+// Wert selbst verfaelschen (siehe Kommentar bei validTempAvatar() in
+// firestore.rules fuer die serverseitige Absicherung DIESES Wertes).
+function getActiveTempAvatarId() {
+  const expiresAt = parseInt(localStorage.getItem("tempAvatarExpiresAt") || "0", 10);
+  if (!expiresAt || Date.now() >= expiresAt) return null;
+  return localStorage.getItem("tempAvatarId") || null;
+}
+
+function formatTempAvatarRemaining(expiresAt) {
+  const msLeft = expiresAt - Date.now();
+  if (msLeft <= 0) return "";
+  const hoursLeft = Math.ceil(msLeft / 3600000);
+  return hoursLeft >= 24 ? `${Math.ceil(hoursLeft / 24)}d` : `${hoursLeft}h`;
+}
+
 function renderAvatarPicker() {
   const picker = document.getElementById("wheel-avatar-picker");
   if (!picker || typeof wheelAvatarOptions === "undefined") return;
 
-  const savedAvatar = localStorage.getItem("wheelAvatar");
-  selectedWheelAvatar = savedAvatar || wheelAvatarOptions[0] || null;
-
   const unlockedIds = getUnlockedAvatarIds();
   const specials = typeof wheelSpecialAvatars !== "undefined" ? wheelSpecialAvatars : [];
+  const activeTempAvatarId = getActiveTempAvatarId();
+  const expiresAt = parseInt(localStorage.getItem("tempAvatarExpiresAt") || "0", 10);
+
+  // Ein abgelaufener Test-Avatar darf nicht mehr als aktiv ausgewaehlt
+  // sein - faellt die aktuelle Auswahl auf einen inzwischen abgelaufenen
+  // (und nicht dauerhaft freigeschalteten) Test-Avatar, wird sie auf den
+  // ersten Standard-Avatar zurueckgesetzt.
+  const savedAvatar = localStorage.getItem("wheelAvatar");
+  const savedMatchesExpiredTemp = specials.some((entry) =>
+    entry.isTemporary && entry.avatar === savedAvatar
+    && !unlockedIds.includes(entry.id) && entry.id !== activeTempAvatarId
+  );
+  if (savedMatchesExpiredTemp) {
+    localStorage.removeItem("wheelAvatar");
+  }
+  selectedWheelAvatar = savedMatchesExpiredTemp ? (wheelAvatarOptions[0] || null) : (savedAvatar || wheelAvatarOptions[0] || null);
 
   // Immer verfügbare Standard-Avatare
   let html = wheelAvatarOptions
@@ -430,32 +464,76 @@ function renderAvatarPicker() {
     })
     .join("");
 
-  // Freischaltbare Spezial-Avatare (gesperrt, bis der passende Code kam)
+  // Freischaltbare Spezial-Avatare (gesperrt, bis der passende Code/das
+  // Schatzrad kam) - zeitlich befristete Eintraege (isTemporary) gelten
+  // zusaetzlich als "unlocked", solange ihre Server-Ablaufzeit noch in
+  // der Zukunft liegt.
   html += specials
     .map((entry) => {
-      const unlocked = unlockedIds.includes(entry.id);
+      const isActiveTemp = entry.isTemporary && entry.id === activeTempAvatarId;
+      const unlocked = unlockedIds.includes(entry.id) || isActiveTemp;
       const isSelected = unlocked && entry.avatar === selectedWheelAvatar;
 
       if (!unlocked) {
+        const lockedTitle = entry.isTemporary
+          ? `Gesperrt - '${entry.label}' kann als zeitlich begrenzte Schatzrad-Belohnung gewonnen werden!`
+          : `Gesperrt - schalte '${entry.label}' durch einen passenden Code frei!`;
         return `
           <button type="button" class="avatar-option avatar-option-locked" disabled
-            title="Gesperrt - schalte '${entry.label}' durch einen passenden Code frei!">
+            title="${lockedTitle}">
             <span class="avatar-lock-icon">🔒</span>
           </button>
         `;
       }
 
+      const remainingBadge = isActiveTemp
+        ? `<span class="avatar-option-temp-badge" title="Noch verfügbar">⏳ ${formatTempAvatarRemaining(expiresAt)}</span>`
+        : "";
+
       return `
-        <button type="button" class="avatar-option avatar-option-unlocked${isSelected ? " avatar-option-selected" : ""}"
+        <button type="button" class="avatar-option avatar-option-unlocked${isSelected ? " avatar-option-selected" : ""}${isActiveTemp ? " avatar-option-temporary" : ""}"
           title="${entry.label}"
           data-avatar-value="${encodeURIComponent(entry.avatar)}" onclick="selectWheelAvatar(this.dataset.avatarValue)">
           ${buildAvatarPickerHtml(entry.avatar)}
+          ${remainingBadge}
         </button>
       `;
     })
     .join("");
 
   picker.innerHTML = html;
+}
+
+/* ------------------------------------------------------
+   ZEITLICH BEFRISTETEN AVATAR VOM SERVER ABGLEICHEN
+   Wird bei jedem Besuch der Login-/Schatzrad-Seite aufgerufen (siehe
+   updateLoginPage()/updateWheelPage()) - genau das gleiche Prinzip wie
+   syncOwnedShopItemsFromServer() im Shop: players/{uid}.tempAvatarExpiresAt
+   ist die alleinige Wahrheit, localStorage ist nur eine schnelle,
+   NACHGEORDNETE Kopie fuer die Anzeige (siehe getActiveTempAvatarId()).
+------------------------------------------------------ */
+async function syncTempAvatarFromServer() {
+  if (!wheelDb) return;
+
+  try {
+    const uid = await wheelAuthReady;
+    if (!uid) return;
+
+    const snap = await wheelDb.collection("players").doc(uid).get();
+    if (!snap.exists) return;
+
+    const data = snap.data();
+    if (typeof data.tempAvatarExpiresAt === "number") {
+      localStorage.setItem("tempAvatarExpiresAt", String(data.tempAvatarExpiresAt));
+      localStorage.setItem("tempAvatarId", data.tempAvatarId || "");
+    }
+
+    if (typeof renderAvatarPicker === "function") {
+      renderAvatarPicker();
+    }
+  } catch (err) {
+    console.warn("Zeitlich begrenzter Avatar konnte nicht abgeglichen werden:", err);
+  }
 }
 
 function selectWheelAvatar(rawValue) {
@@ -718,9 +796,37 @@ function savePlayerData(fields) {
 }
 
 /* ------------------------------------------------------
+   GEWICHTETE ZUFALLSAUSWAHL (Seltenheiten)
+   Jeder Preis in wheelPrizes hat ein eigenes "weight" - die tatsaech-
+   liche Chance ist weight/Summe-aller-weights. Zentral hier statt
+   verstreut, damit die in wheel-data.js dokumentierten Seltenheits-
+   Stufen (WHEEL_RARITY_INFO) tatsaechlich das Auswahl-Verhalten
+   steuern und bei Aenderung der Gewichte nichts hier angepasst
+   werden muss.
+------------------------------------------------------ */
+function pickWeightedWheelPrize() {
+  const totalWeight = wheelPrizes.reduce((sum, p) => sum + (p.weight || 1), 0);
+  let roll = Math.random() * totalWeight;
+
+  for (let i = 0; i < wheelPrizes.length; i++) {
+    roll -= wheelPrizes[i].weight || 1;
+    if (roll <= 0) return i;
+  }
+  return wheelPrizes.length - 1; // Rundungs-Fallback
+}
+
+// Verhindert mehrfache Belohnungen durch schnelles Klicken/Konsolen-
+// Aufrufe: spinWheel() bricht sofort ab, wenn bereits eine Drehung
+// laeuft - unabhaengig vom (erst NACH der Animation aktualisierten)
+// "heute schon gedreht"-Datum in localStorage.
+let wheelSpinInFlight = false;
+
+/* ------------------------------------------------------
    DREHEN
 ------------------------------------------------------ */
 function spinWheel() {
+  if (wheelSpinInFlight) return;
+
   const state = getWheelState();
   const today = todayStr();
 
@@ -736,12 +842,13 @@ function spinWheel() {
 
   if (!disc || !spinBtn || typeof wheelPrizes === "undefined") return;
 
+  wheelSpinInFlight = true;
   spinBtn.disabled = true;
   resultEl.textContent = "";
   resultEl.classList.remove("code-success", "code-error");
 
   const segmentAngle = 360 / wheelPrizes.length;
-  const prizeIndex = Math.floor(Math.random() * wheelPrizes.length);
+  const prizeIndex = pickWeightedWheelPrize();
   const prize = wheelPrizes[prizeIndex];
 
   const targetMid = prizeIndex * segmentAngle + segmentAngle / 2;
@@ -766,9 +873,13 @@ function spinWheel() {
     disc.style.transform = `rotate(${finalRotation}deg)`;
   }, 360);
 
+  // Das Rad landet visuell nach ~5.15s (.35s Anlauf + 4.8s Drehung) -
+  // GENAU DANN wird die Belohnung serverseitig eingelöst (siehe
+  // finalizeSpin()), NIE vorher. Das erfundene "Feld A anzeigen, Feld
+  // B gutschreiben" ist damit ausgeschlossen: "prize" ist ab hier fix,
+  // dieselbe Variable treibt sowohl die Drehung als auch die
+  // Gutschrift.
   setTimeout(() => {
-    resultEl.textContent = prize.message;
-    resultEl.classList.add("code-success");
     spawnWheelSparks();
     finalizeSpin(state, today, prize);
 
@@ -780,28 +891,134 @@ function spinWheel() {
   }, 5200);
 }
 
-function finalizeSpin(state, today, prize) {
+async function finalizeSpin(state, today, prize) {
+  const resultEl = document.getElementById("wheel-result");
+  const spinBtn = document.getElementById("spin-button");
+
   let newStreak = 1;
   if (state.lastSpin === yesterdayStr()) {
     newStreak = state.streak + 1;
   }
 
+  try {
+    await redeemWheelPrize(prize, newStreak);
+  } catch (err) {
+    console.warn("Schatzrad-Belohnung konnte nicht eingelöst werden:", err);
+    if (resultEl) {
+      resultEl.textContent = err && err.message === "too-soon"
+        ? (typeof t === "function" ? t("wheel.status.spunToday", { streak: state.streak }) : "Du hast heute schon gedreht.")
+        : "⚠️ Das hat nicht geklappt, bitte versuch's gleich nochmal.";
+      resultEl.classList.remove("code-success");
+      resultEl.classList.add("code-error");
+    }
+    wheelSpinInFlight = false;
+    if (spinBtn) spinBtn.disabled = false;
+    return;
+  }
+
+  // Erst NACH bestätigter, serverseitiger Gutschrift gilt die Drehung
+  // als abgeschlossen - genau das Prinzip aus der Codesystem-Reparatur
+  // (siehe redeemCurrencyCode()): niemals lokal Erfolg vortäuschen,
+  // bevor die Transaktion wirklich durch ist.
+  resultEl.textContent = prize.message;
+  resultEl.classList.add("code-success");
+
   localStorage.setItem("wheelLastSpin", today);
   localStorage.setItem("wheelStreak", String(newStreak));
+  localStorage.setItem("wheelAvatar_lastPrize", prize.label);
 
+  wheelSpinInFlight = false;
   refreshWheelStatus();
 
-  savePlayerData({
-    nickname: state.nickname,
-    streak: newStreak,
-    lastSpin: today,
-    lastPrize: prize.label,
-  });
+  if (typeof refreshShopCurrencyDisplay === "function") {
+    refreshShopCurrencyDisplay();
+  }
+  if (typeof renderShipToolInventory === "function") {
+    renderShipToolInventory();
+  }
+  if (typeof renderAvatarPicker === "function") {
+    renderAvatarPicker();
+  }
 
   // Fortschritt fürs Wochenrennen
   if (typeof addRaceProgress === "function" && typeof raceConfig !== "undefined") {
     addRaceProgress(raceConfig.progressPerSpin);
   }
+}
+
+/* ------------------------------------------------------
+   SCHATZRAD-BELOHNUNG SERVERSEITIG EINLÖSEN
+   ---------------------------------------------------
+   Genau EINE atomare Firestore-Transaktion für die gesamte Drehung -
+   dasselbe Prinzip wie redeemCurrencyCode() im Codesystem:
+   - prüft serverzeit-verankert, ob wirklich genug Zeit seit der
+     letzten Drehung vergangen ist (players/{uid}.lastWheelSpinAt,
+     siehe firestore.rules validWheelSpin() - das ist die ECHTE
+     Absicherung, nicht diese Client-Vorabprüfung hier),
+   - schreibt Streak/letzte Drehung UND die eigentliche Belohnung in
+     einem einzigen Schritt,
+   - reused dafür ausschließlich bereits bestehende, bereits validierte
+     Felder (currency/totalCurrencyEarned, shipTools, ownedShopItems) -
+     nur für die zeitlich befristete Test-Avatar-Belohnung kommen zwei
+     neue, schmale Felder dazu (tempAvatarExpiresAt/tempAvatarId).
+
+   Wirft bei zu früher Drehung einen Error mit message === "too-soon".
+------------------------------------------------------ */
+const WHEEL_SPIN_MIN_INTERVAL_MS = 20 * 60 * 60 * 1000; // 20h, siehe firestore.rules
+
+async function redeemWheelPrize(prize, newStreak) {
+  if (!wheelDb) throw new Error("no-db");
+  const uid = await wheelAuthReady;
+  if (!uid) throw new Error("no-uid");
+
+  const playerRef = wheelDb.collection("players").doc(uid);
+  const nickname = localStorage.getItem("wheelNickname") || "";
+  const today = todayStr();
+
+  await wheelDb.runTransaction(async (tx) => {
+    const snap = await tx.get(playerRef);
+    const data = snap.exists ? snap.data() : {};
+
+    const lastSpinAt = data.lastWheelSpinAt;
+    if (lastSpinAt && typeof lastSpinAt.toMillis === "function") {
+      if (Date.now() - lastSpinAt.toMillis() < WHEEL_SPIN_MIN_INTERVAL_MS) {
+        throw new Error("too-soon");
+      }
+    }
+
+    const fields = {
+      lastWheelSpinAt: firebase.firestore.FieldValue.serverTimestamp(),
+      streak: newStreak,
+      lastSpin: today,
+      lastPrize: prize.label,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    if (nickname) fields.nickname = nickname;
+
+    if (prize.type === "currency") {
+      fields.currency = firebase.firestore.FieldValue.increment(prize.amount);
+      fields.totalCurrencyEarned = firebase.firestore.FieldValue.increment(prize.amount);
+    } else if (prize.type === "tool") {
+      const toolIds = typeof SHIP_TOOLS !== "undefined" ? Object.keys(SHIP_TOOLS) : [];
+      if (toolIds.length) {
+        const toolId = toolIds[Math.floor(Math.random() * toolIds.length)];
+        fields.shipTools = { [toolId]: firebase.firestore.FieldValue.increment(1) };
+        prize.grantedToolId = toolId; // für die Ergebnis-Anzeige (optional)
+      }
+    } else if (prize.type === "frame") {
+      fields.ownedShopItems = firebase.firestore.FieldValue.arrayUnion(prize.frameId);
+    } else if (prize.type === "tempAvatar") {
+      // Serverzeit-verankert: der Client berechnet den Millisekunden-
+      // Wert zwar lokal (Date.now() + Tage), aber firestore.rules
+      // akzeptiert nur einen Wert nahe der ECHTEN Serverzeit + 3 Tage
+      // (validTempAvatar()) - eine vorgestellte Client-Uhr kann diesen
+      // Wert also nicht verlängern, siehe Kommentar dort.
+      fields.tempAvatarExpiresAt = Date.now() + prize.durationDays * 86400000;
+      fields.tempAvatarId = prize.avatarId;
+    }
+
+    tx.set(playerRef, fields, { merge: true });
+  });
 }
 
 /* ------------------------------------------------------
@@ -1225,6 +1442,7 @@ function updateWheelPage(pageID) {
   }
 
   syncCodesToFirestore();
+  syncTempAvatarFromServer();
   refreshWheelStatus();
 }
 

@@ -157,4 +157,8 @@ function updateLoginPage(pageID) {
   }
 
   refreshTwitchLoginUI();
+
+  if (typeof syncTempAvatarFromServer === "function") {
+    syncTempAvatarFromServer();
+  }
 }

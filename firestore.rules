@@ -275,7 +275,8 @@ service cloud.firestore {
     // Schreibvorgang nur um einen plausiblen Hoechstwert steigen -
     // gamesPlayed/gamesWon je um max. 1 (eine Spielothek-Runde pro
     // Transaktion), totalCurrencyEarned um denselben Hoechstbetrag
-    // wie "currency" selbst (groesste Einzel-Belohnung: Code FIRE300).
+    // wie "currency" selbst (groesste Einzel-Belohnung: der
+    // "legendaere" Schatzrad-Gewinn coins-500).
     function validQuestCounters(data) {
       return (!('gamesPlayed' in data)
               || (data.gamesPlayed is int
@@ -288,7 +289,7 @@ service cloud.firestore {
              && (!('totalCurrencyEarned' in data)
                  || (data.totalCurrencyEarned is int
                      && data.totalCurrencyEarned >= 0
-                     && data.totalCurrencyEarned <= oldNum('totalCurrencyEarned') + 300));
+                     && data.totalCurrencyEarned <= oldNum('totalCurrencyEarned') + 500));
     }
 
     // Liest players/{playerId}.dailyQuests.claimedDays aus dem
@@ -403,14 +404,21 @@ service cloud.firestore {
     }
 
     // Prueft die Shop-Felder: Dublonen duerfen pro Schreibvorgang nur
-    // um max. 300 steigen (groesste tatsaechlich vergebene Belohnung -
-    // Code FIRE300, siehe scripts/codes/codes-data.js), aber beliebig
-    // sinken (Kaeufe im Shop, Spielothek-Einsatz). Nie unter 0.
+    // um max. 500 steigen (groesste tatsaechlich vergebene Belohnung -
+    // der "legendaere" Schatzrad-Gewinn coins-500, siehe wheelPrizes in
+    // scripts/wheel/wheel-data.js; vorher 300 fuer Code FIRE300, das
+    // bleibt darunter weiterhin gedeckt), aber beliebig sinken (Kaeufe
+    // im Shop, Spielothek-Einsatz). Nie unter 0. Das ist zugleich die
+    // einzige noetige serverseitige Absicherung gegen die im Auftrag
+    // genannte Konsolen-Manipulation "reward = 50000": unabhaengig
+    // davon, was ein manipulierter Client als Schatzrad-Gewinn
+    // behauptet, wird ein Dublonen-Sprung ueber 500 hinaus in EINEM
+    // Schreibvorgang immer abgelehnt.
     function validShopFields(data) {
       return (!('currency' in data)
               || (data.currency is int
                   && data.currency >= 0
-                  && data.currency <= oldNum('currency') + 300))
+                  && data.currency <= oldNum('currency') + 500))
              && (!('ownedShopItems' in data)
                  || (data.ownedShopItems is list && data.ownedShopItems.size() <= 40))
              && (!('equippedFrame' in data)
@@ -494,6 +502,35 @@ service cloud.firestore {
       return !('redeemedCurrencyCodes' in newData) || validCodeRedemptionDetail(newData);
     }
 
+    // Schatzrad: EINE zusammengefasste Funktion statt zwei getrennter -
+    // spart Funktionsaufruf-Overhead, siehe Kommentar bei
+    // validCodeRedemptionDetail() oben zum knappen Ausdrucksbudget (das
+    // gesamte players/{uid}-Regelwerk teilt sich offenbar EIN Budget
+    // ueber create+update+catch-all hinweg, nicht pro Zweig getrennt -
+    // jeder eingesparte Ausdruck hier zaehlt). Nur ueber "update"
+    // erreichbar (siehe "allow create" oben: dort werden beide Felder
+    // stattdessen komplett verboten statt validiert, billiger und
+    // ausreichend, da eine echte Neuanlage sie nie braucht) - deshalb
+    // kein resource==null-Schutz noetig.
+    //   - lastWheelSpinAt: Mindestabstand 20h zwischen zwei Drehungen
+    //     (grosszuegige Naeherung an "einmal pro Kalendertag" - die
+    //     eigentliche serverseitige Sperre gegen mehrfache Drehungen;
+    //     die Sperre in wheel.js selbst ist nur UX).
+    //   - tempAvatarExpiresAt: muss nahe der ECHTEN Serverzeit
+    //     (request.time) + 3 Tage liegen (+/-6h Toleranz) - eine
+    //     vorgestellte Client-Uhr kann die Gueltigkeit dadurch nicht
+    //     verlaengern. "tempAvatarId" wird bewusst NICHT zusaetzlich
+    //     geprueft (rein kosmetisch, siehe getActiveTempAvatarId() in
+    //     wheel.js - ein erfundener Wert schaltet nichts frei).
+    function validWheelFields(newData) {
+      return (!('lastWheelSpinAt' in newData)
+              || !('lastWheelSpinAt' in resource.data)
+              || request.time.toMillis() - resource.data.lastWheelSpinAt.toMillis() >= 72000000)
+          && (!('tempAvatarExpiresAt' in newData)
+              || (newData.tempAvatarExpiresAt >= request.time.toMillis() + 237600000
+                  && newData.tempAvatarExpiresAt <= request.time.toMillis() + 280800000));
+    }
+
     // ---------------------------------------------
     // RANGLISTE (Streak + geknackte Codes) / SPIELERPROFIL
     // Enthaelt auch Dublonen, Werkzeuge, Shop-Items - siehe
@@ -512,6 +549,14 @@ service cloud.firestore {
                     && validQuestCounters(request.resource.data)
                     && validDailyQuestsWrite(request.resource.data)
                     && validCodeRedemption(request.resource.data)
+                    // Schatzrad-Felder sind bei einer ECHTEN Neuanlage nie
+                    // noetig (redeemWheelPrize() setzt nur voraus, dass der
+                    // Spieler schon einen Spitznamen hat - das Dokument
+                    // existiert dann laengst) - guenstiger als die vollen
+                    // validWheelSpin()/validTempAvatar()-Pruefungen (siehe
+                    // dort) einfach komplett verbieten statt validieren.
+                    && !('lastWheelSpinAt' in request.resource.data)
+                    && !('tempAvatarExpiresAt' in request.resource.data)
                     && (!('streak' in request.resource.data)
                         || (request.resource.data.streak is int && request.resource.data.streak <= 1))
                     && (!('codesCracked' in request.resource.data)
@@ -527,6 +572,7 @@ service cloud.firestore {
                     && validQuestCounters(request.resource.data)
                     && validDailyQuestsWrite(request.resource.data)
                     && validCodeRedemption(request.resource.data)
+                    && validWheelFields(request.resource.data)
                     && (!('streak' in request.resource.data)
                         || (request.resource.data.streak is int
                             && request.resource.data.streak <= oldNum('streak') + 1))

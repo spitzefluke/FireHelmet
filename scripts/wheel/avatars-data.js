@@ -56,6 +56,16 @@ const wheelSpecialAvatars = [
   { id: "Admin", avatar: "scripts/avatare/11.png", label: "Admin" },
   { id: "boss-slayer", avatar: "🏅", label: "Boss-Bezwinger (Top 3 Schaden)" },
 
+  // Zeitlich befristete Schatzrad-Belohnung (siehe wheel-data.js:
+  // wheelPrizes -> type "tempAvatar" -> avatarId "Ändii"). Nutzt das
+  // bereits vorhandene Ändii-Bild aus dem Charaktersystem (scripts/
+  // characters/characters-data.js -> CHARACTER_DATABASE.andi.image) -
+  // kein neues, externes Bild. isTemporary:true markiert diesen
+  // Eintrag fuer renderAvatarPicker(): er wird NICHT wie die anderen
+  // hier dauerhaft ueber "unlockedAvatars" freigeschaltet, sondern
+  // ueber das separate, server-synchronisierte tempAvatarExpiresAt.
+  { id: "Ändii", avatar: "scripts/avatare/ändii.webp", label: "Ändii (3-Tage-Test)", isTemporary: true },
+
   // Im Shop kaufbare Avatare (siehe scripts/shop/shop-data.js, dort
   // referenziert per "avatarId" - genau dieselbe id wie hier)
   { id: "shop-papagei", avatar: "🦜", label: "Papagei" },
