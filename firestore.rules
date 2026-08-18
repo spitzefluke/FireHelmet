@@ -21,6 +21,23 @@
    Zeichen (auch in Kommentaren) - deshalb hier bewusst ue/oe/ae/ss
    statt Umlauten, geprueft mit dem echten Firebase Emulator.
 
+   SIEHST DU IN DER BROWSER-KONSOLE GENAU DIESE FEHLER?
+     "site_config konnte nicht geladen werden ... Missing or
+      insufficient permissions"
+     "Schiffsstatus ... konnte nicht geladen werden ... Missing or
+      insufficient permissions"
+   Der Code selbst ist dafuer NICHT die Ursache: site_config/main
+   und ship_repair/main sind hier unten bereits mit "allow read: if
+   true" (also oeffentlich, ohne Login) freigegeben, und der Code
+   fragt exakt diese Pfade ab, mit korrekt abgewartetem Auth-Status.
+   Diese Fehler bedeuten fast immer, dass in der Firebase Console
+   noch eine AELTERE Version dieser Regeln aktiv ist (z.B. ohne den
+   site_config-Block, oder noch mit dem Standard-"alles gesperrt"-
+   Regelwerk) - schau in Schritt 1-4 oben nach und veroeffentliche
+   diese aktuelle Version. Die Fehler verschwinden von selbst,
+   sobald die Regeln synchron sind - es ist NICHT noetig (und auch
+   nicht sicher), die Regeln stattdessen offener zu machen.
+
    VORAUSSETZUNG fuer den Admin-Bereich (isAdmin()):
    In der Firebase Console unter Authentication -> Sign-in method
    muss "Google" aktiviert sein, UND du musst dich einmal ueber
