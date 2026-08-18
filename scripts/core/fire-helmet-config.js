@@ -32,7 +32,7 @@ const FIRE_HELMET_CONFIG = {
   // selbst bestätigt kryptografisch, welche E-Mail zu einem Login
   // gehört. Dafür muss in der Firebase Console unter Authentication
   // -> Sign-in method die Google-Anmeldung aktiviert sein.
-  ownerEmail: "spitzefluke@gmail.com",
+  ownerEmail: "y.n.trott@gmail.com",
 
   // Wie oft sich der Schwarzmarkt neu bestückt (in Minuten).
   shopRotationMinutes: 60,
