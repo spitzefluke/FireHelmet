@@ -7640,6 +7640,22 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   margin-top: 14px;
 }
 
+.fh-ship-phase-progress-bar {
+  margin-top: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid var(--fh-border-strong);
+  overflow: hidden;
+}
+
+.fh-ship-phase-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--fh-fire), var(--fh-gold-bright));
+  transition: width 1s linear;
+}
+
 .fh-ship-phase-timer-value {
   font-family: var(--fh-font-display);
   font-size: 32px;
@@ -7795,15 +7811,15 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 #fh-ship-repair-stage.fh-phase-sails-done .fh-ship-part-sails-fixed  { opacity: 1; }
 #fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-part-rudder-broken { opacity: 0; }
 #fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-part-rudder-fixed  { opacity: 1; }
-#fh-ship-repair-stage.fh-phase-final-done .fh-ship-part-final-fixed    { opacity: 1; }
+#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-part-final-fixed   { opacity: 1; }
 
-#fh-ship-repair-stage.fh-phase-details-done .fh-ship-repair-svg {
+#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-repair-svg {
   filter: drop-shadow(0 18px 26px rgba(0,0,0,.5)) saturate(1.25) brightness(1.08);
 }
 
 #fh-ship-repair-stage.fh-phase-hull-done.fh-phase-mast-done .fh-ship-repair-smoke { opacity: .55; }
 #fh-ship-repair-stage.fh-phase-sails-done.fh-phase-rudder-done .fh-ship-repair-smoke { opacity: .25; }
-#fh-ship-repair-stage.fh-phase-final-done .fh-ship-repair-smoke { opacity: 0; }
+#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-repair-smoke { opacity: 0; }
 
 /* --- Reparatur-Abschluss-Toast (nutzt .currency-toast Basisstil) --- */
 .ship-repair-done-toast {
@@ -8026,32 +8042,88 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
    Seitenaufruf komplett neu auf (siehe spielothek.js) - dadurch
    sind es immer frische DOM-Elemente und die Animation spielt
    automatisch bei jedem erneuten Oeffnen erneut ab, ganz ohne
-   zusaetzlichen JS-Aufwand. Rein CSS (transform/opacity), leicht
-   gestaffelt, dezent statt spektakulaer.
+   zusaetzlichen JS-Aufwand. Rein CSS (transform/opacity), in
+   mehreren gestaffelten Phasen ueber insgesamt ca. 1,8s:
+   Hintergrund -> Titel -> Kontostand/Einsatz -> Spieltisch-Rahmen
+   -> Ändii -> Spielbereich -> Regeln -> abschliessender
+   Bounce/Glow. "backwards" haelt jedes Element bis zu seinem
+   eigenen Start unsichtbar, die Spiele sind so nie sofort
+   komplett sichtbar. Alle Animationen sind einmalige, endliche
+   CSS-Keyframes (kein setInterval/requestAnimationFrame-Loop).
 ------------------------------------------------------ */
-.spielothek-game-heading,
-.spielothek-currency-bar,
-.spielothek-bet-hint,
-.spielothek-stage,
-.spielothek-rules {
-  animation: spielothekEnter .5s cubic-bezier(.22, .9, .32, 1.1) backwards;
+.spielothek-page-content {
+  animation: spielothekBgIn .4s ease-out backwards;
 }
 
-.spielothek-currency-bar { animation-delay: .05s; }
-.spielothek-bet-hint     { animation-delay: .1s; }
-.spielothek-stage        { animation-delay: .16s; }
-.spielothek-rules        { animation-delay: .26s; }
+.spielothek-game-heading {
+  animation: spielothekSlideDown .5s cubic-bezier(.22, .9, .32, 1.1) .15s backwards;
+}
+
+.spielothek-currency-bar {
+  animation: spielothekEnter .45s cubic-bezier(.22, .9, .32, 1.1) .38s backwards;
+}
+
+.spielothek-bet-hint {
+  animation: spielothekEnter .4s cubic-bezier(.22, .9, .32, 1.1) .55s backwards;
+}
+
+.spielothek-stage {
+  animation:
+    spielothekEnter .5s cubic-bezier(.22, .9, .32, 1.1) .7s backwards,
+    spielothekFinalBounce .4s ease-out 1.55s;
+}
+
+.spielothek-andi {
+  animation: spielothekSlideLeft .5s cubic-bezier(.22, .9, .32, 1.1) .95s backwards;
+}
+
+.spielothek-game-area {
+  animation: spielothekSlideRight .5s cubic-bezier(.22, .9, .32, 1.1) 1.15s backwards;
+}
+
+.spielothek-rules {
+  animation: spielothekEnter .45s cubic-bezier(.22, .9, .32, 1.1) 1.4s backwards;
+}
+
+@keyframes spielothekBgIn {
+  0%   { opacity: 0; transform: scale(.98); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spielothekSlideDown {
+  0%   { opacity: 0; transform: translateY(-18px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spielothekSlideLeft {
+  0%   { opacity: 0; transform: translateX(-26px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spielothekSlideRight {
+  0%   { opacity: 0; transform: translateX(26px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
 
 @keyframes spielothekEnter {
   0%   { opacity: 0; transform: translateY(16px) scale(.97); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes spielothekFinalBounce {
+  0%   { transform: scale(1); box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
+  45%  { transform: scale(1.015); box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 44px rgba(240,201,106,.5); }
+  100% { transform: scale(1); box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .spielothek-page-content,
   .spielothek-game-heading,
   .spielothek-currency-bar,
   .spielothek-bet-hint,
   .spielothek-stage,
+  .spielothek-andi,
+  .spielothek-game-area,
   .spielothek-rules {
     animation: none;
   }
@@ -8166,6 +8238,43 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   min-height: 3.4em;
 }
 
+/* --- Ändii-Reaktion bei Niederlage (Punkt 10): Avatar kommt von der
+   Seite herein -> Spruch erscheint -> kurzer Bounce. Klasse wird von
+   renderSpielothekResult() nur bei Verlust gesetzt und vor jedem neuen
+   Ergebnis wieder entfernt (siehe spielothek.js), spielt dadurch bei
+   jeder Niederlage frisch ab. --- */
+.spielothek-andi-lose-react .spielothek-andi-image {
+  animation: spielothekAndiSlideIn .45s cubic-bezier(.22, .9, .32, 1.1) backwards;
+}
+
+.spielothek-andi-lose-react .spielothek-andi-quote {
+  animation: spielothekEnter .4s cubic-bezier(.22, .9, .32, 1.1) .25s backwards;
+}
+
+.spielothek-andi-lose-react {
+  animation: spielothekAndiBounce .4s ease-out .55s;
+}
+
+@keyframes spielothekAndiSlideIn {
+  0%   { opacity: 0; transform: translateX(-34px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spielothekAndiBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.06); }
+  70%  { transform: scale(.98); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-andi-lose-react .spielothek-andi-image,
+  .spielothek-andi-lose-react .spielothek-andi-quote,
+  .spielothek-andi-lose-react {
+    animation: none;
+  }
+}
+
 .spielothek-game-area {
   flex: 1 1 260px;
   display: flex;
@@ -8176,6 +8285,7 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 
 .spielothek-result {
+  position: relative;
   min-height: 100px;
   display: flex;
   flex-direction: column;
@@ -8265,6 +8375,56 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 
 .spielothek-result-lose {
   color: var(--fh-danger);
+}
+
+/* --- Gewinn-Ablauf in zwei Schritten (Punkt 11): "Gewinn!" wird zuerst
+   aufgedeckt, dann poppt der Betrag mit demselben Effekt nach, waehrend
+   triggerSpielothekConfetti() (spielothek.js) ein paar Konfetti-Punkte
+   auseinanderfliegen laesst. --- */
+.spielothek-result-reveal {
+  animation: spielothekResultPop .35s cubic-bezier(.34, 1.5, .64, 1) backwards;
+}
+
+.spielothek-amount-pop {
+  animation: spielothekResultPop .4s cubic-bezier(.34, 1.5, .64, 1);
+}
+
+@keyframes spielothekResultPop {
+  0%   { opacity: 0; transform: scale(.7); }
+  60%  { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.spielothek-confetti-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.spielothek-confetti-piece {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--fh-confetti-color, #f0c96a);
+  animation: spielothekConfettiPop .75s ease-out both;
+  animation-delay: var(--fh-confetti-delay, 0ms);
+}
+
+@keyframes spielothekConfettiPop {
+  0%   { opacity: 1; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(0) scale(1); }
+  100% { opacity: 0; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(-48px) scale(.4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-result-reveal,
+  .spielothek-amount-pop,
+  .spielothek-confetti-piece {
+    animation: none;
+  }
 }
 
 .spielothek-rules {

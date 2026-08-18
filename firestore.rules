@@ -65,18 +65,17 @@
                                  gesperrte Kapitel, deaktivierte Spiele)
                                  - siehe scripts/core/site-config.js /
                                  scripts/core/admin-gateway.js
-   - ship_repair/main            NEU (dieses Update): EIN gemeinsames
-                                 Community-Dokument fuer den Fortschritt
-                                 der Schiffsreparatur - siehe scripts/
-                                 ship/ship-repair.js. Gehoert KEINEM
-                                 einzelnen Spieler (genau wie
-                                 community_boss), daher oeffentlich
-                                 lesbar; Schreiben ist zusaetzlich zur
-                                 Anmeldung durch die Struktur unten
-                                 eingeschraenkt, damit niemand die
-                                 Reparatur per Konsole einfach auf
-                                 "fertig" springen lassen oder den
-                                 gemeinsamen Fortschritt loeschen kann.
+   - ship_repair/{uid}           PERSOENLICHER Reparaturfortschritt PRO
+                                 SPIELER (Dokument-ID = eigene Auth-UID,
+                                 genau wie bei players/{uid}) - siehe
+                                 scripts/ship/ship-repair.js. NUR der
+                                 jeweilige Spieler darf sein eigenes
+                                 Dokument lesen oder schreiben; Schreiben
+                                 ist zusaetzlich durch die Struktur unten
+                                 eingeschraenkt, damit niemand seine
+                                 eigene Reparatur per Konsole auf
+                                 "fertig" springen, Etappen ueberspringen
+                                 oder den Countdown manipulieren kann.
 
    BEKANNTE, BEWUSST IN KAUF GENOMMENE EINSCHRAENKUNGEN:
    Ohne eigenes Backend (Cloud Functions) kann nicht JEDER denkbare
@@ -92,11 +91,12 @@
    devResetShipEvent() in ship-repair.js): Diese sind AUSDRUECKLICH
    KEIN echter Zugriffsschutz (nur ein URL-Parameter/localStorage-
    Flag, siehe Kommentar dort). Die Regeln unten pruefen ship_repair-
-   Schreibvorgaenge unabhaengig davon, WER sie absendet, rein anhand
-   der Werte selbst - dadurch werden auch diese Dev-Werkzeuge jetzt
-   korrekt von echten Spielern abgelehnt (sie koennen weiterhin lokal
-   gegen den Firebase-Emulator verwendet werden). Das ist beabsichtigt
-   und kein Fehler.
+   Schreibvorgaenge zusaetzlich zur Eigentuemer-Pruefung (nur die
+   eigene UID darf das eigene Dokument schreiben) auch inhaltlich rein
+   anhand der Werte selbst - dadurch werden auch diese Dev-Werkzeuge
+   korrekt abgelehnt, sobald sie versuchen, den Countdown vorzeitig zu
+   beenden (sie koennen weiterhin lokal gegen den Firebase-Emulator
+   verwendet werden). Das ist beabsichtigt und kein Fehler.
 ====================================================== */
 
 rules_version = '2';
@@ -436,17 +436,33 @@ service cloud.firestore {
     // Reparatur sofort fertigstellt oder den gemeinsamen Fortschritt
     // loescht/faelscht - genau wie bei community_boss oben.
     // ---------------------------------------------
-    match /ship_repair/{docId} {
-      allow read: if true;
+    // ---------------------------------------------
+    // SCHIFFSREPARATUR - PERSOENLICH PRO SPIELER
+    // Dokument-ID ist die eigene Auth-UID (wie bei players/{playerId}),
+    // NICHT mehr ein gemeinsames "main"-Dokument: jeder Spieler darf
+    // ausschliesslich sein EIGENES Reparaturdokument lesen und
+    // schreiben. Repariert Spieler A sein Schiff, hat das dadurch
+    // technisch erzwungen keinerlei Einfluss auf den Reparaturstatus
+    // von Spieler B - ein fremdes Dokument ist fuer Firestore-Regeln
+    // schlicht ein anderer Pfad, auf den niemand sonst zugreifen kann.
+    // Die Uebergangs-Validierung (Etappen nur der Reihe nach, kein
+    // Sprung auf "fertig", Countdown nur nach echtem Ablauf laut
+    // Server-Zeit) bleibt inhaltlich wie zuvor erhalten.
+    // ---------------------------------------------
+    match /ship_repair/{playerId} {
+      allow read: if isSignedIn() && request.auth.uid == playerId;
 
       allow create: if isSignedIn()
+                    && request.auth.uid == playerId
                     && request.resource.data.completedPhases is list
                     && request.resource.data.completedPhases.size() == 0
                     && request.resource.data.activeRepair == null
                     && request.resource.data.shipName == null;
 
-      allow update: if isSignedIn() && (
-                      // Fall A: neue Reparaturphase wird gestartet.
+      allow update: if isSignedIn()
+                    && request.auth.uid == playerId
+                    && (
+                      // Fall A: neue Reparatur-Etappe wird gestartet.
                       (resource.data.activeRepair == null
                        && request.resource.data.activeRepair != null
                        && request.resource.data.activeRepair.endsAt is number
@@ -454,21 +470,23 @@ service cloud.firestore {
                        && request.resource.data.completedPhases == resource.data.completedPhases
                        && request.resource.data.shipName == resource.data.shipName)
                       ||
-                      // Fall B: laufende Reparatur wird abgeschlossen -
+                      // Fall B: laufende Etappe wird abgeschlossen -
                       // nur wenn ihre Endzeit laut Server wirklich
-                      // schon erreicht ist.
+                      // schon erreicht ist (Countdown laesst sich so
+                      // nicht per Konsole vorzeitig "fertig" setzen).
                       (resource.data.activeRepair != null
                        && resource.data.activeRepair.endsAt <= request.time.toMillis()
                        && request.resource.data.activeRepair == null
                        && request.resource.data.completedPhases.size() == resource.data.completedPhases.size() + 1
                        && request.resource.data.completedPhases[resource.data.completedPhases.size()] == resource.data.activeRepair.phaseId)
                     )
-                    // shipName: bleibt null, solange nicht alle 6 Phasen
-                    // fertig sind; wird beim Abschluss der letzten Phase
-                    // genau einmal gesetzt; danach unveraendbar.
+                    // shipName: bleibt null, solange nicht alle 5 Etappen
+                    // fertig sind (kein Ueberspringen einzelner Etappen
+                    // moeglich); wird beim Abschluss der letzten Etappe
+                    // genau einmal gesetzt; danach unveraenderbar.
                     && (resource.data.shipName != null
                         ? request.resource.data.shipName == resource.data.shipName
-                        : (request.resource.data.completedPhases.size() < 6
+                        : (request.resource.data.completedPhases.size() < 5
                            ? request.resource.data.shipName == null
                            : request.resource.data.shipName is string))
                     && ((request.resource.data.shipName == null) == (request.resource.data.namedBy == null));

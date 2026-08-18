@@ -52,7 +52,7 @@ const CHARACTER_DATABASE = {
   andi: {
     name: "Ändi",
     role: "Crew - notorischer Würfler",
-    image: "",
+    image: "scripts/avatare/ändii.webp",
     quote: "Nie wieder Würfelspiele. Diesmal ganz bestimmt.",
     description:
       "Ein spielsüchtiges Mitglied der Crew, das schon mehr als einmal fast die gesamte Schiffskasse verzockt hätte. Wird seither von Dean mit Argusaugen beobachtet, sobald Würfel im Spiel sind.",

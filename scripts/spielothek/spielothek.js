@@ -190,18 +190,89 @@ async function renderSpielothekResult(game, handler, result) {
   // wurde (Punkt 14: keine manipulierte/irreführende Darstellung).
   const netDelta = result.payout - handler.betCost;
 
-  resultEl.insertAdjacentHTML("beforeend", `
-    <p class="spielothek-result-line ${result.win ? "spielothek-result-win" : "spielothek-result-lose"}">
-      ${result.win ? (isEn ? "Win" : "Gewinn") : (isEn ? "Loss" : "Verlust")}: ${netDelta >= 0 ? "+" : ""}${netDelta} 🪙
-    </p>
-  `);
+  if (result.win) {
+    // Gewinn-Ablauf in zwei sichtbaren Schritten (Punkt 11): zuerst wird
+    // nur "aufgedeckt", dass es ein Gewinn ist (kurze Spannung), dann -
+    // nach einer kleinen Pause - erscheint der eigentliche Betrag samt
+    // Glow/Konfetti-Effekt. Auf reduzierte Bewegung wird beides sofort
+    // gemeinsam angezeigt.
+    resultEl.insertAdjacentHTML("beforeend", `
+      <p class="spielothek-result-line spielothek-result-reveal" id="spielothek-win-reveal">
+        ${isEn ? "Win!" : "Gewinn!"}
+      </p>
+    `);
+
+    if (!reduceMotion) {
+      await new Promise((resolve) => setTimeout(resolve, 260));
+    }
+
+    const revealEl = document.getElementById("spielothek-win-reveal");
+    if (revealEl) {
+      revealEl.textContent = `${isEn ? "Win" : "Gewinn"}: +${netDelta} 🪙`;
+      revealEl.classList.add("spielothek-result-win");
+      if (!reduceMotion) revealEl.classList.add("spielothek-amount-pop");
+    }
+    if (!reduceMotion) triggerSpielothekConfetti(resultEl);
+  } else {
+    resultEl.insertAdjacentHTML("beforeend", `
+      <p class="spielothek-result-line spielothek-result-lose">
+        ${isEn ? "Loss" : "Verlust"}: ${netDelta} 🪙
+      </p>
+    `);
+  }
 
   if (andiEl) andiEl.textContent = getRandomAndiResultQuote(result.win);
+
+  // Ändii-Reaktionsanimation bei Verlust (Punkt 10): Avatar kommt von der
+  // Seite herein, dann erscheint der Spruch, dann ein kurzer Bounce - siehe
+  // .spielothek-andi-lose-react in style.css. Klasse wird bei JEDEM
+  // Ergebnis zuerst entfernt (+ erzwungener Reflow), damit sie beim
+  // naechsten Verlust erneut sauber abspielt statt nur einmalig zu
+  // greifen; bei einem Gewinn bleibt sie einfach weg.
+  const andiWrapEl = document.getElementById("spielothek-andi");
+  if (andiWrapEl) {
+    andiWrapEl.classList.remove("spielothek-andi-lose-react");
+    void andiWrapEl.offsetWidth;
+    if (!result.win) andiWrapEl.classList.add("spielothek-andi-lose-react");
+  }
+
   if (stageEl) {
     stageEl.classList.remove("spielothek-stage-win", "spielothek-stage-lose");
     void stageEl.offsetWidth;
     stageEl.classList.add(result.win ? "spielothek-stage-win" : "spielothek-stage-lose");
   }
+}
+
+/* ------------------------------------------------------
+   KONFETTI-EFFEKT BEI GEWINN (Punkt 11)
+   ---------------------------------------------------
+   Ein paar kurzlebige <span>-Elemente, die rein per CSS-Keyframe
+   auseinanderfliegen und sich dabei ausblenden (siehe
+   @keyframes spielothekConfettiPop in style.css) - läuft genau
+   EINMAL pro Gewinn ab und entfernt sich danach selbst per
+   setTimeout, KEINE dauerhafte requestAnimationFrame/Intervall-
+   Schleife (Punkt 12: Performance).
+------------------------------------------------------ */
+function triggerSpielothekConfetti(containerEl) {
+  if (!containerEl) return;
+
+  const colors = ["#f0c96a", "#e8a33d", "#ffe9b3", "#d6a84f"];
+  const burst = document.createElement("div");
+  burst.className = "spielothek-confetti-burst";
+  burst.setAttribute("aria-hidden", "true");
+
+  const pieceCount = 10;
+  for (let i = 0; i < pieceCount; i++) {
+    const piece = document.createElement("span");
+    piece.className = "spielothek-confetti-piece";
+    piece.style.setProperty("--fh-confetti-angle", `${(360 / pieceCount) * i}deg`);
+    piece.style.setProperty("--fh-confetti-color", colors[i % colors.length]);
+    piece.style.setProperty("--fh-confetti-delay", `${i * 12}ms`);
+    burst.appendChild(piece);
+  }
+
+  containerEl.appendChild(burst);
+  setTimeout(() => burst.remove(), 900);
 }
 
 function buildSpielothekAndiHtml() {
@@ -260,8 +331,48 @@ async function renderSpielothekPage() {
   refreshSpielothekCurrencyDisplay();
 }
 
+/* ------------------------------------------------------
+   OEFFNUNGS-SOUND (Punkt 2 des Auftrags)
+   ---------------------------------------------------
+   Wird NUR hier aufgerufen - direkt und synchron innerhalb von
+   changePage('spielothek'), das ausschliesslich per onclick auf
+   einen Menuepunkt ausgeloest wird (siehe index.html), NIE beim
+   Laden der Seite selbst oder bei einem simplen Neu-Rendern (z.B.
+   das "siteConfigUpdated"-Neuzeichnen unten ruft bewusst NUR
+   renderSpielothekPage() auf, nicht diese Funktion). Dadurch
+   bleibt der Aufruf innerhalb derselben Nutzer-Geste, wie es die
+   Autoplay-Regeln der Browser verlangen. Ein neues <audio>-
+   Element pro Aufruf statt einem wiederverwendeten Element, damit
+   kein gemeinsamer Zustand/keine gemeinsame Promise mit anderen
+   Seiten (z.B. der Mystery-Musik) entstehen kann.
+------------------------------------------------------ */
+function playSpielothekOpenSound() {
+  try {
+    const audio = new Audio("scripts/spielothek/audio/spielothek-open.wav");
+    audio.volume = 0.55;
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch((err) => {
+        // "AbortError" bedeutet nur, dass die Wiedergabe durch ein fast
+        // zeitgleiches pause()/Entfernen unterbrochen wurde (z.B. sehr
+        // schnelles mehrfaches Oeffnen) - kein echter Fehler. Blockiert
+        // der Browser die Wiedergabe grundsaetzlich (z.B. weil er die
+        // Nutzer-Geste doch nicht anerkennt), bleibt das Spiel trotzdem
+        // voll nutzbar - der Sound ist rein kosmetisch.
+        if (err.name !== "AbortError") {
+          console.warn("Spielothek-Sound konnte nicht abgespielt werden:", err);
+        }
+      });
+    }
+  } catch (err) {
+    // Audio komplett nicht verfuegbar (sehr alter Browser o.ae.) - das
+    // Spiel funktioniert trotzdem normal weiter.
+  }
+}
+
 function updateSpielothekPage(pageID) {
   if (pageID !== "spielothek") return;
+  playSpielothekOpenSound();
   renderSpielothekPage();
 }
 

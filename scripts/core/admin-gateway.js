@@ -206,15 +206,12 @@ function buildGatewayStatusHtml() {
 }
 
 async function buildGatewayShipStatusHtml() {
-  if (!wheelDb) return "";
-  try {
-    const snap = await wheelDb.collection("ship_repair").doc("main").get();
-    const data = snap.exists ? snap.data() : { completedPhases: [] };
-    const completed = (data.completedPhases || []).length;
-    return `<p class="gateway-status-sub">Reparaturfortschritt: ${completed} / ${SHIP_REPAIR_PHASES.length} Phasen${data.shipName ? ` - Schiffsname: ${data.shipName}` : ""}</p>`;
-  } catch (err) {
-    return "";
-  }
+  // Die Schiffsreparatur ist seit der Personalisierung PRO SPIELER
+  // (ship_repair/{uid}, siehe scripts/ship/ship-repair.js) - es gibt
+  // dadurch keinen einzelnen "globalen" Fortschritt mehr, den man hier
+  // sinnvoll anzeigen könnte, ohne die Reparaturdaten aller Spieler
+  // aufzulisten (was die Security Rules bewusst nicht erlauben).
+  return `<p class="gateway-status-sub">Reparaturfortschritt ist jetzt pro Spieler persönlich - kein globaler Wert mehr.</p>`;
 }
 
 /* ------------------------------------------------------

@@ -20,16 +20,34 @@ const SHIP_TOOLS = {
 };
 
 /* ------------------------------------------------------
-   REPARATURPHASEN
-   Werden IN DIESER REIHENFOLGE freigeschaltet - Phase n+1 kann
-   erst begonnen werden, wenn Phase n abgeschlossen ist. Jede
-   Phase erzeugt eine eigene sichtbare Veränderung am Schiff
-   (siehe .fh-ship-repair-hull/-mast/-sails/-rudder/-details in
-   style.css, gesteuert über completedPhases).
+   REPARATUR-ETAPPEN
+   Werden IN DIESER REIHENFOLGE freigeschaltet - Etappe n+1 kann
+   erst begonnen werden, wenn Etappe n abgeschlossen ist. "id"
+   bleibt aus Kompatibilitätsgründen bei den ursprünglichen
+   Werten (hull/mast/sails/rudder), da darüber sowohl die
+   sichtbaren Schiffsteile in style.css (.fh-phase-<id>-done)
+   als auch die Werkzeugzuordnung verlinkt sind - nur "label"/
+   "description"/"stageNumber" wurden an die 5 neuen Etappen-
+   Namen angepasst. "inspect" ist eine reine Fortschritts-Etappe
+   ohne eigenes Schiffsteil (Schadensanalyse). Die letzte Etappe
+   ("rudder"/Abschlusstest) löst zusätzlich die Flaggen- und
+   Glanz-Effekte aus (siehe .fh-phase-rudder-done in style.css).
 ------------------------------------------------------ */
 const SHIP_REPAIR_PHASES = [
   {
+    id: "inspect",
+    stageNumber: 1,
+    tool: "hammer",
+    label: { de: "Schaden untersuchen", en: "Inspect the damage" },
+    description: {
+      de: "Bevor auch nur ein Nagel eingeschlagen wird, muss die Crew wissen, wie schlimm es wirklich steht.",
+      en: "Before a single nail is driven, the crew needs to know just how bad the damage really is.",
+    },
+    doneLabel: { de: "⚒ Der Schaden ist begutachtet - los geht's!", en: "⚒ Damage assessed - let's get to work!" },
+  },
+  {
     id: "hull",
+    stageNumber: 2,
     tool: "saw",
     label: { de: "Rumpf reparieren", en: "Repair the hull" },
     description: {
@@ -40,53 +58,36 @@ const SHIP_REPAIR_PHASES = [
   },
   {
     id: "mast",
+    stageNumber: 3,
     tool: "hammer",
-    label: { de: "Mast reparieren", en: "Repair the mast" },
+    label: { de: "Antrieb reparieren", en: "Repair the propulsion" },
     description: {
-      de: "Der Hauptmast ist mittendurch gebrochen. Ohne ihn kann kein Segel mehr Wind fangen.",
-      en: "The main mast is snapped in half. Without it, no sail can catch the wind.",
+      de: "Der Hauptmast ist mittendurch gebrochen. Ohne ihn kann kein Segel mehr Wind fangen und das Schiff kommt nicht vom Fleck.",
+      en: "The main mast is snapped in half. Without it, no sail can catch the wind and the ship goes nowhere.",
     },
-    doneLabel: { de: "⚒ Der Mast steht wieder!", en: "⚒ The mast stands tall again!" },
+    doneLabel: { de: "⚒ Der Antrieb funktioniert wieder!", en: "⚒ The propulsion works again!" },
   },
   {
     id: "sails",
+    stageNumber: 4,
     tool: "brush",
-    label: { de: "Segel reparieren", en: "Repair the sails" },
+    label: { de: "Systeme reparieren", en: "Repair the systems" },
     description: {
-      de: "Die Segel hängen in Fetzen von den Rahen. Zeit, die Risse zu flicken.",
-      en: "The sails hang in tatters from the yards. Time to patch the tears.",
+      de: "Segel, Takelage und die restlichen Bordsysteme hängen in Fetzen. Zeit, alles wieder instand zu setzen.",
+      en: "Sails, rigging and the rest of the ship's systems are in tatters. Time to patch it all up.",
     },
-    doneLabel: { de: "⚒ Die Segel füllen sich mit Wind!", en: "⚒ The sails are filling with wind!" },
+    doneLabel: { de: "⚒ Die Systeme laufen wieder rund!", en: "⚒ The systems are running smoothly again!" },
   },
   {
     id: "rudder",
+    stageNumber: 5,
     tool: "saw",
-    label: { de: "Ruder reparieren", en: "Repair the rudder" },
+    label: { de: "Abschlusstest", en: "Final check" },
     description: {
-      de: "Das Ruder hängt nur noch an einer Angel - ohne es treibt das Schiff steuerlos.",
-      en: "The rudder hangs on by a single hinge - without it the ship drifts, unsteerable.",
+      de: "Das Ruder wird geprüft und die ganze Flitzpiepen ein letztes Mal von Bug bis Heck kontrolliert.",
+      en: "The rudder gets checked and the whole Flitzpiepen is inspected one last time, bow to stern.",
     },
-    doneLabel: { de: "⚒ Das Ruder gehorcht wieder!", en: "⚒ The rudder answers the helm again!" },
-  },
-  {
-    id: "details",
-    tool: "brush",
-    label: { de: "Details & Anstrich", en: "Details & paint" },
-    description: {
-      de: "Schrammen, verblasste Farbe, ein zerzaustes Flaggentuch - die Flitzpiepen braucht ihren Glanz zurück.",
-      en: "Scratches, faded paint, a tattered flag - the Flitzpiepen needs her shine back.",
-    },
-    doneLabel: { de: "⚒ Frischer Anstrich, neuer Glanz!", en: "⚒ Fresh paint, new shine!" },
-  },
-  {
-    id: "final",
-    tool: "hammer",
-    label: { de: "Letzte Reparatur", en: "Final repair" },
-    description: {
-      de: "Die letzten Nägel, die letzten Handgriffe - dann ist die Flitzpiepen wieder seetüchtig.",
-      en: "The last nails, the last touches - then the Flitzpiepen is seaworthy again.",
-    },
-    doneLabel: { de: "⚓ DIE FLITZPIEPEN IST WIEDER SEETÜCHTIG!", en: "⚓ THE FLITZPIEPEN IS SEAWORTHY AGAIN!" },
+    doneLabel: { de: "⚓ SCHIFF VOLLSTÄNDIG REPARIERT!", en: "⚓ SHIP FULLY REPAIRED!" },
   },
 ];
 
