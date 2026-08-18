@@ -37,7 +37,7 @@ function loadStories() {
     card.onclick = () => openStory(story.id);
 
     card.innerHTML = `
-      <img src="${story.cover}" alt="${story.title}">
+      <img src="${story.cover}" alt="${story.title}" loading="lazy" decoding="async">
       <h2>${story.title}</h2>
       <p>${story.description}</p>
     `;

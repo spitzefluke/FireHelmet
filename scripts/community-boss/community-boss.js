@@ -998,7 +998,7 @@ async function renderBossLeaderboard(monthId) {
       let avatarHtml =
         p.avatar && typeof isAvatarImagePath === "function"
           ? isAvatarImagePath(p.avatar)
-            ? `<img src="${p.avatar}" class="leaderboard-avatar" alt="">`
+            ? `<img src="${p.avatar}" class="leaderboard-avatar" alt="" loading="lazy" decoding="async">`
             : `<span class="leaderboard-avatar leaderboard-avatar-emoji">${p.avatar}</span>`
           : "";
 

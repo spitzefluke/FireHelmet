@@ -180,6 +180,12 @@ const translations = {
     "homeShip.complete": "⚓ REPARATUR ABGESCHLOSSEN",
     "homeShip.unavailable": "Verbindung nicht verfügbar - versuch's später nochmal.",
 
+    "menu.shipRepair": "⚒ Repariere das Schiff",
+    "shipRepairPage.title": "⚓ Repariere das Schiff",
+    "shipRepairPage.subtitle": "Der gemeinsame Reparaturfortschritt der ganzen Crew.",
+    "shipRepairPage.locked": "Die Reparatur beginnt, sobald „???“ enthüllt ist.",
+    "shipRepairPage.goToFull": "Zur vollständigen Reparatur",
+
     "boss.title": "COMMUNITY-BOSS",
     "boss.subtitle": "Gemeinsam besiegen, bevor der Monat endet!",
     "boss.statDamage": "Schaden",
@@ -356,6 +362,12 @@ const translations = {
     "homeShip.progressLabel": "Repair progress",
     "homeShip.complete": "⚓ REPAIR COMPLETE",
     "homeShip.unavailable": "Connection unavailable - try again later.",
+
+    "menu.shipRepair": "⚒ Repair the Ship",
+    "shipRepairPage.title": "⚓ Repair the Ship",
+    "shipRepairPage.subtitle": "The whole crew's shared repair progress.",
+    "shipRepairPage.locked": "Repairs begin once \"???\" is revealed.",
+    "shipRepairPage.goToFull": "Go to full repair page",
 
     "boss.title": "COMMUNITY BOSS",
     "boss.subtitle": "Defeat it together before the month ends!",

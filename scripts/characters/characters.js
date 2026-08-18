@@ -96,7 +96,7 @@ function buildCharacters() {
     card.style.setProperty("--char-accent2", theme.accent2);
 
     const imageHtml = char.image
-      ? `<img src="${char.image}" class="character-image" alt="${char.name}">`
+      ? `<img src="${char.image}" class="character-image" alt="${char.name}" loading="lazy" decoding="async">`
       : `<div class="character-image character-image-placeholder">${emblem}</div>`;
 
     const quoteHtml = char.quote ? `<p class="character-quote">&bdquo;${char.quote}&ldquo;</p>` : "";

@@ -838,6 +838,63 @@ async function renderHomeShipRepairSummary() {
 }
 
 /* ------------------------------------------------------
+   EIGENE MENÜSEITE "REPARIERE DAS SCHIFF"
+   ---------------------------------------------------
+   Direkt aus dem Hauptmenü erreichbar (siehe index.html, Menüpunkt
+   unterhalb von "???"). Zeigt denselben echten, gemeinsamen
+   Fortschritt wie die Home-Zusammenfassung (ship_repair/main) -
+   KEIN neues, paralleles Reparatursystem, nur eine weitere Ansicht
+   auf dieselben Daten. Die vollständige interaktive Reparatur
+   (Werkzeuge, Rätsel, Reparieren-Button) bleibt bewusst exklusiv
+   auf der "???"-Seite (renderShipRepairPage()), um doppelte
+   Element-IDs zwischen beiden Seiten zu vermeiden - ein Link führt
+   von hier aus dorthin.
+------------------------------------------------------ */
+async function renderShipRepairMenuPage() {
+  const bodyEl = document.getElementById("ship-repair-page-body");
+  if (!bodyEl) return;
+
+  if (!isShipEventUnlocked()) {
+    bodyEl.innerHTML = `<p class="wheel-status" data-i18n="shipRepairPage.locked">Die Reparatur beginnt, sobald „???“ enthüllt ist.</p>`;
+    if (typeof applyTranslations === "function") applyTranslations();
+    return;
+  }
+
+  if (!wheelDb) {
+    bodyEl.innerHTML = `<p class="wheel-status" data-i18n="homeShip.unavailable">Verbindung nicht verfügbar - versuch's später nochmal.</p>`;
+    if (typeof applyTranslations === "function") applyTranslations();
+    return;
+  }
+
+  await checkAndCompleteActiveRepair();
+  const state = await loadShipState();
+  if (!state) return;
+
+  const completed = state.data.completedPhases || [];
+  const percent = Math.round((completed.length / SHIP_REPAIR_PHASES.length) * 100);
+
+  if (completed.length >= SHIP_REPAIR_PHASES.length) {
+    bodyEl.innerHTML = `
+      <p class="fh-home-ship-complete" data-i18n="homeShip.complete">⚓ REPARATUR ABGESCHLOSSEN</p>
+      ${state.data.shipName ? `<p class="fh-home-ship-complete-name">${state.data.shipName}</p>` : ""}
+    `;
+  } else {
+    bodyEl.innerHTML = `
+      <p class="fh-home-ship-progress-label" data-i18n="homeShip.progressLabel">Reparaturfortschritt</p>
+      <div class="fh-home-ship-progress-bar">
+        <div class="fh-home-ship-progress-fill" style="width:${percent}%"></div>
+      </div>
+      <p class="fh-home-ship-progress-percent">${percent}%</p>
+      <ul class="fh-home-ship-checklist">${buildHomeShipChecklistHtml(completed)}</ul>
+      <div class="fh-ship-repair-page-cta">
+        <button type="button" class="code-button" onclick="changePage('streamraetsel')">⚒ <span data-i18n="shipRepairPage.goToFull">Zur vollständigen Reparatur</span></button>
+      </div>
+    `;
+  }
+  if (typeof applyTranslations === "function") applyTranslations();
+}
+
+/* ------------------------------------------------------
    COUNTDOWN-ANZEIGE (gesperrte Ansicht)
    Selbes Prinzip wie das alte updateStreamRaetselView(): jede
    Sekunde neu aus dem echten Zeitstempel berechnet (kein
@@ -901,6 +958,10 @@ function updateShipRepairPage(pageID) {
     renderHomeShipRepairSummary();
   } else {
     stopHomeShipRepairTimers();
+  }
+
+  if (pageID === "ship-repair") {
+    renderShipRepairMenuPage();
   }
 
   if (pageID !== "streamraetsel") {
