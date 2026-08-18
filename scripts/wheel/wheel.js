@@ -216,6 +216,7 @@ function buildWheelBulbs() {
 function spawnWheelSparks() {
   const container = document.getElementById("wheel-sparks");
   if (!container) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   for (let i = 0; i < 16; i++) {
     const angle = Math.random() * 360;
@@ -829,6 +830,12 @@ function triggerCodeSuccessEffect() {
   fx.classList.remove("code-fx-flash");
   void fx.offsetWidth;
   fx.classList.add("code-fx-flash");
+
+  // Der kurze Aufblitz-Flash bleibt (ein einzelner Opacity-Uebergang),
+  // der 36-Partikel-Burst darunter wird bei reduzierter Bewegung
+  // uebersprungen - deutlich weniger Bewegung, aber der Erfolg bleibt
+  // trotzdem sichtbar markiert.
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const symbols = ["🪙", "✨", "💰", "🧭", "⭐"];
   const count = 36;

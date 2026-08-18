@@ -33,7 +33,11 @@ function loadStories() {
 
   stories.forEach((story) => {
     const card = document.createElement("div");
-    card.className = "story-card";
+    // "fh-reveal" blendet die Karte sanft ein, sobald sie beim Scrollen
+    // ins Blickfeld kommt (scripts/home/cinematic.js/fhScanReveals()) -
+    // .story-card hatte bisher (anders als z.B. Shop/Rangliste/Characters)
+    // ueberhaupt keine Eingangsanimation.
+    card.className = "story-card fh-reveal";
     card.onclick = () => openStory(story.id);
 
     card.innerHTML = `
@@ -44,6 +48,10 @@ function loadStories() {
 
     container.appendChild(card);
   });
+
+  if (typeof window.fhScanReveals === "function") {
+    window.fhScanReveals();
+  }
 }
 
 /* ------------------------------------------------------
