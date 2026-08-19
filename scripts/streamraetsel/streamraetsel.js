@@ -335,6 +335,11 @@ function updateStreamRaetselPage(pageID) {
     streamRaetselIntervalIsFast = false;
     stopStreamRaetselParticles();
     stopStreamRaetselMusic();
+    // Beim naechsten Betreten soll die Route wieder frisch zur
+    // aktuellen Stufe scrollen, statt eine ggf. veraltete Scroll-
+    // Position beizubehalten (siehe scrollToCurrentPassTier() in
+    // scripts/piratenpass/piratenpass.js).
+    if (typeof resetPiratenpassScrollState === "function") resetPiratenpassScrollState();
     return;
   }
 

@@ -9061,89 +9061,417 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   transform: translateY(-1px);
 }
 
-/* ---- Piratenpass (ersetzt den bestehenden "???"-Bereich, siehe
-   #streamraetsel-content in index.html) ---- */
-.pass-page-content {
-  max-width: 640px;
+/* =====================================================
+   PIRATENPASS: HORIZONTALE SCHATZROUTE (ersetzt den bestehenden
+   "???"-Bereich, siehe #streamraetsel-content in index.html)
+   ---------------------------------------------------
+   Alle Selektoren mit "piratenpass-" praefigiert und ausschliesslich
+   INNERHALB von #streamraetsel-content wirksam - keine globalen
+   Regeln, die andere Seiten beeinflussen koennten. Nutzt
+   ausschliesslich bestehende Design-Tokens (--fh-gold/--fh-fire/
+   --fh-muted/--fh-border/--fh-radius/--fh-shadow/--fh-font-display/
+   --fh-ease usw.), keine neuen Farben.
+===================================================== */
+
+.piratenpass-wrap {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
 }
 
-.pass-empty-state {
+.piratenpass-empty-state {
   color: var(--fh-muted-fg);
 }
 
-.pass-season-status {
-  color: var(--fh-gold-bright);
-  font-size: 14px;
-  margin-top: -8px;
-  margin-bottom: 20px;
+/* ---- Kompakter Header ---- */
+.piratenpass-header {
+  margin-bottom: 6px;
 }
 
-.pass-overall-bar {
-  width: 100%;
-  height: 14px;
+.piratenpass-header h1 {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.3rem, 3.4vw, 1.9rem);
+  letter-spacing: .06em;
+  text-shadow: 0 0 30px rgba(240,201,106,.3);
+  color: var(--fh-fg);
+  margin: 0 0 8px;
+}
+
+.piratenpass-header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.piratenpass-season-label {
+  font-family: var(--fh-font-display);
+  letter-spacing: .1em;
+  font-size: 13px;
+  color: var(--fh-gold-bright);
+}
+
+.piratenpass-days-left {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.piratenpass-tier-heading {
+  font-size: 13px;
+  color: var(--fh-fg);
+  margin: 0 0 6px;
+}
+
+.piratenpass-header-progressbar {
+  width: min(360px, 100%);
+  margin: 0 auto;
+  height: 10px;
   border-radius: 999px;
   background: var(--fh-muted);
   border: 1px solid var(--fh-border);
   overflow: hidden;
 }
 
-.pass-overall-fill {
+.piratenpass-header-progressbar-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--fh-gold), var(--fh-fire));
   transition: width .6s var(--fh-ease);
 }
 
-.pass-tier-heading {
-  font-family: var(--fh-font-display);
-  letter-spacing: .08em;
-  color: var(--fh-fg);
-  margin: 14px 0 8px;
-}
-
-.pass-tier-progress-bar {
-  width: min(320px, 100%);
-  height: 8px;
-  border-radius: 999px;
-  background: var(--fh-muted);
-  border: 1px solid var(--fh-border);
-  overflow: hidden;
-}
-
-.pass-tier-progress-fill {
-  height: 100%;
-  background: var(--fh-gold-bright);
-  transition: width .5s var(--fh-ease);
-}
-
-.pass-tier-progress-text {
-  font-size: 12px;
+.piratenpass-header-xp {
+  display: block;
+  font-size: 11px;
   color: var(--fh-muted-fg);
   margin-top: 4px;
 }
 
-.pass-cap-banner {
-  margin-top: 24px;
+/* ---- Horizontal scrollbare Route (NUR dieser Bereich scrollt,
+   nie die gesamte Website - siehe max-width:100% + overflow-x auf
+   dem inneren Container, waehrend .piratenpass-route breiter als
+   der Viewport werden darf) ---- */
+.piratenpass-scroll {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 34px 24px 30px;
+  margin-top: 14px;
+  border-radius: var(--fh-radius);
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(240,201,106,.07), transparent 55%),
+    radial-gradient(ellipse at 85% 100%, rgba(255,106,42,.06), transparent 55%),
+    var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  scrollbar-width: thin;
+  scrollbar-color: var(--fh-gold) var(--fh-muted);
+}
+
+.piratenpass-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.piratenpass-scroll::-webkit-scrollbar-track {
+  background: var(--fh-muted);
+  border-radius: 999px;
+}
+.piratenpass-scroll::-webkit-scrollbar-thumb {
+  background: var(--fh-gold);
+  border-radius: 999px;
+}
+
+.piratenpass-route {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  min-width: 100%;
+}
+
+.piratenpass-start-flag {
+  flex-shrink: 0;
+  font-size: 20px;
+  margin-right: 10px;
+  opacity: .8;
+}
+
+/* ---- Verbindungslinie: zeigt den Fortschritt zwischen Stufen ---- */
+.piratenpass-connector {
+  flex-shrink: 0;
+  width: 34px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--fh-border);
+  margin: 0 -2px;
+}
+
+.piratenpass-connector-filled {
+  background: linear-gradient(90deg, var(--fh-gold), var(--fh-fire));
+  box-shadow: 0 0 6px rgba(240,201,106,.4);
+}
+
+/* ---- Stufen-Knoten ---- */
+.piratenpass-node {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--fh-muted);
+  border: 2px solid var(--fh-border-strong);
+  cursor: pointer;
+  transition: transform .15s, border-color .2s, box-shadow .2s;
+  font-size: 17px;
+}
+
+.piratenpass-node:hover,
+.piratenpass-node:focus-visible {
+  transform: translateY(-3px);
+  outline: none;
+  border-color: var(--fh-gold-bright);
+}
+
+.piratenpass-node-number {
+  position: absolute;
+  bottom: -18px;
+  font-size: 10px;
+  color: var(--fh-muted-fg);
+  font-family: var(--fh-font-display);
+  white-space: nowrap;
+}
+
+.piratenpass-node-status-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  background: var(--fh-bg);
+  border: 1px solid var(--fh-border-strong);
+  line-height: 1;
+}
+
+/* Gesperrt: gedimmt/entsaettigt */
+.piratenpass-node-locked {
+  opacity: .45;
+  filter: grayscale(.5);
+}
+
+/* Erreicht (eingeloest ODER abholbereit): leuchtender Rand */
+.piratenpass-node-claimed,
+.piratenpass-node-ready {
+  border-color: var(--fh-gold);
+  background: var(--fh-surface-light);
+  box-shadow: 0 0 10px rgba(240,201,106,.25);
+}
+
+.piratenpass-node-claimed {
+  opacity: .8;
+}
+
+.piratenpass-node-claimed .piratenpass-node-status-badge {
+  color: var(--fh-success);
+  border-color: var(--fh-success);
+}
+
+.piratenpass-node-ready .piratenpass-node-status-badge {
+  color: var(--fh-gold-bright);
+  border-color: var(--fh-gold-bright);
+}
+
+/* Aktuelle Stufe ("DU HIER") - deutlich groesser + Glow-Puls */
+.piratenpass-node-current {
+  width: 60px;
+  height: 60px;
+  font-size: 22px;
+  border-color: var(--fh-gold-bright);
+  box-shadow: 0 0 0 4px rgba(240,201,106,.15), 0 0 22px rgba(240,201,106,.5);
+  animation: piratenpassCurrentPulse 2.4s ease-in-out infinite;
+  z-index: 1;
+}
+
+.piratenpass-node-current-tag {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--fh-font-display);
+  font-size: 9px;
+  letter-spacing: .1em;
+  color: var(--fh-gold-bright);
+  white-space: nowrap;
+}
+
+@keyframes piratenpassCurrentPulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(240,201,106,.15), 0 0 18px rgba(240,201,106,.45); }
+  50% { box-shadow: 0 0 0 7px rgba(240,201,106,.08), 0 0 28px rgba(240,201,106,.65); }
+}
+
+/* Groessen-Varianten (Auftrag Punkt 5: nicht alle Stufen gleich groß) */
+.piratenpass-node-special {
+  width: 54px;
+  height: 54px;
+  font-size: 21px;
+}
+
+.piratenpass-node-milestone {
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  border-width: 3px;
+}
+
+.piratenpass-node-milestone.piratenpass-node-claimed,
+.piratenpass-node-milestone.piratenpass-node-ready {
+  border-color: var(--fh-fire);
+  box-shadow: 0 0 14px rgba(255,106,42,.4);
+}
+
+/* Finale (Stufe 50) - große "Schatzinsel" */
+.piratenpass-node-finale {
+  width: 104px;
+  height: 104px;
+  border-radius: 38% 38% 46% 46% / 44% 44% 56% 56%;
+  font-size: 32px;
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 3px solid var(--fh-gold);
+  box-shadow: var(--fh-glow-gold);
+}
+
+.piratenpass-node-finale .piratenpass-node-number {
+  bottom: -22px;
+  font-size: 11px;
+}
+
+.piratenpass-node-finale.piratenpass-node-current {
+  width: 118px;
+  height: 118px;
+}
+
+/* ---- Stufen-Tooltip (beim Anklicken/Tappen, wie Level-Up-Overlay
+   aufgebaut - gleiches, bereits etabliertes Muster) ---- */
+.piratenpass-tooltip-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5,7,11,.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s var(--fh-ease);
+  padding: 20px;
+}
+
+.piratenpass-tooltip-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.piratenpass-tooltip-card {
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid rgba(240,201,106,.35);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow);
+  padding: 26px 28px;
+  max-width: 300px;
+  width: 100%;
+  text-align: center;
+  transform: scale(.92);
+  transition: transform .3s var(--fh-ease);
+}
+
+.piratenpass-tooltip-overlay.visible .piratenpass-tooltip-card {
+  transform: scale(1);
+}
+
+.piratenpass-tooltip-title {
+  font-family: var(--fh-font-display);
+  letter-spacing: .05em;
+  color: var(--fh-gold-bright);
+  font-size: 15px;
+  margin: 0 0 10px;
+}
+
+.piratenpass-tooltip-reward {
+  font-size: 16px;
+  color: var(--fh-fg);
+  margin: 0 0 12px;
+}
+
+.piratenpass-tooltip-status {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  margin: 0 0 16px;
+}
+
+.piratenpass-tooltip-status.is-ready {
+  color: var(--fh-gold-bright);
+}
+
+.piratenpass-tooltip-claim-btn,
+.piratenpass-tooltip-close-btn {
+  padding: 9px 22px;
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform .15s, filter .2s;
+}
+
+.piratenpass-tooltip-claim-btn {
+  background: linear-gradient(135deg, var(--fh-gold), var(--fh-fire));
+  color: #1a0a05;
+}
+
+.piratenpass-tooltip-close-btn {
+  background: var(--fh-muted);
+  color: var(--fh-fg);
+  border: 1px solid var(--fh-border);
+  margin-top: 10px;
+}
+
+.piratenpass-tooltip-claim-btn:hover,
+.piratenpass-tooltip-close-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* ---- Finale-Banner (Stufe 50 abgeschlossen) ---- */
+.piratenpass-cap-banner {
+  margin-top: 20px;
   padding: 20px;
   background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
   border: 1px solid rgba(240,201,106,.4);
   border-radius: var(--fh-radius);
-  text-align: center;
 }
 
-.pass-cap-banner-title {
+.piratenpass-cap-banner-title {
   font-family: var(--fh-font-display);
   color: var(--fh-gold-bright);
   font-size: 17px;
   margin: 0 0 6px;
 }
 
-.pass-cap-banner-sub {
+.piratenpass-cap-banner-sub {
   font-size: 13px;
   color: var(--fh-muted-fg);
   margin: 0 0 10px;
 }
 
-.pass-cap-badge {
+.piratenpass-cap-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -9156,107 +9484,88 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   overflow: hidden;
 }
 
-.pass-cap-badge img {
+.piratenpass-cap-badge img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.pass-cap-badge-fallback {
-  font-size: 34px;
-  line-height: 1.4;
-  text-align: center;
-  padding: 8px;
-}
-
-.pass-cap-badge-fallback br + * ,
-.pass-cap-badge-fallback {
-  font-size: 34px;
-}
-
-.pass-cap-claim-btn {
-  display: block;
-  margin: 0 auto;
-}
-
-/* ---- Stufen-Liste: kompakte, VERTIKALE Karten - keine horizontale
-   Gesamttabelle, siehe Auftrag Punkt 16 ("keine riesige horizontale
-   Tabelle"). Funktioniert dadurch bereits ohne Media-Query mobil. ---- */
-.pass-tier-list {
+.piratenpass-cap-badge-fallback {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 20px;
-}
-
-.pass-tier-row {
-  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: var(--fh-muted);
-  border: 1px solid var(--fh-border);
-  border-radius: var(--fh-radius-sm);
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
-.pass-tier-row.pass-tier-ready {
-  border-color: rgba(240,201,106,.5);
-  background: var(--fh-surface-light);
+.piratenpass-cap-badge-emoji {
+  font-size: 34px;
+  line-height: 1;
 }
 
-.pass-tier-row.pass-tier-claimed {
-  opacity: .65;
-}
-
-.pass-tier-number {
-  font-family: var(--fh-font-display);
-  width: 28px;
-  flex-shrink: 0;
+.piratenpass-cap-badge-label {
+  font-size: 11px;
+  line-height: 1.35;
   color: var(--fh-muted-fg);
-  font-size: 13px;
+  text-align: center;
 }
 
-.pass-tier-icon {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.pass-tier-label {
-  flex: 1;
-  font-size: 13px;
-  color: var(--fh-fg);
-  min-width: 0;
-}
-
-.pass-tier-status {
-  flex-shrink: 0;
-  font-size: 13px;
-}
-
-.pass-tier-claim-btn {
-  flex-shrink: 0;
-  padding: 6px 14px;
-  background: linear-gradient(135deg, var(--fh-gold), var(--fh-fire));
-  border: none;
-  border-radius: 999px;
-  color: #1a0a05;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform .15s, filter .2s;
-}
-
-.pass-tier-claim-btn:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-@media (max-width: 640px) {
-  .pass-tier-row {
-    flex-wrap: wrap;
+/* ---- Reduzierte Bewegung: Puls-Animation und sanftes Scrollen
+   abschalten, Status bleibt weiterhin ueber Icon+Text erkennbar
+   (nicht nur ueber Farbe/Animation) ---- */
+@media (prefers-reduced-motion: reduce) {
+  .piratenpass-node-current {
+    animation: none;
   }
-  .pass-tier-label {
-    order: 3;
-    flex-basis: 100%;
+  .piratenpass-scroll {
+    scroll-behavior: auto;
+  }
+  .piratenpass-tooltip-overlay,
+  .piratenpass-tooltip-overlay .piratenpass-tooltip-card {
+    transition: opacity .15s linear;
+    transform: none;
+  }
+}
+
+/* ---- Mobile: kompaktere Knoten, gleiche horizontale
+   Scroll-Mechanik (siehe Auftrag Punkt 8: nur DIESER Bereich darf
+   scrollen, niemals die gesamte Website) ---- */
+@media (max-width: 640px) {
+  .piratenpass-scroll {
+    padding: 28px 16px 26px;
+  }
+  .piratenpass-node {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+  }
+  .piratenpass-node-special {
+    width: 46px;
+    height: 46px;
+    font-size: 17px;
+  }
+  .piratenpass-node-milestone {
+    width: 50px;
+    height: 50px;
+    font-size: 19px;
+  }
+  .piratenpass-node-finale {
+    width: 84px;
+    height: 84px;
+    font-size: 25px;
+  }
+  .piratenpass-node-finale.piratenpass-node-current {
+    width: 96px;
+    height: 96px;
+  }
+  .piratenpass-node-current {
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+  }
+  .piratenpass-connector {
+    width: 20px;
   }
 }
