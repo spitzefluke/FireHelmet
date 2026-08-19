@@ -266,8 +266,38 @@ service cloud.firestore {
         && withinToolCap(newData, 'testKit') && withinToolCap(newData, 'captainsSeal');
     }
 
+    // WICHTIG (Fehlerbericht "403 in playSpielothekGame() bei
+    // aeltestem Spielerstand"): der zweite "||"-Zweig unten
+    // ("newData.shipTools == oldShipToolsMap()") ist der eigentliche
+    // Fix. Grund: set(..., {merge:true}) macht request.resource.data
+    // (newData) zum VOLLEN Dokument NACH dem Merge, nicht nur zu den
+    // tatsaechlich gesendeten Feldern - "shipTools" ist bei jedem
+    // Spieler, der schon mindestens ein Werkzeug besitzt, danach IMMER
+    // in newData vorhanden, auch wenn der Schreibvorgang (z.B. eine
+    // Spielothek-Runde) shipTools ueberhaupt nicht anfasst. Ohne diesen
+    // Fast-Path lief deshalb bei JEDEM Schreibvorgang eines
+    // "gealterten" Spielers (echtes Inventar mit mehreren Werkzeugen)
+    // die komplette teure Pruefung unten (hasOnly()-Iteration ueber bis
+    // zu 20 Schluessel, diff() zweier bis zu 20 Eintraege grosser Maps,
+    // dann 20x withinToolCap()) - zusammen mit den uebrigen Pruefungen
+    // (validDailyQuestsWrite, validCodeRedemption, ...) hat das
+    // zuverlaessig Firestores Obergrenze von 1000 auswertbaren
+    // Teilausdruecken gerissen ("Unable to evaluate the expression as
+    // the maximum of 1000 expressions..." -> PERMISSION_DENIED / HTTP
+    // 403, obwohl der Schreibvorgang inhaltlich voellig gueltig war).
+    // Reproduziert und verifiziert gegen den echten Firebase-Emulator
+    // mit einem realistischen, "gealterten" Testdokument (alle 20
+    // Werkzeuge, mehrere geclaimte Tagesquests, mehrere eingeloeste
+    // Codes) - siehe Testprotokoll. Die Kartengleichheit ("==") ist
+    // eine EINZELNE guenstige Pruefung; ist shipTools unveraendert
+    // (der weit ueberwiegende Fall bei jedem Schreibvorgang, der nicht
+    // die Schiffsreparatur betrifft), wird die teure Pruefung darunter
+    // komplett uebersprungen. Aendert sich shipTools tatsaechlich,
+    // greift die volle Pruefung unveraendert wie zuvor - keinerlei
+    // Sicherheitsverlust, nur ein gespartes Auswerten im Nicht-
+    // Aenderungsfall.
     function validShipTools(newData) {
-      return !('shipTools' in newData) || (
+      return !('shipTools' in newData) || newData.shipTools == oldShipToolsMap() || (
         newData.shipTools is map
         && newData.shipTools.size() <= 20
         && newData.shipTools.keys().hasOnly(allToolIds())
