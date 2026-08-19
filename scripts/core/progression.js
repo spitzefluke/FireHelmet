@@ -299,6 +299,17 @@ function awardChapterReadXp(chapterId) {
 /* ------------------------------------------------------
    LEVEL-UP-ERKENNUNG
 ------------------------------------------------------ */
+// Einzige Stelle, die das rewardId-Format fuer Level-Belohnungen
+// festlegt - sowohl der automatische Level-Up (unten) als auch der
+// persoenliche Levelpfad (scripts/core/level-path.js, zeigt/beansprucht
+// dieselben Belohnungen manuell ueber claimedRewardIds) nutzen exakt
+// dieselbe ID, damit eine im Levelpfad eingeloeste Belohnung nicht
+// beim naechsten Level-Up ein zweites Mal ausgeloest werden koennte
+// (und umgekehrt).
+function getLevelRewardId(level) {
+  return `level_${level}_reward`;
+}
+
 function handleXpGainSideEffects(oldXp, newXp) {
   refreshPlayerCard();
 
@@ -309,7 +320,7 @@ function handleXpGainSideEffects(oldXp, newXp) {
   for (let lvl = oldLevel + 1; lvl <= newLevel; lvl++) {
     const reward = typeof LEVEL_REWARDS !== "undefined" ? LEVEL_REWARDS[lvl] : null;
     if (reward) {
-      claimReward(`level_${lvl}_reward`, reward).then((res) => {
+      claimReward(getLevelRewardId(lvl), reward).then((res) => {
         if (res.ok && !res.alreadyClaimed) showLevelUpOverlay(lvl, reward);
       });
     } else {
@@ -350,7 +361,7 @@ function renderPlayerCardHtml(data) {
   const safeNickname = typeof escapeHtml === "function" ? escapeHtml(nickname) : nickname;
 
   return `
-    <button type="button" class="fh-player-card" onclick="changePage('piratenpass')" aria-label="${levelLabel} ${progress.level}">
+    <button type="button" class="fh-player-card" onclick="openLevelPath()" aria-label="${levelLabel} ${progress.level}">
       <span class="fh-player-card-avatar">${avatarHtml}</span>
       <span class="fh-player-card-info">
         <span class="fh-player-card-name">${safeNickname}</span>

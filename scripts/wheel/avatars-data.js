@@ -86,7 +86,6 @@ const wheelSpecialAvatars = [
   { id: "level-30-nachtkapitaen", avatar: "🌙", label: "Nachtkapitän (Level 30)" },
   { id: "level-40-sturmreiter", avatar: "⛈️", label: "Sturmreiter (Level 40, 3 Tage)", isTemporary: true },
   { id: "level-50-legende", avatar: "👑", label: "Legende (Level 50)" },
-  { id: "level-80-flitzpiepen-ikone", avatar: "🌟", label: "Flitzpiepen-Ikone (Level 80)" },
   { id: "milestone-30-schatzkarte", avatar: "🗺️", label: "Schatzkarte (Expedition 30%)" },
   { id: "milestone-40-nebelgeist", avatar: "👻", label: "Nebelgeist (Expedition 40%, 3 Tage)", isTemporary: true },
   { id: "milestone-70-kompassrose", avatar: "🧭", label: "Kompassrose (Expedition 70%)" },
