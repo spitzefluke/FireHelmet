@@ -61,11 +61,94 @@ function getRandomAndiIdleQuote() {
   return typeof t === "function" ? t(`spielothek.andiIdle${n}`, "...") : "...";
 }
 
-function getRandomAndiResultQuote(win) {
-  const count = win ? ANDII_WIN_QUOTE_COUNT : ANDII_LOSE_QUOTE_COUNT;
+function getRandomAndiResultQuote(win, tier) {
+  let pool = "andiLose";
+  let count = ANDII_LOSE_QUOTE_COUNT;
+
+  if (win) {
+    if (tier === "jackpot") {
+      pool = "andiWinJackpot";
+      count = ANDII_WIN_JACKPOT_QUOTE_COUNT;
+    } else if (tier === "big" || tier === "veryBig") {
+      pool = "andiWinBig";
+      count = ANDII_WIN_BIG_QUOTE_COUNT;
+    } else {
+      pool = "andiWin";
+      count = ANDII_WIN_QUOTE_COUNT;
+    }
+  }
+
   const n = Math.floor(Math.random() * count) + 1;
-  const key = win ? `spielothek.andiWin${n}` : `spielothek.andiLose${n}`;
-  return typeof t === "function" ? t(key, "...") : "...";
+  return typeof t === "function" ? t(`spielothek.${pool}${n}`, "...") : "...";
+}
+
+function getRandomAndiCooldownQuote() {
+  const n = Math.floor(Math.random() * ANDII_COOLDOWN_QUOTE_COUNT) + 1;
+  return typeof t === "function" ? t(`spielothek.cooldownQuote${n}`, "...") : "...";
+}
+
+/* ------------------------------------------------------
+   COOLDOWN ZWISCHEN ZWEI SPIELRUNDEN (Auftrag Punkt 1-3)
+   ---------------------------------------------------
+   Rein die UI-Anzeige (Countdown-Text, deaktivierter Button, Ändiis
+   Spruch) - die tatsaechliche Sperre wird serverseitig in
+   firestore.rules erzwungen (validSpielothekCooldown(), liest
+   players/{uid}.lastSpielothekPlayAt) und kann daher NICHT durch
+   Reload/mehrere Tabs/Konsolen-Manipulation umgangen werden: selbst
+   wenn hier im Client jemand cooldownUntil auf 0 setzen wuerde, lehnt
+   die Firestore-Transaktion den verfruehten Schreibversuch trotzdem
+   ab (siehe catch-Zweig "cooldown" unten). Genau dasselbe Muster wie
+   die bestehende 20h-Sperre des Schatzrads (lastWheelSpinAt +
+   validWheelFields() in firestore.rules) - hier nur mit kurzer
+   Dauer statt eines ganzen Tages.
+------------------------------------------------------ */
+let spielothekCooldownUntil = 0;
+let spielothekCooldownInterval = null;
+
+function stopSpielothekCooldownUI() {
+  clearInterval(spielothekCooldownInterval);
+  spielothekCooldownInterval = null;
+}
+
+function startSpielothekCooldownUI(untilMs) {
+  spielothekCooldownUntil = untilMs;
+  const playBtn = document.getElementById("spielothek-play-btn");
+  const statusEl = document.getElementById("spielothek-status");
+  const andiEl = document.getElementById("spielothek-andi-quote");
+
+  if (andiEl) andiEl.textContent = getRandomAndiCooldownQuote();
+
+  stopSpielothekCooldownUI();
+
+  function tick() {
+    const remainingMs = spielothekCooldownUntil - Date.now();
+
+    if (remainingMs <= 0) {
+      stopSpielothekCooldownUI();
+      if (playBtn) {
+        playBtn.disabled = false;
+        playBtn.textContent = typeof t === "function" ? t("spielothek.playButton", "SPIELEN") : "SPIELEN";
+      }
+      if (statusEl) statusEl.textContent = "";
+      return;
+    }
+
+    if (playBtn) {
+      playBtn.disabled = true;
+      const secondsLeft = Math.ceil(remainingMs / 1000);
+      const waitLabel = typeof t === "function" ? t("spielothek.cooldownWaitButton", "WARTEN ...") : "WARTEN ...";
+      playBtn.textContent = `${waitLabel} (${secondsLeft})`;
+    }
+    if (statusEl) {
+      const doneLabel = typeof t === "function" ? t("spielothek.spinCompleteLabel", "🎰 Dreh abgeschlossen!") : "🎰 Dreh abgeschlossen!";
+      const label = typeof t === "function" ? t("spielothek.cooldownLabel", "Nächster Spin in:") : "Nächster Spin in:";
+      const secondsLeft = Math.ceil(remainingMs / 1000);
+      statusEl.textContent = `${doneLabel} ${label} ${String(secondsLeft).padStart(2, "0")}`;
+    }
+  }
+
+  tick();
+  spielothekCooldownInterval = setInterval(tick, 200);
 }
 
 /* ------------------------------------------------------
@@ -75,6 +158,7 @@ let spielothekBusy = false;
 
 async function playSpielothekGame() {
   if (spielothekBusy) return;
+  if (Date.now() < spielothekCooldownUntil) return; // Button ist eh disabled, aber doppelt haelt besser
 
   const statusEl = document.getElementById("spielothek-status");
   const nickname = localStorage.getItem("wheelNickname") || "";
@@ -107,6 +191,20 @@ async function playSpielothekGame() {
       const data = snap.exists ? snap.data() : {};
       const currentCurrency = data.currency || 0;
 
+      // Freundliche Vor-Pruefung innerhalb der Transaktion (liest den
+      // FRISCHEN Serverstand, keinen moeglicherweise veralteten Client-
+      // Cache) - wirft einen klaren, eigenen Fehler statt eines
+      // generischen "permission-denied" aus firestore.rules. Die
+      // eigentliche, nicht umgehbare Absicherung bleibt trotzdem die
+      // Regel selbst (validSpielothekCooldown()), diese Pruefung hier
+      // ist nur fuer eine bessere Fehlermeldung.
+      const lastPlayMs = data.lastSpielothekPlayAt && typeof data.lastSpielothekPlayAt.toMillis === "function"
+        ? data.lastSpielothekPlayAt.toMillis()
+        : 0;
+      if (lastPlayMs && Date.now() - lastPlayMs < SPIELOTHEK_COOLDOWN_MS) {
+        throw new Error("cooldown");
+      }
+
       if (currentCurrency < betCost) {
         throw new Error("not-enough-currency");
       }
@@ -131,6 +229,7 @@ async function playSpielothekGame() {
           gamesPlayed: currentGamesPlayed + 1,
           gamesWon: spin.win ? currentGamesWon + 1 : currentGamesWon,
           totalCurrencyEarned: spin.payout > 0 ? currentTotalEarned + spin.payout : currentTotalEarned,
+          lastSpielothekPlayAt: firebase.firestore.FieldValue.serverTimestamp(),
         },
         { merge: true }
       );
@@ -139,9 +238,20 @@ async function playSpielothekGame() {
 
     refreshSpielothekCurrencyDisplay();
     await renderSpielothekResult(game, handler, result);
+    // Cooldown erst NACH der abgeschlossenen Ergebnis-Anzeige starten,
+    // nicht schon waehrend die Walzen noch laufen (Auftrag: "Nach
+    // einem abgeschlossenen Spin" - nicht waehrenddessen).
+    startSpielothekCooldownUI(Date.now() + SPIELOTHEK_COOLDOWN_MS);
   } catch (err) {
     if (err.message === "not-enough-currency") {
       if (statusEl) statusEl.textContent = typeof t === "function" ? t("spielothek.notEnoughCurrency", "❌ Nicht genug Dublonen dafür.") : "❌ Nicht genug Dublonen dafür.";
+      if (playBtn) playBtn.disabled = false;
+    } else if (err.message === "cooldown") {
+      // Client-Uhr/Cache war minimal daneben (z.B. anderer Tab hat
+      // gerade gespielt) - einfach die Cooldown-UI aus dem tatsaechlichen
+      // Serverstand neu aufbauen statt eine verwirrende Fehlermeldung
+      // zu zeigen.
+      await refreshSpielothekCooldownFromServer();
     } else {
       // Die Transaktion ist entweder komplett durchgelaufen (siehe
       // runTransaction() oben - dann landen wir hier gar nicht) oder
@@ -156,10 +266,54 @@ async function playSpielothekGame() {
           ? t("spielothek.saveFailed", "⚠️ Die Spielrunde konnte gerade nicht gespeichert werden. Deine Daten wurden nicht verändert. Bitte versuch's nochmal.")
           : "⚠️ Die Spielrunde konnte gerade nicht gespeichert werden. Deine Daten wurden nicht verändert. Bitte versuch's nochmal.";
       }
+      if (playBtn) playBtn.disabled = false;
     }
   } finally {
     spielothekBusy = false;
+  }
+}
+
+/* ------------------------------------------------------
+   COOLDOWN-STATUS BEIM SEITENBESUCH LADEN
+   ---------------------------------------------------
+   Wichtig fuer Reload/mehrere Tabs (Auftrag Punkt 3/7): ein frischer
+   Seitenaufruf kennt den lokalen spielothekCooldownUntil-Stand nicht
+   mehr (der lebt nur im JS-Speicher) - hier wird er aus dem
+   tatsaechlichen Server-Zeitstempel neu hergeleitet, BEVOR der
+   Spieler ueberhaupt auf "Spielen" klicken kann. Verhindert, dass ein
+   Reload die sichtbare Sperre einfach "vergisst" (die serverseitige
+   Sperre selbst bliebe ohnehin bestehen, das hier ist nur fuer eine
+   korrekte Anzeige).
+------------------------------------------------------ */
+async function refreshSpielothekCooldownFromServer() {
+  if (!wheelDb || typeof wheelAuthReady === "undefined") return;
+
+  try {
+    const uid = await wheelAuthReady;
+    if (!uid) return;
+
+    const snap = await wheelDb.collection("players").doc(uid).get();
+    const data = snap.exists ? snap.data() : {};
+    const lastPlayMs = data.lastSpielothekPlayAt && typeof data.lastSpielothekPlayAt.toMillis === "function"
+      ? data.lastSpielothekPlayAt.toMillis()
+      : 0;
+
+    if (lastPlayMs) {
+      const until = lastPlayMs + SPIELOTHEK_COOLDOWN_MS;
+      if (until > Date.now()) {
+        startSpielothekCooldownUI(until);
+        return;
+      }
+    }
+
+    stopSpielothekCooldownUI();
+    spielothekCooldownUntil = 0;
+    const playBtn = document.getElementById("spielothek-play-btn");
     if (playBtn) playBtn.disabled = false;
+  } catch (err) {
+    // Kein Grund, das Spiel deswegen zu blockieren - schlimmstenfalls
+    // greift beim naechsten Klick einfach die serverseitige Sperre
+    // (firestore.rules) mit der normalen Fehlerbehandlung oben.
   }
 }
 
@@ -206,6 +360,21 @@ async function renderSpielothekResult(game, handler, result) {
   resultEl.innerHTML = handler.buildResultHtml(result);
 
   const reduceMotion = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Kurzer Licht-/Glow-Impuls GENAU dann, wenn eine Walze tatsaechlich
+  // landet (Auftrag Punkt 5) - das Spiel-Modul (z.B. slot.js) kennt
+  // seine eigenen Stopp-Zeitpunkte am besten und liefert sie optional
+  // mit; spielothek.js selbst bleibt dadurch weiterhin unabhaengig von
+  // slot-spezifischen Details (siehe Kommentar am Dateianfang).
+  if (!reduceMotion && Array.isArray(handler.reelStopTimesMs)) {
+    const symbolEls = resultEl.querySelectorAll(".spielothek-slot-symbol");
+    handler.reelStopTimesMs.forEach((stopMs, i) => {
+      const el = symbolEls[i];
+      if (!el) return;
+      setTimeout(() => el.classList.add("spielothek-slot-symbol-landed"), stopMs);
+    });
+  }
+
   const revealDelay = reduceMotion ? 0 : (typeof handler.resultRevealDelayMs === "number" ? handler.resultRevealDelayMs : 1150);
   if (revealDelay > 0) {
     await new Promise((resolve) => setTimeout(resolve, revealDelay));
@@ -235,11 +404,15 @@ async function renderSpielothekResult(game, handler, result) {
 
     const revealEl = document.getElementById("spielothek-win-reveal");
     if (revealEl) {
-      revealEl.textContent = `${isEn ? "Win" : "Gewinn"}: +${netDelta} 🪙`;
+      const label = result.tier === "jackpot" ? (isEn ? "JACKPOT" : "JACKPOT") : (isEn ? "Win" : "Gewinn");
+      revealEl.textContent = `${label}: +${netDelta} 🪙`;
       revealEl.classList.add("spielothek-result-win");
+      if (result.tier === "jackpot" || result.tier === "veryBig") revealEl.classList.add("spielothek-result-win-big");
       if (!reduceMotion) revealEl.classList.add("spielothek-amount-pop");
     }
-    if (!reduceMotion) triggerSpielothekConfetti(resultEl);
+    // Staerkerer Effekt bei selteneren Gewinnen (Auftrag Punkt 5): mehr
+    // Konfetti-Teile, laenger sichtbar, je hoeher die Gewinnstufe.
+    if (!reduceMotion) triggerSpielothekConfetti(resultEl, result.tier);
   } else {
     resultEl.insertAdjacentHTML("beforeend", `
       <p class="spielothek-result-line spielothek-result-lose">
@@ -248,7 +421,7 @@ async function renderSpielothekResult(game, handler, result) {
     `);
   }
 
-  if (andiEl) andiEl.textContent = getRandomAndiResultQuote(result.win);
+  if (andiEl) andiEl.textContent = getRandomAndiResultQuote(result.win, result.tier);
 
   // Ändii-Reaktionsanimation bei Verlust (Punkt 10): Avatar kommt von der
   // Seite herein, dann erscheint der Spruch, dann ein kurzer Bounce - siehe
@@ -280,15 +453,21 @@ async function renderSpielothekResult(game, handler, result) {
    setTimeout, KEINE dauerhafte requestAnimationFrame/Intervall-
    Schleife (Punkt 12: Performance).
 ------------------------------------------------------ */
-function triggerSpielothekConfetti(containerEl) {
+const SPIELOTHEK_CONFETTI_TIERS = {
+  jackpot: { pieceCount: 28, colors: ["#ff6a2a", "#f0c96a", "#ffe9b3", "#ff9f4d"], lifespanMs: 1500 },
+  veryBig: { pieceCount: 20, colors: ["#7dd3fc", "#f0c96a", "#ffe9b3"], lifespanMs: 1200 },
+  big: { pieceCount: 16, colors: ["#7dd3fc", "#e8a33d", "#ffe9b3"], lifespanMs: 1000 },
+};
+const SPIELOTHEK_CONFETTI_DEFAULT = { pieceCount: 10, colors: ["#f0c96a", "#e8a33d", "#ffe9b3", "#d6a84f"], lifespanMs: 900 };
+
+function triggerSpielothekConfetti(containerEl, tier) {
   if (!containerEl) return;
 
-  const colors = ["#f0c96a", "#e8a33d", "#ffe9b3", "#d6a84f"];
+  const { pieceCount, colors, lifespanMs } = SPIELOTHEK_CONFETTI_TIERS[tier] || SPIELOTHEK_CONFETTI_DEFAULT;
   const burst = document.createElement("div");
-  burst.className = "spielothek-confetti-burst";
+  burst.className = `spielothek-confetti-burst${tier === "jackpot" ? " spielothek-confetti-burst-jackpot" : ""}`;
   burst.setAttribute("aria-hidden", "true");
 
-  const pieceCount = 10;
   for (let i = 0; i < pieceCount; i++) {
     const piece = document.createElement("span");
     piece.className = "spielothek-confetti-piece";
@@ -299,7 +478,7 @@ function triggerSpielothekConfetti(containerEl) {
   }
 
   containerEl.appendChild(burst);
-  setTimeout(() => burst.remove(), 900);
+  setTimeout(() => burst.remove(), lifespanMs);
 }
 
 function buildSpielothekAndiHtml() {
@@ -356,6 +535,10 @@ async function renderSpielothekPage() {
 
   if (typeof applyTranslations === "function") applyTranslations();
   refreshSpielothekCurrencyDisplay();
+  // Frisch aufgebautes Markup kennt einen evtl. noch laufenden Cooldown
+  // nicht (siehe ausfuehrlicher Kommentar bei refreshSpielothekCooldownFromServer()
+  // weiter oben) - hier direkt nach dem Aufbau nachladen.
+  refreshSpielothekCooldownFromServer();
 }
 
 /* ------------------------------------------------------

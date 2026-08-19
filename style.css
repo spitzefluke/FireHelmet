@@ -3931,258 +3931,12 @@ main {
 }
 
 /* =====================================================
-   SUPPORT-BOT
+   SUPPORT
 ===================================================== */
 .support-content {
   max-width: 680px;
   margin: auto;
   position: relative;
-}
-
-.support-chat-box {
-  position: relative;
-  margin-top: 40px;
-  border-radius: 24px;
-  background: linear-gradient(180deg, rgba(20,30,50,.65), rgba(6,10,20,.9));
-  border: 1px solid rgba(77,163,255,.25);
-  box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.03);
-  overflow: hidden;
-  isolation: isolate;
-}
-
-/* Rotierender Farbverlauf-Rand ums ganze Chat-Fenster */
-.support-chat-box::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 26px;
-  padding: 2px;
-  background: conic-gradient(from 0deg, #4da3ff, #50ff8c, #4da3ff);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: menuBorderSpin 6s linear infinite;
-  opacity: .5;
-  z-index: -1;
-}
-
-/* Treibende Blasen im Hintergrund des Chats, Ozean-Thema */
-.support-chat-box::after {
-  content: "🫧 🐚 🫧 🐠 🫧 🫧 🐚 🫧";
-  position: absolute;
-  inset: -20px;
-  z-index: 0;
-  font-size: 20px;
-  line-height: 70px;
-  letter-spacing: 60px;
-  opacity: .06;
-  overflow: hidden;
-  white-space: nowrap;
-  pointer-events: none;
-  animation: leaderboardBgDrift 50s linear infinite;
-}
-
-.support-chat-header {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 22px;
-  background: rgba(255,255,255,.03);
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-
-.support-bot-avatar {
-  position: relative;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  background: radial-gradient(circle at 35% 30%, rgba(77,163,255,.35), rgba(10,15,30,.9));
-  border: 2px solid rgba(77,163,255,.55);
-  box-shadow: 0 0 16px rgba(77,163,255,.4);
-  flex-shrink: 0;
-}
-
-.support-bot-status {
-  position: absolute;
-  bottom: 1px;
-  right: 1px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #50ff8c;
-  border: 2px solid #0a0e1a;
-  box-shadow: 0 0 8px rgba(80,255,140,.8);
-  animation: supportStatusPulse 1.8s ease-in-out infinite;
-}
-
-@keyframes supportStatusPulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.25); }
-}
-
-.support-bot-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  text-align: left;
-}
-
-.support-bot-info strong {
-  font-size: 15px;
-  color: #fff;
-}
-
-.support-bot-info span {
-  font-size: 12px;
-  color: #7ee0a3;
-}
-
-.support-chat-log {
-  position: relative;
-  z-index: 1;
-  height: 340px;
-  overflow-y: auto;
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.support-msg {
-  max-width: 78%;
-  padding: 13px 17px;
-  border-radius: 18px;
-  font-size: 14px;
-  line-height: 1.55;
-  text-align: left;
-  box-shadow: 0 4px 14px rgba(0,0,0,.25);
-}
-
-.support-msg-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 9px;
-  align-self: flex-start;
-  max-width: 88%;
-}
-
-.support-msg-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  flex-shrink: 0;
-  background: radial-gradient(circle at 35% 30%, rgba(77,163,255,.35), rgba(10,15,30,.9));
-  border: 1.5px solid rgba(77,163,255,.5);
-}
-
-.support-msg-bot {
-  background: linear-gradient(135deg, rgba(77,163,255,.18), rgba(77,163,255,.08));
-  border: 1px solid rgba(77,163,255,.3);
-  border-bottom-left-radius: 4px;
-}
-
-.support-msg-user {
-  align-self: flex-end;
-  background: linear-gradient(135deg, rgba(212,175,55,.28), rgba(212,175,55,.12));
-  border: 1px solid rgba(212,175,55,.4);
-  border-bottom-right-radius: 4px;
-}
-
-.support-chat-input-row {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  gap: 10px;
-  padding: 16px;
-  background: rgba(255,255,255,.03);
-  border-top: 1px solid rgba(255,255,255,.08);
-}
-
-.support-chat-input-row .code-input {
-  flex: 1;
-  max-width: none;
-}
-
-.support-chat-input-row .code-input:disabled {
-  opacity: .5;
-  cursor: not-allowed;
-  border-color: rgba(255,109,109,.5);
-}
-
-.support-chat-input-row .code-button:disabled {
-  opacity: .4;
-  cursor: not-allowed;
-}
-
-/* Themen-Vorschläge, wenn der Bot keine passende Antwort fand */
-.support-suggestions {
-  align-self: flex-start;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  max-width: 85%;
-  margin-left: 39px;
-}
-
-.support-suggestion-btn {
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(77,163,255,.4);
-  background: rgba(77,163,255,.1);
-  color: #bcdfff;
-  font-size: 13px;
-  cursor: pointer;
-  transition: transform .2s, background .2s;
-}
-
-.support-suggestion-btn:hover {
-  background: rgba(77,163,255,.3);
-  transform: translateY(-2px);
-}
-
-/* Kurzes Aufblitzen der Bot-Nachricht bei Verwarnung/Timeout */
-.support-msg-row:last-child .support-msg-bot {
-  animation: supportMsgIn .3s ease;
-}
-
-@keyframes supportMsgIn {
-  0%   { opacity: 0; transform: translateY(6px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* "..." Tipp-Animation, während die KI antwortet */
-.support-msg-typing {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 14px 18px !important;
-}
-
-.support-msg-typing span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: .5;
-  animation: supportTypingBounce 1.1s ease-in-out infinite;
-}
-
-.support-msg-typing span:nth-child(2) { animation-delay: .15s; }
-.support-msg-typing span:nth-child(3) { animation-delay: .3s; }
-
-@keyframes supportTypingBounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: .5; }
-  30%           { transform: translateY(-4px); opacity: 1; }
 }
 
 .support-report-box {
@@ -4194,17 +3948,6 @@ main {
   border: 1px solid rgba(255,255,255,.1);
   box-shadow: 0 20px 50px rgba(0,0,0,.4);
   transition: box-shadow .4s, border-color .4s, transform .3s;
-}
-
-.support-report-box.support-highlight {
-  border-color: rgba(255,215,107,.7);
-  box-shadow: 0 0 40px rgba(255,215,107,.35), 0 20px 50px rgba(0,0,0,.4);
-  animation: supportReportPulse 1.6s ease-in-out infinite;
-}
-
-@keyframes supportReportPulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.015); }
 }
 
 .support-report-box h2 {
@@ -8625,10 +8368,25 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 .spielothek-slot-reels {
   display: flex;
   gap: 10px;
+  animation: spielothekReelsWobble .35s ease-in-out;
+}
+
+/* Kurzes Wackeln beim Start des Spins (Auftrag Punkt 5) - laeuft
+   EINMAL beim Erscheinen des .spielothek-slot-reels-Elements ab,
+   bevor die eigentliche Dreh-Animation der Walzen greift. */
+@keyframes spielothekReelsWobble {
+  0%   { transform: translateX(0) rotate(0deg); }
+  20%  { transform: translateX(-3px) rotate(-1deg); }
+  40%  { transform: translateX(3px) rotate(1deg); }
+  60%  { transform: translateX(-2px) rotate(-.5deg); }
+  80%  { transform: translateX(2px) rotate(.5deg); }
+  100% { transform: translateX(0) rotate(0deg); }
 }
 
 .spielothek-slot-symbol {
   --slot-symbol-size: 64px;
+  --slot-reel-duration: 900ms;
+  position: relative;
   width: var(--slot-symbol-size);
   height: var(--slot-symbol-size);
   display: flex;
@@ -8646,6 +8404,80 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   border: 2px solid rgba(214,168,79,.5);
   box-shadow: inset 0 0 12px rgba(0,0,0,.6);
   overflow: hidden;
+}
+
+/* Kurzer Licht-/Glow-Impuls, GENAU wenn diese Walze landet - Klasse
+   wird von spielothek.js per JS zeitgleich mit dem tatsaechlichen
+   Animationsende dieser Walze gesetzt (kennt SLOT_REEL_STOP_TIMES_MS
+   aus slot.js), keine Ratewerte. Bewegungsunschaerfe waehrend des
+   Drehens simuliert der leicht reduzierte Kontrast/Blur-Filter unten. */
+.spielothek-slot-symbol.spielothek-slot-spin {
+  filter: blur(1.5px) brightness(1.08);
+}
+
+.spielothek-slot-symbol-landed {
+  filter: none;
+  animation: spielothekReelLand .5s cubic-bezier(.34, 1.5, .64, 1);
+}
+
+.spielothek-slot-symbol-landed::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 12px;
+  background: radial-gradient(circle, rgba(255,230,170,.75), transparent 70%);
+  animation: spielothekReelGlow .5s ease-out;
+  pointer-events: none;
+}
+
+@keyframes spielothekReelLand {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.12) translateY(-2px); }
+  100% { transform: scale(1); }
+}
+
+@keyframes spielothekReelGlow {
+  0%   { opacity: 0; }
+  35%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ---- Tier-abhaengige Verstaerkung beim Landen (Auftrag Punkt 5:
+   "staerkerer Effekt bei seltenen Gewinnen") ---- */
+.spielothek-slot-reels-tier-big .spielothek-slot-symbol-landed::after,
+.spielothek-slot-reels-tier-veryBig .spielothek-slot-symbol-landed::after {
+  background: radial-gradient(circle, rgba(125,211,252,.85), transparent 70%);
+}
+
+.spielothek-slot-reels-tier-jackpot .spielothek-slot-symbol-landed::after {
+  background: radial-gradient(circle, rgba(255,106,42,.9), transparent 70%);
+}
+
+.spielothek-slot-reels-tier-jackpot .spielothek-slot-symbol-landed {
+  animation: spielothekReelLandBig .6s cubic-bezier(.34, 1.5, .64, 1);
+}
+
+@keyframes spielothekReelLandBig {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.24) translateY(-4px); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-slot-reels {
+    animation: none;
+  }
+  .spielothek-slot-symbol.spielothek-slot-spin {
+    filter: none;
+  }
+  .spielothek-slot-symbol-landed,
+  .spielothek-slot-reels-tier-jackpot .spielothek-slot-symbol-landed {
+    animation: none;
+  }
+  .spielothek-slot-symbol-landed::after {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* ------------------------------------------------------
@@ -8676,18 +8508,18 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 
 .spielothek-slot-spin .spielothek-slot-strip {
-  animation: spielothekReelSpin .9s cubic-bezier(.13, .82, .22, 1) both;
+  animation: spielothekReelSpin var(--slot-reel-duration, 900ms) cubic-bezier(.13, .82, .22, 1) both;
 }
 
 @keyframes spielothekReelSpin {
   from { transform: translateY(0); }
-  to   { transform: translateY(calc(-6 * var(--slot-symbol-size))); }
+  to   { transform: translateY(calc(-14 * var(--slot-symbol-size))); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .spielothek-slot-spin .spielothek-slot-strip {
     animation: none;
-    transform: translateY(calc(-6 * var(--slot-symbol-size)));
+    transform: translateY(calc(-14 * var(--slot-symbol-size)));
   }
 }
 
@@ -8747,6 +8579,28 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   100% { opacity: 0; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(-48px) scale(.4); }
 }
 
+/* Jackpot: deutlich weiterer, laengerer Konfetti-Wurf UND groessere
+   Partikel (Auftrag Punkt 5: "staerkerer Effekt bei seltenen
+   Gewinnen") - eigene Keyframe statt nur mehr Teilchen derselben
+   Groesse/Reichweite. */
+.spielothek-confetti-burst-jackpot .spielothek-confetti-piece {
+  width: 8px;
+  height: 8px;
+  animation-name: spielothekConfettiPopJackpot;
+  animation-duration: 1.4s;
+}
+
+@keyframes spielothekConfettiPopJackpot {
+  0%   { opacity: 1; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(0) scale(1); }
+  100% { opacity: 0; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(-92px) scale(.3); }
+}
+
+/* Grosse Gewinne heben sich zusaetzlich farblich/optisch ab */
+.spielothek-result-win-big {
+  color: #ffd76b;
+  text-shadow: 0 0 18px rgba(255,215,107,.7);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .spielothek-result-reveal,
   .spielothek-amount-pop,
@@ -8778,6 +8632,30 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   margin: 10px 0 0;
   padding-left: 20px;
   line-height: 1.6;
+}
+
+/* Transparente Gewinntabelle (Auftrag Punkt 8) - eigene Liste ohne
+   Aufzaehlungspunkte, damit Symbol/Bezeichnung/Betrag wie eine
+   kleine Tabelle wirken. */
+.spielothek-rules-tiers {
+  list-style: none;
+  padding-left: 0 !important;
+  margin: 0 0 12px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spielothek-rules-tiers li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spielothek-rules-symbols {
+  font-size: 15px;
+  min-width: 76px;
 }
 
 @media (max-width: 640px) {

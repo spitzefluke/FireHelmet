@@ -55,8 +55,6 @@
    - site_meta/{docId}          Technischer Zustand (z.B. zuletzt an
                                  Discord gesendeter Update-Text-Hash,
                                  siehe scripts/core/discord-notify.js)
-   - support_chat_log/{autoId}  KI-Support-Chatverlauf (nie vom Client
-                                 gelesen)
    - community_boss/{monthId}   EIN gemeinsames Community-Dokument
    - community_boss_damage/{monthId_uid}  Schaden PRO Spieler
    - site_ratings/{autoId}      einzelne Bewertungen (schreibgeschuetzt)
@@ -183,15 +181,23 @@ service cloud.firestore {
     }
 
     // Liest ein Zahlenfeld aus dem BESTEHENDEN Dokument sicher aus,
-    // auch wenn es dort noch nicht existiert (dann 0)
+    // auch wenn es dort noch nicht existiert (dann 0). "resource != null"
+    // MUSS zuerst geprueft werden, nicht nur "field in resource.data" -
+    // bei einem brandneuen Dokument (echtes "create", z.B. wenn
+    // redeemCurrencyCode() in wheel.js einen Dublonen-Code einloest,
+    // bevor je ein players/{uid}-Dokument existierte) ist "resource"
+    // selbst null, und "resource.data" wuerde dann direkt einen
+    // "Null value error" werfen statt sauber 0 zu liefern (mit dem echten
+    // Firestore-Emulator reproduziert und verifiziert).
     function oldNum(field) {
-      return field in resource.data ? resource.data[field] : 0;
+      return (resource != null && field in resource.data) ? resource.data[field] : 0;
     }
 
     // Liest players/{playerId}.shipTools[toolId] aus dem BESTEHENDEN
-    // Dokument sicher aus (0, falls Werkzeug/Map noch nicht existiert).
+    // Dokument sicher aus (0, falls Werkzeug/Map/Dokument noch nicht
+    // existiert) - derselbe "resource != null"-Schutz wie bei oldNum().
     function oldToolCount(toolId) {
-      return ('shipTools' in resource.data && toolId in resource.data.shipTools)
+      return (resource != null && 'shipTools' in resource.data && toolId in resource.data.shipTools)
              ? resource.data.shipTools[toolId] : 0;
     }
 
@@ -289,14 +295,17 @@ service cloud.firestore {
              && (!('totalCurrencyEarned' in data)
                  || (data.totalCurrencyEarned is int
                      && data.totalCurrencyEarned >= 0
-                     && data.totalCurrencyEarned <= oldNum('totalCurrencyEarned') + 500));
+                     // Siehe Kommentar bei validShopFields() oben -
+                     // derselbe Grund (Spielothek-Jackpot bis 3000),
+                     // dieselbe neue Obergrenze.
+                     && data.totalCurrencyEarned <= oldNum('totalCurrencyEarned') + 3000));
     }
 
     // Liest players/{playerId}.dailyQuests.claimedDays aus dem
     // BESTEHENDEN Dokument sicher aus (leere Liste, falls noch nie
     // gestartet).
     function oldClaimedDays() {
-      return ('dailyQuests' in resource.data && 'claimedDays' in resource.data.dailyQuests)
+      return (resource != null && 'dailyQuests' in resource.data && 'claimedDays' in resource.data.dailyQuests)
              ? resource.data.dailyQuests.claimedDays : [];
     }
 
@@ -382,7 +391,7 @@ service cloud.firestore {
         && newDays is list
         && newDays.size() <= 20
         && (
-          (!('dailyQuests' in resource.data) || !('startedAt' in resource.data.dailyQuests))
+          (resource == null || !('dailyQuests' in resource.data) || !('startedAt' in resource.data.dailyQuests))
             ? (newData.dailyQuests.startedAt == request.time && newDays.size() == 0)
             : (
               newData.dailyQuests.startedAt == resource.data.dailyQuests.startedAt
@@ -418,7 +427,15 @@ service cloud.firestore {
       return (!('currency' in data)
               || (data.currency is int
                   && data.currency >= 0
-                  && data.currency <= oldNum('currency') + 500))
+                  // War frueher +500 (groesste Einzelbelohnung: der
+                  // legendaere Schatzrad-Gewinn coins-500). Jetzt +3000,
+                  // weil die Spielothek-Slotmaschine (scripts/spielothek/
+                  // games/slot.js, SLOT_TRIPLE_REWARDS.fire) einen
+                  // JACKPOT von 3000 Dublonen auszahlen kann - selten
+                  // (rechnerisch ca. 1:70.000, siehe Kommentar dort),
+                  // aber ein einzelner Schreibvorgang muss diesen echten
+                  // Hoechstwert trotzdem durchlassen koennen.
+                  && data.currency <= oldNum('currency') + 3000))
              && (!('ownedShopItems' in data)
                  || (data.ownedShopItems is list && data.ownedShopItems.size() <= 40))
              && (!('equippedFrame' in data)
@@ -531,6 +548,22 @@ service cloud.firestore {
                   && newData.tempAvatarExpiresAt <= request.time.toMillis() + 280800000));
     }
 
+    // Spielothek-Cooldown zwischen zwei Spielrunden (Auftrag "Wartezeit
+    // zwischen den Drehungen") - EXAKT dasselbe Muster wie
+    // validWheelFields() oben (lastWheelSpinAt), nur mit kurzer statt
+    // langer Sperrzeit. Nur ueber "update" erreichbar (siehe "allow
+    // create" unten: dort wird das Feld komplett verboten statt
+    // validiert, genau wie bei lastWheelSpinAt/tempAvatarExpiresAt) -
+    // "resource" ist deshalb hier garantiert nie null, kein
+    // zusaetzlicher Schutz noetig. 4000ms MUSS mit
+    // SPIELOTHEK_COOLDOWN_MS in scripts/spielothek/spielothek-data.js
+    // synchron bleiben - dort geaendert? Hier ebenfalls anpassen.
+    function validSpielothekCooldown(newData) {
+      return !('lastSpielothekPlayAt' in newData)
+          || !('lastSpielothekPlayAt' in resource.data)
+          || request.time.toMillis() - resource.data.lastSpielothekPlayAt.toMillis() >= 4000;
+    }
+
     // ---------------------------------------------
     // XP / LEVEL / PIRATENPASS / EINMAL-BELOHNUNGEN (NEU)
     // Siehe scripts/core/progression.js/progression-data.js. Level
@@ -579,6 +612,12 @@ service cloud.firestore {
                     // dort) einfach komplett verbieten statt validieren.
                     && !('lastWheelSpinAt' in request.resource.data)
                     && !('tempAvatarExpiresAt' in request.resource.data)
+                    // Genau wie lastWheelSpinAt direkt darueber: bei einer
+                    // ECHTEN Neuanlage nie noetig (playSpielothekGame()
+                    // setzt voraus, dass schon genug Dublonen vorhanden
+                    // sind, das Dokument also laengst existiert) - komplett
+                    // verbieten statt validieren.
+                    && !('lastSpielothekPlayAt' in request.resource.data)
                     && (!('streak' in request.resource.data)
                         || (request.resource.data.streak is int && request.resource.data.streak <= 1))
                     && (!('codesCracked' in request.resource.data)
@@ -586,7 +625,29 @@ service cloud.firestore {
 
       allow update: if isSignedIn()
                     && request.auth.uid == playerId
-                    && validNickname(request.resource.data)
+                    // WICHTIG (siehe Fehlerbericht "Firestore 403 in
+                    // playSpielothekGame()"): anders als jedes andere
+                    // Feld hier war validNickname() bislang OHNE die
+                    // sonst ueberall verwendete "!('feld' in data) ||"-
+                    // Ausnahme fuer optionale Felder eingebunden - dadurch
+                    // verlangte JEDER Update-Schreibvorgang auf
+                    // players/{uid} einen gueltigen Namen im GESAMTEN
+                    // resultierenden Dokument, selbst wenn der Name gar
+                    // nicht Teil dieses Schreibvorgangs war (z.B. reine
+                    // Dublonen-/Statistik-Updates aus der Spielothek).
+                    // Fehlte einem Spieler der Name im Dokument (z.B. weil
+                    // ein Login-Weg ihn nie geschrieben hatte), schlug
+                    // dadurch JEDER folgende Schreibvorgang fehl - nicht
+                    // nur ein Namens-Update. Jetzt wie alle anderen
+                    // optionalen Felder behandelt: nur wenn "nickname"
+                    // tatsaechlich Teil dieses Schreibvorgangs ist
+                    // (Neuanlage ODER bewusste Namensaenderung), muss er
+                    // gueltig sein - eine manipulierte/leere Namensangabe
+                    // wird weiterhin zuverlaessig abgelehnt. Bei "create"
+                    // bleibt der Name bewusst weiterhin PFLICHT (siehe
+                    // "allow create" oben, unveraendert) - jedes neue
+                    // Dokument braucht von Anfang an einen Namen.
+                    && (!('nickname' in request.resource.data) || validNickname(request.resource.data))
                     && validRewards(request.resource.data)
                     && validAvatar(request.resource.data)
                     && validShopFields(request.resource.data)
@@ -595,6 +656,7 @@ service cloud.firestore {
                     && validDailyQuestsWrite(request.resource.data)
                     && validCodeRedemption(request.resource.data)
                     && validWheelFields(request.resource.data)
+                    && validSpielothekCooldown(request.resource.data)
                     && (!('streak' in request.resource.data)
                         || (request.resource.data.streak is int
                             && request.resource.data.streak <= oldNum('streak') + 1))
@@ -706,24 +768,12 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ---------------------------------------------
-    // SUPPORT-CHAT-PROTOKOLL (fuer die KI-Antworten)
-    // Genau wie supportReports: jeder darf einen Eintrag
-    // anlegen, aber niemand darf fremde Chatverlaeufe lesen -
-    // nur der Betreiber sieht sie in der Firebase Console.
-    // ---------------------------------------------
-    match /support_chat_log/{logId} {
-      allow read: if false;
-
-      allow create: if isSignedIn()
-                    && request.resource.data.question is string
-                    && request.resource.data.question.size() <= 500
-                    && request.resource.data.reply is string
-                    && request.resource.data.reply.size() <= 800;
-
-      allow update: if false;
-      allow delete: if false;
-    }
+    // Hinweis: die fruehere "SUPPORT-CHAT-PROTOKOLL"-Regel fuer
+    // support_chat_log/{logId} wurde entfernt, weil der KI-Support-Bot
+    // selbst vollstaendig aus der Website entfernt wurde (siehe
+    // scripts/support/support.js) - kein Code schreibt mehr in diese
+    // Collection. supportReports/{reportId} (das unabhaengige "Fehler
+    // melden"-Formular) bleibt unveraendert bestehen, siehe oben.
 
     // ---------------------------------------------
     // COMMUNITY-BOSS

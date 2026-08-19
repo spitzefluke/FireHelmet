@@ -53,10 +53,6 @@ function changePage(pageID) {
     updateCharactersPage(pageID);
   }
 
-  if (typeof updateSupportPage === "function") {
-    updateSupportPage(pageID);
-  }
-
   if (typeof updateLoginPage === "function") {
     updateLoginPage(pageID);
   }
