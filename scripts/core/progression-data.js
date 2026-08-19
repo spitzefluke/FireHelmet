@@ -29,7 +29,13 @@
    damit beliebig weit skalierbar, ohne dass jemand von Hand weitere
    Level ergaenzen muss.
 ------------------------------------------------------ */
-const PROGRESSION_MAX_LEVEL = 80;
+// EINZIGE Stelle, die das maximale Level festlegt - Levelanzeige,
+// XP-Balken, Level-Up, der persoenliche Levelpfad (scripts/core/
+// level-path.js) und LEVEL_REWARDS unten lesen ausschliesslich diese
+// Konstante, nirgendwo ist "50" ein zweites Mal hartcodiert. Ein
+// spaeteres Erhoehen ist damit ein Einzeiler hier plus neue Eintraege
+// in LEVEL_REWARDS - keine weiteren Codeaenderungen noetig.
+const PROGRESSION_MAX_LEVEL = 50;
 
 function xpRequiredForLevel(level) {
   if (level <= 1) return 0;
@@ -61,10 +67,9 @@ const LEVEL_REWARDS = {
   35: { type: "coins", amount: 300 },
   40: { type: "temporary_avatar", avatarId: "level-40-sturmreiter", durationDays: 3 },
   45: { type: "coins", amount: 350 },
+  // Level 50 ist das aktuelle Maximum (PROGRESSION_MAX_LEVEL) - bewusst
+  // die groesste Einzelbelohnung als Abschluss der persoenlichen Reise.
   50: { type: "avatar", avatarId: "level-50-legende" },
-  60: { type: "coins", amount: 450 },
-  70: { type: "coins", amount: 500 },
-  80: { type: "avatar", avatarId: "level-80-flitzpiepen-ikone" },
 };
 
 /* ------------------------------------------------------
