@@ -321,48 +321,144 @@ function drawGlowEyes(offsets, glowColor, size) {
   bossCtx.shadowBlur = 0;
 }
 
+/* ------------------------------------------------------
+   KLEINE DETAIL-HELFER (wiederverwendet von allen vier Bossen)
+   Runde Punkte fuer Saugnaepfe/Knoepfe/Nieten, kurze Linien fuer
+   Narben/Naehte - bewusst winzig und billig zu zeichnen (keine
+   Farbverlaeufe/Schatten), damit sie bei 320x320px Buehnengroesse
+   die Silhouette praezisieren statt zu Bildrauschen zu werden.
+------------------------------------------------------ */
+function drawDot(ctx, x, y, r, color) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawScarLine(ctx, x1, y1, x2, y2, color, width) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
 function drawKraken(time, boss) {
   const ctx = bossCtx;
 
-  // Tentakel, jeder mit eigener Wellenbewegung
+  // Tentakel, jeder mit eigener Wellenbewegung - jetzt mit
+  // Saugnapf-Reihen auf der Unterseite fuer mehr organische Detailtiefe
   for (let i = 0; i < 6; i++) {
     const angle = (Math.PI / 5) * (i - 2.5);
     const wave = Math.sin(time / 500 + i) * 18;
+    const endX = Math.sin(angle) * 60 + wave * 1.6;
+    const endY = 175 + Math.abs(wave) * 0.3;
+    const midX = Math.sin(angle) * 90 + wave;
+    const midY = 110;
+    const startX = Math.sin(angle) * 30;
+
     ctx.strokeStyle = boss.color;
     ctx.lineWidth = 13 - i * 0.6;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(Math.sin(angle) * 30, 40);
-    ctx.quadraticCurveTo(
-      Math.sin(angle) * 90 + wave, 110,
-      Math.sin(angle) * 60 + wave * 1.6, 175 + Math.abs(wave) * 0.3
-    );
+    ctx.moveTo(startX, 40);
+    ctx.quadraticCurveTo(midX, midY, endX, endY);
     ctx.stroke();
+
+    // Saugnaepfe entlang der Tentakel-Mitte (nur bei den 4 vorderen,
+    // hinterste 2 bleiben glatt im Hintergrund - vermeidet Ueberladung)
+    if (i >= 1 && i <= 4) {
+      for (let s = 0.3; s < 0.95; s += 0.16) {
+        const sx = startX + (midX - startX) * s + (endX - midX) * Math.max(0, s - 0.5);
+        const sy = 40 + (midY - 40) * s + (endY - midY) * Math.max(0, s - 0.5);
+        drawDot(ctx, sx, sy, 2.2 - s, "rgba(20,8,3,.55)");
+      }
+    }
   }
 
-  // Kopf/Mantel
+  // Kopf/Mantel - mit Rand-Rimlight fuer mehr Tiefe statt flachem Verlauf
   const grad = ctx.createRadialGradient(-20, -30, 10, 0, 0, 100);
   grad.addColorStop(0, "#c2601f");
-  grad.addColorStop(1, boss.color);
+  grad.addColorStop(0.7, boss.color);
+  grad.addColorStop(1, "#2a1206");
   ctx.fillStyle = grad;
   ctx.beginPath();
   ctx.ellipse(0, -20, 85, 70, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Warzige Haut-Textur: unregelmaessige dunkle Flecken auf dem Mantel
+  const bumps = [[-45, -45], [-20, -60], [15, -55], [40, -35], [-35, -5], [30, 5], [0, -75]];
+  bumps.forEach(([bx, by], i) => {
+    drawDot(ctx, bx, by, 5 - (i % 3), "rgba(30,12,4,.35)");
+  });
+
+  // Brauenwulst ueber den Augen - macht den Blick finsterer statt neutral
+  ctx.strokeStyle = "rgba(20,8,3,.6)";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-42, -42);
+  ctx.quadraticCurveTo(-28, -50, -14, -42);
+  ctx.moveTo(14, -42);
+  ctx.quadraticCurveTo(28, -50, 42, -42);
+  ctx.stroke();
+
   drawGlowEyes([[-28, -30], [28, -30]], "rgba(255,80,60,.95)", 11);
 
-  // Pupillen
+  // Schlitzpupillen statt runder Punkte - deutlich bedrohlicher
   ctx.fillStyle = "#1a0a05";
+  ctx.save();
+  ctx.translate(-28, -30);
+  ctx.scale(0.4, 1.3);
   ctx.beginPath();
-  ctx.arc(-28, -30, 4, 0, Math.PI * 2);
-  ctx.arc(28, -30, 4, 0, Math.PI * 2);
+  ctx.arc(0, 0, 4, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.translate(28, -30);
+  ctx.scale(0.4, 1.3);
+  ctx.beginPath();
+  ctx.arc(0, 0, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Hakenschnabel unter den Augen (Kraken-typisches Merkmal, bisher fehlte
+  // jede Mund-/Kieferandeutung komplett) - spitz nach unten statt rund,
+  // damit er nicht wie ein Laecheln wirkt
+  ctx.fillStyle = "#150a08";
+  ctx.beginPath();
+  ctx.moveTo(-16, -12);
+  ctx.lineTo(0, 10);
+  ctx.lineTo(16, -12);
+  ctx.quadraticCurveTo(0, -20, -16, -12);
+  ctx.closePath();
+  ctx.fill();
+
+  // Alte Narbe quer ueber den Mantel - individuelles Wiedererkennungsmerkmal
+  drawScarLine(ctx, -50, -20, -20, 10, "rgba(15,6,2,.5)", 3);
+  drawScarLine(ctx, -38, -6, -30, 16, "rgba(15,6,2,.5)", 2.5);
 }
 
 function drawStormDemon(time, boss) {
   const ctx = bossCtx;
 
-  // Wirbelnder Sturm-Körper (mehrere rotierende, versetzte Ellipsen)
+  // Umhang-Silhouette: eine dunklere, in sich geschlossene Robenform
+  // HINTER dem Wirbel, damit eine humanoide Gestalt im Sturm erkennbar
+  // wird statt nur loser Ringe (Punkt "geheimnisvolle Elemente")
+  const cloakSway = Math.sin(time / 900) * 8;
+  ctx.fillStyle = "rgba(4, 9, 18, .8)";
+  ctx.beginPath();
+  ctx.moveTo(-58, -70);
+  ctx.quadraticCurveTo(-90 + cloakSway * 0.4, 40, -70 + cloakSway, 130);
+  ctx.quadraticCurveTo(0, 150, 70 - cloakSway, 130);
+  ctx.quadraticCurveTo(90 - cloakSway * 0.4, 40, 58, -70);
+  ctx.quadraticCurveTo(0, -95, -58, -70);
+  ctx.closePath();
+  ctx.fill();
+
+  // Wirbelnder Sturm-Koerper (mehrere rotierende, versetzte Ellipsen)
   for (let i = 0; i < 5; i++) {
     const t = time / 600 + i * 0.7;
     const ringY = -60 + i * 30;
@@ -373,6 +469,41 @@ function drawStormDemon(time, boss) {
     ctx.fill();
   }
 
+  // Zerfetzter Umhang-Saum unten - lose Fetzen statt glatter Kante
+  ctx.strokeStyle = "rgba(8, 16, 28, .7)";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  for (let i = -3; i <= 3; i++) {
+    const fx = i * 20 + cloakSway * 0.5;
+    const fLen = 14 + Math.abs(Math.sin(time / 700 + i)) * 10;
+    ctx.beginPath();
+    ctx.moveTo(fx, 118);
+    ctx.lineTo(fx + Math.sin(time / 600 + i) * 6, 118 + fLen);
+    ctx.stroke();
+  }
+
+  // Kapuzen-Schatten um das Gesicht - grenzt den Kopf klarer vom Wirbel ab
+  const hoodGrad = ctx.createRadialGradient(0, -25, 5, 0, -25, 55);
+  hoodGrad.addColorStop(0, "rgba(10,18,30,0)");
+  hoodGrad.addColorStop(0.75, "rgba(10,18,30,0)");
+  hoodGrad.addColorStop(1, "rgba(5,10,18,.6)");
+  ctx.fillStyle = hoodGrad;
+  ctx.beginPath();
+  ctx.arc(0, -25, 55, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Zornige Brauen ueber den Augen - schraeg nach innen, statt eines
+  // neutralen/ueberraschten Blicks
+  ctx.strokeStyle = "rgba(200,225,255,.55)";
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-34, -34);
+  ctx.lineTo(-12, -26);
+  ctx.moveTo(34, -34);
+  ctx.lineTo(12, -26);
+  ctx.stroke();
+
   drawGlowEyes([[-22, -20], [22, -20]], "rgba(255,255,255,.95)", 10);
   ctx.fillStyle = "#0a1520";
   ctx.beginPath();
@@ -380,7 +511,18 @@ function drawStormDemon(time, boss) {
   ctx.arc(22, -20, 4, 0, Math.PI * 2);
   ctx.fill();
 
-  // Blitz-Krone oben
+  // Rissiger Blitz-Mund statt gesichtsloser Leere - breiter und dunkler
+  // konturiert fuer bessere Erkennbarkeit
+  ctx.strokeStyle = "rgba(210,232,255,.9)";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(-16, 2);
+  ctx.lineTo(-6, 10);
+  ctx.lineTo(2, 3);
+  ctx.lineTo(14, 11);
+  ctx.stroke();
+
+  // Blitz-Krone oben - jetzt verzweigt statt ein einzelner Zickzack
   ctx.strokeStyle = "rgba(220,235,255,.9)";
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -388,12 +530,47 @@ function drawStormDemon(time, boss) {
   ctx.lineTo(5, -80);
   ctx.lineTo(-5, -78);
   ctx.lineTo(10, -55);
+  ctx.moveTo(2, -85);
+  ctx.lineTo(18, -72);
+  ctx.stroke();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "rgba(220,235,255,.5)";
+  ctx.beginPath();
+  ctx.moveTo(-5, -78);
+  ctx.lineTo(-16, -66);
   ctx.stroke();
 }
 
+/* ------------------------------------------------------
+   KAPITÄN BLACKGOLD - staerkster Detail-Fokus, da einziger echt
+   humanoider Piraten-Kapitaen der vier Bosse: Totenschaedel mit
+   Augenhoehlen/Riss/Kiefer, Mantel mit Revers/Knoepfen/Epauletten/
+   Schaerpe, Dreispitz mit Band+Totenkopf-Abzeichen+Feder, Saebel.
+------------------------------------------------------ */
 function drawGhostCaptain(time, boss) {
   const ctx = bossCtx;
   const flicker = 0.85 + Math.sin(time / 250) * 0.15;
+
+  // Saebel an der Seite (Waffe/Ausruestungsdetail) - hinter dem Mantel,
+  // damit er wie am Guertel getragen wirkt
+  ctx.save();
+  ctx.translate(48, 20);
+  ctx.rotate(0.5);
+  const bladeGrad = ctx.createLinearGradient(0, 0, 0, 70);
+  bladeGrad.addColorStop(0, "rgba(210,215,225,.85)");
+  bladeGrad.addColorStop(1, "rgba(120,130,145,.6)");
+  ctx.fillStyle = bladeGrad;
+  ctx.beginPath();
+  ctx.moveTo(-4, 0);
+  ctx.quadraticCurveTo(10, 35, -2, 68);
+  ctx.lineTo(-8, 66);
+  ctx.quadraticCurveTo(2, 33, -10, 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#c9a227";
+  ctx.fillRect(-12, -6, 16, 6);
+  drawDot(ctx, -4, -8, 4, "#c9a227");
+  ctx.restore();
 
   // Wallender Geister-Mantel
   ctx.fillStyle = `rgba(59, 36, 21, ${flicker})`;
@@ -409,6 +586,63 @@ function drawGhostCaptain(time, boss) {
   ctx.closePath();
   ctx.fill();
 
+  // Zerschlissener Mantelsaum - kleine Kerben/Risse statt glatter Kontur
+  ctx.strokeStyle = `rgba(30, 16, 8, ${flicker})`;
+  ctx.lineWidth = 2;
+  for (let i = 0; i <= 6; i++) {
+    const x = -70 + i * (140 / 6);
+    const y = 90 + Math.sin(time / 400 + i) * 12;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + (i % 2 ? 4 : -4), y - 8);
+    ctx.stroke();
+  }
+
+  // Revers (Mantel-Kragenaufschlaege) - gibt der Brust eine echte
+  // Kleidungsform statt einer glatten Flaeche
+  ctx.fillStyle = `rgba(40, 22, 12, ${flicker})`;
+  ctx.beginPath();
+  ctx.moveTo(0, -22);
+  ctx.lineTo(-26, 24);
+  ctx.lineTo(-8, 30);
+  ctx.lineTo(0, -6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(0, -22);
+  ctx.lineTo(26, 24);
+  ctx.lineTo(8, 30);
+  ctx.lineTo(0, -6);
+  ctx.closePath();
+  ctx.fill();
+
+  // Goldene Knopfreihe die Mitte hinunter
+  for (let i = 0; i < 4; i++) {
+    drawDot(ctx, 0, -2 + i * 12, 2.4, `rgba(201,162,39,${flicker})`);
+  }
+
+  // Schaerpe diagonal ueber die Brust - klassisches Kapitaens-Detail
+  ctx.strokeStyle = `rgba(124, 45, 18, ${flicker * 0.9})`;
+  ctx.lineWidth = 10;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-32, -30);
+  ctx.lineTo(24, 34);
+  ctx.stroke();
+  // Abzeichen an der Schaerpe (kleines Medaillon)
+  ctx.save();
+  ctx.translate(-4, 2);
+  drawDot(ctx, 0, 0, 7, `rgba(201,162,39,${flicker})`);
+  drawDot(ctx, 0, 0, 3.5, "rgba(30,16,8,.8)");
+  ctx.restore();
+
+  // Epauletten auf den Schultern - goldfarben statt mantelbraun, sonst
+  // gehen sie farblich im Mantel unter
+  drawDot(ctx, -48, -14, 8, `rgba(201,162,39,${flicker * 0.85})`);
+  drawDot(ctx, 48, -14, 8, `rgba(201,162,39,${flicker * 0.85})`);
+  drawDot(ctx, -48, -14, 3.5, `rgba(40,22,12,${flicker})`);
+  drawDot(ctx, 48, -14, 3.5, `rgba(40,22,12,${flicker})`);
+
   // Dreispitz-Hut
   ctx.fillStyle = "#1c1006";
   ctx.beginPath();
@@ -417,14 +651,58 @@ function drawGhostCaptain(time, boss) {
   ctx.quadraticCurveTo(0, -70, -55, -55);
   ctx.fill();
 
+  // Hutband mit Totenkopf-Abzeichen statt schmuckloser Krempe
+  ctx.strokeStyle = "rgba(90,60,25,.9)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(-38, -58);
+  ctx.quadraticCurveTo(0, -68, 38, -58);
+  ctx.stroke();
+  drawDot(ctx, 0, -63, 5, "rgba(230,225,210,.9)");
+  drawDot(ctx, -2, -64, 1, "#1a0a05");
+  drawDot(ctx, 2, -64, 1, "#1a0a05");
+
+  // Zerzauste Feder am Hut
+  ctx.strokeStyle = "rgba(120,255,170,.5)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(45, -68);
+  ctx.quadraticCurveTo(60, -80, 52, -95);
+  ctx.stroke();
+
   // Totenkopf-Gesicht
   ctx.fillStyle = `rgba(230,225,210,${flicker})`;
   ctx.beginPath();
   ctx.arc(0, -25, 34, 0, Math.PI * 2);
   ctx.fill();
 
+  // Wangenknochen-Schatten fuer echte Gesichtstiefe statt einer flachen
+  // Scheibe - dunklere Vertiefungen unter den Augenhoehlen
+  ctx.fillStyle = "rgba(90,80,68,.7)";
+  ctx.beginPath();
+  ctx.ellipse(-18, -14, 9, 6, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(18, -14, 9, 6, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Augenhoehlen (dunkle Vertiefung hinter dem Glow, macht die Augen zu
+  // echten Hoehlen statt schwebenden Punkten)
+  ctx.fillStyle = "rgba(15,8,4,.75)";
+  ctx.beginPath();
+  ctx.ellipse(-13, -28, 11, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(13, -28, 11, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
   drawGlowEyes([[-13, -28], [13, -28]], "rgba(120,255,170,.95)", 8);
 
+  // Sprung ueber den Schaedel - individuelles Narbenmerkmal
+  drawScarLine(ctx, -22, -48, -6, -18, "rgba(90,80,68,.6)", 2);
+  drawScarLine(ctx, -14, -34, -18, -22, "rgba(90,80,68,.6)", 1.5);
+
+  // Nasenhoehle
   ctx.fillStyle = "#1a0a05";
   ctx.beginPath();
   ctx.moveTo(0, -18);
@@ -432,12 +710,26 @@ function drawGhostCaptain(time, boss) {
   ctx.lineTo(5, -5);
   ctx.closePath();
   ctx.fill();
+
+  // Kiefer mit erkennbaren Zahnluecken statt einer glatten Linie
+  ctx.strokeStyle = "rgba(120,110,95,.7)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-16, 4);
+  ctx.lineTo(16, 4);
+  ctx.stroke();
+  for (let i = -3; i <= 3; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * 5, 4);
+    ctx.lineTo(i * 5, 9);
+    ctx.stroke();
+  }
 }
 
 function drawSeaSerpent(time, boss) {
   const ctx = bossCtx;
 
-  // Geschwungener Körper aus Segmenten
+  // Geschwungener Koerper aus Segmenten
   ctx.strokeStyle = boss.color;
   ctx.lineWidth = 34;
   ctx.lineCap = "round";
@@ -464,6 +756,35 @@ function drawSeaSerpent(time, boss) {
   }
   ctx.stroke();
 
+  // Einzelne Schuppen-Boegen quer zum Koerper (statt nur einer
+  // Laengs-Highlight-Linie) - echte Schuppenstruktur statt glatter Haut
+  ctx.strokeStyle = "rgba(0,0,0,.18)";
+  ctx.lineWidth = 1.5;
+  for (let i = 4; i <= 56; i += 6) {
+    const t = i / 60;
+    const x = -110 + t * 220;
+    const y = Math.sin(t * Math.PI * 2.4 + time / 500) * 45;
+    ctx.beginPath();
+    ctx.arc(x, y, 9, Math.PI * 0.15, Math.PI * 0.85);
+    ctx.stroke();
+  }
+
+  // Rueckenkamm-Zacken entlang des Koerpers - deutlich gefaehrlicheres
+  // Profil statt einer glatten Wurst-Silhouette
+  ctx.fillStyle = boss.color;
+  for (let i = 6; i <= 54; i += 8) {
+    const t = i / 60;
+    const x = -110 + t * 220;
+    const y = Math.sin(t * Math.PI * 2.4 + time / 500) * 45;
+    const spikeH = 12 + Math.sin(t * 6) * 3;
+    ctx.beginPath();
+    ctx.moveTo(x - 6, y - 12);
+    ctx.lineTo(x, y - 12 - spikeH);
+    ctx.lineTo(x + 6, y - 12);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   // Kopf am vorderen Ende
   const headX = 110;
   const headY = Math.sin(2.4 * Math.PI + time / 500) * 45;
@@ -472,7 +793,30 @@ function drawSeaSerpent(time, boss) {
   ctx.ellipse(headX, headY, 30, 22, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Kiefer-/Brauenkontur - schaerferer, reptilischerer Kopf statt eines
+  // einfachen Ovals
+  ctx.strokeStyle = "rgba(0,0,0,.3)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(headX - 18, headY - 14);
+  ctx.quadraticCurveTo(headX + 4, headY - 22, headX + 26, headY - 10);
+  ctx.stroke();
+
+  // Nuestern
+  drawDot(ctx, headX + 22, headY - 4, 1.8, "rgba(0,0,0,.45)");
+
   drawGlowEyes([[headX + 8, headY - 8]], "rgba(255,220,60,.95)", 6);
+
+  // Reisszaehne im Ober-/Unterkiefer statt keiner Bezahnung
+  ctx.fillStyle = "rgba(255,250,235,.9)";
+  [[headX + 18, headY + 6], [headX + 26, headY + 8], [headX + 20, headY + 12]].forEach(([tx, ty]) => {
+    ctx.beginPath();
+    ctx.moveTo(tx - 2, ty - 4);
+    ctx.lineTo(tx + 2, ty - 4);
+    ctx.lineTo(tx, ty + 3);
+    ctx.closePath();
+    ctx.fill();
+  });
 
   // gespaltene Zunge
   ctx.strokeStyle = "#ff5d5d";
