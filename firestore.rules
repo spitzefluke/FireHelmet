@@ -55,8 +55,6 @@
    - site_meta/{docId}          Technischer Zustand (z.B. zuletzt an
                                  Discord gesendeter Update-Text-Hash,
                                  siehe scripts/core/discord-notify.js)
-   - support_chat_log/{autoId}  KI-Support-Chatverlauf (nie vom Client
-                                 gelesen)
    - community_boss/{monthId}   EIN gemeinsames Community-Dokument
    - community_boss_damage/{monthId_uid}  Schaden PRO Spieler
    - site_ratings/{autoId}      einzelne Bewertungen (schreibgeschuetzt)
@@ -297,7 +295,10 @@ service cloud.firestore {
              && (!('totalCurrencyEarned' in data)
                  || (data.totalCurrencyEarned is int
                      && data.totalCurrencyEarned >= 0
-                     && data.totalCurrencyEarned <= oldNum('totalCurrencyEarned') + 500));
+                     // Siehe Kommentar bei validShopFields() oben -
+                     // derselbe Grund (Spielothek-Jackpot bis 3000),
+                     // dieselbe neue Obergrenze.
+                     && data.totalCurrencyEarned <= oldNum('totalCurrencyEarned') + 3000));
     }
 
     // Liest players/{playerId}.dailyQuests.claimedDays aus dem
@@ -426,7 +427,15 @@ service cloud.firestore {
       return (!('currency' in data)
               || (data.currency is int
                   && data.currency >= 0
-                  && data.currency <= oldNum('currency') + 500))
+                  // War frueher +500 (groesste Einzelbelohnung: der
+                  // legendaere Schatzrad-Gewinn coins-500). Jetzt +3000,
+                  // weil die Spielothek-Slotmaschine (scripts/spielothek/
+                  // games/slot.js, SLOT_TRIPLE_REWARDS.fire) einen
+                  // JACKPOT von 3000 Dublonen auszahlen kann - selten
+                  // (rechnerisch ca. 1:70.000, siehe Kommentar dort),
+                  // aber ein einzelner Schreibvorgang muss diesen echten
+                  // Hoechstwert trotzdem durchlassen koennen.
+                  && data.currency <= oldNum('currency') + 3000))
              && (!('ownedShopItems' in data)
                  || (data.ownedShopItems is list && data.ownedShopItems.size() <= 40))
              && (!('equippedFrame' in data)
@@ -539,6 +548,22 @@ service cloud.firestore {
                   && newData.tempAvatarExpiresAt <= request.time.toMillis() + 280800000));
     }
 
+    // Spielothek-Cooldown zwischen zwei Spielrunden (Auftrag "Wartezeit
+    // zwischen den Drehungen") - EXAKT dasselbe Muster wie
+    // validWheelFields() oben (lastWheelSpinAt), nur mit kurzer statt
+    // langer Sperrzeit. Nur ueber "update" erreichbar (siehe "allow
+    // create" unten: dort wird das Feld komplett verboten statt
+    // validiert, genau wie bei lastWheelSpinAt/tempAvatarExpiresAt) -
+    // "resource" ist deshalb hier garantiert nie null, kein
+    // zusaetzlicher Schutz noetig. 4000ms MUSS mit
+    // SPIELOTHEK_COOLDOWN_MS in scripts/spielothek/spielothek-data.js
+    // synchron bleiben - dort geaendert? Hier ebenfalls anpassen.
+    function validSpielothekCooldown(newData) {
+      return !('lastSpielothekPlayAt' in newData)
+          || !('lastSpielothekPlayAt' in resource.data)
+          || request.time.toMillis() - resource.data.lastSpielothekPlayAt.toMillis() >= 4000;
+    }
+
     // ---------------------------------------------
     // XP / LEVEL / PIRATENPASS / EINMAL-BELOHNUNGEN (NEU)
     // Siehe scripts/core/progression.js/progression-data.js. Level
@@ -587,6 +612,12 @@ service cloud.firestore {
                     // dort) einfach komplett verbieten statt validieren.
                     && !('lastWheelSpinAt' in request.resource.data)
                     && !('tempAvatarExpiresAt' in request.resource.data)
+                    // Genau wie lastWheelSpinAt direkt darueber: bei einer
+                    // ECHTEN Neuanlage nie noetig (playSpielothekGame()
+                    // setzt voraus, dass schon genug Dublonen vorhanden
+                    // sind, das Dokument also laengst existiert) - komplett
+                    // verbieten statt validieren.
+                    && !('lastSpielothekPlayAt' in request.resource.data)
                     && (!('streak' in request.resource.data)
                         || (request.resource.data.streak is int && request.resource.data.streak <= 1))
                     && (!('codesCracked' in request.resource.data)
@@ -625,6 +656,7 @@ service cloud.firestore {
                     && validDailyQuestsWrite(request.resource.data)
                     && validCodeRedemption(request.resource.data)
                     && validWheelFields(request.resource.data)
+                    && validSpielothekCooldown(request.resource.data)
                     && (!('streak' in request.resource.data)
                         || (request.resource.data.streak is int
                             && request.resource.data.streak <= oldNum('streak') + 1))
@@ -736,24 +768,12 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ---------------------------------------------
-    // SUPPORT-CHAT-PROTOKOLL (fuer die KI-Antworten)
-    // Genau wie supportReports: jeder darf einen Eintrag
-    // anlegen, aber niemand darf fremde Chatverlaeufe lesen -
-    // nur der Betreiber sieht sie in der Firebase Console.
-    // ---------------------------------------------
-    match /support_chat_log/{logId} {
-      allow read: if false;
-
-      allow create: if isSignedIn()
-                    && request.resource.data.question is string
-                    && request.resource.data.question.size() <= 500
-                    && request.resource.data.reply is string
-                    && request.resource.data.reply.size() <= 800;
-
-      allow update: if false;
-      allow delete: if false;
-    }
+    // Hinweis: die fruehere "SUPPORT-CHAT-PROTOKOLL"-Regel fuer
+    // support_chat_log/{logId} wurde entfernt, weil der KI-Support-Bot
+    // selbst vollstaendig aus der Website entfernt wurde (siehe
+    // scripts/support/support.js) - kein Code schreibt mehr in diese
+    // Collection. supportReports/{reportId} (das unabhaengige "Fehler
+    // melden"-Formular) bleibt unveraendert bestehen, siehe oben.
 
     // ---------------------------------------------
     // COMMUNITY-BOSS

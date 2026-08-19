@@ -63,6 +63,22 @@ const SPIELOTHEK_GAMES = [
    normale Sprachsystem übersetzbar, siehe scripts/core/i18n.js
    ("spielothek.andiIdleN" / "andiWinN" / "andiLoseN").
 ------------------------------------------------------ */
-const ANDII_IDLE_QUOTE_COUNT = 6;
+const ANDII_IDLE_QUOTE_COUNT = 7;
 const ANDII_WIN_QUOTE_COUNT = 3;
+const ANDII_WIN_BIG_QUOTE_COUNT = 3;
+const ANDII_WIN_JACKPOT_QUOTE_COUNT = 3;
 const ANDII_LOSE_QUOTE_COUNT = 20;
+const ANDII_COOLDOWN_QUOTE_COUNT = 8;
+
+/* ------------------------------------------------------
+   COOLDOWN ZWISCHEN ZWEI SPIELRUNDEN (Auftrag Punkt 1-3)
+   ---------------------------------------------------
+   Rein die ANZEIGE-Dauer - die tatsaechliche, serverseitig
+   erzwungene Sperre steht in firestore.rules (validSpielothekCooldown()),
+   siehe ausfuehrlicher Kommentar dort. Beide MUESSEN uebereinstimmen,
+   sonst wuerde entweder der Button zu frueh wieder aktiv (Server lehnt
+   dann trotzdem ab) oder zu spaet (unnoetig lange Wartezeit). Zentrale,
+   leicht anpassbare Stelle - siehe Auftrag Punkt 1: "soll spaeter
+   leicht anpassbar sein".
+------------------------------------------------------ */
+const SPIELOTHEK_COOLDOWN_MS = 4000;
