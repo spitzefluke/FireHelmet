@@ -30,6 +30,37 @@ function loginWithTwitch() {
   window.location.href = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
 }
 
+/* ------------------------------------------------------
+   NAMEN IN FIRESTORE NACHTRAGEN (Twitch/Discord)
+   ---------------------------------------------------
+   fetchTwitchUser()/fetchDiscordUser() setzten den Anzeigenamen
+   bisher NUR in localStorage (fuer die Anzeige), schrieben ihn aber
+   nie nach players/{uid} in Firestore - anders als die anonyme
+   Anmeldung, die dafuer bereits savePlayerData() aufruft (siehe
+   saveNickname() weiter unten in dieser Datei). firestore.rules
+   verlangt ueber validNickname() aber bei JEDEM players/{uid}-
+   Schreibvorgang ein vorhandenes nickname-Feld im Dokument - auch
+   bei Schreibvorgaengen, die mit dem Namen selbst gar nichts zu tun
+   haben (Spielothek-Einsatz, Schatzrad-Drehung, Wochenrennen, ...).
+   Ohne diesen Nachtrag schlugen dadurch ALLE Firestore-Schreib-
+   vorgaenge eines per Twitch/Discord angemeldeten Spielers mit
+   "permission-denied" fehl, sobald sein players/{uid}-Dokument noch
+   kein nickname-Feld hatte (genau der gemeldete Fehler in
+   spielothek.js). Wird sowohl direkt nach einem frischen Login als
+   auch einmalig beim Laden aufgerufen (deckt auch bereits betroffene,
+   laengst eingeloggte Sitzungen ab) - savePlayerData() ist ueber
+   merge:true idempotent, ein wiederholter Aufruf mit demselben Namen
+   aendert nichts.
+------------------------------------------------------ */
+function ensureOAuthNicknamePersisted() {
+  const provider = localStorage.getItem("loginProvider") || "";
+  const nickname = localStorage.getItem("wheelNickname") || "";
+  if ((provider !== "twitch" && provider !== "discord") || !nickname) return;
+  if (typeof savePlayerData === "function") {
+    savePlayerData({ nickname });
+  }
+}
+
 function logoutTwitch() {
   localStorage.removeItem("twitchToken");
   localStorage.removeItem("twitchAvatar");
@@ -63,6 +94,7 @@ function fetchTwitchUser(token) {
       localStorage.setItem("wheelNickname", user.display_name);
       localStorage.setItem("twitchAvatar", user.profile_image_url);
       localStorage.setItem("loginProvider", "twitch");
+      ensureOAuthNicknamePersisted();
 
       refreshTwitchLoginUI();
       if (typeof refreshWheelStatus === "function") refreshWheelStatus();
@@ -145,6 +177,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
   handleTwitchRedirect();
   refreshTwitchLoginUI();
+
+  // Heilt bereits laengst eingeloggte Sitzungen (Twitch/Discord), deren
+  // players/{uid}-Dokument das nickname-Feld noch nie bekommen hat -
+  // siehe ausfuehrlicher Kommentar bei ensureOAuthNicknamePersisted()
+  // weiter oben in dieser Datei.
+  ensureOAuthNicknamePersisted();
 });
 
 /* ------------------------------------------------------

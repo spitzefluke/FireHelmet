@@ -60,6 +60,7 @@ function fetchDiscordUser(token) {
       localStorage.setItem("wheelNickname", displayName);
       localStorage.setItem("discordAvatar", avatarUrl);
       localStorage.setItem("loginProvider", "discord");
+      if (typeof ensureOAuthNicknamePersisted === "function") ensureOAuthNicknamePersisted();
 
       refreshTwitchLoginUI();
       if (typeof refreshWheelStatus === "function") refreshWheelStatus();
