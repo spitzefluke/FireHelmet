@@ -9061,49 +9061,8 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   transform: translateY(-1px);
 }
 
-/* ---- Piratenpass-Teaser (hinter dem "???"-Countdown) ---- */
-.pass-teaser {
-  margin-top: 22px;
-}
-
-.pass-teaser-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  margin: 0 auto;
-  padding: 12px 28px;
-  background: var(--fh-surface-light);
-  border: 1px solid rgba(240,201,106,.35);
-  border-radius: var(--fh-radius);
-  color: inherit;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color .2s, transform .15s;
-}
-
-.pass-teaser-btn:hover {
-  border-color: var(--fh-gold-bright);
-  transform: translateY(-2px);
-}
-
-.pass-teaser-title {
-  font-family: var(--fh-font-display);
-  letter-spacing: .08em;
-  font-size: 14px;
-  color: var(--fh-gold-bright);
-}
-
-.pass-teaser-sub {
-  font-size: 13px;
-  color: var(--fh-muted-fg);
-}
-
-.pass-teaser-btn-ended .pass-teaser-sub {
-  color: var(--fh-danger);
-}
-
-/* ---- Piratenpass-Seite ---- */
+/* ---- Piratenpass (ersetzt den bestehenden "???"-Bereich, siehe
+   #streamraetsel-content in index.html) ---- */
 .pass-page-content {
   max-width: 640px;
 }

@@ -223,6 +223,16 @@ document.addEventListener("click", () => {
 
 /* ------------------------------------------------------
    INHALT NACH DER FREISCHALTUNG
+   ---------------------------------------------------
+   Der "???"-Bereich ist der Eingang zum Piratenpass (siehe Auftrag
+   "WICHTIGE KORREKTUR ZUM PIRATENPASS"): sobald der Countdown unten
+   auf 0 laeuft, wird HIER, an genau dieser Stelle, direkt
+   renderPassPage() (scripts/piratenpass/piratenpass.js) aufgerufen -
+   kein eigener Menüpunkt, keine eigene Seite, kein zweiter,
+   unabhaengiger Countdown. renderStreamRaetselContent() (der
+   urspruengliche, nie mit echtem Inhalt befuellte Platzhalter-Text
+   aus streamRaetselConfig) bleibt als Rueckfallebene erhalten, falls
+   piratenpass.js aus irgendeinem Grund nicht geladen ist.
 ------------------------------------------------------ */
 function renderStreamRaetselContent() {
   const contentEl = document.getElementById("streamraetsel-content");
@@ -239,28 +249,37 @@ function renderStreamRaetselContent() {
   `;
 }
 
-let streamRaetselContentRendered = false;
-
 /* ------------------------------------------------------
-   COUNTDOWN-ANZEIGE
+   COUNTDOWN-ANZEIGE / UMSCHALTUNG AUF DEN PIRATENPASS
+   ---------------------------------------------------
+   Solange gesperrt: sekuendliches Ticken wie bisher. Sobald
+   freigeschaltet: der Piratenpass zeigt selbst nur einen Tage-
+   Countdown (keine Sekundenanzeige), daher reicht danach ein
+   selteneres Intervall (60s) statt weiterhin sekuendlich neu zu
+   rendern (Auftrag Punkt 25: "keine permanente Polling-Schleife").
+   ensureStreamRaetselInterval() wechselt automatisch zwischen beiden
+   Taktungen, auch WAEHREND die Seite schon offen ist (Countdown
+   laeuft gerade ab, ohne dass neu geladen wird).
 ------------------------------------------------------ */
 function updateStreamRaetselView() {
   const lockedEl = document.getElementById("streamraetsel-locked");
   const contentEl = document.getElementById("streamraetsel-content");
   if (!lockedEl || !contentEl) return;
 
-  if (isStreamRaetselUnlocked()) {
+  const unlocked = isStreamRaetselUnlocked();
+
+  if (unlocked) {
     lockedEl.style.display = "none";
     contentEl.style.display = "block";
 
-    if (!streamRaetselContentRendered) {
+    if (typeof renderPassPage === "function") {
+      renderPassPage();
+    } else {
       renderStreamRaetselContent();
-      streamRaetselContentRendered = true;
     }
 
-    clearInterval(streamRaetselInterval);
-    streamRaetselInterval = null;
     stopStreamRaetselParticles();
+    ensureStreamRaetselInterval(true);
     return;
   }
 
@@ -285,9 +304,20 @@ function updateStreamRaetselView() {
   if (hoursEl) hoursEl.textContent = padTwo(hours);
   if (minutesEl) minutesEl.textContent = padTwo(minutes);
   if (secondsEl) secondsEl.textContent = padTwo(seconds);
+
+  ensureStreamRaetselInterval(false);
 }
 
 let streamRaetselInterval = null;
+let streamRaetselIntervalIsFast = false;
+
+function ensureStreamRaetselInterval(unlocked) {
+  const desiredFast = !unlocked;
+  if (streamRaetselInterval && streamRaetselIntervalIsFast === desiredFast) return;
+  clearInterval(streamRaetselInterval);
+  streamRaetselInterval = setInterval(updateStreamRaetselView, desiredFast ? 1000 : 60000);
+  streamRaetselIntervalIsFast = desiredFast;
+}
 
 /* ------------------------------------------------------
    SEITENWECHSEL-HOOK
@@ -296,12 +326,13 @@ let streamRaetselInterval = null;
    unabhaengig von der Schiffsreparatur (siehe scripts/ship/
    ship-repair.js, Auftrag: Reparatur darf nicht an "???" gekoppelt
    sein). Diese Datei ist wieder alleine fuer ihre eigene Locked-
-   Ansicht + Inhalt zustaendig.
+   Ansicht + Inhalt (inkl. Piratenpass) zustaendig.
 ------------------------------------------------------ */
 function updateStreamRaetselPage(pageID) {
   if (pageID !== "streamraetsel") {
     clearInterval(streamRaetselInterval);
     streamRaetselInterval = null;
+    streamRaetselIntervalIsFast = false;
     stopStreamRaetselParticles();
     stopStreamRaetselMusic();
     return;
@@ -311,7 +342,6 @@ function updateStreamRaetselPage(pageID) {
   updateStreamRaetselView();
 
   if (!isStreamRaetselUnlocked()) {
-    streamRaetselInterval = setInterval(updateStreamRaetselView, 1000);
     startStreamRaetselParticles();
   }
 }

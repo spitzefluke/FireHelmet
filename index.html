@@ -105,7 +105,6 @@
       <a class="fh-nav-item" data-page="race" onclick="changePage('race')" data-i18n="menu.race">🏎️ <span>Wochenrennen</span></a>
       <a class="fh-nav-item" data-page="community-boss" onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 <span>Community-Boss</span></a>
       <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')">❓ <span data-i18n="menu.streamraetselShort">???</span></a>
-      <a class="fh-nav-item" data-page="piratenpass" onclick="changePage('piratenpass')" data-i18n="menu.piratenpass">🏴‍☠️ <span>Piratenpass</span></a>
       <a class="fh-nav-item" data-page="ship-repair" onclick="changePage('ship-repair')" data-i18n="menu.shipRepair">⚒ <span>Repariere das Schiff</span></a>
       <a class="fh-nav-item" data-page="socials" onclick="changePage('socials')" data-i18n="menu.socials">🌐 <span>Socials</span></a>
       <a class="fh-nav-item" data-page="support" onclick="changePage('support')" data-i18n="menu.support">🆘 <span>Support</span></a>
@@ -775,24 +774,15 @@
             <small data-i18n="common.seconds">Sekunden</small>
           </div>
         </div>
-
-        <!-- Piratenpass-Teaser hinter dem "???"-Countdown - befuellt
-             von renderPassTeaser() in scripts/piratenpass/piratenpass.js.
-             Rein additiv (eigenes Element, keine Aenderung an den
-             streamraetsel-*-IDs oben), stoert daher die bestehende
-             updateStreamRaetselView()-Logik nicht. -->
-        <div class="pass-teaser" id="pass-teaser"></div>
       </div>
 
-      <div id="streamraetsel-content" class="streamraetsel-unlocked"></div>
-    </section>
-
-    <!-- =====================
-         PIRATENPASS (eigene Menüseite)
-         Befuellt von renderPassPage() in scripts/piratenpass/piratenpass.js.
-    ===================== -->
-    <section id="piratenpass" class="page">
-      <div class="page-content pass-page-content" id="pass-page-content"></div>
+      <!-- Sobald der Countdown oben abgelaufen ist, ersetzt
+           updateStreamRaetselView() (scripts/streamraetsel/
+           streamraetsel.js) diesen Bereich durch den Piratenpass
+           (renderPassPage() in scripts/piratenpass/piratenpass.js) -
+           kein eigener Menüpunkt, der "???"-Countdown IST der
+           Eingang zum Piratenpass. -->
+      <div id="streamraetsel-content" class="streamraetsel-unlocked pass-page-content"></div>
     </section>
 
     <!-- =====================

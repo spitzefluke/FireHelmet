@@ -5,61 +5,17 @@
    scripts/core/progression-data.js). Nutzt den zentralen Reward-
    Dispatcher claimReward() (scripts/core/progression.js) fuer jede
    Stufen-Belohnung - keine eigene Belohnungslogik.
+
+   KEIN eigener Menüpunkt/keine eigene Seite: der Pass ersetzt den
+   bestehenden "???"-Bereich an genau derselben Stelle, sobald dessen
+   Countdown abgelaufen ist - siehe updateStreamRaetselView() in
+   scripts/streamraetsel/streamraetsel.js, die renderPassPage() unten
+   direkt aufruft. Diese Datei bringt daher absichtlich KEINEN
+   eigenen Seiten-Lebenszyklus-Hook (kein updatePiratenpassPage()) und
+   KEINEN eigenen Countdown-Timer mit - beides uebernimmt die
+   bestehende "???"-Logik.
 ====================================== */
 
-let passTeaserInterval = null;
-
-/* ------------------------------------------------------
-   COUNTDOWN-TEASER (hinter dem "???"-Countdown, siehe index.html
-   #pass-teaser). Rein datumsbasiert, kein Dauer-Polling: die Anzeige
-   wird beim Betreten der Seite einmal berechnet und danach nur alle
-   60s aktualisiert (siehe updatePiratenpassPage() unten) - ein
-   "Tage verbleibend"-Wert braucht keine Sekundenpraezision.
------------------------------------------------------- */
-function renderPassTeaser() {
-  const el = document.getElementById("pass-teaser");
-  if (!el || typeof getCurrentPirateSeason !== "function") return;
-
-  const lang = typeof getCurrentLang === "function" ? getCurrentLang() : "de";
-  const isEn = lang === "en";
-  const active = getCurrentPirateSeason();
-
-  if (active) {
-    const daysLeft = Math.max(0, Math.ceil((new Date(active.endDate).getTime() - Date.now()) / 86400000));
-    const daysLabel = isEn ? (daysLeft === 1 ? "day" : "days") : "Tage";
-    el.innerHTML = `
-      <button type="button" class="pass-teaser-btn" onclick="changePage('piratenpass')">
-        <span class="pass-teaser-title">🏴‍☠️ ${isEn ? "PIRATE PASS" : "PIRATENPASS"}</span>
-        <span class="pass-teaser-sub">${isEn ? "Still" : "Noch"} ${daysLeft} ${daysLabel}</span>
-      </button>
-    `;
-    return;
-  }
-
-  const next = typeof getNextPirateSeason === "function" ? getNextPirateSeason() : null;
-  if (next) {
-    const daysUntil = Math.max(0, Math.ceil((new Date(next.startDate).getTime() - Date.now()) / 86400000));
-    const daysLabel = isEn ? (daysUntil === 1 ? "day" : "days") : "Tage";
-    el.innerHTML = `
-      <button type="button" class="pass-teaser-btn pass-teaser-btn-pending" onclick="changePage('piratenpass')">
-        <span class="pass-teaser-title">🏴‍☠️ ${isEn ? "PIRATE PASS" : "PIRATENPASS"}</span>
-        <span class="pass-teaser-sub">${isEn ? `Starts in ${daysUntil} ${daysLabel}` : `Startet in ${daysUntil} ${daysLabel}`}</span>
-      </button>
-    `;
-    return;
-  }
-
-  el.innerHTML = `
-    <button type="button" class="pass-teaser-btn pass-teaser-btn-ended" onclick="changePage('piratenpass')">
-      <span class="pass-teaser-title">🏴‍☠️ ${isEn ? "PIRATE PASS" : "PIRATENPASS"}</span>
-      <span class="pass-teaser-sub">${isEn ? "Ended" : "Beendet"}</span>
-    </button>
-  `;
-}
-
-/* ------------------------------------------------------
-   HAUPTSEITE
------------------------------------------------------- */
 function passStatusEmoji(state) {
   return state === "claimed" ? "🟢" : state === "ready" ? "🟡" : "🔒";
 }
@@ -88,8 +44,13 @@ function passRewardLabel(reward, isEn) {
   }
 }
 
+/* ------------------------------------------------------
+   HAUPTANSICHT - rendert IMMER in #streamraetsel-content (dem
+   bisherigen "??? freigeschaltet"-Bereich), niemals in eine eigene
+   Seite.
+------------------------------------------------------ */
 async function renderPassPage() {
-  const container = document.getElementById("pass-page-content");
+  const container = document.getElementById("streamraetsel-content");
   if (!container || typeof PIRATE_PASSES === "undefined") return;
 
   const lang = typeof getCurrentLang === "function" ? getCurrentLang() : "de";
@@ -99,7 +60,7 @@ async function renderPassPage() {
 
   if (!pass) {
     const next = typeof getNextPirateSeason === "function" ? getNextPirateSeason() : null;
-    const daysUntil = next ? Math.max(0, Math.ceil((new Date(next.startDate).getTime() - Date.now()) / 86400000)) : null;
+    const daysUntil = next ? Math.max(0, Math.ceil((resolvePassDates(next).start.getTime() - Date.now()) / 86400000)) : null;
     container.innerHTML = `
       <h1>🏴‍☠️ ${isEn ? "PIRATE PASS" : "PIRATENPASS"}</h1>
       <p class="pass-empty-state">${
@@ -134,7 +95,8 @@ async function renderPassPage() {
 
   const currentTier = typeof getPassTier === "function" ? getPassTier(passXp, pass) : 0;
   const isEnded = !active;
-  const daysLeft = Math.max(0, Math.ceil((new Date(pass.endDate).getTime() - Date.now()) / 86400000));
+  const { end: passEnd } = resolvePassDates(pass);
+  const daysLeft = Math.max(0, Math.ceil((passEnd.getTime() - Date.now()) / 86400000));
 
   const nextTierXp = currentTier < pass.levels ? passXpRequiredForTier(currentTier + 1) : passXpRequiredForTier(pass.levels);
   const tierBaseXp = passXpRequiredForTier(currentTier);
@@ -166,7 +128,6 @@ async function renderPassPage() {
     `);
   }
 
-  const capReward = pass.rewards[pass.levels];
   const capReached = currentTier >= pass.levels;
 
   container.innerHTML = `
@@ -254,26 +215,3 @@ async function claimPassTier(tier) {
   const result = await claimReward(rewardId, reward);
   if (result.ok) renderPassPage();
 }
-
-/* ------------------------------------------------------
-   SEITEN-LEBENSZYKLUS (siehe changePage() in main.js)
------------------------------------------------------- */
-function updatePiratenpassPage(pageID) {
-  if (pageID === "piratenpass") {
-    renderPassPage();
-  }
-
-  if (pageID === "streamraetsel" || pageID === "piratenpass") {
-    renderPassTeaser();
-    if (!passTeaserInterval) {
-      passTeaserInterval = setInterval(renderPassTeaser, 60000);
-    }
-  } else if (passTeaserInterval) {
-    clearInterval(passTeaserInterval);
-    passTeaserInterval = null;
-  }
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  renderPassTeaser();
-});

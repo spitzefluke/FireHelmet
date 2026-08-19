@@ -125,6 +125,16 @@ const PASS_XP_PER_ACTION = {
    werden, damit Pass-XP-Schreibvorgaenge fuer die neue Saison
    akzeptiert werden - siehe Kommentar dort.
 
+   startDate: entweder ein normales ISO-Datum, ODER das spezielle
+   Schluesselwort "@streamraetsel-unlock" - dann wird das Startdatum
+   zur Laufzeit aus dem BEREITS VORHANDENEN "???"-Countdown
+   uebernommen (getStreamRaetselUnlockDate() in scripts/streamraetsel/
+   streamraetsel.js, siehe resolvePassStartDate() in progression.js) -
+   keine zweite, unabhaengige Datumsquelle. endDate wird IMMER aus
+   startDate + durationDays berechnet, nie fest eingetragen, damit
+   eine spaetere Verschiebung des "???"-Termins (z.B. per Admin-
+   Gateway) automatisch auch die Piratenpass-Saison mitverschiebt.
+
    50 Stufen, XP-Bedarf pro Stufe steigt gleichmaessig (100 XP pro
    Stufe zusaetzlich) - insgesamt 2550 Pass-XP fuer Stufe 50, bei
    einer 2-Monats-Saison ueber taegliche Aktionen gut erreichbar.
@@ -172,8 +182,8 @@ const PIRATE_PASSES = [
   {
     passId: "season1",
     name: "Piratenpass #1",
-    startDate: "2026-08-19T00:00:00",
-    endDate: "2026-10-19T00:00:00",
+    startDate: "@streamraetsel-unlock",
+    durationDays: 61, // ~2 Monate
     levels: 50,
     rewards: buildSeason1PassRewards(),
   },
@@ -182,8 +192,8 @@ const PIRATE_PASSES = [
   // {
   //   passId: "season2",
   //   name: "Piratenpass #2",
-  //   startDate: "2026-10-19T00:00:00",
-  //   endDate: "2026-12-19T00:00:00",
+  //   startDate: "2026-10-19T00:00:00", // normales ISO-Datum
+  //   durationDays: 61,
   //   levels: 50,
   //   rewards: buildSeason2PassRewards(),
   // },
