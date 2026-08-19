@@ -246,8 +246,21 @@ function getRaceTrackLength() {
   const pathEl = document.getElementById("race-track-path");
   if (!pathEl) return 0;
 
-  raceTrackLength = pathEl.getTotalLength();
-  return raceTrackLength;
+  // Der Pfad bekommt sein "d"-Attribut erst durch buildRaceTrack() -
+  // ist das noch nicht geschehen (siehe Kommentar in
+  // loadRaceLeaderboard() fuer den genauen Ablauf, der das
+  // urspruenglich verursacht hat), wirft getTotalLength() einen
+  // InvalidStateError ("path is empty") statt einfach 0
+  // zurueckzugeben. Einmal abgefangen, statt den kompletten
+  // restlichen Rangliste-Render abzubrechen.
+  try {
+    const length = pathEl.getTotalLength();
+    if (!length) return 0;
+    raceTrackLength = length;
+    return raceTrackLength;
+  } catch (err) {
+    return 0;
+  }
 }
 
 const kartMarkup = `
@@ -385,6 +398,13 @@ function positionKart(uid, percent, nickname, colorIndex) {
   if (!pathEl) return;
 
   const length = getRaceTrackLength();
+  // Strecke wurde noch nicht gezeichnet (siehe buildRaceTrack() bzw.
+  // der Aufruf-Absicherung in loadRaceLeaderboard() weiter unten) -
+  // dann gibt es aktuell nichts Sinnvolles zu positionieren. Einzelne
+  // Karts hier zu ueberspringen ist besser als die komplette
+  // forEach-Schleife in renderRaceTrack() per Exception abzubrechen
+  // (das wuerde ALLE nachfolgenden Karts unpositioniert lassen).
+  if (!length) return;
   const clamped = Math.max(0, Math.min(1, percent));
   const point = pathEl.getPointAtLength(clamped * length);
   const lookAhead = pathEl.getPointAtLength(Math.min(length, clamped * length + 2));
@@ -536,6 +556,21 @@ function renderRaceTrack(entries, emptyMessage) {
 }
 
 function loadRaceLeaderboard() {
+  // URSACHE des "path is empty"-Fehlers: addRaceProgress() (wheel.js,
+  // nach jeder Rad-Drehung/jedem geknackten Code) ruft diese Funktion
+  // IMMER auf, damit die Rangliste live aktualisiert ist, falls die
+  // Rennseite gerade offen ist - unabhaengig davon, auf welcher Seite
+  // sich der Spieler gerade befindet. Das Zeichnen der SVG-Strecke
+  // (buildRaceTrack(), setzt das "d"-Attribut von #race-track-path)
+  // lief bisher dagegen NUR beim tatsaechlichen Besuch der Rennseite
+  // (updateRacePage()). Spinnt ein Spieler das Rad, ohne die
+  // Rennseite in dieser Sitzung je geoeffnet zu haben, war die
+  // Strecke beim Rendern also noch nie gezeichnet -> leerer Pfad ->
+  // getPointAtLength() wirft. buildRaceTrack() ist idempotent (baut
+  // pro Woche nur einmal), daher hier immer sicherheitshalber zuerst
+  // aufrufen, statt die eigentliche Ursache mit try/catch zu verdecken.
+  buildRaceTrack();
+
   const emptyEl = document.getElementById("race-track-empty");
 
   if (!wheelDb) {

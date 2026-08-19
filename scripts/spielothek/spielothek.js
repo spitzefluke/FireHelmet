@@ -143,8 +143,19 @@ async function playSpielothekGame() {
     if (err.message === "not-enough-currency") {
       if (statusEl) statusEl.textContent = typeof t === "function" ? t("spielothek.notEnoughCurrency", "❌ Nicht genug Dublonen dafür.") : "❌ Nicht genug Dublonen dafür.";
     } else {
+      // Die Transaktion ist entweder komplett durchgelaufen (siehe
+      // runTransaction() oben - dann landen wir hier gar nicht) oder
+      // komplett fehlgeschlagen, nie halb: Ein Fehler hier bedeutet
+      // also sicher, dass NICHTS gespeichert wurde. Wichtig, das dem
+      // Spieler auch so zu sagen, statt eine vage Meldung zu zeigen,
+      // die den Eindruck erwecken koennte, der Einsatz sei trotzdem
+      // weg (siehe Auftrag Punkt 14/15 - kein Gewinn ohne Speicherung).
       console.warn("Spielrunde konnte nicht verarbeitet werden:", err);
-      if (statusEl) statusEl.textContent = "⚠️ Das hat nicht geklappt, versuch's nochmal.";
+      if (statusEl) {
+        statusEl.textContent = typeof t === "function"
+          ? t("spielothek.saveFailed", "⚠️ Die Spielrunde konnte gerade nicht gespeichert werden. Deine Daten wurden nicht verändert. Bitte versuch's nochmal.")
+          : "⚠️ Die Spielrunde konnte gerade nicht gespeichert werden. Deine Daten wurden nicht verändert. Bitte versuch's nochmal.";
+      }
     }
   } finally {
     spielothekBusy = false;
