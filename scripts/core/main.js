@@ -41,6 +41,10 @@ function changePage(pageID) {
     updateCommunityBossPage(pageID);
   }
 
+  if (typeof updatePiratenpassPage === "function") {
+    updatePiratenpassPage(pageID);
+  }
+
   if (typeof updateShopPage === "function") {
     updateShopPage(pageID);
   }
@@ -986,6 +990,8 @@ async function checkCode() {
         triggerCodeSuccessEffect();
       }
 
+      if (typeof awardActionXp === "function") awardActionXp("codeRedeemed");
+
       playCodeAudio(match);
 
       if (match.image && imageEl) {
@@ -1013,6 +1019,8 @@ async function checkCode() {
       if (typeof triggerCodeSuccessEffect === "function") {
         triggerCodeSuccessEffect();
       }
+
+      if (typeof awardActionXp === "function") awardActionXp("codeRedeemed");
 
       playCodeAudio(match);
 

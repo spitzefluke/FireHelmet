@@ -102,6 +102,7 @@ async function checkAndCompleteActiveRepair(uid) {
   if (!wheelDb || !uid) return;
 
   const docRef = wheelDb.collection("ship_repair").doc(uid);
+  let phaseJustCompleted = false;
 
   try {
     await wheelDb.runTransaction(async (tx) => {
@@ -120,9 +121,21 @@ async function checkAndCompleteActiveRepair(uid) {
         update.namedBy = active.startedBy || null;
       }
       tx.update(docRef, update);
+      phaseJustCompleted = true;
     });
   } catch (err) {
     console.warn("Reparatur konnte nicht abgeschlossen werden:", err);
+  }
+
+  // XP fuer die abgeschlossene Etappe - "uid" ist hier immer die
+  // eigene angemeldete UID (ship_repair/{uid} ist personenbezogen,
+  // siehe firestore.rules), daher ist es sicher, hier direkt XP fuer
+  // den aktuell angemeldeten Spieler zu vergeben. Die Etappe selbst
+  // ist durch completedPhases bereits einmalig (kann serverseitig nie
+  // zweimal abgeschlossen werden), es braucht keine zusaetzliche
+  // claimedRewardIds-Dopplungspruefung.
+  if (phaseJustCompleted && typeof awardActionXp === "function") {
+    awardActionXp("shipRepairPhase");
   }
 }
 
@@ -222,6 +235,7 @@ async function claimDailyQuest(day) {
 
     showShipToolToast(quest.toolId);
     renderShipRepairPage();
+    if (typeof awardActionXp === "function") awardActionXp("dailyQuest");
   } catch (err) {
     if (!statusEl) return;
     const lang = typeof getCurrentLang === "function" ? getCurrentLang() : "de";

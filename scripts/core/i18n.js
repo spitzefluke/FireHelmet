@@ -32,6 +32,7 @@ const translations = {
     "menu.communityBoss": "🐙 Community-Boss",
     "menu.streamraetsel": "❓ ???",
     "menu.streamraetselShort": "???",
+    "menu.piratenpass": "🏴‍☠️ Piratenpass",
     "menu.support": "🆘 Support",
     "menu.rating": "⭐ Bewertung",
 
@@ -130,6 +131,12 @@ const translations = {
     "story.expeditionProgress": "EXPEDITION-FORTSCHRITT",
     "story.chapterLockedMessage": "Dieses Kapitel ist noch nicht freigeschaltet.",
 
+    "progression.notLoggedIn": "Noch nicht angemeldet",
+    "progression.level": "LEVEL",
+    "progression.maxLevel": "Max. Level erreicht",
+    "progression.levelUp": "LEVEL UP!",
+    "progression.close": "Schließen",
+
     "characters.title": "CHARACTERS",
 
     "socials.title": "SOCIALS",
@@ -218,6 +225,7 @@ const translations = {
     "menu.communityBoss": "🐙 Community Boss",
     "menu.streamraetsel": "❓ ???",
     "menu.streamraetselShort": "???",
+    "menu.piratenpass": "🏴‍☠️ Pirate Pass",
     "menu.support": "🆘 Support",
     "menu.rating": "⭐ Rating",
 
@@ -315,6 +323,12 @@ const translations = {
     "story.chapterHeading": "Chapters",
     "story.expeditionProgress": "EXPEDITION PROGRESS",
     "story.chapterLockedMessage": "This chapter hasn't been unlocked yet.",
+
+    "progression.notLoggedIn": "Not signed in yet",
+    "progression.level": "LEVEL",
+    "progression.maxLevel": "Max level reached",
+    "progression.levelUp": "LEVEL UP!",
+    "progression.close": "Close",
 
     "characters.title": "CHARACTERS",
 

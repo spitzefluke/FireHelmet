@@ -1259,6 +1259,7 @@ async function attackCommunityBoss() {
 
     localStorage.setItem(getBossDailyAttackKey(), todayStr());
     spawnBossHitEffect(damage);
+    if (typeof awardActionXp === "function") awardActionXp("bossAttack");
 
     if (statusEl) statusEl.textContent = `⚔️ Du hast ${damage} Schaden verursacht! Komm morgen wieder.`;
 
