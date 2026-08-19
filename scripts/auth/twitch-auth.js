@@ -114,6 +114,8 @@ function refreshTwitchLoginUI() {
       : localStorage.getItem("twitchAvatar") || "";
   const isLoggedIn = provider === "twitch" || provider === "discord";
 
+  if (typeof refreshPlayerCard === "function") refreshPlayerCard();
+
   if (!loggedInBox) return;
 
   if (isLoggedIn) {

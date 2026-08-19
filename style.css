@@ -8751,3 +8751,553 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
     font-size: 28px;
   }
 }
+
+/* =====================================================
+   PROGRESSION-SYSTEM: SPIELERKARTE, LEVEL-UP, MEILENSTEINE,
+   PIRATENPASS (NEU)
+   Nutzt bestehende Design-Tokens (--fh-gold/--fh-muted/--fh-border/
+   --fh-success/--fh-font-display/--fh-ease usw.), keine neuen Farben.
+===================================================== */
+
+/* ---- Sidebar-Spielerkarte (ersetzt "Crew Flitzpiepen · Online") ---- */
+.fh-sidebar-footer-wrap {
+  padding: 18px;
+}
+
+.fh-sidebar-footer {
+  min-height: 32px;
+}
+
+.fh-player-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  background: var(--fh-muted);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-sm);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+
+.fh-player-card:hover,
+.fh-player-card:focus-visible {
+  border-color: rgba(240,201,106,.4);
+  background: var(--fh-surface-light);
+  outline: none;
+}
+
+.fh-player-card-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fh-surface-2);
+  border: 1px solid var(--fh-border-strong);
+  font-size: 20px;
+}
+
+.fh-player-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fh-player-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fh-player-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fh-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fh-player-card-level {
+  font-family: var(--fh-font-display);
+  letter-spacing: .1em;
+  font-size: 11px;
+  color: var(--fh-gold-bright);
+}
+
+.fh-player-card-xpbar {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fh-surface-2);
+  overflow: hidden;
+  margin-top: 1px;
+}
+
+.fh-player-card-xpfill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--fh-gold), var(--fh-fire));
+  transition: width .5s var(--fh-ease);
+}
+
+.fh-player-card-xptext {
+  font-size: 10px;
+  color: var(--fh-muted-fg);
+}
+
+/* ---- Level-Up-Overlay ---- */
+.fh-levelup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5,7,11,.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s var(--fh-ease);
+  padding: 20px;
+}
+
+.fh-levelup-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fh-levelup-card {
+  position: relative;
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid rgba(240,201,106,.35);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow), var(--fh-glow-gold);
+  padding: 36px 32px;
+  text-align: center;
+  max-width: 340px;
+  width: 100%;
+  transform: scale(.9);
+  transition: transform .35s var(--fh-ease);
+}
+
+.fh-levelup-overlay.visible .fh-levelup-card {
+  transform: scale(1);
+}
+
+.fh-levelup-overlay.fh-reduced-motion,
+.fh-levelup-overlay.fh-reduced-motion .fh-levelup-card {
+  transition: opacity .2s linear;
+  transform: none;
+}
+
+.fh-levelup-title {
+  font-family: var(--fh-font-display);
+  font-size: 26px;
+  letter-spacing: .08em;
+  color: var(--fh-gold-bright);
+  margin: 0 0 6px;
+}
+
+.fh-levelup-level {
+  font-size: 15px;
+  color: var(--fh-fg);
+  margin: 0 0 14px;
+}
+
+.fh-levelup-reward {
+  font-size: 15px;
+  color: var(--fh-fg);
+  background: var(--fh-muted);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-sm);
+  padding: 10px 14px;
+  margin: 0 0 18px;
+}
+
+.fh-levelup-close {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, var(--fh-gold), var(--fh-fire));
+  border: none;
+  border-radius: 999px;
+  color: #1a0a05;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, filter .2s;
+}
+
+.fh-levelup-close:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.fh-levelup-confetti {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(240,201,106,.5) 0 3px, transparent 4px),
+    radial-gradient(circle at 80% 15%, rgba(255,106,42,.5) 0 3px, transparent 4px),
+    radial-gradient(circle at 30% 85%, rgba(85,200,120,.4) 0 3px, transparent 4px),
+    radial-gradient(circle at 70% 80%, rgba(240,201,106,.4) 0 3px, transparent 4px),
+    radial-gradient(circle at 50% 50%, rgba(255,215,107,.35) 0 3px, transparent 4px);
+  animation: fhConfettiDrift 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes fhConfettiDrift {
+  from { transform: translateY(-4px); opacity: .9; }
+  to { transform: translateY(4px); opacity: .5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-levelup-overlay,
+  .fh-levelup-overlay .fh-levelup-card {
+    transition: opacity .2s linear !important;
+    transform: none !important;
+  }
+  .fh-levelup-confetti {
+    animation: none;
+  }
+}
+
+/* ---- Expedition-Meilensteine (story-progress-bar aus stories.js) ---- */
+.story-progress-bar {
+  position: relative;
+  overflow: visible;
+}
+
+.story-milestone-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.story-milestone-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--fh-bg);
+  background: var(--fh-muted-fg);
+}
+
+.story-milestone-marker.story-milestone-ready .story-milestone-dot {
+  background: var(--fh-gold-bright);
+  box-shadow: 0 0 6px var(--fh-gold-bright);
+}
+
+.story-milestone-marker.story-milestone-claimed .story-milestone-dot {
+  background: var(--fh-success);
+  box-shadow: 0 0 6px var(--fh-success);
+}
+
+.story-milestone-icon {
+  position: absolute;
+  top: 14px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.story-milestone-banner-slot:empty {
+  display: none;
+}
+
+.story-milestone-banner {
+  margin-top: 40px;
+  background: var(--fh-surface-light);
+  border: 1px solid rgba(240,201,106,.35);
+  border-radius: var(--fh-radius);
+  padding: 16px 18px;
+  max-width: 420px;
+}
+
+.story-milestone-banner-title {
+  font-family: var(--fh-font-display);
+  letter-spacing: .05em;
+  color: var(--fh-gold-bright);
+  margin: 0 0 4px;
+}
+
+.story-milestone-banner-subtitle {
+  font-size: 13px;
+  color: var(--fh-fg);
+  margin: 0 0 8px;
+}
+
+.story-milestone-banner-reward {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  margin: 0 0 12px;
+}
+
+.story-milestone-banner-btn {
+  padding: 9px 20px;
+  background: linear-gradient(135deg, var(--fh-gold), var(--fh-fire));
+  border: none;
+  border-radius: 999px;
+  color: #1a0a05;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, filter .2s;
+}
+
+.story-milestone-banner-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* ---- Piratenpass-Teaser (hinter dem "???"-Countdown) ---- */
+.pass-teaser {
+  margin-top: 22px;
+}
+
+.pass-teaser-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 0 auto;
+  padding: 12px 28px;
+  background: var(--fh-surface-light);
+  border: 1px solid rgba(240,201,106,.35);
+  border-radius: var(--fh-radius);
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .2s, transform .15s;
+}
+
+.pass-teaser-btn:hover {
+  border-color: var(--fh-gold-bright);
+  transform: translateY(-2px);
+}
+
+.pass-teaser-title {
+  font-family: var(--fh-font-display);
+  letter-spacing: .08em;
+  font-size: 14px;
+  color: var(--fh-gold-bright);
+}
+
+.pass-teaser-sub {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.pass-teaser-btn-ended .pass-teaser-sub {
+  color: var(--fh-danger);
+}
+
+/* ---- Piratenpass-Seite ---- */
+.pass-page-content {
+  max-width: 640px;
+}
+
+.pass-empty-state {
+  color: var(--fh-muted-fg);
+}
+
+.pass-season-status {
+  color: var(--fh-gold-bright);
+  font-size: 14px;
+  margin-top: -8px;
+  margin-bottom: 20px;
+}
+
+.pass-overall-bar {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--fh-muted);
+  border: 1px solid var(--fh-border);
+  overflow: hidden;
+}
+
+.pass-overall-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fh-gold), var(--fh-fire));
+  transition: width .6s var(--fh-ease);
+}
+
+.pass-tier-heading {
+  font-family: var(--fh-font-display);
+  letter-spacing: .08em;
+  color: var(--fh-fg);
+  margin: 14px 0 8px;
+}
+
+.pass-tier-progress-bar {
+  width: min(320px, 100%);
+  height: 8px;
+  border-radius: 999px;
+  background: var(--fh-muted);
+  border: 1px solid var(--fh-border);
+  overflow: hidden;
+}
+
+.pass-tier-progress-fill {
+  height: 100%;
+  background: var(--fh-gold-bright);
+  transition: width .5s var(--fh-ease);
+}
+
+.pass-tier-progress-text {
+  font-size: 12px;
+  color: var(--fh-muted-fg);
+  margin-top: 4px;
+}
+
+.pass-cap-banner {
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid rgba(240,201,106,.4);
+  border-radius: var(--fh-radius);
+  text-align: center;
+}
+
+.pass-cap-banner-title {
+  font-family: var(--fh-font-display);
+  color: var(--fh-gold-bright);
+  font-size: 17px;
+  margin: 0 0 6px;
+}
+
+.pass-cap-banner-sub {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  margin: 0 0 10px;
+}
+
+.pass-cap-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--fh-radius);
+  background: var(--fh-surface-2);
+  border: 1px solid var(--fh-border-strong);
+  margin: 0 auto 14px;
+  overflow: hidden;
+}
+
+.pass-cap-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pass-cap-badge-fallback {
+  font-size: 34px;
+  line-height: 1.4;
+  text-align: center;
+  padding: 8px;
+}
+
+.pass-cap-badge-fallback br + * ,
+.pass-cap-badge-fallback {
+  font-size: 34px;
+}
+
+.pass-cap-claim-btn {
+  display: block;
+  margin: 0 auto;
+}
+
+/* ---- Stufen-Liste: kompakte, VERTIKALE Karten - keine horizontale
+   Gesamttabelle, siehe Auftrag Punkt 16 ("keine riesige horizontale
+   Tabelle"). Funktioniert dadurch bereits ohne Media-Query mobil. ---- */
+.pass-tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.pass-tier-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--fh-muted);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-sm);
+}
+
+.pass-tier-row.pass-tier-ready {
+  border-color: rgba(240,201,106,.5);
+  background: var(--fh-surface-light);
+}
+
+.pass-tier-row.pass-tier-claimed {
+  opacity: .65;
+}
+
+.pass-tier-number {
+  font-family: var(--fh-font-display);
+  width: 28px;
+  flex-shrink: 0;
+  color: var(--fh-muted-fg);
+  font-size: 13px;
+}
+
+.pass-tier-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.pass-tier-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--fh-fg);
+  min-width: 0;
+}
+
+.pass-tier-status {
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.pass-tier-claim-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, var(--fh-gold), var(--fh-fire));
+  border: none;
+  border-radius: 999px;
+  color: #1a0a05;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, filter .2s;
+}
+
+.pass-tier-claim-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .pass-tier-row {
+    flex-wrap: wrap;
+  }
+  .pass-tier-label {
+    order: 3;
+    flex-basis: 100%;
+  }
+}

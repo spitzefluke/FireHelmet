@@ -627,6 +627,7 @@ async function saveNickname() {
   savePlayerData({ nickname: name });
   syncCodesToFirestore();
   showNicknameSuccess(name);
+  if (typeof refreshPlayerCard === "function") refreshPlayerCard();
 }
 
 /* ------------------------------------------------------

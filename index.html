@@ -105,15 +105,18 @@
       <a class="fh-nav-item" data-page="race" onclick="changePage('race')" data-i18n="menu.race">🏎️ <span>Wochenrennen</span></a>
       <a class="fh-nav-item" data-page="community-boss" onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 <span>Community-Boss</span></a>
       <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')">❓ <span data-i18n="menu.streamraetselShort">???</span></a>
+      <a class="fh-nav-item" data-page="piratenpass" onclick="changePage('piratenpass')" data-i18n="menu.piratenpass">🏴‍☠️ <span>Piratenpass</span></a>
       <a class="fh-nav-item" data-page="ship-repair" onclick="changePage('ship-repair')" data-i18n="menu.shipRepair">⚒ <span>Repariere das Schiff</span></a>
       <a class="fh-nav-item" data-page="socials" onclick="changePage('socials')" data-i18n="menu.socials">🌐 <span>Socials</span></a>
       <a class="fh-nav-item" data-page="support" onclick="changePage('support')" data-i18n="menu.support">🆘 <span>Support</span></a>
       <a class="fh-nav-item" data-page="rating" onclick="changePage('rating')" data-i18n="menu.rating">⭐ <span>Bewertung</span></a>
     </nav>
 
-    <div class="fh-sidebar-footer">
-      <p class="fh-sidebar-footer-label">Crew</p>
-      <p class="fh-sidebar-footer-status"><span class="fh-status-dot"></span> Flitzpiepen · Online</p>
+    <div class="fh-sidebar-footer-wrap">
+      <!-- Wird von renderPlayerCardHtml() in scripts/core/progression.js
+           befuellt (Avatar/Name/Level/XP-Balken) - ersetzt die vorher
+           statische "Crew Flitzpiepen · Online"-Anzeige. -->
+      <div class="fh-sidebar-footer" id="fh-sidebar-footer"></div>
       <a class="fh-gateway-link fh-sidebar-gateway-link" onclick="changePage('gateway')" title="Admin-Gateway">⚙</a>
     </div>
   </aside>
@@ -772,9 +775,24 @@
             <small data-i18n="common.seconds">Sekunden</small>
           </div>
         </div>
+
+        <!-- Piratenpass-Teaser hinter dem "???"-Countdown - befuellt
+             von renderPassTeaser() in scripts/piratenpass/piratenpass.js.
+             Rein additiv (eigenes Element, keine Aenderung an den
+             streamraetsel-*-IDs oben), stoert daher die bestehende
+             updateStreamRaetselView()-Logik nicht. -->
+        <div class="pass-teaser" id="pass-teaser"></div>
       </div>
 
       <div id="streamraetsel-content" class="streamraetsel-unlocked"></div>
+    </section>
+
+    <!-- =====================
+         PIRATENPASS (eigene Menüseite)
+         Befuellt von renderPassPage() in scripts/piratenpass/piratenpass.js.
+    ===================== -->
+    <section id="piratenpass" class="page">
+      <div class="page-content pass-page-content" id="pass-page-content"></div>
     </section>
 
     <!-- =====================
@@ -970,6 +988,7 @@
   <script src="scripts/music/music-player.js"></script>
   <script src="scripts/wheel/wheel-data.js"></script>
   <script src="scripts/wheel/avatars-data.js"></script>
+  <script src="scripts/core/progression-data.js"></script>
   <script src="scripts/wheel/nickname-filter-data.js"></script>
   <script src="scripts/wheel/nickname-filter.js"></script>
   <script src="scripts/race/race-data.js"></script>
@@ -996,6 +1015,8 @@
   <script src="scripts/race/race.js"></script>
   <script src="scripts/community-boss/community-boss.js"></script>
   <script src="scripts/wheel/wheel.js"></script>
+  <script src="scripts/core/progression.js"></script>
+  <script src="scripts/piratenpass/piratenpass.js"></script>
   <script src="scripts/spielothek/spielothek-data.js"></script>
   <script src="scripts/spielothek/games/slot.js"></script>
   <script src="scripts/spielothek/spielothek.js"></script>

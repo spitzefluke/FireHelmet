@@ -87,11 +87,93 @@ function markChapterAsRead(chapterId) {
   }
 }
 
-function renderStoryProgress() {
+/* ------------------------------------------------------
+   EXPEDITION-MEILENSTEINE
+   ---------------------------------------------------
+   Nutzt EXPEDITION_MILESTONES (scripts/core/progression-data.js) und
+   den zentralen Reward-Dispatcher claimReward() (scripts/core/
+   progression.js) - dieselbe Meilenstein-Vorlage gilt fuer JEDES
+   Logbuch, aber jedes Logbuch hat unabhaengige rewardIds
+   ("story_<storyId>_milestone_<percent>"), siehe Auftrag Punkt 2.
+   Der Lesefortschritt selbst bleibt bewusst rein lokal
+   (getReadChapterIds() oben, unveraendert) - nur die Belohnungs-
+   VERGABE ist serverseitig dedupliziert (claimedRewardIds in
+   player_progression/{uid}), damit ein Reload nie doppelt vergibt.
+------------------------------------------------------ */
+function rewardMilestoneIcon(reward) {
+  switch (reward.type) {
+    case "coins": return "🪙";
+    case "avatar": return "🎭";
+    case "temporary_avatar": return "🎭";
+    case "tool": return "🔧";
+    default: return "🎁";
+  }
+}
+
+function buildMilestoneMarkersHtml(storyId, percent, claimedIds) {
+  if (typeof EXPEDITION_MILESTONES === "undefined") return "";
+  return EXPEDITION_MILESTONES.map((m) => {
+    const reached = percent >= m.percent;
+    const rewardId = `story_${storyId}_milestone_${m.percent}`;
+    const claimed = claimedIds.includes(rewardId);
+    const stateClass = claimed ? "story-milestone-claimed" : reached ? "story-milestone-ready" : "story-milestone-locked";
+    const stateEmoji = claimed ? "🟢" : reached ? "🟡" : "🔒";
+    const icon = rewardMilestoneIcon(m.reward);
+    return `<span class="story-milestone-marker ${stateClass}" style="left:${m.percent}%" title="${m.percent}% ${stateEmoji}">
+      <span class="story-milestone-dot" aria-hidden="true"></span>
+      <span class="story-milestone-icon" aria-hidden="true">${icon}</span>
+    </span>`;
+  }).join("");
+}
+
+function renderMilestoneBanner(storyId, percent, claimedIds) {
+  const slot = document.getElementById("story-milestone-banner");
+  if (!slot || typeof EXPEDITION_MILESTONES === "undefined") return;
+
+  const pending = EXPEDITION_MILESTONES.find(
+    (m) => percent >= m.percent && !claimedIds.includes(`story_${storyId}_milestone_${m.percent}`)
+  );
+  if (!pending) {
+    slot.innerHTML = "";
+    return;
+  }
+
+  const lang = typeof getCurrentLang === "function" ? getCurrentLang() : "de";
+  const isEn = lang === "en";
+  const rewardText = typeof describeRewardHtml === "function" ? describeRewardHtml(pending.reward) : "";
+  const title = isEn ? "ARRR! Milestone reached!" : "ARRR! Meilenstein erreicht!";
+  const subtitle = isEn
+    ? `You've completed ${pending.percent}% of the expedition!`
+    : `Du hast ${pending.percent}% der Expedition geschafft!`;
+  const rewardLabel = isEn ? "Reward" : "Belohnung";
+  const btnLabel = isEn ? "Collect reward" : "Belohnung einsammeln";
+
+  slot.innerHTML = `
+    <div class="story-milestone-banner">
+      <p class="story-milestone-banner-title">🏴‍☠️ ${title}</p>
+      <p class="story-milestone-banner-subtitle">${subtitle}</p>
+      <p class="story-milestone-banner-reward">${rewardLabel}: ${rewardText}</p>
+      <button type="button" class="story-milestone-banner-btn" onclick="claimStoryMilestone('${storyId}', ${pending.percent})">${btnLabel}</button>
+    </div>
+  `;
+}
+
+async function claimStoryMilestone(storyId, percent) {
+  if (typeof EXPEDITION_MILESTONES === "undefined" || typeof claimReward !== "function") return;
+  const milestone = EXPEDITION_MILESTONES.find((m) => m.percent === percent);
+  if (!milestone) return;
+
+  const rewardId = `story_${storyId}_milestone_${percent}`;
+  const result = await claimReward(rewardId, milestone.reward);
+  if (result.ok) renderStoryProgress();
+}
+
+async function renderStoryProgress() {
   const el = document.getElementById("story-progress");
   if (!el || !currentStory) return;
+  const storyAtStart = currentStory;
 
-  const unlockedChapters = currentStory.chapters.filter((c) => !isChapterLocked(c.id));
+  const unlockedChapters = storyAtStart.chapters.filter((c) => !isChapterLocked(c.id));
   if (!unlockedChapters.length) {
     el.innerHTML = "";
     return;
@@ -102,10 +184,36 @@ function renderStoryProgress() {
   const percent = Math.round((readCount / unlockedChapters.length) * 100);
   const label = typeof t === "function" ? t("story.expeditionProgress", "EXPEDITION-FORTSCHRITT") : "EXPEDITION-FORTSCHRITT";
 
+  let claimedIds = [];
+  if (typeof wheelDb !== "undefined" && wheelDb && typeof wheelAuthReady !== "undefined") {
+    try {
+      const uid = await wheelAuthReady;
+      if (uid) {
+        const snap = await wheelDb.collection("player_progression").doc(uid).get();
+        claimedIds = (snap.exists && snap.data().claimedRewardIds) || [];
+      }
+    } catch (err) {
+      console.warn("Meilenstein-Status konnte nicht geladen werden:", err);
+    }
+  }
+
+  // Falls der Nutzer inzwischen die Story gewechselt hat, waehrend
+  // dieser asynchrone Ladevorgang lief, nicht mehr in die falsche
+  // Story rendern.
+  if (currentStory !== storyAtStart) return;
+
+  const milestonesHtml = buildMilestoneMarkersHtml(storyAtStart.id, percent, claimedIds);
+
   el.innerHTML = `
     <p class="story-progress-label">${label} ${percent}%</p>
-    <div class="story-progress-bar"><div class="story-progress-fill" style="width:${percent}%"></div></div>
+    <div class="story-progress-bar">
+      <div class="story-progress-fill" style="width:${percent}%"></div>
+      ${milestonesHtml}
+    </div>
+    <div class="story-milestone-banner-slot" id="story-milestone-banner"></div>
   `;
+
+  renderMilestoneBanner(storyAtStart.id, percent, claimedIds);
 }
 
 /* ------------------------------------------------------
@@ -182,6 +290,7 @@ function openChapter(id) {
   document.getElementById("book-text").textContent = chapter.text;
 
   markChapterAsRead(id);
+  if (typeof awardChapterReadXp === "function") awardChapterReadXp(id);
 
   changePage("book-reader");
 }

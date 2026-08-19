@@ -532,6 +532,28 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------
+    // XP / LEVEL / PIRATENPASS / EINMAL-BELOHNUNGEN (NEU)
+    // Siehe scripts/core/progression.js/progression-data.js. Level
+    // wird bewusst NICHT gespeichert, sondern immer aus "xp"
+    // hergeleitet (progression-data.js xpRequiredForLevel()) - erspart
+    // ein zusaetzliches validiertes Feld und moegliche Level/XP-
+    // Widersprueche.
+    // ---------------------------------------------
+
+    // XP/Level/Piratenpass/Einmal-Belohnungen leben NICHT hier, sondern
+    // in einer eigenen Collection player_progression/{uid} (siehe
+    // weiter unten) - ein erster Versuch, sie direkt in players/{uid}
+    // zu validieren, hat beim Testen gegen den Emulator wiederholt
+    // "Unable to evaluate the expression as the maximum of 1000
+    // expressions to evaluate has been reached" ausgeloest, und zwar
+    // GENAU bei abgelehnten Schreibvorgaengen (siehe Testprotokoll
+    // progression.test.mjs) - das players/{uid}-Regelwerk ist laut
+    // den Kommentaren oben bereits nah am Budget, jede weitere
+    // Pruefung dort ist riskant. Eine eigene Collection hat ein
+    // FRISCHES, unbelastetes Ausdrucksbudget (siehe Kommentar bei
+    // match /player_progression/{playerId} unten).
+
+    // ---------------------------------------------
     // RANGLISTE (Streak + geknackte Codes) / SPIELERPROFIL
     // Enthaelt auch Dublonen, Werkzeuge, Shop-Items - siehe
     // validShopFields() oben.
@@ -866,6 +888,98 @@ service cloud.firestore {
                            : request.resource.data.shipName is string))
                     && ((request.resource.data.shipName == null) == (request.resource.data.namedBy == null));
 
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------
+    // XP / LEVEL / PIRATENPASS / EINMAL-BELOHNUNGEN (NEU)
+    // Siehe scripts/core/progression.js/progression-data.js. EIGENE
+    // Collection statt Felder in players/{uid} - eine erste Fassung
+    // direkt in players/{uid} hat beim Testen gegen den Emulator
+    // wiederholt "Unable to evaluate the expression as the maximum of
+    // 1000 expressions to evaluate has been reached" ausgeloest, weil
+    // dieses Regelwerk laut den Kommentaren oben bereits nah am
+    // Firestore-Budget von 1000 auswertbaren Teilausdruecken PRO
+    // SCHREIBVORGANG ist. Jeder Dokumentpfad hat sein EIGENES Budget
+    // (siehe ship_repair/{uid} oben, das genauso als eigene Collection
+    // gefuehrt wird) - dieser Block startet deshalb bei null.
+    //
+    // Dokument-ID = eigene Auth-UID (wie players/{uid}/ship_repair/
+    // {uid}) - nur der jeweilige Spieler darf sein eigenes Dokument
+    // lesen oder schreiben. Level wird bewusst NICHT gespeichert,
+    // sondern immer aus "xp" hergeleitet (progression-data.js
+    // xpRequiredForLevel()) - erspart ein zusaetzliches validiertes
+    // Feld und moegliche Level/XP-Widersprueche.
+    //
+    // create UND update teilen sich dieselbe Detail-Pruefung (der
+    // ALLERERSTE Schreibvorgang traegt hier, anders als bei
+    // players/{uid}, bereits echte xp - claimReward()/awardActionXp()
+    // legen das Dokument bei der ersten Belohnung direkt MIT Inhalt
+    // an) - "resource" ist bei create null, deshalb lesen alle
+    // old*()-Zugriffe hier ueber ein vorangestelltes "resource != null
+    // &&" statt des sonst ueblichen oldNum()-Helfers (der wuerde bei
+    // create einen "Null value"-Fehler werfen).
+    // "let"-Bindungen berechnen jeden alten Wert nur EINMAL, mit dem
+    // Null-Check DIREKT inline per "&&" (nicht ueber einen separaten
+    // Funktionsaufruf wie oldNum() - der wuerde bei create() intern
+    // trotzdem "resource.data" anfassen, selbst wenn der AUFRUF
+    // scheinbar hinter einer "resource != null ?"-Bedingung steht,
+    // und dabei einen "evaluation error" ausloesen, siehe Testprotokoll
+    // progression.test.mjs). Exakt dasselbe Muster wie bei
+    // validCodeRedemptionDetail() oben ("let isNewDoc = resource ==
+    // null; let oldMap = (!isNewDoc && 'feld' in resource.data) ? ...").
+    function validProgressionWrite(newData) {
+      let oldXp = (resource != null && 'xp' in resource.data) ? resource.data.xp : 0;
+      let oldPass = (resource != null && 'passProgress' in resource.data) ? resource.data.passProgress : {};
+      let oldPassId = ('passId' in oldPass) ? oldPass.passId : '';
+      let oldPassXp = ('xp' in oldPass) ? oldPass.xp : 0;
+      let oldClaimedCount = (resource != null && 'claimedRewardIds' in resource.data) ? resource.data.claimedRewardIds.size() : 0;
+
+      return (!('xp' in newData)
+              || (newData.xp is int && newData.xp >= 0 && newData.xp <= oldXp + 500))
+        && (!('passProgress' in newData)
+            || (
+              newData.passProgress is map
+              && newData.passProgress.passId is string
+              && newData.passProgress.passId in ['season1']
+              && newData.passProgress.xp is int
+              && newData.passProgress.xp >= 0
+              && (newData.passProgress.passId != oldPassId || newData.passProgress.xp <= oldPassXp + 500)
+            ))
+        && (!('claimedRewardIds' in newData)
+            || (
+              newData.claimedRewardIds is list
+              && newData.claimedRewardIds.size() <= 300
+              && newData.claimedRewardIds.size() >= oldClaimedCount
+              && newData.claimedRewardIds.size() <= oldClaimedCount + 1
+            ))
+        && (!('hasFlitzpiepenCap' in newData) || newData.hasFlitzpiepenCap == true);
+    }
+
+    // claimedRewardIds: EINE geteilte Ledger fuer ALLE einmaligen
+    // Belohnungen (Level-Ups, Expedition-Meilensteine, Piratenpass-
+    // Stufen, Kapitel-Lese-XP) - siehe claimReward() in progression.js.
+    // Anders als bei redeemedCurrencyCodes in players/{uid} wird hier
+    // NICHT jede einzelne rewardId samt exaktem Betrag hart
+    // einprogrammiert (bei 50 Pass-Stufen + Meilensteinen + Level-
+    // Belohnungen waeren das zu viele Ausdruecke) - stattdessen
+    // generisch: hoechstens EIN neuer Eintrag pro Schreibvorgang,
+    // Groesse darf nie sinken. BEWUSST IN KAUF GENOMMENE
+    // VEREINFACHUNG (wie bei shipTools/dailyQuests in players/{uid}):
+    // ein manipulierter Client koennte einen vorhandenen Eintrag gegen
+    // einen anderen "tauschen" (Groesse bleibt gleich) und so eine
+    // rewardId erneut "unvergeben" machen - die eigentliche Belohnung
+    // wird dadurch aber nicht direkt gutgeschrieben, sondern erst
+    // durch einen spaeteren claimReward()-Aufruf, dessen Effekte
+    // (currency/shipTools in players/{uid}, xp hier) weiterhin durch
+    // ihre jeweiligen Obergrenzen PRO SCHREIBVORGANG gedeckelt sind -
+    // kein unbegrenzter Vorteil moeglich, hoechstens eine einzelne
+    // bereits kassierte Belohnung ein weiteres Mal im Rahmen dieser
+    // Grenzen.
+    match /player_progression/{playerId} {
+      allow read: if isSignedIn() && request.auth.uid == playerId;
+      allow create: if isSignedIn() && request.auth.uid == playerId && validProgressionWrite(request.resource.data);
+      allow update: if isSignedIn() && request.auth.uid == playerId && validProgressionWrite(request.resource.data);
       allow delete: if false;
     }
 

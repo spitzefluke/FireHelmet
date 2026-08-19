@@ -75,4 +75,23 @@ const wheelSpecialAvatars = [
 
   // Eigene Beispiele:
   // { id: "legendaer", avatar: "scripts/avatare/legendaer.png", label: "Legendärer Pirat" },
+
+  // Level-/Expedition-/Piratenpass-Belohnungen (siehe LEVEL_REWARDS /
+  // EXPEDITION_MILESTONES / PIRATE_PASSES in scripts/core/progression-
+  // data.js) - werden nicht per Code, sondern automatisch beim
+  // Erreichen des jeweiligen Levels/Meilensteins/Stufe freigeschaltet
+  // (siehe applyReward() in scripts/core/progression.js).
+  { id: "level-10-albatros", avatar: "🐦", label: "Albatros (Level 10)" },
+  { id: "level-15-glueckssegel", avatar: "🎏", label: "Glückssegel (Level 15, 3 Tage)", isTemporary: true },
+  { id: "level-30-nachtkapitaen", avatar: "🌙", label: "Nachtkapitän (Level 30)" },
+  { id: "level-40-sturmreiter", avatar: "⛈️", label: "Sturmreiter (Level 40, 3 Tage)", isTemporary: true },
+  { id: "level-50-legende", avatar: "👑", label: "Legende (Level 50)" },
+  { id: "level-80-flitzpiepen-ikone", avatar: "🌟", label: "Flitzpiepen-Ikone (Level 80)" },
+  { id: "milestone-30-schatzkarte", avatar: "🗺️", label: "Schatzkarte (Expedition 30%)" },
+  { id: "milestone-40-nebelgeist", avatar: "👻", label: "Nebelgeist (Expedition 40%, 3 Tage)", isTemporary: true },
+  { id: "milestone-70-kompassrose", avatar: "🧭", label: "Kompassrose (Expedition 70%)" },
+  { id: "milestone-90-goldnebel", avatar: "✨", label: "Goldnebel (Expedition 90%, 3 Tage)", isTemporary: true },
+  { id: "pass-s1-tier-10-schmuggler", avatar: "🎭", label: "Schmuggler (Piratenpass Stufe 10)" },
+  { id: "pass-s1-tier-25-nebelkoenigin", avatar: "🫧", label: "Nebelkönigin (Piratenpass Stufe 25, 3 Tage)", isTemporary: true },
+  { id: "pass-s1-tier-30-sturmlaeufer", avatar: "🌊", label: "Sturmläufer (Piratenpass Stufe 30)" },
 ];
