@@ -41,22 +41,40 @@ function getLevelProgress(xp) {
 /* ------------------------------------------------------
    PIRATENPASS - SAISON-AUSWAHL (rein datumsbasiert, siehe
    PIRATE_PASSES in progression-data.js)
+   ---------------------------------------------------
+   resolvePassDates() loest das Sonder-Schluesselwort
+   "@streamraetsel-unlock" gegen die BEREITS VORHANDENE "???"-
+   Countdown-Logik auf (getStreamRaetselUnlockDate() in scripts/
+   streamraetsel/streamraetsel.js) - keine zweite, unabhaengige
+   Datumsquelle. endDate wird immer aus startDate + durationDays
+   berechnet, nie separat gespeichert.
 ------------------------------------------------------ */
+function resolvePassDates(pass) {
+  const start = pass.startDate === "@streamraetsel-unlock" && typeof getStreamRaetselUnlockDate === "function"
+    ? getStreamRaetselUnlockDate()
+    : new Date(pass.startDate);
+  const end = new Date(start.getTime() + pass.durationDays * 86400000);
+  return { start, end };
+}
+
 function getCurrentPirateSeason() {
   const now = Date.now();
   return PIRATE_PASSES.find((pass) => {
-    const start = new Date(pass.startDate).getTime();
-    const end = new Date(pass.endDate).getTime();
-    return now >= start && now < end;
+    const { start, end } = resolvePassDates(pass);
+    return now >= start.getTime() && now < end.getTime();
   }) || null;
 }
 
 function getNextPirateSeason() {
   const now = Date.now();
   let next = null;
+  let nextStartMs = null;
   PIRATE_PASSES.forEach((pass) => {
-    const start = new Date(pass.startDate).getTime();
-    if (start > now && (!next || start < new Date(next.startDate).getTime())) next = pass;
+    const { start } = resolvePassDates(pass);
+    if (start.getTime() > now && (nextStartMs === null || start.getTime() < nextStartMs)) {
+      next = pass;
+      nextStartMs = start.getTime();
+    }
   });
   return next;
 }
@@ -64,9 +82,13 @@ function getNextPirateSeason() {
 function getLatestEndedPirateSeason() {
   const now = Date.now();
   let latest = null;
+  let latestEndMs = null;
   PIRATE_PASSES.forEach((pass) => {
-    const end = new Date(pass.endDate).getTime();
-    if (end <= now && (!latest || end > new Date(latest.endDate).getTime())) latest = pass;
+    const { end } = resolvePassDates(pass);
+    if (end.getTime() <= now && (latestEndMs === null || end.getTime() > latestEndMs)) {
+      latest = pass;
+      latestEndMs = end.getTime();
+    }
   });
   return latest;
 }

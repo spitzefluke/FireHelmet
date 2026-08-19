@@ -32,7 +32,6 @@ const translations = {
     "menu.communityBoss": "🐙 Community-Boss",
     "menu.streamraetsel": "❓ ???",
     "menu.streamraetselShort": "???",
-    "menu.piratenpass": "🏴‍☠️ Piratenpass",
     "menu.support": "🆘 Support",
     "menu.rating": "⭐ Bewertung",
 
@@ -225,7 +224,6 @@ const translations = {
     "menu.communityBoss": "🐙 Community Boss",
     "menu.streamraetsel": "❓ ???",
     "menu.streamraetselShort": "???",
-    "menu.piratenpass": "🏴‍☠️ Pirate Pass",
     "menu.support": "🆘 Support",
     "menu.rating": "⭐ Rating",
 

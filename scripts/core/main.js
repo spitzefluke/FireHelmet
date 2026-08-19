@@ -41,10 +41,6 @@ function changePage(pageID) {
     updateCommunityBossPage(pageID);
   }
 
-  if (typeof updatePiratenpassPage === "function") {
-    updatePiratenpassPage(pageID);
-  }
-
   if (typeof updateShopPage === "function") {
     updateShopPage(pageID);
   }
