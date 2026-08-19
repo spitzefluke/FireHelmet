@@ -1645,6 +1645,31 @@ main {
   line-height: 1.5;
 }
 
+/* Erst der kurze Spruch (character-quote), dann - mit spuerbarer
+   Verzoegerung - die eigentliche Beschreibung: beim Umdrehen der
+   Karte (Hover/Fokus/Antippen, siehe .character-card-flipped) ist
+   der Spruch sofort da, die Beschreibung blendet sich erst danach
+   ein, statt gleichzeitig zu erscheinen. Gilt fuer Maus, Tastatur
+   UND Touch, da alle drei denselben Flip-Zustand ansteuern - es
+   braucht also KEIN zweites Antippen auf Mobilgeraeten. */
+.character-face-back .character-description {
+  opacity: 0;
+  transition: opacity .4s ease;
+}
+
+.character-card-v2:hover .character-face-back .character-description,
+.character-card-v2:focus .character-face-back .character-description,
+.character-card-v2.character-card-flipped .character-face-back .character-description {
+  opacity: 1;
+  transition-delay: .55s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character-face-back .character-description {
+    transition-delay: 0s !important;
+  }
+}
+
 @media (max-width: 900px) {
   .character-card-v2 {
     width: 185px;
@@ -5733,23 +5758,31 @@ img, svg, video, canvas {
 /* =====================================================
    UNTERE TAB-LEISTE (Mobile/Tablet)
 ===================================================== */
-.fh-bottom-nav {
-  display: flex;
+/* Gemeinsamer fixierter Wrapper fuer Spielerkarte + Tableiste, siehe
+   index.html - beide stapeln sich per Flex-Layout, dadurch muss die
+   Hoehe der Tableiste nirgendwo als fester Pixelwert geraten werden. */
+.fh-mobile-bottom-stack {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 260;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+  .fh-mobile-bottom-stack {
+    display: none;
+  }
+}
+
+.fh-bottom-nav {
+  display: flex;
   padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
   background: rgba(10, 14, 24, .92);
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--fh-border);
-}
-
-@media (min-width: 1024px) {
-  .fh-bottom-nav {
-    display: none;
-  }
 }
 
 .fh-bottom-nav-item {
@@ -5836,7 +5869,15 @@ img, svg, video, canvas {
 @media (max-width: 1023px) {
   .page {
     padding-top: calc(90px + env(safe-area-inset-top));
-    padding-bottom: calc(78px + env(safe-area-inset-bottom));
+    /* --fh-mobile-stack-height wird von syncMobileBottomStackHeight()
+       in scripts/core/progression.js live aus der tatsaechlichen
+       Hoehe von #fh-mobile-bottom-stack gemessen (Tableiste +
+       ggf. sichtbare Spielerkarte) - kein geratener Pixelwert, der
+       bei sich aenderndem Inhalt (z.B. Karte erscheint/verschwindet)
+       aus dem Ruder laufen kann. 78px ist nur der Fallback, bevor
+       JS einmal gemessen hat.
+    */
+    padding-bottom: calc(var(--fh-mobile-stack-height, 78px) + 16px);
   }
 }
 
@@ -8857,6 +8898,27 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   color: var(--fh-muted-fg);
 }
 
+/* ---- Mobile Spielerkarte (unter 1024px, ueber der Tableiste) ----
+   Zeigt dieselbe renderPlayerCardHtml()-Ausgabe wie die Desktop-
+   Sidebar, da .fh-sidebar unterhalb 1024px komplett display:none
+   ist (siehe .fh-sidebar-Regel weiter oben) und der Levelbereich
+   dort sonst fuer die meisten Besucher (Smartphones) unsichtbar
+   bliebe. */
+.fh-mobile-player-card {
+  padding: 8px 10px 0;
+}
+
+.fh-mobile-player-card .fh-player-card {
+  background: rgba(10, 14, 24, .92);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 -2px 14px rgba(0, 0, 0, .25);
+}
+
+.fh-mobile-player-card-empty,
+.fh-mobile-player-card:empty {
+  display: none;
+}
+
 /* ---- Level-Up-Overlay ---- */
 .fh-levelup-overlay {
   position: fixed;
@@ -8969,6 +9031,101 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   }
   .fh-levelup-confetti {
     animation: none;
+  }
+}
+
+/* ---- "Crew beigetreten"-Animation (nur beim allerersten anonymen
+   Login, siehe showCrewJoinAnimation() in scripts/core/progression.js) ---- */
+.fh-crewjoin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5,7,11,.82);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s var(--fh-ease);
+  padding: 20px;
+  cursor: pointer;
+}
+
+.fh-crewjoin-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fh-crewjoin-card {
+  position: relative;
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+  transform: scale(.85);
+  transition: transform .45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fh-crewjoin-overlay.visible .fh-crewjoin-card {
+  transform: scale(1);
+}
+
+.fh-crewjoin-flag {
+  font-size: 64px;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 18px rgba(240,201,106,.5));
+  animation: fhCrewJoinFlagWave 1.8s ease-in-out infinite;
+}
+
+@keyframes fhCrewJoinFlagWave {
+  0%, 100% { transform: rotate(-4deg) translateY(0); }
+  50% { transform: rotate(4deg) translateY(-4px); }
+}
+
+.fh-crewjoin-title {
+  font-family: var(--fh-font-display);
+  font-size: 24px;
+  letter-spacing: .06em;
+  color: var(--fh-gold-bright);
+  margin: 0 0 6px;
+  text-shadow: 0 0 20px rgba(240,201,106,.4);
+}
+
+.fh-crewjoin-name {
+  font-size: 16px;
+  color: var(--fh-fg);
+  margin: 0;
+}
+
+.fh-crewjoin-confetti {
+  position: absolute;
+  inset: -60px -40px;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(240,201,106,.55) 0 3px, transparent 4px),
+    radial-gradient(circle at 85% 20%, rgba(255,106,42,.5) 0 3px, transparent 4px),
+    radial-gradient(circle at 20% 90%, rgba(85,200,120,.4) 0 3px, transparent 4px),
+    radial-gradient(circle at 75% 85%, rgba(240,201,106,.45) 0 3px, transparent 4px),
+    radial-gradient(circle at 50% 50%, rgba(255,215,107,.35) 0 3px, transparent 4px),
+    radial-gradient(circle at 40% 30%, rgba(77,163,255,.35) 0 3px, transparent 4px);
+  animation: fhConfettiDrift 2.4s ease-in-out infinite alternate;
+}
+
+.fh-crewjoin-overlay.fh-reduced-motion,
+.fh-crewjoin-overlay.fh-reduced-motion .fh-crewjoin-card,
+.fh-crewjoin-overlay.fh-reduced-motion .fh-crewjoin-flag {
+  transition: opacity .2s linear;
+  animation: none;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-crewjoin-overlay,
+  .fh-crewjoin-overlay .fh-crewjoin-card,
+  .fh-crewjoin-flag {
+    transition: opacity .2s linear !important;
+    animation: none !important;
+    transform: none !important;
   }
 }
 
