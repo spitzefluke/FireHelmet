@@ -116,7 +116,7 @@ function buildCharacters() {
           <h2>${char.name}</h2>
           ${char.role ? `<p class="character-role">${char.role}</p>` : ""}
           ${quoteHtml}
-          <p>${char.description}</p>
+          <p class="character-description">${char.description}</p>
         </div>
       </div>
     `;

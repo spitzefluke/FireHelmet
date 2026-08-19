@@ -522,8 +522,8 @@ async function renderShipRepairPage() {
     mainPanelHtml = `
       <div class="fh-ship-complete-banner">
         <p class="fh-ship-complete-eyebrow" data-i18n="ship.completeEyebrow">⚓ DIE FLITZPIEPEN IST WIEDER SEETÜCHTIG!</p>
-        <h2 class="fh-ship-complete-name">${data.shipName || "???"}</h2>
-        ${data.namedBy ? `<p class="fh-ship-complete-captain">${(typeof getCurrentLang === "function" && getCurrentLang() === "en") ? "Captain" : "Kapitän"}: ${data.namedBy}</p>` : ""}
+        <h2 class="fh-ship-complete-name">${escapeHtml(data.shipName || "???")}</h2>
+        ${data.namedBy ? `<p class="fh-ship-complete-captain">${(typeof getCurrentLang === "function" && getCurrentLang() === "en") ? "Captain" : "Kapitän"}: ${escapeHtml(data.namedBy)}</p>` : ""}
         <p class="fh-ship-complete-hint" data-i18n="ship.completeHint">Deine Flitzpiepen ist wieder seetüchtig und bereit für die nächste Reise.</p>
       </div>
     `;

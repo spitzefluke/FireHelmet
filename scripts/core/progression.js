@@ -344,12 +344,16 @@ function renderPlayerCardHtml(data) {
   const xpText = progress.isMaxLevel
     ? (typeof t === "function" ? t("progression.maxLevel", "Max. Level erreicht") : "Max. Level erreicht")
     : `${progress.xpIntoLevel} / ${progress.xpForNextLevel} XP`;
+  // Der Spielername stammt letztlich vom Nutzer (Nickname-Eingabe) -
+  // niemals ungefiltert in innerHTML einsetzen, siehe escapeHtml()
+  // in wheel.js (dieselbe Funktion, die auch Rangliste/Boss nutzen).
+  const safeNickname = typeof escapeHtml === "function" ? escapeHtml(nickname) : nickname;
 
   return `
     <button type="button" class="fh-player-card" onclick="changePage('piratenpass')" aria-label="${levelLabel} ${progress.level}">
       <span class="fh-player-card-avatar">${avatarHtml}</span>
       <span class="fh-player-card-info">
-        <span class="fh-player-card-name">${nickname}</span>
+        <span class="fh-player-card-name">${safeNickname}</span>
         <span class="fh-player-card-level">${levelLabel} ${progress.level}</span>
         <span class="fh-player-card-xpbar" role="progressbar" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpText}">
           <span class="fh-player-card-xpfill" style="width:${percent}%"></span>
@@ -362,21 +366,50 @@ function renderPlayerCardHtml(data) {
 
 let progressionUnsubscribe = null;
 
+// Misst die TATSAECHLICHE Hoehe von Tableiste + (falls sichtbar)
+// mobiler Spielerkarte und spiegelt sie in eine CSS-Variable, statt
+// dass .page irgendwo einen geratenen Pixelwert dafuer reserviert
+// (siehe --fh-mobile-stack-height in style.css). Laeuft ausserdem bei
+// jeder Fenstergroessenaenderung, damit z.B. eine Drehung des Handys
+// (andere env(safe-area-inset-bottom)) nichts verdeckt.
+function syncMobileBottomStackHeight() {
+  const stack = document.getElementById("fh-mobile-bottom-stack");
+  if (!stack) return;
+  document.documentElement.style.setProperty("--fh-mobile-stack-height", `${stack.offsetHeight}px`);
+}
+window.addEventListener("resize", syncMobileBottomStackHeight);
+
+// Beide Karten (feste Desktop-Sidebar ab 1024px UND die kompakte
+// Mobile-Leiste darunter) werden hier IMMER gemeinsam aus derselben
+// renderPlayerCardHtml()-Ausgabe befuellt - es gibt bewusst keine
+// zweite, eigenstaendige Levellogik nur fuer Mobile.
+function paintPlayerCardTargets(data) {
+  const html = renderPlayerCardHtml(data);
+  const hasCard = html.includes("fh-player-card");
+  ["fh-sidebar-footer", "fh-mobile-player-card"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = html;
+    // Ohne Login zeigt die mobile Leiste keinen leeren Balken ueber
+    // der Tableiste an, sondern bleibt platzsparend eingeklappt.
+    el.classList.toggle("fh-mobile-player-card-empty", id === "fh-mobile-player-card" && !hasCard);
+  });
+  syncMobileBottomStackHeight();
+}
+
 async function refreshPlayerCard() {
   const container = document.getElementById("fh-sidebar-footer");
   if (!container || !wheelDb || typeof wheelAuthReady === "undefined") return;
 
   const uid = await wheelAuthReady;
   if (!uid) {
-    container.innerHTML = renderPlayerCardHtml(null);
+    paintPlayerCardTargets(null);
     return;
   }
 
   if (!progressionUnsubscribe) {
     progressionUnsubscribe = wheelDb.collection("player_progression").doc(uid).onSnapshot((snap) => {
-      const el = document.getElementById("fh-sidebar-footer");
-      if (!el) return;
-      el.innerHTML = renderPlayerCardHtml(snap.exists ? snap.data() : null);
+      paintPlayerCardTargets(snap.exists ? snap.data() : null);
     });
     return;
   }
@@ -386,7 +419,7 @@ async function refreshPlayerCard() {
   // sofort sichtbare Aktualisierung (z.B. direkt nach einer
   // Belohnungsvergabe), ohne ein zweites Abo aufzumachen.
   const snap = await wheelDb.collection("player_progression").doc(uid).get();
-  container.innerHTML = renderPlayerCardHtml(snap.exists ? snap.data() : null);
+  paintPlayerCardTargets(snap.exists ? snap.data() : null);
 }
 
 /* ------------------------------------------------------
@@ -441,6 +474,58 @@ function showLevelUpOverlay(level, reward) {
     if (e.target === overlay) close();
   });
   document.addEventListener("keydown", onKeydown);
+}
+
+/* ------------------------------------------------------
+   "CREW BEIGETRETEN"-ANIMATION
+   ---------------------------------------------------
+   Laeuft NUR beim allerersten anonymen Anmelden (siehe Aufruf in
+   saveNickname() in scripts/wheel/wheel.js, gated ueber das einmalig
+   in localStorage gesetzte Flag "hasSeenCrewJoinAnimation" - wird
+   NIE erneut gezeigt, auch nicht nach Reload/erneutem Login).
+   Kurze, 1-3s selbst-ausblendende Sequenz, angelehnt an
+   showLevelUpOverlay() oben (gleiche Overlay-/Konfetti-Bausteine,
+   keine zweite eigenstaendige Overlay-Implementierung von Grund auf).
+------------------------------------------------------ */
+function showCrewJoinAnimation(name) {
+  const existing = document.getElementById("fh-crewjoin-overlay");
+  if (existing) existing.remove();
+
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const overlay = document.createElement("div");
+  overlay.id = "fh-crewjoin-overlay";
+  overlay.className = `fh-crewjoin-overlay${reduceMotion ? " fh-reduced-motion" : ""}`;
+  overlay.setAttribute("role", "status");
+  overlay.setAttribute("aria-live", "polite");
+
+  // Name kommt aus validateUsername()/saveNickname() - trotzdem hier
+  // ebenfalls per escapeHtml() ausgeben (dieselbe Funktion wie
+  // ueberall sonst), statt roher HTML-Injektion.
+  const safeName = typeof escapeHtml === "function" ? escapeHtml(name) : name;
+  const welcomeLabel = typeof t === "function" ? t("progression.crewJoinWelcome", "Willkommen in der Crew!") : "Willkommen in der Crew!";
+
+  overlay.innerHTML = `
+    <div class="fh-crewjoin-card">
+      ${reduceMotion ? "" : '<div class="fh-crewjoin-confetti" aria-hidden="true"></div>'}
+      <div class="fh-crewjoin-flag" aria-hidden="true">🏴‍☠️</div>
+      <p class="fh-crewjoin-title">${welcomeLabel}</p>
+      <p class="fh-crewjoin-name">${safeName}</p>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add("visible"));
+
+  function close() {
+    overlay.classList.remove("visible");
+    setTimeout(() => overlay.remove(), 350);
+  }
+
+  // Blendet sich von allein wieder aus (1-3s Vorgabe) - ein Klick
+  // ueberspringt die Animation vorzeitig, falls jemand ungeduldig ist.
+  overlay.addEventListener("click", close);
+  setTimeout(close, reduceMotion ? 1300 : 2600);
 }
 
 function describeRewardHtml(reward) {

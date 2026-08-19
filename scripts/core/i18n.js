@@ -134,6 +134,7 @@ const translations = {
     "progression.level": "LEVEL",
     "progression.maxLevel": "Max. Level erreicht",
     "progression.levelUp": "LEVEL UP!",
+    "progression.crewJoinWelcome": "Willkommen in der Crew!",
     "progression.close": "Schließen",
 
     "characters.title": "CHARACTERS",
@@ -326,6 +327,7 @@ const translations = {
     "progression.level": "LEVEL",
     "progression.maxLevel": "Max level reached",
     "progression.levelUp": "LEVEL UP!",
+    "progression.crewJoinWelcome": "Welcome to the crew!",
     "progression.close": "Close",
 
     "characters.title": "CHARACTERS",

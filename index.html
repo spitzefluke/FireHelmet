@@ -121,32 +121,50 @@
   </aside>
 
   <!-- ============================================================
-       UNTERE TAB-LEISTE (Mobile/Tablet, unter 1024px)
-       Bestehendes Hamburger-Menü bleibt als "Mehr"-Schublade
-       für alle restlichen Seiten erhalten (openMenu()).
+       MOBILE UNTERER BEREICH (unter 1024px): Spielerkarte + Tableiste
+       ---------------------------------------------------
+       Beide Elemente stecken bewusst in EINEM gemeinsamen, fixierten
+       Wrapper und stapeln sich per normalem Flex-Layout - so muss die
+       tatsaechliche Hoehe der Tableiste nirgendwo als fester
+       Pixelwert geraten werden (das fuehrte vorher dazu, dass die
+       XP-Zeile der Spielerkarte teilweise hinter der Tableiste
+       verschwand). Die Spielerkarte wird von renderPlayerCardHtml()/
+       refreshPlayerCard() in scripts/core/progression.js befuellt -
+       dieselbe Quelle wie die Desktop-Sidebar-Karte, keine zweite
+       eigenstaendige Levellogik. Auf der Desktop-Sidebar (ab 1024px)
+       ist .fh-sidebar bereits sichtbar; hier zeigen wir die
+       identische Karte kompakt ueber der Tableiste, da .fh-sidebar
+       unterhalb 1024px display:none ist und der Levelbereich dort
+       sonst komplett unsichtbar bliebe.
   ============================================================ -->
-  <nav class="fh-bottom-nav" id="fh-bottom-nav">
-    <a class="fh-bottom-nav-item" data-page="home" onclick="changePage('home')">
-      <span class="fh-bottom-nav-icon">🏠</span>
-      <span class="fh-bottom-nav-label" data-i18n="menu.home">Home</span>
-    </a>
-    <a class="fh-bottom-nav-item" data-page="community-boss" onclick="changePage('community-boss')">
-      <span class="fh-bottom-nav-icon">🐙</span>
-      <span class="fh-bottom-nav-label" data-i18n="menu.communityBoss">Boss</span>
-    </a>
-    <a class="fh-bottom-nav-item" data-page="race" onclick="changePage('race')">
-      <span class="fh-bottom-nav-icon">🏎️</span>
-      <span class="fh-bottom-nav-label" data-i18n="menu.race">Rennen</span>
-    </a>
-    <a class="fh-bottom-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')">
-      <span class="fh-bottom-nav-icon">🏆</span>
-      <span class="fh-bottom-nav-label" data-i18n="menu.leaderboard">Rangliste</span>
-    </a>
-    <button type="button" class="fh-bottom-nav-item fh-bottom-nav-more" onclick="openMenu()">
-      <span class="fh-bottom-nav-icon">☰</span>
-      <span class="fh-bottom-nav-label">Mehr</span>
-    </button>
-  </nav>
+  <div class="fh-mobile-bottom-stack" id="fh-mobile-bottom-stack">
+    <div class="fh-mobile-player-card" id="fh-mobile-player-card"></div>
+
+    <!-- Bestehendes Hamburger-Menü bleibt als "Mehr"-Schublade für
+         alle restlichen Seiten erhalten (openMenu()). -->
+    <nav class="fh-bottom-nav" id="fh-bottom-nav">
+      <a class="fh-bottom-nav-item" data-page="home" onclick="changePage('home')">
+        <span class="fh-bottom-nav-icon">🏠</span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.home">Home</span>
+      </a>
+      <a class="fh-bottom-nav-item" data-page="community-boss" onclick="changePage('community-boss')">
+        <span class="fh-bottom-nav-icon">🐙</span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.communityBoss">Boss</span>
+      </a>
+      <a class="fh-bottom-nav-item" data-page="race" onclick="changePage('race')">
+        <span class="fh-bottom-nav-icon">🏎️</span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.race">Rennen</span>
+      </a>
+      <a class="fh-bottom-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')">
+        <span class="fh-bottom-nav-icon">🏆</span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.leaderboard">Rangliste</span>
+      </a>
+      <button type="button" class="fh-bottom-nav-item fh-bottom-nav-more" onclick="openMenu()">
+        <span class="fh-bottom-nav-icon">☰</span>
+        <span class="fh-bottom-nav-label">Mehr</span>
+      </button>
+    </nav>
+  </div>
 
   <main>
 

@@ -343,14 +343,19 @@ const NICKNAME_HOMOGLYPHS = {
   α: "a", ε: "e", ο: "o", ρ: "p", υ: "y", χ: "x", ι: "i", // griechisch
 };
 
-function normalizeNicknameForFilter(name) {
+// Buchstaben-/Zahlen-Vertauschungen und Homoglyphen aufloesen, aber
+// (anders als normalizeNicknameForFilter) Trennzeichen wie Leerzeichen
+// noch NICHT entfernen - wird sowohl fuer den voll zusammengezogenen
+// Vergleichstext als auch fuer die Wort-fuer-Wort-Pruefung unten
+// gebraucht.
+function applyNicknameSubstitutions(name) {
   let text = name.toLowerCase();
 
   for (const [from, to] of Object.entries(NICKNAME_HOMOGLYPHS)) {
     text = text.split(from).join(to);
   }
 
-  text = text
+  return text
     .replace(/0/g, "o")
     .replace(/1/g, "i")
     .replace(/3/g, "e")
@@ -359,17 +364,44 @@ function normalizeNicknameForFilter(name) {
     .replace(/7/g, "t")
     .replace(/8/g, "b")
     .replace(/\$/g, "s")
-    .replace(/@/g, "a")
-    .replace(/[^a-zäöüß]/g, "");
+    .replace(/@/g, "a");
+}
 
+function collapseRepeatedLetters(text) {
   // Wiederholte/gestreckte Buchstaben zusammenziehen, z.B.
   // "arrrschloch" oder "aaarschloch" -> "arschloch", damit sich
   // niemand durch Buchstaben-Wiederholung mitten im Wort
   // vorbeimogeln kann
-  text = text.replace(/(.)\1+/g, "$1");
-
-  return text;
+  return text.replace(/(.)\1+/g, "$1");
 }
+
+function normalizeNicknameForFilter(name) {
+  const substituted = applyNicknameSubstitutions(name).replace(/[^a-zäöüß]/g, "");
+  return collapseRepeatedLetters(substituted);
+}
+
+// Einzelne "Woerter" des Namens (getrennt durch Leerzeichen oder
+// sonstige Nicht-Buchstaben, z.B. Unterstriche/Punkte), jeweils fuer
+// sich normalisiert. Wird nur fuer KURZE Filterbegriffe gebraucht,
+// siehe isNicknameBlocked().
+function getNicknameWords(name) {
+  return applyNicknameSubstitutions(name)
+    .split(/[^a-zäöüß]+/)
+    .filter(Boolean)
+    .map(collapseRepeatedLetters);
+}
+
+// Ab dieser Laenge wird ein Filterbegriff als Teilstring des GESAMTEN,
+// getrennt-zeichen-frei zusammengezogenen Namens gesucht (fängt damit
+// auch auseinandergezogene Schreibweisen wie "B e l e i d i g u n g"
+// ab). KURZE Begriffe (z.B. "mod", 3 Zeichen) wuerden als reine
+// Teilstring-Suche viel zu leicht harmlose Namen treffen, die den
+// Begriff nur zufaellig enthalten (z.B. "Commodore" enthaelt "mod",
+// "Modest" beginnt mit "mod") - die pruefen wir stattdessen nur gegen
+// einzelne, durch Trennzeichen abgegrenzte Wortteile des Namens bzw.
+// gegen den kompletten Namen, nicht gegen eine beliebige Stelle mitten
+// in einem laengeren, harmlosen Wort.
+const NICKNAME_SUBSTRING_MATCH_MIN_LENGTH = 5;
 
 function isNicknameBlocked(name) {
   const normalized = normalizeNicknameForFilter(name);
@@ -377,11 +409,69 @@ function isNicknameBlocked(name) {
 
   const ownList = typeof nicknameBlocklist !== "undefined" ? nicknameBlocklist : [];
   const combinedList = [...ownList, ...externalBadWordsList];
+  const words = getNicknameWords(name);
 
-  return combinedList.some((word) => {
-    const normalizedWord = normalizeNicknameForFilter(word);
-    return normalizedWord && normalizedWord.length >= 3 && normalized.includes(normalizedWord);
+  return combinedList.some((entry) => {
+    const normalizedWord = normalizeNicknameForFilter(entry);
+    if (!normalizedWord || normalizedWord.length < 3) return false;
+
+    if (normalizedWord.length >= NICKNAME_SUBSTRING_MATCH_MIN_LENGTH) {
+      return normalized.includes(normalizedWord);
+    }
+
+    // Kurzer Begriff: nur blocken, wenn er als eigenstaendiges Wort
+    // vorkommt oder der GESAMTE Name (zusammengezogen) genau diesem
+    // Begriff entspricht - nicht, wenn er nur zufaellig als
+    // Teilstring in einem laengeren, harmlosen Namen steckt.
+    return normalized === normalizedWord || words.includes(normalizedWord);
   });
+}
+
+/* ------------------------------------------------------
+   ZENTRALE NAMENS-VALIDIERUNG
+   ---------------------------------------------------
+   EINZIGE Stelle, die einen vom Spieler frei eingegebenen Namen
+   (aktuell: anonyme Anmeldung) vor dem Speichern prueft - Laenge,
+   erlaubte Zeichen UND der Schimpfwort-Filter oben. Alle
+   Anmeldewege, die einen frei eingetippten Namen entgegennehmen,
+   sollen ausschliesslich ueber diese Funktion laufen, damit es nicht
+   mehrere, unterschiedlich strenge Pruefungen im Code gibt.
+   (Bei Twitch/Discord-Login wird stattdessen der echte, vom Anbieter
+   bestaetigte Anzeigename uebernommen - der wird bewusst NICHT gegen
+   den Schimpfwort-Filter geprueft, da er keine frei waehlbare,
+   anonyme Trollerie ist, sondern die tatsaechliche Konto-Identitaet;
+   beim Anzeigen wird er wie jeder andere Name ueber escapeHtml()
+   ausgegeben, siehe renderPlayerCardHtml() etc.)
+------------------------------------------------------ */
+const NICKNAME_MIN_LENGTH = 2;
+const NICKNAME_MAX_LENGTH = 18; // deckt sich mit maxlength="18" auf #wheel-nickname-input
+// Erlaubt: Buchstaben (inkl. Umlaute/Unicode), Zahlen, Leerzeichen und
+// die gaengigen harmlosen Trennzeichen. Alles andere - insbesondere
+// < > & " ' sowie Steuerzeichen - wird abgelehnt, damit ueber den
+// Namen niemals HTML/JS eingeschleust werden kann. Das ist eine
+// zusaetzliche Absicherung an der Eingabe; die eigentliche, immer
+// greifende Schutzmassnahme ist aber, dass jede Anzeigestelle den
+// Namen ausschliesslich per escapeHtml() (sichere Textausgabe) statt
+// per roher HTML-Injektion ausgibt.
+const NICKNAME_ALLOWED_CHARS = /^[\p{L}\p{N} _\-.]+$/u;
+
+function validateUsername(rawName) {
+  const name = (rawName || "").trim().replace(/\s+/g, " ");
+
+  if (name.length < NICKNAME_MIN_LENGTH) {
+    return { ok: false, reason: "tooShort" };
+  }
+  if (name.length > NICKNAME_MAX_LENGTH) {
+    return { ok: false, reason: "tooLong" };
+  }
+  if (!NICKNAME_ALLOWED_CHARS.test(name)) {
+    return { ok: false, reason: "invalidChars" };
+  }
+  if (isNicknameBlocked(name)) {
+    return { ok: false, reason: "blocked" };
+  }
+
+  return { ok: true, name };
 }
 
 /* ------------------------------------------------------
@@ -590,15 +680,24 @@ function showAvatarUnlockToast(entry) {
 /* ------------------------------------------------------
    NAME SPEICHERN
 ------------------------------------------------------ */
+const NICKNAME_VALIDATION_MESSAGES = {
+  tooShort: "❌ Der Name ist zu kurz. Bitte gib mindestens 2 Zeichen ein.",
+  tooLong: `❌ Der Name ist zu lang (max. ${NICKNAME_MAX_LENGTH} Zeichen).`,
+  // Verraet absichtlich NICHT, welcher Begriff genau angeschlagen hat -
+  // sonst liesse sich der Filter durch Ausprobieren "durchtesten".
+  invalidChars: "❌ Bitte nur Buchstaben, Zahlen, Leerzeichen sowie - _ . verwenden.",
+  blocked: "Arrr! Dieser Name passt leider nicht zu unserer Crew. Versuch bitte einen anderen.",
+};
+
 async function saveNickname() {
   const input = document.getElementById("wheel-nickname-input");
   const messageEl = document.getElementById("nickname-error");
   if (!input) return;
 
-  const name = input.value.trim();
+  const rawName = input.value.trim();
   if (messageEl) messageEl.textContent = "";
 
-  if (!name) return;
+  if (!rawName) return;
 
   // Sicherstellen, dass die externe Schimpfwort-Datenbank geladen ist,
   // bevor geprüft wird (ist in aller Regel längst fertig, da das Laden
@@ -609,12 +708,19 @@ async function saveNickname() {
   }
   if (messageEl) messageEl.textContent = "";
 
-  if (isNicknameBlocked(name)) {
+  // Einzige Stelle, die einen frei eingetippten Namen prueft (Laenge,
+  // erlaubte Zeichen, Schimpfwort-Filter) - siehe validateUsername()
+  // weiter oben in dieser Datei.
+  const result = validateUsername(rawName);
+  if (!result.ok) {
     if (messageEl) {
-      messageEl.textContent = "❌ Dieser Name ist leider nicht erlaubt. Bitte wähle einen anderen.";
+      messageEl.textContent = NICKNAME_VALIDATION_MESSAGES[result.reason] || NICKNAME_VALIDATION_MESSAGES.blocked;
     }
     return;
   }
+  const name = result.name;
+
+  const isFirstEverSignup = !localStorage.getItem("wheelNickname") && !localStorage.getItem("hasSeenCrewJoinAnimation");
 
   localStorage.setItem("wheelNickname", name);
   localStorage.setItem("loginProvider", "anonymous");
@@ -628,6 +734,11 @@ async function saveNickname() {
   syncCodesToFirestore();
   showNicknameSuccess(name);
   if (typeof refreshPlayerCard === "function") refreshPlayerCard();
+
+  if (isFirstEverSignup && typeof showCrewJoinAnimation === "function") {
+    localStorage.setItem("hasSeenCrewJoinAnimation", "1");
+    showCrewJoinAnimation(name);
+  }
 }
 
 /* ------------------------------------------------------
