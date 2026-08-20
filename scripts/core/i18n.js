@@ -117,6 +117,10 @@ const translations = {
     "socials.audiobookText": "Tauche noch tiefer in die Geschichte ein.",
     "socials.audiobookButton": "Auf Spotify anhören",
 
+    "socials.gameTitle": "🎮 Andiis Schatzraub",
+    "socials.gameText": "Spiel das Schatzraub-Game und stell dein Glück auf die Probe.",
+    "socials.gameButton": "Jetzt spielen",
+
     "common.days": "Tage",
     "common.hours": "Stunden",
     "common.minutes": "Minuten",
@@ -327,6 +331,10 @@ const translations = {
     "socials.audiobookTitle": "🎧 The Fire Helmet Audio Drama",
     "socials.audiobookText": "Dive even deeper into the story.",
     "socials.audiobookButton": "Listen on Spotify",
+
+    "socials.gameTitle": "🎮 Andii's Treasure Heist",
+    "socials.gameText": "Play the treasure heist game and test your luck.",
+    "socials.gameButton": "Play now",
 
     "common.days": "Days",
     "common.hours": "Hours",
