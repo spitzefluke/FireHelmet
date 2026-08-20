@@ -135,6 +135,30 @@ function loadStreamRaetselRandomTrack() {
 
   const index = pickStreamRaetselNextIndex();
   el.src = streamRaetselConfig.musicPlaylist[index];
+  updateStreamRaetselNowPlayingUI(streamRaetselConfig.musicPlaylist[index]);
+}
+
+/* ------------------------------------------------------
+   "JETZT LÄUFT"-ANZEIGE (rein visuell, unabhängig von der
+   Countdown-Logik oben - siehe drawStreamRaetselCountdown()/
+   updateStreamRaetselView() weiter unten, die dieses Element nie
+   anfassen). Der Titel wird direkt aus dem Dateinamen abgeleitet
+   (Unterstriche -> Leerzeichen, Endung weg) statt eines separaten
+   Metadaten-Felds - spart eine zweite Quelle, die mit der Playlist
+   synchron gehalten werden müsste.
+------------------------------------------------------ */
+function deriveStreamRaetselTrackTitle(path) {
+  const fileName = path.split("/").pop() || "";
+  return fileName.replace(/\.[^.]+$/, "").replace(/_/g, " ");
+}
+
+function updateStreamRaetselNowPlayingUI(path) {
+  const wrapEl = document.getElementById("streamraetsel-now-playing");
+  const titleEl = document.getElementById("streamraetsel-now-playing-title");
+  if (!wrapEl || !titleEl) return;
+
+  titleEl.textContent = deriveStreamRaetselTrackTitle(path);
+  wrapEl.hidden = false;
 }
 
 function fadeStreamRaetselMusic(el, targetVolume, duration, onComplete) {

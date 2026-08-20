@@ -3366,6 +3366,29 @@ main {
   50%      { box-shadow: 0 0 55px rgba(255,45,45,.6); }
 }
 
+.streamraetsel-now-playing {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--fh-font-display);
+  font-size: 15px;
+  letter-spacing: .5px;
+  color: var(--fh-muted-fg, #ffb3b3);
+  text-transform: capitalize;
+}
+
+.streamraetsel-now-playing-icon {
+  animation: streamTeaserTwinkle 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streamraetsel-now-playing-icon {
+    animation: none;
+  }
+}
+
 .streamraetsel-countdown .time-box:hover {
   box-shadow: 0 0 60px #ff2d2d;
 }
