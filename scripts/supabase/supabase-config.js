@@ -21,6 +21,6 @@ const supabaseConfig = {
   // Leer lassen = Supabase-Integration ist deaktiviert, die Website
   // funktioniert unveraendert normal weiter (rein additiv, siehe
   // scripts/supabase/supabase-client.js).
-  url: "DEINE-SUPABASE-URL",
-  anonKey: "DEIN-SUPABASE-ANON-KEY",
+  url: "https://kxlntqjevvdiiefzkoiu.supabase.co",
+  anonKey: "sb_publishable_NaYW1ymFR8LhPH2pJSo83g_-spwRoci",
 };
