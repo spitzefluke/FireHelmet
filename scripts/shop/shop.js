@@ -98,7 +98,7 @@ function renderShopGrid(options) {
       } else if (isOwned) {
         buttonHtml = `<button type="button" class="shop-item-btn shop-item-equipped" disabled>✓ Freigeschaltet</button>`;
       } else {
-        buttonHtml = `<button type="button" class="shop-item-btn" onclick="buyShopItem('${item.id}')">${item.price.toLocaleString("de-DE")} 💰 Kaufen</button>`;
+        buttonHtml = `<button type="button" class="shop-item-btn" onclick="buyShopItem('${item.id}')"><span class="shop-item-price">${item.price.toLocaleString("de-DE")} 💰</span> Kaufen</button>`;
       }
 
       const previewClass = isFrame ? `avatar-frame-${item.style}` : "";
@@ -121,7 +121,7 @@ function renderShopGrid(options) {
             <p class="shop-item-info-name">${item.emoji} ${item.name}</p>
             <p class="shop-item-info-rarity">${rarityLabel}</p>
             ${item.description ? `<p class="shop-item-info-desc">&bdquo;${item.description}&ldquo;</p>` : ""}
-            <p class="shop-item-info-meta"><span>${categoryLabel}</span><span>${item.price.toLocaleString("de-DE")} 💰</span></p>
+            <p class="shop-item-info-meta"><span>${categoryLabel}</span><span class="shop-item-price">${item.price.toLocaleString("de-DE")} 💰</span></p>
           </div>
         </div>
       `;

@@ -770,8 +770,13 @@
     <section id="streamraetsel" class="page">
       <!-- Eigene, unabhängige Mystery-Hintergrundmusik für diese Seite.
            Leg deine Audiodatei ab und trag den Pfad unten ein
-           (z.B. "scripts/streamraetsel/mystery-musik.mp3"). -->
-      <audio id="streamraetsel-music" loop></audio>
+           (z.B. "scripts/streamraetsel/mystery-musik.mp3").
+           WICHTIG: kein "loop"-Attribut - sonst feuert der Browser nie
+           "ended" und loadStreamRaetselRandomTrack() (siehe
+           streamraetsel.js, startStreamRaetselMusic()) kommt beim
+           naechsten Song in der Playlist nie zum Zug, derselbe Track
+           liefe stattdessen die ganze Sitzung lang in Dauerschleife. -->
+      <audio id="streamraetsel-music"></audio>
 
       <div class="streamraetsel-fx" id="streamraetsel-fx"></div>
 
@@ -799,6 +804,11 @@
             <small data-i18n="common.seconds">Sekunden</small>
           </div>
         </div>
+
+        <p class="streamraetsel-now-playing" id="streamraetsel-now-playing" hidden>
+          <span class="streamraetsel-now-playing-icon">🎵</span>
+          <span id="streamraetsel-now-playing-title"></span>
+        </p>
       </div>
 
       <!-- Sobald der Countdown oben abgelaufen ist, ersetzt

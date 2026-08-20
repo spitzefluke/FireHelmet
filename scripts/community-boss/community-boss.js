@@ -281,7 +281,58 @@ function drawBossCreature(time, w, h, boss) {
   else if (boss.type === "serpent") drawSeaSerpent(time, boss);
   else drawKraken(time, boss);
 
+  drawBossDamageCracks(time, rageColor);
+
   bossCtx.restore();
+}
+
+/* ------------------------------------------------------
+   SCHADENS-RISSE AUF DEM KOERPER (neu)
+   ---------------------------------------------------
+   Sichtbare, gluehende Risslinien direkt AUF der Kreatur, die mit
+   sinkenden HP an Zahl und Intensitaet zunehmen (bossRageLevel, siehe
+   applyBossHpDisplay()) - macht den Kampfverlauf am Boss selbst
+   ablesbar, nicht nur an Arena-Hintergrund/HP-Balken. Die Risspfade
+   selbst sind FEST (kein Math.random() pro Frame), nur Alpha/Glow
+   pulsieren mit der Zeit - sonst wirkt es wie Bildrauschen statt
+   wie echte Risse. Wird in DERSELBEN transformierten Koordinate
+   gezeichnet wie die Kreatur (translate/scale bereits aktiv), landet
+   also automatisch exakt auf ihr.
+------------------------------------------------------ */
+const BOSS_CRACK_PATHS = [
+  [[0, -10], [-14, -34], [-8, -58], [-20, -82]],
+  [[6, -4], [24, -20], [18, -44], [34, -60]],
+  [[-4, 8], [-22, 22], [-14, 44], [-28, 64]],
+  [[10, 14], [28, 32], [20, 52], [36, 74]],
+  [[-8, -20], [-26, -8], [-40, 6], [-52, -4]],
+  [[2, 2], [18, 14], [36, 10], [50, 22]],
+];
+
+function drawBossDamageCracks(time, rageColor) {
+  if (bossRageLevel < 0.12) return;
+
+  const ctx = bossCtx;
+  const visibleCount = Math.min(BOSS_CRACK_PATHS.length, Math.round(bossRageLevel * BOSS_CRACK_PATHS.length) + 1);
+  const flicker = 0.7 + Math.sin(time / 260) * 0.3;
+
+  ctx.save();
+  ctx.strokeStyle = hexToRgba(rageColor, Math.min(0.9, bossRageLevel * 0.9) * flicker);
+  ctx.shadowColor = rageColor;
+  ctx.shadowBlur = 10 + bossRageLevel * 10;
+  ctx.lineWidth = 1.5 + bossRageLevel * 1.5;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  for (let i = 0; i < visibleCount; i++) {
+    const path = BOSS_CRACK_PATHS[i];
+    ctx.beginPath();
+    ctx.moveTo(path[0][0], path[0][1]);
+    for (let p = 1; p < path.length; p++) ctx.lineTo(path[p][0], path[p][1]);
+    ctx.stroke();
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.restore();
 }
 
 function hexToRgba(hex, alpha) {

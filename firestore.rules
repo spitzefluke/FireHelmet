@@ -411,11 +411,27 @@ service cloud.firestore {
     // einen weiteren, fortlaufenden Tag pro Schreibvorgang freischalten
     // (siehe dailyQuestDayIsUnlocked()/thresholdForQuestDay() unten,
     // die ausschliesslich auf dieser hergeleiteten Tagesnummer beruhen).
+    // Ausgelagert aus validDailyQuestsWriteDetail() (siehe dort): baut
+    // toolForQuestDay(newDay) - eine 20-elementige Liste - und wird
+    // dadurch NUR noch ausgewertet, wenn ein Tag tatsaechlich geclaimt
+    // wird (der seltene Zweig), statt bei JEDEM Schreibvorgang eines
+    // Spielers mit gestarteten Tagesquests unbedingt mitzuzahlen (auch
+    // bei voellig unveraenderten dailyQuests, z.B. einer Spielothek-
+    // Runde). Trug zum selben Ausdrucks-Budget-Problem bei wie
+    // validShipTools() oben (siehe Kommentar dort) - dieselbe Ursache
+    // (set(...,{merge:true}) macht dailyQuests praktisch immer Teil von
+    // newData), nur ueber eine andere, bisher uebersehene Stelle.
+    function validDailyQuestClaim(newData, newDay) {
+      let tool = toolForQuestDay(newDay);
+      return dailyQuestDayIsUnlocked(newDay)
+        && oldNum(metricForQuestDay(newDay)) >= thresholdForQuestDay(newDay)
+        && newData.shipTools[tool] == oldToolCount(tool) + 1;
+    }
+
     function validDailyQuestsWriteDetail(newData) {
       let oldDays = oldClaimedDays();
       let newDays = newData.dailyQuests.claimedDays;
       let newDay = oldDays.size() + 1;
-      let tool = toolForQuestDay(newDay);
 
       return newData.dailyQuests is map
         && newDays is list
@@ -429,17 +445,22 @@ service cloud.firestore {
                 newDays.size() == oldDays.size()
                 || (
                   newDays.size() == oldDays.size() + 1
-                  && dailyQuestDayIsUnlocked(newDay)
-                  && oldNum(metricForQuestDay(newDay)) >= thresholdForQuestDay(newDay)
-                  && newData.shipTools[tool] == oldToolCount(tool) + 1
+                  && validDailyQuestClaim(newData, newDay)
                 )
               )
             )
         );
     }
 
+    // Fast-Path nach demselben Muster wie validShipTools() oben: ist
+    // dailyQuests wirklich unveraendert (der weit ueberwiegende Fall bei
+    // jedem Schreibvorgang, der nicht die Schiffsreparatur betrifft),
+    // wird validDailyQuestsWriteDetail() gar nicht erst aufgerufen -
+    // spart selbst die dortigen guenstigen Pruefungen noch ein.
     function validDailyQuestsWrite(newData) {
-      return !('dailyQuests' in newData) || validDailyQuestsWriteDetail(newData);
+      return !('dailyQuests' in newData)
+          || (resource != null && 'dailyQuests' in resource.data && newData.dailyQuests == resource.data.dailyQuests)
+          || validDailyQuestsWriteDetail(newData);
     }
 
     // Prueft die Shop-Felder: Dublonen duerfen pro Schreibvorgang nur
