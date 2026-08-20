@@ -121,6 +121,8 @@ const translations = {
     "socials.gameText": "Spiel das Schatzraub-Game und stell dein Glück auf die Probe.",
     "socials.gameButton": "Jetzt spielen",
 
+    "home.loadingText": "Wird geladen",
+
     "common.days": "Tage",
     "common.hours": "Stunden",
     "common.minutes": "Minuten",
@@ -335,6 +337,8 @@ const translations = {
     "socials.gameTitle": "🎮 Andii's Treasure Heist",
     "socials.gameText": "Play the treasure heist game and test your luck.",
     "socials.gameButton": "Play now",
+
+    "home.loadingText": "Loading",
 
     "common.days": "Days",
     "common.hours": "Hours",
