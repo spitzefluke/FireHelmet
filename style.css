@@ -796,6 +796,112 @@ main {
   letter-spacing: .5px;
 }
 
+/* ======================================================
+   LADEBALKEN UNTER DEM COUNTDOWN
+   Basis: "Loader" von Uiverse.io (KSAplay), Farben auf das
+   FireHelmet-Theme umgestellt (--fh-fire-deep -> --fh-gold-bright
+   statt Original-Orange, dunkler Hintergrund via --fh-bg/--fh-surface).
+====================================================== */
+.fh-hero-loader {
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fh-hero-loader .loading-text {
+  color: var(--fh-fg, #e8edf4);
+  font-size: 14pt;
+  font-weight: 600;
+  margin-left: 10px;
+}
+
+.fh-hero-loader .dot {
+  margin-left: 3px;
+  animation: fhLoaderBlink 1.5s infinite;
+}
+.fh-hero-loader .dot:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.fh-hero-loader .dot:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.fh-hero-loader .loading-bar-background {
+  --height: 30px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 5px;
+  width: 200px;
+  height: var(--height);
+  background-color: var(--fh-surface-2, #111a26);
+  box-shadow: var(--fh-bg, #05070b) -2px 2px 4px 0px inset;
+  border-radius: calc(var(--height) / 2);
+}
+
+.fh-hero-loader .loading-bar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  --height: 20px;
+  width: 0%;
+  height: var(--height);
+  overflow: hidden;
+  background: linear-gradient(
+    0deg,
+    var(--fh-fire-deep, #d9431e) 0%,
+    var(--fh-gold-bright, #f0c96a) 100%
+  );
+  border-radius: calc(var(--height) / 2);
+  animation: fhLoaderFill 4s ease-out infinite;
+}
+
+.fh-hero-loader .white-bars-container {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.fh-hero-loader .white-bar {
+  background: linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  width: 10px;
+  height: 45px;
+  opacity: 0.3;
+  rotate: 45deg;
+}
+
+@keyframes fhLoaderFill {
+  0% {
+    width: 0;
+  }
+  80% {
+    width: 100%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes fhLoaderBlink {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* =====================================================
    FH CINEMATIC HOME EXPERIENCE
    Neue, scroll-gebundene Eroeffnungssequenz vor dem
