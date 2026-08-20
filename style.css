@@ -3532,13 +3532,14 @@ main {
   align-items: center;
   gap: 12px;
   padding: 14px 28px;
-  border-radius: 15px;
+  border-radius: var(--fh-radius, 15px);
   border: 1px solid rgba(145,70,255,.5);
   background: rgba(145,70,255,.2);
   color: #e4d4ff;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
+  box-shadow: var(--fh-shadow-sm, none);
   transition: .3s;
 }
 
@@ -3559,7 +3560,7 @@ main {
   align-items: center;
   gap: 14px;
   padding: 10px 20px;
-  border-radius: 15px;
+  border-radius: var(--fh-radius, 15px);
   background: rgba(145,70,255,.15);
   border: 1px solid rgba(145,70,255,.4);
 }
@@ -3621,7 +3622,7 @@ main {
 
 .login-divider {
   margin: 20px 0;
-  color: #666;
+  color: var(--fh-muted-fg, #666);
   font-size: 14px;
 }
 
@@ -8045,8 +8046,8 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   gap: 10px;
   padding: 12px 18px;
   border-radius: 12px;
-  background: rgba(85,200,120,.08);
-  border: 1px solid rgba(85,200,120,.3);
+  background: color-mix(in srgb, var(--fh-success, #55c878) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fh-success, #55c878) 30%, transparent);
   color: var(--fh-fg);
   font-size: 14px;
 }
@@ -8134,6 +8135,10 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   border: 1px solid var(--fh-border);
   font-size: 14px;
   cursor: pointer;
+}
+
+.gateway-chapter-row input[type="checkbox"] {
+  accent-color: var(--fh-gold);
 }
 
 .gateway-chapter-row small {
