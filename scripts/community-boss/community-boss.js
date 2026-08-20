@@ -1308,6 +1308,13 @@ async function attackCommunityBoss() {
 
     await recordBossDamage(monthId, nickname, damage);
 
+    // Rein additiv, NACH den bereits erfolgreichen Firestore-Schreib-
+    // vorgaengen oben - siehe scripts/supabase/supabase-games.js. Ein
+    // Fehlschlag hier kann den eigentlichen Angriff nicht beeinflussen.
+    if (typeof logBossAttackToSupabase === "function") {
+      logBossAttackToSupabase(nickname, monthId, damage);
+    }
+
     localStorage.setItem(getBossDailyAttackKey(), todayStr());
     spawnBossHitEffect(damage);
     if (typeof awardActionXp === "function") awardActionXp("bossAttack");
