@@ -400,6 +400,17 @@ body.lang-en {
   z-index: 1;
 }
 
+/* Auf Mobile liegt die fixierte Spielerkarte+Tableiste
+   (.fh-mobile-bottom-stack, z-index 260) ueber dem Menue (z-index
+   200) - ohne zusaetzliches Bottom-Padding verschwinden die
+   untersten Menuepunkte (Support/Bewertung/Gateway) dahinter.
+   Gleiche live gemessene Variable wie bei .page (siehe dort). */
+@media (max-width: 1023px) {
+  .sidebar {
+    padding-bottom: calc(var(--fh-mobile-stack-height, 78px) + 30px);
+  }
+}
+
 /* Wichtig: main.js schaltet die Klasse "open" (nicht "active") */
 .sidebar.open {
   left: 0;
@@ -972,6 +983,23 @@ main {
   transform: translate3d(0, calc(var(--fh-progress) * -30px), 0);
 }
 
+/* Sternschnuppe: unsichtbar/opacity 0 in Ruhe, wird per GSAP
+   (fhInitShootingStar() in cinematic.js) beim Erreichen eines
+   bestimmten Scroll-Fortschritts einmal ueber den Himmel gezogen. */
+.fh-shooting-star {
+  position: absolute;
+  top: 16%;
+  left: 66%;
+  width: 90px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.9));
+  border-radius: 999px;
+  opacity: 0;
+  transform: rotate(28deg);
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,.6));
+}
+
 .fh-layer-moon {
   top: 8%;
   right: 12%;
@@ -1042,6 +1070,55 @@ main {
   filter: drop-shadow(0 16px 20px rgba(0,0,0,.5));
 }
 
+/* Dezentes Segelflattern - drei leicht versetzte Loops statt
+   perfekt synchron, wirkt dadurch organischer als ein einzelner
+   Puls auf allen drei Segeln gleichzeitig. */
+#fh-ship-sail-a, #fh-ship-sail-b, #fh-ship-sail-c {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+}
+
+#fh-ship-sail-a { animation: fhSailFlutter 3.6s ease-in-out infinite; }
+#fh-ship-sail-b { animation: fhSailFlutter 4.2s ease-in-out infinite -1.1s; }
+#fh-ship-sail-c { animation: fhSailFlutter 3.1s ease-in-out infinite -.6s; }
+
+@keyframes fhSailFlutter {
+  0%, 100% { transform: scaleX(1) skewY(0deg); }
+  50%      { transform: scaleX(.97) skewY(1.2deg); }
+}
+
+/* Schaumspur im Kielwasser: ein paar Blasen, die am Heck
+   auftauchen, sich ausdehnen und nach hinten wegtreiben. */
+.fh-ship-wake {
+  position: absolute;
+  left: 14%;
+  bottom: 26%;
+  width: 30%;
+  height: 14%;
+  pointer-events: none;
+}
+
+.fh-wake-bubble {
+  position: absolute;
+  bottom: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.55), rgba(255,255,255,0) 70%);
+  animation: fhWakeDrift 3.2s ease-out infinite;
+}
+
+.fh-wake-bubble:nth-child(1) { left: 90%; animation-delay: 0s; }
+.fh-wake-bubble:nth-child(2) { left: 65%; animation-delay: .7s; }
+.fh-wake-bubble:nth-child(3) { left: 40%; animation-delay: 1.5s; }
+.fh-wake-bubble:nth-child(4) { left: 15%; animation-delay: 2.2s; }
+
+@keyframes fhWakeDrift {
+  0%   { transform: translate(0, 0) scale(.4); opacity: 0; }
+  15%  { opacity: .55; }
+  100% { transform: translate(18px, 6px) scale(1.6); opacity: 0; }
+}
+
 .fh-layer-fg-fog {
   background: linear-gradient(0deg, rgba(6,9,15,.92), transparent 55%);
   opacity: max(0, calc(1 - var(--fh-progress) * .6));
@@ -1080,6 +1157,20 @@ main {
   width: 100%;
   height: auto;
   filter: drop-shadow(0 22px 30px rgba(0,0,0,.55));
+}
+
+/* Schwenkender Leuchtturm-Lichtkegel, dreht um die Laterne
+   (215,52 im 300x200-viewBox der Ziel-SVG). */
+#fh-lighthouse-sweep {
+  transform-box: view-box;
+  transform-origin: 215px 52px;
+  mix-blend-mode: screen;
+  animation: fhLighthouseSweep 5s ease-in-out infinite;
+}
+
+@keyframes fhLighthouseSweep {
+  0%, 100% { transform: rotate(-16deg); }
+  50%      { transform: rotate(16deg); }
 }
 
 .fh-destination-glow {
@@ -1265,8 +1356,18 @@ main {
   .fh-ship-bob,
   .fh-scroll-cue-arrow,
   .fh-ocean-sheen,
-  .fh-ember {
+  .fh-ember,
+  #fh-ship-sail-a,
+  #fh-ship-sail-b,
+  #fh-ship-sail-c,
+  .fh-wake-bubble,
+  #fh-lighthouse-sweep {
     animation: none !important;
+  }
+
+  .fh-ship-wake,
+  .fh-shooting-star {
+    display: none !important;
   }
 }
 
