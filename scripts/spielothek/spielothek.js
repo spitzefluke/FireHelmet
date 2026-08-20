@@ -237,6 +237,12 @@ async function playSpielothekGame() {
     });
 
     refreshSpielothekCurrencyDisplay();
+    // Rein additiv, NACH der bereits erfolgreichen/server-geprueften
+    // Firestore-Transaktion oben - siehe scripts/supabase/supabase-games.js.
+    // Ein Fehlschlag hier kann das eigentliche Spiel nicht beeinflussen.
+    if (typeof logSpielothekRoundToSupabase === "function") {
+      logSpielothekRoundToSupabase(game.id, betCost, result.payout, result.win);
+    }
     await renderSpielothekResult(game, handler, result);
     // Cooldown erst NACH der abgeschlossenen Ergebnis-Anzeige starten,
     // nicht schon waehrend die Walzen noch laufen (Auftrag: "Nach

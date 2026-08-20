@@ -1,0 +1,37 @@
+# ======================================================
+# Vorlage fuer das Cloudflare-Workers-Projekt.
+# Kopiere diese Datei in dein SEPARATES Worker-Projekt (nicht Teil
+# dieses Repos, genau wie beim bereits bestehenden Discord-Notify-
+# Worker) als "wrangler.toml" und passe die Werte an.
+#
+# Secrets NIEMALS hier eintragen - stattdessen:
+#   wrangler secret put SUPABASE_URL
+#   wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+# (interaktive Eingabe, landet verschluesselt bei Cloudflare, nie im
+# Klartext in einer Datei oder im Dashboard sichtbar)
+# ======================================================
+
+name = "firehelmet-supabase-proxy"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+FIREBASE_PROJECT_ID = "firehelmet-60558"
+# Genaue Origin deiner Seite (kein Wildcard!) - z.B.:
+# ALLOWED_ORIGIN = "https://spitzefluke.github.io"
+ALLOWED_ORIGIN = "https://DEINE-DOMAIN-HIER"
+
+# Optional, aber empfohlen: KV-Namespace fuer das eingebaute
+# Rate-Limiting (siehe rate-limit.js). Ohne diesen Block laeuft der
+# Worker trotzdem, nur ohne Rate Limiting.
+# Erstellen mit: wrangler kv namespace create RATE_LIMIT_KV
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT_KV"
+# id = "DEINE-KV-NAMESPACE-ID"
+
+# Optional: periodischer Trigger fuer den scheduled()-Handler.
+# Die eigentliche Ranglisten-Snapshot-Erzeugung passiert NICHT hier
+# (der Worker hat keine Firebase-Admin-Zugangsdaten), sondern per
+# supabase/scripts/generate-leaderboard-snapshot.mjs, siehe README.md.
+# [triggers]
+# crons = ["0 3 * * 1"]  # jeden Montag 03:00 UTC
