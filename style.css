@@ -2726,6 +2726,7 @@ main {
 }
 
 .reward-badge {
+  position: relative;
   display: inline-block;
   padding: 4px 10px;
   border-radius: 999px;
@@ -2735,11 +2736,29 @@ main {
   font-weight: 600;
   color: #ffe9b0;
   white-space: nowrap;
+  overflow: hidden;
   transition: transform .2s;
+}
+
+.reward-badge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.4) 48%, transparent 66%);
+  background-size: 250% 100%;
+  background-position: 200% 0;
+  opacity: 0;
+  transition: opacity .2s;
 }
 
 .reward-badge:hover {
   transform: scale(1.1) translateY(-2px);
+}
+
+.reward-badge:hover::after {
+  opacity: 1;
+  animation: fhNavSweep .7s ease forwards;
 }
 
 .reward-none {
@@ -2997,6 +3016,18 @@ main {
 @keyframes kartLeaderGlow {
   0%, 100% { filter: drop-shadow(0 0 2px #ffd76b); }
   50%      { filter: drop-shadow(0 0 10px #ffd76b); }
+}
+
+/* Dezente Silber-/Bronze-Aura fuer Platz 2/3 - schwaecher als die
+   Gold-Aura des Fuehrenden, damit die Rangfolge auch beim fliegenden
+   Vorbeifahren auf einen Blick erkennbar bleibt, nicht nur ueber die
+   Positionsreihenfolge auf der Strecke. */
+.race-kart-rank2 {
+  filter: drop-shadow(0 0 4px #c7ccd6) drop-shadow(0 2px 3px rgba(0,0,0,.5));
+}
+
+.race-kart-rank3 {
+  filter: drop-shadow(0 0 4px #d99a5b) drop-shadow(0 2px 3px rgba(0,0,0,.5));
 }
 
 /* Krone sitzt jetzt FEST auf dem Fahrzeug: sie ist Teil der
@@ -3569,12 +3600,13 @@ main {
   border-radius: 50%;
   vertical-align: middle;
   margin-right: 10px;
-  border: none;
-  transition: transform .2s, box-shadow .2s;
+  border: 1px solid rgba(240,201,106,.25);
+  transition: transform .2s, box-shadow .2s, border-color .2s;
 }
 
 .leaderboard-table tbody tr:hover .leaderboard-avatar {
   transform: scale(1.15);
+  border-color: rgba(240,201,106,.55);
 }
 
 .wheel-login-hint {
@@ -5908,6 +5940,16 @@ img, svg, video, canvas {
   text-align: center;
   font-family: var(--fh-font-display);
   letter-spacing: .02em;
+}
+
+.shop-item-price {
+  display: inline-block;
+  filter: drop-shadow(0 0 6px rgba(255,215,107,.55));
+}
+
+.shop-item-info-meta .shop-item-price {
+  color: #ffe9b0;
+  font-weight: 700;
 }
 
 .shop-item-btn {

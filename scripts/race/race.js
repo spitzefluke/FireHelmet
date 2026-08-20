@@ -421,6 +421,8 @@ function positionKart(uid, percent, nickname, colorIndex) {
   kart.querySelector(".kart-number").textContent = colorIndex + 1;
   kart.style.transform = `translate(${point.x}px, ${point.y}px) rotate(${angle}deg)`;
   kart.classList.toggle("race-kart-leader", colorIndex === 0);
+  kart.classList.toggle("race-kart-rank2", colorIndex === 1);
+  kart.classList.toggle("race-kart-rank3", colorIndex === 2);
 
   if (colorIndex === 0) {
     raceLeaderUid = uid;
