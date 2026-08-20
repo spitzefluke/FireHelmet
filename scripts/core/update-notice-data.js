@@ -15,7 +15,8 @@ const updateNoticeConfig = {
   title: "🆕 Neuigkeiten",
   message:
     "Update 4.0 ist da und damit auch viele funktionen und Upgrades." +
-    "Shop ist endlich da und du kannst dir mit Dublonen etwas kaufen. Ein mysteriöser Countdown ist erschienen und irgendwas passiert auf der Seite... Update /Sh000IFF56547FAHRE kommt....",
+    "Shop ist endlich da und du kannst dir mit Dublonen etwas kaufen. Ein mysteriöser Countdown ist erschienen und irgendwas passiert auf der Seite... Update /Sh000IFF56547FAHRE kommt.... " +
+    "Außerdem neu: 3 neue Songs auf der ???-Seite, das Spiel 'Andiis Schatzraub' ist jetzt bei Socials verlinkt, ein neuer Ladebalken ziert den ???-Countdown, und die Schiffs-Reise auf der Startseite läuft jetzt butterweich über GSAP.",
 
   // Optional: Bild anzeigen (Pfad relativ zur index.html), sonst leer lassen
   image: "",

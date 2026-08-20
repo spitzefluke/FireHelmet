@@ -15,12 +15,15 @@
    2) fhInitShipJourney()
       Treibt die neue Scroll-gebundene Eröffnungssequenz
       auf der Home-Seite (#fh-journey-track /
-      #fh-journey-scene). EIN Scroll-Listener auf #home
-      (rAF-entprellt), der den Fortschritt (0-1) als
-      CSS-Variable --fh-progress schreibt. Die eigentliche
-      Bewegung der Ebenen (Schiff, Nebel, Sterne, Ziel ...)
-      passiert dadurch komplett in CSS via calc()/clamp() -
-      pro Frame nur EIN einziger Style-Write.
+      #fh-journey-scene). Nutzt GSAP ScrollTrigger, um den
+      Fortschritt (0-1) als CSS-Variable --fh-progress zu
+      schreiben, solange #home (der Scroll-Container) durch
+      den 300vh hohen Track scrollt. Die eigentliche Bewegung
+      der Ebenen (Schiff, Nebel, Sterne, Ziel ...) passiert
+      dadurch weiterhin komplett in CSS via calc()/clamp() -
+      GSAP ersetzt hier nur den frueheren, selbst gebauten
+      rAF-Scroll-Listener (siehe fhShipJourneyFallback() weiter
+      unten, falls GSAP/ScrollTrigger mal nicht laden sollten).
 
    Beides ist bewusst additiv und komplett von den
    bestehenden Home-Effekten (scripts/core/main.js,
@@ -125,6 +128,30 @@
       return;
     }
 
+    if (typeof gsap === "undefined" || typeof ScrollTrigger === "undefined") {
+      // CDN nicht erreichbar o.ä. - alter handgeschriebener
+      // Scroll-Listener als Fallback, damit die Sequenz notfalls
+      // trotzdem funktioniert statt bei --fh-progress:0 haengen zu bleiben.
+      fhShipJourneyFallback(homeSection, track, scene);
+      return;
+    }
+
+    gsap.to(scene, {
+      "--fh-progress": 1,
+      ease: "none",
+      scrollTrigger: {
+        trigger: track,
+        scroller: homeSection,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+      },
+    });
+  }
+
+  /* rAF-entprellter Scroll-Listener, funktional identisch zur
+     bisherigen (Vor-GSAP) Implementierung - nur noch als Fallback. */
+  function fhShipJourneyFallback(homeSection, track, scene) {
     let ticking = false;
 
     function updateProgress() {
