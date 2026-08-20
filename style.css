@@ -1226,7 +1226,7 @@ main {
 }
 
 .story-card p {
-  color: #a9a9a9;
+  color: var(--fh-muted-fg, #a9a9a9);
   margin: 0 15px 25px;
 }
 
@@ -1804,21 +1804,21 @@ main {
 .social-container a {
   width: 250px;
   padding: 30px;
-  border-radius: 25px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.2);
-  color: white;
+  border-radius: var(--fh-radius, 25px);
+  background: linear-gradient(160deg, var(--fh-surface-light, #1a2636), var(--fh-surface, #0d1520));
+  border: 1px solid var(--fh-border, rgba(255,255,255,.2));
+  color: var(--fh-fg, white);
   text-decoration: none;
   font-size: 25px;
   text-align: center;
-  transition: .4s;
+  transition: transform .3s var(--fh-ease, ease), border-color .3s ease, box-shadow .3s ease, background .3s ease;
   backdrop-filter: blur(20px);
 }
 
 .social-container a:hover {
-  transform: translateY(-15px);
-  background: rgba(77,163,255,.3);
-  box-shadow: 0 0 40px #4da3ff;
+  transform: translateY(-8px);
+  border-color: var(--fh-gold, #d6a84f);
+  box-shadow: var(--fh-glow-gold), var(--fh-shadow-sm);
 }
 
 /* Social-Buttons mit Marken-Icon und -Farbe */
@@ -3524,18 +3524,19 @@ main {
 
 .twitch-logout-btn {
   padding: 6px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.2);
-  background: rgba(255,255,255,.05);
-  color: #ccc;
+  border-radius: var(--fh-radius-sm, 10px);
+  border: 1px solid var(--fh-border, rgba(255,255,255,.2));
+  background: var(--fh-surface, rgba(255,255,255,.05));
+  color: var(--fh-muted-fg, #ccc);
   font-size: 13px;
   cursor: pointer;
-  transition: .3s;
+  transition: background .3s ease, color .3s ease, border-color .3s ease;
 }
 
 .twitch-logout-btn:hover {
-  background: rgba(255,80,80,.2);
-  color: #fff;
+  background: rgba(229,57,53,.18);
+  border-color: var(--fh-danger, #e53935);
+  color: var(--fh-fg, #fff);
 }
 
 /* Avatar in der Rangliste */
