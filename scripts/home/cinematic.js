@@ -18,12 +18,17 @@
       #fh-journey-scene). Nutzt GSAP ScrollTrigger, um den
       Fortschritt (0-1) als CSS-Variable --fh-progress zu
       schreiben, solange #home (der Scroll-Container) durch
-      den 300vh hohen Track scrollt. Die eigentliche Bewegung
-      der Ebenen (Schiff, Nebel, Sterne, Ziel ...) passiert
-      dadurch weiterhin komplett in CSS via calc()/clamp() -
-      GSAP ersetzt hier nur den frueheren, selbst gebauten
-      rAF-Scroll-Listener (siehe fhShipJourneyFallback() weiter
-      unten, falls GSAP/ScrollTrigger mal nicht laden sollten).
+      den 300vh hohen Track scrollt. Die meisten Ebenen (Nebel,
+      Sterne, Ziel ...) laufen weiterhin komplett in CSS via
+      calc()/clamp() auf --fh-progress - GSAP ersetzt hier nur
+      den frueheren, selbst gebauten rAF-Scroll-Listener (siehe
+      fhShipJourneyFallback() weiter unten, falls GSAP/
+      ScrollTrigger mal nicht laden sollten). Zusaetzlich holt
+      GSAP das Schiff selbst von der reinen Geradeausfahrt: Es
+      folgt jetzt per MotionPathPlugin einer leicht geschwungenen
+      Route (fhInitShipMotionPath()), dazu Segelflattern/Kielwasser
+      per CSS und eine gelegentliche Sternschnuppe beim Durchqueren
+      der Sternenhimmel-Phase (fhInitShootingStar()).
 
    Beides ist bewusst additiv und komplett von den
    bestehenden Home-Effekten (scripts/core/main.js,
@@ -136,16 +141,96 @@
       return;
     }
 
+    const scrollTriggerBase = {
+      trigger: track,
+      scroller: homeSection,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: true,
+    };
+
     gsap.to(scene, {
       "--fh-progress": 1,
       ease: "none",
-      scrollTrigger: {
-        trigger: track,
-        scroller: homeSection,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: true,
+      scrollTrigger: scrollTriggerBase,
+    });
+
+    fhInitShipMotionPath(homeSection, scrollTriggerBase);
+    fhInitShootingStar(track, homeSection);
+  }
+
+  /* ------------------------------------------------------
+     SCHIFF AUF EINEM WELLENFOERMIGEN PFAD (GSAP MotionPathPlugin)
+     Ersetzt die fruehere reine Geradeaus-Bewegung (nur --fh-progress
+     als x-Versatz) durch eine echte, leicht geschwungene Segelroute
+     ueber das Meer - waehrend die eigentliche Groessen-Skalierung
+     (per scale) weiterhin am selben ScrollTrigger haengt wie
+     --fh-progress oben, also exakt synchron bleibt.
+  ------------------------------------------------------ */
+  function fhInitShipMotionPath(homeSection, scrollTriggerBase) {
+    const shipRig = document.getElementById("fh-ship-rig");
+    if (!shipRig || typeof MotionPathPlugin === "undefined") return;
+
+    // Reisedistanz an die tatsaechliche Breite anpassen (deckt sich
+    // in etwa mit dem alten "32vw" aus der CSS-calc()-Version), nach
+    // oben gedeckelt, damit die Route auf riesigen Screens nicht
+    // ausufert.
+    const travel = Math.min(homeSection.clientWidth, 1200) * 0.34;
+
+    // Startzustand: weit rechts, klein - wie zuvor per calc().
+    gsap.set(shipRig, { xPercent: -50, x: travel, y: 18, scale: 0.5 });
+
+    gsap.to(shipRig, {
+      motionPath: {
+        path: [
+          { x: travel * 0.7, y: -22 },
+          { x: travel * 0.4, y: 20 },
+          { x: travel * 0.15, y: -14 },
+          { x: 0, y: 0 },
+        ],
+        curviness: 1.35,
       },
+      scale: 1.35,
+      ease: "none",
+      scrollTrigger: scrollTriggerBase,
+    });
+  }
+
+  /* ------------------------------------------------------
+     GELEGENTLICHE STERNSCHNUPPE
+     Einmaliger Flourish, sobald man beim Scrollen die Sternenhimmel-
+     Phase durchquert (~38% der Strecke) - sowohl vorwaerts als auch
+     rueckwaerts scrollend. Rein dekorativ, auf Mobile deaktiviert
+     (Punkt 24/32-Konvention wie schon bei fhSpawnEmbers()).
+  ------------------------------------------------------ */
+  function fhInitShootingStar(track, homeSection) {
+    const star = document.getElementById("fh-shooting-star");
+    if (!star || isMobile.matches) return;
+
+    function fire() {
+      gsap.killTweensOf(star);
+      gsap.fromTo(
+        star,
+        { x: 0, y: 0, opacity: 0 },
+        { x: -200, y: 100, opacity: 1, duration: .8, ease: "power1.in",
+          onComplete: () => gsap.to(star, { opacity: 0, duration: .25 }) }
+      );
+    }
+
+    // "38% top" wuerde sich auf 38% der reinen Track-Hoehe beziehen -
+    // eine andere Skala als --fh-progress (das zusaetzlich die
+    // Viewport-Hoehe abzieht, siehe scrollTriggerBase oben). Der
+    // px-Offset unten nutzt dieselbe Rechnung wie dort, damit die
+    // Sternschnuppe wirklich bei ~38% des sichtbaren Fortschritts
+    // ausgeloest wird statt erst deutlich spaeter.
+    const scrollRange = track.offsetHeight - homeSection.clientHeight;
+
+    ScrollTrigger.create({
+      trigger: track,
+      scroller: homeSection,
+      start: `top+=${Math.max(0, scrollRange * 0.38)} top`,
+      onEnter: fire,
+      onEnterBack: fire,
     });
   }
 

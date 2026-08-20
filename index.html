@@ -194,7 +194,9 @@
         <div class="fh-journey-track" id="fh-journey-track">
           <div class="fh-journey-scene" id="fh-journey-scene" aria-hidden="true">
             <div class="fh-layer fh-layer-sky"></div>
-            <div class="fh-layer fh-layer-stars"></div>
+            <div class="fh-layer fh-layer-stars">
+              <span class="fh-shooting-star" id="fh-shooting-star" aria-hidden="true"></span>
+            </div>
             <div class="fh-layer fh-layer-moon"></div>
             <div class="fh-layer fh-layer-far-fog"></div>
 
@@ -231,12 +233,12 @@
 
                   <!-- Hauptmast + Grosssegel -->
                   <line x1="100" y1="18" x2="100" y2="104" stroke="#5a4a34" stroke-width="2.5"/>
-                  <path d="M100,24 C130,30 134,58 130,78 C120,72 108,70 100,70 Z" fill="url(#fh-ship-sail)"/>
-                  <path d="M100,24 C72,30 66,58 72,80 C82,72 92,70 100,70 Z" fill="url(#fh-ship-sail)" opacity=".92"/>
+                  <path id="fh-ship-sail-a" d="M100,24 C130,30 134,58 130,78 C120,72 108,70 100,70 Z" fill="url(#fh-ship-sail)"/>
+                  <path id="fh-ship-sail-b" d="M100,24 C72,30 66,58 72,80 C82,72 92,70 100,70 Z" fill="url(#fh-ship-sail)" opacity=".92"/>
 
                   <!-- Vordermast + Focksegel -->
                   <line x1="52" y1="42" x2="52" y2="100" stroke="#5a4a34" stroke-width="2"/>
-                  <path d="M52,46 C70,50 72,68 68,82 C62,76 56,74 52,74 Z" fill="url(#fh-ship-sail)" opacity=".85"/>
+                  <path id="fh-ship-sail-c" d="M52,46 C70,50 72,68 68,82 C62,76 56,74 52,74 Z" fill="url(#fh-ship-sail)" opacity=".85"/>
 
                   <!-- Flagge -->
                   <path d="M100,18 L100,8 L118,13 L100,18 Z" fill="#c8392a"/>
@@ -245,6 +247,17 @@
                   <circle cx="164" cy="92" r="14" fill="url(#fh-ship-lantern)"/>
                   <circle cx="164" cy="92" r="3" fill="#ffe6b0"/>
                 </svg>
+              </div>
+
+              <!-- Schaumspur im Kielwasser, rein dekorativ (aria-hidden),
+                   liegt ausserhalb von .fh-ship-bob damit sie ruhig an der
+                   Rumpfmitte bleibt statt mit dem Wiegen des Schiffs
+                   mitzuzittern. -->
+              <div class="fh-ship-wake" aria-hidden="true">
+                <span class="fh-wake-bubble"></span>
+                <span class="fh-wake-bubble"></span>
+                <span class="fh-wake-bubble"></span>
+                <span class="fh-wake-bubble"></span>
               </div>
             </div>
 
@@ -268,11 +281,21 @@
                     <stop offset="0%" stop-color="#ffe9b0" stop-opacity=".9"/>
                     <stop offset="100%" stop-color="#ffe9b0" stop-opacity="0"/>
                   </radialGradient>
+                  <linearGradient id="fh-lighthouse-sweep-grad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#ffe9b0" stop-opacity=".55"/>
+                    <stop offset="100%" stop-color="#ffe9b0" stop-opacity="0"/>
+                  </linearGradient>
                 </defs>
 
                 <ellipse cx="150" cy="188" rx="140" ry="8" fill="#4da3ff" opacity=".1"/>
                 <path d="M20,180 Q60,110 120,130 Q160,90 210,120 Q260,100 280,170 Q260,190 40,190 Z" fill="url(#fh-island-grad)"/>
                 <circle cx="215" cy="95" r="55" fill="url(#fh-lighthouse-beam)"/>
+
+                <!-- Schwenkender Lichtkegel, dreht sich per CSS um die
+                     Laterne (215,52) - rein dekorativ, unabhaengig vom
+                     statischen Glow-Kreis darueber. -->
+                <path id="fh-lighthouse-sweep" d="M215,52 L40,20 L40,86 Z" fill="url(#fh-lighthouse-sweep-grad)"/>
+
                 <rect x="205" y="60" width="20" height="70" fill="url(#fh-lighthouse-grad)"/>
                 <path d="M200,60 L230,60 L223,46 L207,46 Z" fill="#e8edf4"/>
                 <rect x="211" y="48" width="8" height="8" fill="#ffe9b0"/>
