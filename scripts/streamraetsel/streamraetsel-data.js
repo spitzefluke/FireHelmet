@@ -35,5 +35,8 @@ const streamRaetselConfig = {
     "scripts/streamraetsel/musik/Nebel_über_Kiel.mp3",
     "scripts/streamraetsel/musik/Nachtkasse.mp3",
     "scripts/streamraetsel/musik/Unter_dem_Siegel.mp3",
+    "scripts/streamraetsel/musik/Merch_Realese_Nacht.mp3",
+    "scripts/streamraetsel/musik/Riitainen_Ravevaunu.mp3",
+    "scripts/streamraetsel/musik/Davets_Zuglauf.mp3",
   ],
 };
