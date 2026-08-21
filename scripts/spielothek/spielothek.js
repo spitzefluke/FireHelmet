@@ -169,7 +169,7 @@ async function playSpielothekGame() {
     if (statusEl) statusEl.textContent = "⚠️ Kein Spiel verfügbar.";
     return;
   }
-  if (!nickname || !wheelDb) {
+  if (!nickname || !supabaseClient) {
     if (statusEl) statusEl.textContent = typeof t === "function" ? t("spielothek.needLogin", "Melde dich zuerst an, um zu spielen!") : "Melde dich zuerst an, um zu spielen!";
     return;
   }
@@ -183,58 +183,76 @@ async function playSpielothekGame() {
     const uid = await wheelAuthReady;
     if (!uid) return;
 
-    const docRef = wheelDb.collection("players").doc(uid);
     const betCost = handler.betCost;
 
-    const result = await wheelDb.runTransaction(async (tx) => {
-      const snap = await tx.get(docRef);
-      const data = snap.exists ? snap.data() : {};
-      const currentCurrency = data.currency || 0;
+    await ensureSupabasePlayerRow(uid, nickname);
 
-      // Freundliche Vor-Pruefung innerhalb der Transaktion (liest den
-      // FRISCHEN Serverstand, keinen moeglicherweise veralteten Client-
-      // Cache) - wirft einen klaren, eigenen Fehler statt eines
-      // generischen "permission-denied" aus firestore.rules. Die
-      // eigentliche, nicht umgehbare Absicherung bleibt trotzdem die
-      // Regel selbst (validSpielothekCooldown()), diese Pruefung hier
-      // ist nur fuer eine bessere Fehlermeldung.
-      const lastPlayMs = data.lastSpielothekPlayAt && typeof data.lastSpielothekPlayAt.toMillis === "function"
-        ? data.lastSpielothekPlayAt.toMillis()
-        : 0;
-      if (lastPlayMs && Date.now() - lastPlayMs < SPIELOTHEK_COOLDOWN_MS) {
-        throw new Error("cooldown");
-      }
+    const { data: current, error: readError } = await supabaseClient
+      .from("players")
+      .select("currency, games_played, games_won, total_currency_earned, last_spielothek_play_at")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (readError) throw readError;
 
-      if (currentCurrency < betCost) {
-        throw new Error("not-enough-currency");
-      }
+    const data = current || {};
+    const currentCurrency = data.currency || 0;
 
-      // Ergebnis wird HIER, innerhalb der Transaktion, ermittelt -
-      // dasselbe Ergebnis wird gleich unten angezeigt UND ist exakt
-      // das, was tatsächlich gutgeschrieben/abgezogen wurde.
-      const spin = handler.play();
-      const newCurrency = currentCurrency - betCost + spin.payout;
+    // Freundliche Vor-Pruefung (liest den FRISCHEN Serverstand, keinen
+    // moeglicherweise veralteten Client-Cache) - wirft einen klaren,
+    // eigenen Fehler statt einer generischen RLS-Ablehnung. Die
+    // eigentliche, nicht umgehbare Absicherung bleibt trotzdem die
+    // Datenbank-Regel selbst (siehe supabase/game-migration/
+    // 01-players-ship-progression.sql, valid_spielothek_cooldown()) -
+    // diese Pruefung hier ist nur fuer eine bessere Fehlermeldung.
+    const lastPlayMs = data.last_spielothek_play_at ? new Date(data.last_spielothek_play_at).getTime() : 0;
+    if (lastPlayMs && Date.now() - lastPlayMs < SPIELOTHEK_COOLDOWN_MS) {
+      throw new Error("cooldown");
+    }
 
-      // Lebenslange Zähler, Grundlage der täglichen Reparatur-Quests
-      // (siehe DAILY_QUESTS in ship-repair-data.js) - unabhängig vom
-      // Kontostand, der durch Einsätze/Käufe auch wieder sinkt.
-      const currentGamesPlayed = data.gamesPlayed || 0;
-      const currentGamesWon = data.gamesWon || 0;
-      const currentTotalEarned = data.totalCurrencyEarned || 0;
+    if (currentCurrency < betCost) {
+      throw new Error("not-enough-currency");
+    }
 
-      tx.set(
-        docRef,
-        {
-          currency: Math.max(0, newCurrency),
-          gamesPlayed: currentGamesPlayed + 1,
-          gamesWon: spin.win ? currentGamesWon + 1 : currentGamesWon,
-          totalCurrencyEarned: spin.payout > 0 ? currentTotalEarned + spin.payout : currentTotalEarned,
-          lastSpielothekPlayAt: firebase.firestore.FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
-      return spin;
-    });
+    // Ergebnis wird HIER ermittelt - dasselbe Ergebnis wird gleich
+    // unten angezeigt UND ist exakt das, was tatsächlich gutgeschrieben/
+    // abgezogen wurde.
+    const spin = handler.play();
+    const newCurrency = Math.max(0, currentCurrency - betCost + spin.payout);
+
+    // Lebenslange Zähler, Grundlage der täglichen Reparatur-Quests
+    // (siehe DAILY_QUESTS in ship-repair-data.js) - unabhängig vom
+    // Kontostand, der durch Einsätze/Käufe auch wieder sinkt.
+    const currentGamesPlayed = data.games_played || 0;
+    const currentGamesWon = data.games_won || 0;
+    const currentTotalEarned = data.total_currency_earned || 0;
+
+    // EIN einzelnes UPDATE, dessen Zulaessigkeit die Datenbank selbst
+    // prueft (RLS vergleicht neuen mit altem Wert, siehe
+    // valid_players_write() im Migrationsschema) - dadurch von Natur
+    // aus atomar, kein client-getriebenes Transaktions-Konstrukt noetig
+    // (anders als bei Firestore).
+    const { data: updated, error: writeError } = await supabaseClient
+      .from("players")
+      .update({
+        currency: newCurrency,
+        games_played: currentGamesPlayed + 1,
+        games_won: spin.win ? currentGamesWon + 1 : currentGamesWon,
+        total_currency_earned: spin.payout > 0 ? currentTotalEarned + spin.payout : currentTotalEarned,
+        last_spielothek_play_at: new Date().toISOString(),
+      })
+      .eq("firebase_uid", uid)
+      .select()
+      .maybeSingle();
+
+    if (writeError || !updated) {
+      // Von der Datenbank abgelehnt (z.B. Wettlauf mit einem anderen
+      // Tab, der zwischen der Vor-Pruefung oben und diesem Schreib-
+      // vorgang bereits gespielt hat) - Cooldown-UI aus dem echten
+      // Serverstand neu aufbauen statt einer verwirrenden Meldung.
+      throw new Error("cooldown");
+    }
+
+    const result = spin;
 
     refreshSpielothekCurrencyDisplay();
     // Rein additiv, NACH der bereits erfolgreichen/server-geprueften
@@ -292,17 +310,19 @@ async function playSpielothekGame() {
    korrekte Anzeige).
 ------------------------------------------------------ */
 async function refreshSpielothekCooldownFromServer() {
-  if (!wheelDb || typeof wheelAuthReady === "undefined") return;
+  if (!supabaseClient || typeof wheelAuthReady === "undefined") return;
 
   try {
     const uid = await wheelAuthReady;
     if (!uid) return;
 
-    const snap = await wheelDb.collection("players").doc(uid).get();
-    const data = snap.exists ? snap.data() : {};
-    const lastPlayMs = data.lastSpielothekPlayAt && typeof data.lastSpielothekPlayAt.toMillis === "function"
-      ? data.lastSpielothekPlayAt.toMillis()
-      : 0;
+    const { data: snapData } = await supabaseClient
+      .from("players")
+      .select("last_spielothek_play_at")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    const data = snapData || {};
+    const lastPlayMs = data.last_spielothek_play_at ? new Date(data.last_spielothek_play_at).getTime() : 0;
 
     if (lastPlayMs) {
       const until = lastPlayMs + SPIELOTHEK_COOLDOWN_MS;
@@ -328,13 +348,17 @@ async function refreshSpielothekCooldownFromServer() {
 ------------------------------------------------------ */
 async function refreshSpielothekCurrencyDisplay() {
   const el = document.getElementById("spielothek-currency-amount");
-  if (!el || !wheelDb) return;
+  if (!el || !supabaseClient) return;
 
   try {
     const uid = await wheelAuthReady;
     if (!uid) return;
-    const snap = await wheelDb.collection("players").doc(uid).get();
-    const currency = snap.exists ? snap.data().currency || 0 : 0;
+    const { data } = await supabaseClient
+      .from("players")
+      .select("currency")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    const currency = data ? data.currency || 0 : 0;
     el.textContent = currency.toLocaleString("de-DE");
   } catch (err) {
     // still leaves the last known value on screen instead of breaking

@@ -192,7 +192,7 @@ async function buyShopItem(itemId) {
   if (!item) return;
 
   const nickname = localStorage.getItem("wheelNickname") || "";
-  if (!nickname || !wheelDb) {
+  if (!nickname || !supabaseClient) {
     if (statusEl) statusEl.textContent = "Melde dich zuerst an, um im Shop einzukaufen!";
     return;
   }
@@ -203,34 +203,46 @@ async function buyShopItem(itemId) {
     const uid = await wheelAuthReady;
     if (!uid) return;
 
-    const docRef = wheelDb.collection("players").doc(uid);
+    await ensureSupabasePlayerRow(uid, nickname);
 
-    await wheelDb.runTransaction(async (tx) => {
-      const snap = await tx.get(docRef);
-      const data = snap.exists ? snap.data() : {};
-      const currentCurrency = data.currency || 0;
-      const owned = data.ownedShopItems || [];
+    const { data: current, error: readError } = await supabaseClient
+      .from("players")
+      .select("currency, owned_shop_items")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (readError) throw readError;
 
-      if (owned.includes(itemId)) {
-        throw new Error("already-owned");
-      }
-      if (currentCurrency < item.price) {
-        throw new Error("not-enough-currency");
-      }
+    const data = current || {};
+    const currentCurrency = data.currency || 0;
+    const owned = data.owned_shop_items || [];
 
-      tx.set(
-        docRef,
-        {
-          currency: currentCurrency - item.price,
-          ownedShopItems: [...owned, itemId],
-        },
-        { merge: true }
-      );
-    });
+    if (owned.includes(itemId)) {
+      throw new Error("already-owned");
+    }
+    if (currentCurrency < item.price) {
+      throw new Error("not-enough-currency");
+    }
 
-    const owned = getOwnedShopItems();
-    owned.push(itemId);
-    localStorage.setItem("ownedShopItems", JSON.stringify(owned));
+    // EIN einzelnes UPDATE, dessen Zulaessigkeit die Datenbank selbst
+    // prueft (RLS vergleicht neuen mit altem Wert) - von Natur aus
+    // atomar, kein client-getriebenes Transaktions-Konstrukt noetig.
+    const { data: updated, error: writeError } = await supabaseClient
+      .from("players")
+      .update({
+        currency: currentCurrency - item.price,
+        owned_shop_items: [...owned, itemId],
+      })
+      .eq("firebase_uid", uid)
+      .select()
+      .maybeSingle();
+
+    if (writeError || !updated) {
+      throw new Error("purchase-failed");
+    }
+
+    const ownedLocal = getOwnedShopItems();
+    ownedLocal.push(itemId);
+    localStorage.setItem("ownedShopItems", JSON.stringify(ownedLocal));
 
     // Avatare direkt im normalen Avatar-Picker freischalten (nutzt
     // dieselbe Mechanik wie ein per Code freigeschalteter Avatar)
@@ -259,7 +271,7 @@ async function buyShopItem(itemId) {
 ------------------------------------------------------ */
 async function refreshShopCurrencyDisplay() {
   const amountEl = document.getElementById("shop-currency-amount");
-  if (!amountEl || !wheelDb) return;
+  if (!amountEl || !supabaseClient) return;
 
   try {
     const uid = await wheelAuthReady;
@@ -268,8 +280,12 @@ async function refreshShopCurrencyDisplay() {
       return;
     }
 
-    const snap = await wheelDb.collection("players").doc(uid).get();
-    const currency = snap.exists ? snap.data().currency || 0 : 0;
+    const { data } = await supabaseClient
+      .from("players")
+      .select("currency")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    const currency = data ? data.currency || 0 : 0;
     amountEl.textContent = currency.toLocaleString("de-DE");
   } catch (err) {
     console.warn("Dublonen-Stand konnte nicht geladen werden:", err);
@@ -360,30 +376,48 @@ function updateShopPage(pageID) {
 }
 
 async function syncOwnedShopItemsFromServer() {
-  if (!wheelDb || typeof shopItems === "undefined") return;
+  if (!supabaseClient || typeof shopItems === "undefined") return;
 
   try {
     const uid = await wheelAuthReady;
     if (!uid) return;
 
-    const snap = await wheelDb.collection("players").doc(uid).get();
-    if (!snap.exists) return;
+    const { data } = await supabaseClient
+      .from("players")
+      .select("owned_shop_items")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
 
-    const data = snap.data();
-    if (Array.isArray(data.ownedShopItems)) {
-      localStorage.setItem("ownedShopItems", JSON.stringify(data.ownedShopItems));
+    if (data && Array.isArray(data.owned_shop_items)) {
+      localStorage.setItem("ownedShopItems", JSON.stringify(data.owned_shop_items));
 
       // Gekaufte Avatare auch im Picker verfügbar machen
-      data.ownedShopItems.forEach((itemId) => {
+      data.owned_shop_items.forEach((itemId) => {
         const item = shopItems.find((i) => i.id === itemId);
         if (item && item.type === "avatar" && item.avatarId && typeof unlockAvatar === "function") {
           unlockAvatar(item.avatarId);
         }
       });
     }
-    if (data.equippedFrame) {
-      localStorage.setItem("equippedFrame", data.equippedFrame);
+
+    // equippedFrame wird bisher noch von savePlayerData() in wheel.js
+    // geschrieben (dort noch nicht auf Supabase umgestellt) - deshalb
+    // hier bewusst weiterhin aus Firestore gelesen, damit Schreiben
+    // und Lesen zusammenbleiben. Sobald wheel.js in einer spaeteren
+    // Phase ebenfalls umgestellt ist, kann dieser Block entfallen und
+    // "equipped_frame" oben einfach mit ausgelesen werden.
+    if (wheelDb) {
+      try {
+        const snap = await wheelDb.collection("players").doc(uid).get();
+        if (snap.exists && snap.data().equippedFrame) {
+          localStorage.setItem("equippedFrame", snap.data().equippedFrame);
+        }
+      } catch (err) {
+        // unbedenklich - equippedFrame bleibt dann einfach auf dem
+        // lokal zuletzt bekannten Stand
+      }
     }
+
     renderShopGrid({ quiet: true });
   } catch (err) {
     console.warn("Shop-Abgleich fehlgeschlagen:", err);

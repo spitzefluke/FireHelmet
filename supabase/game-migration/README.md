@@ -1,6 +1,6 @@
 # Firestore → Supabase Migration (Spieler-Datenbank)
 
-**Status: Phase 2 von 5 — noch NICHT live, Firestore läuft unverändert weiter.**
+**Status: Phase 3 von 5 — noch NICHT live, Firestore läuft unverändert weiter.**
 
 Voraussetzung erfüllt: Third-Party Auth (Firebase) ist im Supabase-Dashboard aktiviert.
 
@@ -18,6 +18,8 @@ Ein weiterer Unterschied zu Firestore, der die Übersetzung stellenweise sogar *
 
 **Phase 2**: `race_progress`, `community_boss`, `community_boss_damage` — jeweils Delta-Obergrenze pro Schreibvorgang (Rennfortschritt +15, Boss-Schaden pro Angriff max. 45), öffentlich lesbar, Schreibrechte nur auf das eigene Dokument (bzw. bei `community_boss` als geteiltes Monats-Dokument ohne Eigentümer-Konzept, exakt wie in Firestore). Firestores "Dokument-ID = week_uid"-Trick wird hier durch einen echten zusammengesetzten Primary Key `(week, firebase_uid)` ersetzt — einfacher, kein String-Vergleich nötig.
 
+**Phase 3**: `site_config`, `site_meta`, `giveaway_entries`, `giveaway_winners`, `support_reports`, `site_ratings`. Bemerkenswert: `site_config` validiert in Firestore bewusst KEIN einzelnes Feld (nur `isAdmin()`) — Entsprechung ist ein JSONB-Blob statt erfundener Spalten. `support_reports` hat bewusst KEINE Lese-Policy für `anon`/`authenticated` (Firestore: `allow read: if false`) — nur `service_role` (Supabase-eigener Table-Editor/Dashboard-Login) kann sie einsehen, genau wie bisher nur die Firebase Console.
+
 ## Voraussetzung im Supabase-Dashboard (musst du selbst prüfen)
 
 **Authentication → Third-Party Auth → Firebase muss aktiviert sein**, damit `auth.jwt() ->> 'sub'` die echte, kryptographisch geprüfte Firebase-UID liefert. Ebenso muss geprüft werden, ob `auth.jwt() ->> 'email'` bei OAuth-Logins (Twitch/Discord verlinkt mit Google/E-Mail) tatsächlich die E-Mail-Claim des Firebase-ID-Tokens durchreicht (für `app.is_admin()`). Beides kann ich von hier aus nicht verifizieren.
@@ -26,22 +28,24 @@ Ein weiterer Unterschied zu Firestore, der die Übersetzung stellenweise sogar *
 
 - `02-players-ship-progression.test.sql` — 25 Testfälle (Phase 1), **echt gegen eine lokale PostgreSQL-16-Instanz mit einem Supabase-Auth-Stub ausgeführt**: alle Manipulationsversuche aus dem ursprünglichen Auftrag (currency, gamesPlayed, gamesWon, shipTools, dailyQuests, redeemedCurrencyCodes, lastSpielothekPlayAt, lastWheelSpinAt, tempAvatarExpiresAt, progression, ship_repair, fremde UID, SQL-Injection), 25/25 bestanden.
 - `04-race-boss.test.sql` — 12 Testfälle (Phase 2): Rennfortschritt-Sprung, Boss-HP-Manipulation, Schaden-Rangliste-Manipulation, fremde UID, Neuanlage über Obergrenze — 12/12 bestanden.
+- `06-site-data.test.sql` — 20 Testfälle (Phase 3): Site-Config-Schreiben durch normalen Benutzer vs. Admin, Support-Report-Lesen (niemand darf, auch nicht der Absender), Gewinnspiel-Teilnahme/-Ziehung-Manipulation, Bewertungs-Grenzen, SQL-Injection — 20/20 bestanden.
 
-Lokal wiederholen (Phase 1 + 2):
+Lokal wiederholen (alle 3 Phasen):
 ```
 createdb test_db
 psql -d test_db -f 00-supabase-auth-stub.sql
 psql -d test_db -f 01-players-ship-progression.sql
 psql -d test_db -f 03-race-boss.sql
+psql -d test_db -f 05-site-data.sql
 psql -d test_db -c "grant usage on schema app to anon, authenticated, service_role;
-  grant select, insert, update, delete on public.players, public.ship_repair, public.player_progression, public.race_progress, public.community_boss, public.community_boss_damage to anon, authenticated;
-  grant all on public.players, public.ship_repair, public.player_progression, public.race_progress, public.community_boss, public.community_boss_damage to service_role;"
+  grant select, insert, update, delete on public.players, public.ship_repair, public.player_progression, public.race_progress, public.community_boss, public.community_boss_damage, public.site_config, public.site_meta, public.giveaway_entries, public.giveaway_winners, public.support_reports, public.site_ratings to anon, authenticated;
+  grant all on public.players, public.ship_repair, public.player_progression, public.race_progress, public.community_boss, public.community_boss_damage, public.site_config, public.site_meta, public.giveaway_entries, public.giveaway_winners, public.support_reports, public.site_ratings to service_role;"
 psql -d test_db -f 02-players-ship-progression.test.sql
 psql -d test_db -f 04-race-boss.test.sql
+psql -d test_db -f 06-site-data.test.sql
 ```
 
 ## Nächste Schritte (noch nicht umgesetzt)
 
-- Phase 3: `site_config`, `site_meta`, `giveawayEntries`, `giveawayWinners`, `supportReports`, `site_ratings`
 - Phase 4: Client-Umstellung (~15 Dateien von `wheelDb` auf `supabaseClient`)
 - Phase 5: Umschaltpunkt — erst nach vollständiger Prüfung
