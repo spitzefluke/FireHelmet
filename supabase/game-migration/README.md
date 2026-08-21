@@ -68,11 +68,25 @@ Direkt in den bestehenden Dateien umgestellt (keine Parallelkopien) — jede Dat
 
   **Split-Brain-Falle rechtzeitig gefunden:** `player_progression` wird nicht nur von `progression.js` gelesen — `scripts/core/level-path.js` (2 Stellen), `scripts/piratenpass/piratenpass.js` und `scripts/stories/stories.js` lesen direkt aus derselben Tabelle für ihre jeweilige Anzeige (Levelpfad-Modal, Piratenpass-Fortschritt, Expeditions-Meilensteine). Da `claimReward()`/`awardActionXp()` jetzt nach Supabase schreiben, mussten diese vier Lesestellen in DERSELBEN Änderung mit umgestellt werden — sonst hätten sie sofort veraltete/falsche Daten aus Firestore angezeigt, sobald eine Belohnung eingelöst wird.
 
-**Noch offen (Phase 4, weitere Dateien):** `race.js`, `community-boss.js`, sowie die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`).
+- **4g** (erledigt): `scripts/race/race.js` — Wochenrennen-Fortschritt (`addRaceProgress()`, echtes Upsert über den zusammengesetzten Schlüssel `(week, firebase_uid)` statt Firestores `"<week>_<uid>"`-Dokument-ID-Trick), Live-Rangliste (`loadRaceLeaderboard()`) und Vorwochen-Sieger + Top-3-Dublonen (`loadLastWeekWinner()`/`grantWeeklyRaceCurrency()`, liest jetzt `firebase_uid` statt des Firestore-eigenen `uid`-Felds).
 
-## ⚠️ Manueller Schritt erforderlich: Bugfix auf dem echten Supabase-Projekt nachziehen
+  **Fehlende Spalte gefunden:** Firestores `raceProgress`-Dokument speichert zusätzlich `equippedFrame` (Momentaufnahme für den Rahmen um den Namen in der Rangliste, siehe `race.js` Zeile ~511) — `firestore.rules` validiert dieses Feld bewusst nicht extra. Die Phase-2-Tabelle `race_progress` hatte dafür bislang **keine Spalte** (in Phase 1/2 übersehen, da kein Test das Feld anfasste). Ohne Korrektur wäre die Rahmen-Anzeige in der Rangliste beim echten Cutover einfach leer geblieben (kein Datenverlust, nur ein optisches Downgrade) — trotzdem in `03-race-boss.sql` nachgezogen (`equipped_frame text` + Längenprüfung, keine RLS-Sonderprüfung nötig, genau wie im Original). **Muss additiv auf dem echten, bereits laufenden Supabase-Projekt nachgezogen werden, siehe unten.**
 
-Phase 1 wurde bereits von dir gegen das echte Supabase-Projekt getestet und läuft dort produktiv (Schema). Der oben beschriebene Bugfund in `valid_daily_quests_write()` betrifft eine bereits deployte Funktion. Bitte im Supabase-Dashboard → SQL Editor **einmalig** ausführen (rein additiv, kein Datenverlust, keine Downtime):
+**Noch offen (Phase 4, weitere Dateien):** `community-boss.js`, sowie die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`).
+
+## ⚠️ Manuelle Schritte erforderlich: zwei Nachbesserungen auf dem echten Supabase-Projekt
+
+Phase 1 und Phase 2 wurden bereits von dir gegen das echte Supabase-Projekt getestet und laufen dort produktiv (Schema). Beide unten beschriebenen Funde betreffen bereits deployte Struktur. Bitte im Supabase-Dashboard → SQL Editor **beide einmalig** ausführen (jeweils rein additiv, kein Datenverlust, keine Downtime):
+
+**1) `race_progress.equipped_frame`-Spalte nachziehen (Phase 4g):**
+
+```sql
+alter table public.race_progress
+  add column if not exists equipped_frame text,
+  add constraint race_progress_frame_len check (equipped_frame is null or char_length(equipped_frame) <= 50);
+```
+
+**2) `valid_daily_quests_write()`-Toleranzfenster nachziehen (Phase 4e):**
 
 ```sql
 create or replace function app.valid_daily_quests_write(

@@ -22,11 +22,18 @@ create table public.race_progress (
   firebase_uid text not null,
   nickname text not null,
   progress integer not null default 0,
+  -- Denormalisierte Momentaufnahme fuers Rangliste-Rendering (Rahmen um
+  -- den Namen, siehe race.js loadRaceLeaderboard()) - genau wie im
+  -- Firestore-Original (raceProgress/{week_uid}.equippedFrame) OHNE
+  -- eigene Validierung: firestore.rules prueft dieses Feld ebenfalls
+  -- nicht extra (nur week/progress/nickname), siehe Kommentar dort.
+  equipped_frame text,
   updated_at timestamptz not null default now(),
   primary key (week, firebase_uid),
 
   constraint race_progress_nickname_len check (char_length(nickname) between 1 and 30),
-  constraint race_progress_progress_nonneg check (progress >= 0)
+  constraint race_progress_progress_nonneg check (progress >= 0),
+  constraint race_progress_frame_len check (equipped_frame is null or char_length(equipped_frame) <= 50)
 );
 
 alter table public.race_progress enable row level security;
