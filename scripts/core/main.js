@@ -962,10 +962,10 @@ async function checkCode() {
         return;
       }
 
-      // Transaktion bestätigt erfolgreich - jetzt erst lokal markieren
-      // (Firestore hat codesCracked bereits in derselben Transaktion
+      // Schreibvorgang bestätigt erfolgreich - jetzt erst lokal markieren
+      // (das atomare Supabase-UPDATE hat codes_cracked bereits mit
       // erhöht, deshalb NUR die lokale Buchhaltung, nicht recordCodeCrack()
-      // mit seinem eigenen, zusätzlichen Firestore-Schreibvorgang).
+      // mit seinem eigenen, zusätzlichen Datenbank-Schreibvorgang).
       if (typeof markCodeCrackedLocally === "function") {
         markCodeCrackedLocally(codeId, match.reward || null);
       }

@@ -31,26 +31,24 @@ function loginWithTwitch() {
 }
 
 /* ------------------------------------------------------
-   NAMEN IN FIRESTORE NACHTRAGEN (Twitch/Discord)
+   NAMEN IN DER DATENBANK NACHTRAGEN (Twitch/Discord)
    ---------------------------------------------------
    fetchTwitchUser()/fetchDiscordUser() setzten den Anzeigenamen
    bisher NUR in localStorage (fuer die Anzeige), schrieben ihn aber
-   nie nach players/{uid} in Firestore - anders als die anonyme
-   Anmeldung, die dafuer bereits savePlayerData() aufruft (siehe
-   saveNickname() weiter unten in dieser Datei). firestore.rules
-   verlangt ueber validNickname() aber bei JEDEM players/{uid}-
-   Schreibvorgang ein vorhandenes nickname-Feld im Dokument - auch
-   bei Schreibvorgaengen, die mit dem Namen selbst gar nichts zu tun
-   haben (Spielothek-Einsatz, Schatzrad-Drehung, Wochenrennen, ...).
-   Ohne diesen Nachtrag schlugen dadurch ALLE Firestore-Schreib-
-   vorgaenge eines per Twitch/Discord angemeldeten Spielers mit
-   "permission-denied" fehl, sobald sein players/{uid}-Dokument noch
-   kein nickname-Feld hatte (genau der gemeldete Fehler in
-   spielothek.js). Wird sowohl direkt nach einem frischen Login als
-   auch einmalig beim Laden aufgerufen (deckt auch bereits betroffene,
-   laengst eingeloggte Sitzungen ab) - savePlayerData() ist ueber
-   merge:true idempotent, ein wiederholter Aufruf mit demselben Namen
-   aendert nichts.
+   nie in die players-Zeile - anders als die anonyme Anmeldung, die
+   dafuer bereits savePlayerData() aufruft (siehe saveNickname()
+   weiter unten in dieser Datei). Historischer Hintergrund: unter
+   Firestore verlangte validNickname() bei JEDEM players/{uid}-
+   Schreibvorgang ein vorhandenes nickname-Feld - ohne diesen
+   Nachtrag schlugen dadurch ALLE Schreibvorgaenge eines per
+   Twitch/Discord angemeldeten Spielers fehl. Die neue Postgres-RLS
+   (app.valid_players_write() in supabase/game-migration/) verlangt
+   das NICHT mehr - der Nachtrag bleibt trotzdem sinnvoll, damit
+   players.nickname fuer Rangliste/Rennen/Social-Anzeige bei OAuth-
+   Logins genauso zuverlaessig gefuellt ist wie bei der anonymen
+   Anmeldung. Wird sowohl direkt nach einem frischen Login als auch
+   einmalig beim Laden aufgerufen - savePlayerData() ist idempotent,
+   ein wiederholter Aufruf mit demselben Namen aendert nichts.
 ------------------------------------------------------ */
 function ensureOAuthNicknamePersisted() {
   const provider = localStorage.getItem("loginProvider") || "";

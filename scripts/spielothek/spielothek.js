@@ -7,14 +7,14 @@
    Währung, keine Ein-/Auszahlung, keine Zahlungsanbieter.
 
    FAIRNESS/SICHERHEIT (Punkt 14/15):
-   Jeder Spieldurchlauf läuft in EINER Firestore-Transaktion (wie
+   Jeder Spieldurchlauf läuft in EINEM einzigen Supabase-UPDATE (wie
    buyShopItem() in shop.js): Einsatz wird erst nach Prüfung des
    aktuellen Kontostands abgezogen, Gewinn wird IM SELBEN Schritt
    gutgeschrieben. Der Client kann den Kontostand nicht selbst
-   verändern - jede Spielrunde muss serverseitig (Firestore
-   Security Rules, siehe firestore.rules) über genau diese
-   Transaktion laufen. Angezeigt wird IMMER exakt das Ergebnis,
-   das die Transaktion zurückgegeben hat, nie ein separat im
+   verändern - jede Spielrunde muss serverseitig (Postgres Row
+   Level Security, siehe supabase/game-migration/) über genau
+   dieses UPDATE laufen. Angezeigt wird IMMER exakt das Ergebnis,
+   das der Schreibvorgang zurückgegeben hat, nie ein separat im
    Client berechneter Wert.
 
    MONATLICHE ROTATION:
@@ -91,15 +91,15 @@ function getRandomAndiCooldownQuote() {
    COOLDOWN ZWISCHEN ZWEI SPIELRUNDEN (Auftrag Punkt 1-3)
    ---------------------------------------------------
    Rein die UI-Anzeige (Countdown-Text, deaktivierter Button, Ändiis
-   Spruch) - die tatsaechliche Sperre wird serverseitig in
-   firestore.rules erzwungen (validSpielothekCooldown(), liest
-   players/{uid}.lastSpielothekPlayAt) und kann daher NICHT durch
-   Reload/mehrere Tabs/Konsolen-Manipulation umgangen werden: selbst
-   wenn hier im Client jemand cooldownUntil auf 0 setzen wuerde, lehnt
-   die Firestore-Transaktion den verfruehten Schreibversuch trotzdem
-   ab (siehe catch-Zweig "cooldown" unten). Genau dasselbe Muster wie
-   die bestehende 20h-Sperre des Schatzrads (lastWheelSpinAt +
-   validWheelFields() in firestore.rules) - hier nur mit kurzer
+   Spruch) - die tatsaechliche Sperre wird serverseitig per Postgres
+   RLS erzwungen (valid_spielothek_cooldown(), liest
+   players.last_spielothek_play_at, siehe supabase/game-migration/)
+   und kann daher NICHT durch Reload/mehrere Tabs/Konsolen-Manipulation
+   umgangen werden: selbst wenn hier im Client jemand cooldownUntil
+   auf 0 setzen wuerde, lehnt die Datenbank den verfruehten
+   Schreibversuch trotzdem ab (siehe catch-Zweig "cooldown" unten).
+   Genau dasselbe Muster wie die bestehende 20h-Sperre des Schatzrads
+   (last_wheel_spin_at + valid_wheel_fields()) - hier nur mit kurzer
    Dauer statt eines ganzen Tages.
 ------------------------------------------------------ */
 let spielothekCooldownUntil = 0;
@@ -255,8 +255,10 @@ async function playSpielothekGame() {
     const result = spin;
 
     refreshSpielothekCurrencyDisplay();
-    // Rein additiv, NACH der bereits erfolgreichen/server-geprueften
-    // Firestore-Transaktion oben - siehe scripts/supabase/supabase-games.js.
+    // Rein additiv, NACH dem bereits erfolgreichen/server-geprueften
+    // Supabase-UPDATE oben - siehe scripts/supabase/supabase-games.js
+    // (separate Statistik-Tabelle, laeuft ueber den Cloudflare-Worker-
+    // Proxy statt direkt ueber den Supabase-Client).
     // Ein Fehlschlag hier kann das eigentliche Spiel nicht beeinflussen.
     if (typeof logSpielothekRoundToSupabase === "function") {
       logSpielothekRoundToSupabase(game.id, betCost, result.payout, result.win);
@@ -277,9 +279,10 @@ async function playSpielothekGame() {
       // zu zeigen.
       await refreshSpielothekCooldownFromServer();
     } else {
-      // Die Transaktion ist entweder komplett durchgelaufen (siehe
-      // runTransaction() oben - dann landen wir hier gar nicht) oder
-      // komplett fehlgeschlagen, nie halb: Ein Fehler hier bedeutet
+      // Das UPDATE ist entweder komplett durchgelaufen (siehe
+      // supabaseClient.from("players").update() oben - dann landen wir
+      // hier gar nicht) oder komplett fehlgeschlagen, nie halb: Ein Fehler
+      // hier bedeutet
       // also sicher, dass NICHTS gespeichert wurde. Wichtig, das dem
       // Spieler auch so zu sagen, statt eine vage Meldung zu zeigen,
       // die den Eindruck erwecken koennte, der Einsatz sei trotzdem
@@ -339,7 +342,8 @@ async function refreshSpielothekCooldownFromServer() {
   } catch (err) {
     // Kein Grund, das Spiel deswegen zu blockieren - schlimmstenfalls
     // greift beim naechsten Klick einfach die serverseitige Sperre
-    // (firestore.rules) mit der normalen Fehlerbehandlung oben.
+    // (Postgres RLS, siehe supabase/game-migration/) mit der normalen
+    // Fehlerbehandlung oben.
   }
 }
 

@@ -17,7 +17,7 @@
 /* ------------------------------------------------------
    LEVEL-BERECHNUNG (rein aus xp abgeleitet, siehe
    xpRequiredForLevel() in progression-data.js - es gibt bewusst kein
-   eigenes "level"-Feld in Firestore, das aus dem Ruder laufen koennte)
+   eigenes "level"-Feld in der Datenbank, das aus dem Ruder laufen koennte)
 ------------------------------------------------------ */
 function getPlayerLevel(xp) {
   const totalXp = xp || 0;
@@ -110,28 +110,29 @@ function getPassTier(passXp, pass) {
    ---------------------------------------------------
    EINE Funktion fuer alle einmaligen Belohnungen (Level-Ups,
    Expedition-Meilensteine, Piratenpass-Stufen) - vergibt nur, wenn
-   rewardId noch nicht in players/{uid}.claimedRewardIds steht, und
-   markiert danach ATOMAR (Transaktion) als eingeloest. Ein Reload
-   oder Doppelklick kann dieselbe rewardId nie zweimal ausloesen
-   (Auftrag Punkt 21).
+   rewardId noch nicht in player_progression.claimed_reward_ids steht,
+   und markiert danach als eingeloest (Reihenfolge/Fehlerfall siehe
+   Kommentar bei claimReward() unten). Ein Reload oder Doppelklick
+   kann dieselbe rewardId nie zweimal ausloesen (Auftrag Punkt 21).
 
    Belohnungs-Effekte nutzen ausschliesslich bestehende, bereits
    server-synchronisierte Felder (currency/xp/tempAvatarExpiresAt/
-   shipTools) - NUR "avatar" (dauerhaft) hat bewusst KEIN eigenes Firestore-Feld:
-   das wuerde die bestehende, rein lokale unlockAvatar()-Logik
-   duplizieren (Auftrag Punkt 22) statt sie wiederzuverwenden. Das
-   entspricht exakt der bestehenden Garantie fuer code-freigeschaltete
-   Avatare (main.js checkCode()) - keine neue, schwaechere Stelle.
+   shipTools) - NUR "avatar" (dauerhaft) hat bewusst KEINE eigene
+   Spalte in der Datenbank: das wuerde die bestehende, rein lokale
+   unlockAvatar()-Logik duplizieren (Auftrag Punkt 22) statt sie
+   wiederzuverwenden. Das entspricht exakt der bestehenden Garantie
+   fuer code-freigeschaltete Avatare (main.js checkCode()) - keine
+   neue, schwaechere Stelle.
 ------------------------------------------------------ */
-// Belohnungs-Effekte verteilen sich auf ZWEI Dokumente derselben
-// Transaktion: currency/shipTools/tempAvatar* bleiben in players/{uid}
-// (bestehende, bereits validierte Felder - siehe validShopFields()/
-// validShipTools()/validWheelFields() in firestore.rules), xp/
+// Belohnungs-Effekte verteilen sich auf ZWEI Tabellen: currency/
+// shipTools/tempAvatar* bleiben in players (bestehende, bereits
+// validierte Felder - siehe app.valid_players_write() in
+// supabase/game-migration/01-players-ship-progression.sql), xp/
 // passProgress/claimedRewardIds/hasFlitzpiepenCap leben in der neuen
-// player_progression/{uid} (eigenes, unbelastetes Ausdrucksbudget -
-// siehe Kommentar dort). Ein Firestore-Transaction kann mehrere
-// Dokumente atomar lesen/schreiben, beide Schreibvorgaenge committen
-// deshalb gemeinsam oder gar nicht.
+// player_progression (eigenes, unbelastetes Ausdrucksbudget - siehe
+// Kommentar dort). KEINE echte Cross-Table-Atomaritaet zwischen
+// beiden - siehe Kommentar bei claimReward() unten fuer die deshalb
+// bewusst gewaehlte Schreibreihenfolge.
 function buildRewardFields(reward, playerData, progressionData, currentPass) {
   const playerFields = {};
   const progressionFields = {};
