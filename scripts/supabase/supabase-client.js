@@ -24,11 +24,24 @@
 
 let supabaseClient = null;
 
+// Der ALLERERSTE Aufruf pro Seitenaufruf erzwingt ein frisches Token
+// (statt eines evtl. aus einer wiederhergestellten Sitzung gecachten) -
+// ein Token, das im selben Moment neu ausgestellt UND fast zeitgleich
+// von Supabase geprueft wird, kann sonst an einer knappen Zeit-Toleranz
+// (iat/Uhr-Abweichung) scheitern und faelschlich als 401 (statt 403)
+// zurueckkommen, obwohl RLS/Third-Party-Auth korrekt konfiguriert sind.
+// Danach reicht wieder das normale, guenstige Firebase-Caching - sonst
+// wuerde JEDE Supabase-Anfrage einen zusaetzlichen Netzwerk-Umweg zu
+// Firebase brauchen, nicht nur die erste.
+let supabaseAccessTokenForcedOnce = false;
+
 async function getSupabaseAccessToken() {
   try {
     if (typeof wheelAuthReady !== "undefined") await wheelAuthReady;
     if (typeof firebase === "undefined" || !firebase.auth || !firebase.auth().currentUser) return null;
-    return await firebase.auth().currentUser.getIdToken();
+    const forceRefresh = !supabaseAccessTokenForcedOnce;
+    supabaseAccessTokenForcedOnce = true;
+    return await firebase.auth().currentUser.getIdToken(forceRefresh);
   } catch (err) {
     console.warn("Firebase-ID-Token fuer Supabase konnte nicht geholt werden:", err);
     return null;
