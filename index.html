@@ -1021,8 +1021,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-  <!-- Supabase (nur für nicht sicherheitskritische Statistiken, siehe supabase/ - Firebase bleibt für Spielerdaten führend) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <!-- Supabase (Spieler-Datenbank, siehe supabase/game-migration/README.md - Firebase bleibt NUR noch für Authentication zuständig).
+       Version bewusst fest gepinnt (nicht "@2" o.ä.), damit ein Update der CDN-Version nicht ungetestet auf der Live-Seite landet. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
 
   <!-- GSAP (Animationen). Kein Bundler hier, daher als globale
        <script>-Tags statt "import { gsap } from 'gsap'" - jedes

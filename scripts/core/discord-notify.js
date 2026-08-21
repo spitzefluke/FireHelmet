@@ -32,11 +32,13 @@ async function trySendDiscordUpdateNotice() {
   );
 
   try {
+    console.log("[DEBUG discord-notify @" + performance.now().toFixed(0) + "ms] vor SELECT, uid=" + uid);
     const { data, error: readError } = await supabaseClient
       .from("site_meta")
       .select("last_sent_hash")
       .eq("id", "update_notice")
       .maybeSingle();
+    console.log("[DEBUG discord-notify @" + performance.now().toFixed(0) + "ms] SELECT fertig, readError=" + (readError ? JSON.stringify(readError) : "null"));
     if (readError) throw readError;
 
     const lastSentHash = data ? data.last_sent_hash : null;
@@ -45,9 +47,11 @@ async function trySendDiscordUpdateNotice() {
     // Sofort als "gesendet" markieren, BEVOR der eigentliche Versand
     // passiert - so lösen nicht mehrere gleichzeitige Besucher
     // versehentlich mehrere Nachrichten aus
+    console.log("[DEBUG discord-notify @" + performance.now().toFixed(0) + "ms] vor UPSERT");
     const { error: writeError } = await supabaseClient
       .from("site_meta")
       .upsert({ id: "update_notice", last_sent_hash: currentHash, sent_at: new Date().toISOString() }, { onConflict: "id" });
+    console.log("[DEBUG discord-notify @" + performance.now().toFixed(0) + "ms] UPSERT fertig, writeError=" + (writeError ? JSON.stringify(writeError) : "null"));
     if (writeError) throw writeError;
 
     const content =
@@ -59,6 +63,7 @@ async function trySendDiscordUpdateNotice() {
       body: JSON.stringify({ content }),
     });
   } catch (err) {
+    console.log("[DEBUG discord-notify] FEHLER komplett:", JSON.stringify(err), err);
     console.warn("Discord-Benachrichtigung konnte nicht gesendet werden:", err);
   }
 }
