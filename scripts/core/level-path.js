@@ -178,14 +178,17 @@ async function openLevelPath() {
   let xp = 0;
   let claimedIds = [];
 
-  if (typeof wheelDb !== "undefined" && wheelDb && typeof wheelAuthReady !== "undefined") {
+  if (typeof supabaseClient !== "undefined" && supabaseClient && typeof wheelAuthReady !== "undefined") {
     try {
       const uid = await wheelAuthReady;
       if (uid) {
-        const snap = await wheelDb.collection("player_progression").doc(uid).get();
-        const data = snap.exists ? snap.data() : {};
-        xp = data.xp || 0;
-        claimedIds = data.claimedRewardIds || [];
+        const { data } = await supabaseClient
+          .from("player_progression")
+          .select("xp, claimed_reward_ids")
+          .eq("firebase_uid", uid)
+          .maybeSingle();
+        xp = (data && data.xp) || 0;
+        claimedIds = (data && data.claimed_reward_ids) || [];
       }
     } catch (err) {
       console.warn("Levelpfad-Fortschritt konnte nicht geladen werden:", err);
@@ -354,15 +357,18 @@ async function claimLevelPathRewardFromTooltip(level) {
 
   // Karte im Hintergrund neu aufbauen, damit der Knoten sofort als
   // "eingeloest" markiert erscheint, ohne das ganze Modal neu zu oeffnen.
-  if (typeof wheelDb !== "undefined" && wheelDb && typeof wheelAuthReady !== "undefined") {
+  if (typeof supabaseClient !== "undefined" && supabaseClient && typeof wheelAuthReady !== "undefined") {
     const uid = await wheelAuthReady;
     if (uid) {
-      const snap = await wheelDb.collection("player_progression").doc(uid).get();
-      const data = snap.exists ? snap.data() : {};
+      const { data } = await supabaseClient
+        .from("player_progression")
+        .select("xp, claimed_reward_ids")
+        .eq("firebase_uid", uid)
+        .maybeSingle();
       const existingOverlay = document.getElementById("fh-levelpath-overlay");
       if (existingOverlay) {
         existingOverlay.remove();
-        renderLevelPathOverlay(data.xp || 0, data.claimedRewardIds || []);
+        renderLevelPathOverlay((data && data.xp) || 0, (data && data.claimed_reward_ids) || []);
         // Nach dem Neu-Rendern erneut zur aktuellen Stufe scrollen (das
         // frische Scroll-Element steht sonst wieder bei 0, unabhaengig
         // davon, wo der Spieler die Belohnung gerade eingeloest hat).

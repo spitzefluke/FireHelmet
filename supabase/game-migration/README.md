@@ -60,7 +60,15 @@ Direkt in den bestehenden Dateien umgestellt (keine Parallelkopien) — jede Dat
 
   **Bugfund während 4e:** `app.valid_daily_quests_write()` verlangte für den Tagesquest-Erststart `new_started_at = now()` exakt — das funktioniert nur bei direktem SQL (wie in den Tests), ein echter Supabase-Client kann aber keine rohe `now()`-Funktion senden, nur einen fertigen Zeitwert, der nie exakt trifft. Dieser Fehler wäre erst beim echten Cutover aufgefallen (Tagesquests hätten nie starten können) und wurde in `01-players-ship-progression.sql` auf ein 2-Minuten-Toleranzfenster korrigiert — **muss manuell auf dem echten Supabase-Projekt nachgezogen werden, siehe unten.**
 
-**Noch offen (Phase 4, weitere Dateien):** `progression.js`, `race.js`, `community-boss.js`, sowie die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`, `level-path.js`, `piratenpass.js`, `stories.js`).
+- **4f** (erledigt): `scripts/core/progression.js` — zentraler Reward-Dispatcher (`claimReward()`, schreibt je nach Belohnungstyp in `players` UND/ODER `player_progression`), XP-Vergabe für bestehende Aktionen (`awardActionXp()`), Spielerkarte (`refreshPlayerCard()`, kein Live-Abo mehr — siehe unten). `passProgress` (Firestore: verschachtelte Map) ist in Postgres von Anfang an als zwei flache Spalten (`pass_id`/`pass_xp`) angelegt — hier entsprechend übersetzt.
+
+  **Wichtig — kein Firestore-Cross-Collection-Transaktion-Äquivalent:** `claimReward()` konnte in Firestore `players` UND `player_progression` atomar in EINER Transaktion schreiben; ein normaler Supabase-REST-Aufruf kann das nicht (zwei unabhängige Anfragen). Um das schlimmere Fehlerbild zu vermeiden, schreibt `claimReward()` jetzt IMMER zuerst `players` (Belohnungseffekt), erst danach `player_progression` (Markierung "eingelöst") — schlägt nur der zweite Schritt fehl, bleibt die Belohnung unmarkiert und ein späterer Versuch holt sie sicher nach (schlimmstenfalls einmal doppelt vergeben, nie dauerhaft verloren).
+
+  **Live-Abo entfernt:** `refreshPlayerCard()` nutzte bisher Firestores `onSnapshot()` für automatische Aktualisierung. Ein direktes Supabase-Realtime-Äquivalent wird in dieser Migration bislang nirgends genutzt, deshalb jetzt ein einmaliger Direktabruf — alle Stellen, die die Spielerkarte tatsächlich verändern, rufen `refreshPlayerCard()` bereits selbst explizit erneut auf, ein Verlust an Aktualität entsteht dadurch nicht.
+
+  **Split-Brain-Falle rechtzeitig gefunden:** `player_progression` wird nicht nur von `progression.js` gelesen — `scripts/core/level-path.js` (2 Stellen), `scripts/piratenpass/piratenpass.js` und `scripts/stories/stories.js` lesen direkt aus derselben Tabelle für ihre jeweilige Anzeige (Levelpfad-Modal, Piratenpass-Fortschritt, Expeditions-Meilensteine). Da `claimReward()`/`awardActionXp()` jetzt nach Supabase schreiben, mussten diese vier Lesestellen in DERSELBEN Änderung mit umgestellt werden — sonst hätten sie sofort veraltete/falsche Daten aus Firestore angezeigt, sobald eine Belohnung eingelöst wird.
+
+**Noch offen (Phase 4, weitere Dateien):** `race.js`, `community-boss.js`, sowie die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`).
 
 ## ⚠️ Manueller Schritt erforderlich: Bugfix auf dem echten Supabase-Projekt nachziehen
 
