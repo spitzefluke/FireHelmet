@@ -1034,17 +1034,8 @@ function stopShipRepairTicker() {
    einzelner Versuch mal fehlschlaegt, und ein reines No-Op, sobald
    das Kapitel schon freigeschaltet ist.
 ------------------------------------------------------ */
-// Bleibt bewusst auf Firestore: site_config wird clientseitig erst in
-// einer spaeteren Phase 4-Datei (site-config.js/admin-gateway.js) auf
-// Supabase umgestellt - "siteConfig" (globale Variable, gefuellt von
-// site-config.js) liest bis dahin weiterhin von dort. Ein Wechsel nur
-// hier wuerde Schreiben/Lesen auf zwei verschiedene Datenbanken
-// aufteilen (siehe dieselbe Ueberlegung bei "equippedFrame" in
-// shop.js, Phase 4c/4d) - erst wenn site-config.js migriert ist, wird
-// auch dieser Schreibvorgang auf Supabase (site_config.data-JSONB)
-// umgestellt.
 async function maybeUnlockChapterAfterShipRepair() {
-  if (!wheelDb || typeof siteConfig === "undefined") return;
+  if (typeof siteConfig === "undefined" || typeof patchSupabaseSiteConfig !== "function") return;
 
   const targetIds = siteConfig.shipRepairUnlockChapterIds || [];
   if (!targetIds.length) return;
@@ -1054,10 +1045,7 @@ async function maybeUnlockChapterAfterShipRepair() {
   if (!stillLocked.length) return;
 
   try {
-    await wheelDb
-      .collection("site_config")
-      .doc("main")
-      .set({ lockedChapterIds: locked.filter((id) => !targetIds.includes(id)) }, { merge: true });
+    await patchSupabaseSiteConfig({ lockedChapterIds: locked.filter((id) => !targetIds.includes(id)) });
   } catch (err) {
     console.warn("Kapitel konnte nach Schiffsreparatur nicht automatisch freigeschaltet werden:", err);
   }

@@ -7,8 +7,12 @@
    FIRE_HELMET_CONFIG.ownerEmail entspricht. Ein Besucher kann
    diese Prüfung nicht faelschen, da die E-Mail nicht vom Client
    kommt, sondern Teil des von Firebase kryptografisch geprüften
-   ID-Tokens ist (request.auth.token.email in den Firestore
-   Security Rules - siehe firestore.rules im Projekt-Root).
+   ID-Tokens ist. Firebase Authentication bleibt unveraendert -
+   nur die Datenbank ist gewechselt: die eigentliche, server-
+   seitige Durchsetzung (nicht nur diese Client-Anzeige-Pruefung)
+   passiert jetzt ueber app.is_admin() in der Supabase RLS-Policy
+   "site_config_write_admin" (siehe 05-site-data.sql), die
+   auth.jwt() ->> 'email' gegen dieselbe ownerEmail prueft.
 
    WICHTIG - Voraussetzung: In der Firebase Console muss unter
    Authentication -> Sign-in method die Google-Anmeldung aktiv
@@ -44,7 +48,7 @@ function isAuthorizedAdmin(user) {
 
 async function loginAdminWithGoogle() {
   const statusEl = document.getElementById("gateway-login-status");
-  if (typeof firebase === "undefined" || !wheelDb) {
+  if (typeof firebase === "undefined" || !supabaseClient) {
     if (statusEl) statusEl.textContent = "⚠️ Firebase ist nicht verfügbar.";
     return;
   }
@@ -129,18 +133,19 @@ async function saveGatewayCountdowns() {
   const statusEl = document.getElementById("gateway-save-status");
   const mainInput = document.getElementById("gateway-main-countdown");
   const shipInput = document.getElementById("gateway-ship-countdown");
-  if (!wheelDb) return;
+  if (!supabaseClient) return;
 
   const update = {};
   if (mainInput && mainInput.value) update.mainCountdownTarget = new Date(mainInput.value).toISOString().slice(0, 19);
   if (shipInput && shipInput.value) update.shipEventUnlockDate = new Date(shipInput.value).toISOString().slice(0, 19);
 
   try {
-    await wheelDb.collection("site_config").doc("main").set(update, { merge: true });
-    // Kurz verzögert setzen: das eigene Speichern löst über onSnapshot
-    // (siehe site-config.js) sofort ein Neuzeichnen des gesamten Panels
-    // aus (für die Live-Vorschau) - das würde die Meldung hier sonst
-    // augenblicklich wieder überschreiben, bevor sie sichtbar wird.
+    await patchSupabaseSiteConfig(update);
+    // Kurz verzögert setzen: das eigene Speichern löst über
+    // applySiteConfigSnapshot() (siehe site-config.js) sofort ein
+    // Neuzeichnen des gesamten Panels aus (für die Live-Vorschau) -
+    // das würde die Meldung hier sonst augenblicklich wieder
+    // überschreiben, bevor sie sichtbar wird.
     setTimeout(() => {
       const el = document.getElementById("gateway-save-status");
       if (el) el.textContent = "✅ Gespeichert.";
@@ -152,13 +157,13 @@ async function saveGatewayCountdowns() {
 }
 
 async function toggleGatewayChapterLock(groupKey, ids, locked) {
-  if (!wheelDb) return;
+  if (!supabaseClient) return;
   const current = Array.isArray(siteConfig.lockedChapterIds) ? [...siteConfig.lockedChapterIds] : [];
   const withoutGroup = current.filter((id) => !ids.includes(id));
   const next = locked ? [...withoutGroup, ...ids] : withoutGroup;
 
   try {
-    await wheelDb.collection("site_config").doc("main").set({ lockedChapterIds: next }, { merge: true });
+    await patchSupabaseSiteConfig({ lockedChapterIds: next });
   } catch (err) {
     console.error("Kapitel-Sperre konnte nicht gespeichert werden:", err);
   }
@@ -247,13 +252,13 @@ function buildGatewaySpielothekHtml() {
 }
 
 async function toggleGatewaySpielothekGame(gameId, disabled) {
-  if (!wheelDb) return;
+  if (!supabaseClient) return;
   const current = Array.isArray(siteConfig.disabledGameIds) ? [...siteConfig.disabledGameIds] : [];
   const withoutGame = current.filter((id) => id !== gameId);
   const next = disabled ? [...withoutGame, gameId] : withoutGame;
 
   try {
-    await wheelDb.collection("site_config").doc("main").set({ disabledGameIds: next }, { merge: true });
+    await patchSupabaseSiteConfig({ disabledGameIds: next });
   } catch (err) {
     console.error("Spiel konnte nicht umgeschaltet werden:", err);
   }
@@ -286,13 +291,10 @@ function buildGatewayShipUnlockSelectHtml() {
 }
 
 async function saveGatewayShipUnlockChapter(groupKey) {
-  if (!wheelDb) return;
+  if (!supabaseClient) return;
   const group = getChapterGroupsForGateway().find((g) => g.key === groupKey);
   try {
-    await wheelDb
-      .collection("site_config")
-      .doc("main")
-      .set({ shipRepairUnlockChapterIds: group ? group.ids : [] }, { merge: true });
+    await patchSupabaseSiteConfig({ shipRepairUnlockChapterIds: group ? group.ids : [] });
   } catch (err) {
     console.error("Konnte nicht gespeichert werden:", err);
   }
@@ -317,7 +319,7 @@ async function renderGatewayPage() {
   const container = document.getElementById("gateway-content");
   if (!container) return;
 
-  if (!wheelDb) {
+  if (!supabaseClient) {
     container.innerHTML = `<p class="wheel-status">⚠️ Firebase ist nicht verfügbar - das Admin-Gateway benötigt eine Verbindung.</p>`;
     return;
   }
