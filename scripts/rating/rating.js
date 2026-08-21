@@ -47,7 +47,7 @@ async function submitRating() {
     return;
   }
 
-  if (!wheelDb) {
+  if (!supabaseClient) {
     if (statusEl) statusEl.textContent = "⚠️ Bewertung ist gerade nicht verfügbar.";
     return;
   }
@@ -60,13 +60,13 @@ async function submitRating() {
   try {
     const uid = await wheelAuthReady;
 
-    await wheelDb.collection("site_ratings").add({
-      uid: uid || null,
+    const { error } = await supabaseClient.from("site_ratings").insert({
+      firebase_uid: uid || null,
       nickname,
       value: selectedRatingValue,
-      comment,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      comment: comment || null,
     });
+    if (error) throw error;
 
     localStorage.setItem("ratingSubmitted", "1");
     if (statusEl) statusEl.textContent = "✅ Danke für dein Feedback!";
@@ -86,21 +86,22 @@ async function loadRatingAverage() {
   const box = document.getElementById("rating-average");
   const starsEl = document.getElementById("rating-average-stars");
   const textEl = document.getElementById("rating-average-text");
-  if (!box || !wheelDb) return;
+  if (!box || !supabaseClient) return;
 
   try {
-    const snap = await wheelDb.collection("site_ratings").get();
-    if (snap.empty) return;
+    const { data, error } = await supabaseClient.from("site_ratings").select("value");
+    if (error) throw error;
+    if (!data || !data.length) return;
 
     let total = 0;
-    snap.forEach((doc) => {
-      total += doc.data().value || 0;
+    data.forEach((row) => {
+      total += row.value || 0;
     });
-    const avg = total / snap.size;
+    const avg = total / data.length;
     const roundedStars = Math.round(avg);
 
     if (starsEl) starsEl.textContent = "★".repeat(roundedStars) + "☆".repeat(5 - roundedStars);
-    if (textEl) textEl.textContent = `${avg.toFixed(1)} / 5 (${snap.size} Bewertung${snap.size === 1 ? "" : "en"})`;
+    if (textEl) textEl.textContent = `${avg.toFixed(1)} / 5 (${data.length} Bewertung${data.length === 1 ? "" : "en"})`;
 
     box.style.display = "flex";
   } catch (err) {

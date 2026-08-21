@@ -1,6 +1,6 @@
 # Firestore → Supabase Migration (Spieler-Datenbank)
 
-**Status: Phase 4 von 5 (Client-Umstellung läuft, Datei für Datei) — noch NICHT live, Firestore läuft unverändert weiter.**
+**Status: Phase 4 von 5 abgeschlossen (alle Client-Dateien umgestellt) — noch NICHT live, Firestore läuft unverändert weiter. Phase 5 (Umschaltpunkt) steht noch aus.**
 
 Voraussetzung erfüllt: Third-Party Auth (Firebase) ist im Supabase-Dashboard aktiviert.
 
@@ -82,13 +82,33 @@ Direkt in den bestehenden Dateien umgestellt (keine Parallelkopien) — jede Dat
 
   **Dead Code entdeckt:** `scripts/giveaway/giveaway.js` ist in `index.html` **nirgends eingebunden** (kein `<script>`-Tag, keine Seite, kein Menüpunkt) — komplett unverdrahtete/inaktive Funktionalität. Wird trotzdem als eigener Schritt migriert (die Phase-3-Tabelle existiert bereits), aber ohne Playwright-Testabdeckung, da keine echte Seite existiert, über die sie sich auslösen ließe.
 
-**Noch offen (Phase 4, weitere Dateien):** `giveaway.js` (unverdrahtet, siehe oben), `support.js`, `rating.js`.
+- **4j** (erledigt, damit ist Phase 4 vollständig): `scripts/support/support.js`, `scripts/rating/rating.js`, `scripts/giveaway/giveaway.js` (unverdrahtet, siehe oben) — Fehlermeldungen (`submitSupportReport()`), Sternebewertungen (`submitRating()`/`loadRatingAverage()`) und Gewinnspiel-Teilnahme/-Ziehung laufen jetzt über `supabaseClient` statt `wheelDb`/Firestore. `giveawayWinners.create()` (Firestores atomares "nur anlegen, wenn noch nicht vorhanden") wird durch ein reines `.insert()` ersetzt — der Primary Key `round_id` liefert dieselbe Garantie strukturell (Unique-Verletzung bei einem zweiten Zug), kein Sonderfall nötig.
 
-## ⚠️ Manuelle Schritte erforderlich: drei Nachbesserungen auf dem echten Supabase-Projekt
+  **Zwei fehlende Spalten gefunden (derselbe Fehlerklasse wie `race_progress.equipped_frame` in Phase 4g):** Firestores `supportReports`-Dokument speicherte zusätzlich `uid`/`nickname`/`page` (fürs Betreiber-Triage, `firestore.rules` validierte nur `message`), `site_ratings` zusätzlich `uid` — beide Tabellen hatten dafür in `05-site-data.sql` bislang keine Spalten. Nachgezogen (`firebase_uid`/`nickname`/`page` bzw. `firebase_uid`, alle mit defensiven Längenprüfungen, keine RLS-Sonderprüfung nötig, genau wie im Original). Lokal gegen PostgreSQL 16 verifiziert: bestehende 20 Phase-3-Tests weiterhin 20/20 grün, neue Spalten akzeptieren Schreibvorgänge, `support_reports` bleibt für niemanden lesbar (auch nicht den Absender selbst) — genau wie zuvor. **Muss additiv auf dem echten, bereits laufenden Supabase-Projekt nachgezogen werden, siehe unten.**
 
-Phase 1 und Phase 2 wurden bereits von dir gegen das echte Supabase-Projekt getestet und laufen dort produktiv (Schema). Alle drei unten beschriebenen Funde betreffen bereits deployte Struktur. Bitte im Supabase-Dashboard → SQL Editor **alle drei einmalig** ausführen (jeweils rein additiv, kein Datenverlust, keine Downtime):
+Getestet (4j): Playwright-Kontrollflusstest deckt Support-Meldung inkl. Schimpfwort-Filter-Ablehnung und Bewertung inkl. Durchschnittsanzeige und lokaler Doppel-Sperre ab - 7/7 Prüfpunkte grün. Volle 17-Seiten-Regression: nur die erwarteten sandbox-bedingten Netzwerkfehler, keine echten JS-Fehler.
 
-**1) `app.attack_community_boss()`-Funktion anlegen (Phase 4h, neu):**
+**Phase 4 ist damit für alle ~19 client-seitigen Dateien abgeschlossen.** Übrig bleibt ausschließlich Phase 5 (der eigentliche Umschaltpunkt).
+
+## ⚠️ Manuelle Schritte erforderlich: vier Nachbesserungen auf dem echten Supabase-Projekt
+
+Phase 1, 2 und 3 wurden bereits von dir gegen das echte Supabase-Projekt getestet (57 Testfälle) und laufen dort produktiv (Schema). Alle vier unten beschriebenen Funde betreffen bereits deployte Struktur. Bitte im Supabase-Dashboard → SQL Editor **alle vier einmalig** ausführen (jeweils rein additiv, kein Datenverlust, keine Downtime):
+
+**1) `support_reports`/`site_ratings`-Spalten nachziehen (Phase 4j, neu):**
+
+```sql
+alter table public.support_reports
+  add column if not exists firebase_uid text,
+  add column if not exists nickname text,
+  add column if not exists page text,
+  add constraint support_reports_nickname_len check (nickname is null or char_length(nickname) <= 30),
+  add constraint support_reports_page_len check (page is null or char_length(page) <= 500);
+
+alter table public.site_ratings
+  add column if not exists firebase_uid text;
+```
+
+**2) `app.attack_community_boss()`-Funktion anlegen (Phase 4h):**
 
 ```sql
 create or replace function app.attack_community_boss(p_month_id text, p_damage integer)
@@ -112,7 +132,7 @@ $$;
 grant execute on function app.attack_community_boss(text, integer) to authenticated;
 ```
 
-**2) `race_progress.equipped_frame`-Spalte nachziehen (Phase 4g):**
+**3) `race_progress.equipped_frame`-Spalte nachziehen (Phase 4g):**
 
 ```sql
 alter table public.race_progress
@@ -120,7 +140,7 @@ alter table public.race_progress
   add constraint race_progress_frame_len check (equipped_frame is null or char_length(equipped_frame) <= 50);
 ```
 
-**3) `valid_daily_quests_write()`-Toleranzfenster nachziehen (Phase 4e):**
+**4) `valid_daily_quests_write()`-Toleranzfenster nachziehen (Phase 4e):**
 
 ```sql
 create or replace function app.valid_daily_quests_write(
@@ -190,5 +210,5 @@ $$;
 
 ## Nächste Schritte (noch nicht umgesetzt)
 
-- Phase 4 (Rest): restliche ~11 Dateien, siehe oben
-- Phase 5: Umschaltpunkt — erst nach vollständiger Prüfung
+- Die vier oben aufgelisteten manuellen SQL-Nachbesserungen auf dem echten Supabase-Projekt ausführen
+- Phase 5: Umschaltpunkt — erst nach vollständiger Prüfung (Phase 4 ist client-seitig komplett)
