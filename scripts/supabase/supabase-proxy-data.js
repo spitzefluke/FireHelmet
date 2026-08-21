@@ -17,7 +17,7 @@
 const supabaseProxyConfig = {
   // Leer lassen = Logging ist deaktiviert, Spielothek/Community-Boss
   // funktionieren unveraendert normal weiter (rein additiv).
-  proxyUrl: "", // z.B. "https://firehelmet-supabase-proxy.deinname.workers.dev"
+  proxyUrl: "https://firehelmet-supabase-proxy.spitzefluke.workers.dev",
 
-  enabled: false,
+  enabled: true,
 };
