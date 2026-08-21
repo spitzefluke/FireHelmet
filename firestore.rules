@@ -495,7 +495,8 @@ service cloud.firestore {
 
     // Bekannte Dublonen-Code-Hashes und ihr jeweiliger Betrag - MUSS mit
     // den currencyReward-Eintraegen in scripts/codes/codes-data.js
-    // synchron bleiben (fire100/beutel25/kleinerbeutel/fire300/coins300).
+    // synchron bleiben (fire100/beutel25/kleinerbeutel/fire300/coins300/
+    // sorry500).
     // Diese Pruefung ist der eigentliche Fix fuer das kaputte Codesystem:
     // vorher gab es fuer Dublonen-Codes GAR KEINE serverseitige Dopplungs-
     // pruefung (nur einen lokalen localStorage-Eintrag) - ein Code liess
@@ -561,6 +562,7 @@ service cloud.firestore {
               || ('8bfe3282c066093f84dc23ea2215dff3eae0c7bb2a0d7a11585800adc3d7efb1' in newMap && !('8bfe3282c066093f84dc23ea2215dff3eae0c7bb2a0d7a11585800adc3d7efb1' in oldMap) && delta == 25)
               || ('8f42ea772af5c16d5b27feb56aae75e6407d8b85e9174e79e468320b9ed88dba' in newMap && !('8f42ea772af5c16d5b27feb56aae75e6407d8b85e9174e79e468320b9ed88dba' in oldMap) && delta == 300)
               || ('d422fd99131807e57e4c5b71defeeab9544b77d9d9201cf36a922f14bf5f226d' in newMap && !('d422fd99131807e57e4c5b71defeeab9544b77d9d9201cf36a922f14bf5f226d' in oldMap) && delta == 300)
+              || ('80ebd9ad284c580790b9d1f1e276568c455838fa1604159d7bf323b89718f27c' in newMap && !('80ebd9ad284c580790b9d1f1e276568c455838fa1604159d7bf323b89718f27c' in oldMap) && delta == 500)
             )
           )
         );

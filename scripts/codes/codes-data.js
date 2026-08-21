@@ -205,6 +205,11 @@ const codes = [
     message: "🪙 +300 Dublonen für dich!",
     currencyReward: 300,
   },
+  {
+    hash: "80ebd9ad284c580790b9d1f1e276568c455838fa1604159d7bf323b89718f27c", // sorry500
+    message: "🪙 +500 Dublonen als Entschuldigung dafür, dass die Spielothek 3 Tage lang nicht funktioniert hat!",
+    currencyReward: 500,
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde
