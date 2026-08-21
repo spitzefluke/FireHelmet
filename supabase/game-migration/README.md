@@ -1,6 +1,6 @@
 # Firestore → Supabase Migration (Spieler-Datenbank)
 
-**Status: Phase 3 von 5 — noch NICHT live, Firestore läuft unverändert weiter.**
+**Status: Phase 4 von 5 (Client-Umstellung läuft, Datei für Datei) — noch NICHT live, Firestore läuft unverändert weiter.**
 
 Voraussetzung erfüllt: Third-Party Auth (Firebase) ist im Supabase-Dashboard aktiviert.
 
@@ -45,7 +45,20 @@ psql -d test_db -f 04-race-boss.test.sql
 psql -d test_db -f 06-site-data.test.sql
 ```
 
+## Phase 4: Client-Umstellung (läuft, Datei für Datei)
+
+Direkt in den bestehenden Dateien umgestellt (keine Parallelkopien) — jede Datei einzeln per Playwright-Kontrollfluss-Test (Mock aus `firebase-mock.js` + `supabase-mock.js`) geprüft, bevor die nächste drankommt. Firestore bleibt bis zum Umschaltpunkt (Phase 5) vollständig unverändert nutzbar, betroffen ist ausschließlich der Lese-/Schreibpfad im Client.
+
+- **4a** (erledigt): `scripts/supabase/supabase-client.js` — Third-Party-Auth-Client mit `accessToken`-Callback (echtes Firebase-ID-Token bei jeder Anfrage).
+- **4b** (erledigt): `scripts/spielothek/spielothek.js` — Spielrunde, Cooldown, Dublonenanzeige.
+- **4c** (erledigt): `scripts/shop/shop.js` — Kauf, Dublonenanzeige, Abgleich freigeschalteter Artikel.
+- **4d** (erledigt): `scripts/wheel/wheel.js` — größte Einzeldatei: `savePlayerData()` (zentral, wird von `saveNickname()`, `shop.js equipFrame()` und `twitch-auth.js` genutzt), `addCurrency()` (Rennplatzierung, Boss-Top-Angreifer), Schatzrad-Drehung (`redeemWheelPrize()`, 20h-Cooldown + alle 4 Preistypen), Code-Tracking (`recordCodeCrack()`, `syncCodesToFirestore()`-Nachholsynchronisierung), sichere Währungscode-Einlösung (`redeemCurrencyCode()`), zeitlich befristeter Avatar-Abgleich (`syncTempAvatarFromServer()`) und die globale Rangliste (`loadLeaderboard()`). Dabei zusätzlich die in 4c bewusst offen gelassene `equippedFrame`-Kopplung in `shop.js` geschlossen (wird jetzt konsistent aus Supabase gelesen).
+
+  Bemerkenswert: zwei rein informative, nirgends zurückgelesene Firestore-Felder (`lastSpin`, `lastPrize`) haben in der Postgres-Tabelle bewusst KEINE Spalte bekommen (in Phase 1 bereits final geprüft/getestet) — sie wurden beim Umstieg ersatzlos weggelassen, ohne Funktionsverlust.
+
+**Noch offen (Phase 4, weitere Dateien):** `ship-repair.js`, `progression.js`, `race.js`, `community-boss.js`, sowie die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`, `level-path.js`, `piratenpass.js`, `stories.js`).
+
 ## Nächste Schritte (noch nicht umgesetzt)
 
-- Phase 4: Client-Umstellung (~15 Dateien von `wheelDb` auf `supabaseClient`)
+- Phase 4 (Rest): restliche ~11 Dateien, siehe oben
 - Phase 5: Umschaltpunkt — erst nach vollständiger Prüfung

@@ -384,7 +384,7 @@ async function syncOwnedShopItemsFromServer() {
 
     const { data } = await supabaseClient
       .from("players")
-      .select("owned_shop_items")
+      .select("owned_shop_items, equipped_frame")
       .eq("firebase_uid", uid)
       .maybeSingle();
 
@@ -400,22 +400,8 @@ async function syncOwnedShopItemsFromServer() {
       });
     }
 
-    // equippedFrame wird bisher noch von savePlayerData() in wheel.js
-    // geschrieben (dort noch nicht auf Supabase umgestellt) - deshalb
-    // hier bewusst weiterhin aus Firestore gelesen, damit Schreiben
-    // und Lesen zusammenbleiben. Sobald wheel.js in einer spaeteren
-    // Phase ebenfalls umgestellt ist, kann dieser Block entfallen und
-    // "equipped_frame" oben einfach mit ausgelesen werden.
-    if (wheelDb) {
-      try {
-        const snap = await wheelDb.collection("players").doc(uid).get();
-        if (snap.exists && snap.data().equippedFrame) {
-          localStorage.setItem("equippedFrame", snap.data().equippedFrame);
-        }
-      } catch (err) {
-        // unbedenklich - equippedFrame bleibt dann einfach auf dem
-        // lokal zuletzt bekannten Stand
-      }
+    if (data && data.equipped_frame) {
+      localStorage.setItem("equippedFrame", data.equipped_frame);
     }
 
     renderShopGrid({ quiet: true });
