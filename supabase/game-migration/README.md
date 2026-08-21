@@ -1,6 +1,6 @@
 # Firestore → Supabase Migration (Spieler-Datenbank)
 
-**Status: Phase 4 von 5 abgeschlossen (alle Client-Dateien umgestellt) — noch NICHT live, Firestore läuft unverändert weiter. Phase 5 (Umschaltpunkt) steht noch aus.**
+**Status: Phase 4 vollständig abgeschlossen (4a–4l, alle Client-Dateien umgestellt + Dokumentation bereinigt). Phase 5 (Umschaltpunkt) ist vorbereitet, aber noch NICHT ausgeführt — noch NICHT live, Firestore läuft unverändert weiter. Diese Branch liegt als PR zur Review bereit; der eigentliche Merge/Deploy nach `main` ist der Cutover selbst, siehe "Phase 5: Umschaltpunkt" unten.**
 
 Voraussetzung erfüllt: Third-Party Auth (Firebase) ist im Supabase-Dashboard aktiviert.
 
@@ -94,9 +94,9 @@ Getestet (4j): Playwright-Kontrollflusstest deckt Support-Meldung inkl. Schimpfw
 
 **Phase 4 ist damit für alle ~19 client-seitigen Dateien abgeschlossen** (4a–4k). Übrig bleibt ausschließlich Phase 5 (der eigentliche Umschaltpunkt).
 
-## ⚠️ Manuelle Schritte erforderlich: vier Nachbesserungen auf dem echten Supabase-Projekt
+## ✅ Vier Nachbesserungen auf dem echten Supabase-Projekt — erledigt
 
-Phase 1, 2 und 3 wurden bereits von dir gegen das echte Supabase-Projekt getestet (57 Testfälle) und laufen dort produktiv (Schema). Alle vier unten beschriebenen Funde betreffen bereits deployte Struktur. Bitte im Supabase-Dashboard → SQL Editor **alle vier einmalig** ausführen (jeweils rein additiv, kein Datenverlust, keine Downtime):
+Phase 1, 2 und 3 wurden bereits gegen das echte Supabase-Projekt getestet (57 Testfälle) und laufen dort produktiv (Schema). Die vier unten beschriebenen Funde betrafen bereits deployte Struktur und sind laut Rückmeldung **alle vier bereits im Supabase-Dashboard → SQL Editor ausgeführt** (jeweils rein additiv, kein Datenverlust, keine Downtime). Die SQL-Snippets bleiben hier stehen, damit sie beim Aufsetzen eines neuen/zweiten Supabase-Projekts (z.B. Staging) jederzeit reproduzierbar sind.
 
 **1) `support_reports`/`site_ratings`-Spalten nachziehen (Phase 4j, neu):**
 
@@ -212,7 +212,31 @@ end;
 $$;
 ```
 
-## Nächste Schritte (noch nicht umgesetzt)
+## Phase 5: Umschaltpunkt (Cutover)
 
-- Die vier oben aufgelisteten manuellen SQL-Nachbesserungen auf dem echten Supabase-Projekt ausführen
-- Phase 5: Umschaltpunkt — erst nach vollständiger Prüfung (Phase 4 ist client-seitig komplett)
+**Wichtig zu verstehen:** Phase 4 hat den Lese-/Schreibpfad direkt in den bestehenden Dateien ersetzt (keine Parallelkopien, kein Feature-Flag). Das bedeutet: **der eigentliche Umschaltpunkt ist der Merge/Deploy dieser Branch nach `main`** — es gibt keinen separaten Code-Schritt danach, der noch "umschaltet". Sobald diese Branch live ist, sprechen alle ~19 migrierten Dateien mit Supabase statt Firestore, für JEDEN Besucher gleichzeitig (kein schrittweises Rollout einzelner Nutzer möglich, da es sich um eine statische Website ohne serverseitiges Feature-Flagging handelt).
+
+**Vorher (Checkliste):**
+- [x] Third-Party Auth (Firebase) im Supabase-Dashboard aktiviert
+- [x] Alle vier manuellen SQL-Nachbesserungen oben ausgeführt
+- [x] `scripts/supabase/supabase-config.js` zeigt bereits auf das echte, produktive Supabase-Projekt (kein Platzhalter mehr)
+- [x] Phase 4 vollständig (4a–4l), volle 17-Seiten-Playwright-Regression zuletzt grün (nur die erwarteten sandbox-bedingten Netzwerkfehler)
+- [ ] **Noch offen, nur von dir prüfbar:** ein echter End-to-End-Test gegen das ECHTE Supabase-Projekt (nicht nur gegen den lokalen Postgres-Test und die Playwright-Mocks) — z.B. einmal anonym einloggen, eine Spielothek-Runde spielen, Schatzrad drehen, und im Supabase-Dashboard → Table Editor prüfen, ob `players` wie erwartet befüllt wird. Ich habe dafür keine Zugangsdaten und wollte ohne Rücksprache keine echten Zeilen in eurer Produktivdatenbank anlegen.
+
+**Was NICHT nötig ist:**
+- Keine Datenmigration (bewusste "bei Null"-Entscheidung von Anfang an)
+- Keine Änderung an `firestore.rules` — Firestore bleibt einfach ungenutzt stehen, nichts schreibt mehr dorthin (siehe unten)
+- Keine Änderung an Firebase Authentication — bleibt exakt wie bisher
+
+**Bekannter, akzeptierter Nebeneffekt — `wheelDb`/Firestore-SDK bleibt als toter Code:** `scripts/auth/firebase-config.js` initialisiert weiterhin `wheelDb = firebase.firestore()`, aber nichts im gesamten `scripts/`-Baum liest oder schreibt mehr darüber (per Sweep bestätigt: `grep -rn "wheelDb\.|firebase\.firestore(|\.collection(|\.doc(" scripts/` findet nach dieser Zeile nichts mehr). Bewusst NICHT entfernt — das Firestore-SDK bleibt geladen und `firestore.rules` bleibt deployt, als reine Rollback-Absicherung (siehe unten). Eine spätere Aufräum-Runde (SDK-Script-Tag + `wheelDb`-Init + `firestore.rules` entfernen) ist ein eigener, risikoarmer Schritt, der zeitlich unabhängig vom eigentlichen Cutover ist.
+
+**Rollback-Plan, falls nach dem Deploy etwas nicht stimmt:**
+Da Phase 4 direkt in den bestehenden Dateien umgestellt hat (kein Feature-Flag), ist der Rollback ein reiner Git-Revert, kein Datenbank-Vorgang:
+1. Den Merge-Commit auf `main` per `git revert` rückgängig machen und erneut deployen — die Seite spricht danach wieder mit Firestore, exakt wie vor dem Cutover.
+2. Firestore wurde die ganze Zeit nicht angerührt (Parallelbetrieb-Entscheidung), enthält also weiterhin den letzten Stand vor dem Cutover-Fenster — keine Datenlücke für den Rollback-Fall.
+3. Einzige Einschränkung: Spielstände, die WÄHREND des Live-Fensters mit Supabase-Code entstanden sind (neue Spieler, neue Fortschritte), gehen beim Rollback verloren, weil sie nie in Firestore landeten — das ist dieselbe "bei Null"-Prämisse wie beim Cutover selbst, nur rückwärts. Für einen kurzen Beobachtungszeitraum (Stunden, nicht Tage) nach dem Deploy ist das ein vertretbares Risiko.
+
+**Nach erfolgreichem Cutover (späterer, unabhängiger Aufräum-Schritt, nicht Teil dieser PR):**
+- `firestore.rules` kann inhaltlich vereinfacht werden (nur noch, falls überhaupt, für ganz andere/zukünftige Firestore-Nutzung)
+- Firestore-SDK-Script-Tag + `wheelDb`-Init in `firebase-config.js` können entfernt werden
+- Die vier SQL-Snippets oben sind dann nur noch Referenz für neue Supabase-Projekte (Staging etc.)
