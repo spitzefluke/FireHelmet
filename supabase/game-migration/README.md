@@ -26,7 +26,7 @@ Ein weiterer Unterschied zu Firestore, der die Übersetzung stellenweise sogar *
 
 ## Tests
 
-- `02-players-ship-progression.test.sql` — 25 Testfälle (Phase 1), **echt gegen eine lokale PostgreSQL-16-Instanz mit einem Supabase-Auth-Stub ausgeführt**: alle Manipulationsversuche aus dem ursprünglichen Auftrag (currency, gamesPlayed, gamesWon, shipTools, dailyQuests, redeemedCurrencyCodes, lastSpielothekPlayAt, lastWheelSpinAt, tempAvatarExpiresAt, progression, ship_repair, fremde UID, SQL-Injection), 25/25 bestanden.
+- `02-players-ship-progression.test.sql` — 27 Testfälle (Phase 1), **echt gegen eine lokale PostgreSQL-16-Instanz mit einem Supabase-Auth-Stub ausgeführt**: alle Manipulationsversuche aus dem ursprünglichen Auftrag (currency, gamesPlayed, gamesWon, shipTools, dailyQuests, redeemedCurrencyCodes, lastSpielothekPlayAt, lastWheelSpinAt, tempAvatarExpiresAt, progression, ship_repair, fremde UID, SQL-Injection), 27/27 bestanden. **Update (Phase 4e):** `valid_daily_quests_write()` Fall A verlangte ursprünglich `new_started_at = now()` exakt — funktioniert nur bei direktem SQL (wie in diesen Tests), nicht über einen echten Supabase-Client (PostgREST kann keine rohe `now()`-Funktion im Request-Body senden, nur einen fertigen Zeitwert). Auf ein 2-Minuten-Toleranzfenster umgestellt (TEST16a/16b decken das jetzt ab) — **muss auf dem echten Supabase-Projekt manuell nachgezogen werden**, siehe Hinweis unten.
 - `04-race-boss.test.sql` — 12 Testfälle (Phase 2): Rennfortschritt-Sprung, Boss-HP-Manipulation, Schaden-Rangliste-Manipulation, fremde UID, Neuanlage über Obergrenze — 12/12 bestanden.
 - `06-site-data.test.sql` — 20 Testfälle (Phase 3): Site-Config-Schreiben durch normalen Benutzer vs. Admin, Support-Report-Lesen (niemand darf, auch nicht der Absender), Gewinnspiel-Teilnahme/-Ziehung-Manipulation, Bewertungs-Grenzen, SQL-Injection — 20/20 bestanden.
 
@@ -56,7 +56,81 @@ Direkt in den bestehenden Dateien umgestellt (keine Parallelkopien) — jede Dat
 
   Bemerkenswert: zwei rein informative, nirgends zurückgelesene Firestore-Felder (`lastSpin`, `lastPrize`) haben in der Postgres-Tabelle bewusst KEINE Spalte bekommen (in Phase 1 bereits final geprüft/getestet) — sie wurden beim Umstieg ersatzlos weggelassen, ohne Funktionsverlust.
 
-**Noch offen (Phase 4, weitere Dateien):** `ship-repair.js`, `progression.js`, `race.js`, `community-boss.js`, sowie die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`, `level-path.js`, `piratenpass.js`, `stories.js`).
+- **4e** (erledigt): `scripts/ship/ship-repair.js` — persönlicher Schiffszustand (`ship_repair`-Tabelle: Reparatur starten/abschließen, Fall-A/Fall-B-Zustandsautomat), Werkzeug-Inventar (`players.ship_tools`), Tagesquests (`players.daily_quests_started_at`/`.daily_quests_claimed_days`, inkl. Metrik-Spaltenübersetzung fürs Anzeige-Objekt) sowie die Preview-Dev-Werkzeuge (`devGrantAllShipTools()`/`devFinishActiveRepair()`/`devResetShipEvent()` — zwei davon waren schon unter den alten `firestore.rules` faktisch wirkungslos, siehe Kommentare im Code, wurden aber bewusst 1:1 mit demselben Verhalten portiert statt die RLS dafür extra zu erweitern). `maybeUnlockChapterAfterShipRepair()` bleibt bewusst auf Firestore (site_config ist erst in Phase 4i dran).
+
+  **Bugfund während 4e:** `app.valid_daily_quests_write()` verlangte für den Tagesquest-Erststart `new_started_at = now()` exakt — das funktioniert nur bei direktem SQL (wie in den Tests), ein echter Supabase-Client kann aber keine rohe `now()`-Funktion senden, nur einen fertigen Zeitwert, der nie exakt trifft. Dieser Fehler wäre erst beim echten Cutover aufgefallen (Tagesquests hätten nie starten können) und wurde in `01-players-ship-progression.sql` auf ein 2-Minuten-Toleranzfenster korrigiert — **muss manuell auf dem echten Supabase-Projekt nachgezogen werden, siehe unten.**
+
+**Noch offen (Phase 4, weitere Dateien):** `progression.js`, `race.js`, `community-boss.js`, sowie die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`, `level-path.js`, `piratenpass.js`, `stories.js`).
+
+## ⚠️ Manueller Schritt erforderlich: Bugfix auf dem echten Supabase-Projekt nachziehen
+
+Phase 1 wurde bereits von dir gegen das echte Supabase-Projekt getestet und läuft dort produktiv (Schema). Der oben beschriebene Bugfund in `valid_daily_quests_write()` betrifft eine bereits deployte Funktion. Bitte im Supabase-Dashboard → SQL Editor **einmalig** ausführen (rein additiv, kein Datenverlust, keine Downtime):
+
+```sql
+create or replace function app.valid_daily_quests_write(
+  p_uid text,
+  new_started_at timestamptz,
+  new_claimed_days integer[],
+  new_ship_tools jsonb
+) returns boolean
+language plpgsql stable
+as $$
+declare
+  old_row public.players := app.old_player(p_uid);
+  old_started_at timestamptz := old_row.daily_quests_started_at;
+  old_claimed_days integer[] := coalesce(old_row.daily_quests_claimed_days, '{}');
+  new_day int;
+  needed_tool text;
+  needed_threshold int;
+  old_metric_value numeric;
+  old_tool_count numeric;
+  new_tool_count numeric;
+begin
+  if new_started_at is not distinct from old_started_at
+     and coalesce(new_claimed_days,'{}') = old_claimed_days then
+    return true;
+  end if;
+
+  if coalesce(array_length(new_claimed_days,1),0) > 20 then
+    return false;
+  end if;
+
+  if old_started_at is null then
+    return new_started_at between now() - interval '2 minutes' and now() + interval '2 minutes'
+       and coalesce(array_length(new_claimed_days,1),0) = 0;
+  end if;
+
+  if new_started_at is distinct from old_started_at then
+    return false;
+  end if;
+
+  if coalesce(array_length(new_claimed_days,1),0) <> coalesce(array_length(old_claimed_days,1),0) + 1 then
+    return false;
+  end if;
+
+  new_day := coalesce(array_length(old_claimed_days,1),0) + 1;
+  needed_tool := app.day_tool(new_day);
+  needed_threshold := app.day_threshold(new_day);
+
+  if now() < old_started_at + ((new_day - 1) * interval '1 day') then
+    return false;
+  end if;
+
+  old_metric_value := app.day_metric_value(new_day, old_row);
+  if old_metric_value < needed_threshold then
+    return false;
+  end if;
+
+  old_tool_count := coalesce((old_row.ship_tools ->> needed_tool)::numeric, 0);
+  new_tool_count := coalesce((new_ship_tools ->> needed_tool)::numeric, 0);
+  if new_tool_count <> old_tool_count + 1 then
+    return false;
+  end if;
+
+  return true;
+end;
+$$;
+```
 
 ## Nächste Schritte (noch nicht umgesetzt)
 

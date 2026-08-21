@@ -9,18 +9,18 @@
    Reparaturphase (activeRepair.endsAt) - siehe startShipRepairTicker().
 
    ARCHITEKTUR (persönliche Reparatur, siehe Auftrag):
-   - Das SCHIFF ist PERSÖNLICH pro Spieler: eine eigene Firestore-
-     Instanz je Nutzer (Sammlung "ship_repair", Dokument-ID = die
-     eigene Auth-UID, genau wie bei "players/{uid}"). Repariert
-     Spieler A sein Schiff, hat das NULL Einfluss auf den
-     Reparaturstatus von Spieler B - jeder sieht und ändert
-     ausschließlich sein eigenes Dokument (siehe firestore.rules:
-     isOwner(playerId) auf ship_repair/{playerId}).
+   - Das SCHIFF ist PERSÖNLICH pro Spieler: eine eigene Zeile je Nutzer
+     (Supabase-Tabelle "ship_repair", Primärschlüssel = die eigene
+     Firebase-Auth-UID, genau wie bei "players"). Repariert Spieler A
+     sein Schiff, hat das NULL Einfluss auf den Reparaturstatus von
+     Spieler B - jeder sieht und ändert ausschließlich seine eigene
+     Zeile (siehe 01-players-ship-progression.sql: firebase_uid =
+     app.firebase_uid() auf ship_repair).
    - WERKZEUGE sind ebenfalls persönliches Inventar pro Spieler
-     (players/{uid}.shipTools), genau wie Dublonen/ownedShopItems.
-   - Ohne Login/Firebase (wheelDb nicht verfügbar oder keine UID)
-     läuft die Seite im reinen Lesemodus mit klarer Meldung, statt
-     einen zweiten, nur-lokalen Fortschritt vorzutäuschen.
+     (players.ship_tools), genau wie Dublonen/ownedShopItems.
+   - Ohne Login/Supabase (supabaseClient nicht verfügbar oder keine
+     UID) läuft die Seite im reinen Lesemodus mit klarer Meldung,
+     statt einen zweiten, nur-lokalen Fortschritt vorzutäuschen.
 ====================================================== */
 
 /* ------------------------------------------------------
@@ -70,22 +70,38 @@ function getRandomRepairDurationMs() {
    Reparatur eines anderen Spielers hat darauf keinerlei
    Einfluss (Punkt 3 des Auftrags).
 ------------------------------------------------------ */
-async function loadShipState(uid) {
-  if (!wheelDb || !uid) return null;
-
-  const docRef = wheelDb.collection("ship_repair").doc(uid);
-  const snap = await docRef.get();
-
-  if (snap.exists) return { ref: docRef, data: snap.data() };
-
-  const initialData = { completedPhases: [], activeRepair: null, shipName: null, namedBy: null };
+async function ensureSupabaseShipRepairRow(uid) {
+  if (!supabaseClient || !uid) return;
   try {
-    await docRef.set(initialData);
+    await supabaseClient
+      .from("ship_repair")
+      .upsert({ firebase_uid: uid }, { onConflict: "firebase_uid", ignoreDuplicates: true });
   } catch (err) {
     // ein anderer Tab desselben Spielers war evtl. eine Millisekunde schneller
+    console.warn("Supabase-Schiffsreparatur-Zeile konnte nicht sichergestellt werden:", err);
   }
-  const freshSnap = await docRef.get();
-  return { ref: docRef, data: freshSnap.exists ? freshSnap.data() : initialData };
+}
+
+async function loadShipState(uid) {
+  if (!supabaseClient || !uid) return null;
+
+  await ensureSupabaseShipRepairRow(uid);
+
+  const { data, error } = await supabaseClient
+    .from("ship_repair")
+    .select("completed_phases, active_repair, ship_name, named_by")
+    .eq("firebase_uid", uid)
+    .maybeSingle();
+  if (error || !data) return null;
+
+  return {
+    data: {
+      completedPhases: data.completed_phases || [],
+      activeRepair: data.active_repair || null,
+      shipName: data.ship_name || null,
+      namedBy: data.named_by || null,
+    },
+  };
 }
 
 function getNextPhase(completedPhases) {
@@ -98,31 +114,47 @@ function getNextPhase(completedPhases) {
    Event-Countdown selbst - überlebt Reload/Seitenverlassen
    (Punkt 18/19).
 ------------------------------------------------------ */
-async function checkAndCompleteActiveRepair(uid) {
-  if (!wheelDb || !uid) return;
+async function checkAndCompleteActiveRepair(uid, options) {
+  if (!supabaseClient || !uid) return;
+  const force = !!(options && options.force);
 
-  const docRef = wheelDb.collection("ship_repair").doc(uid);
   let phaseJustCompleted = false;
 
   try {
-    await wheelDb.runTransaction(async (tx) => {
-      const snap = await tx.get(docRef);
-      if (!snap.exists) return;
-      const data = snap.data();
-      const active = data.activeRepair;
-      if (!active || Date.now() < active.endsAt) return;
+    const { data, error: readError } = await supabaseClient
+      .from("ship_repair")
+      .select("completed_phases, active_repair, ship_name")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (readError || !data) return;
 
-      const completed = [...(data.completedPhases || []), active.phaseId];
-      const isFinal = completed.length >= SHIP_REPAIR_PHASES.length;
+    const active = data.active_repair;
+    // "force" wird nur vom Preview-Dev-Werkzeug devFinishActiveRepair()
+    // gesetzt - die eigentliche Absicherung, dass wirklich genug Zeit
+    // vergangen ist, prueft trotzdem weiterhin die RLS anhand des in der
+    // Datenbank gespeicherten endsAt (siehe app.valid_ship_repair_update()
+    // Fall B), ein Client kann das also so oder so nicht faelschen.
+    if (!active || (!force && Date.now() < active.endsAt)) return;
 
-      const update = { completedPhases: completed, activeRepair: null };
-      if (isFinal && !data.shipName) {
-        update.shipName = generateShipName(active.startedBy || "");
-        update.namedBy = active.startedBy || null;
-      }
-      tx.update(docRef, update);
+    const completed = [...(data.completed_phases || []), active.phaseId];
+    const isFinal = completed.length >= SHIP_REPAIR_PHASES.length;
+
+    const update = { completed_phases: completed, active_repair: null };
+    if (isFinal && !data.ship_name) {
+      update.ship_name = generateShipName(active.startedBy || "");
+      update.named_by = active.startedBy || null;
+    }
+
+    const { data: updated, error: writeError } = await supabaseClient
+      .from("ship_repair")
+      .update(update)
+      .eq("firebase_uid", uid)
+      .select()
+      .maybeSingle();
+
+    if (!writeError && updated) {
       phaseJustCompleted = true;
-    });
+    }
   } catch (err) {
     console.warn("Reparatur konnte nicht abgeschlossen werden:", err);
   }
@@ -163,26 +195,38 @@ function generateShipName(nickname) {
 ------------------------------------------------------ */
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// "dailyQuests" hat in Postgres keine eigene verschachtelte Spalte mehr
+// (players.daily_quests_started_at / .daily_quests_claimed_days sind
+// zwei getrennte Top-Level-Spalten) - nach aussen (getUnlockedDailyQuestDay(),
+// buildDailyQuestCardHtml()) wird trotzdem weiterhin dasselbe
+// {startedAt, claimedDays}-Objekt gereicht, um dort nichts anpassen zu
+// muessen. "startedAt" ist jetzt ein ISO-String statt eines Firestore-
+// Timestamp-Objekts.
 async function ensureDailyQuestsStarted(uid, data) {
-  if (data.dailyQuests && data.dailyQuests.startedAt) return data.dailyQuests;
+  if (data.dailyQuestsStartedAt) {
+    return { startedAt: data.dailyQuestsStartedAt, claimedDays: data.dailyQuestsClaimedDays || [] };
+  }
 
-  const playerRef = wheelDb.collection("players").doc(uid);
   try {
-    await playerRef.set(
-      { dailyQuests: { startedAt: firebase.firestore.FieldValue.serverTimestamp(), claimedDays: [] } },
-      { merge: true }
-    );
+    const { data: updated, error } = await supabaseClient
+      .from("players")
+      .update({ daily_quests_started_at: new Date().toISOString(), daily_quests_claimed_days: [] })
+      .eq("firebase_uid", uid)
+      .select("daily_quests_started_at, daily_quests_claimed_days")
+      .maybeSingle();
+    if (error || !updated) throw error || new Error("start-failed");
+    return { startedAt: updated.daily_quests_started_at, claimedDays: updated.daily_quests_claimed_days || [] };
   } catch (err) {
     console.warn("Tagesquest konnte nicht gestartet werden:", err);
-    return data.dailyQuests || null;
+    return data.dailyQuestsStartedAt ? { startedAt: data.dailyQuestsStartedAt, claimedDays: data.dailyQuestsClaimedDays || [] } : null;
   }
-  const snap = await playerRef.get();
-  return snap.exists && snap.data().dailyQuests ? snap.data().dailyQuests : null;
 }
 
 function getUnlockedDailyQuestDay(dailyQuests) {
-  if (!dailyQuests || !dailyQuests.startedAt || typeof dailyQuests.startedAt.toMillis !== "function") return 1;
-  const elapsedMs = Date.now() - dailyQuests.startedAt.toMillis();
+  if (!dailyQuests || !dailyQuests.startedAt) return 1;
+  const startedAtMs = new Date(dailyQuests.startedAt).getTime();
+  if (!Number.isFinite(startedAtMs)) return 1;
+  const elapsedMs = Date.now() - startedAtMs;
   return Math.min(DAILY_QUESTS.length, Math.floor(elapsedMs / DAY_MS) + 1);
 }
 
@@ -201,37 +245,56 @@ function buildDailyQuestDescription(quest, lang) {
    Klicken oder ein Reload kann das Werkzeug daher nie doppelt
    vergeben (siehe validDailyQuestsWrite() in firestore.rules).
 ------------------------------------------------------ */
+const DAILY_QUEST_METRIC_COLUMN = {
+  gamesPlayed: "games_played",
+  gamesWon: "games_won",
+  totalCurrencyEarned: "total_currency_earned",
+  codesCracked: "codes_cracked",
+  streak: "streak",
+};
+
 async function claimDailyQuest(day) {
   const statusEl = document.getElementById("ship-quest-status");
   const uid = await wheelAuthReady;
-  if (!uid) return;
+  if (!uid || !supabaseClient) return;
 
   const quest = DAILY_QUESTS.find((q) => q.day === day);
   if (!quest) return;
 
-  const playerRef = wheelDb.collection("players").doc(uid);
   try {
-    await wheelDb.runTransaction(async (tx) => {
-      const snap = await tx.get(playerRef);
-      const data = snap.exists ? snap.data() : {};
-      const dq = data.dailyQuests || {};
-      const claimed = dq.claimedDays || [];
+    const { data: current, error: readError } = await supabaseClient
+      .from("players")
+      .select("daily_quests_started_at, daily_quests_claimed_days, ship_tools, games_played, games_won, total_currency_earned, codes_cracked, streak")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (readError) throw readError;
 
-      if (claimed.includes(day)) throw new Error("already-claimed");
-      if (claimed.length + 1 !== day) throw new Error("wrong-order");
-      if (!dq.startedAt) throw new Error("not-started");
-      if (day > getUnlockedDailyQuestDay(dq)) throw new Error("locked");
-      if ((data[quest.metric] || 0) < quest.threshold) throw new Error("not-met");
+    const row = current || {};
+    const claimed = row.daily_quests_claimed_days || [];
+    const metricColumn = DAILY_QUEST_METRIC_COLUMN[quest.metric];
 
-      tx.set(
-        playerRef,
-        {
-          dailyQuests: { startedAt: dq.startedAt, claimedDays: firebase.firestore.FieldValue.arrayUnion(day) },
-          shipTools: { [quest.toolId]: firebase.firestore.FieldValue.increment(1) },
-        },
-        { merge: true }
-      );
-    });
+    if (claimed.includes(day)) throw new Error("already-claimed");
+    if (claimed.length + 1 !== day) throw new Error("wrong-order");
+    if (!row.daily_quests_started_at) throw new Error("not-started");
+    if (day > getUnlockedDailyQuestDay({ startedAt: row.daily_quests_started_at })) throw new Error("locked");
+    if ((row[metricColumn] || 0) < quest.threshold) throw new Error("not-met");
+
+    const tools = row.ship_tools || {};
+    // daily_quests_started_at wird hier bewusst NICHT mitgeschickt -
+    // eine Spalte, die ein UPDATE nicht erwaehnt, behaelt automatisch
+    // ihren alten Wert (siehe Kommentar am Kopf von
+    // 01-players-ship-progression.sql), erfuellt also von selbst die
+    // Fall-B-Anforderung "startedAt bleibt exakt unveraendert".
+    const { data: updated, error: writeError } = await supabaseClient
+      .from("players")
+      .update({
+        daily_quests_claimed_days: [...claimed, day],
+        ship_tools: { ...tools, [quest.toolId]: (tools[quest.toolId] || 0) + 1 },
+      })
+      .eq("firebase_uid", uid)
+      .select()
+      .maybeSingle();
+    if (writeError || !updated) throw new Error("claim-failed");
 
     showShipToolToast(quest.toolId);
     renderShipRepairPage();
@@ -266,7 +329,7 @@ async function startShipRepair(phaseId) {
   const statusEl = document.getElementById("ship-repair-status");
   const nickname = localStorage.getItem("wheelNickname") || "";
 
-  if (!nickname || !wheelDb) {
+  if (!nickname || !supabaseClient) {
     if (statusEl) statusEl.textContent = "Melde dich zuerst an, um mitzureparieren!";
     return;
   }
@@ -278,34 +341,53 @@ async function startShipRepair(phaseId) {
     const uid = await wheelAuthReady;
     if (!uid) return;
 
-    const playerRef = wheelDb.collection("players").doc(uid);
-    const shipRef = wheelDb.collection("ship_repair").doc(uid);
+    await ensureSupabasePlayerRow(uid, nickname);
+    await ensureSupabaseShipRepairRow(uid);
 
     // 1) Werkzeug serverseitig abziehen (schlägt fehl, wenn nicht genug da ist)
-    await wheelDb.runTransaction(async (tx) => {
-      const snap = await tx.get(playerRef);
-      const data = snap.exists ? snap.data() : {};
-      const tools = data.shipTools || {};
-      const have = tools[phase.tool] || 0;
-      if (have < 1) throw new Error("missing-tool");
-      tx.set(playerRef, { shipTools: { ...tools, [phase.tool]: have - 1 } }, { merge: true });
-    });
+    const { data: playerData, error: playerReadError } = await supabaseClient
+      .from("players")
+      .select("ship_tools")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (playerReadError) throw playerReadError;
+
+    const tools = (playerData && playerData.ship_tools) || {};
+    const have = tools[phase.tool] || 0;
+    if (have < 1) throw new Error("missing-tool");
+
+    const { data: toolUpdated, error: toolWriteError } = await supabaseClient
+      .from("players")
+      .update({ ship_tools: { ...tools, [phase.tool]: have - 1 } })
+      .eq("firebase_uid", uid)
+      .select()
+      .maybeSingle();
+    if (toolWriteError || !toolUpdated) throw new Error("missing-tool");
 
     // 2) Gemeinsame Reparatur starten (schlägt fehl, wenn inzwischen
     //    schon eine andere läuft oder die Phase nicht mehr "dran" ist)
-    await wheelDb.runTransaction(async (tx) => {
-      const snap = await tx.get(shipRef);
-      const data = snap.exists ? snap.data() : { completedPhases: [], activeRepair: null };
-      if (data.activeRepair) throw new Error("already-active");
-      const next = getNextPhase(data.completedPhases || []);
-      if (!next || next.id !== phaseId) throw new Error("wrong-phase");
+    const { data: shipData, error: shipReadError } = await supabaseClient
+      .from("ship_repair")
+      .select("completed_phases, active_repair")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (shipReadError) throw shipReadError;
 
-      const startedAt = Date.now();
-      const endsAt = startedAt + getRandomRepairDurationMs();
-      tx.update(shipRef, {
-        activeRepair: { phaseId, tool: phase.tool, startedAt, endsAt, startedBy: nickname },
-      });
-    });
+    const data = shipData || { completed_phases: [], active_repair: null };
+    if (data.active_repair) throw new Error("already-active");
+    const next = getNextPhase(data.completed_phases || []);
+    if (!next || next.id !== phaseId) throw new Error("wrong-phase");
+
+    const startedAt = Date.now();
+    const endsAt = startedAt + getRandomRepairDurationMs();
+
+    const { data: shipUpdated, error: shipWriteError } = await supabaseClient
+      .from("ship_repair")
+      .update({ active_repair: { phaseId, tool: phase.tool, startedAt, endsAt, startedBy: nickname } })
+      .eq("firebase_uid", uid)
+      .select()
+      .maybeSingle();
+    if (shipWriteError || !shipUpdated) throw new Error("already-active");
 
     if (statusEl) statusEl.textContent = "";
     renderShipRepairPage();
@@ -328,7 +410,7 @@ async function startShipRepair(phaseId) {
    exakt wie unlockAvatar() bei match.avatarUnlock.
 ------------------------------------------------------ */
 async function unlockShipTool(toolId) {
-  if (!wheelDb || typeof SHIP_TOOLS === "undefined" || !SHIP_TOOLS[toolId]) return;
+  if (!supabaseClient || typeof SHIP_TOOLS === "undefined" || !SHIP_TOOLS[toolId]) return;
 
   const nickname = localStorage.getItem("wheelNickname") || "";
   if (!nickname) return; // Meldung übernimmt bereits checkCode() selbst
@@ -337,10 +419,21 @@ async function unlockShipTool(toolId) {
     const uid = await wheelAuthReady;
     if (!uid) return;
 
-    await wheelDb
-      .collection("players")
-      .doc(uid)
-      .set({ shipTools: { [toolId]: firebase.firestore.FieldValue.increment(1) } }, { merge: true });
+    await ensureSupabasePlayerRow(uid, nickname);
+
+    const { data: current, error: readError } = await supabaseClient
+      .from("players")
+      .select("ship_tools")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (readError) throw readError;
+
+    const tools = (current && current.ship_tools) || {};
+    const { error: writeError } = await supabaseClient
+      .from("players")
+      .update({ ship_tools: { ...tools, [toolId]: (tools[toolId] || 0) + 1 } })
+      .eq("firebase_uid", uid);
+    if (writeError) throw writeError;
 
     showShipToolToast(toolId);
     renderShipToolInventory();
@@ -411,39 +504,79 @@ function checkShipPuzzleAnswer(puzzleId) {
    Preview-Modus, siehe isShipPreviewActive() oben.
 ------------------------------------------------------ */
 async function devGrantAllShipTools() {
-  if (!isShipPreviewActive() || !wheelDb) return;
+  if (!isShipPreviewActive() || !supabaseClient) return;
   const uid = await wheelAuthReady;
   if (!uid) return;
-  const playerRef = wheelDb.collection("players").doc(uid);
-  const increments = {};
-  Object.keys(SHIP_TOOLS).forEach((id) => (increments[id] = firebase.firestore.FieldValue.increment(1)));
-  // 3 einzelne Schreibvorgänge statt einem einzigen "+3" - die Security
-  // Rules erlauben pro Werkzeug bewusst nur max. +1 pro Schreibvorgang
-  // (siehe validToolDelta() in firestore.rules), damit auch dieses reine
-  // Test-Werkzeug denselben echten Regeln unterliegt.
-  for (let i = 0; i < 3; i++) {
-    await playerRef.set({ shipTools: increments }, { merge: true });
+
+  await ensureSupabasePlayerRow(uid, localStorage.getItem("wheelNickname") || "");
+
+  // Ein einzelner Schreibvorgang darf laut RLS (app.valid_ship_tools() in
+  // 01-players-ship-progression.sql) hoechstens EIN Werkzeug aendern -
+  // deshalb hier fuer jedes Werkzeug ein eigener, sequenzieller
+  // Schreibvorgang statt eines gemeinsamen "alle +1"-Updates, damit auch
+  // dieses reine Test-Werkzeug denselben echten Regeln unterliegt.
+  for (const toolId of Object.keys(SHIP_TOOLS)) {
+    for (let i = 0; i < 3; i++) {
+      const { data: current, error: readError } = await supabaseClient
+        .from("players")
+        .select("ship_tools")
+        .eq("firebase_uid", uid)
+        .maybeSingle();
+      if (readError) continue;
+      const tools = (current && current.ship_tools) || {};
+      await supabaseClient
+        .from("players")
+        .update({ ship_tools: { ...tools, [toolId]: (tools[toolId] || 0) + 1 } })
+        .eq("firebase_uid", uid);
+    }
   }
   renderShipRepairPage();
 }
 
 async function devFinishActiveRepair() {
-  if (!isShipPreviewActive() || !wheelDb) return;
+  if (!isShipPreviewActive() || !supabaseClient) return;
   const uid = await wheelAuthReady;
   if (!uid) return;
-  const shipRef = wheelDb.collection("ship_repair").doc(uid);
-  const snap = await shipRef.get();
-  if (!snap.exists || !snap.data().activeRepair) return;
-  await shipRef.update({ "activeRepair.endsAt": Date.now() });
-  await checkAndCompleteActiveRepair(uid);
+
+  const { data, error } = await supabaseClient
+    .from("ship_repair")
+    .select("active_repair")
+    .eq("firebase_uid", uid)
+    .maybeSingle();
+  if (error || !data || !data.active_repair) return;
+
+  // Hinweis: dieser Zwischenschritt (nur endsAt vorziehen, activeRepair
+  // bleibt sonst unveraendert bestehen) faellt weder unter Fall A noch
+  // Fall B von app.valid_ship_repair_update() - wird von der RLS also
+  // abgelehnt, GENAU WIE zuvor unter firestore.rules (dieselbe Fall-A/
+  // Fall-B-Struktur dort liess diese Zwischenaenderung ebenfalls nie
+  // durch). Reines Dev-Preview-Werkzeug ohne echten Sicherheitswert
+  // (siehe Kommentar bei isShipPreviewActive() oben) - bewusst nicht
+  // eigens dafuer erweitert.
+  await supabaseClient
+    .from("ship_repair")
+    .update({ active_repair: { ...data.active_repair, endsAt: Date.now() } })
+    .eq("firebase_uid", uid);
+
+  await checkAndCompleteActiveRepair(uid, { force: true });
   renderShipRepairPage();
 }
 
 async function devResetShipEvent() {
-  if (!isShipPreviewActive() || !wheelDb) return;
+  if (!isShipPreviewActive() || !supabaseClient) return;
   const uid = await wheelAuthReady;
   if (!uid) return;
-  await wheelDb.collection("ship_repair").doc(uid).set({ completedPhases: [], activeRepair: null, shipName: null, namedBy: null });
+
+  // Wie devFinishActiveRepair(): ein voller Reset auf den Nullzustand
+  // erfuellt in aller Regel weder Fall A noch Fall B von
+  // app.valid_ship_repair_update() (genau wie zuvor unter
+  // firestore.rules) und wird daher von der RLS abgelehnt - reines
+  // Dev-Preview-Werkzeug ohne echten Sicherheitswert, siehe Kommentar
+  // bei isShipPreviewActive() oben.
+  await supabaseClient
+    .from("ship_repair")
+    .update({ completed_phases: [], active_repair: null, ship_name: null, named_by: null })
+    .eq("firebase_uid", uid);
   renderShipRepairPage();
 }
 
@@ -478,7 +611,7 @@ async function renderShipRepairPage() {
   const contentEl = document.getElementById("ship-repair-page-body");
   if (!contentEl) return;
 
-  if (!wheelDb) {
+  if (!supabaseClient) {
     contentEl.innerHTML = `<h1 data-i18n="ship.title">⚓ SCHIFF REPARIEREN</h1><p class="wheel-status">⚠️ Verbindung nicht verfügbar - versuch's später nochmal.</p>`;
     if (typeof applyTranslations === "function") applyTranslations();
     return;
@@ -493,6 +626,7 @@ async function renderShipRepairPage() {
     return;
   }
 
+  await ensureSupabasePlayerRow(uid, nickname);
   await checkAndCompleteActiveRepair(uid);
   const state = await loadShipState(uid);
   if (!state) return;
@@ -506,10 +640,28 @@ async function renderShipRepairPage() {
   const next = getNextPhase(completed);
 
   let tools = emptyShipToolsInventory();
-  const pSnap = await wheelDb.collection("players").doc(uid).get();
-  const playerData = pSnap.exists ? pSnap.data() : {};
-  tools = { ...tools, ...(playerData.shipTools || {}) };
+  const { data: pRow } = await supabaseClient
+    .from("players")
+    .select("ship_tools, games_played, games_won, total_currency_earned, codes_cracked, streak, daily_quests_started_at, daily_quests_claimed_days")
+    .eq("firebase_uid", uid)
+    .maybeSingle();
+  const row = pRow || {};
+  tools = { ...tools, ...(row.ship_tools || {}) };
   window._shipToolsCache = tools;
+
+  // buildDailyQuestCardHtml()/DAILY_QUESTS (ship-repair-data.js) nutzen
+  // weiterhin camelCase-Feldnamen (gamesPlayed, gamesWon, ...) - hier
+  // aus den snake_case-Supabase-Spalten uebersetzt, damit die
+  // Anzeige-Funktionen unveraendert bleiben konnten.
+  const playerData = {
+    gamesPlayed: row.games_played || 0,
+    gamesWon: row.games_won || 0,
+    totalCurrencyEarned: row.total_currency_earned || 0,
+    codesCracked: row.codes_cracked || 0,
+    streak: row.streak || 0,
+    dailyQuestsStartedAt: row.daily_quests_started_at || null,
+    dailyQuestsClaimedDays: row.daily_quests_claimed_days || [],
+  };
 
   const dailyQuests = await ensureDailyQuestsStarted(uid, playerData);
 
@@ -882,6 +1034,15 @@ function stopShipRepairTicker() {
    einzelner Versuch mal fehlschlaegt, und ein reines No-Op, sobald
    das Kapitel schon freigeschaltet ist.
 ------------------------------------------------------ */
+// Bleibt bewusst auf Firestore: site_config wird clientseitig erst in
+// einer spaeteren Phase 4-Datei (site-config.js/admin-gateway.js) auf
+// Supabase umgestellt - "siteConfig" (globale Variable, gefuellt von
+// site-config.js) liest bis dahin weiterhin von dort. Ein Wechsel nur
+// hier wuerde Schreiben/Lesen auf zwei verschiedene Datenbanken
+// aufteilen (siehe dieselbe Ueberlegung bei "equippedFrame" in
+// shop.js, Phase 4c/4d) - erst wenn site-config.js migriert ist, wird
+// auch dieser Schreibvorgang auf Supabase (site_config.data-JSONB)
+// umgestellt.
 async function maybeUnlockChapterAfterShipRepair() {
   if (!wheelDb || typeof siteConfig === "undefined") return;
 
