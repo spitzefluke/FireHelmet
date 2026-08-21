@@ -1083,33 +1083,35 @@ function drawBossImpactRing(x, y, t, rgbPrefix) {
    BOSS-ZUSTAND AUS FIRESTORE LADEN
 ------------------------------------------------------ */
 async function loadBossState() {
-  if (!wheelDb) return null;
+  if (!supabaseClient) return null;
 
   if (typeof wheelAuthReady !== "undefined") {
     await wheelAuthReady;
   }
 
   const monthId = getCurrentMonthId();
-  const docRef = wheelDb.collection("community_boss").doc(monthId);
-  const snap = await docRef.get();
-
-  if (snap.exists) {
-    return { ref: docRef, data: snap.data() };
-  }
-
-  // Erste Anfrage in diesem Monat -> neuen Boss mit vollen HP anlegen
   const maxHp = typeof communityBossConfig !== "undefined" ? communityBossConfig.maxHp : 5000;
-  const initialData = { hp: maxHp, maxHp, defeated: false };
 
+  // Echtes Upsert mit ignoreDuplicates: legt den Boss nur an, falls er
+  // fuer diesen Monat noch nicht existiert (community_boss_insert
+  // verlangt hp = max_hp) - existiert er schon, bleibt er unangetastet.
   try {
-    await docRef.set(initialData);
+    await supabaseClient
+      .from("community_boss")
+      .upsert({ month_id: monthId, hp: maxHp, max_hp: maxHp, defeated: false }, { onConflict: "month_id", ignoreDuplicates: true });
   } catch (err) {
     // Ein anderer Besucher war evtl. eine Millisekunde schneller - kein Problem,
     // wir lesen unten einfach nochmal
   }
 
-  const freshSnap = await docRef.get();
-  return { ref: docRef, data: freshSnap.exists ? freshSnap.data() : initialData };
+  const { data, error } = await supabaseClient
+    .from("community_boss")
+    .select("hp, max_hp, defeated")
+    .eq("month_id", monthId)
+    .maybeSingle();
+  if (error || !data) return null;
+
+  return { data: { hp: data.hp, maxHp: data.max_hp, defeated: data.defeated } };
 }
 
 /* ------------------------------------------------------
@@ -1135,7 +1137,7 @@ async function renderCommunityBossPage() {
   startBossRender();
   updateBossResetCountdown(resetEl);
 
-  if (!wheelDb) {
+  if (!supabaseClient) {
     if (statusEl) statusEl.textContent = "⚠️ Verbindung nicht verfügbar - versuch's später nochmal.";
     if (attackBtn) attackBtn.disabled = true;
     return;
@@ -1218,11 +1220,15 @@ async function updateBossStatsRow(monthId, hp, maxHp) {
   if (dmgEl) dmgEl.textContent = Math.max(0, maxHp - hp).toLocaleString("de-DE");
 
   const atkEl = document.getElementById("boss-stat-attackers");
-  if (!atkEl || !wheelDb) return;
+  if (!atkEl || !supabaseClient) return;
 
   try {
-    const snap = await wheelDb.collection("community_boss_damage").where("month", "==", monthId).count().get();
-    atkEl.textContent = snap.data().count.toLocaleString("de-DE");
+    const { count, error } = await supabaseClient
+      .from("community_boss_damage")
+      .select("firebase_uid", { count: "exact", head: true })
+      .eq("month_id", monthId);
+    if (error) throw error;
+    atkEl.textContent = (count || 0).toLocaleString("de-DE");
   } catch (err) {
     atkEl.textContent = "–";
   }
@@ -1288,27 +1294,35 @@ async function attackCommunityBoss() {
   const statusEl = document.getElementById("boss-status");
   const nickname = localStorage.getItem("wheelNickname") || "";
 
-  if (!nickname || !wheelDb || hasAttackedToday()) return;
+  if (!nickname || !supabaseClient || hasAttackedToday()) return;
   if (attackBtn) attackBtn.disabled = true;
 
   const cfg = typeof communityBossConfig !== "undefined" ? communityBossConfig : { minDamagePerAttack: 15, maxDamagePerAttack: 45 };
   const damage = Math.floor(cfg.minDamagePerAttack + Math.random() * (cfg.maxDamagePerAttack - cfg.minDamagePerAttack));
 
   const monthId = getCurrentMonthId();
-  const docRef = wheelDb.collection("community_boss").doc(monthId);
 
   try {
     if (typeof wheelAuthReady !== "undefined") {
       await wheelAuthReady;
     }
 
-    await docRef.update({
-      hp: firebase.firestore.FieldValue.increment(-damage),
+    // app.attack_community_boss() statt Read-dann-Write: community_boss
+    // ist eine GEMEINSAME Zeile, die viele Spieler gleichzeitig treffen -
+    // nur ein echtes serverseitiges relatives UPDATE (wie Firestores
+    // FieldValue.increment() zuvor) verliert dabei keinen Schaden durch
+    // ueberholte Zwischenstaende, siehe Kommentar in 03-race-boss.sql.
+    const { data: rows, error: attackError } = await supabaseClient.rpc("attack_community_boss", {
+      p_month_id: monthId,
+      p_damage: damage,
     });
+    if (attackError) throw attackError;
+    const bossAfter = Array.isArray(rows) ? rows[0] : rows;
+    if (!bossAfter) throw new Error("attack-failed");
 
     await recordBossDamage(monthId, nickname, damage);
 
-    // Rein additiv, NACH den bereits erfolgreichen Firestore-Schreib-
+    // Rein additiv, NACH den bereits erfolgreichen Supabase-Schreib-
     // vorgaengen oben - siehe scripts/supabase/supabase-games.js. Ein
     // Fehlschlag hier kann den eigentlichen Angriff nicht beeinflussen.
     if (typeof logBossAttackToSupabase === "function") {
@@ -1320,12 +1334,6 @@ async function attackCommunityBoss() {
     if (typeof awardActionXp === "function") awardActionXp("bossAttack");
 
     if (statusEl) statusEl.textContent = `⚔️ Du hast ${damage} Schaden verursacht! Komm morgen wieder.`;
-
-    const snap = await docRef.get();
-    const data = snap.data();
-    if (data.hp <= 0 && !data.defeated) {
-      await docRef.update({ defeated: true, hp: 0 });
-    }
 
     setTimeout(renderCommunityBossPage, 600);
     setTimeout(() => renderBossLeaderboard(monthId), 700);
@@ -1340,7 +1348,7 @@ async function attackCommunityBoss() {
    SCHADEN PRO SPIELER MERKEN (für Rangliste + Top-3-Belohnung)
 ------------------------------------------------------ */
 async function recordBossDamage(monthId, nickname, damage) {
-  if (!wheelDb) return;
+  if (!supabaseClient) return;
 
   const uid = await wheelAuthReady;
   if (!uid) return;
@@ -1353,19 +1361,20 @@ async function recordBossDamage(monthId, nickname, damage) {
 
   const equippedFrame = localStorage.getItem("equippedFrame") || null;
 
-  const docRef = wheelDb.collection("community_boss_damage").doc(`${monthId}_${uid}`);
-  const snap = await docRef.get();
+  const { data: current, error: readError } = await supabaseClient
+    .from("community_boss_damage")
+    .select("total_damage")
+    .eq("month_id", monthId)
+    .eq("firebase_uid", uid)
+    .maybeSingle();
+  if (readError) throw readError;
 
-  if (snap.exists) {
-    await docRef.update({
-      totalDamage: firebase.firestore.FieldValue.increment(damage),
-      nickname,
-      avatar,
-      equippedFrame,
-    });
-  } else {
-    await docRef.set({ month: monthId, uid, nickname, avatar, equippedFrame, totalDamage: damage });
-  }
+  const newTotal = ((current && current.total_damage) || 0) + damage;
+
+  await supabaseClient.from("community_boss_damage").upsert(
+    { month_id: monthId, firebase_uid: uid, nickname, avatar, equipped_frame: equippedFrame, total_damage: newTotal },
+    { onConflict: "month_id,firebase_uid" }
+  );
 }
 
 /* ------------------------------------------------------
@@ -1373,17 +1382,18 @@ async function recordBossDamage(monthId, nickname, damage) {
 ------------------------------------------------------ */
 async function renderBossLeaderboard(monthId) {
   const container = document.getElementById("boss-leaderboard");
-  if (!container || !wheelDb) return;
+  if (!container || !supabaseClient) return;
 
   try {
-    const snap = await wheelDb
-      .collection("community_boss_damage")
-      .where("month", "==", monthId)
-      .orderBy("totalDamage", "desc")
-      .limit(10)
-      .get();
+    const { data, error } = await supabaseClient
+      .from("community_boss_damage")
+      .select("firebase_uid, nickname, avatar, equipped_frame, total_damage")
+      .eq("month_id", monthId)
+      .order("total_damage", { ascending: false })
+      .limit(10);
+    if (error) throw error;
 
-    if (snap.empty) {
+    if (!data || !data.length) {
       container.innerHTML = `<p class="wheel-status">Noch niemand hat angegriffen - sei der/die Erste!</p>`;
       return;
     }
@@ -1391,12 +1401,11 @@ async function renderBossLeaderboard(monthId) {
     const ownUid = typeof wheelAuthReady !== "undefined" ? await wheelAuthReady : null;
 
     let html = "";
-    snap.docs.forEach((doc, i) => {
-      const p = doc.data();
+    data.forEach((p, i) => {
       const rank = i + 1;
       const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
-      const isOwn = p.uid === ownUid;
-      const frameStyle = typeof frameStyleFromId === "function" ? frameStyleFromId(p.equippedFrame) : "";
+      const isOwn = p.firebase_uid === ownUid;
+      const frameStyle = typeof frameStyleFromId === "function" ? frameStyleFromId(p.equipped_frame) : "";
       const frameRowClass = typeof rowFrameClass === "function" ? rowFrameClass(frameStyle) : "";
       let avatarHtml =
         p.avatar && typeof isAvatarImagePath === "function"
@@ -1413,7 +1422,7 @@ async function renderBossLeaderboard(monthId) {
         <div class="boss-leaderboard-row ${frameRowClass}${rank <= 3 ? " boss-leaderboard-top" : ""}${isOwn ? " boss-leaderboard-own" : ""}">
           <span class="boss-leaderboard-rank">${medal}</span>
           <span class="boss-leaderboard-name">${avatarHtml}${escapeHtmlBoss(p.nickname || "Unbekannt")}${isOwn ? " (Du)" : ""}</span>
-          <span class="boss-leaderboard-damage">${(p.totalDamage || 0).toLocaleString("de-DE")} Schaden</span>
+          <span class="boss-leaderboard-damage">${(p.total_damage || 0).toLocaleString("de-DE")} Schaden</span>
           ${rank <= 3 ? `<span class="boss-leaderboard-reward">🏆 +${BOSS_REWARDS_BY_RANK[rank - 1]} 💰</span>` : ""}
         </div>
       `;
@@ -1439,20 +1448,21 @@ function escapeHtmlBoss(text) {
    nach dem Sieg, nicht zwingend live in dem Moment).
 ------------------------------------------------------ */
 async function checkBossSlayerReward(monthId) {
-  if (!wheelDb) return;
+  if (!supabaseClient) return;
 
   try {
     const ownUid = typeof wheelAuthReady !== "undefined" ? await wheelAuthReady : null;
     if (!ownUid) return;
 
-    const snap = await wheelDb
-      .collection("community_boss_damage")
-      .where("month", "==", monthId)
-      .orderBy("totalDamage", "desc")
-      .limit(3)
-      .get();
+    const { data, error } = await supabaseClient
+      .from("community_boss_damage")
+      .select("firebase_uid")
+      .eq("month_id", monthId)
+      .order("total_damage", { ascending: false })
+      .limit(3);
+    if (error) throw error;
 
-    const ownIndex = snap.docs.findIndex((doc) => doc.data().uid === ownUid);
+    const ownIndex = (data || []).findIndex((row) => row.firebase_uid === ownUid);
     if (ownIndex >= 0 && typeof unlockAvatar === "function") {
       unlockAvatar("boss-slayer");
     }

@@ -72,13 +72,41 @@ Direkt in den bestehenden Dateien umgestellt (keine Parallelkopien) — jede Dat
 
   **Fehlende Spalte gefunden:** Firestores `raceProgress`-Dokument speichert zusätzlich `equippedFrame` (Momentaufnahme für den Rahmen um den Namen in der Rangliste, siehe `race.js` Zeile ~511) — `firestore.rules` validiert dieses Feld bewusst nicht extra. Die Phase-2-Tabelle `race_progress` hatte dafür bislang **keine Spalte** (in Phase 1/2 übersehen, da kein Test das Feld anfasste). Ohne Korrektur wäre die Rahmen-Anzeige in der Rangliste beim echten Cutover einfach leer geblieben (kein Datenverlust, nur ein optisches Downgrade) — trotzdem in `03-race-boss.sql` nachgezogen (`equipped_frame text` + Längenprüfung, keine RLS-Sonderprüfung nötig, genau wie im Original). **Muss additiv auf dem echten, bereits laufenden Supabase-Projekt nachgezogen werden, siehe unten.**
 
-**Noch offen (Phase 4, weitere Dateien):** `community-boss.js`, sowie die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`).
+- **4h** (erledigt): `scripts/community-boss/community-boss.js` — Boss-Zustand (`loadBossState()`, echtes Upsert legt den Monatsboss nur bei Bedarf frisch an), Angriff (`attackCommunityBoss()`), Schaden pro Spieler (`recordBossDamage()`), Rangliste (`renderBossLeaderboard()`), Top-3-Belohnung (`checkBossSlayerReward()`) und die Angreifer-Statistik (`updateBossStatsRow()`, nutzt Supabases `count: 'exact', head: true` statt Firestores `count()`-Aggregation).
 
-## ⚠️ Manuelle Schritte erforderlich: zwei Nachbesserungen auf dem echten Supabase-Projekt
+  **Erste echte RPC-Funktion der Migration:** `community_boss` ist (anders als alle bisher migrierten Tabellen) eine GEMEINSAME Zeile, die potenziell viele verschiedene Spieler gleichzeitig treffen — der Normalfall bei einem "Community"-Boss, nicht ein seltener Randfall. Firestores `FieldValue.increment(-damage)` war ein echtes atomares Server-Increment; das übliche "erst lesen, dann zurückschreiben"-Muster dieser Migration hätte hier bei echter Gleichzeitigkeit regelmäßig Schaden verloren (Lost-Update-Problem). Deshalb neu: `app.attack_community_boss(month_id, damage)` in `03-race-boss.sql` — eine kleine PL/pgSQL-Funktion, die die relative Änderung in einem einzigen SQL-`UPDATE` ausführt (Postgres serialisiert konkurrierende UPDATEs auf dieselbe Zeile von selbst) und gleichzeitig den `defeated`-Übergang in demselben atomaren Schritt setzt. Läuft als SECURITY INVOKER (Standard) — dieselbe `community_boss_update`-RLS-Policy gilt unverändert, keine erweiterten Rechte. Lokal gegen PostgreSQL 16 verifiziert: zwei aufeinanderfolgende Angriffe ziehen korrekt kumulativ ab, ein überhöhter Schadenswert (>45) wird abgelehnt, und ein finaler Treffer setzt `hp=0`/`defeated=true` in einem einzigen Aufruf. **Muss additiv auf dem echten, bereits laufenden Supabase-Projekt nachgezogen werden, siehe unten.**
 
-Phase 1 und Phase 2 wurden bereits von dir gegen das echte Supabase-Projekt getestet und laufen dort produktiv (Schema). Beide unten beschriebenen Funde betreffen bereits deployte Struktur. Bitte im Supabase-Dashboard → SQL Editor **beide einmalig** ausführen (jeweils rein additiv, kein Datenverlust, keine Downtime):
+**Noch offen (Phase 4, weitere Dateien):** die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`).
 
-**1) `race_progress.equipped_frame`-Spalte nachziehen (Phase 4g):**
+## ⚠️ Manuelle Schritte erforderlich: drei Nachbesserungen auf dem echten Supabase-Projekt
+
+Phase 1 und Phase 2 wurden bereits von dir gegen das echte Supabase-Projekt getestet und laufen dort produktiv (Schema). Alle drei unten beschriebenen Funde betreffen bereits deployte Struktur. Bitte im Supabase-Dashboard → SQL Editor **alle drei einmalig** ausführen (jeweils rein additiv, kein Datenverlust, keine Downtime):
+
+**1) `app.attack_community_boss()`-Funktion anlegen (Phase 4h, neu):**
+
+```sql
+create or replace function app.attack_community_boss(p_month_id text, p_damage integer)
+returns table(hp integer, max_hp integer, defeated boolean)
+language plpgsql
+as $$
+begin
+  if p_damage is null or p_damage < 0 or p_damage > 45 then
+    raise exception 'invalid-damage';
+  end if;
+
+  return query
+  update public.community_boss
+  set hp = greatest(0, community_boss.hp - p_damage),
+      defeated = community_boss.defeated or (community_boss.hp - p_damage <= 0)
+  where month_id = p_month_id
+  returning community_boss.hp, community_boss.max_hp, community_boss.defeated;
+end;
+$$;
+
+grant execute on function app.attack_community_boss(text, integer) to authenticated;
+```
+
+**2) `race_progress.equipped_frame`-Spalte nachziehen (Phase 4g):**
 
 ```sql
 alter table public.race_progress
@@ -86,7 +114,7 @@ alter table public.race_progress
   add constraint race_progress_frame_len check (equipped_frame is null or char_length(equipped_frame) <= 50);
 ```
 
-**2) `valid_daily_quests_write()`-Toleranzfenster nachziehen (Phase 4e):**
+**3) `valid_daily_quests_write()`-Toleranzfenster nachziehen (Phase 4e):**
 
 ```sql
 create or replace function app.valid_daily_quests_write(
