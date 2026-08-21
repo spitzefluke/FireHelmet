@@ -64,9 +64,9 @@ function getRandomRepairDurationMs() {
 }
 
 /* ------------------------------------------------------
-   PERSÖNLICHER SCHIFFS-ZUSTAND (Firestore, EIN Dokument PRO
-   SPIELER - ship_repair/{uid}, siehe players/{uid} für dasselbe
-   Muster). Jeder Spieler repariert sein eigenes Schiff; die
+   PERSÖNLICHER SCHIFFS-ZUSTAND (Supabase/Postgres, EINE ZEILE PRO
+   SPIELER - ship_repair, Primary Key firebase_uid, siehe players
+   für dasselbe Muster). Jeder Spieler repariert sein eigenes Schiff; die
    Reparatur eines anderen Spielers hat darauf keinerlei
    Einfluss (Punkt 3 des Auftrags).
 ------------------------------------------------------ */
@@ -160,8 +160,9 @@ async function checkAndCompleteActiveRepair(uid, options) {
   }
 
   // XP fuer die abgeschlossene Etappe - "uid" ist hier immer die
-  // eigene angemeldete UID (ship_repair/{uid} ist personenbezogen,
-  // siehe firestore.rules), daher ist es sicher, hier direkt XP fuer
+  // eigene angemeldete UID (ship_repair ist ueber den Primary Key
+  // firebase_uid personenbezogen, per RLS geschuetzt), daher ist es
+  // sicher, hier direkt XP fuer
   // den aktuell angemeldeten Spieler zu vergeben. Die Etappe selbst
   // ist durch completedPhases bereits einmalig (kann serverseitig nie
   // zweimal abgeschlossen werden), es braucht keine zusaetzliche
@@ -186,9 +187,10 @@ function generateShipName(nickname) {
    TÄGLICHE QUESTS (20 Tage, je ein Werkzeug)
    ---------------------------------------------------
    Sicherheitskritischer Kern: welcher Tag freigeschaltet ist, wird
-   ANSCHLIESSEND SERVERSEITIG per firestore.rules (dailyQuestDayIsUnlocked())
-   anhand von request.time minus dem einmalig per serverTimestamp()
-   gesetzten dailyQuests.startedAt geprüft - die hier im Client
+   ANSCHLIESSEND SERVERSEITIG per Postgres RLS (app.valid_daily_quests_write()
+   in supabase/game-migration/01-players-ship-progression.sql) anhand
+   der aktuellen Serverzeit minus dem einmalig gesetzten
+   daily_quests_started_at geprüft - die hier im Client
    berechnete "unlockedDay" dient NUR der Anzeige (z. B. "🔒 Tag 5"),
    niemals als alleinige Zugriffsprüfung. Ein Spieler kann also seine
    lokale Uhr beliebig verstellen, ohne dadurch echte Tage freizuschalten.
@@ -238,12 +240,13 @@ function buildDailyQuestDescription(quest, lang) {
 
 /* ------------------------------------------------------
    TAGESQUEST EINLÖSEN
-   Prüft serverseitig (Firestore-Transaktion + Security Rules), dass
+   Prüft serverseitig (atomares Supabase-UPDATE + Postgres RLS), dass
    der Tag wirklich der Reihe nach dran ist, laut Server-Uhrzeit
    bereits freigeschaltet ist, die Anforderung wirklich erreicht wurde
    UND dass diese Quest noch nicht eingelöst wurde - ein erneutes
    Klicken oder ein Reload kann das Werkzeug daher nie doppelt
-   vergeben (siehe validDailyQuestsWrite() in firestore.rules).
+   vergeben (siehe app.valid_daily_quests_write() in
+   supabase/game-migration/01-players-ship-progression.sql).
 ------------------------------------------------------ */
 const DAILY_QUEST_METRIC_COLUMN = {
   gamesPlayed: "games_played",
@@ -319,8 +322,8 @@ async function claimDailyQuest(day) {
 
 /* ------------------------------------------------------
    REPARATUR STARTEN
-   Prüft serverseitig (Firestore-Transaktionen), dass wirklich
-   noch kein Team gerade repariert UND dass der Spieler das
+   Prüft serverseitig (atomare Supabase-UPDATEs + Postgres RLS), dass
+   wirklich noch kein Team gerade repariert UND dass der Spieler das
    richtige Werkzeug wirklich besitzt - eine geänderte
    Browser-Variable allein reicht nicht aus, um Fortschritt zu
    erzwingen (Punkt 40).
@@ -794,7 +797,8 @@ function buildStageChecklistHtml(completed, next) {
    Zeigt die naechste NOCH NICHT eingeloeste Quest - alle vorherigen
    Tage sind entweder schon eingeloest oder (falls verpasst) weiterhin
    nachholbar, aber immer nur EINE nach der anderen (kein Ueberspringen,
-   siehe claimDailyQuest()/validDailyQuestsWrite() in firestore.rules).
+   siehe claimDailyQuest()/app.valid_daily_quests_write() in
+   supabase/game-migration/01-players-ship-progression.sql).
 ------------------------------------------------------ */
 function buildDailyQuestCardHtml(dailyQuests, playerData) {
   const isEn = typeof getCurrentLang === "function" && getCurrentLang() === "en";
@@ -1034,17 +1038,8 @@ function stopShipRepairTicker() {
    einzelner Versuch mal fehlschlaegt, und ein reines No-Op, sobald
    das Kapitel schon freigeschaltet ist.
 ------------------------------------------------------ */
-// Bleibt bewusst auf Firestore: site_config wird clientseitig erst in
-// einer spaeteren Phase 4-Datei (site-config.js/admin-gateway.js) auf
-// Supabase umgestellt - "siteConfig" (globale Variable, gefuellt von
-// site-config.js) liest bis dahin weiterhin von dort. Ein Wechsel nur
-// hier wuerde Schreiben/Lesen auf zwei verschiedene Datenbanken
-// aufteilen (siehe dieselbe Ueberlegung bei "equippedFrame" in
-// shop.js, Phase 4c/4d) - erst wenn site-config.js migriert ist, wird
-// auch dieser Schreibvorgang auf Supabase (site_config.data-JSONB)
-// umgestellt.
 async function maybeUnlockChapterAfterShipRepair() {
-  if (!wheelDb || typeof siteConfig === "undefined") return;
+  if (typeof siteConfig === "undefined" || typeof patchSupabaseSiteConfig !== "function") return;
 
   const targetIds = siteConfig.shipRepairUnlockChapterIds || [];
   if (!targetIds.length) return;
@@ -1054,10 +1049,7 @@ async function maybeUnlockChapterAfterShipRepair() {
   if (!stillLocked.length) return;
 
   try {
-    await wheelDb
-      .collection("site_config")
-      .doc("main")
-      .set({ lockedChapterIds: locked.filter((id) => !targetIds.includes(id)) }, { merge: true });
+    await patchSupabaseSiteConfig({ lockedChapterIds: locked.filter((id) => !targetIds.includes(id)) });
   } catch (err) {
     console.warn("Kapitel konnte nach Schiffsreparatur nicht automatisch freigeschaltet werden:", err);
   }

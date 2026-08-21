@@ -2,8 +2,8 @@
    SHOP
    - Zeigt den Katalog aus scripts/shop/shop-data.js als Grid
    - Zwei Kategorien: Avatar-Rahmen UND kaufbare Avatare
-   - Kauf zieht Dublonen ab (Firestore-Transaktion) und schaltet
-     den Artikel dauerhaft frei (players/{uid}.ownedShopItems)
+   - Kauf zieht Dublonen ab (atomares Supabase-UPDATE) und schaltet
+     den Artikel dauerhaft frei (players.owned_shop_items)
    - Rahmen werden zusätzlich "ausgerüstet" (equippedFrame),
      Avatare erscheinen einfach im normalen Avatar-Picker
      (genau wie ein per Code freigeschalteter Avatar)
@@ -295,7 +295,7 @@ async function refreshShopCurrencyDisplay() {
 /* ------------------------------------------------------
    EINGANGSANIMATION
    Spielt nur einmal pro Seitenbesuch (nicht bei jedem
-   Firestore-Refresh) - der Flag wird zurückgesetzt, sobald man
+   Datenbank-Refresh) - der Flag wird zurückgesetzt, sobald man
    den Shop verlässt, siehe updateShopPage unten.
 ------------------------------------------------------ */
 let shopEntranceShown = false;
@@ -369,7 +369,7 @@ function updateShopPage(pageID) {
   refreshShopCurrencyDisplay();
   if (typeof startShopRotationCountdown === "function") startShopRotationCountdown();
 
-  // Eigene Firestore-Kopie der freigeschalteten Artikel mit dem
+  // Eigene Supabase-Kopie der freigeschalteten Artikel mit dem
   // lokalen Speicher abgleichen (z.B. wenn man auf einem neuen
   // Gerät eingeloggt ist)
   syncOwnedShopItemsFromServer();

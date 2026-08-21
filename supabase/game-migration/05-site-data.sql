@@ -139,9 +139,19 @@ create policy "giveaway_winners_insert_signed_in" on public.giveaway_winners
 create table public.support_reports (
   id bigint generated always as identity primary key,
   message text not null,
+  -- Zusaetzlicher Kontext fuers Triage durch den Betreiber (nur ueber
+  -- Supabase-Dashboard/service_role einsehbar, siehe oben) - genau wie
+  -- im Firestore-Original NICHT extra validiert (nur "message" wird
+  -- geprueft), Laengendeckel hier nur als defensive Absicherung gegen
+  -- Missbrauch ueber einen direkten API-Aufruf ausserhalb der UI.
+  firebase_uid text,
+  nickname text,
+  page text,
   created_at timestamptz not null default now(),
 
-  constraint support_reports_msg_len check (char_length(message) between 1 and 2000)
+  constraint support_reports_msg_len check (char_length(message) between 1 and 2000),
+  constraint support_reports_nickname_len check (nickname is null or char_length(nickname) <= 30),
+  constraint support_reports_page_len check (page is null or char_length(page) <= 500)
 );
 
 alter table public.support_reports enable row level security;
@@ -162,6 +172,10 @@ create table public.site_ratings (
   value integer not null,
   nickname text not null,
   comment text,
+  -- Rein informativ, wie im Firestore-Original NICHT extra validiert -
+  -- site_ratings ist oeffentlich lesbar, "firebase_uid" ist eine
+  -- anonyme, fuer sich genommen nicht identifizierende Kennung.
+  firebase_uid text,
   created_at timestamptz not null default now(),
 
   constraint site_ratings_value_range check (value >= 1 and value <= 5),

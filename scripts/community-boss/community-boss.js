@@ -1,6 +1,6 @@
 /* ======================================================
    COMMUNITY-BOSS
-   Ein gemeinsamer Gegner (geteilte HP in Firestore), den alle
+   Ein gemeinsamer Gegner (geteilte HP in Supabase/Postgres), den alle
    Besucher zusammen innerhalb eines Kalendermonats besiegen.
    Jeder darf einmal am Tag angreifen. Am Monatsanfang beginnt
    automatisch eine neue Runde mit vollen HP und einem neuen Boss.
@@ -1080,7 +1080,7 @@ function drawBossImpactRing(x, y, t, rgbPrefix) {
 }
 
 /* ------------------------------------------------------
-   BOSS-ZUSTAND AUS FIRESTORE LADEN
+   BOSS-ZUSTAND AUS SUPABASE LADEN
 ------------------------------------------------------ */
 async function loadBossState() {
   if (!supabaseClient) return null;
@@ -1210,8 +1210,8 @@ function applyBossPhaseVisuals(phaseKey) {
 /* ------------------------------------------------------
    DAMAGE/ATTACKERS-STATISTIK
    "Damage" ergibt sich direkt aus maxHp-hp (kein Extra-Feld
-   nötig). "Attackers" ist eine Firestore Aggregations-Query
-   (count()) - schlägt sie fehl (älterer SDK-Stand o.ä.), bleibt
+   nötig). "Attackers" ist eine Supabase Aggregations-Query
+   (count:"exact", head:true) - schlägt sie fehl, bleibt
    einfach ein Platzhalter stehen statt die Seite zu zerstören
    (siehe Punkt 36: Fehlerzustand statt leerer Seite).
 ------------------------------------------------------ */

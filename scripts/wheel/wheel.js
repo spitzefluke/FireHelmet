@@ -9,8 +9,10 @@
      möglichen Drehung (Mitternacht)
    - Jede Drehung und jeder NEU geknackte Code geben zusätzlich
      Fortschritt fürs Wochenrennen (siehe scripts/race.js)
-   - Alles wird über Firebase Firestore global gespeichert
-     (siehe scripts/firebase-config.js für Setup)
+   - Alles wird über Supabase/Postgres global gespeichert (RLS-
+     geschuetzt, echte Firebase-UID via Third-Party Auth, siehe
+     supabase/game-migration/README.md) - Firebase bleibt weiterhin
+     die reine Anmeldung (scripts/auth/firebase-config.js)
 ====================================================== */
 
 let wheelBuilt = false;
@@ -498,13 +500,14 @@ function getUnlockedAvatarIds() {
 }
 
 // Zeitlich befristete Avatare (siehe redeemWheelPrize()/tempAvatar):
-// Ablaufzeit kommt IMMER aus dem serverzeit-verankerten Firestore-Feld
+// Ablaufzeit kommt IMMER aus dem serverzeit-verankerten Datenbankfeld
 // (ueber syncTempAvatarFromServer() nach localStorage gespiegelt),
 // nicht aus einem separaten, frei erfundenen "gueltig bis"-Wert - ein
 // Vergleich gegen die eigene (moeglicherweise verstellte) Client-Uhr
 // kann hier bestenfalls die ANZEIGE, nie den tatsaechlich gespeicherten
-// Wert selbst verfaelschen (siehe Kommentar bei validTempAvatar() in
-// firestore.rules fuer die serverseitige Absicherung DIESES Wertes).
+// Wert selbst verfaelschen (siehe app.valid_wheel_fields() in
+// supabase/game-migration/01-players-ship-progression.sql fuer die
+// serverseitige Absicherung DIESES Wertes).
 function getActiveTempAvatarId() {
   const expiresAt = parseInt(localStorage.getItem("tempAvatarExpiresAt") || "0", 10);
   if (!expiresAt || Date.now() >= expiresAt) return null;
@@ -734,7 +737,7 @@ async function saveNickname() {
 
   refreshWheelStatus();
   savePlayerData({ nickname: name });
-  syncCodesToFirestore();
+  syncCodesToDatabase();
   showNicknameSuccess(name);
   if (typeof refreshPlayerCard === "function") refreshPlayerCard();
 
@@ -779,7 +782,7 @@ function showNicknameSuccess(name) {
    werden sie hier nachträglich in die Datenbank übertragen -
    sicher per atomarem Zähler, kein Überschreiben möglich.
 ------------------------------------------------------ */
-function syncCodesToFirestore() {
+function syncCodesToDatabase() {
   const nickname = localStorage.getItem("wheelNickname") || "";
   if (!nickname || !supabaseClient) return;
 
@@ -828,11 +831,6 @@ function syncCodesToFirestore() {
   });
 }
 
-/* ------------------------------------------------------
-   FIRESTORE: EINEN SPIELER-EINTRAG AKTUALISIEREN
-   (merge:true, damit Glücksrad-, Code- und Rennen-Statistiken
-   sich nicht gegenseitig überschreiben)
------------------------------------------------------- */
 /* ------------------------------------------------------
    DUBLONEN (Shop-Währung) VERGEBEN
    Wird von main.js (Codes), race.js (Wochenrennen-Platzierung)
@@ -1087,12 +1085,13 @@ async function finalizeSpin(state, today, prize) {
 /* ------------------------------------------------------
    SCHATZRAD-BELOHNUNG SERVERSEITIG EINLÖSEN
    ---------------------------------------------------
-   Genau EINE atomare Firestore-Transaktion für die gesamte Drehung -
+   Genau EIN atomares Supabase-UPDATE für die gesamte Drehung -
    dasselbe Prinzip wie redeemCurrencyCode() im Codesystem:
    - prüft serverzeit-verankert, ob wirklich genug Zeit seit der
-     letzten Drehung vergangen ist (players/{uid}.lastWheelSpinAt,
-     siehe firestore.rules validWheelSpin() - das ist die ECHTE
-     Absicherung, nicht diese Client-Vorabprüfung hier),
+     letzten Drehung vergangen ist (players.last_wheel_spin_at,
+     siehe app.valid_wheel_fields() in supabase/game-migration/ -
+     das ist die ECHTE Absicherung, nicht diese Client-Vorabprüfung
+     hier),
    - schreibt Streak/letzte Drehung UND die eigentliche Belohnung in
      einem einzigen Schritt,
    - reused dafür ausschließlich bereits bestehende, bereits validierte
@@ -1102,7 +1101,7 @@ async function finalizeSpin(state, today, prize) {
 
    Wirft bei zu früher Drehung einen Error mit message === "too-soon".
 ------------------------------------------------------ */
-const WHEEL_SPIN_MIN_INTERVAL_MS = 20 * 60 * 60 * 1000; // 20h, siehe firestore.rules
+const WHEEL_SPIN_MIN_INTERVAL_MS = 20 * 60 * 60 * 1000; // 20h, siehe app.valid_wheel_fields()
 
 async function redeemWheelPrize(prize, newStreak) {
   if (!supabaseClient) throw new Error("no-db");
@@ -1315,17 +1314,17 @@ function recordCodeCrack(codeId, reward) {
    ohne dass jemals Dublonen ankamen. Das war die tatsächliche
    Ursache der gemeldeten FIRE300/COINS300-Unzuverlässigkeit.
 
-   Jetzt: EINE Firestore-Transaktion
+   Jetzt: EIN atomares Supabase-UPDATE
    - liest den aktuellen Spielstand,
-   - prüft SERVERSEITIG (players/{uid}.redeemedCurrencyCodes, nicht
+   - prüft SERVERSEITIG (players.redeemed_currency_codes, nicht
      nur localStorage - das sich leicht löschen/umgehen lässt bzw.
      auf einem zweiten Gerät gar nicht existiert), ob DIESER Code
      für DIESEN Account schon eingelöst wurde,
-   - schreibt Dublonen + codesCracked + Markierung gemeinsam in
-     einem einzigen atomaren Schritt (siehe firestore.rules:
-     validCodeRedemption() prüft zusätzlich, dass der Betrag exakt
-     zum jeweiligen Code passt - ein erfundener Code-Hash oder ein
-     falscher Betrag wird serverseitig abgelehnt).
+   - schreibt Dublonen + codes_cracked + Markierung gemeinsam in
+     einem einzigen atomaren Schritt (siehe app.valid_code_redemption()
+     in supabase/game-migration/: prüft zusätzlich, dass der Betrag
+     exakt zum jeweiligen Code passt - ein erfundener Code-Hash oder
+     ein falscher Betrag wird serverseitig abgelehnt).
 
    localStorage wird NUR NACH bestätigtem Erfolg aktualisiert
    (schnelle "schon eingelöst"-Anzeige beim nächsten Versuch, ohne
@@ -1610,7 +1609,7 @@ function updateWheelPage(pageID) {
     refreshTwitchLoginUI();
   }
 
-  syncCodesToFirestore();
+  syncCodesToDatabase();
   syncTempAvatarFromServer();
   refreshWheelStatus();
 }

@@ -1,6 +1,6 @@
 # Firestore → Supabase Migration (Spieler-Datenbank)
 
-**Status: Phase 4 von 5 (Client-Umstellung läuft, Datei für Datei) — noch NICHT live, Firestore läuft unverändert weiter.**
+**Status: Phase 4 vollständig abgeschlossen (4a–4l, alle Client-Dateien umgestellt + Dokumentation bereinigt). Phase 5 (Umschaltpunkt) ist vorbereitet, aber noch NICHT ausgeführt — noch NICHT live, Firestore läuft unverändert weiter. Diese Branch liegt als PR zur Review bereit; der eigentliche Merge/Deploy nach `main` ist der Cutover selbst, siehe "Phase 5: Umschaltpunkt" unten.**
 
 Voraussetzung erfüllt: Third-Party Auth (Firebase) ist im Supabase-Dashboard aktiviert.
 
@@ -76,13 +76,43 @@ Direkt in den bestehenden Dateien umgestellt (keine Parallelkopien) — jede Dat
 
   **Erste echte RPC-Funktion der Migration:** `community_boss` ist (anders als alle bisher migrierten Tabellen) eine GEMEINSAME Zeile, die potenziell viele verschiedene Spieler gleichzeitig treffen — der Normalfall bei einem "Community"-Boss, nicht ein seltener Randfall. Firestores `FieldValue.increment(-damage)` war ein echtes atomares Server-Increment; das übliche "erst lesen, dann zurückschreiben"-Muster dieser Migration hätte hier bei echter Gleichzeitigkeit regelmäßig Schaden verloren (Lost-Update-Problem). Deshalb neu: `app.attack_community_boss(month_id, damage)` in `03-race-boss.sql` — eine kleine PL/pgSQL-Funktion, die die relative Änderung in einem einzigen SQL-`UPDATE` ausführt (Postgres serialisiert konkurrierende UPDATEs auf dieselbe Zeile von selbst) und gleichzeitig den `defeated`-Übergang in demselben atomaren Schritt setzt. Läuft als SECURITY INVOKER (Standard) — dieselbe `community_boss_update`-RLS-Policy gilt unverändert, keine erweiterten Rechte. Lokal gegen PostgreSQL 16 verifiziert: zwei aufeinanderfolgende Angriffe ziehen korrekt kumulativ ab, ein überhöhter Schadenswert (>45) wird abgelehnt, und ein finaler Treffer setzt `hp=0`/`defeated=true` in einem einzigen Aufruf. **Muss additiv auf dem echten, bereits laufenden Supabase-Projekt nachgezogen werden, siehe unten.**
 
-**Noch offen (Phase 4, weitere Dateien):** die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`).
+- **4i** (erledigt): `scripts/core/site-config.js` + `scripts/core/admin-gateway.js` — Site-Config-Lesen (`initSiteConfig()`) und alle Admin-Schreibvorgänge (Countdown-Termine, Kapitel-Sperren, Spielothek-Deaktivierung, Schiffsreparatur-Freischalt-Kapitel) über eine neue gemeinsame Funktion `patchSupabaseSiteConfig()` (in `site-config.js`, auch von `ship-repair.js` genutzt). `site_config` liegt in Postgres als EIN JSONB-Blob (Spalte `data`) statt einzelner Top-Level-Felder wie zuvor in Firestore — jede Admin-Änderung liest den Blob deshalb erst, führt den betroffenen Schlüssel zusammen und schreibt ihn komplett zurück (Firestores `set(...,{merge:true})` erledigte das serverseitig automatisch). Schließt außerdem die in Phase 4e bewusst offen gelassene `maybeUnlockChapterAfterShipRepair()`-Kopplung in `ship-repair.js` (liest/schreibt jetzt konsistent über Supabase statt Firestore).
 
-## ⚠️ Manuelle Schritte erforderlich: drei Nachbesserungen auf dem echten Supabase-Projekt
+  **Live-Abo entfernt (bekannter, akzeptierter Unterschied):** Firestores `onSnapshot()` hielt bereits offene Tabs ANDERER Besucher live auf dem neuesten Stand, sobald der Admin etwas änderte. Kein Supabase-Realtime-Äquivalent wird in dieser Migration bislang genutzt (dieselbe Entscheidung wie bei `refreshPlayerCard()` in Phase 4f) — Admin-Änderungen wirken jetzt erst beim nächsten Laden/Neuladen einer Seite bei anderen Besuchern. Das Admin-Gateway selbst bleibt live: `patchSupabaseSiteConfig()` aktualisiert `siteConfig` lokal sofort und feuert weiterhin das bestehende `siteConfigUpdated`-Event, wodurch sich sowohl das Admin-Panel als auch die integrierte Live-Vorschau (`<iframe src="index.html">`) beim Speichern unverändert sofort selbst aktualisieren.
 
-Phase 1 und Phase 2 wurden bereits von dir gegen das echte Supabase-Projekt getestet und laufen dort produktiv (Schema). Alle drei unten beschriebenen Funde betreffen bereits deployte Struktur. Bitte im Supabase-Dashboard → SQL Editor **alle drei einmalig** ausführen (jeweils rein additiv, kein Datenverlust, keine Downtime):
+  **Dead Code entdeckt:** `scripts/giveaway/giveaway.js` ist in `index.html` **nirgends eingebunden** (kein `<script>`-Tag, keine Seite, kein Menüpunkt) — komplett unverdrahtete/inaktive Funktionalität. Wird trotzdem als eigener Schritt migriert (die Phase-3-Tabelle existiert bereits), aber ohne Playwright-Testabdeckung, da keine echte Seite existiert, über die sie sich auslösen ließe.
 
-**1) `app.attack_community_boss()`-Funktion anlegen (Phase 4h, neu):**
+- **4j** (erledigt, damit ist Phase 4 vollständig): `scripts/support/support.js`, `scripts/rating/rating.js`, `scripts/giveaway/giveaway.js` (unverdrahtet, siehe oben) — Fehlermeldungen (`submitSupportReport()`), Sternebewertungen (`submitRating()`/`loadRatingAverage()`) und Gewinnspiel-Teilnahme/-Ziehung laufen jetzt über `supabaseClient` statt `wheelDb`/Firestore. `giveawayWinners.create()` (Firestores atomares "nur anlegen, wenn noch nicht vorhanden") wird durch ein reines `.insert()` ersetzt — der Primary Key `round_id` liefert dieselbe Garantie strukturell (Unique-Verletzung bei einem zweiten Zug), kein Sonderfall nötig.
+
+  **Zwei fehlende Spalten gefunden (derselbe Fehlerklasse wie `race_progress.equipped_frame` in Phase 4g):** Firestores `supportReports`-Dokument speicherte zusätzlich `uid`/`nickname`/`page` (fürs Betreiber-Triage, `firestore.rules` validierte nur `message`), `site_ratings` zusätzlich `uid` — beide Tabellen hatten dafür in `05-site-data.sql` bislang keine Spalten. Nachgezogen (`firebase_uid`/`nickname`/`page` bzw. `firebase_uid`, alle mit defensiven Längenprüfungen, keine RLS-Sonderprüfung nötig, genau wie im Original). Lokal gegen PostgreSQL 16 verifiziert: bestehende 20 Phase-3-Tests weiterhin 20/20 grün, neue Spalten akzeptieren Schreibvorgänge, `support_reports` bleibt für niemanden lesbar (auch nicht den Absender selbst) — genau wie zuvor. **Muss additiv auf dem echten, bereits laufenden Supabase-Projekt nachgezogen werden, siehe unten.**
+
+Getestet (4j): Playwright-Kontrollflusstest deckt Support-Meldung inkl. Schimpfwort-Filter-Ablehnung und Bewertung inkl. Durchschnittsanzeige und lokaler Doppel-Sperre ab - 7/7 Prüfpunkte grün. Volle 17-Seiten-Regression: nur die erwarteten sandbox-bedingten Netzwerkfehler, keine echten JS-Fehler.
+
+- **4k** (erledigt, gefunden durch eine abschließende Vollsweep NACH dem 4j-Commit): `scripts/core/discord-notify.js` — dieselbe Datei war beim ursprünglichen Datei-für-Datei-Durchgang durchgerutscht, weil sie ihre Firestore-Collection nicht als Literal, sondern über eine Variable referenzierte (`wheelDb.collection(DISCORD_NOTIFY_DOC_PATH[0])`) und dadurch bei den bisherigen wortwörtlichen Greps nicht auffiel. `trySendDiscordUpdateNotice()` (Dedupe-Wächter fürs automatische Discord-Update-Posting) liest/schreibt jetzt `site_meta`/`id="update_notice"` über `supabaseClient` statt `wheelDb`. **Keine Schema-Änderung nötig** — die bereits deployte `site_meta`-Tabelle (`id text primary key, last_sent_hash text, sent_at timestamptz`) deckt das unverändert ab. Nicht mehr benötigte `DISCORD_NOTIFY_DOC_PATH`-Konstante entfernt (per Grep bestätigt: sonst nirgends referenziert).
+
+  Getestet (4k): eigener Playwright-Kontrollflusstest — Discord-Benachrichtigung legt `site_meta`-Zeile mit Hash an, erneuter Aufruf mit identischem Text sendet nicht doppelt (Hash bleibt gleich). Volle 17-Seiten-Regression erneut grün.
+
+**Phase 4 ist damit für alle ~19 client-seitigen Dateien abgeschlossen** (4a–4k). Übrig bleibt ausschließlich Phase 5 (der eigentliche Umschaltpunkt).
+
+## ✅ Vier Nachbesserungen auf dem echten Supabase-Projekt — erledigt
+
+Phase 1, 2 und 3 wurden bereits gegen das echte Supabase-Projekt getestet (57 Testfälle) und laufen dort produktiv (Schema). Die vier unten beschriebenen Funde betrafen bereits deployte Struktur und sind laut Rückmeldung **alle vier bereits im Supabase-Dashboard → SQL Editor ausgeführt** (jeweils rein additiv, kein Datenverlust, keine Downtime). Die SQL-Snippets bleiben hier stehen, damit sie beim Aufsetzen eines neuen/zweiten Supabase-Projekts (z.B. Staging) jederzeit reproduzierbar sind.
+
+**1) `support_reports`/`site_ratings`-Spalten nachziehen (Phase 4j, neu):**
+
+```sql
+alter table public.support_reports
+  add column if not exists firebase_uid text,
+  add column if not exists nickname text,
+  add column if not exists page text,
+  add constraint support_reports_nickname_len check (nickname is null or char_length(nickname) <= 30),
+  add constraint support_reports_page_len check (page is null or char_length(page) <= 500);
+
+alter table public.site_ratings
+  add column if not exists firebase_uid text;
+```
+
+**2) `app.attack_community_boss()`-Funktion anlegen (Phase 4h):**
 
 ```sql
 create or replace function app.attack_community_boss(p_month_id text, p_damage integer)
@@ -106,7 +136,7 @@ $$;
 grant execute on function app.attack_community_boss(text, integer) to authenticated;
 ```
 
-**2) `race_progress.equipped_frame`-Spalte nachziehen (Phase 4g):**
+**3) `race_progress.equipped_frame`-Spalte nachziehen (Phase 4g):**
 
 ```sql
 alter table public.race_progress
@@ -114,7 +144,7 @@ alter table public.race_progress
   add constraint race_progress_frame_len check (equipped_frame is null or char_length(equipped_frame) <= 50);
 ```
 
-**3) `valid_daily_quests_write()`-Toleranzfenster nachziehen (Phase 4e):**
+**4) `valid_daily_quests_write()`-Toleranzfenster nachziehen (Phase 4e):**
 
 ```sql
 create or replace function app.valid_daily_quests_write(
@@ -182,7 +212,31 @@ end;
 $$;
 ```
 
-## Nächste Schritte (noch nicht umgesetzt)
+## Phase 5: Umschaltpunkt (Cutover)
 
-- Phase 4 (Rest): restliche ~11 Dateien, siehe oben
-- Phase 5: Umschaltpunkt — erst nach vollständiger Prüfung
+**Wichtig zu verstehen:** Phase 4 hat den Lese-/Schreibpfad direkt in den bestehenden Dateien ersetzt (keine Parallelkopien, kein Feature-Flag). Das bedeutet: **der eigentliche Umschaltpunkt ist der Merge/Deploy dieser Branch nach `main`** — es gibt keinen separaten Code-Schritt danach, der noch "umschaltet". Sobald diese Branch live ist, sprechen alle ~19 migrierten Dateien mit Supabase statt Firestore, für JEDEN Besucher gleichzeitig (kein schrittweises Rollout einzelner Nutzer möglich, da es sich um eine statische Website ohne serverseitiges Feature-Flagging handelt).
+
+**Vorher (Checkliste):**
+- [x] Third-Party Auth (Firebase) im Supabase-Dashboard aktiviert
+- [x] Alle vier manuellen SQL-Nachbesserungen oben ausgeführt
+- [x] `scripts/supabase/supabase-config.js` zeigt bereits auf das echte, produktive Supabase-Projekt (kein Platzhalter mehr)
+- [x] Phase 4 vollständig (4a–4l), volle 17-Seiten-Playwright-Regression zuletzt grün (nur die erwarteten sandbox-bedingten Netzwerkfehler)
+- [ ] **Noch offen, nur von dir prüfbar:** ein echter End-to-End-Test gegen das ECHTE Supabase-Projekt (nicht nur gegen den lokalen Postgres-Test und die Playwright-Mocks) — z.B. einmal anonym einloggen, eine Spielothek-Runde spielen, Schatzrad drehen, und im Supabase-Dashboard → Table Editor prüfen, ob `players` wie erwartet befüllt wird. Ich habe dafür keine Zugangsdaten und wollte ohne Rücksprache keine echten Zeilen in eurer Produktivdatenbank anlegen.
+
+**Was NICHT nötig ist:**
+- Keine Datenmigration (bewusste "bei Null"-Entscheidung von Anfang an)
+- Keine Änderung an `firestore.rules` — Firestore bleibt einfach ungenutzt stehen, nichts schreibt mehr dorthin (siehe unten)
+- Keine Änderung an Firebase Authentication — bleibt exakt wie bisher
+
+**Bekannter, akzeptierter Nebeneffekt — `wheelDb`/Firestore-SDK bleibt als toter Code:** `scripts/auth/firebase-config.js` initialisiert weiterhin `wheelDb = firebase.firestore()`, aber nichts im gesamten `scripts/`-Baum liest oder schreibt mehr darüber (per Sweep bestätigt: `grep -rn "wheelDb\.|firebase\.firestore(|\.collection(|\.doc(" scripts/` findet nach dieser Zeile nichts mehr). Bewusst NICHT entfernt — das Firestore-SDK bleibt geladen und `firestore.rules` bleibt deployt, als reine Rollback-Absicherung (siehe unten). Eine spätere Aufräum-Runde (SDK-Script-Tag + `wheelDb`-Init + `firestore.rules` entfernen) ist ein eigener, risikoarmer Schritt, der zeitlich unabhängig vom eigentlichen Cutover ist.
+
+**Rollback-Plan, falls nach dem Deploy etwas nicht stimmt:**
+Da Phase 4 direkt in den bestehenden Dateien umgestellt hat (kein Feature-Flag), ist der Rollback ein reiner Git-Revert, kein Datenbank-Vorgang:
+1. Den Merge-Commit auf `main` per `git revert` rückgängig machen und erneut deployen — die Seite spricht danach wieder mit Firestore, exakt wie vor dem Cutover.
+2. Firestore wurde die ganze Zeit nicht angerührt (Parallelbetrieb-Entscheidung), enthält also weiterhin den letzten Stand vor dem Cutover-Fenster — keine Datenlücke für den Rollback-Fall.
+3. Einzige Einschränkung: Spielstände, die WÄHREND des Live-Fensters mit Supabase-Code entstanden sind (neue Spieler, neue Fortschritte), gehen beim Rollback verloren, weil sie nie in Firestore landeten — das ist dieselbe "bei Null"-Prämisse wie beim Cutover selbst, nur rückwärts. Für einen kurzen Beobachtungszeitraum (Stunden, nicht Tage) nach dem Deploy ist das ein vertretbares Risiko.
+
+**Nach erfolgreichem Cutover (späterer, unabhängiger Aufräum-Schritt, nicht Teil dieser PR):**
+- `firestore.rules` kann inhaltlich vereinfacht werden (nur noch, falls überhaupt, für ganz andere/zukünftige Firestore-Nutzung)
+- Firestore-SDK-Script-Tag + `wheelDb`-Init in `firebase-config.js` können entfernt werden
+- Die vier SQL-Snippets oben sind dann nur noch Referenz für neue Supabase-Projekte (Staging etc.)

@@ -101,21 +101,22 @@ function joinGiveaway() {
     return;
   }
 
-  if (!wheelDb) return;
+  if (!supabaseClient) return;
 
   wheelAuthReady.then((uid) => {
     if (!uid) return;
 
-    wheelDb
-      .collection("giveawayEntries")
-      .doc(`${giveawayConfig.id}_${uid}`)
-      .set({
-        giveawayId: giveawayConfig.id,
-        uid: uid,
-        nickname: nickname,
-        joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      })
-      .then(() => {
+    // Reines .insert() statt .set() - giveaway_entries hat in der RLS
+    // bewusst KEINE update-Policy (siehe 05-site-data.sql), ein
+    // zweiter Beitrittsversuch fuer dieselbe Runde/UID scheitert daher
+    // schon am zusammengesetzten Primary Key (giveaway_id,
+    // firebase_uid), genau wie zuvor Firestores "allow update: if false"
+    // einen erneuten .set() auf denselben Dokumentnamen ablehnte.
+    supabaseClient
+      .from("giveaway_entries")
+      .insert({ giveaway_id: giveawayConfig.id, firebase_uid: uid, nickname: nickname })
+      .then(({ error }) => {
+        if (error) throw error;
         localStorage.setItem("giveawayJoinedId", giveawayConfig.id);
         loadGiveawayView();
       })
@@ -130,17 +131,13 @@ function joinGiveaway() {
    TEILNEHMERKREIS DIESER RUNDE LADEN
 ------------------------------------------------------ */
 function loadGiveawayParticipants() {
-  return wheelDb
-    .collection("giveawayEntries")
-    .where("giveawayId", "==", giveawayConfig.id)
-    .get()
-    .then((snapshot) => {
-      const participants = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        participants.push({ uid: data.uid, nickname: data.nickname });
-      });
-      return participants;
+  return supabaseClient
+    .from("giveaway_entries")
+    .select("firebase_uid, nickname")
+    .eq("giveaway_id", giveawayConfig.id)
+    .then(({ data, error }) => {
+      if (error) throw error;
+      return (data || []).map((row) => ({ uid: row.firebase_uid, nickname: row.nickname }));
     });
 }
 
@@ -148,32 +145,43 @@ function loadGiveawayParticipants() {
    GEWINNER LADEN ODER (EINMALIG) ZIEHEN
 ------------------------------------------------------ */
 function loadOrDrawWinners(participants) {
-  const winnersRef = wheelDb.collection("giveawayWinners").doc(giveawayConfig.id);
+  return supabaseClient
+    .from("giveaway_winners")
+    .select("winners")
+    .eq("round_id", giveawayConfig.id)
+    .maybeSingle()
+    .then(({ data, error }) => {
+      if (error) throw error;
+      if (data) return data.winners || [];
 
-  return winnersRef.get().then((doc) => {
-    if (doc.exists) {
-      return doc.data().winners || [];
-    }
+      const winners = pickGiveawayWinners(participants, giveawayConfig.winnersCount, giveawayConfig.id);
+      if (!winners.length) return [];
 
-    const winners = pickGiveawayWinners(participants, giveawayConfig.winnersCount, giveawayConfig.id);
-    if (!winners.length) return [];
+      return wheelAuthReady.then((uid) => {
+        if (!uid) return winners;
 
-    return wheelAuthReady.then((uid) => {
-      if (!uid) return winners;
-
-      return winnersRef
-        .create({
-          id: giveawayConfig.id,
-          winners: winners,
-          drawnAt: firebase.firestore.FieldValue.serverTimestamp(),
-        })
-        .then(() => winners)
-        .catch(() => {
-          // Ein anderer Besucher war schneller - dessen Ergebnis lesen
-          return winnersRef.get().then((d) => (d.exists ? d.data().winners : winners));
-        });
+        // Reines .insert() statt Firestores atomarem .create() - der
+        // Primary Key round_id sorgt bereits strukturell fuer dieselbe
+        // Garantie: ein zweiter Zug fuer dieselbe Runde scheitert an
+        // der Unique-Verletzung, kein doppeltes Ziehen moeglich.
+        return supabaseClient
+          .from("giveaway_winners")
+          .insert({ round_id: giveawayConfig.id, winners: winners })
+          .then(({ error: insertError }) => {
+            if (insertError) throw insertError;
+            return winners;
+          })
+          .catch(() => {
+            // Ein anderer Besucher war schneller - dessen Ergebnis lesen
+            return supabaseClient
+              .from("giveaway_winners")
+              .select("winners")
+              .eq("round_id", giveawayConfig.id)
+              .maybeSingle()
+              .then(({ data: existing }) => (existing ? existing.winners : winners));
+          });
+      });
     });
-  });
 }
 
 /* ------------------------------------------------------
@@ -203,10 +211,10 @@ function loadGiveawayView() {
 
   if (inactiveEl) inactiveEl.style.display = "none";
 
-  if (!wheelDb) {
+  if (!supabaseClient) {
     if (winnerEl) {
       winnerEl.style.display = "block";
-      winnerEl.textContent = "Das Gewinnspiel ist noch nicht eingerichtet (Firebase-Zugangsdaten fehlen).";
+      winnerEl.textContent = "Das Gewinnspiel ist noch nicht eingerichtet (Supabase-Zugangsdaten fehlen).";
     }
     return;
   }

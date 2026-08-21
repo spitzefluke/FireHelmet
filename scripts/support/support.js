@@ -1,8 +1,10 @@
 /* ======================================================
    SUPPORT
    - Formular, um Fehler/Anliegen direkt an dich (den Betreiber)
-     zu melden - landet in Firestore, einsehbar in der Firebase
-     Console unter "supportReports"
+     zu melden - landet in Supabase, einsehbar im Supabase-Dashboard
+     unter "support_reports" (nur per service_role/Table-Editor-
+     Login, nicht ueber die Website lesbar - siehe RLS in
+     05-site-data.sql)
 
    HINWEIS: Der frühere Support-Bot (regelbasierter Chat +
    optionale KI-Anbindung) wurde komplett entfernt. Der
@@ -95,22 +97,22 @@ function submitSupportReport() {
 
   statusEl.textContent = "Wird gesendet ...";
 
-  if (!wheelDb) {
-    statusEl.textContent = "⚠️ Konnte nicht gesendet werden (Firebase ist nicht eingerichtet).";
+  if (!supabaseClient) {
+    statusEl.textContent = "⚠️ Konnte nicht gesendet werden (Supabase ist nicht eingerichtet).";
     return;
   }
 
   wheelAuthReady.then((uid) => {
-    wheelDb
-      .collection("supportReports")
-      .add({
-        uid: uid || null,
+    supabaseClient
+      .from("support_reports")
+      .insert({
+        firebase_uid: uid || null,
         nickname: nickname,
         message: message,
         page: window.location.href,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       })
-      .then(() => {
+      .then(({ error }) => {
+        if (error) throw error;
         statusEl.textContent = "✅ Danke! Deine Nachricht wurde übermittelt.";
         messageInput.value = "";
       })

@@ -126,9 +126,10 @@ const PASS_XP_PER_ACTION = {
    Statische Liste (wie ship-repair-data.js/community-boss-data.js) -
    ein neuer Pass = ein neuer Eintrag hier (siehe Auftrag Punkt 11:
    "spaeter problemlos ein neuer Pass angelegt werden kann"). passId
-   MUSS zusaetzlich in firestore.rules (ALLOWED_PASS_IDS) eingetragen
+   MUSS zusaetzlich im CHECK-Constraint progression_pass_id_valid
+   (supabase/game-migration/01-players-ship-progression.sql) eingetragen
    werden, damit Pass-XP-Schreibvorgaenge fuer die neue Saison
-   akzeptiert werden - siehe Kommentar dort.
+   akzeptiert werden - sonst lehnt Postgres das UPDATE strukturell ab.
 
    startDate: entweder ein normales ISO-Datum, ODER das spezielle
    Schluesselwort "@streamraetsel-unlock" - dann wird das Startdatum
