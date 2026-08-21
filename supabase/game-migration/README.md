@@ -88,7 +88,11 @@ Direkt in den bestehenden Dateien umgestellt (keine Parallelkopien) — jede Dat
 
 Getestet (4j): Playwright-Kontrollflusstest deckt Support-Meldung inkl. Schimpfwort-Filter-Ablehnung und Bewertung inkl. Durchschnittsanzeige und lokaler Doppel-Sperre ab - 7/7 Prüfpunkte grün. Volle 17-Seiten-Regression: nur die erwarteten sandbox-bedingten Netzwerkfehler, keine echten JS-Fehler.
 
-**Phase 4 ist damit für alle ~19 client-seitigen Dateien abgeschlossen.** Übrig bleibt ausschließlich Phase 5 (der eigentliche Umschaltpunkt).
+- **4k** (erledigt, gefunden durch eine abschließende Vollsweep NACH dem 4j-Commit): `scripts/core/discord-notify.js` — dieselbe Datei war beim ursprünglichen Datei-für-Datei-Durchgang durchgerutscht, weil sie ihre Firestore-Collection nicht als Literal, sondern über eine Variable referenzierte (`wheelDb.collection(DISCORD_NOTIFY_DOC_PATH[0])`) und dadurch bei den bisherigen wortwörtlichen Greps nicht auffiel. `trySendDiscordUpdateNotice()` (Dedupe-Wächter fürs automatische Discord-Update-Posting) liest/schreibt jetzt `site_meta`/`id="update_notice"` über `supabaseClient` statt `wheelDb`. **Keine Schema-Änderung nötig** — die bereits deployte `site_meta`-Tabelle (`id text primary key, last_sent_hash text, sent_at timestamptz`) deckt das unverändert ab. Nicht mehr benötigte `DISCORD_NOTIFY_DOC_PATH`-Konstante entfernt (per Grep bestätigt: sonst nirgends referenziert).
+
+  Getestet (4k): eigener Playwright-Kontrollflusstest — Discord-Benachrichtigung legt `site_meta`-Zeile mit Hash an, erneuter Aufruf mit identischem Text sendet nicht doppelt (Hash bleibt gleich). Volle 17-Seiten-Regression erneut grün.
+
+**Phase 4 ist damit für alle ~19 client-seitigen Dateien abgeschlossen** (4a–4k). Übrig bleibt ausschließlich Phase 5 (der eigentliche Umschaltpunkt).
 
 ## ⚠️ Manuelle Schritte erforderlich: vier Nachbesserungen auf dem echten Supabase-Projekt
 
