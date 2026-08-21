@@ -164,17 +164,20 @@ async function renderPassPage() {
   let claimedIds = [];
   let hasCap = false;
 
-  if (typeof wheelDb !== "undefined" && wheelDb && typeof wheelAuthReady !== "undefined") {
+  if (typeof supabaseClient !== "undefined" && supabaseClient && typeof wheelAuthReady !== "undefined") {
     try {
       const uid = await wheelAuthReady;
       if (uid) {
-        const snap = await wheelDb.collection("player_progression").doc(uid).get();
-        const data = snap.exists ? snap.data() : {};
-        if (data.passProgress && data.passProgress.passId === pass.passId) {
-          passXp = data.passProgress.xp || 0;
+        const { data } = await supabaseClient
+          .from("player_progression")
+          .select("pass_id, pass_xp, claimed_reward_ids, has_flitzpiepen_cap")
+          .eq("firebase_uid", uid)
+          .maybeSingle();
+        if (data && data.pass_id === pass.passId) {
+          passXp = data.pass_xp || 0;
         }
-        claimedIds = data.claimedRewardIds || [];
-        hasCap = !!data.hasFlitzpiepenCap;
+        claimedIds = (data && data.claimed_reward_ids) || [];
+        hasCap = !!(data && data.has_flitzpiepen_cap);
       }
     } catch (err) {
       console.warn("Piratenpass-Fortschritt konnte nicht geladen werden:", err);

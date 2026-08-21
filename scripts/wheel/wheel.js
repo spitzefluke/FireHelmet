@@ -603,19 +603,22 @@ function renderAvatarPicker() {
    NACHGEORDNETE Kopie fuer die Anzeige (siehe getActiveTempAvatarId()).
 ------------------------------------------------------ */
 async function syncTempAvatarFromServer() {
-  if (!wheelDb) return;
+  if (!supabaseClient) return;
 
   try {
     const uid = await wheelAuthReady;
     if (!uid) return;
 
-    const snap = await wheelDb.collection("players").doc(uid).get();
-    if (!snap.exists) return;
+    const { data, error } = await supabaseClient
+      .from("players")
+      .select("temp_avatar_expires_at, temp_avatar_id")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (error || !data) return;
 
-    const data = snap.data();
-    if (typeof data.tempAvatarExpiresAt === "number") {
-      localStorage.setItem("tempAvatarExpiresAt", String(data.tempAvatarExpiresAt));
-      localStorage.setItem("tempAvatarId", data.tempAvatarId || "");
+    if (typeof data.temp_avatar_expires_at === "number") {
+      localStorage.setItem("tempAvatarExpiresAt", String(data.temp_avatar_expires_at));
+      localStorage.setItem("tempAvatarId", data.temp_avatar_id || "");
     }
 
     if (typeof renderAvatarPicker === "function") {
@@ -778,7 +781,7 @@ function showNicknameSuccess(name) {
 ------------------------------------------------------ */
 function syncCodesToFirestore() {
   const nickname = localStorage.getItem("wheelNickname") || "";
-  if (!nickname || !wheelDb) return;
+  if (!nickname || !supabaseClient) return;
 
   const totalCracked = getCrackedCodes().length;
   const syncedCount = parseInt(localStorage.getItem("codesSyncedCount") || "0", 10);
@@ -786,31 +789,42 @@ function syncCodesToFirestore() {
 
   if (missing <= 0) return;
 
-  wheelAuthReady.then((uid) => {
+  wheelAuthReady.then(async (uid) => {
     if (!uid) return;
 
-    const fields = {
-      nickname: nickname,
-      codesCracked: firebase.firestore.FieldValue.increment(missing),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    };
+    try {
+      await ensureSupabasePlayerRow(uid, nickname);
 
-    const rewards = getCodeRewards();
-    if (rewards.length) {
-      // arrayUnion ist ungefährlich mehrfach aufzurufen (dedupliziert automatisch)
-      fields.rewards = firebase.firestore.FieldValue.arrayUnion(...rewards);
+      const { data: current, error: readError } = await supabaseClient
+        .from("players")
+        .select("codes_cracked, rewards")
+        .eq("firebase_uid", uid)
+        .maybeSingle();
+      if (readError) throw readError;
+
+      const fields = {
+        nickname: nickname,
+        codes_cracked: (current && current.codes_cracked ? current.codes_cracked : 0) + missing,
+      };
+
+      // Aequivalent zu Firestores arrayUnion: dedupliziert von Hand,
+      // ungefaehrlich mehrfach aufzurufen.
+      const rewards = getCodeRewards();
+      if (rewards.length) {
+        const oldRewards = (current && current.rewards) || [];
+        fields.rewards = [...new Set([...oldRewards, ...rewards])];
+      }
+
+      const { error: writeError } = await supabaseClient
+        .from("players")
+        .update(fields)
+        .eq("firebase_uid", uid);
+      if (writeError) throw writeError;
+
+      localStorage.setItem("codesSyncedCount", String(totalCracked));
+    } catch (err) {
+      console.error("Nachhol-Synchronisierung fehlgeschlagen:", err);
     }
-
-    wheelDb
-      .collection("players")
-      .doc(uid)
-      .set(fields, { merge: true })
-      .then(() => {
-        localStorage.setItem("codesSyncedCount", String(totalCracked));
-      })
-      .catch((err) => {
-        console.error("Nachhol-Synchronisierung fehlgeschlagen:", err);
-      });
   });
 }
 
@@ -825,25 +839,32 @@ function syncCodesToFirestore() {
    und community-boss.js (Top-Angreifer) aufgerufen.
 ------------------------------------------------------ */
 async function addCurrency(amount) {
-  if (!wheelDb || !amount) return;
+  if (!supabaseClient || !amount) return;
 
   try {
     const uid = await wheelAuthReady;
     if (!uid) return;
 
-    await wheelDb
-      .collection("players")
-      .doc(uid)
-      .set(
-        {
-          currency: firebase.firestore.FieldValue.increment(amount),
-          // Lebenslanger Zaehler, unabhaengig vom (auch wieder sinkenden)
-          // Kontostand - Grundlage fuer die taeglichen Reparatur-Quests
-          // (siehe DAILY_QUESTS in ship-repair-data.js).
-          totalCurrencyEarned: firebase.firestore.FieldValue.increment(amount),
-        },
-        { merge: true }
-      );
+    await ensureSupabasePlayerRow(uid, localStorage.getItem("wheelNickname") || "");
+
+    const { data: current, error: readError } = await supabaseClient
+      .from("players")
+      .select("currency, total_currency_earned")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (readError) throw readError;
+
+    const { error: writeError } = await supabaseClient
+      .from("players")
+      .update({
+        currency: (current && current.currency ? current.currency : 0) + amount,
+        // Lebenslanger Zaehler, unabhaengig vom (auch wieder sinkenden)
+        // Kontostand - Grundlage fuer die taeglichen Reparatur-Quests
+        // (siehe DAILY_QUESTS in ship-repair-data.js).
+        total_currency_earned: (current && current.total_currency_earned ? current.total_currency_earned : 0) + amount,
+      })
+      .eq("firebase_uid", uid);
+    if (writeError) throw writeError;
 
     if (typeof refreshShopCurrencyDisplay === "function") {
       refreshShopCurrencyDisplay();
@@ -871,7 +892,7 @@ function showCurrencyToast(amount) {
 }
 
 function savePlayerData(fields) {
-  if (!wheelDb) return;
+  if (!supabaseClient) return;
 
   const provider = localStorage.getItem("loginProvider") || "";
   let avatar = null;
@@ -884,26 +905,31 @@ function savePlayerData(fields) {
     avatar = localStorage.getItem("wheelAvatar") || null;
   }
 
-  wheelAuthReady.then((uid) => {
+  wheelAuthReady.then(async (uid) => {
     if (!uid) {
       console.warn("Keine Firebase-Anmeldung vorhanden, Eintrag wird nicht gespeichert.");
       return;
     }
 
-    wheelDb
-      .collection("players")
-      .doc(uid)
-      .set(
-        {
-          ...fields,
-          avatar: avatar,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      )
-      .catch((err) => {
-        console.error("Eintrag konnte nicht gespeichert werden:", err);
-      });
+    const nickname = "nickname" in fields ? fields.nickname : localStorage.getItem("wheelNickname") || "";
+
+    try {
+      await ensureSupabasePlayerRow(uid, nickname);
+
+      // "fields" kommt bisher ausschliesslich mit genau einem von zwei
+      // Schluesseln herein (nickname aus saveNickname()/twitch-auth.js,
+      // equippedFrame aus shop.js equipFrame()) - deshalb explizite
+      // Zuordnung auf die passenden Spalten statt eines generischen
+      // camelCase->snake_case-Mappings.
+      const update = { avatar: avatar };
+      if ("nickname" in fields) update.nickname = fields.nickname;
+      if ("equippedFrame" in fields) update.equipped_frame = fields.equippedFrame;
+
+      const { error } = await supabaseClient.from("players").update(update).eq("firebase_uid", uid);
+      if (error) throw error;
+    } catch (err) {
+      console.error("Eintrag konnte nicht gespeichert werden:", err);
+    }
   });
 }
 
@@ -1079,58 +1105,67 @@ async function finalizeSpin(state, today, prize) {
 const WHEEL_SPIN_MIN_INTERVAL_MS = 20 * 60 * 60 * 1000; // 20h, siehe firestore.rules
 
 async function redeemWheelPrize(prize, newStreak) {
-  if (!wheelDb) throw new Error("no-db");
+  if (!supabaseClient) throw new Error("no-db");
   const uid = await wheelAuthReady;
   if (!uid) throw new Error("no-uid");
 
-  const playerRef = wheelDb.collection("players").doc(uid);
   const nickname = localStorage.getItem("wheelNickname") || "";
-  const today = todayStr();
 
-  await wheelDb.runTransaction(async (tx) => {
-    const snap = await tx.get(playerRef);
-    const data = snap.exists ? snap.data() : {};
+  await ensureSupabasePlayerRow(uid, nickname);
 
-    const lastSpinAt = data.lastWheelSpinAt;
-    if (lastSpinAt && typeof lastSpinAt.toMillis === "function") {
-      if (Date.now() - lastSpinAt.toMillis() < WHEEL_SPIN_MIN_INTERVAL_MS) {
-        throw new Error("too-soon");
-      }
+  const { data: current, error: readError } = await supabaseClient
+    .from("players")
+    .select("last_wheel_spin_at, currency, total_currency_earned, ship_tools, owned_shop_items")
+    .eq("firebase_uid", uid)
+    .maybeSingle();
+  if (readError) throw readError;
+
+  const data = current || {};
+  const lastSpinAt = data.last_wheel_spin_at ? new Date(data.last_wheel_spin_at).getTime() : null;
+  if (lastSpinAt && Date.now() - lastSpinAt < WHEEL_SPIN_MIN_INTERVAL_MS) {
+    throw new Error("too-soon");
+  }
+
+  const fields = {
+    last_wheel_spin_at: new Date().toISOString(),
+    streak: newStreak,
+  };
+  if (nickname) fields.nickname = nickname;
+
+  if (prize.type === "currency") {
+    fields.currency = (data.currency || 0) + prize.amount;
+    fields.total_currency_earned = (data.total_currency_earned || 0) + prize.amount;
+  } else if (prize.type === "tool") {
+    const toolIds = typeof SHIP_TOOLS !== "undefined" ? Object.keys(SHIP_TOOLS) : [];
+    if (toolIds.length) {
+      const toolId = toolIds[Math.floor(Math.random() * toolIds.length)];
+      const oldTools = data.ship_tools || {};
+      fields.ship_tools = { ...oldTools, [toolId]: (oldTools[toolId] || 0) + 1 };
+      prize.grantedToolId = toolId; // für die Ergebnis-Anzeige (optional)
     }
+  } else if (prize.type === "frame") {
+    const owned = data.owned_shop_items || [];
+    fields.owned_shop_items = owned.includes(prize.frameId) ? owned : [...owned, prize.frameId];
+  } else if (prize.type === "tempAvatar") {
+    // Serverzeit-verankert: der Client berechnet den Millisekunden-
+    // Wert zwar lokal (Date.now() + Tage), aber die Supabase-RLS-Regel
+    // (valid_wheel_fields in 01-players-ship-progression.sql) akzeptiert
+    // nur einen Wert nahe der ECHTEN Serverzeit + 3 Tage - eine
+    // vorgestellte Client-Uhr kann diesen Wert also nicht verlängern.
+    fields.temp_avatar_expires_at = Date.now() + prize.durationDays * 86400000;
+    fields.temp_avatar_id = prize.avatarId;
+  }
 
-    const fields = {
-      lastWheelSpinAt: firebase.firestore.FieldValue.serverTimestamp(),
-      streak: newStreak,
-      lastSpin: today,
-      lastPrize: prize.label,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    };
-    if (nickname) fields.nickname = nickname;
+  const { data: updated, error: writeError } = await supabaseClient
+    .from("players")
+    .update(fields)
+    .eq("firebase_uid", uid)
+    .select()
+    .maybeSingle();
 
-    if (prize.type === "currency") {
-      fields.currency = firebase.firestore.FieldValue.increment(prize.amount);
-      fields.totalCurrencyEarned = firebase.firestore.FieldValue.increment(prize.amount);
-    } else if (prize.type === "tool") {
-      const toolIds = typeof SHIP_TOOLS !== "undefined" ? Object.keys(SHIP_TOOLS) : [];
-      if (toolIds.length) {
-        const toolId = toolIds[Math.floor(Math.random() * toolIds.length)];
-        fields.shipTools = { [toolId]: firebase.firestore.FieldValue.increment(1) };
-        prize.grantedToolId = toolId; // für die Ergebnis-Anzeige (optional)
-      }
-    } else if (prize.type === "frame") {
-      fields.ownedShopItems = firebase.firestore.FieldValue.arrayUnion(prize.frameId);
-    } else if (prize.type === "tempAvatar") {
-      // Serverzeit-verankert: der Client berechnet den Millisekunden-
-      // Wert zwar lokal (Date.now() + Tage), aber firestore.rules
-      // akzeptiert nur einen Wert nahe der ECHTEN Serverzeit + 3 Tage
-      // (validTempAvatar()) - eine vorgestellte Client-Uhr kann diesen
-      // Wert also nicht verlängern, siehe Kommentar dort.
-      fields.tempAvatarExpiresAt = Date.now() + prize.durationDays * 86400000;
-      fields.tempAvatarId = prize.avatarId;
-    }
-
-    tx.set(playerRef, fields, { merge: true });
-  });
+  if (writeError || !updated) {
+    throw new Error("too-soon");
+  }
 }
 
 /* ------------------------------------------------------
@@ -1228,27 +1263,38 @@ function recordCodeCrack(codeId, reward) {
 
   const nickname = localStorage.getItem("wheelNickname") || "";
 
-  if (nickname && wheelDb) {
-    wheelAuthReady.then((uid) => {
+  if (nickname && supabaseClient) {
+    wheelAuthReady.then(async (uid) => {
       if (!uid) return;
 
-      const fields = {
-        nickname: nickname,
-        codesCracked: firebase.firestore.FieldValue.increment(1),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      };
+      try {
+        await ensureSupabasePlayerRow(uid, nickname);
 
-      if (reward) {
-        fields.rewards = firebase.firestore.FieldValue.arrayUnion(reward);
+        const { data: current, error: readError } = await supabaseClient
+          .from("players")
+          .select("codes_cracked, rewards")
+          .eq("firebase_uid", uid)
+          .maybeSingle();
+        if (readError) throw readError;
+
+        const fields = {
+          nickname: nickname,
+          codes_cracked: (current && current.codes_cracked ? current.codes_cracked : 0) + 1,
+        };
+
+        if (reward) {
+          const oldRewards = (current && current.rewards) || [];
+          fields.rewards = oldRewards.includes(reward) ? oldRewards : [...oldRewards, reward];
+        }
+
+        const { error: writeError } = await supabaseClient
+          .from("players")
+          .update(fields)
+          .eq("firebase_uid", uid);
+        if (writeError) throw writeError;
+      } catch (err) {
+        console.error("Code-Fortschritt konnte nicht gespeichert werden:", err);
       }
-
-      wheelDb
-        .collection("players")
-        .doc(uid)
-        .set(fields, { merge: true })
-        .catch((err) => {
-          console.error("Code-Fortschritt konnte nicht gespeichert werden:", err);
-        });
     });
   }
 
@@ -1291,53 +1337,55 @@ function recordCodeCrack(codeId, reward) {
    meldung statt eines vorgetäuschten Erfolgs).
 ------------------------------------------------------ */
 async function redeemCurrencyCode(codeId, amount) {
-  if (!wheelDb) throw new Error("no-db");
+  if (!supabaseClient) throw new Error("no-db");
   const uid = await wheelAuthReady;
   if (!uid) throw new Error("no-uid");
 
-  const playerRef = wheelDb.collection("players").doc(uid);
   const nickname = localStorage.getItem("wheelNickname") || "";
 
-  await wheelDb.runTransaction(async (tx) => {
-    const snap = await tx.get(playerRef);
-    const data = snap.exists ? snap.data() : {};
-    const redeemed = data.redeemedCurrencyCodes || {};
+  // ensureSupabasePlayerRow() vorher legt bei Bedarf eine frische Zeile an
+  // (leeres redeemed_currency_codes) - das UPDATE unten kann sich damit auf
+  // die "Zeile existiert bereits" Annahme verlassen, kein Insert-Zweig noetig.
+  await ensureSupabasePlayerRow(uid, nickname);
 
-    if (redeemed[codeId]) {
-      throw new Error("already-redeemed");
-    }
+  const { data: current, error: readError } = await supabaseClient
+    .from("players")
+    .select("currency, total_currency_earned, codes_cracked, redeemed_currency_codes")
+    .eq("firebase_uid", uid)
+    .maybeSingle();
+  if (readError) throw readError;
 
-    const base = {
-      currency: firebase.firestore.FieldValue.increment(amount),
-      totalCurrencyEarned: firebase.firestore.FieldValue.increment(amount),
-      codesCracked: firebase.firestore.FieldValue.increment(1),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    };
-    if (nickname) base.nickname = nickname;
+  const data = current || {};
+  const redeemed = data.redeemed_currency_codes || {};
 
-    if (snap.exists) {
-      // Dot-Notation-Feldpfad statt "redeemedCurrencyCodes: {[codeId]: true}"
-      // via set()/merge: set()+merge ERSETZT ein verschachteltes Map-Feld
-      // KOMPLETT statt es zusammenzuführen - ein zweiter Code-Fund hätte
-      // sonst den ERSTEN wieder aus der Map entfernt und dadurch erneut
-      // einlösbar gemacht. Nur tx.update() (nicht set-mit-merge) löst
-      // "a.b"-Feldnamen als echten verschachtelten Pfad auf, alle anderen
-      // bereits eingelösten Codes bleiben dabei unangetastet erhalten.
-      tx.update(playerRef, {
-        ...base,
-        [`redeemedCurrencyCodes.${codeId}`]: true,
-      });
-    } else {
-      // Dokument existiert noch gar nicht (Code eingelöst, bevor je ein
-      // Spitzname gesetzt wurde) - update() würde hier fehlschlagen, also
-      // per set() ganz neu anlegen. Kein Dot-Pfad nötig, da es noch keine
-      // vorherigen Eintraege gibt, die erhalten bleiben müssten.
-      tx.set(playerRef, {
-        ...base,
-        redeemedCurrencyCodes: { [codeId]: true },
-      });
-    }
-  });
+  if (redeemed[codeId]) {
+    throw new Error("already-redeemed");
+  }
+
+  const fields = {
+    currency: (data.currency || 0) + amount,
+    total_currency_earned: (data.total_currency_earned || 0) + amount,
+    codes_cracked: (data.codes_cracked || 0) + 1,
+    // JSONB-Merge von Hand (kein Firestore-Dot-Pfad noetig): alle bereits
+    // eingeloesten Codes bleiben erhalten, nur dieser eine kommt dazu. Die
+    // eigentliche Absicherung gegen doppeltes Einloesen (auch bei einer
+    // echten Race Condition zwischen zwei parallelen Anfragen) liegt in
+    // app.valid_code_redemption() - die liest den Ausgangszustand bei
+    // JEDEM UPDATE frisch aus der Datenbank, nicht aus diesem Client-Stand.
+    redeemed_currency_codes: { ...redeemed, [codeId]: true },
+  };
+  if (nickname) fields.nickname = nickname;
+
+  const { data: updated, error: writeError } = await supabaseClient
+    .from("players")
+    .update(fields)
+    .eq("firebase_uid", uid)
+    .select()
+    .maybeSingle();
+
+  if (writeError || !updated) {
+    throw new Error("redeem-failed");
+  }
 }
 
 /* ------------------------------------------------------
@@ -1448,28 +1496,37 @@ function loadLeaderboard() {
   const podiumContainer = document.getElementById("leaderboard-podium");
   if (!container) return;
 
-  if (!wheelDb) {
+  if (!supabaseClient) {
     container.innerHTML =
-      '<p class="wheel-status">Die globale Rangliste ist noch nicht eingerichtet (Firebase-Zugangsdaten fehlen in scripts/firebase-config.js).</p>';
+      '<p class="wheel-status">Die globale Rangliste ist noch nicht eingerichtet (Supabase-Zugangsdaten fehlen in scripts/supabase/supabase-config.js).</p>';
     return;
   }
 
   container.innerHTML = '<p class="wheel-status">Lade Rangliste ...</p>';
 
-  // WICHTIG: kein orderBy() hier! Firestore würde sonst alle Spieler
-  // weglassen, die noch kein "codesCracked"-Feld haben (z.B. weil sie
-  // erst am Rad gedreht, aber noch keinen Code geknackt haben). Wir
-  // laden daher ALLE Spieler mit Namen und sortieren selbst im Browser.
+  // players_select_public erlaubt jedem (auch anonym) das Lesen ALLER
+  // Spielerzeilen (Firestore: "allow read: if true") - wir laden daher
+  // wie zuvor ALLE Spieler mit Namen und sortieren selbst im Browser.
   Promise.all([
-    wheelDb.collection("players").get(),
+    supabaseClient
+      .from("players")
+      .select("firebase_uid, nickname, codes_cracked, rewards, avatar, equipped_frame"),
     wheelAuthReady,
   ])
-    .then(([snapshot, ownUid]) => {
+    .then(([{ data: rows, error }, ownUid]) => {
+      if (error) throw error;
+
       const players = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        if (!data.nickname) return; // Einträge ganz ohne Namen überspringen
-        players.push({ uid: doc.id, codesCracked: 0, ...data });
+      (rows || []).forEach((row) => {
+        if (!row.nickname) return; // Einträge ganz ohne Namen überspringen
+        players.push({
+          uid: row.firebase_uid,
+          nickname: row.nickname,
+          codesCracked: row.codes_cracked || 0,
+          rewards: row.rewards || [],
+          avatar: row.avatar,
+          equippedFrame: row.equipped_frame,
+        });
       });
 
       players.sort((a, b) => (b.codesCracked || 0) - (a.codesCracked || 0));

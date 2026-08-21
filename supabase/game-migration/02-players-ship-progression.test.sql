@@ -11,6 +11,8 @@ insert into public.players (firebase_uid, nickname, currency)
 values ('uid-B', 'Bert', 500);
 insert into public.players (firebase_uid, nickname, currency)
 values ('uid-C', 'Carla', 500);
+insert into public.players (firebase_uid, nickname, currency)
+values ('uid-D', 'Dieter', 500);
 insert into public.ship_repair (firebase_uid) values ('uid-A');
 reset role;
 
@@ -58,7 +60,7 @@ $$;
 -- ============================================================
 set role anon;
 select set_config('request.jwt.claims', '', false);
-select case when count(*) = 3 then 'PASS' else 'FAIL' end || ' - TEST1 anon liest players oeffentlich' as result from public.players;
+select case when count(*) = 4 then 'PASS' else 'FAIL' end || ' - TEST1 anon liest players oeffentlich' as result from public.players;
 reset role;
 
 set role authenticated;
@@ -270,6 +272,27 @@ select set_config('request.jwt.claims', '{"sub":"uid-A"}', false);
 select test_expect_blocked(
   $sql$insert into public.players (firebase_uid, nickname) values ('uid-FREMD', 'Faker')$sql$,
   'TEST15 Insert mit fremder UID wird abgelehnt');
+reset role;
+
+-- ============================================================
+-- TEST 16: Tagesquest-Erststart (Fall A) - Toleranzfenster statt
+-- exaktem "= now()" (siehe Kommentar bei valid_daily_quests_write():
+-- ein normaler Supabase-Client kann keine rohe now()-SQL-Funktion
+-- senden, nur einen fertigen Zeitwert - das muss nah an, aber nicht
+-- exakt gleich der Serverzeit sein duerfen).
+-- ============================================================
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"uid-C"}', false);
+select test_expect_ok(
+  $sql$update public.players set daily_quests_started_at = now() - interval '1 second', daily_quests_claimed_days = '{}' where firebase_uid = 'uid-C'$sql$,
+  'TEST16a Tagesquest-Erststart mit realistischer Client-Laufzeit (1s Differenz) wird akzeptiert');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"uid-D"}', false);
+select test_expect_blocked(
+  $sql$update public.players set daily_quests_started_at = now() - interval '3 days', daily_quests_claimed_days = '{}' where firebase_uid = 'uid-D'$sql$,
+  'TEST16b Zurueckdatierter Tagesquest-Start (3 Tage) wird abgelehnt');
 reset role;
 
 drop function test_expect_blocked(text, text);

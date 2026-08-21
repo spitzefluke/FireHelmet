@@ -215,10 +215,20 @@ begin
   end if;
 
   if old_started_at is null then
-    -- Fall A: Erststart - MUSS exakt der aktuelle Server-Zeitpunkt sein
-    -- (now() ist innerhalb EINER Transaktion stabil/identisch, siehe
-    -- Testprotokoll - ein Client kann diesen Wert nicht faelschen).
-    return new_started_at = now() and coalesce(array_length(new_claimed_days,1),0) = 0;
+    -- Fall A: Erststart - MUSS nah an der aktuellen Serverzeit liegen.
+    -- URSPRUENGLICH als exaktes "= now()" geplant (analog zu Firestores
+    -- request.time-Sentinel bei serverTimestamp()) - das setzt aber
+    -- voraus, dass now() selbst Teil des SCHREIBBEFEHLS ist (funktioniert
+    -- nur bei direktem SQL, z.B. in den Tests hier). Ein normaler
+    -- Supabase-Client (PostgREST/supabase-js) kann keine rohe SQL-
+    -- Funktion im Request-Body senden, nur einen fertigen Literalwert -
+    -- der landet nie exakt auf dem now() der Datenbank (Netzwerk-
+    -- Laufzeit, Uhren-Differenz). Ein enges Toleranzfenster (2 Minuten,
+    -- weit unter der 24h-Tagesschwelle) ersetzt daher die exakte
+    -- Gleichheit: reicht fuer normale Netzwerk-Latenz, verhindert aber
+    -- ein nennenswertes Zurückdatieren zum Freischalten spaeterer Tage.
+    return new_started_at between now() - interval '2 minutes' and now() + interval '2 minutes'
+       and coalesce(array_length(new_claimed_days,1),0) = 0;
   end if;
 
   -- Fall B: startedAt MUSS exakt gleich bleiben

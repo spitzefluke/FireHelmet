@@ -1,6 +1,6 @@
 # Firestore → Supabase Migration (Spieler-Datenbank)
 
-**Status: Phase 3 von 5 — noch NICHT live, Firestore läuft unverändert weiter.**
+**Status: Phase 4 von 5 (Client-Umstellung läuft, Datei für Datei) — noch NICHT live, Firestore läuft unverändert weiter.**
 
 Voraussetzung erfüllt: Third-Party Auth (Firebase) ist im Supabase-Dashboard aktiviert.
 
@@ -26,7 +26,7 @@ Ein weiterer Unterschied zu Firestore, der die Übersetzung stellenweise sogar *
 
 ## Tests
 
-- `02-players-ship-progression.test.sql` — 25 Testfälle (Phase 1), **echt gegen eine lokale PostgreSQL-16-Instanz mit einem Supabase-Auth-Stub ausgeführt**: alle Manipulationsversuche aus dem ursprünglichen Auftrag (currency, gamesPlayed, gamesWon, shipTools, dailyQuests, redeemedCurrencyCodes, lastSpielothekPlayAt, lastWheelSpinAt, tempAvatarExpiresAt, progression, ship_repair, fremde UID, SQL-Injection), 25/25 bestanden.
+- `02-players-ship-progression.test.sql` — 27 Testfälle (Phase 1), **echt gegen eine lokale PostgreSQL-16-Instanz mit einem Supabase-Auth-Stub ausgeführt**: alle Manipulationsversuche aus dem ursprünglichen Auftrag (currency, gamesPlayed, gamesWon, shipTools, dailyQuests, redeemedCurrencyCodes, lastSpielothekPlayAt, lastWheelSpinAt, tempAvatarExpiresAt, progression, ship_repair, fremde UID, SQL-Injection), 27/27 bestanden. **Update (Phase 4e):** `valid_daily_quests_write()` Fall A verlangte ursprünglich `new_started_at = now()` exakt — funktioniert nur bei direktem SQL (wie in diesen Tests), nicht über einen echten Supabase-Client (PostgREST kann keine rohe `now()`-Funktion im Request-Body senden, nur einen fertigen Zeitwert). Auf ein 2-Minuten-Toleranzfenster umgestellt (TEST16a/16b decken das jetzt ab) — **muss auf dem echten Supabase-Projekt manuell nachgezogen werden**, siehe Hinweis unten.
 - `04-race-boss.test.sql` — 12 Testfälle (Phase 2): Rennfortschritt-Sprung, Boss-HP-Manipulation, Schaden-Rangliste-Manipulation, fremde UID, Neuanlage über Obergrenze — 12/12 bestanden.
 - `06-site-data.test.sql` — 20 Testfälle (Phase 3): Site-Config-Schreiben durch normalen Benutzer vs. Admin, Support-Report-Lesen (niemand darf, auch nicht der Absender), Gewinnspiel-Teilnahme/-Ziehung-Manipulation, Bewertungs-Grenzen, SQL-Injection — 20/20 bestanden.
 
@@ -45,7 +45,144 @@ psql -d test_db -f 04-race-boss.test.sql
 psql -d test_db -f 06-site-data.test.sql
 ```
 
+## Phase 4: Client-Umstellung (läuft, Datei für Datei)
+
+Direkt in den bestehenden Dateien umgestellt (keine Parallelkopien) — jede Datei einzeln per Playwright-Kontrollfluss-Test (Mock aus `firebase-mock.js` + `supabase-mock.js`) geprüft, bevor die nächste drankommt. Firestore bleibt bis zum Umschaltpunkt (Phase 5) vollständig unverändert nutzbar, betroffen ist ausschließlich der Lese-/Schreibpfad im Client.
+
+- **4a** (erledigt): `scripts/supabase/supabase-client.js` — Third-Party-Auth-Client mit `accessToken`-Callback (echtes Firebase-ID-Token bei jeder Anfrage).
+- **4b** (erledigt): `scripts/spielothek/spielothek.js` — Spielrunde, Cooldown, Dublonenanzeige.
+- **4c** (erledigt): `scripts/shop/shop.js` — Kauf, Dublonenanzeige, Abgleich freigeschalteter Artikel.
+- **4d** (erledigt): `scripts/wheel/wheel.js` — größte Einzeldatei: `savePlayerData()` (zentral, wird von `saveNickname()`, `shop.js equipFrame()` und `twitch-auth.js` genutzt), `addCurrency()` (Rennplatzierung, Boss-Top-Angreifer), Schatzrad-Drehung (`redeemWheelPrize()`, 20h-Cooldown + alle 4 Preistypen), Code-Tracking (`recordCodeCrack()`, `syncCodesToFirestore()`-Nachholsynchronisierung), sichere Währungscode-Einlösung (`redeemCurrencyCode()`), zeitlich befristeter Avatar-Abgleich (`syncTempAvatarFromServer()`) und die globale Rangliste (`loadLeaderboard()`). Dabei zusätzlich die in 4c bewusst offen gelassene `equippedFrame`-Kopplung in `shop.js` geschlossen (wird jetzt konsistent aus Supabase gelesen).
+
+  Bemerkenswert: zwei rein informative, nirgends zurückgelesene Firestore-Felder (`lastSpin`, `lastPrize`) haben in der Postgres-Tabelle bewusst KEINE Spalte bekommen (in Phase 1 bereits final geprüft/getestet) — sie wurden beim Umstieg ersatzlos weggelassen, ohne Funktionsverlust.
+
+- **4e** (erledigt): `scripts/ship/ship-repair.js` — persönlicher Schiffszustand (`ship_repair`-Tabelle: Reparatur starten/abschließen, Fall-A/Fall-B-Zustandsautomat), Werkzeug-Inventar (`players.ship_tools`), Tagesquests (`players.daily_quests_started_at`/`.daily_quests_claimed_days`, inkl. Metrik-Spaltenübersetzung fürs Anzeige-Objekt) sowie die Preview-Dev-Werkzeuge (`devGrantAllShipTools()`/`devFinishActiveRepair()`/`devResetShipEvent()` — zwei davon waren schon unter den alten `firestore.rules` faktisch wirkungslos, siehe Kommentare im Code, wurden aber bewusst 1:1 mit demselben Verhalten portiert statt die RLS dafür extra zu erweitern). `maybeUnlockChapterAfterShipRepair()` bleibt bewusst auf Firestore (site_config ist erst in Phase 4i dran).
+
+  **Bugfund während 4e:** `app.valid_daily_quests_write()` verlangte für den Tagesquest-Erststart `new_started_at = now()` exakt — das funktioniert nur bei direktem SQL (wie in den Tests), ein echter Supabase-Client kann aber keine rohe `now()`-Funktion senden, nur einen fertigen Zeitwert, der nie exakt trifft. Dieser Fehler wäre erst beim echten Cutover aufgefallen (Tagesquests hätten nie starten können) und wurde in `01-players-ship-progression.sql` auf ein 2-Minuten-Toleranzfenster korrigiert — **muss manuell auf dem echten Supabase-Projekt nachgezogen werden, siehe unten.**
+
+- **4f** (erledigt): `scripts/core/progression.js` — zentraler Reward-Dispatcher (`claimReward()`, schreibt je nach Belohnungstyp in `players` UND/ODER `player_progression`), XP-Vergabe für bestehende Aktionen (`awardActionXp()`), Spielerkarte (`refreshPlayerCard()`, kein Live-Abo mehr — siehe unten). `passProgress` (Firestore: verschachtelte Map) ist in Postgres von Anfang an als zwei flache Spalten (`pass_id`/`pass_xp`) angelegt — hier entsprechend übersetzt.
+
+  **Wichtig — kein Firestore-Cross-Collection-Transaktion-Äquivalent:** `claimReward()` konnte in Firestore `players` UND `player_progression` atomar in EINER Transaktion schreiben; ein normaler Supabase-REST-Aufruf kann das nicht (zwei unabhängige Anfragen). Um das schlimmere Fehlerbild zu vermeiden, schreibt `claimReward()` jetzt IMMER zuerst `players` (Belohnungseffekt), erst danach `player_progression` (Markierung "eingelöst") — schlägt nur der zweite Schritt fehl, bleibt die Belohnung unmarkiert und ein späterer Versuch holt sie sicher nach (schlimmstenfalls einmal doppelt vergeben, nie dauerhaft verloren).
+
+  **Live-Abo entfernt:** `refreshPlayerCard()` nutzte bisher Firestores `onSnapshot()` für automatische Aktualisierung. Ein direktes Supabase-Realtime-Äquivalent wird in dieser Migration bislang nirgends genutzt, deshalb jetzt ein einmaliger Direktabruf — alle Stellen, die die Spielerkarte tatsächlich verändern, rufen `refreshPlayerCard()` bereits selbst explizit erneut auf, ein Verlust an Aktualität entsteht dadurch nicht.
+
+  **Split-Brain-Falle rechtzeitig gefunden:** `player_progression` wird nicht nur von `progression.js` gelesen — `scripts/core/level-path.js` (2 Stellen), `scripts/piratenpass/piratenpass.js` und `scripts/stories/stories.js` lesen direkt aus derselben Tabelle für ihre jeweilige Anzeige (Levelpfad-Modal, Piratenpass-Fortschritt, Expeditions-Meilensteine). Da `claimReward()`/`awardActionXp()` jetzt nach Supabase schreiben, mussten diese vier Lesestellen in DERSELBEN Änderung mit umgestellt werden — sonst hätten sie sofort veraltete/falsche Daten aus Firestore angezeigt, sobald eine Belohnung eingelöst wird.
+
+- **4g** (erledigt): `scripts/race/race.js` — Wochenrennen-Fortschritt (`addRaceProgress()`, echtes Upsert über den zusammengesetzten Schlüssel `(week, firebase_uid)` statt Firestores `"<week>_<uid>"`-Dokument-ID-Trick), Live-Rangliste (`loadRaceLeaderboard()`) und Vorwochen-Sieger + Top-3-Dublonen (`loadLastWeekWinner()`/`grantWeeklyRaceCurrency()`, liest jetzt `firebase_uid` statt des Firestore-eigenen `uid`-Felds).
+
+  **Fehlende Spalte gefunden:** Firestores `raceProgress`-Dokument speichert zusätzlich `equippedFrame` (Momentaufnahme für den Rahmen um den Namen in der Rangliste, siehe `race.js` Zeile ~511) — `firestore.rules` validiert dieses Feld bewusst nicht extra. Die Phase-2-Tabelle `race_progress` hatte dafür bislang **keine Spalte** (in Phase 1/2 übersehen, da kein Test das Feld anfasste). Ohne Korrektur wäre die Rahmen-Anzeige in der Rangliste beim echten Cutover einfach leer geblieben (kein Datenverlust, nur ein optisches Downgrade) — trotzdem in `03-race-boss.sql` nachgezogen (`equipped_frame text` + Längenprüfung, keine RLS-Sonderprüfung nötig, genau wie im Original). **Muss additiv auf dem echten, bereits laufenden Supabase-Projekt nachgezogen werden, siehe unten.**
+
+- **4h** (erledigt): `scripts/community-boss/community-boss.js` — Boss-Zustand (`loadBossState()`, echtes Upsert legt den Monatsboss nur bei Bedarf frisch an), Angriff (`attackCommunityBoss()`), Schaden pro Spieler (`recordBossDamage()`), Rangliste (`renderBossLeaderboard()`), Top-3-Belohnung (`checkBossSlayerReward()`) und die Angreifer-Statistik (`updateBossStatsRow()`, nutzt Supabases `count: 'exact', head: true` statt Firestores `count()`-Aggregation).
+
+  **Erste echte RPC-Funktion der Migration:** `community_boss` ist (anders als alle bisher migrierten Tabellen) eine GEMEINSAME Zeile, die potenziell viele verschiedene Spieler gleichzeitig treffen — der Normalfall bei einem "Community"-Boss, nicht ein seltener Randfall. Firestores `FieldValue.increment(-damage)` war ein echtes atomares Server-Increment; das übliche "erst lesen, dann zurückschreiben"-Muster dieser Migration hätte hier bei echter Gleichzeitigkeit regelmäßig Schaden verloren (Lost-Update-Problem). Deshalb neu: `app.attack_community_boss(month_id, damage)` in `03-race-boss.sql` — eine kleine PL/pgSQL-Funktion, die die relative Änderung in einem einzigen SQL-`UPDATE` ausführt (Postgres serialisiert konkurrierende UPDATEs auf dieselbe Zeile von selbst) und gleichzeitig den `defeated`-Übergang in demselben atomaren Schritt setzt. Läuft als SECURITY INVOKER (Standard) — dieselbe `community_boss_update`-RLS-Policy gilt unverändert, keine erweiterten Rechte. Lokal gegen PostgreSQL 16 verifiziert: zwei aufeinanderfolgende Angriffe ziehen korrekt kumulativ ab, ein überhöhter Schadenswert (>45) wird abgelehnt, und ein finaler Treffer setzt `hp=0`/`defeated=true` in einem einzigen Aufruf. **Muss additiv auf dem echten, bereits laufenden Supabase-Projekt nachgezogen werden, siehe unten.**
+
+**Noch offen (Phase 4, weitere Dateien):** die Phase-3-Tabellen betreffenden Dateien (`admin-gateway.js`, `site-config.js`, `giveaway.js`, `support.js`, `rating.js`).
+
+## ⚠️ Manuelle Schritte erforderlich: drei Nachbesserungen auf dem echten Supabase-Projekt
+
+Phase 1 und Phase 2 wurden bereits von dir gegen das echte Supabase-Projekt getestet und laufen dort produktiv (Schema). Alle drei unten beschriebenen Funde betreffen bereits deployte Struktur. Bitte im Supabase-Dashboard → SQL Editor **alle drei einmalig** ausführen (jeweils rein additiv, kein Datenverlust, keine Downtime):
+
+**1) `app.attack_community_boss()`-Funktion anlegen (Phase 4h, neu):**
+
+```sql
+create or replace function app.attack_community_boss(p_month_id text, p_damage integer)
+returns table(hp integer, max_hp integer, defeated boolean)
+language plpgsql
+as $$
+begin
+  if p_damage is null or p_damage < 0 or p_damage > 45 then
+    raise exception 'invalid-damage';
+  end if;
+
+  return query
+  update public.community_boss
+  set hp = greatest(0, community_boss.hp - p_damage),
+      defeated = community_boss.defeated or (community_boss.hp - p_damage <= 0)
+  where month_id = p_month_id
+  returning community_boss.hp, community_boss.max_hp, community_boss.defeated;
+end;
+$$;
+
+grant execute on function app.attack_community_boss(text, integer) to authenticated;
+```
+
+**2) `race_progress.equipped_frame`-Spalte nachziehen (Phase 4g):**
+
+```sql
+alter table public.race_progress
+  add column if not exists equipped_frame text,
+  add constraint race_progress_frame_len check (equipped_frame is null or char_length(equipped_frame) <= 50);
+```
+
+**3) `valid_daily_quests_write()`-Toleranzfenster nachziehen (Phase 4e):**
+
+```sql
+create or replace function app.valid_daily_quests_write(
+  p_uid text,
+  new_started_at timestamptz,
+  new_claimed_days integer[],
+  new_ship_tools jsonb
+) returns boolean
+language plpgsql stable
+as $$
+declare
+  old_row public.players := app.old_player(p_uid);
+  old_started_at timestamptz := old_row.daily_quests_started_at;
+  old_claimed_days integer[] := coalesce(old_row.daily_quests_claimed_days, '{}');
+  new_day int;
+  needed_tool text;
+  needed_threshold int;
+  old_metric_value numeric;
+  old_tool_count numeric;
+  new_tool_count numeric;
+begin
+  if new_started_at is not distinct from old_started_at
+     and coalesce(new_claimed_days,'{}') = old_claimed_days then
+    return true;
+  end if;
+
+  if coalesce(array_length(new_claimed_days,1),0) > 20 then
+    return false;
+  end if;
+
+  if old_started_at is null then
+    return new_started_at between now() - interval '2 minutes' and now() + interval '2 minutes'
+       and coalesce(array_length(new_claimed_days,1),0) = 0;
+  end if;
+
+  if new_started_at is distinct from old_started_at then
+    return false;
+  end if;
+
+  if coalesce(array_length(new_claimed_days,1),0) <> coalesce(array_length(old_claimed_days,1),0) + 1 then
+    return false;
+  end if;
+
+  new_day := coalesce(array_length(old_claimed_days,1),0) + 1;
+  needed_tool := app.day_tool(new_day);
+  needed_threshold := app.day_threshold(new_day);
+
+  if now() < old_started_at + ((new_day - 1) * interval '1 day') then
+    return false;
+  end if;
+
+  old_metric_value := app.day_metric_value(new_day, old_row);
+  if old_metric_value < needed_threshold then
+    return false;
+  end if;
+
+  old_tool_count := coalesce((old_row.ship_tools ->> needed_tool)::numeric, 0);
+  new_tool_count := coalesce((new_ship_tools ->> needed_tool)::numeric, 0);
+  if new_tool_count <> old_tool_count + 1 then
+    return false;
+  end if;
+
+  return true;
+end;
+$$;
+```
+
 ## Nächste Schritte (noch nicht umgesetzt)
 
-- Phase 4: Client-Umstellung (~15 Dateien von `wheelDb` auf `supabaseClient`)
+- Phase 4 (Rest): restliche ~11 Dateien, siehe oben
 - Phase 5: Umschaltpunkt — erst nach vollständiger Prüfung

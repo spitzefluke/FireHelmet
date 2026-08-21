@@ -179,27 +179,30 @@ function addRaceProgress(amount) {
   localStorage.setItem("raceProgress", String(newProgress));
 
   const nickname = localStorage.getItem("wheelNickname") || "";
-  if (!nickname || !wheelDb) return;
+  if (!nickname || !supabaseClient) return;
 
   wheelAuthReady.then((uid) => {
     if (!uid) return;
 
-    wheelDb
-      .collection("raceProgress")
-      .doc(`${currentWeek}_${uid}`)
-      .set(
+    // Echtes Upsert (ein Aufruf deckt sowohl "erster Eintrag diese
+    // Woche" als auch "Fortschritt aktualisieren" ab) - der
+    // zusammengesetzte Schluessel (week, firebase_uid) ist die
+    // natuerliche Entsprechung zu Firestores Dokument-ID-Trick
+    // "<week>_<uid>", siehe 03-race-boss.sql.
+    supabaseClient
+      .from("race_progress")
+      .upsert(
         {
           week: currentWeek,
-          uid: uid,
+          firebase_uid: uid,
           nickname: nickname,
           progress: newProgress,
-          equippedFrame: localStorage.getItem("equippedFrame") || null,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          equipped_frame: localStorage.getItem("equippedFrame") || null,
         },
-        { merge: true }
+        { onConflict: "week,firebase_uid" }
       )
-      .catch((err) => {
-        console.error("Rennfortschritt konnte nicht gespeichert werden:", err);
+      .then(({ error }) => {
+        if (error) console.error("Rennfortschritt konnte nicht gespeichert werden:", error);
       });
   });
 
@@ -575,10 +578,10 @@ function loadRaceLeaderboard() {
 
   const emptyEl = document.getElementById("race-track-empty");
 
-  if (!wheelDb) {
+  if (!supabaseClient) {
     if (emptyEl) {
       emptyEl.textContent =
-        "Das globale Rennen ist noch nicht eingerichtet (Firebase-Zugangsdaten fehlen in scripts/firebase-config.js).";
+        "Das globale Rennen ist noch nicht eingerichtet (Supabase-Zugangsdaten fehlen in scripts/supabase/supabase-config.js).";
       emptyEl.style.display = "flex";
     }
     return;
@@ -586,30 +589,26 @@ function loadRaceLeaderboard() {
 
   const currentWeek = getCurrentWeekId();
 
-  wheelDb
-    .collection("raceProgress")
-    .where("week", "==", currentWeek)
-    .orderBy("progress", "desc")
+  supabaseClient
+    .from("race_progress")
+    .select("firebase_uid, nickname, progress, equipped_frame")
+    .eq("week", currentWeek)
+    .order("progress", { ascending: false })
     .limit(raceConfig.topPlayersShown)
-    .get()
-    .then((snapshot) => {
-      const entries = [];
-      snapshot.forEach((doc) => entries.push(doc.data()));
+    .then(({ data, error }) => {
+      if (error) throw error;
+      const entries = (data || []).map((row) => ({
+        uid: row.firebase_uid,
+        nickname: row.nickname,
+        progress: row.progress,
+        equippedFrame: row.equipped_frame,
+      }));
       renderRaceTrack(entries, "Noch niemand ist diese Woche gestartet – sei der Erste!");
     })
     .catch((err) => {
       console.error("Rennen konnte nicht geladen werden:", err);
-
       if (!emptyEl) return;
-
-      if (err.code === "failed-precondition") {
-        emptyEl.textContent =
-          "Firestore braucht noch einen Suchindex fürs Rennen. Öffne die Browser-Konsole (F12) - " +
-          "dort zeigt Firebase einen Link zum automatischen Erstellen an. Einmal klicken, kurz " +
-          "warten (1-2 Minuten), dann Seite neu laden.";
-      } else {
-        emptyEl.textContent = "Rennen konnte nicht geladen werden.";
-      }
+      emptyEl.textContent = "Rennen konnte nicht geladen werden.";
       emptyEl.style.display = "flex";
     });
 }
@@ -619,26 +618,29 @@ function loadRaceLeaderboard() {
 ------------------------------------------------------ */
 function loadLastWeekWinner() {
   const el = document.getElementById("race-last-winner");
-  if (!el || !wheelDb) return;
+  if (!el || !supabaseClient) return;
 
   const previousWeek = getPreviousWeekId();
 
-  wheelDb
-    .collection("raceProgress")
-    .where("week", "==", previousWeek)
-    .orderBy("progress", "desc")
+  supabaseClient
+    .from("race_progress")
+    .select("firebase_uid, nickname, progress")
+    .eq("week", previousWeek)
+    .order("progress", { ascending: false })
     .limit(3)
-    .get()
-    .then((snapshot) => {
-      if (snapshot.empty) {
+    .then(({ data, error }) => {
+      if (error) throw error;
+      const entries = data || [];
+
+      if (!entries.length) {
         el.textContent = "Letzte Woche gab es noch keinen Sieger.";
         return;
       }
 
-      const winner = snapshot.docs[0].data();
+      const winner = entries[0];
       el.textContent = `🏆 Sieger der letzten Woche: ${winner.nickname} mit ${winner.progress} Punkten!`;
 
-      grantWeeklyRaceCurrency(previousWeek, snapshot.docs);
+      grantWeeklyRaceCurrency(previousWeek, entries);
     })
     .catch((err) => {
       console.error("Vorwochen-Sieger konnte nicht geladen werden:", err);
@@ -651,7 +653,7 @@ function loadLastWeekWinner() {
    ein Top-3-Platz beim Besuch dieser Seite erkannt wird - man
    muss also nach Wochenende einmal auf der Seite vorbeischauen.
 ------------------------------------------------------ */
-async function grantWeeklyRaceCurrency(weekId, topDocs) {
+async function grantWeeklyRaceCurrency(weekId, topEntries) {
   const claimKey = `raceRewardClaimed_${weekId}`;
   if (localStorage.getItem(claimKey)) return;
   if (typeof addCurrency !== "function" || typeof wheelAuthReady === "undefined") return;
@@ -660,7 +662,7 @@ async function grantWeeklyRaceCurrency(weekId, topDocs) {
   if (!ownUid) return;
 
   const rewardsByRank = RACE_REWARDS_BY_RANK;
-  const ownIndex = topDocs.findIndex((doc) => doc.data().uid === ownUid);
+  const ownIndex = topEntries.findIndex((entry) => entry.firebase_uid === ownUid);
 
   localStorage.setItem(claimKey, "1"); // merken, egal ob getroffen oder nicht
 

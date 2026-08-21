@@ -185,12 +185,16 @@ async function renderStoryProgress() {
   const label = typeof t === "function" ? t("story.expeditionProgress", "EXPEDITION-FORTSCHRITT") : "EXPEDITION-FORTSCHRITT";
 
   let claimedIds = [];
-  if (typeof wheelDb !== "undefined" && wheelDb && typeof wheelAuthReady !== "undefined") {
+  if (typeof supabaseClient !== "undefined" && supabaseClient && typeof wheelAuthReady !== "undefined") {
     try {
       const uid = await wheelAuthReady;
       if (uid) {
-        const snap = await wheelDb.collection("player_progression").doc(uid).get();
-        claimedIds = (snap.exists && snap.data().claimedRewardIds) || [];
+        const { data } = await supabaseClient
+          .from("player_progression")
+          .select("claimed_reward_ids")
+          .eq("firebase_uid", uid)
+          .maybeSingle();
+        claimedIds = (data && data.claimed_reward_ids) || [];
       }
     } catch (err) {
       console.warn("Meilenstein-Status konnte nicht geladen werden:", err);
