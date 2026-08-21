@@ -36,13 +36,18 @@ let supabaseClient = null;
 let supabaseAccessTokenForcedOnce = false;
 
 async function getSupabaseAccessToken() {
+  const dbg = "[DEBUG accessToken @" + performance.now().toFixed(0) + "ms]";
   try {
     if (typeof wheelAuthReady !== "undefined") await wheelAuthReady;
+    console.log(dbg, "nach wheelAuthReady, currentUser vorhanden:", !!(typeof firebase !== "undefined" && firebase.auth && firebase.auth().currentUser));
     if (typeof firebase === "undefined" || !firebase.auth || !firebase.auth().currentUser) return null;
     const forceRefresh = !supabaseAccessTokenForcedOnce;
     supabaseAccessTokenForcedOnce = true;
-    return await firebase.auth().currentUser.getIdToken(forceRefresh);
+    const token = await firebase.auth().currentUser.getIdToken(forceRefresh);
+    console.log(dbg, "forceRefresh=" + forceRefresh, "tokenLaenge=" + (token ? token.length : token), "tokenStart=" + (token ? token.slice(0, 20) : token));
+    return token;
   } catch (err) {
+    console.log(dbg, "FEHLER beim Token-Holen:", err);
     console.warn("Firebase-ID-Token fuer Supabase konnte nicht geholt werden:", err);
     return null;
   }
