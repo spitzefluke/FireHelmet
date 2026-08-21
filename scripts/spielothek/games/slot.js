@@ -137,20 +137,16 @@ window.SPIELOTHEK_GAME_HANDLERS.slot = {
   calculateResult: calculateSlotResult,
 
   /*
-   * Der Browser fordert eine Runde an.
-   * Keine Dublonenänderung hier!
+   * Der Browser fordert eine Runde an. Keine Dublonenänderung
+   * hier - das Ergebnis wird nur BERECHNET, die eigentliche
+   * Gutschrift/Abbuchung passiert danach in spielothek.js ueber
+   * einen server-geprueften Schreibvorgang (Firestore-Regeln bzw.
+   * Supabase RLS), der den Kontostand-Sprung pro Runde begrenzt -
+   * das ist die eigentliche Vertrauensgrenze, siehe Kommentar am
+   * Dateianfang.
    */
-  play: async function requestSlotPlay() {
-    if (
-      !window.SPIELOTHEK_SERVER ||
-      typeof window.SPIELOTHEK_SERVER.playSlot !== "function"
-    ) {
-      throw new Error(
-        "Slot-Serverfunktion ist nicht verfügbar."
-      );
-    }
-
-    return window.SPIELOTHEK_SERVER.playSlot();
+  play: function requestSlotPlay() {
+    return calculateSlotResult();
   },
 
   buildResultHtml: buildSlotResultHtml,
