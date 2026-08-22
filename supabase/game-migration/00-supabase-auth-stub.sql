@@ -9,6 +9,14 @@ create or replace function auth.jwt() returns jsonb as $$
   select coalesce(current_setting('request.jwt.claims', true)::jsonb, '{}'::jsonb);
 $$ language sql stable;
 
+-- Bildet Supabases eigenes, natives auth.uid() nach (nicht mehr die
+-- Third-Party-Auth-JWT-Bruecke) - liest dieselbe "sub"-Claim, die bei
+-- einer echten Supabase-Sitzung (signInAnonymously()/signInWithOAuth())
+-- die eigene Supabase-User-UUID enthaelt.
+create or replace function auth.uid() returns uuid as $$
+  select nullif(current_setting('request.jwt.claims', true)::jsonb ->> 'sub', '')::uuid;
+$$ language sql stable;
+
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then

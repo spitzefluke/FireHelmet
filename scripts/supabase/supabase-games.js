@@ -3,19 +3,24 @@
    ---------------------------------------------------
    WICHTIG - NIEMALS die Quelle der Wahrheit: Diese Funktionen werden
    AUSSCHLIESSLICH NACH einer bereits erfolgreich und server-geprueft
-   in Firestore geschriebenen Runde/einem Angriff aufgerufen (siehe
-   Aufrufstellen in spielothek.js/community-boss.js) - rein additiv,
-   fuer Statistik/Verlauf. Ein Fehlschlag hier darf niemals die
-   eigentliche Spiel-Funktionalitaet beeintraechtigen: jede Funktion
-   faengt ihre eigenen Fehler ab und wirft NIE weiter.
+   gespeicherten Runde/einem Angriff aufgerufen (siehe Aufrufstellen
+   in spielothek.js/community-boss.js) - rein additiv, fuer
+   Statistik/Verlauf. Ein Fehlschlag hier darf niemals die eigentliche
+   Spiel-Funktionalitaet beeintraechtigen: jede Funktion faengt ihre
+   eigenen Fehler ab und wirft NIE weiter.
 
-   Nutzt bewusst NICHT den Supabase-Client/anon-Key zum Schreiben
-   (siehe supabase-client.js) - stattdessen einen Fetch-Aufruf an den
-   Cloudflare-Worker-Proxy mit dem echten Firebase-ID-Token im
-   Authorization-Header, exakt wie das bereits bestehende Muster in
-   scripts/core/discord-notify.js. Der Worker verifiziert das Token
-   und schreibt selbst mit seinem service_role-Key - siehe
-   supabase/worker/README.md.
+   BEKANNTER, AKZEPTIERTER FOLGE-SCHRITT (Firebase entfernt): Dieser
+   Weg nutzte urspruenglich einen Cloudflare-Worker-Proxy, der ein
+   Firebase-ID-Token serverseitig prueft und dann selbst mit seinem
+   service_role-Key schreibt (siehe supabase/worker/README.md). Da
+   Firebase komplett entfernt wurde, liefert getFirebaseIdTokenForSupabase()
+   jetzt immer null (typeof firebase === "undefined") - postToSupabaseProxy()
+   No-opt dadurch automatisch und sicher (kein Fehler, kein Absturz),
+   die eigentliche Spiel-Funktionalitaet ist davon nicht betroffen. Um
+   diese Statistik-Funktion wieder zu aktivieren, muesste der Worker
+   selbst auf Supabase-eigene Tokens umgestellt werden (eigener Schritt,
+   ausserhalb dieses Repos deploybar) - bis dahin bleibt sie bewusst
+   inaktiv statt kaputt.
 ====================================================== */
 
 async function getFirebaseIdTokenForSupabase() {

@@ -3,11 +3,21 @@
    players / ship_repair / player_progression
    ---------------------------------------------------
    1:1-Uebersetzung der Sicherheitslogik aus firestore.rules nach
-   Postgres Row Level Security. Firebase Authentication bleibt
-   unveraendert (Third-Party Auth "Firebase" muss im Supabase-
-   Dashboard aktiviert sein, siehe supabase/game-migration/README.md) -
-   auth.jwt() ->> 'sub' liefert dann die ECHTE, von Supabase selbst
-   kryptographisch geprueften Firebase-UID.
+   Postgres Row Level Security.
+
+   AUTH-UMSTELLUNG (Nachtrag): urspruenglich lief die Anmeldung ueber
+   Firebase Authentication + Supabase "Third-Party Auth" als Bruecke
+   (auth.jwt() ->> 'sub' sollte die per Third-Party Auth gepruefte
+   Firebase-UID liefern). Live gegen das echte Projekt hat sich diese
+   Bruecke als nicht zuverlaessig erwiesen (lokal reproduziert: Schema/
+   RLS-Logik korrekt, aber die Identitaet kam nicht zuverlaessig bei
+   der tatsaechlichen RLS-Auswertung an - separates, Supabase-seitiges
+   Problem, siehe Git-Historie). Ersetzt durch Supabase-natives Auth
+   (auth.uid(), signInAnonymously()/signInWithOAuth()) - dieselbe
+   Spalte/Funktion (app.firebase_uid(), Spaltenname "firebase_uid")
+   bleibt bewusst gleich benannt, um den Client-Code unveraendert zu
+   lassen (nur die Werte darin sind jetzt Supabase-eigene UUIDs statt
+   Firebase-UIDs - "bei Null anfangen" war ohnehin die Praemisse).
 
    WICHTIGER UNTERSCHIED ZU FIRESTORE:
    In Firestore macht set(...,{merge:true}) das GESAMTE Dokument nach
@@ -33,23 +43,26 @@ create schema if not exists app;
 /* ------------------------------------------------------
    GRUNDFUNKTIONEN (Firestore: isSignedIn()/isAdmin())
 ------------------------------------------------------ */
+-- auth.uid() ist Supabase-natives Auth (signInAnonymously()/
+-- signInWithOAuth() ueber supabaseClient.auth) - kein Third-Party-
+-- JWT-Umweg mehr, dieselbe UUID wie supabaseClient.auth.getUser().
 create or replace function app.firebase_uid() returns text
 language sql stable
-as $$ select nullif(auth.jwt() ->> 'sub', '') $$;
+as $$ select auth.uid()::text $$;
 
 create or replace function app.is_signed_in() returns boolean
 language sql stable
 as $$ select app.firebase_uid() is not null $$;
 
--- Einzig autorisierter Admin-Account - siehe isAdmin() in
--- firestore.rules. Setzt voraus, dass Supabase (per Third-Party
--- Auth Firebase) die "email"-Claim aus dem echten Firebase-ID-Token
--- unveraendert in auth.jwt() durchreicht - IM SUPABASE-DASHBOARD
--- SELBST PRUEFEN, kann von hier aus nicht verifiziert werden.
+-- Einzig autorisierter Admin-Account - Anmeldung ueber Supabase-
+-- natives Google-OAuth (siehe admin-gateway.js), auth.jwt() ->> 'email'
+-- kommt direkt von Supabases eigenem, verifiziertem Google-Provider
+-- (kein Firebase/Third-Party-Umweg mehr). Muss exakt FIRE_HELMET_CONFIG.
+-- ownerEmail entsprechen (scripts/core/fire-helmet-config.js).
 create or replace function app.is_admin() returns boolean
 language sql stable
 as $$
-  select app.is_signed_in() and (auth.jwt() ->> 'email') = 'spitzefluke@gmail.com'
+  select app.is_signed_in() and (auth.jwt() ->> 'email') = 'y.n.trott@gmail.com'
 $$;
 
 /* ======================================================
