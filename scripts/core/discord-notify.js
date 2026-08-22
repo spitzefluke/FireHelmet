@@ -44,24 +44,37 @@ async function trySendDiscordUpdateNotice() {
     const lastSentHash = data ? data.last_sent_hash : null;
     if (lastSentHash === currentHash) return; // schon gesendet für diesen Textstand
 
-    // Sofort als "gesendet" markieren, BEVOR der eigentliche Versand
-    // passiert - so lösen nicht mehrere gleichzeitige Besucher
-    // versehentlich mehrere Nachrichten aus
+    const content =
+      `📢 **${updateNoticeConfig.title || "Update"}**\n${updateNoticeConfig.message || ""}`;
+
+    // ERST wirklich senden, DANACH als "gesendet" markieren - nicht
+    // umgekehrt. Vorher wurde last_sent_hash schon VOR dem fetch()
+    // geschrieben (um Mehrfach-Sendungen durch gleichzeitige Besucher
+    // zu vermeiden), aber ohne den Erfolg zu prüfen: schlug der Proxy-
+    // Aufruf fehl (z.B. wegen eines CORS-Fehlers im Cloudflare-Worker,
+    // siehe supabase/worker/README.md), stand der Hash trotzdem schon
+    // als "gesendet" in der Datenbank - jeder weitere Seitenaufruf sah
+    // dann faelschlich "schon erledigt" und hat es nie wieder
+    // versucht, obwohl in Discord nie eine Nachricht ankam. Das
+    // verbleibende Restrisiko (zwei Besucher lesen gleichzeitig einen
+    // noch alten Hash und senden beide) ist fuer eine seltene Update-
+    // Ankuendigung unkritisch - eine gelegentliche doppelte Nachricht
+    // ist deutlich harmloser als eine, die nie ankommt.
+    const response = await fetch(discordNotifyConfig.proxyUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+    if (!response.ok) {
+      throw new Error("Discord-Proxy antwortete mit Status " + response.status);
+    }
+
     const { error: writeError } = await withSupabaseRlsColdStartRetry(() =>
       supabaseClient
         .from("site_meta")
         .upsert({ id: "update_notice", last_sent_hash: currentHash, sent_at: new Date().toISOString() }, { onConflict: "id" })
     );
     if (writeError) throw writeError;
-
-    const content =
-      `📢 **${updateNoticeConfig.title || "Update"}**\n${updateNoticeConfig.message || ""}`;
-
-    await fetch(discordNotifyConfig.proxyUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
-    });
   } catch (err) {
     console.warn("Discord-Benachrichtigung konnte nicht gesendet werden:", err);
   }
