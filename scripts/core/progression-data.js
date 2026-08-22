@@ -208,10 +208,13 @@ const PIRATE_PASSES = [
 /* ------------------------------------------------------
    ENDBELOHNUNG: "ICH BIN EINE FLITZPIEPE"-CAP
    ---------------------------------------------------
-   Bildpfad fuer die physische Stufe-50-Belohnung. Die Datei existiert
-   bewusst noch nicht (siehe Auftrag Punkt 14) - progression.js prueft
-   vor dem Anzeigen per Bild-Preload, ob sie schon hochgeladen wurde,
+   Bildpfad fuer die physische Stufe-50-Belohnung (Produktfoto,
+   22.08.2026 hochgeladen) - .webp statt .png: verlustfreie PNG-
+   Kodierung des Fotos war ~5x groesser (ca. 950KB) bei identischer
+   Bildqualitaet, siehe auch scripts/avatare/ändii.webp fuer denselben
+   bereits etablierten Formatwechsel. upgradeCapBadgeIfImageExists()
+   in piratenpass.js prueft per Bild-Preload, ob die Datei existiert,
    und zeigt bis dahin ein textbasiertes Abzeichen statt eines
-   kaputten <img>-Tags.
+   kaputten <img>-Tags - unveraendert, unabhaengig vom Dateiformat.
 ------------------------------------------------------ */
-const PIRATE_PASS_CAP_IMAGE = "assets/piratenpass/cap.png";
+const PIRATE_PASS_CAP_IMAGE = "assets/piratenpass/cap.webp";
