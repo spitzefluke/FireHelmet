@@ -1460,14 +1460,20 @@ function renderRewardBadges(rewards) {
 
 /* ------------------------------------------------------
    AVATAR MIT RAHMEN UMWICKELN
-   Wird überall dort genutzt, wo ein Spieler-Avatar angezeigt
-   wird (Rangliste, Boss-Rangliste, Wochenrennen-Rangliste).
+   ---------------------------------------------------
+   War frueher der rotierende Farbverlauf-Ring um den Avatar in
+   Rangliste + Boss-Rangliste (dieselbe Optik wie in der Shop-
+   Vorschau, .avatar-frame-*::before mit avatarFrameSpin-Animation,
+   siehe style.css). Auf Wunsch entfernt: der Ring lief bei kleinen
+   32px-Avataren in Tabellen mit mehreren Spielern (je nach
+   Rahmenstufe unterschiedlich schnell) zu unruhig. Der Zeilen-Glow
+   (rowFrameClass(), .row-frame-*) bleibt als Rahmen-Kennzeichnung
+   bestehen. Die Shop-Vorschau nutzt einen eigenen Code-Pfad
+   (shop.js, direkt "avatar-frame-${item.style}") und ist davon
+   nicht betroffen - dort bleibt die Animation als Vorschau sinnvoll.
 ------------------------------------------------------ */
 function wrapAvatarWithFrame(avatarHtml, frameStyle) {
-  if (!avatarHtml) return avatarHtml;
-  if (!frameStyle) return avatarHtml;
-
-  return `<span class="avatar-frame-wrap avatar-frame-${frameStyle}">${avatarHtml}</span>`;
+  return avatarHtml;
 }
 
 function frameStyleFromId(frameId) {
