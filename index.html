@@ -67,6 +67,7 @@
     <a data-page="wheel" onclick="changePage('wheel')" data-i18n="menu.wheel">🧭 Schatzrad</a>
     <a data-page="spielothek" onclick="changePage('spielothek')" data-i18n="menu.spielothek">🎰 Ändiis Spielothek</a>
     <a data-page="leaderboard" onclick="changePage('leaderboard')" data-i18n="menu.leaderboard">🏆 Rangliste</a>
+    <a data-page="tournament" onclick="changePage('tournament')" data-i18n="menu.tournament">🧢 THE CHALLENGE</a>
     <a data-page="race" onclick="changePage('race')" data-i18n="menu.race">🏎️ Wochenrennen</a>
     <a data-page="community-boss" onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 Community-Boss</a>
     <a data-page="streamraetsel" onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">❓ ???</a>
@@ -109,6 +110,7 @@
       <a class="fh-nav-item" data-page="wheel" onclick="changePage('wheel')" data-i18n="menu.wheel">🧭 <span>Schatzrad</span></a>
       <a class="fh-nav-item" data-page="spielothek" onclick="changePage('spielothek')">🎰 <span data-i18n="menu.spielothekShort">Spielothek</span></a>
       <a class="fh-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')" data-i18n="menu.leaderboard">🏆 <span>Rangliste</span></a>
+      <a class="fh-nav-item" data-page="tournament" onclick="changePage('tournament')" data-i18n="menu.tournament">🧢 <span>THE CHALLENGE</span></a>
       <a class="fh-nav-item" data-page="race" onclick="changePage('race')" data-i18n="menu.race">🏎️ <span>Wochenrennen</span></a>
       <a class="fh-nav-item" data-page="community-boss" onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 <span>Community-Boss</span></a>
       <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')">❓ <span data-i18n="menu.streamraetselShort">???</span></a>
@@ -846,6 +848,20 @@
     </section>
 
     <!-- =====================
+         THE CHALLENGE (K.-o.-Turnier)
+         Komplett JS-gerendert (scripts/tournament/tournament.js),
+         analog zu "Repariere das Schiff" oben - die vielen
+         moeglichen Zustaende (Anmeldephase/aktiv/ausgeschieden/
+         Champion/...) lassen sich in reinem JS deutlich einfacher
+         pflegen als in statischem HTML mit CSS-Umschaltung.
+    ===================== -->
+    <section id="tournament" class="page">
+      <div class="page-content">
+        <div id="tournament-page-body"></div>
+      </div>
+    </section>
+
+    <!-- =====================
          GEWINNSPIEL
     ===================== -->
     <section id="community-boss" class="page">
@@ -1027,6 +1043,7 @@
   <script src="scripts/tournament/tournament-data.js"></script>
   <script src="scripts/tournament/tournament-bracket.js"></script>
   <script src="scripts/tournament/games/reaction-game.js"></script>
+  <script src="scripts/tournament/tournament.js"></script>
   <script src="scripts/supabase/supabase-games.js"></script>
   <script src="scripts/supabase/supabase-statistics.js"></script>
   <script src="scripts/core/site-config.js"></script>

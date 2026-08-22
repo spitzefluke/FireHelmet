@@ -25,6 +25,10 @@ function changePage(pageID) {
     updateShipRepairPage(pageID);
   }
 
+  if (typeof updateTournamentPage === "function") {
+    updateTournamentPage(pageID);
+  }
+
   if (typeof updateGatewayPage === "function") {
     updateGatewayPage(pageID);
   }
