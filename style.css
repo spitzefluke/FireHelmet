@@ -1049,11 +1049,19 @@ main {
   object-fit: cover;
   width: 100%;
   height: 100%;
-  /* Bleibt bis ~45% der Journey-Strecke voll sichtbar (deckt sich mit
-     dem laengeren ScrollTrigger-Scrub-Fenster in cinematic.js) und
-     blendet erst danach, bis ~58%, sanft aus - statt wie zuvor schon
-     nach den ersten ~22% zu verschwinden. */
-  opacity: clamp(0, calc((0.58 - var(--fh-progress)) * 7.7), 1);
+  /* Abgedunkelt/entsaettigt und mit weicher Vignette-Maske statt
+     hartem Rechteck-Rand, damit das Video wie ein atmosphaerischer
+     Hintergrund in der Szene wirkt statt wie ein scharf abgegrenztes
+     Video-Fenster im Vordergrund. */
+  filter: saturate(.6) brightness(.7) contrast(1.08);
+  mask-image: radial-gradient(ellipse 78% 72% at 50% 42%, #000 0%, #000 45%, transparent 92%);
+  -webkit-mask-image: radial-gradient(ellipse 78% 72% at 50% 42%, #000 0%, #000 45%, transparent 92%);
+  /* Bleibt bis ~45% der Journey-Strecke sichtbar (deckt sich mit dem
+     ScrollTrigger-Scrub-Fenster in cinematic.js) und blendet erst
+     danach, bis ~58%, sanft aus - statt wie zuvor schon nach den
+     ersten ~22% zu verschwinden. Deckelt zusaetzlich bei .8 statt 1,
+     damit es nie wie ein grelles Vordergrund-Fenster wirkt. */
+  opacity: clamp(0, calc((0.58 - var(--fh-progress)) * 6.16), .8);
 }
 
 .fh-ship-rig {
