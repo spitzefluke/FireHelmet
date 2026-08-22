@@ -1,6 +1,30 @@
-# Firestore → Supabase Migration (Spieler-Datenbank)
+# Firestore → Supabase Migration (Spieler-Datenbank + Anmeldung)
 
-**Status: Phase 4 vollständig abgeschlossen (4a–4l, alle Client-Dateien umgestellt + Dokumentation bereinigt). Phase 5 (Umschaltpunkt) ist vorbereitet, aber noch NICHT ausgeführt — noch NICHT live, Firestore läuft unverändert weiter. Diese Branch liegt als PR zur Review bereit; der eigentliche Merge/Deploy nach `main` ist der Cutover selbst, siehe "Phase 5: Umschaltpunkt" unten.**
+## ⚠️ Nachtrag: Firebase komplett entfernt (Auth-Pivot nach dem Cutover)
+
+**Alles unterhalb dieser Box beschreibt den urspruenglichen Plan ("Firebase Authentication bleibt, nur die Datenbank wandert") - dieser Plan ist ueberholt.** Nach dem ersten Live-Merge (Phase 5) trat auf dem echten Supabase-Projekt ein Produktionsfehler auf: Supabase "Third-Party Auth" (die Bruecke, die Firebase-ID-Tokens fuer Postgres RLS verifizieren sollte) hat serverseitig zuverlaessig NICHT funktioniert - jede authentifizierte Schreibanfrage lief als `anon` statt `authenticated`, obwohl Konfiguration UND Token nachweislich korrekt waren (lokal gegen echtes Postgres reproduziert: Schema/RLS-Logik selbst war fehlerfrei). Live mit dem Nutzer per Supabase-Log-Auswertung (Feld `auth_user` korrekt, aber `auth.jwt()` kam in der tatsaechlichen RLS-Pruefung nicht richtig an) diagnostiziert - ein Supabase-seitiges Problem, das sich vom Client/Schema aus nicht beheben liess.
+
+**Entscheidung des Betreibers: Firebase komplett entfernt, Supabase ist jetzt die EINZIGE Anmeldung UND Datenbank.**
+
+- `app.firebase_uid()` liefert jetzt `auth.uid()::text` (Supabase-natives Auth) statt `auth.jwt() ->> 'sub'` (Third-Party-Auth-Bruecke) - siehe `01-players-ship-progression.sql`.
+- `app.is_admin()` prueft weiterhin `auth.jwt() ->> 'email'`, jetzt aber aus einer echten Supabase-Google-OAuth-Sitzung statt einer Firebase-Bruecke (und mit dem korrigierten `ownerEmail`, siehe unten - vorher stand dort versehentlich eine andere Adresse).
+- `scripts/auth/firebase-config.js` und alle drei Firebase-SDK-`<script>`-Tags in `index.html` sind entfernt. `wheelAuthReady` (jetzt in `scripts/supabase/supabase-client.js`) loest per `supabaseClient.auth.signInAnonymously()` auf - der Rest des Client-Codes (jedes `.eq("firebase_uid", uid)`) ist UNVERAENDERT, nur die Quelle von `uid` hat sich geaendert (Supabase-UUID statt Firebase-UID - "bei Null anfangen" war ohnehin schon die Praemisse).
+- `scripts/core/admin-gateway.js` nutzt jetzt `supabaseClient.auth.signInWithOAuth({provider:"google"})` (Redirect-Flow) statt Firebases `linkWithPopup()`.
+- `scripts/supabase/supabase-games.js` (additive Spielothek/Boss-Statistik-Logs ueber den Cloudflare-Worker-Proxy) ist dadurch ausser Betrieb - no-opt sicher (kein Fehler), da sie ein Firebase-ID-Token brauchte. Betrifft NICHT die eigentliche Spiel-Funktionalitaet, nur eine Statistik-Zusatzfunktion. Um sie zu reaktivieren, muesste der Worker selbst auf Supabase-eigene Tokens umgestellt werden - eigener, spaeterer Schritt.
+
+### Neue manuelle Schritte im Supabase-Dashboard (bevor das live funktioniert)
+
+1. **Authentication → Sign In / Providers → Anonymous Sign-Ins aktivieren** - ohne das schlaegt jede `signInAnonymously()`-Anfrage fehl (nichts speichert mehr, genau wie beim urspruenglichen Bug).
+2. **Authentication → Sign In / Providers → Google aktivieren** - eigene OAuth-Client-ID/Secret aus der Google Cloud Console eintragen (Redirect-URI dort UND bei Google selbst hinterlegen, Supabase zeigt die genaue URL im Dashboard an). Ohne das kann sich niemand mehr am Admin-Gateway anmelden.
+3. Die alte Third-Party-Auth-Firebase-Konfiguration kann optional entfernt werden (wird nicht mehr genutzt), muss aber nicht - sie ist einfach nur noch wirkungslos.
+
+### Lokale Tests
+
+Die drei `.test.sql`-Dateien wurden entsprechend angepasst: Test-UIDs sind jetzt echte UUID-Strings (`a0000000-...` statt `uid-A` usw., da `auth.uid()` den Typ `uuid` hat), und `auth.uid()` wird im lokalen Stub (`00-supabase-auth-stub.sql`) mitsimuliert. Alle 59 Testfaelle (27+12+20) laufen weiterhin gruen gegen eine echte lokale PostgreSQL-16-Instanz.
+
+---
+
+## Urspruenglicher Plan (historisch, siehe Nachtrag oben)
 
 Voraussetzung erfüllt: Third-Party Auth (Firebase) ist im Supabase-Dashboard aktiviert.
 

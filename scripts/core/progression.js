@@ -6,9 +6,8 @@
    und Level-Up-Overlay. Konfiguration liegt in progression-data.js
    (vorher geladen, siehe index.html).
 
-   WIEDERVERWENDET statt dupliziert: wheelAuthReady (firebase-config.js,
-   Firebase Authentication bleibt unveraendert), supabaseClient
-   (scripts/supabase/supabase-client.js), unlockAvatar()/
+   WIEDERVERWENDET statt dupliziert: wheelAuthReady + supabaseClient
+   (beide scripts/supabase/supabase-client.js), unlockAvatar()/
    isAvatarImagePath()/buildAvatarPickerHtml() (wheel.js),
    addCurrency()-Vertrauensmodell (nicht-transaktionale, aber
    gedeckelte Increments).

@@ -1,100 +1,67 @@
 /* ======================================================
    ADMIN-GATEWAY
    ---------------------------------------------------
-   ECHTE Firebase Authentication statt eines Passworts im
-   Frontend: Anmeldung per Google, danach wird geprüft, ob die
-   vom GOOGLE-SERVER selbst bestätigte E-Mail-Adresse exakt
+   ECHTE Supabase Authentication statt eines Passworts im Frontend:
+   Anmeldung per Google, danach wird geprüft, ob die vom
+   GOOGLE-SERVER selbst bestätigte E-Mail-Adresse exakt
    FIRE_HELMET_CONFIG.ownerEmail entspricht. Ein Besucher kann
    diese Prüfung nicht faelschen, da die E-Mail nicht vom Client
-   kommt, sondern Teil des von Firebase kryptografisch geprüften
-   ID-Tokens ist. Firebase Authentication bleibt unveraendert -
-   nur die Datenbank ist gewechselt: die eigentliche, server-
-   seitige Durchsetzung (nicht nur diese Client-Anzeige-Pruefung)
-   passiert jetzt ueber app.is_admin() in der Supabase RLS-Policy
+   kommt, sondern Teil der von Supabase selbst kryptografisch
+   geprüften Sitzung ist. Die eigentliche, serverseitige
+   Durchsetzung (nicht nur diese Client-Anzeige-Pruefung) passiert
+   über app.is_admin() in der Supabase RLS-Policy
    "site_config_write_admin" (siehe 05-site-data.sql), die
    auth.jwt() ->> 'email' gegen dieselbe ownerEmail prueft.
 
-   WICHTIG - Voraussetzung: In der Firebase Console muss unter
-   Authentication -> Sign-in method die Google-Anmeldung aktiv
-   sein. Ist sie das nicht, zeigt der "Mit Google anmelden"-Button
-   einen klaren Fehler statt etwas vorzutäuschen.
+   WICHTIG - Voraussetzung: im Supabase-Dashboard muss unter
+   Authentication -> Sign In / Providers -> Google die Anmeldung
+   aktiv sein (eigene Google-OAuth-Client-ID/Secret aus der Google
+   Cloud Console eintragen). Ist sie das nicht, zeigt der
+   "Mit Google anmelden"-Button einen klaren Fehler.
 
-   Warum linkWithPopup() statt signInWithPopup():
-   Jeder Besucher (auch der Betreiber selbst beim normalen
-   Stöbern) bekommt beim Laden bereits eine anonyme Firebase-
-   Anmeldung (siehe scripts/auth/firebase-config.js), an die u.a.
-   Dublonen/Werkzeuge/Fortschritt hängen. signInWithPopup() würde
-   die Sitzung auf eine KOMPLETT NEUE Google-Identität umschalten
-   und damit den bisherigen anonymen Fortschritt "verwaisen"
-   lassen. linkWithPopup() verknüpft den Google-Account stattdessen
-   MIT der bestehenden anonymen UID - für den Betreiber bleibt
-   alles wie bisher, nur eben jetzt zusätzlich echt verifiziert.
+   signInWithOAuth() statt eines Popups: Supabase-js bietet fuer
+   OAuth nur einen Redirect-Flow (kein linkWithPopup()-Aequivalent
+   fuer eine bestehende anonyme Sitzung) - der Browser wechselt kurz
+   zu Google und kommt zurueck. Das ersetzt die bisherige anonyme
+   Sitzung durch eine echte Google-Sitzung (anders als zuvor bei
+   Firebase, wo die anonyme UID per linkWithPopup() erhalten blieb) -
+   fuer den Admin-Bereich unproblematisch, da er nicht von der
+   eigenen Spielerzeile abhaengt.
 ====================================================== */
 
-function isGoogleProviderLinked(user) {
-  return !!user && user.providerData.some((p) => p.providerId === "google.com");
-}
-
-function getLinkedGoogleEmail(user) {
-  if (!user) return null;
-  const google = user.providerData.find((p) => p.providerId === "google.com");
-  return google ? google.email : null;
+function getGoogleEmail(user) {
+  return user ? user.email : null;
 }
 
 function isAuthorizedAdmin(user) {
-  const email = getLinkedGoogleEmail(user);
+  const email = getGoogleEmail(user);
   return !!email && typeof FIRE_HELMET_CONFIG !== "undefined" && email.toLowerCase() === (FIRE_HELMET_CONFIG.ownerEmail || "").toLowerCase();
 }
 
 async function loginAdminWithGoogle() {
   const statusEl = document.getElementById("gateway-login-status");
-  if (typeof firebase === "undefined" || !supabaseClient) {
-    if (statusEl) statusEl.textContent = "⚠️ Firebase ist nicht verfügbar.";
+  if (!supabaseClient) {
+    if (statusEl) statusEl.textContent = "⚠️ Supabase ist nicht verfügbar.";
     return;
   }
 
-  const provider = new firebase.auth.GoogleAuthProvider();
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.href },
+  });
 
-  try {
-    const currentUser = firebase.auth().currentUser;
-    if (currentUser) {
-      await currentUser.linkWithPopup(provider);
-    } else {
-      await firebase.auth().signInWithPopup(provider);
-    }
-  } catch (err) {
-    if (err && err.code === "auth/credential-already-in-use") {
-      // Dieser Google-Account ist bereits fest mit einer ANDEREN
-      // anonymen Sitzung verknüpft (z.B. von einem anderen Gerät/
-      // Browser aus einmal eingerichtet) - dann melden wir uns
-      // direkt darüber an, statt einen Fehler zu zeigen.
-      try {
-        await firebase.auth().signInWithPopup(provider);
-      } catch (err2) {
-        console.error("Admin-Login fehlgeschlagen:", err2);
-        if (statusEl) statusEl.textContent = "⚠️ Anmeldung fehlgeschlagen: " + (err2.message || err2.code || "");
-        return;
-      }
-    } else if (err && err.code === "auth/popup-closed-by-user") {
-      return;
-    } else {
-      console.error("Admin-Login fehlgeschlagen:", err);
-      if (statusEl) {
-        statusEl.textContent =
-          err && err.code === "auth/operation-not-allowed"
-            ? "⚠️ Google-Anmeldung ist in der Firebase Console noch nicht aktiviert (Authentication -> Sign-in method)."
-            : "⚠️ Anmeldung fehlgeschlagen: " + (err.message || err.code || "");
-      }
-      return;
-    }
+  if (error) {
+    console.error("Admin-Login fehlgeschlagen:", error);
+    if (statusEl) statusEl.textContent = "⚠️ Anmeldung fehlgeschlagen: " + (error.message || "");
   }
-
-  renderGatewayPage();
+  // Bei Erfolg verlaesst der Browser die Seite Richtung Google -
+  // renderGatewayPage() laeuft nach der Rueckkehr ueber den normalen
+  // Seiten-Start erneut, kein manueller Aufruf hier noetig.
 }
 
 async function logoutAdmin() {
   try {
-    await firebase.auth().signOut();
+    await supabaseClient.auth.signOut();
   } catch (err) {
     console.warn("Abmelden fehlgeschlagen:", err);
   }
@@ -320,14 +287,15 @@ async function renderGatewayPage() {
   if (!container) return;
 
   if (!supabaseClient) {
-    container.innerHTML = `<p class="wheel-status">⚠️ Firebase ist nicht verfügbar - das Admin-Gateway benötigt eine Verbindung.</p>`;
+    container.innerHTML = `<p class="wheel-status">⚠️ Supabase ist nicht verfügbar - das Admin-Gateway benötigt eine Verbindung.</p>`;
     return;
   }
 
   if (typeof wheelAuthReady !== "undefined") await wheelAuthReady;
-  const user = firebase.auth().currentUser;
+  const { data: userData } = await supabaseClient.auth.getUser();
+  const user = userData ? userData.user : null;
 
-  if (!isGoogleProviderLinked(user)) {
+  if (!user || user.is_anonymous) {
     container.innerHTML = `
       <div class="gateway-login-box">
         <p class="gateway-login-lead">Dieser Bereich ist nur für den Betreiber der Website. Melde dich mit deinem autorisierten Google-Account an.</p>
@@ -339,7 +307,7 @@ async function renderGatewayPage() {
   }
 
   if (!isAuthorizedAdmin(user)) {
-    const email = getLinkedGoogleEmail(user);
+    const email = getGoogleEmail(user);
     container.innerHTML = `
       <div class="gateway-login-box">
         <p class="gateway-login-lead gateway-denied">❌ Dieser Account (${email}) ist nicht für den Admin-Bereich autorisiert.</p>
@@ -354,7 +322,7 @@ async function renderGatewayPage() {
 
   container.innerHTML = `
     <div class="gateway-panel">
-      <p class="gateway-welcome">✅ Angemeldet als ${getLinkedGoogleEmail(user)} <button type="button" class="gateway-logout-link" onclick="logoutAdmin()">Abmelden</button></p>
+      <p class="gateway-welcome">✅ Angemeldet als ${getGoogleEmail(user)} <button type="button" class="gateway-logout-link" onclick="logoutAdmin()">Abmelden</button></p>
 
       <h2 class="fh-ship-section-heading">Status</h2>
       ${buildGatewayStatusHtml()}

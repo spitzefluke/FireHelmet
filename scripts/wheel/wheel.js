@@ -10,9 +10,9 @@
    - Jede Drehung und jeder NEU geknackte Code geben zusätzlich
      Fortschritt fürs Wochenrennen (siehe scripts/race.js)
    - Alles wird über Supabase/Postgres global gespeichert (RLS-
-     geschuetzt, echte Firebase-UID via Third-Party Auth, siehe
-     supabase/game-migration/README.md) - Firebase bleibt weiterhin
-     die reine Anmeldung (scripts/auth/firebase-config.js)
+     geschuetzt ueber die anonyme Supabase-Sitzung, siehe
+     scripts/supabase/supabase-client.js und
+     supabase/game-migration/README.md)
 ====================================================== */
 
 let wheelBuilt = false;
@@ -905,7 +905,7 @@ function savePlayerData(fields) {
 
   wheelAuthReady.then(async (uid) => {
     if (!uid) {
-      console.warn("Keine Firebase-Anmeldung vorhanden, Eintrag wird nicht gespeichert.");
+      console.warn("Keine Supabase-Anmeldung vorhanden, Eintrag wird nicht gespeichert.");
       return;
     }
 

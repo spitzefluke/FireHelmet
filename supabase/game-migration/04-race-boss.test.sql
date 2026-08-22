@@ -39,9 +39,9 @@ $$;
 -- Vorbereitung
 -- ============================================================
 set role service_role;
-insert into public.race_progress (week, firebase_uid, nickname, progress) values ('2026-W33', 'uid-A', 'Anna', 5);
+insert into public.race_progress (week, firebase_uid, nickname, progress) values ('2026-W33', 'a0000000-0000-0000-0000-000000000000', 'Anna', 5);
 insert into public.community_boss (month_id, hp, max_hp) values ('2026-08', 4500, 5000);
-insert into public.community_boss_damage (month_id, firebase_uid, nickname, total_damage) values ('2026-08', 'uid-A', 'Anna', 30);
+insert into public.community_boss_damage (month_id, firebase_uid, nickname, total_damage) values ('2026-08', 'a0000000-0000-0000-0000-000000000000', 'Anna', 30);
 reset role;
 
 -- ============================================================
@@ -58,9 +58,9 @@ reset role;
 -- TEST 2: legitimer Rennfortschritt (+15 pro Schreibvorgang)
 -- ============================================================
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"uid-A"}', false);
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
 select test_expect_ok(
-  $sql$update public.race_progress set progress = 20 where week = '2026-W33' and firebase_uid = 'uid-A'$sql$,
+  $sql$update public.race_progress set progress = 20 where week = '2026-W33' and firebase_uid = 'a0000000-0000-0000-0000-000000000000'$sql$,
   'TEST2 legitimer Rennfortschritt (+15) gelingt');
 reset role;
 
@@ -68,9 +68,9 @@ reset role;
 -- TEST 3: Manipulation von Rennfortschritt (Sprung > +15)
 -- ============================================================
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"uid-A"}', false);
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
 select test_expect_blocked(
-  $sql$update public.race_progress set progress = 999 where week = '2026-W33' and firebase_uid = 'uid-A'$sql$,
+  $sql$update public.race_progress set progress = 999 where week = '2026-W33' and firebase_uid = 'a0000000-0000-0000-0000-000000000000'$sql$,
   'TEST3 Rennfortschritt-Sprung wird blockiert');
 reset role;
 
@@ -78,21 +78,21 @@ reset role;
 -- TEST 4: Benutzer A schreibt Rennfortschritt fuer Benutzer B
 -- ============================================================
 set role service_role;
-insert into public.race_progress (week, firebase_uid, nickname, progress) values ('2026-W33', 'uid-B', 'Bert', 3);
+insert into public.race_progress (week, firebase_uid, nickname, progress) values ('2026-W33', 'b0000000-0000-0000-0000-000000000000', 'Bert', 3);
 reset role;
 
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"uid-A"}', false);
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
 select test_expect_blocked(
-  $sql$update public.race_progress set progress = 0 where week = '2026-W33' and firebase_uid = 'uid-B'$sql$,
-  'TEST4 uid-A kann NICHT uid-Bs Rennfortschritt schreiben');
+  $sql$update public.race_progress set progress = 0 where week = '2026-W33' and firebase_uid = 'b0000000-0000-0000-0000-000000000000'$sql$,
+  'TEST4 a0000000-0000-0000-0000-000000000000 kann NICHT b0000000-0000-0000-0000-000000000000s Rennfortschritt schreiben');
 reset role;
 
 -- ============================================================
 -- TEST 5: legitimer Boss-Angriff (Schaden <= 45 pro Schreibvorgang)
 -- ============================================================
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"uid-A"}', false);
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
 select test_expect_ok(
   $sql$update public.community_boss set hp = 4460 where month_id = '2026-08'$sql$,
   'TEST5 legitimer Boss-Angriff (-40 HP) gelingt');
@@ -102,7 +102,7 @@ reset role;
 -- TEST 6: Manipulation der Boss-HP (auf einen Schlag besiegen)
 -- ============================================================
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"uid-A"}', false);
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
 select test_expect_blocked(
   $sql$update public.community_boss set hp = 0 where month_id = '2026-08'$sql$,
   'TEST6 Boss-HP-Sprung auf 0 wird blockiert');
@@ -112,9 +112,9 @@ reset role;
 -- TEST 7: legitimer Schaden-Log-Zuwachs (<=45)
 -- ============================================================
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"uid-A"}', false);
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
 select test_expect_ok(
-  $sql$update public.community_boss_damage set total_damage = 70 where month_id = '2026-08' and firebase_uid = 'uid-A'$sql$,
+  $sql$update public.community_boss_damage set total_damage = 70 where month_id = '2026-08' and firebase_uid = 'a0000000-0000-0000-0000-000000000000'$sql$,
   'TEST7 legitimer Schaden-Zuwachs (+40) gelingt');
 reset role;
 
@@ -122,9 +122,9 @@ reset role;
 -- TEST 8: Manipulation von Schaden-Rangliste (Sprung > +45)
 -- ============================================================
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"uid-A"}', false);
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
 select test_expect_blocked(
-  $sql$update public.community_boss_damage set total_damage = 99999 where month_id = '2026-08' and firebase_uid = 'uid-A'$sql$,
+  $sql$update public.community_boss_damage set total_damage = 99999 where month_id = '2026-08' and firebase_uid = 'a0000000-0000-0000-0000-000000000000'$sql$,
   'TEST8 Schaden-Sprung wird blockiert');
 reset role;
 
@@ -133,16 +133,16 @@ reset role;
 -- Obergrenze (>15 bzw. >45 direkt bei Neuanlage)
 -- ============================================================
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"uid-A"}', false);
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
 select test_expect_blocked(
-  $sql$insert into public.race_progress (week, firebase_uid, nickname, progress) values ('2026-W34', 'uid-A', 'Anna', 999)$sql$,
+  $sql$insert into public.race_progress (week, firebase_uid, nickname, progress) values ('2026-W34', 'a0000000-0000-0000-0000-000000000000', 'Anna', 999)$sql$,
   'TEST9 Neuanlage race_progress mit progress=999 wird blockiert');
 reset role;
 
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"uid-A"}', false);
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
 select test_expect_ok(
-  $sql$insert into public.race_progress (week, firebase_uid, nickname, progress) values ('2026-W34', 'uid-A', 'Anna', 10)$sql$,
+  $sql$insert into public.race_progress (week, firebase_uid, nickname, progress) values ('2026-W34', 'a0000000-0000-0000-0000-000000000000', 'Anna', 10)$sql$,
   'TEST9b legitime Neuanlage race_progress gelingt');
 reset role;
 
