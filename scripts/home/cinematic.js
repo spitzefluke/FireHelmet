@@ -165,11 +165,16 @@
      Statt das Video per autoplay/play() abzuspielen (siehe die
      wiederholten AbortError-Probleme mit Browser-Autoplay-Policies
      an anderer Stelle im Projekt, z.B. beim Mystery-Musikplayer),
-     wird video.currentTime direkt an den Scroll-Fortschritt der
-     ERSTEN ~22% der Journey-Strecke gekoppelt - deckt sich mit der
-     Opacity-Fade-Formel in style.css (".fh-cinematic-video",
-     Faktor 4.5 erreicht 0 bei Fortschritt ~0.222). Auf Mobile und
-     bei reduzierter Bewegung wird gar nicht erst geladen (kein
+     wird video.currentTime direkt an den Scroll-Fortschritt gekoppelt -
+     ueber die ERSTEN ~58% der Journey-Strecke (statt nur die ersten
+     22% wie in der ersten Version), damit das Video ueber seine
+     GESAMTE Laufzeit hinweg ein durchgehender, praesenter Teil der
+     Sequenz bleibt statt nach kurzer Zeit eingefroren im Hintergrund
+     zu haengen. Deckt sich mit der Opacity-Fade-Formel in style.css
+     (".fh-cinematic-video"): voll sichtbar bis Fortschritt ~0.45,
+     dann Fade-out bis ~0.58 - das Video ist also exakt dann fertig
+     durchgelaufen, wenn es auch aus dem Bild verschwindet. Auf Mobile
+     und bei reduzierter Bewegung wird gar nicht erst geladen (kein
      Netzwerk-Request), passend zur isMobile/prefersReducedMotion-
      Konvention des restlichen Moduls.
   ------------------------------------------------------ */
@@ -190,7 +195,7 @@
           trigger: track,
           scroller: homeSection,
           start: "top top",
-          end: `top+=${Math.max(0, scrollRange * 0.22)} top`,
+          end: `top+=${Math.max(0, scrollRange * 0.58)} top`,
           scrub: true,
           onUpdate: (self) => {
             video.currentTime = self.progress * video.duration;

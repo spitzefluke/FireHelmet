@@ -1049,7 +1049,11 @@ main {
   object-fit: cover;
   width: 100%;
   height: 100%;
-  opacity: clamp(0, calc(1 - var(--fh-progress) * 4.5), 1);
+  /* Bleibt bis ~45% der Journey-Strecke voll sichtbar (deckt sich mit
+     dem laengeren ScrollTrigger-Scrub-Fenster in cinematic.js) und
+     blendet erst danach, bis ~58%, sanft aus - statt wie zuvor schon
+     nach den ersten ~22% zu verschwinden. */
+  opacity: clamp(0, calc((0.58 - var(--fh-progress)) * 7.7), 1);
 }
 
 .fh-ship-rig {
