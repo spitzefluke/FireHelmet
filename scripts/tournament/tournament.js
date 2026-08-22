@@ -156,13 +156,29 @@ function buildTournamentPageHtml({ uid, tournament, finished, matches, participa
   `;
 }
 
+// Nutzt dasselbe Cap-Bild wie die Piratenpass-Maximalstufe
+// (assets/piratenpass/cap.webp, siehe PIRATE_PASS_CAP_IMAGE in
+// progression-data.js) statt eines Emojis - dieselbe Cap ist hier wie
+// dort der reale, limitierte Gegenstand. progression-data.js ist auf
+// jeder Seite geladen (vor tournament.js in index.html), daher kein
+// eigener Preload-mit-Fallback-Mechanismus wie beim Pass noetig - das
+// Bild existiert nachweislich bereits.
+function buildTournamentPrizeCapImgHtml() {
+  const src = typeof PIRATE_PASS_CAP_IMAGE !== "undefined" ? PIRATE_PASS_CAP_IMAGE : "";
+  if (!src) return "";
+  return `<img class="tournament-prize-cap-icon" src="${src}" alt="" aria-hidden="true">`;
+}
+
 function buildTournamentPrizeBannerHtml(prize) {
+  const capImg = buildTournamentPrizeCapImgHtml();
+
   if (prize) {
     const lang = getCurrentLang();
     const date = new Date(prize.claimed_at).toLocaleDateString(lang === "en" ? "en-US" : "de-DE");
     return `
       <div class="tournament-prize-banner is-won">
-        <p class="tournament-prize-headline">${escapeHtml(tt("tournament.prize.wonBanner", "🏆 THE CAP HAS BEEN WON"))}</p>
+        ${capImg}
+        <p class="tournament-prize-headline">${escapeHtml(tt("tournament.prize.wonBanner", "THE CAP HAS BEEN WON"))}</p>
         <p class="tournament-prize-sub">${escapeHtml(tt("tournament.prize.wonBy", "by"))} <strong>@${escapeHtml(prize.winner_nickname)}</strong> · ${escapeHtml(date)}</p>
       </div>
     `;
@@ -170,7 +186,8 @@ function buildTournamentPrizeBannerHtml(prize) {
 
   return `
     <div class="tournament-prize-banner is-available">
-      <p class="tournament-prize-headline">${escapeHtml(tt("tournament.prize.availableBanner", "🧢 Die limitierte Cap ist noch nicht vergeben - werde der erste Champion!"))}</p>
+      ${capImg}
+      <p class="tournament-prize-headline">${escapeHtml(tt("tournament.prize.availableBanner", "Die limitierte Cap ist noch nicht vergeben - werde der erste Champion!"))}</p>
     </div>
   `;
 }

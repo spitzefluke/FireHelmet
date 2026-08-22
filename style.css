@@ -10825,3 +10825,23 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
     padding: 18px;
   }
 }
+
+/* Nav-Icon fuer "THE CHALLENGE" - dasselbe Cap-Bild wie beim
+   Piratenpass-Maximallevel statt eines Emojis. */
+.fh-nav-cap-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.tournament-prize-cap-icon {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--fh-radius-sm);
+  margin: 0 auto 8px;
+  display: block;
+  border: 1px solid var(--fh-border-strong);
+}
