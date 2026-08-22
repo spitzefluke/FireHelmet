@@ -23,12 +23,10 @@
       calc()/clamp() auf --fh-progress - GSAP ersetzt hier nur
       den frueheren, selbst gebauten rAF-Scroll-Listener (siehe
       fhShipJourneyFallback() weiter unten, falls GSAP/
-      ScrollTrigger mal nicht laden sollten). Zusaetzlich holt
-      GSAP das Schiff selbst von der reinen Geradeausfahrt: Es
-      folgt jetzt per MotionPathPlugin einer leicht geschwungenen
-      Route (fhInitShipMotionPath()), dazu Segelflattern/Kielwasser
-      per CSS und eine gelegentliche Sternschnuppe beim Durchqueren
-      der Sternenhimmel-Phase (fhInitShootingStar()).
+      ScrollTrigger mal nicht laden sollten). Dazu ein
+      scroll-gescrubbtes Hintergrundvideo (fhInitCinematicVideo())
+      und eine gelegentliche Sternschnuppe beim Durchqueren der
+      Sternenhimmel-Phase (fhInitShootingStar()).
 
    Beides ist bewusst additiv und komplett von den
    bestehenden Home-Effekten (scripts/core/main.js,
@@ -155,7 +153,6 @@
       scrollTrigger: scrollTriggerBase,
     });
 
-    fhInitShipMotionPath(homeSection, scrollTriggerBase);
     fhInitShootingStar(track, homeSection);
     fhInitCinematicVideo(homeSection, track);
   }
@@ -166,15 +163,16 @@
      wiederholten AbortError-Probleme mit Browser-Autoplay-Policies
      an anderer Stelle im Projekt, z.B. beim Mystery-Musikplayer),
      wird video.currentTime direkt an den Scroll-Fortschritt gekoppelt -
-     ueber die ERSTEN ~58% der Journey-Strecke (statt nur die ersten
-     22% wie in der ersten Version), damit das Video ueber seine
-     GESAMTE Laufzeit hinweg ein durchgehender, praesenter Teil der
-     Sequenz bleibt statt nach kurzer Zeit eingefroren im Hintergrund
-     zu haengen. Deckt sich mit der Opacity-Fade-Formel in style.css
-     (".fh-cinematic-video"): voll sichtbar bis Fortschritt ~0.45,
-     dann Fade-out bis ~0.58 - das Video ist also exakt dann fertig
-     durchgelaufen, wenn es auch aus dem Bild verschwindet. Auf Mobile
-     und bei reduzierter Bewegung wird gar nicht erst geladen (kein
+     ueber die ERSTEN ~85% der Journey-Strecke. Seit das gezeichnete
+     Vektor-Schiff (fhInitShipMotionPath) entfernt wurde, traegt das
+     Video jetzt fast den gesamten mittleren/spaeten Teil der Reise
+     allein, statt sich nur die ersten gut zwei Fuenftel zu teilen.
+     Deckt sich mit der Opacity-Fade-Formel in style.css
+     (".fh-cinematic-video"): voll sichtbar bis Fortschritt ~0.6, dann
+     Fade-out bis ~0.85 - das Video ist also exakt dann fertig
+     durchgelaufen, wenn es auch aus dem Bild verschwindet und der
+     Zielhafen (".fh-destination") uebernimmt. Auf Mobile und bei
+     reduzierter Bewegung wird gar nicht erst geladen (kein
      Netzwerk-Request), passend zur isMobile/prefersReducedMotion-
      Konvention des restlichen Moduls.
   ------------------------------------------------------ */
@@ -195,7 +193,7 @@
           trigger: track,
           scroller: homeSection,
           start: "top top",
-          end: `top+=${Math.max(0, scrollRange * 0.58)} top`,
+          end: `top+=${Math.max(0, scrollRange * 0.85)} top`,
           scrub: true,
           onUpdate: (self) => {
             video.currentTime = self.progress * video.duration;
@@ -206,43 +204,6 @@
     );
 
     video.load();
-  }
-
-  /* ------------------------------------------------------
-     SCHIFF AUF EINEM WELLENFOERMIGEN PFAD (GSAP MotionPathPlugin)
-     Ersetzt die fruehere reine Geradeaus-Bewegung (nur --fh-progress
-     als x-Versatz) durch eine echte, leicht geschwungene Segelroute
-     ueber das Meer - waehrend die eigentliche Groessen-Skalierung
-     (per scale) weiterhin am selben ScrollTrigger haengt wie
-     --fh-progress oben, also exakt synchron bleibt.
-  ------------------------------------------------------ */
-  function fhInitShipMotionPath(homeSection, scrollTriggerBase) {
-    const shipRig = document.getElementById("fh-ship-rig");
-    if (!shipRig || typeof MotionPathPlugin === "undefined") return;
-
-    // Reisedistanz an die tatsaechliche Breite anpassen (deckt sich
-    // in etwa mit dem alten "32vw" aus der CSS-calc()-Version), nach
-    // oben gedeckelt, damit die Route auf riesigen Screens nicht
-    // ausufert.
-    const travel = Math.min(homeSection.clientWidth, 1200) * 0.34;
-
-    // Startzustand: weit rechts, klein - wie zuvor per calc().
-    gsap.set(shipRig, { xPercent: -50, x: travel, y: 18, scale: 0.5 });
-
-    gsap.to(shipRig, {
-      motionPath: {
-        path: [
-          { x: travel * 0.7, y: -22 },
-          { x: travel * 0.4, y: 20 },
-          { x: travel * 0.15, y: -14 },
-          { x: 0, y: 0 },
-        ],
-        curviness: 1.35,
-      },
-      scale: 1.35,
-      ease: "none",
-      scrollTrigger: scrollTriggerBase,
-    });
   }
 
   /* ------------------------------------------------------

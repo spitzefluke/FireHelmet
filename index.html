@@ -211,61 +211,6 @@
               <source src="assets/home/ship-cinematic.mp4" type="video/mp4">
             </video>
 
-            <div class="fh-ship-rig" id="fh-ship-rig">
-              <div class="fh-ship-bob">
-                <svg viewBox="0 0 200 140" preserveAspectRatio="xMidYMid meet">
-                  <defs>
-                    <linearGradient id="fh-ship-hull" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#2c3a4d"/>
-                      <stop offset="100%" stop-color="#0c1420"/>
-                    </linearGradient>
-                    <linearGradient id="fh-ship-sail" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#e9e2cf"/>
-                      <stop offset="100%" stop-color="#b9ad8f"/>
-                    </linearGradient>
-                    <radialGradient id="fh-ship-lantern" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stop-color="#ffe6b0"/>
-                      <stop offset="60%" stop-color="#ffb04d" stop-opacity=".85"/>
-                      <stop offset="100%" stop-color="#ffb04d" stop-opacity="0"/>
-                    </radialGradient>
-                  </defs>
-
-                  <!-- Wasserreflexion -->
-                  <ellipse cx="100" cy="128" rx="60" ry="6" fill="#4da3ff" opacity=".12"/>
-
-                  <!-- Rumpf -->
-                  <path d="M28,96 Q30,116 60,120 L140,120 Q170,116 172,96 Q140,104 100,104 Q60,104 28,96 Z" fill="url(#fh-ship-hull)" stroke="#4da3ff" stroke-opacity=".35" stroke-width="1"/>
-
-                  <!-- Hauptmast + Grosssegel -->
-                  <line x1="100" y1="18" x2="100" y2="104" stroke="#5a4a34" stroke-width="2.5"/>
-                  <path id="fh-ship-sail-a" d="M100,24 C130,30 134,58 130,78 C120,72 108,70 100,70 Z" fill="url(#fh-ship-sail)"/>
-                  <path id="fh-ship-sail-b" d="M100,24 C72,30 66,58 72,80 C82,72 92,70 100,70 Z" fill="url(#fh-ship-sail)" opacity=".92"/>
-
-                  <!-- Vordermast + Focksegel -->
-                  <line x1="52" y1="42" x2="52" y2="100" stroke="#5a4a34" stroke-width="2"/>
-                  <path id="fh-ship-sail-c" d="M52,46 C70,50 72,68 68,82 C62,76 56,74 52,74 Z" fill="url(#fh-ship-sail)" opacity=".85"/>
-
-                  <!-- Flagge -->
-                  <path d="M100,18 L100,8 L118,13 L100,18 Z" fill="#c8392a"/>
-
-                  <!-- Laterne am Heck -->
-                  <circle cx="164" cy="92" r="14" fill="url(#fh-ship-lantern)"/>
-                  <circle cx="164" cy="92" r="3" fill="#ffe6b0"/>
-                </svg>
-              </div>
-
-              <!-- Schaumspur im Kielwasser, rein dekorativ (aria-hidden),
-                   liegt ausserhalb von .fh-ship-bob damit sie ruhig an der
-                   Rumpfmitte bleibt statt mit dem Wiegen des Schiffs
-                   mitzuzittern. -->
-              <div class="fh-ship-wake" aria-hidden="true">
-                <span class="fh-wake-bubble"></span>
-                <span class="fh-wake-bubble"></span>
-                <span class="fh-wake-bubble"></span>
-                <span class="fh-wake-bubble"></span>
-              </div>
-            </div>
-
             <div class="fh-layer fh-layer-fg-fog"></div>
             <div class="fh-layer fh-layer-particles" id="fh-particle-layer"></div>
             <div class="fh-layer fh-layer-cursor-light" aria-hidden="true"></div>
