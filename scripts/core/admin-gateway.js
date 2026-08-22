@@ -347,6 +347,9 @@ async function renderGatewayPage() {
       <h2 class="fh-ship-section-heading">Ändiis Spielothek</h2>
       ${buildGatewaySpielothekHtml()}
 
+      <h2 class="fh-ship-section-heading">THE CHALLENGE (Turnier)</h2>
+      <div id="gateway-tournament-sub">Lade Turnierstatus...</div>
+
       <h2 class="fh-ship-section-heading">Vorschau</h2>
       <p class="gateway-preview-hint">So sieht die normale Website gerade aus (aktualisiert sich live mit deinen Änderungen):</p>
       <iframe class="gateway-preview-frame" src="index.html" title="Vorschau"></iframe>
@@ -357,6 +360,116 @@ async function renderGatewayPage() {
     const sub = document.getElementById("gateway-ship-status-sub");
     if (sub) sub.innerHTML = html;
   });
+
+  buildGatewayTournamentHtml().then((html) => {
+    const sub = document.getElementById("gateway-tournament-sub");
+    if (sub) sub.innerHTML = html;
+  });
+}
+
+/* ------------------------------------------------------
+   THE CHALLENGE (TURNIER) - ADMIN-STEUERUNG
+   ---------------------------------------------------
+   Bewusst nur die im Auftrag geforderten einfachen Aktionen (starten/
+   zuruecksetzen/pausieren/Preis als ausgehaendigt markieren) - die
+   eigentliche Zustandslogik (wer wann was darf) steckt bereits
+   vollstaendig in den SECURITY DEFINER-Funktionen aus
+   07-tournament.sql, hier wird nur tournament-api.js aufgerufen und
+   danach das ganze Panel neu gezeichnet (kein eigenes Live-Update-
+   Event wie bei siteConfig noetig - Admin-Aktionen hier sind selten).
+------------------------------------------------------- */
+async function buildGatewayTournamentHtml() {
+  if (typeof getOpenTournament !== "function") return "";
+
+  try {
+    const [tournament, prize] = await Promise.all([getOpenTournament(), getTournamentPrize()]);
+
+    const prizeHtml = prize
+      ? `<p class="gateway-status-sub">🏆 Preis vergeben an <strong>${escapeHtml(prize.winner_nickname)}</strong> (${prize.fulfilled ? "ausgehändigt" : "noch nicht ausgehändigt"})${!prize.fulfilled ? ` <button type="button" class="code-button gateway-inline-btn" onclick="gatewayMarkTournamentPrizeFulfilled()">Als ausgehändigt markieren</button>` : ""}</p>`
+      : `<p class="gateway-status-sub">🧢 Preis noch nicht vergeben.</p>`;
+
+    if (!tournament) {
+      return `
+        ${prizeHtml}
+        <p class="gateway-status-sub">Kein aktives Turnier.</p>
+        <button type="button" class="code-button" onclick="gatewayCreateTournament()">Neues Turnier erstellen</button>
+        <p id="gateway-tournament-status" class="wheel-status"></p>
+      `;
+    }
+
+    const participants = await getTournamentParticipants(tournament.id);
+    const matches = tournament.status === "active" ? await getTournamentMatches(tournament.id) : [];
+    const openMatches = matches.filter((m) => m.status === "open").length;
+
+    const actions = [];
+    if (tournament.status === "registration") {
+      actions.push(`<button type="button" class="code-button" onclick="gatewayStartTournament('${tournament.id}')">Turnier starten (${participants.length} angemeldet)</button>`);
+      actions.push(`<button type="button" class="code-button" onclick="gatewayResetTournament('${tournament.id}')">Turnier zurücksetzen</button>`);
+    } else {
+      actions.push(`<button type="button" class="code-button" onclick="gatewaySetTournamentPaused('${tournament.id}', ${!tournament.paused})">${tournament.paused ? "Fortsetzen" : "Pausieren"}</button>`);
+    }
+
+    return `
+      ${prizeHtml}
+      <p class="gateway-status-sub">Turnier <code>${escapeHtml(tournament.id)}</code> - Status: ${escapeHtml(tournament.status)}${tournament.paused ? " (pausiert)" : ""}</p>
+      <p class="gateway-status-sub">${participants.length} Teilnehmer${tournament.bracket_size ? `, Bracket-Größe ${tournament.bracket_size}` : ""}${tournament.status === "active" ? `, ${openMatches} offene Matches` : ""}</p>
+      ${actions.join(" ")}
+      <p id="gateway-tournament-status" class="wheel-status"></p>
+    `;
+  } catch (err) {
+    console.error("Turnierstatus für Gateway konnte nicht geladen werden:", err);
+    return `<p class="wheel-status">⚠️ Turnierstatus konnte nicht geladen werden.</p>`;
+  }
+}
+
+async function gatewayCreateTournament() {
+  const statusEl = document.getElementById("gateway-tournament-status");
+  try {
+    await adminCreateTournament(`t-${Date.now()}`);
+    renderGatewayPage();
+  } catch (err) {
+    if (statusEl) statusEl.textContent = "⚠️ " + (err && err.message);
+  }
+}
+
+async function gatewayStartTournament(tournamentId) {
+  const statusEl = document.getElementById("gateway-tournament-status");
+  try {
+    await adminStartTournament(tournamentId);
+    renderGatewayPage();
+  } catch (err) {
+    if (statusEl) statusEl.textContent = "⚠️ " + (err && err.message);
+  }
+}
+
+async function gatewayResetTournament(tournamentId) {
+  const statusEl = document.getElementById("gateway-tournament-status");
+  try {
+    await adminResetTournament(tournamentId);
+    renderGatewayPage();
+  } catch (err) {
+    if (statusEl) statusEl.textContent = "⚠️ " + (err && err.message);
+  }
+}
+
+async function gatewaySetTournamentPaused(tournamentId, paused) {
+  const statusEl = document.getElementById("gateway-tournament-status");
+  try {
+    await adminSetTournamentPaused(tournamentId, paused);
+    renderGatewayPage();
+  } catch (err) {
+    if (statusEl) statusEl.textContent = "⚠️ " + (err && err.message);
+  }
+}
+
+async function gatewayMarkTournamentPrizeFulfilled() {
+  const statusEl = document.getElementById("gateway-tournament-status");
+  try {
+    await adminMarkPrizeFulfilled();
+    renderGatewayPage();
+  } catch (err) {
+    if (statusEl) statusEl.textContent = "⚠️ " + (err && err.message);
+  }
 }
 
 function updateGatewayPage(pageID) {
