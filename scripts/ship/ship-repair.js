@@ -73,9 +73,12 @@ function getRandomRepairDurationMs() {
 async function ensureSupabaseShipRepairRow(uid) {
   if (!supabaseClient || !uid) return;
   try {
-    await supabaseClient
-      .from("ship_repair")
-      .upsert({ firebase_uid: uid }, { onConflict: "firebase_uid", ignoreDuplicates: true });
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("ship_repair")
+        .upsert({ firebase_uid: uid }, { onConflict: "firebase_uid", ignoreDuplicates: true })
+    );
   } catch (err) {
     // ein anderer Tab desselben Spielers war evtl. eine Millisekunde schneller
     console.warn("Supabase-Schiffsreparatur-Zeile konnte nicht sichergestellt werden:", err);
