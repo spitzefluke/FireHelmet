@@ -28,6 +28,47 @@ function isStreamRaetselUnlocked() {
 }
 
 /* ------------------------------------------------------
+   ADMIN-VORSCHAU
+   ---------------------------------------------------
+   Der eingeloggte Admin (siehe isAuthorizedAdmin() in
+   admin-gateway.js - dieselbe Pruefung, dieselbe FIRE_HELMET_CONFIG.
+   ownerEmail) soll den Inhalt hinter dem "???"-Countdown schon vor
+   dem echten Ablauftermin sehen koennen. isStreamRaetselUnlocked()
+   bleibt bewusst NUR datumsbasiert (wird auch im Admin-Gateway selbst
+   fuer die "bereits freigeschaltet"-Statuszeile genutzt, die dort
+   immer den ECHTEN Termin zeigen muss, nicht die eigene Vorschau) -
+   die Vorschau ist deshalb eine eigene Ebene, ausschliesslich fuer
+   die Anzeige-Entscheidung unten.
+------------------------------------------------------ */
+let streamRaetselAdminPreview = false;
+
+function shouldShowStreamRaetselContent() {
+  return isStreamRaetselUnlocked() || streamRaetselAdminPreview;
+}
+
+async function refreshStreamRaetselAdminPreview() {
+  if (typeof supabaseClient === "undefined" || !supabaseClient) return;
+  if (typeof isAuthorizedAdmin !== "function") return;
+
+  try {
+    const { data } = await supabaseClient.auth.getUser();
+    const isAdmin = isAuthorizedAdmin(data ? data.user : null);
+    if (isAdmin === streamRaetselAdminPreview) return; // keine Aenderung
+
+    streamRaetselAdminPreview = isAdmin;
+    // Nur neu zeichnen, wenn man gerade wirklich auf dieser Seite ist -
+    // sonst wuerde ein Login/Logout auf einer ganz anderen Seite
+    // versehentlich verwaiste "streamraetsel-*"-Elemente ansprechen.
+    if (document.getElementById("streamraetsel")?.classList.contains("active-page")) {
+      updateStreamRaetselView();
+    }
+  } catch (err) {
+    // Kein Admin-Status ermittelbar (z.B. nicht eingeloggt) - bleibt
+    // einfach bei der normalen, datumsbasierten Anzeige.
+  }
+}
+
+/* ------------------------------------------------------
    SCHWEBENDE MYSTERY-SYMBOLE IM HINTERGRUND
 ------------------------------------------------------ */
 const streamRaetselSymbols = ["❓", "🌫️", "👁️", "🔮"];
@@ -290,9 +331,9 @@ function updateStreamRaetselView() {
   const contentEl = document.getElementById("streamraetsel-content");
   if (!lockedEl || !contentEl) return;
 
-  const unlocked = isStreamRaetselUnlocked();
+  const reallyUnlocked = isStreamRaetselUnlocked();
 
-  if (unlocked) {
+  if (shouldShowStreamRaetselContent()) {
     lockedEl.style.display = "none";
     contentEl.style.display = "block";
 
@@ -300,6 +341,18 @@ function updateStreamRaetselView() {
       renderPassPage();
     } else {
       renderStreamRaetselContent();
+    }
+
+    // Nur eingeblendet, wenn der echte Termin noch NICHT erreicht ist
+    // (reine Admin-Vorschau) - damit fuer den Admin klar bleibt, dass
+    // andere Besucher weiterhin den Countdown sehen, nicht diesen
+    // Inhalt. renderPassPage()/renderStreamRaetselContent() ersetzen
+    // contentEl.innerHTML komplett, daher erst DANACH einfuegen.
+    if (!reallyUnlocked && streamRaetselAdminPreview) {
+      contentEl.insertAdjacentHTML(
+        "afterbegin",
+        `<p class="streamraetsel-admin-preview-banner">🔓 Admin-Vorschau - für andere Besucher läuft der Countdown noch weiter</p>`
+      );
     }
 
     stopStreamRaetselParticles();
@@ -368,9 +421,10 @@ function updateStreamRaetselPage(pageID) {
   }
 
   startStreamRaetselMusic();
+  refreshStreamRaetselAdminPreview();
   updateStreamRaetselView();
 
-  if (!isStreamRaetselUnlocked()) {
+  if (!shouldShowStreamRaetselContent()) {
     startStreamRaetselParticles();
   }
 }
