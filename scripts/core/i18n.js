@@ -231,6 +231,14 @@ const translations = {
     "boss.phaseCritical": "CRITICAL",
     "boss.phaseFinal": "FINALE PHASE",
     "boss.phaseDefeated": "BESIEGT",
+
+    "tournament.round.final": "Finale",
+    "tournament.round.semifinal": "Halbfinale",
+    "tournament.round.quarterfinal": "Viertelfinale",
+    "tournament.round.round16": "Achtelfinale",
+    "tournament.bracket.pending": "Wird ermittelt",
+    "tournament.bracket.bye": "Freilos",
+    "tournament.bracket.champion": "Champion",
   },
 
   en: {
@@ -449,6 +457,14 @@ const translations = {
     "boss.phaseCritical": "CRITICAL",
     "boss.phaseFinal": "FINAL PHASE",
     "boss.phaseDefeated": "DEFEATED",
+
+    "tournament.round.final": "Final",
+    "tournament.round.semifinal": "Semifinal",
+    "tournament.round.quarterfinal": "Quarterfinal",
+    "tournament.round.round16": "Round of 16",
+    "tournament.bracket.pending": "TBD",
+    "tournament.bracket.bye": "Bye",
+    "tournament.bracket.champion": "Champion",
   },
 };
 

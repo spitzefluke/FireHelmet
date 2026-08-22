@@ -10464,3 +10464,131 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
     width: 18px;
   }
 }
+
+/* ======================================================
+   THE CHALLENGE - TURNIER-BRACKET (Phase 5)
+   ---------------------------------------------------
+   Nutzt ausschliesslich bestehende --fh-* Design-Tokens (siehe
+   scripts/tournament/tournament-bracket.js fuer die HTML-Struktur).
+   Bewusst nur eine state-getriggerte transition (Rahmen/Glow auf
+   .is-mine), kein durchlaufendes Keyframe - daher kein zusaetzlicher
+   prefers-reduced-motion-Block noetig (Konvention dieser Datei:
+   nur durchlaufende/loopende Animationen werden dort gedrosselt).
+====================================================== */
+
+.tournament-bracket {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  padding: 8px 4px 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tournament-round {
+  flex: 0 0 auto;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tournament-round-title {
+  font-family: var(--fh-font-display);
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--fh-gold-bright);
+  text-align: center;
+  margin: 0 0 12px;
+}
+
+.tournament-round-matches {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 16px;
+  flex: 1;
+}
+
+.tournament-match-card {
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-sm);
+  padding: 10px 12px;
+  box-shadow: var(--fh-shadow-sm);
+  transition: border-color .25s ease, box-shadow .25s ease;
+}
+
+.tournament-match-card.is-mine {
+  border-color: var(--fh-gold);
+  box-shadow: var(--fh-glow-gold), var(--fh-shadow-sm);
+}
+
+.tournament-match-player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-family: var(--fh-font-sans);
+  font-size: 14px;
+  color: var(--fh-text-muted);
+}
+
+.tournament-match-player.is-winner {
+  color: var(--fh-text);
+  font-weight: 600;
+}
+
+.tournament-match-player.is-winner .tournament-match-player-name::before {
+  content: "🏆 ";
+}
+
+.tournament-match-player.is-loser {
+  opacity: .55;
+  text-decoration: line-through;
+}
+
+.tournament-match-player.is-pending,
+.tournament-match-player.is-bye {
+  font-style: italic;
+  opacity: .6;
+}
+
+.tournament-match-player-score {
+  font-family: var(--fh-font-display);
+  font-size: 12px;
+  color: var(--fh-cold);
+}
+
+.tournament-match-divider {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--fh-muted-fg);
+  text-transform: uppercase;
+  margin: 2px 0;
+}
+
+.tournament-round-champion {
+  justify-content: center;
+}
+
+.tournament-champion-card {
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid var(--fh-gold);
+  border-radius: var(--fh-radius);
+  padding: 20px;
+  text-align: center;
+  box-shadow: var(--fh-glow-gold), var(--fh-shadow);
+}
+
+.tournament-champion-name {
+  font-family: var(--fh-font-display);
+  font-size: 20px;
+  color: var(--fh-gold-bright);
+}
+
+@media (max-width: 640px) {
+  .tournament-round {
+    width: 180px;
+  }
+}
