@@ -54,3 +54,21 @@ function getTournamentMatchDisplayState(match) {
   if (match.status === "open") return "open";
   return "pending"; // mind. ein Spieler-Slot noch nicht bekannt
 }
+
+/* ------------------------------------------------------
+   AKTIVES MINI-GAME (Phase 6)
+   ---------------------------------------------------
+   Einziger Ort, an dem festgelegt wird, welches Minispiel gerade
+   gespielt wird - siehe scripts/tournament/games/reaction-game.js
+   fuer den mount(container, onScore)/unmount()-Vertrag, den jedes
+   Spiel erfuellen muss. Ein Wechsel auf z.B. ein spaeteres
+   ClickSpeedGame/MemoryGame ist dadurch eine Ein-Zeilen-Aenderung
+   hier plus das neue Spiel-Modul - Turnier/Bracket/API wissen nichts
+   von der Kennung "reaction" und muessen dafuer nicht angefasst werden.
+------------------------------------------------------ */
+const TOURNAMENT_ACTIVE_GAME_ID = "reaction";
+
+function getActiveTournamentGameHandler() {
+  if (typeof window === "undefined" || !window.TOURNAMENT_GAME_HANDLERS) return null;
+  return window.TOURNAMENT_GAME_HANDLERS[TOURNAMENT_ACTIVE_GAME_ID] || null;
+}

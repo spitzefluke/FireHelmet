@@ -239,6 +239,17 @@ const translations = {
     "tournament.bracket.pending": "Wird ermittelt",
     "tournament.bracket.bye": "Freilos",
     "tournament.bracket.champion": "Champion",
+
+    "tournament.reaction.introStatus": "Bereit für den Reaktionstest?",
+    "tournament.reaction.startButton": "Los!",
+    "tournament.reaction.waitingStatus": "Warte auf GRÜN...",
+    "tournament.reaction.waitingButton": "Noch nicht!",
+    "tournament.reaction.goStatus": "JETZT KLICKEN!",
+    "tournament.reaction.goButton": "JETZT!",
+    "tournament.reaction.earlyStatus": "Zu früh geklickt! Das zählt als schlechteste Zeit.",
+    "tournament.reaction.timeoutStatus": "Zu langsam! Zeit abgelaufen.",
+    "tournament.reaction.resultStatus": "Deine Zeit:",
+    "tournament.reaction.resultButton": "Ergebnis wird übermittelt...",
   },
 
   en: {
@@ -465,6 +476,17 @@ const translations = {
     "tournament.bracket.pending": "TBD",
     "tournament.bracket.bye": "Bye",
     "tournament.bracket.champion": "Champion",
+
+    "tournament.reaction.introStatus": "Ready for the reaction test?",
+    "tournament.reaction.startButton": "Go!",
+    "tournament.reaction.waitingStatus": "Wait for GREEN...",
+    "tournament.reaction.waitingButton": "Not yet!",
+    "tournament.reaction.goStatus": "CLICK NOW!",
+    "tournament.reaction.goButton": "NOW!",
+    "tournament.reaction.earlyStatus": "Clicked too early! That counts as the worst possible time.",
+    "tournament.reaction.timeoutStatus": "Too slow! Time's up.",
+    "tournament.reaction.resultStatus": "Your time:",
+    "tournament.reaction.resultButton": "Submitting result...",
   },
 };
 
