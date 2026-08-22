@@ -34,6 +34,19 @@ Sobald Anmeldung/RLS wieder echt funktionierten, kamen drei NEUE, davon unabhaen
 
 Alle drei Fixes lokal verifiziert (volle Testsuite 00+01+03 gruen, der neue Wrapper direkt unter `role authenticated` end-to-end getestet, `node --check` auf beiden JS-Dateien sauber, 17-Seiten-Playwright-Regressionslauf ohne neue Konsolenfehler) und als Hotfix direkt auf `main` gemerged.
 
+### Bekanntes, ungeloestes Problem: Google-OAuth-Redirect landet auf localhost:3000
+
+Beim Google-Login im Admin-Gateway (`admin-gateway.js`, `signInWithOAuth({provider:"google", options:{redirectTo: window.location.href}})`) leitet Supabase nach erfolgreichem Login manchmal NICHT zur Live-Seite zurueck, sondern zu `http://localhost:3000/#access_token=...` ("Verbindung verweigert" - dort laeuft nichts). Ausfuehrlich diagnostiziert (22.08.2026):
+
+- `window.location.href` unmittelbar vor dem Klick ist nachweislich korrekt (`https://spitzefluke.github.io/FireHelmet/`), auch in einem frischen Inkognito-Fenster reproduzierbar - kein Browser-Cache-/Tab-Problem.
+- Supabase-Dashboard (Authentication -> URL Configuration): Site URL UND Redirect URLs zeigen korrekt auf die Live-Seite.
+- Google Cloud Console: "Autorisierte Weiterleitungs-URI" ist korrekt `https://kxlntqjevvdiiefzkoiu.supabase.co/auth/v1/callback`.
+- Supabase-Server-Logs (Authentication -> Logs) bestaetigen: JEDER `/auth/v1/authorize`-Aufruf fordert korrekt `redirect_to=https://spitzefluke.github.io/FireHelmet/` an. Der eigentliche Fehlerort (der `/auth/v1/callback`-Redirect, der stattdessen zu localhost fuehrt) ist im CSV-Log-Export nicht sichtbar, da die Response-"Location"-Header dort fehlen.
+
+Trotz nachweislich korrekter Konfiguration auf allen client- UND dashboard-seitig pruefbaren Ebenen haelt sich das Fehlverhalten ueber mehrere Versuche und ueber 10+ Minuten hinweg - kein reines Propagations-Timing-Problem. Passt zum bereits bekannten Muster dieses Supabase-Projekts (siehe Third-Party-Auth-Vorfall oben): korrekte Konfiguration, aber fehlerhaftes Verhalten auf der Supabase-Plattform-Seite selbst, nicht clientseitig behebbar.
+
+**Workaround (bestaetigt funktionierend):** Der eigentliche Login IST erfolgreich - das Token in der kaputten `localhost:3000`-URL ist gueltig. Einfach in der Adresszeile `http://localhost:3000/` durch `https://spitzefluke.github.io/FireHelmet/` ersetzen (der Teil ab `#access_token=...` bleibt unveraendert) und Enter druecken - `supabase-js` erkennt das Token automatisch im URL-Fragment (`detectSessionInUrl`, Standardeinstellung) und schliesst den Login ab, ganz ohne erneuten Google-Durchlauf.
+
 ---
 
 ## Urspruenglicher Plan (historisch, siehe Nachtrag oben)
