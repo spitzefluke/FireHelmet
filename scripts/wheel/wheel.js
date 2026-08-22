@@ -632,6 +632,49 @@ async function syncTempAvatarFromServer() {
   }
 }
 
+/* ------------------------------------------------------
+   ECHTEN SERVER-COOLDOWN IN localStorage SPIEGELN
+   ---------------------------------------------------
+   refreshWheelStatus()/spinWheel() gaten den Dreh-Button bisher rein
+   ueber den lokal gespeicherten Kalendertag ("wheelLastSpin" == heute)
+   - die echte RLS-Regel (app.valid_wheel_fields, siehe
+   01-players-ship-progression.sql) erlaubt aber ein rollendes 20h-
+   Fenster, kein Kalendertag-Fenster. Weichen beide auseinander (z.B.
+   nach einem frueheren, nur serverseitig erfolgreichen Testlauf, bei
+   dem "wheelLastSpin" lokal nie mitgeschrieben wurde), zeigt der
+   Button faelschlich "bereit" - die Drehung laeuft dann komplett
+   durch und scheitert erst ganz am Ende an der echten RLS-Pruefung
+   (redeemWheelPrize() wirft "too-soon"). Dieser Abgleich laeuft bei
+   jedem Aufruf der Schatzrad-Seite und zieht "wheelLastSpin"/
+   "wheelStreak" auf den tatsaechlichen Server-Stand nach, BEVOR der
+   Button freigegeben wird.
+------------------------------------------------------ */
+async function syncWheelCooldownFromServer() {
+  if (!supabaseClient) return;
+
+  try {
+    const uid = await wheelAuthReady;
+    if (!uid) return;
+
+    const { data, error } = await supabaseClient
+      .from("players")
+      .select("last_wheel_spin_at, streak")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (error || !data) return;
+
+    const lastSpinAt = data.last_wheel_spin_at ? new Date(data.last_wheel_spin_at).getTime() : null;
+    const stillOnCooldown = lastSpinAt && Date.now() - lastSpinAt < WHEEL_SPIN_MIN_INTERVAL_MS;
+
+    localStorage.setItem("wheelLastSpin", stillOnCooldown ? todayStr() : "");
+    localStorage.setItem("wheelStreak", String(data.streak || 0));
+
+    refreshWheelStatus();
+  } catch (err) {
+    console.warn("Schatzrad-Cooldown konnte nicht mit dem Server abgeglichen werden:", err);
+  }
+}
+
 function selectWheelAvatar(rawValue) {
   const value = decodeURIComponent(rawValue);
   selectedWheelAvatar = value;
@@ -1620,6 +1663,7 @@ function updateWheelPage(pageID) {
 
   syncCodesToDatabase();
   syncTempAvatarFromServer();
+  syncWheelCooldownFromServer();
   refreshWheelStatus();
 }
 
