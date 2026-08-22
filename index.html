@@ -796,6 +796,21 @@
       </div>
     </section>
 
+    <!-- Aufloesungs-/Glitch-Filter fuer den "???"-Titel (siehe
+         .streamraetsel-title-mystery in style.css) - rein statische
+         Turbulenz+Verschiebung, die Zeitsteuerung (wann sichtbar,
+         wie stark) kommt komplett aus der CSS-Keyframe-Animation, die
+         "filter: url(#streamGlitchDissolve) ..." nur kurz waehrend des
+         periodischen Glitch-Moments referenziert - kein eigener,
+         separat zu synchronisierender Animations-Takt hier noetig.
+         0x0-SVG, rein technisches Element, nichts davon ist sichtbar. -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <filter id="streamGlitchDissolve" x="-30%" y="-30%" width="160%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.015 0.9" numOctaves="2" seed="7" result="streamGlitchNoise" />
+        <feDisplacementMap in="SourceGraphic" in2="streamGlitchNoise" scale="55" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+
     <!-- =====================
          STREAMRÄTSEL
     ===================== -->

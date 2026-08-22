@@ -3557,12 +3557,33 @@ main {
 }
 
 .streamraetsel-title-mystery {
-  animation: streamTitleGlitch 6s ease-in-out infinite, streamTitleFogPulse 3.4s ease-in-out infinite;
+  animation: streamTitleGlitch 6s ease-in-out infinite, streamTitleFogPulse 6s ease-in-out infinite;
 }
 
+/* Auf denselben 6s-Takt wie streamTitleGlitch gelegt (vorher 3.4s,
+   durchgehend) - buendelt Nebel-Unschaerfe UND den neuen Aufloesungs-
+   Effekt (feTurbulence/feDisplacementMap, siehe #streamGlitchDissolve
+   in index.html) zu einem einzigen, kurzen "der Titel loest sich kurz
+   auf"-Moment statt zweier unabhaengig laufender Effekte - der
+   SVG-Filter wird bewusst NUR waehrend dieses Fensters referenziert
+   (davor/danach schlicht kein filter), keine eigene Animations-Uhr
+   im SVG noetig. */
 @keyframes streamTitleFogPulse {
-  0%, 100% { filter: blur(0px); opacity: 1; }
-  50%      { filter: blur(2.5px); opacity: .75; }
+  0%, 88%   { filter: blur(0px); opacity: 1; }
+  91%       { filter: url(#streamGlitchDissolve) blur(1px); opacity: .85; }
+  93%       { filter: url(#streamGlitchDissolve) blur(3px); opacity: .5; }
+  95%       { filter: url(#streamGlitchDissolve) blur(1px); opacity: .8; }
+  97%, 100% { filter: blur(0px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streamraetsel-title,
+  .streamraetsel-title-mystery {
+    animation: none;
+    text-shadow: 0 0 70px #ff2d2d;
+    filter: none;
+    opacity: 1;
+  }
 }
 
 .streamraetsel-mystery .streamraetsel-subtitle {
