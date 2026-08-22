@@ -3655,6 +3655,17 @@ main {
   text-align: center;
 }
 
+.streamraetsel-admin-preview-banner {
+  margin: 0 0 18px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: rgba(240, 201, 106, 0.12);
+  border: 1px solid rgba(240, 201, 106, 0.4);
+  color: var(--fh-gold-bright, #f0c96a);
+  font-size: 13px;
+  font-weight: bold;
+}
+
 @media (max-width: 900px) {
   .streamraetsel-title {
     font-size: 44px;
