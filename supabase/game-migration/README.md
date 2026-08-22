@@ -24,6 +24,16 @@
 
 Die drei `.test.sql`-Dateien wurden entsprechend angepasst: Test-UIDs sind jetzt echte UUID-Strings (`a0000000-...` statt `uid-A` usw., da `auth.uid()` den Typ `uuid` hat), und `auth.uid()` wird im lokalen Stub (`00-supabase-auth-stub.sql`) mitsimuliert. Alle 59 Testfaelle (27+12+20) laufen weiterhin gruen gegen eine echte lokale PostgreSQL-16-Instanz.
 
+### Nachtrag zum Nachtrag: drei weitere Bugs nach dem Auth-Fix (22.08.2026)
+
+Sobald Anmeldung/RLS wieder echt funktionierten, kamen drei NEUE, davon unabhaengige Fehler zum Vorschein (403/403/404) - keine Reste des Auth-Bugs, sondern eigene Bugklassen, die vom eigentlichen Auth-Fehler bisher ueberdeckt waren:
+
+- **Schatzrad-Serie (403 "too-soon")**: `redeemWheelPrize()` in `wheel.js` uebernahm die neue Serie aus dem lokal in `localStorage` mitgezaehlten Wert. Nach "bei Null anfangen" stand der echte DB-Wert wieder bei 0, `localStorage` aber noch auf einem alten, hohen Stand - der daraus berechnete Sprung ueberschritt den RLS-Deckel (alter Wert + 1) und wurde zurecht abgelehnt. Fix: `redeemWheelPrize()` liest jetzt zuerst den aktuellen Server-Stand (`streak`, `last_wheel_spin_at`) und berechnet die neue Serie ausschliesslich daraus, nie aus `localStorage`.
+- **Wochenrennen-Fortschritt (403)**: exakt dasselbe Muster in `addRaceProgress()` (`race.js`), nur mit dem +15-pro-Schreibvorgang-Deckel der `race_progress`-Tabelle. Gleicher Fix: erst den Server-Fortschritt lesen, dann darauf aufbauend schreiben.
+- **Community-Boss-Angriff (404 "not found")**: `app.attack_community_boss()` existierte nur im `app`-Schema. PostgREST exponiert per Standardkonfiguration ausschliesslich das `public`-Schema (und `graphql_public`) als RPC-Endpunkte - eine reine `app`-Schema-Funktion ist ueber `supabaseClient.rpc(...)` schlicht nicht auffindbar, unabhaengig von Grants. Fix in `03-race-boss.sql`: duenner `public.attack_community_boss()`-Wrapper hinzugefuegt, plus ein fehlendes `grant execute ... to authenticated` direkt auf der `app`-Funktion (zweite, unabhaengige Luecke).
+
+Alle drei Fixes lokal verifiziert (volle Testsuite 00+01+03 gruen, der neue Wrapper direkt unter `role authenticated` end-to-end getestet, `node --check` auf beiden JS-Dateien sauber, 17-Seiten-Playwright-Regressionslauf ohne neue Konsolenfehler) und als Hotfix direkt auf `main` gemerged.
+
 ---
 
 ## Urspruenglicher Plan (historisch, siehe Nachtrag oben)
