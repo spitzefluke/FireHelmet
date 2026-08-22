@@ -210,6 +210,11 @@ const codes = [
     message: "🪙 +500 Dublonen als Entschuldigung dafür, dass die Spielothek 3 Tage lang nicht funktioniert hat!",
     currencyReward: 500,
   },
+  {
+    hash: "484aab2f2cd0f77b3c30f91521ba9a76c8c501112a53e100154a098c274f03d3", // sorry
+    message: "🪙 +300 Dublonen als Entschuldigung für die technischen Probleme heute - die komplette Spielothek läuft jetzt zuverlässig über Supabase!",
+    currencyReward: 300,
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde

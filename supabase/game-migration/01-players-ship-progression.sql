@@ -279,7 +279,7 @@ $$;
 /* ------------------------------------------------------
    Dublonen-Codes - siehe validCodeRedemption()/-Detail() in
    firestore.rules. MUSS mit scripts/codes/codes-data.js synchron
-   bleiben (fire100/beutel25/kleinerbeutel/fire300/coins300/sorry500).
+   bleiben (fire100/beutel25/kleinerbeutel/fire300/coins300/sorry500/sorry).
 ------------------------------------------------------ */
 create or replace function app.valid_code_redemption(
   p_uid text,
@@ -316,6 +316,7 @@ begin
     when '8f42ea772af5c16d5b27feb56aae75e6407d8b85e9174e79e468320b9ed88dba' then delta = 300
     when 'd422fd99131807e57e4c5b71defeeab9544b77d9d9201cf36a922f14bf5f226d' then delta = 300
     when '80ebd9ad284c580790b9d1f1e276568c455838fa1604159d7bf323b89718f27c' then delta = 500
+    when '484aab2f2cd0f77b3c30f91521ba9a76c8c501112a53e100154a098c274f03d3' then delta = 300
     else false
   end;
 end;
