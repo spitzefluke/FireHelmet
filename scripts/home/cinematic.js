@@ -157,6 +157,50 @@
 
     fhInitShipMotionPath(homeSection, scrollTriggerBase);
     fhInitShootingStar(track, homeSection);
+    fhInitCinematicVideo(homeSection, track);
+  }
+
+  /* ------------------------------------------------------
+     SCROLL-GESCRUBBTES EROEFFNUNGSVIDEO
+     Statt das Video per autoplay/play() abzuspielen (siehe die
+     wiederholten AbortError-Probleme mit Browser-Autoplay-Policies
+     an anderer Stelle im Projekt, z.B. beim Mystery-Musikplayer),
+     wird video.currentTime direkt an den Scroll-Fortschritt der
+     ERSTEN ~22% der Journey-Strecke gekoppelt - deckt sich mit der
+     Opacity-Fade-Formel in style.css (".fh-cinematic-video",
+     Faktor 4.5 erreicht 0 bei Fortschritt ~0.222). Auf Mobile und
+     bei reduzierter Bewegung wird gar nicht erst geladen (kein
+     Netzwerk-Request), passend zur isMobile/prefersReducedMotion-
+     Konvention des restlichen Moduls.
+  ------------------------------------------------------ */
+  function fhInitCinematicVideo(homeSection, track) {
+    if (isMobile.matches) return;
+
+    const video = document.getElementById("fh-cinematic-video");
+    if (!video) return;
+
+    video.addEventListener(
+      "loadedmetadata",
+      () => {
+        if (!video.duration || !isFinite(video.duration)) return;
+
+        const scrollRange = track.offsetHeight - homeSection.clientHeight;
+
+        ScrollTrigger.create({
+          trigger: track,
+          scroller: homeSection,
+          start: "top top",
+          end: `top+=${Math.max(0, scrollRange * 0.22)} top`,
+          scrub: true,
+          onUpdate: (self) => {
+            video.currentTime = self.progress * video.duration;
+          },
+        });
+      },
+      { once: true }
+    );
+
+    video.load();
   }
 
   /* ------------------------------------------------------

@@ -1045,6 +1045,13 @@ main {
   transform: translate3d(calc(var(--fh-progress) * 6vw), 0, 0) scale(calc(1 + var(--fh-progress) * .25));
 }
 
+.fh-cinematic-video {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  opacity: clamp(0, calc(1 - var(--fh-progress) * 4.5), 1);
+}
+
 .fh-ship-rig {
   position: absolute;
   left: 50%;
@@ -1341,6 +1348,7 @@ main {
   .fh-layer-mid-fog, .fh-layer-far-fog { filter: blur(3px); }
   .fh-ship-rig { width: min(220px, 58vw); }
   .fh-destination { width: min(280px, 76vw); }
+  .fh-cinematic-video { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1366,7 +1374,8 @@ main {
   }
 
   .fh-ship-wake,
-  .fh-shooting-star {
+  .fh-shooting-star,
+  .fh-cinematic-video {
     display: none !important;
   }
 }
