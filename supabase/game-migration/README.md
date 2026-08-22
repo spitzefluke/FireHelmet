@@ -69,6 +69,14 @@ Ein weiterer Unterschied zu Firestore, der die Übersetzung stellenweise sogar *
 
 **Phase 3**: `site_config`, `site_meta`, `giveaway_entries`, `giveaway_winners`, `support_reports`, `site_ratings`. Bemerkenswert: `site_config` validiert in Firestore bewusst KEIN einzelnes Feld (nur `isAdmin()`) — Entsprechung ist ein JSONB-Blob statt erfundener Spalten. `support_reports` hat bewusst KEINE Lese-Policy für `anon`/`authenticated` (Firestore: `allow read: if false`) — nur `service_role` (Supabase-eigener Table-Editor/Dashboard-Login) kann sie einsehen, genau wie bisher nur die Firebase Console.
 
+**Phase 5 ("THE CHALLENGE", 22.08.2026)**: neues Feature, keine Firestore-Übersetzung — ein K.-o.-Turnier mit vier neuen Tabellen (`tournaments`, `tournament_participants`, `tournament_matches`, `tournament_prize`), siehe `07-tournament.sql` für die vollständige Begründung. Kurzfassung:
+
+- Alle Zustandsübergänge (Turnier starten, Match-Ergebnis eintragen, Sieger vorrücken, Preis vergeben) laufen über `SECURITY DEFINER`-Funktionen statt über direkte RLS-`UPDATE`-Policies für `authenticated` — anders als beim bisherigen `attack_community_boss()` (`SECURITY INVOKER`), weil eine einzelne Aktion hier oft Zeilen verändert, die dem aufrufenden Spieler gar nicht "gehören" (Verlierer als eliminiert markieren, Sieger in ein fremdes Match der nächsten Runde eintragen). Erstmaliger Einsatz von `SECURITY DEFINER` in diesem Projekt — entsprechend mit fest gesetztem `search_path` gegen Search-Path-Hijacking abgesichert.
+- Der Preis (limitierte Cap) wird exakt nach dem `giveaway_winners`-Prinzip vergeben: `tournament_prize` hat eine feste Primary-Key-Zeile (`id='cap'`), ein zweiter `INSERT`-Versuch scheitert strukturell an der Datenbank selbst, unabhängig von jeder Anwendungslogik.
+- Ungleiche Teilnehmerzahlen ("nicht immer exakt 16 Spieler"): beim Start wählt `app.admin_start_tournament()` die kleinste Zweierpotenz aus `{4,8,16}`, die mindestens der Anmeldezahl entspricht (mind. 4 Teilnehmer nötig); überzählige Plätze werden mit Freilosen aufgefüllt, die sofort aufgelöst werden (kaskadierend über mehrere Runden, falls nötig).
+- `n < 4` beim Turnierstart, ein zweites gleichzeitig offenes Turnier (struktureller Unique-Index), Mehrfach-Beitritt, Einreichung für ein fremdes/bereits abgeschlossenes/schon-gespieltes Match und unplausible Reaktionszeiten (außerhalb 50–10000ms) werden alle serverseitig abgelehnt, nicht nur clientseitig.
+- Lokal gegen PostgreSQL 16 verifiziert (`07-tournament.test.sql`, 44 Einzelprüfungen inkl. eines vollständigen Turnierdurchlaufs von der Anmeldung bis zum Preis-Claim), siehe Abschnitt "Tests" unten.
+
 ## Voraussetzung im Supabase-Dashboard (musst du selbst prüfen)
 
 **Authentication → Third-Party Auth → Firebase muss aktiviert sein**, damit `auth.jwt() ->> 'sub'` die echte, kryptographisch geprüfte Firebase-UID liefert. Ebenso muss geprüft werden, ob `auth.jwt() ->> 'email'` bei OAuth-Logins (Twitch/Discord verlinkt mit Google/E-Mail) tatsächlich die E-Mail-Claim des Firebase-ID-Tokens durchreicht (für `app.is_admin()`). Beides kann ich von hier aus nicht verifizieren.
@@ -78,20 +86,23 @@ Ein weiterer Unterschied zu Firestore, der die Übersetzung stellenweise sogar *
 - `02-players-ship-progression.test.sql` — 27 Testfälle (Phase 1), **echt gegen eine lokale PostgreSQL-16-Instanz mit einem Supabase-Auth-Stub ausgeführt**: alle Manipulationsversuche aus dem ursprünglichen Auftrag (currency, gamesPlayed, gamesWon, shipTools, dailyQuests, redeemedCurrencyCodes, lastSpielothekPlayAt, lastWheelSpinAt, tempAvatarExpiresAt, progression, ship_repair, fremde UID, SQL-Injection), 27/27 bestanden. **Update (Phase 4e):** `valid_daily_quests_write()` Fall A verlangte ursprünglich `new_started_at = now()` exakt — funktioniert nur bei direktem SQL (wie in diesen Tests), nicht über einen echten Supabase-Client (PostgREST kann keine rohe `now()`-Funktion im Request-Body senden, nur einen fertigen Zeitwert). Auf ein 2-Minuten-Toleranzfenster umgestellt (TEST16a/16b decken das jetzt ab) — **muss auf dem echten Supabase-Projekt manuell nachgezogen werden**, siehe Hinweis unten.
 - `04-race-boss.test.sql` — 12 Testfälle (Phase 2): Rennfortschritt-Sprung, Boss-HP-Manipulation, Schaden-Rangliste-Manipulation, fremde UID, Neuanlage über Obergrenze — 12/12 bestanden.
 - `06-site-data.test.sql` — 20 Testfälle (Phase 3): Site-Config-Schreiben durch normalen Benutzer vs. Admin, Support-Report-Lesen (niemand darf, auch nicht der Absender), Gewinnspiel-Teilnahme/-Ziehung-Manipulation, Bewertungs-Grenzen, SQL-Injection — 20/20 bestanden.
+- `07-tournament.test.sql` — 24 benannte Testfälle / 44 Einzelprüfungen (Phase 5, "THE CHALLENGE"): öffentliches Lesen, Admin-Gate für Turnier-Erstellung/-Start/-Reset/-Pause, struktureller "nur ein offenes Turnier gleichzeitig"-Schutz, Beitritt (eigene UID / fremde UID / doppelt), direkte Schreibversuche auf tournaments/tournament_matches/tournament_prize durch normale Nutzer, Freilos-Kaskade beim Turnierstart (5 Spieler → bracket_size=8, 3 Freilose sofort aufgelöst), vollständiger Spielverlauf über alle drei Runden bis zum Champion (inkl. "nicht dein Match"/"schon gespielt"/"Match schon abgeschlossen"/"unplausible Reaktionszeit"), und — am wichtigsten — ein kompletter End-to-End-Nachweis, dass `tournament_prize` nach dem Finale **genau eine** Zeile mit dem korrekten Gewinner enthält und ein zweiter Claim-Versuch strukturell an der Primary-Key-Eindeutigkeit scheitert — 44/44 bestanden.
 
-Lokal wiederholen (alle 3 Phasen):
+Lokal wiederholen (alle 5 Phasen):
 ```
 createdb test_db
 psql -d test_db -f 00-supabase-auth-stub.sql
 psql -d test_db -f 01-players-ship-progression.sql
 psql -d test_db -f 03-race-boss.sql
 psql -d test_db -f 05-site-data.sql
+psql -d test_db -f 07-tournament.sql
 psql -d test_db -c "grant usage on schema app to anon, authenticated, service_role;
-  grant select, insert, update, delete on public.players, public.ship_repair, public.player_progression, public.race_progress, public.community_boss, public.community_boss_damage, public.site_config, public.site_meta, public.giveaway_entries, public.giveaway_winners, public.support_reports, public.site_ratings to anon, authenticated;
-  grant all on public.players, public.ship_repair, public.player_progression, public.race_progress, public.community_boss, public.community_boss_damage, public.site_config, public.site_meta, public.giveaway_entries, public.giveaway_winners, public.support_reports, public.site_ratings to service_role;"
+  grant select, insert, update, delete on public.players, public.ship_repair, public.player_progression, public.race_progress, public.community_boss, public.community_boss_damage, public.site_config, public.site_meta, public.giveaway_entries, public.giveaway_winners, public.support_reports, public.site_ratings, public.tournaments, public.tournament_participants, public.tournament_matches, public.tournament_prize to anon, authenticated;
+  grant all on public.players, public.ship_repair, public.player_progression, public.race_progress, public.community_boss, public.community_boss_damage, public.site_config, public.site_meta, public.giveaway_entries, public.giveaway_winners, public.support_reports, public.site_ratings, public.tournaments, public.tournament_participants, public.tournament_matches, public.tournament_prize to service_role;"
 psql -d test_db -f 02-players-ship-progression.test.sql
 psql -d test_db -f 04-race-boss.test.sql
 psql -d test_db -f 06-site-data.test.sql
+psql -d test_db -f 07-tournament.test.sql
 ```
 
 ## Phase 4: Client-Umstellung (läuft, Datei für Datei)
