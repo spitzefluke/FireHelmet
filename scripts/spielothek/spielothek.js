@@ -152,6 +152,41 @@ function startSpielothekCooldownUI(untilMs) {
 }
 
 /* ------------------------------------------------------
+   EINSATZ-AUSWAHL (nur bei Spielen mit handler.variableBet, aktuell
+   nur der Slot - Auftrag: "man soll selbst definieren wie viel man
+   einsetzt, je mehr desto mehr gewinnt man")
+   ---------------------------------------------------
+   Rein clientseitiger UI-Zustand fuer die Anzeige - die eigentliche
+   Absicherung (Einsatz innerhalb der erlaubten Spanne, Kontostand
+   ausreichend) prueft die Datenbank ohnehin bei jedem Schreibvorgang
+   (siehe playSpielothekGame() unten und app.valid_players_write() in
+   supabase/game-migration/01-players-ship-progression.sql).
+------------------------------------------------------ */
+let spielothekSelectedBet = null;
+
+function clampSpielothekBet(handler, rawValue) {
+  const n = Number(rawValue);
+  if (!Number.isFinite(n)) return handler.defaultBet;
+
+  const stepped = Math.round(n / handler.betStep) * handler.betStep;
+  return Math.min(handler.maxBet, Math.max(handler.minBet, stepped));
+}
+
+function updateSpielothekBetDisplay(value) {
+  const label = document.getElementById("spielothek-bet-value");
+  if (label) label.textContent = `${value} 🪙`;
+}
+
+function onSpielothekBetInput(rawValue) {
+  const game = getCurrentSpielothekGame();
+  const handler = getSpielothekHandler(game);
+  if (!handler || !handler.variableBet) return;
+
+  spielothekSelectedBet = clampSpielothekBet(handler, rawValue);
+  updateSpielothekBetDisplay(spielothekSelectedBet);
+}
+
+/* ------------------------------------------------------
    SPIEL AUSFÜHREN (serverseitig geprüfte Transaktion)
 ------------------------------------------------------ */
 let spielothekBusy = false;
@@ -183,7 +218,14 @@ async function playSpielothekGame() {
     const uid = await wheelAuthReady;
     if (!uid) return;
 
-    const betCost = handler.betCost;
+    // Bei Spielen mit frei waehlbarem Einsatz (Auftrag: 4. Slot-Walze
+    // + selbst gewaehlter Einsatz) wird der zuletzt vom Regler
+    // gemeldete Wert genutzt, nochmal serverfrisch geklammert (falls
+    // der Regler z.B. noch nie beruehrt wurde) - fuer Spiele ohne
+    // variableBet bleibt es beim alten festen handler.betCost.
+    const betCost = handler.variableBet
+      ? clampSpielothekBet(handler, spielothekSelectedBet ?? handler.defaultBet)
+      : handler.betCost;
 
     await ensureSupabasePlayerRow(uid, nickname);
 
@@ -216,7 +258,7 @@ async function playSpielothekGame() {
     // Ergebnis wird HIER ermittelt - dasselbe Ergebnis wird gleich
     // unten angezeigt UND ist exakt das, was tatsächlich gutgeschrieben/
     // abgezogen wurde.
-    const spin = handler.play();
+    const spin = handler.play(betCost);
     const newCurrency = Math.max(0, currentCurrency - betCost + spin.payout);
 
     // Lebenslange Zähler, Grundlage der täglichen Reparatur-Quests
@@ -263,7 +305,7 @@ async function playSpielothekGame() {
     if (typeof logSpielothekRoundToSupabase === "function") {
       logSpielothekRoundToSupabase(game.id, betCost, result.payout, result.win);
     }
-    await renderSpielothekResult(game, handler, result);
+    await renderSpielothekResult(game, handler, result, betCost);
     // Cooldown erst NACH der abgeschlossenen Ergebnis-Anzeige starten,
     // nicht schon waehrend die Walzen noch laufen (Auftrag: "Nach
     // einem abgeschlossenen Spin" - nicht waehrenddessen).
@@ -382,7 +424,7 @@ async function refreshSpielothekCurrencyDisplay() {
    (keine Pause, sofortige Anzeige). Async/await statt setInterval,
    also keine dauerhafte JS-Animation-Schleife.
 ------------------------------------------------------ */
-async function renderSpielothekResult(game, handler, result) {
+async function renderSpielothekResult(game, handler, result, betCost) {
   const resultEl = document.getElementById("spielothek-result");
   const andiEl = document.getElementById("spielothek-andi-quote");
   const stageEl = document.getElementById("spielothek-stage");
@@ -418,7 +460,7 @@ async function renderSpielothekResult(game, handler, result) {
   // nie nur die Bruttoauszahlung - sonst würde die Anzeige bei einem
   // Gewinn einen höheren Zuwachs suggerieren, als tatsächlich gutgeschrieben
   // wurde (Punkt 14: keine manipulierte/irreführende Darstellung).
-  const netDelta = result.payout - handler.betCost;
+  const netDelta = result.payout - betCost;
 
   if (result.win) {
     // Gewinn-Ablauf in zwei sichtbaren Schritten (Punkt 11): zuerst wird
@@ -522,6 +564,40 @@ function buildSpielothekAndiHtml() {
     : `<div class="spielothek-andi-image spielothek-andi-placeholder">🎲</div>`;
 }
 
+/* ------------------------------------------------------
+   EINSATZ-HINWEIS/-REGLER
+   ---------------------------------------------------
+   Spiele mit handler.variableBet (aktuell nur der Slot) zeigen einen
+   Schieberegler statt des alten statischen Texts - spielothekSelectedBet
+   wird beim Aufbau auf handler.defaultBet zurueckgesetzt, damit jeder
+   Seitenaufruf/Spielwechsel wieder beim selben, bekannten Einsatz
+   startet statt einen Wert vom vorherigen (evtl. anderen) Spiel
+   mitzuschleppen.
+------------------------------------------------------ */
+function buildSpielothekBetHtml(handler) {
+  if (!handler.variableBet) {
+    return `<p class="spielothek-bet-hint">(${handler.betCost} <span data-i18n="shop.currencyLabel">Dublonen</span> / <span data-i18n="spielothek.perRound">Runde</span>)</p>`;
+  }
+
+  spielothekSelectedBet = handler.defaultBet;
+
+  return `
+    <div class="spielothek-bet-picker">
+      <label for="spielothek-bet-range" data-i18n="spielothek.betLabel">Einsatz:</label>
+      <input
+        type="range"
+        id="spielothek-bet-range"
+        min="${handler.minBet}"
+        max="${handler.maxBet}"
+        step="${handler.betStep}"
+        value="${handler.defaultBet}"
+        oninput="onSpielothekBetInput(this.value)"
+      >
+      <span id="spielothek-bet-value" class="spielothek-bet-value">${handler.defaultBet} 🪙</span>
+    </div>
+  `;
+}
+
 async function renderSpielothekPage() {
   const container = document.getElementById("spielothek-content");
   if (!container) return;
@@ -546,7 +622,7 @@ async function renderSpielothekPage() {
       <span id="spielothek-currency-amount">0</span>
       <span data-i18n="shop.currencyLabel">Dublonen</span>
     </div>
-    <p class="spielothek-bet-hint">(${handler.betCost} <span data-i18n="shop.currencyLabel">Dublonen</span> / <span data-i18n="spielothek.perRound">Runde</span>)</p>
+    ${buildSpielothekBetHtml(handler)}
 
     <div class="spielothek-stage" id="spielothek-stage">
       <div class="spielothek-andi" id="spielothek-andi">
