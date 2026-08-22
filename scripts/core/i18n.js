@@ -220,7 +220,7 @@ const translations = {
     "ship.puzzlesHeading": "⚓ Rätsel des Kapitäns",
 
     "menu.shipRepair": "⚒ Repariere das Schiff",
-    "menu.tournament": "🧢 THE CHALLENGE",
+    "menu.tournament": "THE CHALLENGE",
 
     "boss.title": "COMMUNITY-BOSS",
     "boss.subtitle": "Gemeinsam besiegen, bevor der Monat endet!",
@@ -276,9 +276,9 @@ const translations = {
     "tournament.page.refreshButton": "🔄 Aktualisieren",
 
     "tournament.prize.heading": "Hauptpreis",
-    "tournament.prize.wonBanner": "🏆 DIE CAP WURDE GEWONNEN",
+    "tournament.prize.wonBanner": "DIE CAP WURDE GEWONNEN",
     "tournament.prize.wonBy": "von",
-    "tournament.prize.availableBanner": "🧢 Die limitierte Cap ist noch nicht vergeben - werde der erste Champion!",
+    "tournament.prize.availableBanner": "Die limitierte Cap ist noch nicht vergeben - werde der erste Champion!",
 
     "tournament.match.youWon": "🎉 Sieg! Du gehst weiter.",
     "tournament.match.youLost": "☠️ Niederlage. Du bist ausgeschieden.",
@@ -503,7 +503,7 @@ const translations = {
     "ship.puzzlesHeading": "⚓ Captain's Riddles",
 
     "menu.shipRepair": "⚒ Repair the Ship",
-    "menu.tournament": "🧢 THE CHALLENGE",
+    "menu.tournament": "THE CHALLENGE",
 
     "boss.title": "COMMUNITY BOSS",
     "boss.subtitle": "Defeat it together before the month ends!",
@@ -559,9 +559,9 @@ const translations = {
     "tournament.page.refreshButton": "🔄 Refresh",
 
     "tournament.prize.heading": "Main prize",
-    "tournament.prize.wonBanner": "🏆 THE CAP HAS BEEN WON",
+    "tournament.prize.wonBanner": "THE CAP HAS BEEN WON",
     "tournament.prize.wonBy": "by",
-    "tournament.prize.availableBanner": "🧢 The limited cap hasn't been claimed yet - be the first champion!",
+    "tournament.prize.availableBanner": "The limited cap hasn't been claimed yet - be the first champion!",
 
     "tournament.match.youWon": "🎉 Victory! You move on.",
     "tournament.match.youLost": "☠️ Defeat. You've been eliminated.",
