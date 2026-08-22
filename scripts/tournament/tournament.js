@@ -31,6 +31,17 @@ let tournamentPageBusy = false; // Beitreten/Match-Uebermittlung laeuft gerade
 let tournamentGameInProgress = false; // Minispiel ist gerade gemountet
 let tournamentCurrentUid = null; // vom letzten renderTournamentPage()-Durchlauf, fuer den Ergebnis-Bildschirm
 
+// "Veraltete Antwort"-Schutz: renderTournamentPage() kann mehrfach
+// ueberlappend laufen (z.B. der 12s-Poll UND ein expliziter
+// changePage()-Aufruf kurz hintereinander) - ohne diesen Zaehler
+// koennte die AELTERE der beiden Anfragen zufaellig SPAETER antworten
+// und dann die bereits aktuellere Anzeige mit veralteten Daten
+// ueberschreiben. Jeder Durchlauf merkt sich seine eigene Generation
+// und schreibt nur, wenn zwischenzeitlich kein neuerer Durchlauf
+// gestartet wurde - dasselbe Prinzip wie ein Cleanup-Flag bei einem
+// abgebrochenen React-Effect.
+let tournamentRenderGeneration = 0;
+
 function tt(key, fallback) {
   return typeof t === "function" ? t(key, fallback) : fallback;
 }
@@ -107,9 +118,17 @@ async function renderTournamentPage() {
     return;
   }
 
+  // Eigene Generation fuer diesen Durchlauf - siehe Kommentar bei der
+  // Deklaration von tournamentRenderGeneration oben. Zwei
+  // ueberlappende Aufrufe (typischerweise: der 12s-Poll UND ein
+  // expliziter changePage()-Aufruf kurz hintereinander) sind normal
+  // moeglich; ohne diesen Schutz koennte die AELTERE, aber langsamere
+  // Antwort die bereits aktuellere Anzeige mit veralteten Daten
+  // ueberschreiben.
+  const myGeneration = ++tournamentRenderGeneration;
+
   try {
     const uid = await wheelAuthReady;
-    tournamentCurrentUid = uid;
 
     const [tournament, prize] = await Promise.all([getOpenTournament(), getTournamentPrize()]);
     const finished = tournament ? null : await getLastFinishedTournament();
@@ -124,8 +143,19 @@ async function renderTournamentPage() {
       ]);
     }
 
+    // Waehrend der obigen await-Aufrufe koennte sich der sichtbare
+    // Zustand bereits ueberholt haben: entweder ist inzwischen ein
+    // NEUERER renderTournamentPage()-Durchlauf gestartet (Generation
+    // stimmt nicht mehr ueberein), oder der Spieler hat "MATCH
+    // SPIELEN" geklickt und ein Minispiel gemountet - in beiden
+    // Faellen darf diese veraltete Antwort die aktuellere Anzeige
+    // nicht mehr ueberschreiben.
+    if (myGeneration !== tournamentRenderGeneration || tournamentGameInProgress) return;
+
+    tournamentCurrentUid = uid;
     container.innerHTML = buildTournamentPageHtml({ uid, tournament, finished, matches, participants, prize });
   } catch (err) {
+    if (myGeneration !== tournamentRenderGeneration || tournamentGameInProgress) return;
     console.error("Turnier konnte nicht geladen werden:", err);
     container.innerHTML = `<p class="wheel-status">⚠️ ${escapeHtml(tt("tournament.page.loadError", "Turnier konnte nicht geladen werden."))}</p>`;
   }
