@@ -188,9 +188,12 @@ const PROGRESSION_REWARD_ID_CAP = 300;
 async function ensureSupabaseProgressionRow(uid) {
   if (!supabaseClient || !uid) return;
   try {
-    await supabaseClient
-      .from("player_progression")
-      .upsert({ firebase_uid: uid }, { onConflict: "firebase_uid", ignoreDuplicates: true });
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("player_progression")
+        .upsert({ firebase_uid: uid }, { onConflict: "firebase_uid", ignoreDuplicates: true })
+    );
   } catch (err) {
     console.warn("Supabase-Fortschritts-Zeile konnte nicht sichergestellt werden:", err);
   }
@@ -482,11 +485,17 @@ async function refreshPlayerCard() {
   // die Spielerkarte tatsaechlich veraendert (claimReward(),
   // handleXpGainSideEffects(), Login, Namensvergabe), ruft
   // refreshPlayerCard() bereits selbst explizit erneut auf.
-  const { data } = await supabaseClient
-    .from("player_progression")
-    .select("xp, pass_id, pass_xp, claimed_reward_ids, has_flitzpiepen_cap")
-    .eq("firebase_uid", uid)
-    .maybeSingle();
+  // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+  // - refreshPlayerCard() laeuft direkt bei DOMContentLoaded, ist also
+  // eine der allerersten authentifizierten Anfragen pro Seitenaufruf
+  // und damit besonders anfaellig fuer den dort beschriebenen Kaltstart.
+  const { data } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient
+      .from("player_progression")
+      .select("xp, pass_id, pass_xp, claimed_reward_ids, has_flitzpiepen_cap")
+      .eq("firebase_uid", uid)
+      .maybeSingle()
+  );
   paintPlayerCardTargets(data || null);
 }
 

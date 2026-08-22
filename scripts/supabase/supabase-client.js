@@ -24,33 +24,36 @@
 
 let supabaseClient = null;
 
-// Der ALLERERSTE Aufruf pro Seitenaufruf erzwingt ein frisches Token
-// (statt eines evtl. aus einer wiederhergestellten Sitzung gecachten) -
-// ein Token, das im selben Moment neu ausgestellt UND fast zeitgleich
-// von Supabase geprueft wird, kann sonst an einer knappen Zeit-Toleranz
-// (iat/Uhr-Abweichung) scheitern und faelschlich als 401 (statt 403)
-// zurueckkommen, obwohl RLS/Third-Party-Auth korrekt konfiguriert sind.
-// Danach reicht wieder das normale, guenstige Firebase-Caching - sonst
-// wuerde JEDE Supabase-Anfrage einen zusaetzlichen Netzwerk-Umweg zu
-// Firebase brauchen, nicht nur die erste.
-let supabaseAccessTokenForcedOnce = false;
-
 async function getSupabaseAccessToken() {
-  const dbg = "[DEBUG accessToken @" + performance.now().toFixed(0) + "ms]";
   try {
     if (typeof wheelAuthReady !== "undefined") await wheelAuthReady;
-    console.log(dbg, "nach wheelAuthReady, currentUser vorhanden:", !!(typeof firebase !== "undefined" && firebase.auth && firebase.auth().currentUser));
     if (typeof firebase === "undefined" || !firebase.auth || !firebase.auth().currentUser) return null;
-    const forceRefresh = !supabaseAccessTokenForcedOnce;
-    supabaseAccessTokenForcedOnce = true;
-    const token = await firebase.auth().currentUser.getIdToken(forceRefresh);
-    console.log(dbg, "forceRefresh=" + forceRefresh, "tokenLaenge=" + (token ? token.length : token), "tokenStart=" + (token ? token.slice(0, 20) : token));
-    return token;
+    return await firebase.auth().currentUser.getIdToken();
   } catch (err) {
-    console.log(dbg, "FEHLER beim Token-Holen:", err);
     console.warn("Firebase-ID-Token fuer Supabase konnte nicht geholt werden:", err);
     return null;
   }
+}
+
+// Live gegen das echte Supabase-Projekt beobachtet (Konsole, mit
+// Zeitstempel-Logging): die erste(n) authentifizierte(n) Anfrage(n)
+// pro Seitenaufruf koennen mit Postgres-Code 42501 ("insufficient
+// privilege", RLS lehnt ab, weil die Anfrage trotz eines nachweislich
+// gueltigen, frisch geholten Firebase-Tokens als "anon" statt
+// "authenticated" behandelt wird) scheitern - jede folgende Anfrage
+// mit demselben Client/Token funktioniert dagegen sofort einwandfrei.
+// Deutet auf einen Kaltstart auf Supabase-Seite hin (z.B. das
+// Aufwaermen der JWT-Pruefung/JWKS-Zwischenspeicherung an der Edge fuer
+// eine neue Verbindung), nicht auf ein Problem im Client selbst - hier
+// per einmaligem Retry abgefedert, statt echte Nutzer sichtbar
+// scheitern zu lassen. NUR fuer genau dieses Fehlerbild (42501) - ein
+// echtes, dauerhaftes RLS-Verbot wuerde durch den Retry nicht "repariert"
+// und soll auch nicht stillschweigend wiederholt werden.
+async function withSupabaseRlsColdStartRetry(queryFn) {
+  const first = await queryFn();
+  if (!first || !first.error || first.error.code !== "42501") return first;
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  return await queryFn();
 }
 
 if (

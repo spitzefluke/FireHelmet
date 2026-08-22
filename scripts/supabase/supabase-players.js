@@ -22,9 +22,15 @@
 async function ensureSupabasePlayerRow(uid, nickname) {
   if (!supabaseClient || !uid) return;
   try {
-    await supabaseClient
-      .from("players")
-      .upsert({ firebase_uid: uid, nickname: nickname || null }, { onConflict: "firebase_uid", ignoreDuplicates: true });
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    // - diese Funktion wird von praktisch jedem Schreibpfad als ALLERERSTES
+    // aufgerufen und ist damit besonders anfaellig fuer den dort
+    // beschriebenen Kaltstart bei den fruehesten Anfragen pro Seitenaufruf.
+    await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("players")
+        .upsert({ firebase_uid: uid, nickname: nickname || null }, { onConflict: "firebase_uid", ignoreDuplicates: true })
+    );
   } catch (err) {
     // Race mit einem anderen Tab/Aufruf desselben Spielers ist
     // unbedenklich - die Zeile existiert dann bereits, das eigentliche
