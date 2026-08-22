@@ -140,6 +140,22 @@ select test_expect_blocked(
   'TEST7c doppeltes sorry500-Einloesen (ohne neuen Map-Eintrag) wird blockiert');
 reset role;
 
+-- Neuer "sorry"-Code (300 Dublonen, 22.08.2026 - Entschuldigung fuer den
+-- Firebase->Supabase-Auth-Vorfall), gleiches Muster wie sorry500 oben.
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
+select test_expect_ok(
+  format($sql$update public.players set currency = currency + 300, redeemed_currency_codes = redeemed_currency_codes || jsonb_build_object('484aab2f2cd0f77b3c30f91521ba9a76c8c501112a53e100154a098c274f03d3', 300) where firebase_uid = 'a0000000-0000-0000-0000-000000000000'$sql$),
+  'TEST7d legitimes sorry-Einloesen (300 Dublonen) gelingt');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000000"}', false);
+select test_expect_blocked(
+  $sql$update public.players set currency = currency + 300 where firebase_uid = 'a0000000-0000-0000-0000-000000000000'$sql$,
+  'TEST7e falscher Betrag fuer sorry-Code ohne neuen Map-Eintrag wird blockiert');
+reset role;
+
 -- ============================================================
 -- TEST 8: Spielothek-Cooldown (4s) - zwei GETRENNTE Transaktionen,
 -- eigener frischer Spieler (c0000000-0000-0000-0000-000000000000), damit kein vorheriger Test
