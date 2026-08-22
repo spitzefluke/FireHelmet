@@ -142,6 +142,28 @@ begin
 end;
 $$;
 
+-- Duenner Wrapper im "public"-Schema: PostgREST exponiert per Standard-
+-- Konfiguration NUR Funktionen aus dem "public"-Schema als RPC-Endpunkt
+-- (supabaseClient.rpc(...)) - eine Funktion, die nur im "app"-Schema
+-- existiert, ist ueber die REST-API schlicht nicht auffindbar (404 "not
+-- found"), obwohl sie in der Datenbank selbst einwandfrei existiert und
+-- funktioniert. Live entdeckt: der Client bekam beim Aufruf ueberraschend
+-- 404 statt 200/403. Dieser Wrapper macht die eigentliche Logik ohne
+-- Duplizierung erreichbar, unabhaengig davon, ob "app" zusaetzlich in den
+-- "Exposed schemas" des Supabase-Dashboards eingetragen ist oder nicht.
+create or replace function public.attack_community_boss(p_month_id text, p_damage integer)
+returns table(hp integer, max_hp integer, defeated boolean)
+language sql
+as $$ select * from app.attack_community_boss(p_month_id, p_damage) $$;
+
+-- Beide Grants noetig: der oeffentliche Wrapper laeuft NICHT als
+-- SECURITY DEFINER (bewusst - keine erweiterten Rechte), die aufrufende
+-- Rolle braucht deshalb Ausfuehrungsrechte auf BEIDE Funktionen, nicht
+-- nur auf den Wrapper. Fehlte bisher fuer app.attack_community_boss()
+-- komplett - ein zweiter, unabhaengiger Grund fuer den 404-Fehler.
+grant execute on function app.attack_community_boss(text, integer) to authenticated;
+grant execute on function public.attack_community_boss(text, integer) to authenticated;
+
 
 /* ======================================================
    TABELLE: community_boss_damage

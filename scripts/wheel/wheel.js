@@ -1031,13 +1031,9 @@ async function finalizeSpin(state, today, prize) {
   const resultEl = document.getElementById("wheel-result");
   const spinBtn = document.getElementById("spin-button");
 
-  let newStreak = 1;
-  if (state.lastSpin === yesterdayStr()) {
-    newStreak = state.streak + 1;
-  }
-
+  let newStreak;
   try {
-    await redeemWheelPrize(prize, newStreak);
+    newStreak = await redeemWheelPrize(prize);
   } catch (err) {
     console.warn("Schatzrad-Belohnung konnte nicht eingelöst werden:", err);
     if (resultEl) {
@@ -1103,7 +1099,7 @@ async function finalizeSpin(state, today, prize) {
 ------------------------------------------------------ */
 const WHEEL_SPIN_MIN_INTERVAL_MS = 20 * 60 * 60 * 1000; // 20h, siehe app.valid_wheel_fields()
 
-async function redeemWheelPrize(prize, newStreak) {
+async function redeemWheelPrize(prize) {
   if (!supabaseClient) throw new Error("no-db");
   const uid = await wheelAuthReady;
   if (!uid) throw new Error("no-uid");
@@ -1114,7 +1110,7 @@ async function redeemWheelPrize(prize, newStreak) {
 
   const { data: current, error: readError } = await supabaseClient
     .from("players")
-    .select("last_wheel_spin_at, currency, total_currency_earned, ship_tools, owned_shop_items")
+    .select("last_wheel_spin_at, streak, currency, total_currency_earned, ship_tools, owned_shop_items")
     .eq("firebase_uid", uid)
     .maybeSingle();
   if (readError) throw readError;
@@ -1124,6 +1120,17 @@ async function redeemWheelPrize(prize, newStreak) {
   if (lastSpinAt && Date.now() - lastSpinAt < WHEEL_SPIN_MIN_INTERVAL_MS) {
     throw new Error("too-soon");
   }
+
+  // Server-massgeblich statt vom Aufrufer uebernommen: ein rein lokal
+  // (localStorage "wheelStreak") mitgezaehlter Streak kann von der
+  // echten Datenbank abweichen - z.B. nach dem Firestore->Supabase-
+  // Umstieg, wo alle echten Spielstaende bei 0 neu begannen, das
+  // Browser-localStorage aber unveraendert blieb. Ein daraus
+  // resultierender zu hoher Sprung wuerde von der RLS (streak <= alter
+  // Wert + 1) ohnehin abgelehnt - hier wird er gar nicht erst
+  // versucht, sondern immer aus dem tatsaechlichen DB-Stand berechnet.
+  const lastSpinDateStr = data.last_wheel_spin_at ? new Date(data.last_wheel_spin_at).toISOString().slice(0, 10) : null;
+  const newStreak = lastSpinDateStr === yesterdayStr() ? (data.streak || 0) + 1 : 1;
 
   const fields = {
     last_wheel_spin_at: new Date().toISOString(),
@@ -1165,6 +1172,8 @@ async function redeemWheelPrize(prize, newStreak) {
   if (writeError || !updated) {
     throw new Error("too-soon");
   }
+
+  return updated.streak;
 }
 
 /* ------------------------------------------------------

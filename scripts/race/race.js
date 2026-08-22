@@ -173,42 +173,62 @@ function getLocalRaceProgress() {
 
 function addRaceProgress(amount) {
   const currentWeek = getCurrentWeekId();
-  const newProgress = getLocalRaceProgress() + amount;
-
-  localStorage.setItem("raceWeek", currentWeek);
-  localStorage.setItem("raceProgress", String(newProgress));
-
   const nickname = localStorage.getItem("wheelNickname") || "";
-  if (!nickname || !supabaseClient) return;
 
-  wheelAuthReady.then((uid) => {
+  if (!nickname || !supabaseClient) {
+    // Kein Server-Ziel vorhanden (z.B. Name noch nicht vergeben) - rein
+    // lokal weiterzaehlen bleibt die einzige Option.
+    const newProgress = getLocalRaceProgress() + amount;
+    localStorage.setItem("raceWeek", currentWeek);
+    localStorage.setItem("raceProgress", String(newProgress));
+    refreshOwnRaceProgress();
+    return;
+  }
+
+  wheelAuthReady.then(async (uid) => {
     if (!uid) return;
+
+    // Server-massgeblich statt aus dem lokalen Zaehler uebernommen: ein
+    // rein lokal (localStorage "raceProgress") mitgezaehlter Wert kann
+    // vom tatsaechlichen DB-Stand abweichen - z.B. wenn fruehere
+    // Schreibversuche in derselben Woche fehlgeschlagen sind (localStorage
+    // wurde trotzdem schon optimistisch erhoeht). Ein daraus
+    // resultierender zu hoher Sprung wuerde von der RLS (progress <=
+    // alter Wert + 15) ohnehin abgelehnt - hier wird er gar nicht erst
+    // versucht, sondern immer aus dem echten DB-Stand fuer diese Woche
+    // berechnet.
+    const { data: current } = await supabaseClient
+      .from("race_progress")
+      .select("progress")
+      .eq("week", currentWeek)
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+
+    const newProgress = (current ? current.progress : 0) + amount;
+    localStorage.setItem("raceWeek", currentWeek);
+    localStorage.setItem("raceProgress", String(newProgress));
 
     // Echtes Upsert (ein Aufruf deckt sowohl "erster Eintrag diese
     // Woche" als auch "Fortschritt aktualisieren" ab) - der
     // zusammengesetzte Schluessel (week, firebase_uid) ist die
     // natuerliche Entsprechung zu Firestores Dokument-ID-Trick
     // "<week>_<uid>", siehe 03-race-boss.sql.
-    supabaseClient
-      .from("race_progress")
-      .upsert(
-        {
-          week: currentWeek,
-          firebase_uid: uid,
-          nickname: nickname,
-          progress: newProgress,
-          equipped_frame: localStorage.getItem("equippedFrame") || null,
-        },
-        { onConflict: "week,firebase_uid" }
-      )
-      .then(({ error }) => {
-        if (error) console.error("Rennfortschritt konnte nicht gespeichert werden:", error);
-      });
-  });
+    const { error } = await supabaseClient.from("race_progress").upsert(
+      {
+        week: currentWeek,
+        firebase_uid: uid,
+        nickname: nickname,
+        progress: newProgress,
+        equipped_frame: localStorage.getItem("equippedFrame") || null,
+      },
+      { onConflict: "week,firebase_uid" }
+    );
+    if (error) console.error("Rennfortschritt konnte nicht gespeichert werden:", error);
 
-  refreshOwnRaceProgress();
-  // Live-Rangliste nachladen, falls die Rennseite gerade offen ist
-  loadRaceLeaderboard();
+    refreshOwnRaceProgress();
+    // Live-Rangliste nachladen, falls die Rennseite gerade offen ist
+    loadRaceLeaderboard();
+  });
 }
 
 /* ------------------------------------------------------
