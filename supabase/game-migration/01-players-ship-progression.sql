@@ -377,6 +377,23 @@ $$;
 /* ------------------------------------------------------
    GESAMT-PRUEFUNG fuer players (Firestore: validShopFields() +
    validQuestCounters() + Grenzen aus "allow update")
+   ---------------------------------------------------
+   Deckel fuer currency/total_currency_earned von 3000 auf 30000
+   angehoben (Spielothek-Update: 4. Slot-Walze + frei waehlbarer
+   Einsatz 10-100 Dublonen, siehe games/slot.js). Wie schon vorher
+   beim Schatzrad gilt: der Client BERECHNET das Ergebnis (RNG lokal
+   im Browser, siehe Kommentar am Anfang von games/slot.js), die
+   Datenbank prueft NICHT die Wuerfel/Walzen-Werte selbst nach,
+   sondern nur, dass der Kontostand-Sprung diesen Deckel nicht
+   uebersteigt - bewusste, bereits bestehende Vereinfachung (rein
+   virtuelle Waehrung, kein echtes Geld). Der neue Vierfach-Feuer-
+   Jackpot bei Maximaleinsatz (100 x 300 = 30000 brutto) haette den
+   alten 3000er-Deckel gerissen, daher die Anhebung - betrifft
+   dieselbe Obergrenze auch fuer Schatzrad-Preise/Code-Einloesungen,
+   die aber je eigene, engere Pruefungen haben (valid_wheel_fields()
+   prueft gar keinen Currency-Wert, valid_code_redemption() prueft
+   den exakten Betrag pro Hash) und dadurch von der Anhebung selbst
+   nicht zusaetzlich unsicherer werden.
 ------------------------------------------------------ */
 create or replace function app.valid_players_write(p_uid text, new_row public.players) returns boolean
 language plpgsql stable
@@ -384,10 +401,10 @@ as $$
 declare
   old_row public.players := app.old_player(p_uid);
 begin
-  return new_row.currency <= coalesce(old_row.currency, 0) + 3000
+  return new_row.currency <= coalesce(old_row.currency, 0) + 30000
     and new_row.games_played <= coalesce(old_row.games_played, 0) + 1
     and new_row.games_won <= coalesce(old_row.games_won, 0) + 1
-    and new_row.total_currency_earned <= coalesce(old_row.total_currency_earned, 0) + 3000
+    and new_row.total_currency_earned <= coalesce(old_row.total_currency_earned, 0) + 30000
     and new_row.streak <= coalesce(old_row.streak, 0) + 1
     and new_row.codes_cracked <= coalesce(old_row.codes_cracked, 0) + 1
     and app.valid_ship_tools(p_uid, new_row.ship_tools)

@@ -8505,6 +8505,33 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   color: var(--fh-muted-fg);
 }
 
+.spielothek-bet-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.spielothek-bet-picker input[type="range"] {
+  width: clamp(120px, 40vw, 220px);
+  accent-color: var(--fh-gold-bright, #f0c96a);
+}
+
+.spielothek-bet-value {
+  min-width: 58px;
+  font-weight: bold;
+  color: var(--fh-gold-bright, #f0c96a);
+}
+
+.spielothek-rules-bet-hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
 .spielothek-stage {
   margin-top: 30px;
   display: flex;
