@@ -23,18 +23,18 @@ const stories = [
         text: `
         
 1540 an einem Hafen in einem kleinen Dorf namens Romna, liegt ein stark rot bemaltes Schiff. 
-Es hat schwarze Verzierungen und gehört dem Caiptain Schifffahrer Dave. 
+Es hat schwarze Verzierungen und gehört dem Captain Schifffahrer Dave. 
 Zur heutigen Zeit würde man ihn als Rentner und durchgeknallten zerbrechlichen Mann beschreiben, doch zu dieser Zeit ist er ein ehrenvoller, abenteuerlustiger und erfahrener Schifffahrer.
 Seine Crew nennt ihn auch Fliezpiepenheimer. 
 
 Heute ist es am Hafen etwas sonderbar, da die Crew das erstemal ein wichtige und gut bezahlte Fracht verschiffen sollen. 
 Die Crew schrubbt das Deck und bereitet schon alles auf die Ankunft der wichtigen Ladung vor. 
 Nach kurzer Zeit trifft die erwartete Ladung ein und die Crew macht sich bereit sie zu transportieren.
-Doch der Caiptain hat ein mulmiges Gefühl bei der Sache. 
+Doch der Captain hat ein mulmiges Gefühl bei der Sache. 
 Die Ladung ist in eine massive Metallbox mit 5 Schlössern verstaut. "Was da wohl drin ist?" denken sich alle. 
 Die zwei Männer die die Fracht hergebracht haben, warnten die Crew deutlich die Box unter keinen Umständen aufzumachen, da dies den Tod aller Crew Mitglieder bedeuten würde. 
 Dem Captain ist dies nicht ganz so geheuer, jedoch braucht die Crew dringend das Geld was es für die Auslieferung gibt, weshalb er die Fracht aufladen lässt. 
-Die Crew ist arm geworden, da Ändi, ein spielsüchtiges Crewmitglied, die Schiffskasse verspielt hat.
+Die Crew ist arm geworden, da Ändii, ein spielsüchtiges Crewmitglied, die Schiffskasse verspielt hat.
 Die zwei Männer verschwieden schnell und hinterlassen nur einen leeren Hafen.
 
 `,
@@ -48,7 +48,7 @@ Die zwei Männer verschwieden schnell und hinterlassen nur einen leeren Hafen.
 Beladen mit der seltsamen Fracht stich das Schiff in See und ein neues Abenteuer beginnt. 
 Auf ihrer Reise über die weiten Meere stellt sich die Crew vielen Herausforderungen. 
 Finjan Backbeard, das jüngste und frechste Mitglied der Crew ist trotz dieser überaus sonderbaren Eigenschaften ihr wichtigster Mann.
-Er ärgert den Caiptain der Mannschaft und treibt viel Schabernack, ist aber ein Meister der Beobachtung.
+Er ärgert den Captain der Mannschaft und treibt viel Schabernack, ist aber ein Meister der Beobachtung.
 Oben auf seinem Auskuck überblickt er das weite, schon oft führten seine präzisen Beobachtungen dazu, dass die Crew Gefahren aus dem Weg gehen konnte.
 Sein Blick schweift über das weite Meer und die Flagge des Schiffes weht im Wind, durch sie erkennt man Daves Mannschaft schon auf weite Entfernung.
 Auch dies ist Finjan zu verdanken, denn er hat sie entworfen. 
@@ -62,10 +62,10 @@ Er greift seinen eisernen Säbel der mit der mit goldenen Gravierungen verziert 
 Der Rest der Crew hat sich dort schon versammelt und Dave drängelt sich durch die Menge stinkender Seeleute. 
 Als er am vorderen Ende angekommen ist, sieht er sie zwei Meeresbewohner, sogenannte "Sauluppen" kämpfen miteinander. 
 Diese Tiere sind eine merkwürdige Mischung aus Wal und Schwein, grundsätzlich sind sie friedlich aber es handelt sich hier anscheinend um zwei Weibchen. 
-Diese sind aggressiver als ihre Männlichen Artgenossen und verteidigen ihr Territorium sehr wehemend. 
-Allerdings ist irgendwas bei diesen Exzemplaren anders, aber was nur? 
+Diese sind aggressiver als ihre Männlichen Artgenossen und verteidigen ihr Territorium sehr aggressiv. 
+Allerdings ist irgendwas bei diesen Exemplaren anders, aber was nur? 
 Die Zeit darüber nachzudenken bleibt Dave verwehrt da Finjan ihn in die Seite stuppst. 
-Grinsend fragt ihn dieser: "Hey Captain eine gewisse ähnlichkeit haben sie schon mit diesen Tieren, sind das entfernte Verwandte von ihnen?" lachend tätscheld Dave Finjans Schulter und erwidert: "Pass auf deine Zunge auf sonst kannst du gleich Bekanntschaft mit meinen angeblichen Verwandten machen!". 
+Grinsend fragt ihn dieser: "Hey Captain eine gewisse ähnlichkeit haben sie schon mit diesen Tieren, sind das entfernte Verwandte von ihnen?" lachend tätschelt Dave Finjans Schulter und erwidert: "Pass auf deine Zunge auf sonst kannst du gleich Bekanntschaft mit meinen angeblichen Verwandten machen!". 
 Die Crew schaut noch ein bisschen dem Treiben der Sauluppen zu und verzieht sich danach wieder in ihre Kojen.
 
 `,
@@ -82,12 +82,12 @@ Dean ist schon seit vielen Jahren Steuermann ihres Schiffes und einer von Daves 
 Obwohl er nicht viel redet vertraut Dave ihm voll und ganz. 
 Dean zeigt mit seinem Finger aufgeregt zum Rand des Schiffes, er wirkt schon fast verängstigt. 
 Dies beunruhigt Dave aber er nimmt sich zusammen und schreitet langsam zum Rand des Deckes. 
-Als er dort ankommt verschlägt es ihm schon fast die Sprache, das Wasser hat sich in eine Rote fütze verwandelt, und in dieser schwimmen die Überreste von einem der Sauluppen. 
+Als er dort ankommt verschlägt es ihm schon fast die Sprache, das Wasser hat sich in eine rote Pfütze verwandelt, und in dieser schwimmen die Überreste von einem der Sauluppen. 
 Dave ist erschüttert in seinen langen Jahren als Seefahrer hat er noch nie gesehen das sich diese Tiere gegenseitig abmurksen und auch die Wunden am Kadaver des Tieres stimmen nicht mit denen überein die ein Sauluppen einem anderen zufügen kann. 
-Allerdings hat Dave keine Zeit sich darüber weiter Gedanken zu machen, er gibt den Befehl den Anker einzuziehen und die Segel zu hisen. 
+Allerdings hat Dave keine Zeit sich darüber weiter Gedanken zu machen, er gibt den Befehl den Anker einzuziehen und die Segel zu hissen. 
 Ihre Reise geht weiter. 
 Gegen Mittag meldet sich Finjan aus dem Ausguck: "Hey Captain dahinten zieht ein echt mieses Unwetter auf... fast so mies wie ihre Laune manchmal.". 
-Dave in Gedanken versunken greift zum Fernglas um sich das einmal näher anzugucken: "Da müssen wir durch." Sagt er: "Zieht das Großsegel ein und vertaut alles was nicht niet und nagelfest ist!". 
+Dave in Gedanken versunken greift zum Fernglas um sich das einmal näher anzugucken: "Da müssen wir durch." Sagt er: "Zieht das Großsegel ein und verstaut alles was nicht niet und nagelfest ist!". 
 Finjan schaut ihn mit großen Augen an: "Na gut Captain wir sehen uns auf der anderen Seite... oder vielleicht auch nicht."
 Der Sturm tobt, Wasser spritzt an den Seiten des Deckes hoch und die Mannschaft taumelt benommen über das Deck. 
 Der Himmel ist von pechschwarzen Wolken überzogen die im Minutentakt von Blitzen durchbrochen werden. 
@@ -95,12 +95,12 @@ Und zu allem Übel zieht nun auch noch Nebel auf, die Mannschaft verliert fast k
 Gerade lag er noch neben Dave und Dean auf einem Pult doch nun ist er weg. 
 Dave prescht wie ein wilder Hengst übers Deck und sucht verzweifelt nach dem Kompass. 
 Es dauert zwar eine Zeit aber er findet ihn... oder zu mindest das was von ihm übrig ist, irgendwer muss in der Unruhe des Sturms auf den Kompass getreten sein, dieser liegt zerschmettert in seine Einzelteile am Boden. 
-"Wie sollen wir jetzt bloß weiterkommen?",denkt sich Dave. 
+"Wie sollen wir jetzt bloß weiterkommen?", denkt sich Dave. 
 Der Storm tobt weiterhin und unter der Crew macht sich Panik breit. 
 In einer solchen Situation waren sie noch nie, ohne Kompass sind sie völlig orientierungslos. 
-Dave probiert in dem ganzen Chaos ruhig zu bleiben, allerdings fällt es auch ihm trotz seiner jahre langen Erfahrung schwer einen kühlen Kopf zu bewahren. 
-Durch das kreischen des Sturms hört die Crew plötzlich seltsame Geräusche, laute die ihnen das Blut in den Adern gefrieren lassen. 
-Ein Schatten bäugt sich über den Rumpf des Schiffes, zwei glühend rote Augen starren Dave in die Seele.
+Dave probiert in dem ganzen Chaos ruhig zu bleiben, allerdings fällt es auch ihm trotz seiner Jahre langen Erfahrung schwer einen kühlen Kopf zu bewahren. 
+Durch das Kreischen des Sturms hört die Crew plötzlich seltsame Geräusche, laute die ihnen das Blut in den Adern gefrieren lassen. 
+Ein Schatten beugt sich über den Rumpf des Schiffes, zwei glühend rote Augen starren Dave in die Seele.
 
 
 `,
