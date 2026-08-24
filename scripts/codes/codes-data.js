@@ -215,6 +215,54 @@ const codes = [
     message: "🪙 +300 Dublonen als Entschuldigung für die technischen Probleme heute - die komplette Spielothek läuft jetzt zuverlässig über Supabase!",
     currencyReward: 300,
   },
+
+  /* ------------------------------------------------------
+     10 ZUFALLSCODES - "hacked"
+     Codes im Klartext (nirgendwo sonst gespeichert, hier nur
+     als Kommentar zur eigenen Referenz): prsbn19i, d4v7gre6,
+     jbs08ha0, st7f6ay0, 8nuo3gxw, 9xugd1qg, cblrncyf, cbz82e9z,
+     896lv3gi, 7536xyf5
+  ------------------------------------------------------ */
+  {
+    hash: "3e6abdb95e1b0acc372908ed8318b086b40400b96a35c59ebd1f4fb83bee5e77", // prsbn19i
+    message: "hacked",
+  },
+  {
+    hash: "cb6b9c6b4bdd9ef4c7ed6c03eed0011bc0b30d596a4ca4d963917095166e6735", // d4v7gre6
+    message: "hacked",
+  },
+  {
+    hash: "c1b640f91943ee65097f2dc0acfcea746efc718c4d76eb2ed111dd701ba699cc", // jbs08ha0
+    message: "hacked",
+  },
+  {
+    hash: "6cc4f79c97769335dcabf0ea00dd4fc8feb4dd2460388d7817a616fca1de0771", // st7f6ay0
+    message: "hacked",
+  },
+  {
+    hash: "2526513be80527512558a2b3936aff977733d45f7a3a7a689fef645131b88080", // 8nuo3gxw
+    message: "hacked",
+  },
+  {
+    hash: "ce08e670886c61230efee042c91942e6487ab6549d320b0f68997f4bff6fc7d1", // 9xugd1qg
+    message: "hacked",
+  },
+  {
+    hash: "5ec5675c2ea02f56a30e5ecd254d541a1e1dbf54439edd9d8aedf5befe9ed7a8", // cblrncyf
+    message: "hacked",
+  },
+  {
+    hash: "cc3bc352ea9298a8f994d9d675e7cf2f65978d76bca5c13cf830809dde40f905", // cbz82e9z
+    message: "hacked",
+  },
+  {
+    hash: "3161fa663852bb8cad212ce140f84d6a4e88787db36324bccbfdf1476200cf45", // 896lv3gi
+    message: "hacked",
+  },
+  {
+    hash: "4b40cdd3eb0e8c95da5d8bd34e7684c7021a54eb38d52ce91d84b4b76e32f995", // 7536xyf5
+    message: "hacked",
+  },
 ];
 
 // Nachricht, wenn der Code nicht gefunden wurde

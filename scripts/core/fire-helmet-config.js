@@ -18,7 +18,7 @@ const FIRE_HELMET_CONFIG = {
   // "Repariere das Schiff"-Event (siehe scripts/ship/*): fester
   // Endzeitpunkt statt eines im Browser herunterzählenden Timers -
   // ein Reload springt dadurch nie wieder auf "10 Tage" zurück.
-  shipEventUnlockDate: "2026-08-27T18:00:00",
+  shipEventUnlockDate: "2026-09-01T18:00:00",
 
   // Fallback für den Haupt-Countdown (siehe scripts/core/countdown.js),
   // falls in Firestore (site_config/main, siehe scripts/core/
