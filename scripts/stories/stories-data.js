@@ -125,10 +125,10 @@ Das Ungetüm bewegte sich durch die Höhle fast so als ob es etwas suchen würde
 Die Crew war erschüttert. Erst ging ihr Kompass kaputt jetzt war auch noch ihr Captain weg. 
 Die Stimmung war im Keller und selbst Finians Scherze konnten sie wieder aufhellen. 
 Sie alle waren traurig, aber auch entschlossen keiner wollte Dave zurücklassen. 
-Dean setzte Kurs in Richtung Deadmansisland, das ist der einzige Ort wo das mistvieh Dave hinbringen könnte.
+Dean setzte Kurs in Richtung Deadmansisland, das ist der einzige Ort wo das Mistvieh Dave hinbringen könnte.
 Und so begab sich Daves Crew entschlossen auf eine Rettungsmission.
 Der Wind war gut und das Schiff schmiegte sich gleisend durch das blaue Wasser. 
-Alles wirkte ruhig bis Finian aus dem Ausguck meldung gab: "Insel voraus!"
+Alles wirkte ruhig bis Finian aus dem Ausguck Meldung gab: "Insel voraus!"
 
 `,
       },
@@ -139,17 +139,17 @@ Alles wirkte ruhig bis Finian aus dem Ausguck meldung gab: "Insel voraus!"
         text: `
 
 Dave kriechte weiter über den Boden und suchte nach einem Ausgang das seltsame blaue Licht half ihm sich in der Höhle zurechtzufinden. 
-Mit der Zeit verlor er allerdings das zeitgefühl er wusste nicht ob er schon Stunden, Tage oder Wochen über den Boden krabbelte. 
+Mit der Zeit verlor er allerdings das Zeitgefühl er wusste nicht, ob er schon Stunden, Tage oder Wochen über den Boden krabbelte. 
 Seine Hände ertasteten etwas in der Dunkelheit etwas rundes als Dave sich das Objekt genauer anschaute durchlief ihn ein kurzer Freudenschock, es war ein Kompass! 
 Vor lauter Freude rollte sich Dave auf dem Boden... und rollte über einen Haufen Knochen. 
-Das knacken dieser war in der Stille der Höhle kaum zu überhören, und auch das Biest hörte es, es baute  sich vor Dave auf, seine roten Augen leuchteten bestiealisch. 
-Booooom ein krachen durchzog die Höhle und eine der Felswände fiel in sich zusammen, das Sonnenlicht blendete Dave, erst nach ein paar Sekunden sah er was da durch die Wand gekommen war. 
+Das Knacken dieser war in der Stille der Höhle kaum zu überhören, und auch das Biest hörte es, es baute sich vor Dave auf, seine roten Augen leuchteten bestiealisch. 
+Booooom ein Krachen durchzog die Höhle und eine der Felswände fiel in sich zusammen, das Sonnenlicht blendete Dave, erst nach ein paar Sekunden sah er, was da durch die Wand gekommen war. 
 Es war sein Schiff! Seine Crew! Sie hatten es wohl mit dem Schwarzpulver das noch auf dem Schiff war geschafft ein Loch in die Wand zu sprengen. 
 "Macht es fertig", schrie es vom Schiff und Dave hörte weitere Explosionen. 
 Das Biest hatte keine Wahl und zog sich weiter in die Höhle zurück und probierte mit seinen Tentakeln Dave zu packen, dieser rannte auf sein Schiff zu. 
 Im letzten Moment schaffte er es die Hand von zweien seiner Leute zu greifen. 
-Finian und Julian hielten seine Hand fest und sahen nicht so aus als ob sie loslassen würden:"Halt dich fest Captain sonst bist du gleich Monstertatar!"sagte Finian lässig. 
-Knapp aber in einem Stück schaften sie es das Schiff aus der Höhle zu manövrieren und enkamen dem Untier. 
+Finian und Julian hielten seine Hand fest und sahen nicht so aus als ob sie loslassen würden: "Halt dich fest Captain, sonst bist du gleich Monstertatar!" sagte Finian lässig. 
+Knapp aber in einem Stück schafften sie es das Schiff aus der Höhle zu manövrieren und entkamen dem Untier. 
 Dave, überglücklich darüber das er seine Crew wieder hatte rief:"Kurs setzten Männer wir haben eine Fracht auszuliefern!"
 
 `,
@@ -165,14 +165,14 @@ Das Schiff schaukelt gemächlich über das Meer links und rechts nichts weiter a
 Dave sitzt in seiner Kajüte und macht sich Gedanken seit sie sich auf den Weg gemacht haben sind sie schon vielen gefahren begegnet, ob das etwas mit der mysteriösen Fracht zu tun hat? Dave weiß nicht mehr weiter.
 Oben im Krähennest beobachtet Finian die Azurblaue See, es ist außer ein paar Tung Tung Talahons nichts zu sehen, bei diesen handelt es sich um einen Art Seevogel dessen Federn der Struktur eines Stückes Holz täuschend ähnlich sieht. Sie sind nicht gefährlich aber klauen den Seeleuten oft ihr Essen. 
 Alles ist ruhig und die Crew hat nach diesem anstrengenden Teil der Fahrt endlich Zeit für eine Verschnaufpause. 
-Als Dave allerdings das Deck betritt ertönt ein markerschüternder Schrei: Nicht noch so ein Vieh denkt sich Dave, und greift zu seinem Säbel. 
+Als Dave allerdings das Deck betritt ertönt ein markerschütternder Schrei: Nicht noch so ein Vieh denkt sich Dave, und greift zu seinem Säbel. 
 Er eilt ins untere Deck den von dort kam der Schrei. Als er dort ankommt lacht er sich kaputt eine Krabe hat sich in das Hinterteil von einem der Seeleute verzwickt.
 "Macht das Vieh weg! Macht das Vieh weg", schrie der gezwickte Seemann bei dem es sich um Dr. Janne Noname handelte.
-"Selber schuld wenn du dich auf mich drauf setzt!", erwiderte plötzlich die Krabbe, die Crew zuckte erschrocken zurück:"Was ist das für ein Hexenwerk",sagte einer der Seeleute.
-"Hexenwerk?! Noch nie eine sprechende Krabbe gesehen was? Ich bin FollowingCrab und ihr seid ziemlich am arsch."
+"Selber schuld wenn du dich auf mich drauf setzt!", erwiderte plötzlich die Krabbe, die Crew zuckte erschrocken zurück: "Was ist das für ein Hexenwerk", sagte einer der Seeleute.
+"Hexenwerk?! Noch nie eine sprechende Krabbe gesehen was? Ich bin FollowingCrab und ihr seid ziemlich am Arsch."
 "Warum den das?" fragte Dave die wunderliche Krabbe.
 "Ich hab mich hier mal umgeschaut bevor sich dieser Typ auf mich drauf gesetzt hat und ihr habt da so eine Fracht geladen die ziemlich fragwürdig ist," sagte die Krabbe:" Das was ihr geladen habt ist ein verfluchter Schatz jede Crew die ihn bis jetzt geladen hatte erfur unglaubliches Pech und scheiterte bei dem Versuch die Fracht auszuliefern." 
-Auf Daves Gesicht zeichnete sich ein deutliches Lächeln ab:"Noch ein Grund mehr für uns diese Fracht auszuliefern",sagte Dave lächelnd.       
+Auf Daves Gesicht zeichnete sich ein deutliches Lächeln ab: "Noch ein Grund mehr für uns diese Fracht auszuliefern", sagte Dave lächelnd.       
 
 `,
       },
