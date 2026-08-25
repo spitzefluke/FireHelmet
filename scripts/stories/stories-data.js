@@ -122,15 +122,6 @@ Dave jedenfalls fand sich nach seinem aufwachen in einer Höhle wieder, aber and
 Dave tastete sich vorsichtig vorwärts, er erkannte die Umrisse von zerstörten Schiffen die überall in der Höhle verteilt waren.
 Plötzlich nahm er in der Dunkelheit eine Bewegung war ein großer Schatten der ihm schrecklicherweise bekannt vorkam. 
 Das Ungetüm bewegte sich durch die Höhle fast so als ob es etwas suchen würde, allerdings blieb Dave keine Zeit darüber nachzudenken er musste einen Ausgang finden.
-
-`,
-      },
-      {
-        id: "treasure-de-05",
-        title: "Kapitel 5 - Getrennte Wege",
-        language: "Deutsch",
-        text: `
-
 Die Crew war erschüttert. Erst ging ihr Kompass kaputt jetzt war auch noch ihr Captain weg. 
 Die Stimmung war im Keller und selbst Finians Scherze konnten sie wieder aufhellen. 
 Sie alle waren traurig, aber auch entschlossen keiner wollte Dave zurücklassen. 
@@ -142,24 +133,8 @@ Alles wirkte ruhig bis Finian aus dem Ausguck meldung gab: "Insel voraus!"
 `,
       },
       {
-        id: "treasure-de-06",
-        title: "Kapitel 6 - Einer weniger?",
-        language: "Deutsch",
-        text: `
-        
-Die Crew war erschüttert. Erst ging ihr Kompass kaputt jetzt war auch noch ihr Captain weg. 
-Die Stimmung war im Keller und selbst Finians Scherze konnten sie wieder aufhellen. 
-Sie alle waren traurig, aber auch entschlossen keiner wollte Dave zurücklassen. 
-"Dean setzte Kurs in Richtung Deadmansisland, das ist der einzige Ort wo das mistvieh Dave hinbringen könnte." 
-Und so begab sich Daves Crew entschlossen auf eine Rettungsmission.
-Der Wind war gut und das Schiff schmiegte sich gleisend durch das blaue Wasser. 
-Alles wirkte ruhig bis Finian aus dem Ausguck meldung gab:"Insel voraus!"
-
-`,
-      },
-      {
-        id: "treasure-de-07",
-        title: "Kapitel 7 - Die Rettung",
+        id: "treasure-de-05",
+        title: "Kapitel 5 - Die Rettung",
         language: "Deutsch",
         text: `
 
@@ -180,11 +155,11 @@ Dave, überglücklich darüber das er seine Crew wieder hatte rief:"Kurs setzten
 `,
       },
       {
-        id: "treasure-de-08",
-        title: "Kapitel 8 - Eine Krabbische Begegnung",
+        id: "treasure-de-06",
+        title: "Kapitel 6 - Eine Krabbische Begegnung",
         language: "Deutsch",
         text: `
-        
+
 Nachdem Dave und seiner Crew die Flucht gelungen ist machen diese sich auf den Weg zu ihrem Ziel.
 Das Schiff schaukelt gemächlich über das Meer links und rechts nichts weiter als die ruhige See. 
 Dave sitzt in seiner Kajüte und macht sich Gedanken seit sie sich auf den Weg gemacht haben sind sie schon vielen gefahren begegnet, ob das etwas mit der mysteriösen Fracht zu tun hat? Dave weiß nicht mehr weiter.
@@ -197,7 +172,27 @@ Er eilt ins untere Deck den von dort kam der Schrei. Als er dort ankommt lacht e
 "Hexenwerk?! Noch nie eine sprechende Krabbe gesehen was? Ich bin FollowingCrab und ihr seid ziemlich am arsch."
 "Warum den das?" fragte Dave die wunderliche Krabbe.
 "Ich hab mich hier mal umgeschaut bevor sich dieser Typ auf mich drauf gesetzt hat und ihr habt da so eine Fracht geladen die ziemlich fragwürdig ist," sagte die Krabbe:" Das was ihr geladen habt ist ein verfluchter Schatz jede Crew die ihn bis jetzt geladen hatte erfur unglaubliches Pech und scheiterte bei dem Versuch die Fracht auszuliefern." 
-Auf Daves Gesicht zeichnete sich ein deutliches Lächeln ab:"Noch ein Grund mehr für uns diese Fracht auszuliefern",sagte Dave lächelnd.
+Auf Daves Gesicht zeichnete sich ein deutliches Lächeln ab:"Noch ein Grund mehr für uns diese Fracht auszuliefern",sagte Dave lächelnd.       
+
+`,
+      },
+      {
+        id: "treasure-de-07",
+        title: "Kapitel 7 - ",
+        language: "Deutsch",
+        text: `
+
+
+
+`,
+      },
+      {
+        id: "treasure-de-08",
+        title: "Kapitel 8 - ",
+        language: "Deutsch",
+        text: `
+        
+
 
 `,
       },
