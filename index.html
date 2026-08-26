@@ -18,6 +18,13 @@
 </head>
 <body>
 
+  <!-- Cloudflare-Turnstile-Widget fuer die anonyme Anmeldung (Bot-Schutz),
+       siehe scripts/supabase/turnstile-config.js + supabase-client.js.
+       Bleibt fuer die meisten Besucher unsichtbar (appearance:
+       "interaction-only"), muss aber schon im DOM stehen, bevor
+       supabase-client.js versucht, es zu rendern. -->
+  <div id="turnstile-widget" class="turnstile-widget"></div>
+
   <!-- Update-Mitteilung: erscheint einmalig, Inhalt in scripts/core/update-notice-data.js -->
   <div id="update-notice-overlay" class="update-notice-overlay"></div>
 
@@ -1040,6 +1047,8 @@
   <script src="scripts/auth/twitch-auth.js"></script>
   <script src="scripts/auth/discord-config.js"></script>
   <script src="scripts/auth/discord-auth.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
+  <script src="scripts/supabase/turnstile-config.js"></script>
   <script src="scripts/supabase/supabase-config.js"></script>
   <script src="scripts/supabase/supabase-proxy-data.js"></script>
   <script src="scripts/supabase/supabase-client.js"></script>
