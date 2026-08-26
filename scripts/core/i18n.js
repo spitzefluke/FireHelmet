@@ -182,6 +182,7 @@ const translations = {
     "code.tooManyAttempts": "⏳ Zu viele Fehlversuche – warte noch {seconds} Sekunde(n).",
     "code.alreadyRedeemed": "✅ Diesen Code hast du bereits eingelöst.",
     "code.invalid": "Dieser Code ist ungültig.",
+    "code.history.heading": "📜 Zuletzt eingelöst (letzte 7 Tage)",
 
     "wheel.title": "SCHATZRAD",
     "wheel.subtitle": "Einmal am Tag drehen und dein Glück bei der Schatzsuche versuchen",
@@ -465,6 +466,7 @@ const translations = {
     "code.tooManyAttempts": "⏳ Too many failed attempts – try again in {seconds} second(s).",
     "code.alreadyRedeemed": "✅ You've already redeemed this code.",
     "code.invalid": "This code is invalid.",
+    "code.history.heading": "📜 Recently redeemed (last 7 days)",
 
     "wheel.title": "TREASURE WHEEL",
     "wheel.subtitle": "Spin once a day and try your luck at the treasure hunt",
