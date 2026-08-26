@@ -29,5 +29,5 @@
 ====================================================== */
 
 const turnstileConfig = {
-  siteKey: "DEIN-TURNSTILE-SITE-KEY",
+  siteKey: "0x4AAAAAAEdFE9xIBp5wXOPe",
 };
