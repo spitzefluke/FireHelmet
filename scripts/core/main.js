@@ -41,6 +41,10 @@ function changePage(pageID) {
     updateCodeAmbientPage(pageID);
   }
 
+  if (typeof updateCodeHistoryPage === "function") {
+    updateCodeHistoryPage(pageID);
+  }
+
   if (typeof updateCommunityBossPage === "function") {
     updateCommunityBossPage(pageID);
   }
@@ -676,6 +680,10 @@ async function checkCode() {
 
       messageEl.textContent = match.message;
 
+      if (typeof addCodeHistoryEntry === "function") {
+        addCodeHistoryEntry(enteredCode, match.message);
+      }
+
       if (typeof refreshShopCurrencyDisplay === "function") {
         refreshShopCurrencyDisplay();
       }
@@ -699,6 +707,10 @@ async function checkCode() {
       }
     } else {
       messageEl.textContent = match.message;
+
+      if (typeof addCodeHistoryEntry === "function") {
+        addCodeHistoryEntry(enteredCode, match.message);
+      }
 
       if (typeof recordCodeCrack === "function") {
         recordCodeCrack(codeId, match.reward || null);
