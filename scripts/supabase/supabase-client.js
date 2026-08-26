@@ -25,6 +25,11 @@
    Providers -> Anonymous Sign-Ins muss aktiviert sein, sonst schlaegt
    signInAnonymously() fehl.
 
+   Optionaler Bot-Schutz: signInAnonymously() reicht ein Cloudflare-
+   Turnstile-Token durch, falls konfiguriert (siehe getTurnstileToken()
+   unten + scripts/supabase/turnstile-config.js). Ohne Konfiguration
+   laeuft die Anmeldung unveraendert wie bisher.
+
    Braucht das global per <script>-Tag geladene supabase-js (UMD-
    Build, siehe index.html).
 ====================================================== */
@@ -46,6 +51,66 @@ async function withSupabaseRlsColdStartRetry(queryFn) {
   if (!first || !first.error || first.error.code !== "42501") return first;
   await new Promise((resolve) => setTimeout(resolve, 800));
   return await queryFn();
+}
+
+/* ------------------------------------------------------
+   CLOUDFLARE TURNSTILE - CAPTCHA-TOKEN FUER signInAnonymously()
+   ---------------------------------------------------
+   Siehe scripts/supabase/turnstile-config.js fuer die Einrichtung.
+   Solange dort kein echter Site-Key eingetragen ist, ODER falls das
+   Cloudflare-Skript (z.B. durch einen Adblocker oder Netzwerkfehler)
+   gar nicht laedt, loest diese Funktion einfach mit "null" auf -
+   signInAnonymously() laeuft dann exakt wie vorher, ganz ohne
+   Captcha-Pruefung. Ein echter Besucher soll NIE an einem fehlenden/
+   fehlgeschlagenen Drittanbieter-Skript scheitern.
+------------------------------------------------------ */
+function getTurnstileToken() {
+  return new Promise((resolve) => {
+    if (
+      typeof turnstileConfig === "undefined" ||
+      !turnstileConfig.siteKey ||
+      turnstileConfig.siteKey === "DEIN-TURNSTILE-SITE-KEY" ||
+      typeof turnstile === "undefined"
+    ) {
+      resolve(null);
+      return;
+    }
+
+    const container = document.getElementById("turnstile-widget");
+    if (!container) {
+      resolve(null);
+      return;
+    }
+
+    let settled = false;
+    const finish = (token) => {
+      if (settled) return;
+      settled = true;
+      resolve(token);
+    };
+
+    // Netzwerkprobleme oder ein sehr seltener haengender Widget-Zustand
+    // sollen die gesamte Seite nicht auf unbestimmte Zeit blockieren.
+    const timeout = setTimeout(() => finish(null), 8000);
+
+    try {
+      turnstile.render(container, {
+        sitekey: turnstileConfig.siteKey,
+        appearance: "interaction-only", // bleibt unsichtbar, ausser eine Pruefung ist wirklich noetig
+        callback: (token) => {
+          clearTimeout(timeout);
+          finish(token);
+        },
+        "error-callback": () => {
+          clearTimeout(timeout);
+          finish(null);
+        },
+      });
+    } catch (err) {
+      clearTimeout(timeout);
+      finish(null);
+    }
+  });
 }
 
 if (
@@ -70,7 +135,10 @@ if (
           return sessionData.session.user.id;
         }
 
-        const { data, error } = await supabaseClient.auth.signInAnonymously();
+        const captchaToken = await getTurnstileToken();
+        const { data, error } = await supabaseClient.auth.signInAnonymously(
+          captchaToken ? { options: { captchaToken } } : undefined
+        );
         if (error) throw error;
         return data && data.user ? data.user.id : null;
       } catch (err) {

@@ -19,6 +19,7 @@
 1. **Authentication → Sign In / Providers → Anonymous Sign-Ins aktivieren** - ohne das schlaegt jede `signInAnonymously()`-Anfrage fehl (nichts speichert mehr, genau wie beim urspruenglichen Bug).
 2. **Authentication → Sign In / Providers → Google aktivieren** - eigene OAuth-Client-ID/Secret aus der Google Cloud Console eintragen (Redirect-URI dort UND bei Google selbst hinterlegen, Supabase zeigt die genaue URL im Dashboard an). Ohne das kann sich niemand mehr am Admin-Gateway anmelden.
 3. Die alte Third-Party-Auth-Firebase-Konfiguration kann optional entfernt werden (wird nicht mehr genutzt), muss aber nicht - sie ist einfach nur noch wirkungslos.
+4. **Optional, Bot-Schutz fuer die anonyme Anmeldung:** Cloudflare-Turnstile-Widget anlegen (siehe `scripts/supabase/turnstile-config.js` fuer die genaue Anleitung), Site-Key dort eintragen, Secret-Key unter Authentication → Attack Protection → "Enable Captcha protection" (Anbieter "Turnstile") hinterlegen. Ohne diesen Schritt bleibt die Anmeldung unveraendert - kein Captcha, exakt wie bisher.
 
 ### Lokale Tests
 
