@@ -34,6 +34,7 @@ const translations = {
     "menu.streamraetselShort": "???",
     "menu.support": "🆘 Support",
     "menu.rating": "⭐ Bewertung",
+    "menu.daveAwards": "🏅 Dave Awards",
 
     "support.title": "SUPPORT",
     "support.subtitle": "Melde ein Problem oder ein Anliegen",
@@ -318,6 +319,7 @@ const translations = {
     "menu.streamraetselShort": "???",
     "menu.support": "🆘 Support",
     "menu.rating": "⭐ Rating",
+    "menu.daveAwards": "🏅 Dave Awards",
 
     "support.title": "SUPPORT",
     "support.subtitle": "Report a problem or an issue",
