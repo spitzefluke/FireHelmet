@@ -13,7 +13,7 @@
 
 const updateNoticeConfig = {
   title: "🆕 Neuigkeiten",
-  message: "Update 5.8 Hacked ?",
+  message: "🏅 NEU: Dave Awards! Im Menü findest du jetzt den Punkt 'Dave Awards' - führt dich direkt zur Dave Awards Seite.",
 
   // Optional: Bild anzeigen (Pfad relativ zur index.html), sonst leer lassen
   image: "",
