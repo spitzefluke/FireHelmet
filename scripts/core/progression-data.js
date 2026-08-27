@@ -218,3 +218,17 @@ const PIRATE_PASSES = [
    kaputten <img>-Tags - unveraendert, unabhaengig vom Dateiformat.
 ------------------------------------------------------ */
 const PIRATE_PASS_CAP_IMAGE = "assets/piratenpass/cap.webp";
+
+/* ------------------------------------------------------
+   LIMITIERTE STUECKZAHL DER ECHTEN CAP
+   ---------------------------------------------------
+   Nur reine Anzeige-Konstanten (Texte in piratenpass.js) - die
+   tatsaechlich massgebliche Grenze UND die Hoehe des Dublonen-
+   Ersatzes liegen serverseitig in app.claim_pass_cap() (siehe
+   supabase/game-migration/08-pass-cap.sql), weil eine limitierte,
+   echte physische Belohnung niemals allein clientseitig durchgesetzt
+   werden darf. Aendert sich einer der beiden Werte dort, MUSS er
+   auch hier nachgezogen werden, sonst zeigt die Seite falsche Texte.
+------------------------------------------------------ */
+const PASS_CAP_TOTAL_SLOTS = 9;
+const PASS_CAP_FALLBACK_CURRENCY = 500;

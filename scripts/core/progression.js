@@ -167,9 +167,13 @@ function buildRewardFields(reward, playerData, progressionData, currentPass) {
       break;
     }
 
-    case "cap":
-      progressionFields.has_flitzpiepen_cap = true;
-      break;
+    // "cap" (Stufe-50-Endbelohnung, limitiert auf 9 Stueck) wird NICHT
+    // hier behandelt - siehe der eigene Zweig fuer reward.type === "cap"
+    // in claimReward() unten, der stattdessen app.claim_pass_cap()
+    // aufruft (SECURITY-DEFINER-RPC, siehe 08-pass-cap.sql). Eine
+    // limitierte, echte physische Belohnung darf nie ueber diesen
+    // generischen Pfad laufen, der bewusst kleine Race-Conditions
+    // toleriert ("im schlimmsten Fall einmal zu oft vergeben").
 
     case "avatar":
       // Absichtlich keine Spalte - siehe Kommentar oben.
@@ -214,6 +218,11 @@ async function claimReward(rewardId, reward) {
   if (!uid) return { ok: false, reason: "no-auth" };
 
   let claimedNow = false;
+  // Nur bei reward.type === "cap" gesetzt (siehe Zweig unten) -
+  // unterscheidet "echte Cap bekommen" von "Caps waren alle schon weg,
+  // stattdessen Dublonen bekommen", damit die Aufrufer (piratenpass.js)
+  // die passende Rueckmeldung zeigen koennen.
+  let capResult = null;
 
   try {
     await ensureSupabasePlayerRow(uid, localStorage.getItem("wheelNickname") || "");
@@ -233,6 +242,30 @@ async function claimReward(rewardId, reward) {
       // schon eingeloest - kein Fehler, einfach nichts tun
     } else if (claimed.length >= PROGRESSION_REWARD_ID_CAP) {
       throw new Error("reward-ledger-full");
+    } else if (reward.type === "cap") {
+      // Limitierte, ECHTE physische Belohnung (siehe Kommentar in
+      // buildRewardFields() oben) - laeuft ausschliesslich ueber die
+      // atomare RPC-Funktion, niemals ueber den generischen Pfad im
+      // else-Zweig unten.
+      const currentPass = getCurrentPirateSeason();
+      if (!currentPass) throw new Error("no-active-pass");
+
+      const { data: rpcData, error: rpcError } = await supabaseClient.rpc("claim_pass_cap", {
+        p_pass_id: currentPass.passId,
+      });
+      if (rpcError) throw rpcError;
+      const row = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+      capResult = { gotCap: !!(row && row.got_cap), currencyAwarded: (row && row.currency_awarded) || 0 };
+
+      const { data: updatedProgression, error: progWriteError } = await supabaseClient
+        .from("player_progression")
+        .update({ claimed_reward_ids: [...claimed, rewardId] })
+        .eq("firebase_uid", uid)
+        .select()
+        .maybeSingle();
+      if (progWriteError || !updatedProgression) throw new Error("progression-write-failed");
+
+      claimedNow = true;
     } else {
       const { data: playerRow, error: playerReadError } = await supabaseClient
         .from("players")
@@ -278,9 +311,12 @@ async function claimReward(rewardId, reward) {
   if (reward.type === "coins" && typeof showCurrencyToast === "function") {
     showCurrencyToast(reward.amount);
   }
+  if (reward.type === "cap" && capResult && !capResult.gotCap && typeof showCurrencyToast === "function") {
+    showCurrencyToast(capResult.currencyAwarded);
+  }
 
   refreshPlayerCard();
-  return { ok: true, alreadyClaimed: false };
+  return { ok: true, alreadyClaimed: false, capResult };
 }
 
 /* ------------------------------------------------------
@@ -412,7 +448,10 @@ function renderPlayerCardHtml(data) {
   else if (provider === "twitch") avatar = localStorage.getItem("twitchAvatar") || avatar;
   else avatar = localStorage.getItem("wheelAvatar") || avatar;
 
-  const avatarHtml = typeof buildAvatarPickerHtml === "function" ? buildAvatarPickerHtml(avatar) : `<span>${avatar}</span>`;
+  let avatarHtml = typeof buildAvatarPickerHtml === "function" ? buildAvatarPickerHtml(avatar) : `<span>${avatar}</span>`;
+  if (typeof wrapAvatarWithCapBadge === "function") {
+    avatarHtml = wrapAvatarWithCapBadge(avatarHtml, data && data.has_flitzpiepen_cap);
+  }
   const levelLabel = typeof t === "function" ? t("progression.level", "LEVEL") : "LEVEL";
   const xpText = progress.isMaxLevel
     ? (typeof t === "function" ? t("progression.maxLevel", "Max. Level erreicht") : "Max. Level erreicht")

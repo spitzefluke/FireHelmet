@@ -1476,6 +1476,47 @@ function wrapAvatarWithFrame(avatarHtml, frameStyle) {
   return avatarHtml;
 }
 
+/* ------------------------------------------------------
+   CAP-ABZEICHEN AUF DEM AVATAR
+   ---------------------------------------------------
+   Kleiner Aufkleber oben rechts auf dem Avatar fuer die maximal 9
+   echten Piratenpass-Cap-Gewinner:innen (siehe app.claim_pass_cap()
+   in supabase/game-migration/08-pass-cap.sql). Nutzt dasselbe Bild
+   wie die Piratenpass-Endbelohnung (PIRATE_PASS_CAP_IMAGE), damit
+   erkennbar dieselbe Cap gemeint ist. Wiederverwendet in wheel.js
+   (Rangliste), progression.js (Spielerkarte) und community-boss.js
+   (Boss-Rangliste) - EINE Stelle statt drei separaten Implementierungen.
+------------------------------------------------------ */
+function wrapAvatarWithCapBadge(avatarHtml, hasCap) {
+  if (!hasCap || !avatarHtml) return avatarHtml;
+  const capSrc = typeof PIRATE_PASS_CAP_IMAGE !== "undefined" ? PIRATE_PASS_CAP_IMAGE : "";
+  const badge = capSrc
+    ? `<img class="avatar-cap-badge" src="${capSrc}" alt="" aria-hidden="true" loading="lazy">`
+    : `<span class="avatar-cap-badge avatar-cap-badge-emoji" aria-hidden="true">🧢</span>`;
+  return `<span class="avatar-cap-wrap">${avatarHtml}${badge}</span>`;
+}
+
+/* ------------------------------------------------------
+   LISTE DER CAP-GEWINNER:INNEN LADEN
+   ---------------------------------------------------
+   pass_cap_grants ist oeffentlich lesbar und hat hoechstens 9 Zeilen
+   (siehe 08-pass-cap.sql) - ein voller, ungefilterter Abruf ist damit
+   immer billig. Wird bei jedem Rangliste-/Boss-Rangliste-/Spielerkarte-
+   Rendern frisch abgerufen statt zwischengespeichert - bei maximal 9
+   Zeilen lohnt sich eine eigene Cache-Verwaltung nicht.
+------------------------------------------------------ */
+async function fetchPassCapWinnerUids() {
+  if (!supabaseClient) return new Set();
+  try {
+    const { data, error } = await supabaseClient.from("pass_cap_grants").select("firebase_uid");
+    if (error) throw error;
+    return new Set((data || []).map((row) => row.firebase_uid));
+  } catch (err) {
+    console.warn("Cap-Gewinnerliste konnte nicht geladen werden:", err);
+    return new Set();
+  }
+}
+
 function frameStyleFromId(frameId) {
   if (!frameId || typeof shopItems === "undefined") return "";
   const item = shopItems.find((i) => i.id === frameId);
@@ -1501,6 +1542,7 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
     : "";
 
   avatarHtml = wrapAvatarWithFrame(avatarHtml, frameStyle);
+  avatarHtml = wrapAvatarWithCapBadge(avatarHtml, player.hasCap);
 
   const crownHtml = rank === 1 ? `<span class="leaderboard-crown">👑</span>` : "";
 
@@ -1569,8 +1611,9 @@ function loadLeaderboard() {
       .from("players")
       .select("firebase_uid, nickname, codes_cracked, rewards, avatar, equipped_frame"),
     wheelAuthReady,
+    fetchPassCapWinnerUids(),
   ])
-    .then(([{ data: rows, error }, ownUid]) => {
+    .then(([{ data: rows, error }, ownUid, capWinnerUids]) => {
       if (error) throw error;
 
       const players = [];
@@ -1583,6 +1626,7 @@ function loadLeaderboard() {
           rewards: row.rewards || [],
           avatar: row.avatar,
           equippedFrame: row.equipped_frame,
+          hasCap: capWinnerUids.has(row.firebase_uid),
         });
       });
 

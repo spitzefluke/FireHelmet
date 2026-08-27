@@ -199,6 +199,14 @@ async function renderPassPage() {
   const totalTierXp = passXpRequiredForTier(pass.levels);
 
   const capReached = currentTier >= pass.levels;
+  // Stufe 50 kann bereits "eingeloest" (claimed_reward_ids) sein, OHNE
+  // dass hasCap stimmt - naemlich dann, wenn zum Zeitpunkt des Klicks
+  // alle 9 echten Caps schon vergeben waren und stattdessen Dublonen
+  // kamen (siehe app.claim_pass_cap() in 08-pass-cap.sql). Ohne diese
+  // Unterscheidung wuerde die Person hier fuer immer den "EINLÖSEN"-
+  // Button sehen, obwohl sie schon (per Fallback) bedient wurde.
+  const capRewardId = getPassRewardId(pass, pass.levels);
+  const capRewardClaimed = claimedIds.includes(capRewardId);
   const routeHtml = buildPassRouteHtml(pass, currentTier, claimedIds, hasCap);
 
   container.innerHTML = `
@@ -225,17 +233,27 @@ async function renderPassPage() {
         </div>
       </div>
 
-      ${capReached && !hasCap ? `
+      ${capReached && !capRewardClaimed ? `
         <div class="piratenpass-cap-banner">
           <p class="piratenpass-cap-banner-title">🎉 ${isEn ? "YOU COMPLETED THE PIRATE PASS!" : "DU HAST DEN PIRATENPASS ABGESCHLOSSEN!"}</p>
           <p class="piratenpass-cap-banner-sub">${isEn ? "Your reward:" : "Deine Belohnung:"}</p>
           ${renderCapBadge(isEn)}
+          <p class="piratenpass-cap-banner-note">${isEn
+            ? `Only ${PASS_CAP_TOTAL_SLOTS} real caps exist worldwide - once they're gone, you'll get ${PASS_CAP_FALLBACK_CURRENCY} Doubloons instead.`
+            : `Nur ${PASS_CAP_TOTAL_SLOTS} echte Caps gibt es weltweit - sind sie vergeben, bekommst du stattdessen ${PASS_CAP_FALLBACK_CURRENCY} Dublonen.`}</p>
           <button type="button" class="piratenpass-tooltip-claim-btn" onclick="claimPassTier(${pass.levels})">${isEn ? "COLLECT" : "EINLÖSEN"}</button>
         </div>
       ` : hasCap ? `
         <div class="piratenpass-cap-banner piratenpass-cap-banner-claimed">
           <p class="piratenpass-cap-banner-title">🏴‍☠️ ${isEn ? '"I\'m a Flitzpiepe" cap' : '"Ich bin eine Flitzpiepe"-Cap'}</p>
           ${renderCapBadge(isEn)}
+        </div>
+      ` : capRewardClaimed ? `
+        <div class="piratenpass-cap-banner piratenpass-cap-banner-claimed">
+          <p class="piratenpass-cap-banner-title">🎉 ${isEn ? "YOU COMPLETED THE PIRATE PASS!" : "DU HAST DEN PIRATENPASS ABGESCHLOSSEN!"}</p>
+          <p class="piratenpass-cap-banner-sub">${isEn
+            ? `All ${PASS_CAP_TOTAL_SLOTS} caps had already been claimed - as a thank you, you got ${PASS_CAP_FALLBACK_CURRENCY} Doubloons instead. 🪙`
+            : `Alle ${PASS_CAP_TOTAL_SLOTS} Caps waren bereits vergeben - als Dankeschön hast du stattdessen ${PASS_CAP_FALLBACK_CURRENCY} Dublonen bekommen. 🪙`}</p>
         </div>
       ` : ""}
     </div>
