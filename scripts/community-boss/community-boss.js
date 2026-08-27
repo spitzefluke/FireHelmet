@@ -1399,6 +1399,7 @@ async function renderBossLeaderboard(monthId) {
     }
 
     const ownUid = typeof wheelAuthReady !== "undefined" ? await wheelAuthReady : null;
+    const capWinnerUids = typeof fetchPassCapWinnerUids === "function" ? await fetchPassCapWinnerUids() : new Set();
 
     let html = "";
     data.forEach((p, i) => {
@@ -1416,6 +1417,9 @@ async function renderBossLeaderboard(monthId) {
 
       if (typeof wrapAvatarWithFrame === "function") {
         avatarHtml = wrapAvatarWithFrame(avatarHtml, frameStyle);
+      }
+      if (typeof wrapAvatarWithCapBadge === "function") {
+        avatarHtml = wrapAvatarWithCapBadge(avatarHtml, capWinnerUids.has(p.firebase_uid));
       }
 
       html += `
