@@ -1038,6 +1038,582 @@ Und irgendwo vor uns beginnt der nächste Horizont.
 – Ende des zweiten Logbuchs –
 `,
       },
+      {
+        id: "lostroute-en-01",
+        title: "Chapter I - The Call of the Sea",
+        language: "English",
+        text: `
+Day 1
+
+We're finally at sea again.
+
+I never thought I'd write that sentence again. After everything we've been through, I should have had enough of the sea. But the moment I heard the familiar creak of the planks beneath my feet, I knew I had come back.
+
+The captain gave the order this morning to set sail.
+
+Hardly anyone knows our destination.
+
+I don't even know it myself, not exactly.
+
+They say there's an island somewhere beyond the known waters. An island marked on no ordinary map.
+
+And something is said to be hidden there.
+
+A treasure.
+
+Not just any treasure.
+
+The legendary treasure.
+
+For years, sailors have told stories about it. Gold, jewels, and riches are said to lie there. Some even claim the treasure is older than the first pirate maps.
+
+I always thought those were stories for drunken sailors.
+
+Today, I'm not so sure anymore.
+
+Because the captain has a map.
+
+And it looks damn real.
+`,
+      },
+      {
+        id: "lostroute-en-02",
+        title: "Chapter II - The Map",
+        language: "English",
+        text: `
+Day 3
+
+I got to see the map up close for the first time today.
+
+It's old. Very old.
+
+The paper is burned at the edges and torn in several places. Strange symbols cover its surface. Even our navigator couldn't decipher some of them.
+
+In the middle is a mark that looks like an eye.
+
+Beneath it is a sentence:
+
+"Whoever seeks the treasure must first understand the sea."
+
+What is that supposed to mean?
+
+The captain didn't want to answer my question.
+
+Instead, he just said:
+
+"Dave, some maps don't show you where you have to go. They show you when you have to go."
+
+I've been thinking about it ever since.
+
+Tonight I looked at the map again in secret.
+
+The eye on the map seemed to shimmer in the moonlight.
+
+Maybe I'm just imagining it.
+
+I hope so.
+`,
+      },
+      {
+        id: "lostroute-en-03",
+        title: "Chapter III - The Strange Light",
+        language: "English",
+        text: `
+Day 6
+
+Something is wrong with the sea.
+
+Since this morning, not a single bird has been in sight.
+
+No fish.
+
+Not even a gull.
+
+The water is perfectly still.
+
+Too still.
+
+Around midday the lookout reported a light on the horizon. At first we thought it was a ship. But the light wasn't moving.
+
+It was green.
+
+The captain had the course changed.
+
+I asked him why.
+
+He answered:
+
+"Because the light has already found us."
+
+I didn't like that answer at all.
+
+Shortly before sunset the light disappeared.
+
+But something remained on the water.
+
+A trail of small, glowing dots.
+
+It led straight west.
+
+The captain ordered us to follow it.
+
+No one objected.
+
+Neither did I.
+
+But today, for the first time, I'm afraid.
+`,
+      },
+      {
+        id: "lostroute-en-04",
+        title: "Chapter IV - The Storm",
+        language: "English",
+        text: `
+Day 7
+
+The storm came without warning.
+
+Just minutes ago the sky had still been clear. Then it turned dark.
+
+Not just overcast.
+
+Dark.
+
+As if someone had poured black ink over the sky.
+
+The wind tore at the sails. Waves crashed over the deck. Two men had to secure the ropes while the rest tried to keep the ship on course.
+
+Then I heard it.
+
+A sound beneath us.
+
+A deep rumble.
+
+As if something enormous were swimming under the ship.
+
+We saw nothing.
+
+But I'm certain something was there.
+
+Shortly after, the green light appeared again.
+
+This time right in front of our bow.
+
+The captain shouted:
+
+"Don't turn away!"
+
+We sailed straight into it.
+
+For a moment everything was still.
+
+Then the world turned white.
+`,
+      },
+      {
+        id: "lostroute-en-05",
+        title: "Chapter V - The Island",
+        language: "English",
+        text: `
+Day 8
+
+We survived.
+
+I don't know how.
+
+The ship is damaged but still afloat. Some supplies were lost. One of our men was injured.
+
+But the strangest thing is:
+
+We're no longer where we should be.
+
+An island lies before us.
+
+A massive island.
+
+Tall black cliffs rise out of the water. Beyond them begins a dense forest.
+
+This island is on no map.
+
+The captain held the old treasure map up against the horizon.
+
+It matches.
+
+The symbol at the center of the map points exactly at this island.
+
+We found it.
+
+Or maybe it found us.
+
+On the beach we found footprints.
+
+They were fresh.
+
+And they weren't ours.
+`,
+      },
+      {
+        id: "lostroute-en-06",
+        title: "Chapter VI - The Ruins",
+        language: "English",
+        text: `
+Day 9
+
+We pushed inland.
+
+After about an hour we found the first ruins.
+
+Stone walls, overgrown with plants. Columns half-sunk into the ground. Symbols were carved into the stone in several places.
+
+I recognize one of them.
+
+The eye.
+
+The same mark as on our map.
+
+We also found an old stone tablet.
+
+It reads:
+
+"The treasure does not belong to the one who finds it. It belongs to the one who is worthy."
+
+Our captain wanted to press on immediately.
+
+I asked him what "worthy" was supposed to mean.
+
+He said:
+
+"We'll find out."
+
+I think he knows more than he's telling us.
+
+Much more.
+`,
+      },
+      {
+        id: "lostroute-en-07",
+        title: "Chapter VII - The Guardian",
+        language: "English",
+        text: `
+Day 10
+
+Today we found the entrance.
+
+A massive stone door set into the rock.
+
+Two statues stood before it.
+
+Pirates.
+
+At least, that's what they looked like.
+
+Between them was a pedestal with a hollow.
+
+Our map fit right in.
+
+When the captain placed it there, the ground began to shake.
+
+The statues' eyes lit up.
+
+Then the door opened.
+
+Behind it lay a dark tunnel.
+
+We went inside.
+
+After about ten minutes we heard a sound.
+
+A growl.
+
+Something was moving in the dark.
+
+We drew our weapons.
+
+Then a figure appeared.
+
+Not human.
+
+Not animal.
+
+A guardian made of stone and metal.
+
+It asked us only one question:
+
+"Why do you seek the treasure?"
+
+No one answered.
+
+Then it looked at me.
+
+To this day I don't know why.
+`,
+      },
+      {
+        id: "lostroute-en-08",
+        title: "Chapter VIII - The Trial",
+        language: "English",
+        text: `
+Day 11
+
+The guardian let us pass.
+
+But only after we had passed a trial.
+
+We had to open three doors.
+
+Behind each door was a symbol.
+
+Gold.
+
+Crown.
+
+Heart.
+
+Most of us naturally wanted to open the door with the gold.
+
+It was a trap.
+
+Behind it was a deep pit.
+
+The crown led to another locked room.
+
+The heart was the right choice.
+
+Behind it lay no gold.
+
+Only a small, old compass.
+
+On its back it read:
+
+"Not every treasure glitters."
+
+The captain took it for himself.
+
+I think he was disappointed.
+
+I, on the other hand, suddenly had the feeling that we were slowly starting to understand what this is really about.
+
+Maybe the treasure isn't what we expect.
+`,
+      },
+      {
+        id: "lostroute-en-09",
+        title: "Chapter IX - The Chamber",
+        language: "English",
+        text: `
+Day 12
+
+We reached the treasure chamber.
+
+I can barely find words for it.
+
+The room is enormous.
+
+Golden shields hang on the walls. Chests stand everywhere. Jewels lie on the floor. Coins are piled up to the walls.
+
+We had found the legendary treasure.
+
+Or at least, that's what we believed.
+
+Because in the middle of the room stood a single black chest.
+
+It was smaller than all the others.
+
+And it was locked.
+
+The captain didn't open it.
+
+He said:
+
+"That's the real treasure."
+
+I asked him how he knew that.
+
+He pointed at the map.
+
+The eye was gone.
+
+In its place was now a new sentence:
+
+"You have found what you were looking for. Now decide what you do with it."
+`,
+      },
+      {
+        id: "lostroute-en-10",
+        title: "Chapter X - Betrayal",
+        language: "English",
+        text: `
+Day 13
+
+We're not alone on the island.
+
+This morning we spotted a ship in the bay.
+
+A foreign crew.
+
+They must have followed us.
+
+They know about the treasure.
+
+And they want it.
+
+Shortly after sunset we were attacked.
+
+At first we managed to defend ourselves, but then something happened that no one had expected.
+
+One of our own men opened the door to the treasure chamber.
+
+He had betrayed us.
+
+The foreign crew stormed in.
+
+Suddenly everything happened very fast.
+
+Shots.
+
+Screaming.
+
+Smoke.
+
+The black chest was stolen.
+
+I ran after them.
+
+All the way to the beach.
+
+But I was too late.
+
+The foreign ship set sail.
+
+The captain stood beside me and looked out.
+
+He didn't say a word.
+
+Then I noticed something.
+
+The chest was no longer on the ship at all.
+`,
+      },
+      {
+        id: "lostroute-en-11",
+        title: "Chapter XI - What Was Really in the Chest",
+        language: "English",
+        text: `
+Day 14
+
+We found the chest.
+
+It was lying exactly where we'd least expected it.
+
+On our own ship.
+
+The guardian hadn't been protecting it.
+
+It had been moving it.
+
+Why?
+
+We opened it.
+
+Inside lay no gold.
+
+No jewels.
+
+No treasure.
+
+Only an old book.
+
+The first page held a name.
+
+Dave.
+
+My name.
+
+I couldn't say anything.
+
+The captain apparently already knew.
+
+The book tells of our crew's earlier voyages.
+
+Of things no one ever wrote down.
+
+Of ships that vanished.
+
+Of islands that appear on no map.
+
+And right at the end I found a drawing.
+
+A helmet.
+
+A fire.
+
+And beneath it a sentence:
+
+"The next voyage begins when the horizon burns."
+
+I have the feeling this is only the beginning.
+`,
+      },
+      {
+        id: "lostroute-en-12",
+        title: "Chapter XII - The Last Entry",
+        language: "English",
+        text: `
+Day 15
+
+We're leaving the island.
+
+The treasure stays behind.
+
+At least the part we found.
+
+We're only taking the book and the compass with us.
+
+Maybe that was exactly the trial.
+
+Not to take what you can take.
+
+But to understand what you have found.
+
+The island is already vanishing into the fog.
+
+I looked back one more time.
+
+For a brief moment I saw the green light.
+
+Then it was gone.
+
+The captain told me today that we're not sailing home.
+
+Not yet.
+
+He's set a new course.
+
+Northwest.
+
+I asked him where we're going.
+
+He answered:
+
+"Wherever the book leads us."
+
+I opened the last page.
+
+There's only a single sentence written there.
+
+"Dave, if you're reading this, you've found the first treasure. The second is already waiting."
+
+I closed the book.
+
+The wind is picking up.
+
+The sails are set.
+
+And somewhere ahead of us, the next horizon begins.
+
+– End of the second logbook –
+`,
+      },
     ],
   },
 ];
