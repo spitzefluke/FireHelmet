@@ -178,12 +178,18 @@ Auf Daves Gesicht zeichnete sich ein deutliches Lächeln ab: "Noch ein Grund meh
       },
       {
         id: "treasure-de-07",
-        title: "Kapitel 7 - ",
+        title: "Kapitel 7 - Auf Grund",
         language: "Deutsch",
         text: `
+Die Krabbe, die Dave und seine Crew angetroffen haben, ist seitdem ein treuer Begleiter der Flitzpiepen - diese setzten ihre aufregende Fahrt fort.
 
+Als Finian allerdings an einem sonnigen Tag von den Sonnenstrahlen geweckt wird, bemerkt er, dass ihr Schiff still steht. "Hey Captain, sind wir auf Grund gelaufen?", fragte er. "Nein, aber naja, der Wind ist weg."
 
+"Wie, der Wind ist weg?", fragte Finian mit großen Augen. "Weg halt, es ist einfach kein Wind da", erwiderte Dave. "Crabs hat gesagt, das sei in dieser Gegend üblich."
 
+Ein paar Tage später bewegt sich das Schiff immer noch nicht. Es schaukelt sanft hin und her, umrundet vom tiefblauen Meer. Die Crew ist gelangweilt: Janne angelt erfolglos nach Fischen, und Dean kaut auf einem trockenen Stück Brot herum. Der Einzige, der Spaß zu haben scheint, ist Finian. Dieser amüsiert sich prächtig dabei, Dave und den Rest der Crew richtig zu nerven. Irgendwann reicht es Dave. Er wandert über das Deck und nimmt plötzlich einen stechenden Gestank wahr - er kommt aus dem Unterdeck des Schiffes. Es gibt nur einen Ort, woher dieser Gestank kommen könnte: die Schiffstoilette. Als Dave das Unterdeck betritt, kommt ihm der Handwerker des Schiffes entgegen, Kai Coldfeet - diesen hat er die ganze Fahrt über nicht gesehen. Als er ihn fragt, wo er gewesen sei, antwortet dieser, er sei nur kurz auf der Toilette gewesen.
+
+Dave hatte eine Idee: Wenn das Boot sich nicht von alleine bewegt, dann muss wohl ein bisschen nachgeholfen werden. Mit der Hilfe von Kai Coldfeet schaffte er es, eine Art Apparatur zu bauen, die das Boot durch Wasserräder antreiben konnte. Damit setzten sie ihre Reise fort - aber nicht ohne das Gefühl im Magen, dass so eine Pause vielleicht erst in weiter Zukunft wieder möglich sein würde.
 `,
       },
       {
