@@ -132,14 +132,22 @@ function getPassTier(passXp, pass) {
 // Kommentar dort). KEINE echte Cross-Table-Atomaritaet zwischen
 // beiden - siehe Kommentar bei claimReward() unten fuer die deshalb
 // bewusst gewaehlte Schreibreihenfolge.
-function buildRewardFields(reward, playerData, progressionData, currentPass) {
-  const playerFields = {};
+// playerRpcParams: Parameter fuer app.claim_generic_player_reward() (siehe
+// 09-generic-reward.sql) statt vorberechneter absoluter players-Spaltenwerte -
+// die RPC ist eine SECURITY-DEFINER-Funktion, die currency/ship_tools/
+// temp_avatar_* atomar UND serverseitig validiert selbst hochzaehlt (schliesst
+// damit den frueheren Fehler, bei dem app.valid_code_redemption() jede
+// Waehrungsgutschrift ausserhalb einer Code-Einloesung blockierte - siehe
+// Kommentar am Kopf von 09-generic-reward.sql). claimReward() unten braucht
+// dadurch auch keinen vorherigen players-Lesezugriff mehr, um den alten Stand
+// zu kennen.
+function buildRewardFields(reward, progressionData, currentPass) {
+  const playerRpcParams = {};
   const progressionFields = {};
 
   switch (reward.type) {
     case "coins":
-      playerFields.currency = (playerData.currency || 0) + reward.amount;
-      playerFields.total_currency_earned = (playerData.total_currency_earned || 0) + reward.amount;
+      playerRpcParams.p_currency_delta = reward.amount;
       break;
 
     case "xp": {
@@ -157,15 +165,13 @@ function buildRewardFields(reward, playerData, progressionData, currentPass) {
     }
 
     case "temporary_avatar":
-      playerFields.temp_avatar_expires_at = Date.now() + reward.durationDays * 86400000;
-      playerFields.temp_avatar_id = reward.avatarId;
+      playerRpcParams.p_temp_avatar_id = reward.avatarId;
+      playerRpcParams.p_temp_avatar_days = reward.durationDays;
       break;
 
-    case "tool": {
-      const tools = playerData.ship_tools || {};
-      playerFields.ship_tools = { ...tools, [reward.toolId]: (tools[reward.toolId] || 0) + 1 };
+    case "tool":
+      playerRpcParams.p_tool_id = reward.toolId;
       break;
-    }
 
     // "cap" (Stufe-50-Endbelohnung, limitiert auf 9 Stueck) wird NICHT
     // hier behandelt - siehe der eigene Zweig fuer reward.type === "cap"
@@ -183,7 +189,7 @@ function buildRewardFields(reward, playerData, progressionData, currentPass) {
       break;
   }
 
-  return { playerFields, progressionFields };
+  return { playerRpcParams, progressionFields };
 }
 
 const PROGRESSION_REWARD_ID_CAP = 300;
@@ -275,29 +281,18 @@ async function claimReward(rewardId, reward) {
 
       claimedNow = true;
     } else {
-      const { data: playerRow, error: playerReadError } = await withSupabaseRlsColdStartRetry(() =>
-        supabaseClient
-          .from("players")
-          .select("currency, total_currency_earned, ship_tools")
-          .eq("firebase_uid", uid)
-          .maybeSingle()
-      );
-      if (playerReadError) throw playerReadError;
-      const playerData = playerRow || {};
-
       const currentPass = getCurrentPirateSeason();
-      const { playerFields, progressionFields } = buildRewardFields(reward, playerData, progressionData, currentPass);
+      const { playerRpcParams, progressionFields } = buildRewardFields(reward, progressionData, currentPass);
 
-      if (Object.keys(playerFields).length) {
-        const { data: updatedPlayer, error: playerWriteError } = await withSupabaseRlsColdStartRetry(() =>
-          supabaseClient
-            .from("players")
-            .update(playerFields)
-            .eq("firebase_uid", uid)
-            .select()
-            .maybeSingle()
+      if (Object.keys(playerRpcParams).length) {
+        // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js -
+        // app.claim_generic_player_reward() (09-generic-reward.sql) ist eine
+        // atomare SECURITY-DEFINER-RPC statt eines rohen UPDATEs, siehe
+        // Kommentar bei buildRewardFields() oben.
+        const { error: playerWriteError } = await withSupabaseRlsColdStartRetry(() =>
+          supabaseClient.rpc("claim_generic_player_reward", playerRpcParams)
         );
-        if (playerWriteError || !updatedPlayer) throw new Error("player-write-failed");
+        if (playerWriteError) throw new Error("player-write-failed");
       }
 
       const { data: updatedProgression, error: progWriteError } = await withSupabaseRlsColdStartRetry(() =>
