@@ -57,14 +57,6 @@ const CHARACTER_DATABASE = {
     description:
       "Ein spielsüchtiges Mitglied der Crew, das schon mehr als einmal fast die gesamte Schiffskasse verzockt hätte. Wird seither von Dean mit Argusaugen beobachtet, sobald Würfel im Spiel sind.",
   },
-  julian: {
-    name: "Julian",
-    role: "Crew-Mitglied",
-    image: "",
-    quote: "Halt dich fest, Captain!",
-    description:
-      "Packte im entscheidenden Moment mit an, als es darum ging, Dave aus den Tentakeln des Ungetüms zurück an Bord zu ziehen - ohne zu zögern.",
-  },
   janne: {
     name: "Dr. Janne Noname",
     role: "Biologe der Crew",

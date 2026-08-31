@@ -13,7 +13,7 @@ const stories = [
     // Welche Charaktere aus CHARACTER_DATABASE (siehe
     // scripts/characters/characters-data.js) in diesem Logbuch
     // vorkommen - daraus baut sich die Characters-Seite automatisch.
-    characters: ["dave", "finjan", "dean", "andi", "julian", "janne", "kai"],
+    characters: ["dave", "finjan", "dean", "andi", "janne", "kai"],
 
     chapters: [
       {
