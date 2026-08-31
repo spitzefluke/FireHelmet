@@ -280,11 +280,21 @@ $$;
    Dublonen-Codes - siehe validCodeRedemption()/-Detail() in
    firestore.rules. MUSS mit scripts/codes/codes-data.js synchron
    bleiben (fire100/beutel25/kleinerbeutel/fire300/coins300/sorry500/sorry).
+
+   Signatur um zwei Parameter erweitert (Nachtrag) - "drop" noetig,
+   weil sich die Parameterliste geaendert hat ("create or replace"
+   allein reicht bei Supabase/Postgres nicht, wenn sich Anzahl/Typ der
+   Parameter aendert; die alte 3-Parameter-Version bleibt sonst als
+   separate, ueberladene Funktion bestehen).
 ------------------------------------------------------ */
+drop function if exists app.valid_code_redemption(text, jsonb, integer);
+
 create or replace function app.valid_code_redemption(
   p_uid text,
   new_codes jsonb,
-  new_currency integer
+  new_currency integer,
+  new_last_wheel_spin timestamptz,
+  new_last_spielothek_play timestamptz
 ) returns boolean
 language plpgsql stable
 as $$
@@ -296,7 +306,27 @@ declare
   new_hash text;
 begin
   if new_codes = old_codes then
-    return delta <= 0; -- unveraendert mitgesendet darf NICHT trotzdem gutschreiben
+    -- Unveraendert mitgesendet: an sich darf eine Waehrungsgutschrift
+    -- HIER nicht "einfach so" durchgehen (das waere ein Wiederholungs-
+    -- Einloesen desselben, bereits in der Map stehenden Codes ohne
+    -- neuen Eintrag - siehe TEST7c/7e in 02-players-ship-progression.
+    -- test.sql). ABER: Schatzrad-Preise und Spielothek-Gewinne setzen
+    -- IMMER last_wheel_spin_at bzw. last_spielothek_play_at im selben
+    -- Schreibvorgang - deren Aenderung wird bereits eigenstaendig von
+    -- app.valid_wheel_fields()/app.valid_spielothek_cooldown() geprueft
+    -- (Cooldown-Einhaltung), eine zusaetzliche Waehrungssperre hier waere
+    -- fuer genau diese beiden Faelle unnoetig und blockierte sie bisher
+    -- faelschlich komplett (siehe Testprotokoll/Fehlerbericht). Fuer
+    -- Wochenrennen/Community-Boss/generische Belohnungen (Story-/
+    -- Levelpfad-Meilensteine) gilt weiterhin "delta <= 0" - die laufen
+    -- inzwischen ueber eine eigene, atomare RPC (siehe app.
+    -- claim_generic_reward() in 09-generic-reward.sql), nicht mehr ueber
+    -- dieses rohe UPDATE.
+    if new_last_wheel_spin is distinct from old_row.last_wheel_spin_at
+       or new_last_spielothek_play is distinct from old_row.last_spielothek_play_at then
+      return true;
+    end if;
+    return delta <= 0;
   end if;
   if jsonb_typeof(new_codes) <> 'object' or (select count(*) from jsonb_object_keys(new_codes)) > 50 then
     return false;
@@ -409,7 +439,7 @@ begin
     and new_row.codes_cracked <= coalesce(old_row.codes_cracked, 0) + 1
     and app.valid_ship_tools(p_uid, new_row.ship_tools)
     and app.valid_daily_quests_write(p_uid, new_row.daily_quests_started_at, new_row.daily_quests_claimed_days, new_row.ship_tools)
-    and app.valid_code_redemption(p_uid, new_row.redeemed_currency_codes, new_row.currency)
+    and app.valid_code_redemption(p_uid, new_row.redeemed_currency_codes, new_row.currency, new_row.last_wheel_spin_at, new_row.last_spielothek_play_at)
     and app.valid_wheel_fields(p_uid, new_row.last_wheel_spin_at, new_row.temp_avatar_expires_at)
     and app.valid_spielothek_cooldown(p_uid, new_row.last_spielothek_play_at);
 end;
