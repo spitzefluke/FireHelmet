@@ -29,7 +29,7 @@ const SLOT_SYMBOLS = [
    soll selbst definieren wie viel man einsetzt, je mehr desto mehr
    gewinnt man") - alle Auszahlungen unten sind deshalb VIELFACHE des
    Einsatzes statt fester Betraege, siehe SLOT_TRIPLE_REWARDS/
-   SLOT_QUAD_REWARDS/SLOT_FIVE_REWARDS/SLOT_SIX_REWARDS/SLOT_PAIR_MULTIPLIER. */
+   SLOT_QUAD_REWARDS/SLOT_FIVE_REWARDS/SLOT_SIX_REWARDS/getSlotPairMultiplier(). */
 const SLOT_MIN_BET = 10;
 const SLOT_MAX_BET = 100;
 const SLOT_BET_STEP = 10;
@@ -99,7 +99,21 @@ const SLOT_REWARD_TABLES_BY_COUNT = Object.freeze({
   6: SLOT_SIX_REWARDS,
 });
 
-const SLOT_PAIR_MULTIPLIER = 1.5;
+/* Auftrag: "wenn man gewinnt soll man jeweils das doppelte oder bei
+   groesserem einsatz noch mehr erhalten" - der Basis-Gewinn (zwei
+   gleiche Symbole) zahlt jetzt mindestens den doppelten Einsatz aus,
+   und pro zusaetzlicher Walze (= hoeherer Einsatz, siehe
+   getSlotReelCountForBet) noch etwas mehr obendrauf. Die groesseren
+   Gewinnstufen (SLOT_TRIPLE/QUAD/FIVE/SIX_REWARDS) liegen ohnehin
+   schon alle ueber dem doppelten Einsatz und muessen dafuer nicht
+   angepasst werden. */
+const SLOT_PAIR_MULTIPLIER_BASE = 2;
+const SLOT_PAIR_MULTIPLIER_STEP_PER_REEL = 0.3;
+
+function getSlotPairMultiplier(reelCount) {
+  return SLOT_PAIR_MULTIPLIER_BASE +
+    SLOT_PAIR_MULTIPLIER_STEP_PER_REEL * (reelCount - SLOT_REEL_COUNT_MIN);
+}
 
 /* Sicherheits-Deckel unterhalb des serverseitig erzwungenen Limits
    (currency/total_currency_earned duerfen pro Schreibvorgang um
@@ -265,7 +279,7 @@ function scoreSlotReels(reels, bet) {
       payout = Math.min(Math.round(bet * reward.multiplier), SLOT_MAX_SAFE_PAYOUT);
       tier = reward.tier;
     } else if (bestCount === 2) {
-      payout = Math.round(bet * SLOT_PAIR_MULTIPLIER);
+      payout = Math.round(bet * getSlotPairMultiplier(reels.length));
       tier = "pair";
     }
   }
@@ -460,7 +474,7 @@ function getSlotRulesHtml(lang) {
       <ul class="spielothek-rules-tiers">${renderRows(tripleRows, "Win", "Win")}</ul>
       <ul>
         <li>💀 More matching symbols than skulls → still a win, skulls just don't count toward the match</li>
-        <li>Two matching symbols → ${SLOT_PAIR_MULTIPLIER}× your bet</li>
+        <li>Two matching symbols → ${getSlotPairMultiplier(SLOT_REEL_COUNT_MIN)}×–${getSlotPairMultiplier(SLOT_REEL_COUNT_MAX)}× your bet (higher bet = higher multiplier)</li>
         <li>Otherwise → loss</li>
       </ul>
     `
@@ -477,7 +491,7 @@ function getSlotRulesHtml(lang) {
       <ul class="spielothek-rules-tiers">${renderRows(tripleRows, "Gewinn", "Gewinn")}</ul>
       <ul>
         <li>💀 Mehr gleiche Symbole als Totenköpfe → trotzdem Gewinn, Totenköpfe zählen einfach nicht zum Match</li>
-        <li>Zwei gleiche Symbole → ${SLOT_PAIR_MULTIPLIER}× Einsatz</li>
+        <li>Zwei gleiche Symbole → ${getSlotPairMultiplier(SLOT_REEL_COUNT_MIN)}×–${getSlotPairMultiplier(SLOT_REEL_COUNT_MAX)}× Einsatz (höherer Einsatz = höherer Multiplikator)</li>
         <li>Sonst → Verlust</li>
       </ul>
     `;
