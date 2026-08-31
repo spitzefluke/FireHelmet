@@ -168,11 +168,13 @@ async function renderPassPage() {
     try {
       const uid = await wheelAuthReady;
       if (uid) {
-        const { data } = await supabaseClient
-          .from("player_progression")
-          .select("pass_id, pass_xp, claimed_reward_ids, has_flitzpiepen_cap")
-          .eq("firebase_uid", uid)
-          .maybeSingle();
+        const { data } = await withSupabaseRlsColdStartRetry(() =>
+          supabaseClient
+            .from("player_progression")
+            .select("pass_id, pass_xp, claimed_reward_ids, has_flitzpiepen_cap")
+            .eq("firebase_uid", uid)
+            .maybeSingle()
+        );
         if (data && data.pass_id === pass.passId) {
           passXp = data.pass_xp || 0;
         }

@@ -182,11 +182,13 @@ async function openLevelPath() {
     try {
       const uid = await wheelAuthReady;
       if (uid) {
-        const { data } = await supabaseClient
-          .from("player_progression")
-          .select("xp, claimed_reward_ids")
-          .eq("firebase_uid", uid)
-          .maybeSingle();
+        const { data } = await withSupabaseRlsColdStartRetry(() =>
+          supabaseClient
+            .from("player_progression")
+            .select("xp, claimed_reward_ids")
+            .eq("firebase_uid", uid)
+            .maybeSingle()
+        );
         xp = (data && data.xp) || 0;
         claimedIds = (data && data.claimed_reward_ids) || [];
       }
@@ -361,11 +363,13 @@ async function claimLevelPathRewardFromTooltip(level) {
   if (typeof supabaseClient !== "undefined" && supabaseClient && typeof wheelAuthReady !== "undefined") {
     const uid = await wheelAuthReady;
     if (uid) {
-      const { data } = await supabaseClient
-        .from("player_progression")
-        .select("xp, claimed_reward_ids")
-        .eq("firebase_uid", uid)
-        .maybeSingle();
+      const { data } = await withSupabaseRlsColdStartRetry(() =>
+        supabaseClient
+          .from("player_progression")
+          .select("xp, claimed_reward_ids")
+          .eq("firebase_uid", uid)
+          .maybeSingle()
+      );
       const existingOverlay = document.getElementById("fh-levelpath-overlay");
       if (existingOverlay) {
         existingOverlay.remove();

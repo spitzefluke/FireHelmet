@@ -228,11 +228,17 @@ async function claimReward(rewardId, reward) {
     await ensureSupabasePlayerRow(uid, localStorage.getItem("wheelNickname") || "");
     await ensureSupabaseProgressionRow(uid);
 
-    const { data: progressionRow, error: progReadError } = await supabaseClient
-      .from("player_progression")
-      .select("xp, pass_id, pass_xp, claimed_reward_ids, has_flitzpiepen_cap")
-      .eq("firebase_uid", uid)
-      .maybeSingle();
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js -
+    // JEDER Lese-/Schreibzugriff auf eine RLS-geschuetzte Tabelle kann den
+    // dort beschriebenen Kaltstart-42501 treffen, nicht nur die beiden
+    // ensureSupabase*Row()-Upserts oben (dort war es bereits abgefedert).
+    const { data: progressionRow, error: progReadError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("player_progression")
+        .select("xp, pass_id, pass_xp, claimed_reward_ids, has_flitzpiepen_cap")
+        .eq("firebase_uid", uid)
+        .maybeSingle()
+    );
     if (progReadError) throw progReadError;
 
     const progressionData = progressionRow || {};
@@ -250,28 +256,32 @@ async function claimReward(rewardId, reward) {
       const currentPass = getCurrentPirateSeason();
       if (!currentPass) throw new Error("no-active-pass");
 
-      const { data: rpcData, error: rpcError } = await supabaseClient.rpc("claim_pass_cap", {
-        p_pass_id: currentPass.passId,
-      });
+      const { data: rpcData, error: rpcError } = await withSupabaseRlsColdStartRetry(() =>
+        supabaseClient.rpc("claim_pass_cap", { p_pass_id: currentPass.passId })
+      );
       if (rpcError) throw rpcError;
       const row = Array.isArray(rpcData) ? rpcData[0] : rpcData;
       capResult = { gotCap: !!(row && row.got_cap), currencyAwarded: (row && row.currency_awarded) || 0 };
 
-      const { data: updatedProgression, error: progWriteError } = await supabaseClient
-        .from("player_progression")
-        .update({ claimed_reward_ids: [...claimed, rewardId] })
-        .eq("firebase_uid", uid)
-        .select()
-        .maybeSingle();
+      const { data: updatedProgression, error: progWriteError } = await withSupabaseRlsColdStartRetry(() =>
+        supabaseClient
+          .from("player_progression")
+          .update({ claimed_reward_ids: [...claimed, rewardId] })
+          .eq("firebase_uid", uid)
+          .select()
+          .maybeSingle()
+      );
       if (progWriteError || !updatedProgression) throw new Error("progression-write-failed");
 
       claimedNow = true;
     } else {
-      const { data: playerRow, error: playerReadError } = await supabaseClient
-        .from("players")
-        .select("currency, total_currency_earned, ship_tools")
-        .eq("firebase_uid", uid)
-        .maybeSingle();
+      const { data: playerRow, error: playerReadError } = await withSupabaseRlsColdStartRetry(() =>
+        supabaseClient
+          .from("players")
+          .select("currency, total_currency_earned, ship_tools")
+          .eq("firebase_uid", uid)
+          .maybeSingle()
+      );
       if (playerReadError) throw playerReadError;
       const playerData = playerRow || {};
 
@@ -279,21 +289,25 @@ async function claimReward(rewardId, reward) {
       const { playerFields, progressionFields } = buildRewardFields(reward, playerData, progressionData, currentPass);
 
       if (Object.keys(playerFields).length) {
-        const { data: updatedPlayer, error: playerWriteError } = await supabaseClient
-          .from("players")
-          .update(playerFields)
-          .eq("firebase_uid", uid)
-          .select()
-          .maybeSingle();
+        const { data: updatedPlayer, error: playerWriteError } = await withSupabaseRlsColdStartRetry(() =>
+          supabaseClient
+            .from("players")
+            .update(playerFields)
+            .eq("firebase_uid", uid)
+            .select()
+            .maybeSingle()
+        );
         if (playerWriteError || !updatedPlayer) throw new Error("player-write-failed");
       }
 
-      const { data: updatedProgression, error: progWriteError } = await supabaseClient
-        .from("player_progression")
-        .update({ ...progressionFields, claimed_reward_ids: [...claimed, rewardId] })
-        .eq("firebase_uid", uid)
-        .select()
-        .maybeSingle();
+      const { data: updatedProgression, error: progWriteError } = await withSupabaseRlsColdStartRetry(() =>
+        supabaseClient
+          .from("player_progression")
+          .update({ ...progressionFields, claimed_reward_ids: [...claimed, rewardId] })
+          .eq("firebase_uid", uid)
+          .select()
+          .maybeSingle()
+      );
       if (progWriteError || !updatedProgression) throw new Error("progression-write-failed");
 
       claimedNow = true;

@@ -112,9 +112,12 @@ function joinGiveaway() {
     // schon am zusammengesetzten Primary Key (giveaway_id,
     // firebase_uid), genau wie zuvor Firestores "allow update: if false"
     // einen erneuten .set() auf denselben Dokumentnamen ablehnte.
-    supabaseClient
-      .from("giveaway_entries")
-      .insert({ giveaway_id: giveawayConfig.id, firebase_uid: uid, nickname: nickname })
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("giveaway_entries")
+        .insert({ giveaway_id: giveawayConfig.id, firebase_uid: uid, nickname: nickname })
+    )
       .then(({ error }) => {
         if (error) throw error;
         localStorage.setItem("giveawayJoinedId", giveawayConfig.id);
@@ -164,9 +167,9 @@ function loadOrDrawWinners(participants) {
         // Primary Key round_id sorgt bereits strukturell fuer dieselbe
         // Garantie: ein zweiter Zug fuer dieselbe Runde scheitert an
         // der Unique-Verletzung, kein doppeltes Ziehen moeglich.
-        return supabaseClient
-          .from("giveaway_winners")
-          .insert({ round_id: giveawayConfig.id, winners: winners })
+        return withSupabaseRlsColdStartRetry(() =>
+          supabaseClient.from("giveaway_winners").insert({ round_id: giveawayConfig.id, winners: winners })
+        )
           .then(({ error: insertError }) => {
             if (insertError) throw insertError;
             return winners;

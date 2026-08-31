@@ -1312,10 +1312,10 @@ async function attackCommunityBoss() {
     // nur ein echtes serverseitiges relatives UPDATE (wie Firestores
     // FieldValue.increment() zuvor) verliert dabei keinen Schaden durch
     // ueberholte Zwischenstaende, siehe Kommentar in 03-race-boss.sql.
-    const { data: rows, error: attackError } = await supabaseClient.rpc("attack_community_boss", {
-      p_month_id: monthId,
-      p_damage: damage,
-    });
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    const { data: rows, error: attackError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.rpc("attack_community_boss", { p_month_id: monthId, p_damage: damage })
+    );
     if (attackError) throw attackError;
     const bossAfter = Array.isArray(rows) ? rows[0] : rows;
     if (!bossAfter) throw new Error("attack-failed");
@@ -1371,9 +1371,12 @@ async function recordBossDamage(monthId, nickname, damage) {
 
   const newTotal = ((current && current.total_damage) || 0) + damage;
 
-  await supabaseClient.from("community_boss_damage").upsert(
-    { month_id: monthId, firebase_uid: uid, nickname, avatar, equipped_frame: equippedFrame, total_damage: newTotal },
-    { onConflict: "month_id,firebase_uid" }
+  // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+  await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient.from("community_boss_damage").upsert(
+      { month_id: monthId, firebase_uid: uid, nickname, avatar, equipped_frame: equippedFrame, total_damage: newTotal },
+      { onConflict: "month_id,firebase_uid" }
+    )
   );
 }
 

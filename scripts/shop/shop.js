@@ -228,15 +228,18 @@ async function buyShopItem(itemId) {
     // EIN einzelnes UPDATE, dessen Zulaessigkeit die Datenbank selbst
     // prueft (RLS vergleicht neuen mit altem Wert) - von Natur aus
     // atomar, kein client-getriebenes Transaktions-Konstrukt noetig.
-    const { data: updated, error: writeError } = await supabaseClient
-      .from("players")
-      .update({
-        currency: currentCurrency - item.price,
-        owned_shop_items: [...owned, itemId],
-      })
-      .eq("firebase_uid", uid)
-      .select()
-      .maybeSingle();
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    const { data: updated, error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("players")
+        .update({
+          currency: currentCurrency - item.price,
+          owned_shop_items: [...owned, itemId],
+        })
+        .eq("firebase_uid", uid)
+        .select()
+        .maybeSingle()
+    );
 
     if (writeError || !updated) {
       throw new Error("purchase-failed");

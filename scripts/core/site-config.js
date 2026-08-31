@@ -127,9 +127,10 @@ async function patchSupabaseSiteConfig(partialUpdate) {
 
   const merged = { ...((current && current.data) || {}), ...partialUpdate };
 
-  const { error: writeError } = await supabaseClient
-    .from("site_config")
-    .upsert({ id: "main", data: merged }, { onConflict: "id" });
+  // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+  const { error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient.from("site_config").upsert({ id: "main", data: merged }, { onConflict: "id" })
+  );
   if (writeError) throw writeError;
 
   applySiteConfigSnapshot(merged);

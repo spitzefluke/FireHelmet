@@ -189,11 +189,13 @@ async function renderStoryProgress() {
     try {
       const uid = await wheelAuthReady;
       if (uid) {
-        const { data } = await supabaseClient
-          .from("player_progression")
-          .select("claimed_reward_ids")
-          .eq("firebase_uid", uid)
-          .maybeSingle();
+        const { data } = await withSupabaseRlsColdStartRetry(() =>
+          supabaseClient
+            .from("player_progression")
+            .select("claimed_reward_ids")
+            .eq("firebase_uid", uid)
+            .maybeSingle()
+        );
         claimedIds = (data && data.claimed_reward_ids) || [];
       }
     } catch (err) {

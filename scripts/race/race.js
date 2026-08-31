@@ -213,15 +213,18 @@ function addRaceProgress(amount) {
     // zusammengesetzte Schluessel (week, firebase_uid) ist die
     // natuerliche Entsprechung zu Firestores Dokument-ID-Trick
     // "<week>_<uid>", siehe 03-race-boss.sql.
-    const { error } = await supabaseClient.from("race_progress").upsert(
-      {
-        week: currentWeek,
-        firebase_uid: uid,
-        nickname: nickname,
-        progress: newProgress,
-        equipped_frame: localStorage.getItem("equippedFrame") || null,
-      },
-      { onConflict: "week,firebase_uid" }
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    const { error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.from("race_progress").upsert(
+        {
+          week: currentWeek,
+          firebase_uid: uid,
+          nickname: nickname,
+          progress: newProgress,
+          equipped_frame: localStorage.getItem("equippedFrame") || null,
+        },
+        { onConflict: "week,firebase_uid" }
+      )
     );
     if (error) console.error("Rennfortschritt konnte nicht gespeichert werden:", error);
 

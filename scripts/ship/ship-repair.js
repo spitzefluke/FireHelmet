@@ -90,11 +90,16 @@ async function loadShipState(uid) {
 
   await ensureSupabaseShipRepairRow(uid);
 
-  const { data, error } = await supabaseClient
-    .from("ship_repair")
-    .select("completed_phases, active_repair, ship_name, named_by")
-    .eq("firebase_uid", uid)
-    .maybeSingle();
+  // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js -
+  // ship_repair ist (anders als players) NICHT oeffentlich lesbar, daher
+  // trifft der Kaltstart-42501 hier auch schon das SELECT, nicht nur Writes.
+  const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient
+      .from("ship_repair")
+      .select("completed_phases, active_repair, ship_name, named_by")
+      .eq("firebase_uid", uid)
+      .maybeSingle()
+  );
   if (error || !data) return null;
 
   return {
@@ -124,11 +129,13 @@ async function checkAndCompleteActiveRepair(uid, options) {
   let phaseJustCompleted = false;
 
   try {
-    const { data, error: readError } = await supabaseClient
-      .from("ship_repair")
-      .select("completed_phases, active_repair, ship_name")
-      .eq("firebase_uid", uid)
-      .maybeSingle();
+    const { data, error: readError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("ship_repair")
+        .select("completed_phases, active_repair, ship_name")
+        .eq("firebase_uid", uid)
+        .maybeSingle()
+    );
     if (readError || !data) return;
 
     const active = data.active_repair;
@@ -148,12 +155,14 @@ async function checkAndCompleteActiveRepair(uid, options) {
       update.named_by = active.startedBy || null;
     }
 
-    const { data: updated, error: writeError } = await supabaseClient
-      .from("ship_repair")
-      .update(update)
-      .eq("firebase_uid", uid)
-      .select()
-      .maybeSingle();
+    const { data: updated, error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("ship_repair")
+        .update(update)
+        .eq("firebase_uid", uid)
+        .select()
+        .maybeSingle()
+    );
 
     if (!writeError && updated) {
       phaseJustCompleted = true;
@@ -213,12 +222,14 @@ async function ensureDailyQuestsStarted(uid, data) {
   }
 
   try {
-    const { data: updated, error } = await supabaseClient
-      .from("players")
-      .update({ daily_quests_started_at: new Date().toISOString(), daily_quests_claimed_days: [] })
-      .eq("firebase_uid", uid)
-      .select("daily_quests_started_at, daily_quests_claimed_days")
-      .maybeSingle();
+    const { data: updated, error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("players")
+        .update({ daily_quests_started_at: new Date().toISOString(), daily_quests_claimed_days: [] })
+        .eq("firebase_uid", uid)
+        .select("daily_quests_started_at, daily_quests_claimed_days")
+        .maybeSingle()
+    );
     if (error || !updated) throw error || new Error("start-failed");
     return { startedAt: updated.daily_quests_started_at, claimedDays: updated.daily_quests_claimed_days || [] };
   } catch (err) {
@@ -291,15 +302,17 @@ async function claimDailyQuest(day) {
     // ihren alten Wert (siehe Kommentar am Kopf von
     // 01-players-ship-progression.sql), erfuellt also von selbst die
     // Fall-B-Anforderung "startedAt bleibt exakt unveraendert".
-    const { data: updated, error: writeError } = await supabaseClient
-      .from("players")
-      .update({
-        daily_quests_claimed_days: [...claimed, day],
-        ship_tools: { ...tools, [quest.toolId]: (tools[quest.toolId] || 0) + 1 },
-      })
-      .eq("firebase_uid", uid)
-      .select()
-      .maybeSingle();
+    const { data: updated, error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("players")
+        .update({
+          daily_quests_claimed_days: [...claimed, day],
+          ship_tools: { ...tools, [quest.toolId]: (tools[quest.toolId] || 0) + 1 },
+        })
+        .eq("firebase_uid", uid)
+        .select()
+        .maybeSingle()
+    );
     if (writeError || !updated) throw new Error("claim-failed");
 
     showShipToolToast(quest.toolId);
@@ -362,21 +375,25 @@ async function startShipRepair(phaseId) {
     const have = tools[phase.tool] || 0;
     if (have < 1) throw new Error("missing-tool");
 
-    const { data: toolUpdated, error: toolWriteError } = await supabaseClient
-      .from("players")
-      .update({ ship_tools: { ...tools, [phase.tool]: have - 1 } })
-      .eq("firebase_uid", uid)
-      .select()
-      .maybeSingle();
+    const { data: toolUpdated, error: toolWriteError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("players")
+        .update({ ship_tools: { ...tools, [phase.tool]: have - 1 } })
+        .eq("firebase_uid", uid)
+        .select()
+        .maybeSingle()
+    );
     if (toolWriteError || !toolUpdated) throw new Error("missing-tool");
 
     // 2) Gemeinsame Reparatur starten (schlägt fehl, wenn inzwischen
     //    schon eine andere läuft oder die Phase nicht mehr "dran" ist)
-    const { data: shipData, error: shipReadError } = await supabaseClient
-      .from("ship_repair")
-      .select("completed_phases, active_repair")
-      .eq("firebase_uid", uid)
-      .maybeSingle();
+    const { data: shipData, error: shipReadError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("ship_repair")
+        .select("completed_phases, active_repair")
+        .eq("firebase_uid", uid)
+        .maybeSingle()
+    );
     if (shipReadError) throw shipReadError;
 
     const data = shipData || { completed_phases: [], active_repair: null };
@@ -387,12 +404,14 @@ async function startShipRepair(phaseId) {
     const startedAt = Date.now();
     const endsAt = startedAt + getRandomRepairDurationMs();
 
-    const { data: shipUpdated, error: shipWriteError } = await supabaseClient
-      .from("ship_repair")
-      .update({ active_repair: { phaseId, tool: phase.tool, startedAt, endsAt, startedBy: nickname } })
-      .eq("firebase_uid", uid)
-      .select()
-      .maybeSingle();
+    const { data: shipUpdated, error: shipWriteError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("ship_repair")
+        .update({ active_repair: { phaseId, tool: phase.tool, startedAt, endsAt, startedBy: nickname } })
+        .eq("firebase_uid", uid)
+        .select()
+        .maybeSingle()
+    );
     if (shipWriteError || !shipUpdated) throw new Error("already-active");
 
     if (statusEl) statusEl.textContent = "";
@@ -435,10 +454,12 @@ async function unlockShipTool(toolId) {
     if (readError) throw readError;
 
     const tools = (current && current.ship_tools) || {};
-    const { error: writeError } = await supabaseClient
-      .from("players")
-      .update({ ship_tools: { ...tools, [toolId]: (tools[toolId] || 0) + 1 } })
-      .eq("firebase_uid", uid);
+    const { error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("players")
+        .update({ ship_tools: { ...tools, [toolId]: (tools[toolId] || 0) + 1 } })
+        .eq("firebase_uid", uid)
+    );
     if (writeError) throw writeError;
 
     showShipToolToast(toolId);
@@ -530,10 +551,12 @@ async function devGrantAllShipTools() {
         .maybeSingle();
       if (readError) continue;
       const tools = (current && current.ship_tools) || {};
-      await supabaseClient
-        .from("players")
-        .update({ ship_tools: { ...tools, [toolId]: (tools[toolId] || 0) + 1 } })
-        .eq("firebase_uid", uid);
+      await withSupabaseRlsColdStartRetry(() =>
+        supabaseClient
+          .from("players")
+          .update({ ship_tools: { ...tools, [toolId]: (tools[toolId] || 0) + 1 } })
+          .eq("firebase_uid", uid)
+      );
     }
   }
   renderShipRepairPage();
@@ -544,11 +567,13 @@ async function devFinishActiveRepair() {
   const uid = await wheelAuthReady;
   if (!uid) return;
 
-  const { data, error } = await supabaseClient
-    .from("ship_repair")
-    .select("active_repair")
-    .eq("firebase_uid", uid)
-    .maybeSingle();
+  const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient
+      .from("ship_repair")
+      .select("active_repair")
+      .eq("firebase_uid", uid)
+      .maybeSingle()
+  );
   if (error || !data || !data.active_repair) return;
 
   // Hinweis: dieser Zwischenschritt (nur endsAt vorziehen, activeRepair
@@ -559,10 +584,12 @@ async function devFinishActiveRepair() {
   // durch). Reines Dev-Preview-Werkzeug ohne echten Sicherheitswert
   // (siehe Kommentar bei isShipPreviewActive() oben) - bewusst nicht
   // eigens dafuer erweitert.
-  await supabaseClient
-    .from("ship_repair")
-    .update({ active_repair: { ...data.active_repair, endsAt: Date.now() } })
-    .eq("firebase_uid", uid);
+  await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient
+      .from("ship_repair")
+      .update({ active_repair: { ...data.active_repair, endsAt: Date.now() } })
+      .eq("firebase_uid", uid)
+  );
 
   await checkAndCompleteActiveRepair(uid, { force: true });
   renderShipRepairPage();
@@ -579,10 +606,12 @@ async function devResetShipEvent() {
   // firestore.rules) und wird daher von der RLS abgelehnt - reines
   // Dev-Preview-Werkzeug ohne echten Sicherheitswert, siehe Kommentar
   // bei isShipPreviewActive() oben.
-  await supabaseClient
-    .from("ship_repair")
-    .update({ completed_phases: [], active_repair: null, ship_name: null, named_by: null })
-    .eq("firebase_uid", uid);
+  await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient
+      .from("ship_repair")
+      .update({ completed_phases: [], active_repair: null, ship_name: null, named_by: null })
+      .eq("firebase_uid", uid)
+  );
   renderShipRepairPage();
 }
 
