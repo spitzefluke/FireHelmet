@@ -60,15 +60,7 @@ const CHARACTER_DATABASE = {
   janne: {
     name: "Dr. Janne Noname",
     role: "Biologe der Crew",
-    // Kein Bild hinterlegt - der Nutzer hat ein Portrait direkt im Chat
-    // eingefuegt (Inline-Paste), das dieser Session als reines Bild-
-    // verstehen zugaenglich war, aber NICHT als Datei auf der Festplatte
-    // (im Unterschied zu echten Datei-Uploads, siehe /root/.claude/uploads/
-    // - dort landen nur "richtige" Anhaenge, keine inline eingefuegten
-    // Bilder). Sobald die Datei als Upload nachgereicht wird, hier den
-    // Pfad ergaenzen (Ordner scripts/image/ oder scripts/avatare/, siehe
-    // Kommentar am Dateianfang).
-    image: "",
+    image: "scripts/image/Janne.png",
     quote: "Macht das Vieh weg! Macht das Vieh weg!",
     description:
       "Janne Noname ist der Biologe der Crew. Seinen Namen erhielt er durch die erschreckende Tatsache, dass er sich selbst immer wieder umbenennt - was bei der Crew schon früher zu viel Verwirrung geführt hat. Allerdings halfen seine Fähigkeiten schon oft in verzweifelten Situationen.",
@@ -76,8 +68,7 @@ const CHARACTER_DATABASE = {
   kai: {
     name: "Kai Coldfeet",
     role: "Handwerker des Schiffes",
-    // Kein Bild hinterlegt - siehe Kommentar bei "janne" oben, gleicher Fall.
-    image: "",
+    image: "scripts/image/Kai.png",
     quote: "Ich war nur kurz auf der Toilette.",
     description:
       "Kai Coldfeet ist der Handwerker des Schiffes und ein wahrer Meister seines Handwerks - auch wenn er es kaum je ausübt. Seinen Namen verdankt er seiner Herkunft aus den kalten Bergen. Auf dem Schiff ist er nur selten anzutreffen, weshalb die Crew sich jedes Mal wundert, wenn er plötzlich wieder auftaucht.",
