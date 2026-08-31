@@ -103,14 +103,15 @@ function submitSupportReport() {
   }
 
   wheelAuthReady.then((uid) => {
-    supabaseClient
-      .from("support_reports")
-      .insert({
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.from("support_reports").insert({
         firebase_uid: uid || null,
         nickname: nickname,
         message: message,
         page: window.location.href,
       })
+    )
       .then(({ error }) => {
         if (error) throw error;
         statusEl.textContent = "✅ Danke! Deine Nachricht wurde übermittelt.";

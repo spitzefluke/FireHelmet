@@ -273,18 +273,21 @@ async function playSpielothekGame() {
     // valid_players_write() im Migrationsschema) - dadurch von Natur
     // aus atomar, kein client-getriebenes Transaktions-Konstrukt noetig
     // (anders als bei Firestore).
-    const { data: updated, error: writeError } = await supabaseClient
-      .from("players")
-      .update({
-        currency: newCurrency,
-        games_played: currentGamesPlayed + 1,
-        games_won: spin.win ? currentGamesWon + 1 : currentGamesWon,
-        total_currency_earned: spin.payout > 0 ? currentTotalEarned + spin.payout : currentTotalEarned,
-        last_spielothek_play_at: new Date().toISOString(),
-      })
-      .eq("firebase_uid", uid)
-      .select()
-      .maybeSingle();
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    const { data: updated, error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("players")
+        .update({
+          currency: newCurrency,
+          games_played: currentGamesPlayed + 1,
+          games_won: spin.win ? currentGamesWon + 1 : currentGamesWon,
+          total_currency_earned: spin.payout > 0 ? currentTotalEarned + spin.payout : currentTotalEarned,
+          last_spielothek_play_at: new Date().toISOString(),
+        })
+        .eq("firebase_uid", uid)
+        .select()
+        .maybeSingle()
+    );
 
     if (writeError || !updated) {
       // Von der Datenbank abgelehnt (z.B. Wettlauf mit einem anderen

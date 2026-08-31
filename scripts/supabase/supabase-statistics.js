@@ -25,11 +25,16 @@
  */
 async function fetchOwnSpielothekHistory(limit = 20) {
   if (!supabaseClient) return [];
-  const { data, error } = await supabaseClient
-    .from("spielothek_rounds")
-    .select("game_id, bet_amount, payout_amount, won, played_at")
-    .order("played_at", { ascending: false })
-    .limit(limit);
+  // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js -
+  // spielothek_rounds ist (anders als die meisten anderen Tabellen) NICHT
+  // oeffentlich lesbar, daher trifft der Kaltstart-42501 hier schon das SELECT.
+  const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient
+      .from("spielothek_rounds")
+      .select("game_id, bet_amount, payout_amount, won, played_at")
+      .order("played_at", { ascending: false })
+      .limit(limit)
+  );
 
   if (error) {
     console.warn("Spielothek-Historie konnte nicht geladen werden:", error.message);

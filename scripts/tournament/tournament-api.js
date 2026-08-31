@@ -137,11 +137,14 @@ async function joinTournament(tournamentId, nickname) {
   const uid = await wheelAuthReady;
   if (!uid) throw new Error("not-signed-in");
 
-  const { data, error } = await supabaseClient
-    .from("tournament_participants")
-    .insert({ tournament_id: tournamentId, firebase_uid: uid, nickname })
-    .select()
-    .maybeSingle();
+  // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+  const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient
+      .from("tournament_participants")
+      .insert({ tournament_id: tournamentId, firebase_uid: uid, nickname })
+      .select()
+      .maybeSingle()
+  );
   if (error) throw error;
   return data;
 }
@@ -155,10 +158,13 @@ async function submitMatchScore(matchId, scoreMs) {
   if (!supabaseClient) throw new Error("supabase-not-configured");
   await wheelAuthReady;
 
-  const { data, error } = await supabaseClient.rpc("tournament_submit_score", {
-    p_match_id: matchId,
-    p_score_ms: Math.round(scoreMs),
-  });
+  // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+  const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient.rpc("tournament_submit_score", {
+      p_match_id: matchId,
+      p_score_ms: Math.round(scoreMs),
+    })
+  );
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
   return { matchStatus: row ? row.match_status : null, winnerUid: row ? row.winner_uid : null };
@@ -174,7 +180,9 @@ async function submitMatchScore(matchId, scoreMs) {
 async function adminCreateTournament(tournamentId) {
   if (!supabaseClient) throw new Error("supabase-not-configured");
   await wheelAuthReady;
-  const { data, error } = await supabaseClient.rpc("admin_create_tournament", { p_id: tournamentId });
+  const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient.rpc("admin_create_tournament", { p_id: tournamentId })
+  );
   if (error) throw error;
   return Array.isArray(data) ? data[0] : data;
 }
@@ -182,7 +190,9 @@ async function adminCreateTournament(tournamentId) {
 async function adminStartTournament(tournamentId) {
   if (!supabaseClient) throw new Error("supabase-not-configured");
   await wheelAuthReady;
-  const { data, error } = await supabaseClient.rpc("admin_start_tournament", { p_tournament_id: tournamentId });
+  const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient.rpc("admin_start_tournament", { p_tournament_id: tournamentId })
+  );
   if (error) throw error;
   return Array.isArray(data) ? data[0] : data;
 }
@@ -190,17 +200,21 @@ async function adminStartTournament(tournamentId) {
 async function adminResetTournament(tournamentId) {
   if (!supabaseClient) throw new Error("supabase-not-configured");
   await wheelAuthReady;
-  const { error } = await supabaseClient.rpc("admin_reset_tournament", { p_tournament_id: tournamentId });
+  const { error } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient.rpc("admin_reset_tournament", { p_tournament_id: tournamentId })
+  );
   if (error) throw error;
 }
 
 async function adminSetTournamentPaused(tournamentId, paused) {
   if (!supabaseClient) throw new Error("supabase-not-configured");
   await wheelAuthReady;
-  const { data, error } = await supabaseClient.rpc("admin_set_tournament_paused", {
-    p_tournament_id: tournamentId,
-    p_paused: !!paused,
-  });
+  const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient.rpc("admin_set_tournament_paused", {
+      p_tournament_id: tournamentId,
+      p_paused: !!paused,
+    })
+  );
   if (error) throw error;
   return Array.isArray(data) ? data[0] : data;
 }
@@ -212,12 +226,14 @@ async function adminSetTournamentPaused(tournamentId, paused) {
 async function adminMarkPrizeFulfilled() {
   if (!supabaseClient) throw new Error("supabase-not-configured");
   await wheelAuthReady;
-  const { data, error } = await supabaseClient
-    .from("tournament_prize")
-    .update({ fulfilled: true, fulfilled_at: new Date().toISOString() })
-    .eq("id", "cap")
-    .select()
-    .maybeSingle();
+  const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient
+      .from("tournament_prize")
+      .update({ fulfilled: true, fulfilled_at: new Date().toISOString() })
+      .eq("id", "cap")
+      .select()
+      .maybeSingle()
+  );
   if (error) throw error;
   return data;
 }

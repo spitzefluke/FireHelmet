@@ -60,12 +60,15 @@ async function submitRating() {
   try {
     const uid = await wheelAuthReady;
 
-    const { error } = await supabaseClient.from("site_ratings").insert({
-      firebase_uid: uid || null,
-      nickname,
-      value: selectedRatingValue,
-      comment: comment || null,
-    });
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    const { error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.from("site_ratings").insert({
+        firebase_uid: uid || null,
+        nickname,
+        value: selectedRatingValue,
+        comment: comment || null,
+      })
+    );
     if (error) throw error;
 
     localStorage.setItem("ratingSubmitted", "1");

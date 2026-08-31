@@ -861,10 +861,10 @@ function syncCodesToDatabase() {
         fields.rewards = [...new Set([...oldRewards, ...rewards])];
       }
 
-      const { error: writeError } = await supabaseClient
-        .from("players")
-        .update(fields)
-        .eq("firebase_uid", uid);
+      // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+      const { error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+        supabaseClient.from("players").update(fields).eq("firebase_uid", uid)
+      );
       if (writeError) throw writeError;
 
       localStorage.setItem("codesSyncedCount", String(totalCracked));
@@ -895,16 +895,19 @@ async function addCurrency(amount) {
       .maybeSingle();
     if (readError) throw readError;
 
-    const { error: writeError } = await supabaseClient
-      .from("players")
-      .update({
-        currency: (current && current.currency ? current.currency : 0) + amount,
-        // Lebenslanger Zaehler, unabhaengig vom (auch wieder sinkenden)
-        // Kontostand - Grundlage fuer die taeglichen Reparatur-Quests
-        // (siehe DAILY_QUESTS in ship-repair-data.js).
-        total_currency_earned: (current && current.total_currency_earned ? current.total_currency_earned : 0) + amount,
-      })
-      .eq("firebase_uid", uid);
+    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+    const { error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient
+        .from("players")
+        .update({
+          currency: (current && current.currency ? current.currency : 0) + amount,
+          // Lebenslanger Zaehler, unabhaengig vom (auch wieder sinkenden)
+          // Kontostand - Grundlage fuer die taeglichen Reparatur-Quests
+          // (siehe DAILY_QUESTS in ship-repair-data.js).
+          total_currency_earned: (current && current.total_currency_earned ? current.total_currency_earned : 0) + amount,
+        })
+        .eq("firebase_uid", uid)
+    );
     if (writeError) throw writeError;
 
     if (typeof refreshShopCurrencyDisplay === "function") {
@@ -966,7 +969,10 @@ function savePlayerData(fields) {
       if ("nickname" in fields) update.nickname = fields.nickname;
       if ("equippedFrame" in fields) update.equipped_frame = fields.equippedFrame;
 
-      const { error } = await supabaseClient.from("players").update(update).eq("firebase_uid", uid);
+      // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+      const { error } = await withSupabaseRlsColdStartRetry(() =>
+        supabaseClient.from("players").update(update).eq("firebase_uid", uid)
+      );
       if (error) throw error;
     } catch (err) {
       console.error("Eintrag konnte nicht gespeichert werden:", err);
@@ -1205,12 +1211,17 @@ async function redeemWheelPrize(prize) {
     fields.temp_avatar_id = prize.avatarId;
   }
 
-  const { data: updated, error: writeError } = await supabaseClient
-    .from("players")
-    .update(fields)
-    .eq("firebase_uid", uid)
-    .select()
-    .maybeSingle();
+  // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js -
+  // ohne diesen Retry wuerde ein reiner Kaltstart-42501 hier faelschlich
+  // als "too-soon" (zu frueh gedreht) angezeigt werden.
+  const { data: updated, error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient
+      .from("players")
+      .update(fields)
+      .eq("firebase_uid", uid)
+      .select()
+      .maybeSingle()
+  );
 
   if (writeError || !updated) {
     throw new Error("too-soon");
@@ -1338,10 +1349,10 @@ function recordCodeCrack(codeId, reward) {
           fields.rewards = oldRewards.includes(reward) ? oldRewards : [...oldRewards, reward];
         }
 
-        const { error: writeError } = await supabaseClient
-          .from("players")
-          .update(fields)
-          .eq("firebase_uid", uid);
+        // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+        const { error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+          supabaseClient.from("players").update(fields).eq("firebase_uid", uid)
+        );
         if (writeError) throw writeError;
       } catch (err) {
         console.error("Code-Fortschritt konnte nicht gespeichert werden:", err);
@@ -1427,12 +1438,15 @@ async function redeemCurrencyCode(codeId, amount) {
   };
   if (nickname) fields.nickname = nickname;
 
-  const { data: updated, error: writeError } = await supabaseClient
-    .from("players")
-    .update(fields)
-    .eq("firebase_uid", uid)
-    .select()
-    .maybeSingle();
+  // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
+  const { data: updated, error: writeError } = await withSupabaseRlsColdStartRetry(() =>
+    supabaseClient
+      .from("players")
+      .update(fields)
+      .eq("firebase_uid", uid)
+      .select()
+      .maybeSingle()
+  );
 
   if (writeError || !updated) {
     throw new Error("redeem-failed");
@@ -1508,7 +1522,9 @@ function wrapAvatarWithCapBadge(avatarHtml, hasCap) {
 async function fetchPassCapWinnerUids() {
   if (!supabaseClient) return new Set();
   try {
-    const { data, error } = await supabaseClient.from("pass_cap_grants").select("firebase_uid");
+    const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.from("pass_cap_grants").select("firebase_uid")
+    );
     if (error) throw error;
     return new Set((data || []).map((row) => row.firebase_uid));
   } catch (err) {
