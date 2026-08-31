@@ -223,35 +223,41 @@ function generateForcedWinSlotReels(reelCount, random = Math.random) {
 
   return Array.from({ length: reelCount }, (_, i) => {
     if (pairPositions.has(i)) return matchSymbol;
-    // Uebrige Walzen: normale Gewichtung, aber OHNE Totenkopf - der
-    // wuerde den garantierten Gewinn sonst wieder zunichtemachen
-    // (Regel "Totenkopf irgendwo -> immer Verlust").
+    // Uebrige Walzen: normale Gewichtung, aber OHNE Totenkopf - sonst
+    // koennte die Anzahl der Totenkoepfe die des garantierten Paares
+    // wieder einholen oder uebertreffen (Regel: bestCount > skullCount).
     return pickWeightedSlotSymbol(nonSkullSymbols, random);
   });
 }
 
 
 function scoreSlotReels(reels, bet) {
-  const hasSkull = reels.some(symbol => symbol.id === "skull");
+  const counts = {};
+  let skullCount = 0;
+  reels.forEach(symbol => {
+    if (symbol.id === "skull") {
+      skullCount++;
+      return;
+    }
+    counts[symbol.id] = (counts[symbol.id] || 0) + 1;
+  });
+
+  let bestId = null;
+  let bestCount = 0;
+  Object.keys(counts).forEach(id => {
+    if (counts[id] > bestCount) {
+      bestCount = counts[id];
+      bestId = id;
+    }
+  });
 
   let payout = 0;
   let tier = null;
 
-  if (!hasSkull) {
-    const counts = {};
-    reels.forEach(symbol => {
-      counts[symbol.id] = (counts[symbol.id] || 0) + 1;
-    });
-
-    let bestId = null;
-    let bestCount = 0;
-    Object.keys(counts).forEach(id => {
-      if (counts[id] > bestCount) {
-        bestCount = counts[id];
-        bestId = id;
-      }
-    });
-
+  // Gewinn, sobald die groesste gleiche Symbolgruppe (ohne Totenkoepfe)
+  // die Anzahl der Totenkoepfe uebertrifft - statt frueher "Totenkopf
+  // irgendwo -> immer Verlust".
+  if (bestCount > skullCount) {
     const rewardTable = SLOT_REWARD_TABLES_BY_COUNT[bestCount];
     const reward = rewardTable ? rewardTable[bestId] : null;
 
@@ -453,7 +459,7 @@ function getSlotRulesHtml(lang) {
       <p><strong>3 matching symbols</strong></p>
       <ul class="spielothek-rules-tiers">${renderRows(tripleRows, "Win", "Win")}</ul>
       <ul>
-        <li>💀 Skull anywhere → always a loss</li>
+        <li>💀 More matching symbols than skulls → still a win, skulls just don't count toward the match</li>
         <li>Two matching symbols → ${SLOT_PAIR_MULTIPLIER}× your bet</li>
         <li>Otherwise → loss</li>
       </ul>
@@ -470,7 +476,7 @@ function getSlotRulesHtml(lang) {
       <p><strong>3 gleiche Symbole</strong></p>
       <ul class="spielothek-rules-tiers">${renderRows(tripleRows, "Gewinn", "Gewinn")}</ul>
       <ul>
-        <li>💀 Totenkopf irgendwo → immer Verlust</li>
+        <li>💀 Mehr gleiche Symbole als Totenköpfe → trotzdem Gewinn, Totenköpfe zählen einfach nicht zum Match</li>
         <li>Zwei gleiche Symbole → ${SLOT_PAIR_MULTIPLIER}× Einsatz</li>
         <li>Sonst → Verlust</li>
       </ul>
