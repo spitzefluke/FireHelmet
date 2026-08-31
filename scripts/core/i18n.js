@@ -17,6 +17,9 @@
 const translations = {
   de: {
     "menu.title": "MENU",
+    "menu.sectionExplore": "Erkunden",
+    "menu.sectionGames": "Spiele",
+    "menu.sectionMore": "Mehr",
     "menu.login": "🎮 Anmelden",
     "menu.shop": "🛒 Shop",
     "menu.home": "🏠 Home",
@@ -302,6 +305,9 @@ const translations = {
 
   en: {
     "menu.title": "MENU",
+    "menu.sectionExplore": "Explore",
+    "menu.sectionGames": "Games",
+    "menu.sectionMore": "More",
     "menu.login": "🎮 Login",
     "menu.shop": "🛒 Shop",
     "menu.home": "🏠 Home",

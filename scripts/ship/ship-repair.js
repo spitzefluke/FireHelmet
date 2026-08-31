@@ -929,25 +929,64 @@ function buildShipRepairSvg() {
           <stop offset="0%" stop-color="#3a4a5e"/>
           <stop offset="100%" stop-color="#141c26"/>
         </linearGradient>
+        <linearGradient id="shiprepair-hull-fixed" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4a5f78"/>
+          <stop offset="55%" stop-color="#2c3a4c"/>
+          <stop offset="100%" stop-color="#141c26"/>
+        </linearGradient>
         <linearGradient id="shiprepair-sail" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="#f1e8d2"/>
           <stop offset="100%" stop-color="#c9bd9c"/>
         </linearGradient>
+        <linearGradient id="shiprepair-water" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#4da3ff" stop-opacity="0"/>
+          <stop offset="50%" stop-color="#4da3ff" stop-opacity=".35"/>
+          <stop offset="100%" stop-color="#4da3ff" stop-opacity="0"/>
+        </linearGradient>
       </defs>
 
-      <ellipse cx="250" cy="270" rx="220" ry="18" fill="#4da3ff" opacity=".12"/>
-
-      <!-- RUMPF: kaputt -->
-      <g class="fh-ship-part fh-ship-part-hull-broken">
-        <path d="M70,215 Q90,180 140,188 L200,182 Q210,205 195,215 L230,190 Q245,215 225,225 L360,188 Q410,180 430,215 Q390,240 250,240 Q110,240 70,215 Z" fill="url(#shiprepair-hull)" stroke="#0a3049" stroke-width="2"/>
-        <ellipse cx="150" cy="205" rx="16" ry="10" fill="#020306"/>
-        <ellipse cx="290" cy="210" rx="20" ry="12" fill="#020306"/>
+      <!-- WASSER: sanfte Wellenlinien statt reiner Schatten-Ellipse -->
+      <g aria-hidden="true" opacity=".55">
+        <ellipse cx="250" cy="272" rx="225" ry="16" fill="#04070c" opacity=".5"/>
+        <path d="M45,266 Q95,258 145,266 T245,266 T345,266 T445,266" fill="none" stroke="url(#shiprepair-water)" stroke-width="3"/>
+        <path d="M65,278 Q115,272 165,278 T265,278 T365,278 T425,278" fill="none" stroke="url(#shiprepair-water)" stroke-width="2"/>
       </g>
-      <!-- RUMPF: repariert -->
+
+      <!-- RUMPF: kaputt (Lecks, Riss, loses Tau) -->
+      <g class="fh-ship-part fh-ship-part-hull-broken">
+        <path d="M62,222 Q75,178 145,180 L340,176 Q405,178 432,214 Q420,244 260,250 Q120,250 78,234 Q64,229 62,222 Z"
+              fill="url(#shiprepair-hull)" stroke="#0a3049" stroke-width="2.5"/>
+        <!-- Deckkante -->
+        <path d="M78,196 Q160,182 340,180 Q390,181 420,196" fill="none" stroke="#5a7690" stroke-width="2" opacity=".55"/>
+        <!-- Plankenfugen -->
+        <path d="M85,214 Q220,226 415,208" fill="none" stroke="#04121d" stroke-width="1.5" opacity=".6"/>
+        <path d="M92,231 Q220,240 400,225" fill="none" stroke="#04121d" stroke-width="1.5" opacity=".5"/>
+        <!-- Riss vom Bug bis zum grossen Leck -->
+        <path d="M95,196 L128,206 L118,210 L155,222" fill="none" stroke="#010203" stroke-width="3" stroke-linecap="round"/>
+        <!-- grosses Leck: gezackter Rand, dunkles Loch, rostiger Saum -->
+        <path d="M158,200 L178,197 L192,210 L206,205 L214,224 L196,236 L172,233 L156,220 Z"
+              fill="#010203" stroke="#7c2d12" stroke-width="2" stroke-opacity=".7"/>
+        <!-- zweites Leck mit gebrochenen Plankenzähnen -->
+        <g>
+          <ellipse cx="305" cy="213" rx="19" ry="13" fill="#010203" stroke="#7c2d12" stroke-width="2" stroke-opacity=".6"/>
+          <path d="M288,206 L292,214 L296,204 M318,206 L316,215 L322,207 M296,224 L302,229 L308,222" stroke="#0a3049" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- loses Tau, das ueber Bord haengt -->
+        <path d="M110,196 Q104,214 116,232 Q120,240 112,248" fill="none" stroke="#8a6a3a" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+      </g>
+
+      <!-- RUMPF: repariert (klare Linie, Gold-Zierleiste, Bullaugen) -->
       <g class="fh-ship-part fh-ship-part-hull-fixed">
-        <path d="M70,210 Q90,178 140,186 L360,186 Q410,178 430,210 Q390,236 250,236 Q110,236 70,210 Z" fill="url(#shiprepair-hull)" stroke="#4da3ff" stroke-opacity=".4" stroke-width="2"/>
-        <line x1="110" y1="200" x2="390" y2="200" stroke="#0a3049" stroke-width="1" opacity=".5"/>
-        <line x1="110" y1="215" x2="390" y2="215" stroke="#0a3049" stroke-width="1" opacity=".5"/>
+        <path d="M62,214 Q75,176 148,178 L340,178 Q405,180 432,214 Q404,242 250,244 Q108,242 70,224 Q62,220 62,214 Z"
+              fill="url(#shiprepair-hull-fixed)" stroke="#4da3ff" stroke-opacity=".45" stroke-width="2"/>
+        <!-- Gold-Zierleiste an der Deckkante -->
+        <path d="M74,196 Q160,182 340,182 Q392,183 420,197" fill="none" stroke="#d6a84f" stroke-width="2.5" opacity=".85"/>
+        <!-- saubere Plankenfugen -->
+        <path d="M85,208 Q250,220 415,204" fill="none" stroke="#0a3049" stroke-width="1" opacity=".4"/>
+        <path d="M90,225 Q250,235 405,220" fill="none" stroke="#0a3049" stroke-width="1" opacity=".35"/>
+        <!-- Bullaugen -->
+        <circle cx="170" cy="210" r="8" fill="#0a2030" stroke="#d6a84f" stroke-width="1.5" opacity=".8"/>
+        <circle cx="305" cy="212" r="8" fill="#0a2030" stroke="#d6a84f" stroke-width="1.5" opacity=".8"/>
       </g>
 
       <!-- MAST: kaputt (Stumpf + abgebrochenes Stück quer am Deck) -->
