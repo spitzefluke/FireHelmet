@@ -178,6 +178,12 @@ body.loaded {
   --fh-ocean: #0b1824;
   --fh-paper: #e8d5a8;
   --fh-red-deep: #7c1f1c;
+
+  /* War ein zweiter, eigenstaendiger :root-Block direkt vor der
+     COMMUNITY-BOSS-Sektion - inhaltlich hierher gehoerend, ins
+     Haupt-Token-Set zusammengefuehrt (rein kosmetische Aufraeumung,
+     derselbe Variablenname/Wert). */
+  --boss-accent: #7c2d12;
 }
 
 /* =====================================================
@@ -1008,7 +1014,7 @@ main {
   width: min(170px, 20vw);
   height: min(170px, 20vw);
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff7e0, #f0c96a 45%, #7a5a26 100%);
+  background: radial-gradient(circle at 35% 35%, #fff7e0, var(--menu-hex1) 45%, #7a5a26 100%);
   box-shadow: 0 0 80px rgba(240,201,106,.45), 0 0 160px rgba(240,201,106,.18);
   transform: translate3d(calc(var(--fh-progress) * -6vw), calc(var(--fh-progress) * -3vh), 0) scale(calc(1 + var(--fh-progress) * .12));
 }
@@ -2626,7 +2632,7 @@ main {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fff, #ffd76b 60%, transparent);
+  background: radial-gradient(circle, #fff, var(--menu-hex3) 60%, transparent);
   transform: rotate(var(--angle)) translateX(0);
   animation: wheelSparkFly .85s ease-out forwards;
 }
@@ -2738,7 +2744,7 @@ main {
 
 .wheel-pointer::after {
   top: 5px;
-  border-top: 15px solid #7c2d12;
+  border-top: 15px solid var(--boss-accent);
 }
 
 /* 3D-Tiefe fürs Rad, größer als zuvor */
@@ -2795,7 +2801,7 @@ main {
 .spin-button {
   font-size: 21px;
   padding: 20px 54px;
-  background: linear-gradient(135deg, var(--wheel-accent, #d4af37), #7c2d12);
+  background: linear-gradient(135deg, var(--wheel-accent, #d4af37), var(--boss-accent));
   border: 1px solid rgba(253,241,214,.4);
   color: #fdf1d6;
   font-weight: bold;
@@ -3175,7 +3181,7 @@ main {
   margin-top: 35px;
   font-size: 20px;
   font-weight: bold;
-  color: #ffd76b;
+  color: var(--menu-hex3);
   text-shadow: 0 0 12px rgba(255,215,107,.5);
 }
 
@@ -3255,7 +3261,7 @@ main {
 
 /* Der führende Fahrer bekommt eine glühende Aura + Krone */
 .race-kart-leader {
-  filter: drop-shadow(0 0 5px #ffd76b) drop-shadow(0 2px 3px rgba(0,0,0,.5));
+  filter: drop-shadow(0 0 5px var(--menu-hex3)) drop-shadow(0 2px 3px rgba(0,0,0,.5));
 }
 
 .race-kart-leader .kart-inner {
@@ -3263,8 +3269,8 @@ main {
 }
 
 @keyframes kartLeaderGlow {
-  0%, 100% { filter: drop-shadow(0 0 2px #ffd76b); }
-  50%      { filter: drop-shadow(0 0 10px #ffd76b); }
+  0%, 100% { filter: drop-shadow(0 0 2px var(--menu-hex3)); }
+  50%      { filter: drop-shadow(0 0 10px var(--menu-hex3)); }
 }
 
 /* Dezente Silber-/Bronze-Aura fuer Platz 2/3 - schwaecher als die
@@ -3941,10 +3947,6 @@ main {
 /* =====================================================
    COMMUNITY-BOSS
 ===================================================== */
-:root {
-  --boss-accent: #7c2d12;
-}
-
 .boss-content {
   max-width: 650px;
   margin: auto;
@@ -4291,7 +4293,7 @@ main {
 .support-report-box h2 {
   font-size: 21px;
   margin-bottom: 15px;
-  color: #ffd76b;
+  color: var(--menu-hex3);
   text-shadow: 0 0 14px rgba(255,215,107,.35);
 }
 
@@ -4493,7 +4495,7 @@ main {
 /* Geöffneter Zustand */
 .combo-lock-open .combo-shackle {
   transform: translateZ(10px) translateY(-22px) rotate(-25deg);
-  border-color: #ffd76b !important;
+  border-color: var(--menu-hex3) !important;
 }
 
 .combo-lock-open .combo-body {
@@ -4504,7 +4506,7 @@ main {
 }
 
 .combo-lock-open .combo-digit {
-  color: #ffd76b;
+  color: var(--menu-hex3);
   text-shadow: 0 0 12px rgba(255,215,107,.9);
   transform: translateZ(4px);
 }
@@ -4542,7 +4544,7 @@ main {
   font-size: 34px;
   font-weight: bold;
   letter-spacing: 1px;
-  color: #ffd76b;
+  color: var(--menu-hex3);
   text-shadow: 0 0 25px rgba(255,215,107,.8);
 }
 
@@ -5367,7 +5369,7 @@ img, svg, video, canvas {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ffd76b;
+  background: var(--menu-hex3);
   box-shadow: 0 0 8px rgba(255,215,107,.9);
   transform: rotate(calc(var(--i) * 36deg)) translateX(0);
   animation: dailyBonusSparkFly .8s ease-out forwards;
@@ -6149,7 +6151,7 @@ img, svg, video, canvas {
   inset: 0;
   border-radius: 22px;
   padding: 2px;
-  background: conic-gradient(from 0deg, #ffd76b, #ff6a2a, #9146ff, #4da3ff, #ffd76b);
+  background: conic-gradient(from 0deg, var(--menu-hex3), var(--menu-hex2), #9146ff, #4da3ff, var(--menu-hex3));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -6348,7 +6350,7 @@ img, svg, video, canvas {
 }
 
 .avatar-frame-gold::before {
-  background: conic-gradient(from 0deg, #ffd76b, #fff3c4, #b8860b, #ffd76b);
+  background: conic-gradient(from 0deg, var(--menu-hex3), #fff3c4, #b8860b, var(--menu-hex3));
   animation: avatarFrameSpin 4.2s linear infinite, avatarFrameGoldPulse 2s ease-in-out infinite;
   filter: drop-shadow(0 0 12px rgba(255,215,107,.8));
 }
@@ -6359,7 +6361,7 @@ img, svg, video, canvas {
 }
 
 .avatar-frame-fire::before {
-  background: conic-gradient(from 0deg, #ff6a2a, #ffcf6b, #d9431e, #ff6a2a, #ffb020, #ff6a2a);
+  background: conic-gradient(from 0deg, var(--menu-hex2), #ffcf6b, var(--fh-fire-deep), var(--menu-hex2), #ffb020, var(--menu-hex2));
   animation: avatarFrameSpin 2.4s linear infinite, avatarFrameFireFlicker 1s ease-in-out infinite;
 }
 
@@ -6379,7 +6381,7 @@ img, svg, video, canvas {
 }
 
 .avatar-frame-legend::before {
-  background: conic-gradient(from 0deg, #ffd76b, #ff6a2a, #9146ff, #4da3ff, #4ade80, #ffd76b);
+  background: conic-gradient(from 0deg, var(--menu-hex3), var(--menu-hex2), #9146ff, #4da3ff, #4ade80, var(--menu-hex3));
   animation: avatarFrameSpin 3s linear infinite, avatarFrameLegendPulse 1.8s ease-in-out infinite;
 }
 
@@ -6426,7 +6428,7 @@ tr.row-frame {
 }
 
 .row-frame-gold {
-  --row-frame-color: #ffd76b;
+  --row-frame-color: var(--menu-hex3);
   --row-frame-glow: rgba(255,215,107,.5);
   animation: rowFrameGoldPulse 2.2s ease-in-out infinite;
 }
@@ -6437,7 +6439,7 @@ tr.row-frame {
 }
 
 .row-frame-fire {
-  --row-frame-color: #ff6a2a;
+  --row-frame-color: var(--menu-hex2);
   --row-frame-glow: rgba(255,106,42,.5);
   animation: rowFrameFirePulse 1.1s ease-in-out infinite;
 }
@@ -6463,11 +6465,11 @@ tr.row-frame {
 }
 
 @keyframes rowFrameLegendCycle {
-  0%   { box-shadow: inset 0 0 0 2px #ffd76b, 0 0 18px rgba(255,215,107,.6); }
-  25%  { box-shadow: inset 0 0 0 2px #ff6a2a, 0 0 18px rgba(255,106,42,.6); }
+  0%   { box-shadow: inset 0 0 0 2px var(--menu-hex3), 0 0 18px rgba(255,215,107,.6); }
+  25%  { box-shadow: inset 0 0 0 2px var(--menu-hex2), 0 0 18px rgba(255,106,42,.6); }
   50%  { box-shadow: inset 0 0 0 2px #9146ff, 0 0 18px rgba(145,70,255,.6); }
   75%  { box-shadow: inset 0 0 0 2px #4da3ff, 0 0 18px rgba(77,163,255,.6); }
-  100% { box-shadow: inset 0 0 0 2px #ffd76b, 0 0 18px rgba(255,215,107,.6); }
+  100% { box-shadow: inset 0 0 0 2px var(--menu-hex3), 0 0 18px rgba(255,215,107,.6); }
 }
 
 /* =====================================================
@@ -6551,7 +6553,7 @@ tr.row-frame {
 
 .rating-average-stars {
   font-size: 26px;
-  color: #ffd76b;
+  color: var(--menu-hex3);
   text-shadow: 0 0 14px rgba(255,215,107,.5);
   letter-spacing: 2px;
 }
@@ -6590,7 +6592,7 @@ tr.row-frame {
 }
 
 .rating-star-active {
-  color: #ffd76b;
+  color: var(--menu-hex3);
   text-shadow: 0 0 18px rgba(255,215,107,.7);
   animation: ratingStarPop .3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -6808,7 +6810,7 @@ tr.row-frame {
 .shop-item-rarity-mythic::before {
   opacity: .65;
   animation-duration: 2.4s;
-  background: conic-gradient(from 0deg, #ff5555, #f0c96a, #ff5555, #7c1d1d, #ff5555);
+  background: conic-gradient(from 0deg, #ff5555, var(--menu-hex1), #ff5555, #7c1d1d, #ff5555);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -7350,7 +7352,7 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 
 .fh-boss-layer-sky {
-  background: radial-gradient(ellipse at 50% 18%, color-mix(in srgb, var(--boss-accent, #7c2d12) 35%, transparent), #05070b 72%);
+  background: radial-gradient(ellipse at 50% 18%, color-mix(in srgb, var(--boss-accent, #7c2d12) 35%, transparent), var(--fh-bg) 72%);
   transition: background 1.2s ease;
 }
 
@@ -7551,7 +7553,7 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 
 #fh-boss-arena-bg.fh-boss-phase-critical .fh-boss-layer-sky,
 #fh-boss-arena-bg.fh-boss-phase-final .fh-boss-layer-sky {
-  background: radial-gradient(ellipse at 50% 18%, rgba(217,67,30,.5), #05070b 72%);
+  background: radial-gradient(ellipse at 50% 18%, rgba(217,67,30,.5), var(--fh-bg) 72%);
 }
 
 #fh-boss-arena-bg.fh-boss-phase-final .fh-boss-layer-clouds {
@@ -8983,7 +8985,7 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 
 /* Grosse Gewinne heben sich zusaetzlich farblich/optisch ab */
 .spielothek-result-win-big {
-  color: #ffd76b;
+  color: var(--menu-hex3);
   text-shadow: 0 0 18px rgba(255,215,107,.7);
 }
 
@@ -10182,7 +10184,7 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 
 .fh-levelpath-header-progressbar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #2a4a72, #4da3ff);
+  background: linear-gradient(90deg, var(--fh-blue), #4da3ff);
   transition: width .6s var(--fh-ease);
 }
 
@@ -10243,7 +10245,7 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 
 .fh-levelpath-connector-filled {
-  background: linear-gradient(90deg, #2a4a72, #4da3ff);
+  background: linear-gradient(90deg, var(--fh-blue), #4da3ff);
   box-shadow: 0 0 6px rgba(77,163,255,.4);
 }
 
@@ -10482,7 +10484,7 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 
 .fh-levelpath-tooltip-claim-btn {
-  background: linear-gradient(135deg, #2a4a72, #4da3ff);
+  background: linear-gradient(135deg, var(--fh-blue), #4da3ff);
   color: #04121f;
 }
 

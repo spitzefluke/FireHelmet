@@ -77,6 +77,8 @@
       })
       .join("");
 
+    staggerReveal(listEl, ".code-history-item");
+
     wrapEl.style.display = "block";
   }
 

@@ -749,6 +749,7 @@ async function renderShipRepairPage() {
   `;
 
   renderShipToolInventory(tools);
+  staggerReveal(contentEl, ".fh-ship-stage-row");
   if (typeof applyTranslations === "function") applyTranslations();
 
   if (data.activeRepair) startShipRepairTicker(uid, data.activeRepair.phaseId);

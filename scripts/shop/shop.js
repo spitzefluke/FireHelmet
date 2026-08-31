@@ -181,6 +181,8 @@ function renderRarityLegend() {
       `;
     })
     .join("");
+
+  staggerReveal(el, ".fh-rarity-chip");
 }
 
 /* ------------------------------------------------------

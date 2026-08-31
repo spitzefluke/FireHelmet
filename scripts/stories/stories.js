@@ -267,6 +267,8 @@ function loadChapters() {
 
     container.appendChild(card);
   });
+
+  staggerReveal(container, ".chapter-card");
 }
 
 /* ------------------------------------------------------
