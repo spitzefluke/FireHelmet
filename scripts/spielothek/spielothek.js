@@ -445,16 +445,25 @@ async function renderSpielothekResult(game, handler, result, betCost) {
   // seine eigenen Stopp-Zeitpunkte am besten und liefert sie optional
   // mit; spielothek.js selbst bleibt dadurch weiterhin unabhaengig von
   // slot-spezifischen Details (siehe Kommentar am Dateianfang).
-  if (!reduceMotion && Array.isArray(handler.reelStopTimesMs)) {
+  // Manche Spiele (z.B. der Slot mit seiner einsatzabhaengigen
+  // Walzenzahl, siehe games/slot.js) liefern die Stopp-Zeitpunkte pro
+  // ERGEBNIS statt fest am handler, weil sie sich von Runde zu Runde
+  // aendern koennen - result.reelStopTimesMs hat daher Vorrang, der
+  // statische handler.reelStopTimesMs bleibt als Fallback fuer Spiele
+  // ohne diese Besonderheit.
+  const reelStopTimesMs = Array.isArray(result.reelStopTimesMs) ? result.reelStopTimesMs : handler.reelStopTimesMs;
+
+  if (!reduceMotion && Array.isArray(reelStopTimesMs)) {
     const symbolEls = resultEl.querySelectorAll(".spielothek-slot-symbol");
-    handler.reelStopTimesMs.forEach((stopMs, i) => {
+    reelStopTimesMs.forEach((stopMs, i) => {
       const el = symbolEls[i];
       if (!el) return;
       setTimeout(() => el.classList.add("spielothek-slot-symbol-landed"), stopMs);
     });
   }
 
-  const revealDelay = reduceMotion ? 0 : (typeof handler.resultRevealDelayMs === "number" ? handler.resultRevealDelayMs : 1150);
+  const resultRevealDelayMs = typeof result.resultRevealDelayMs === "number" ? result.resultRevealDelayMs : handler.resultRevealDelayMs;
+  const revealDelay = reduceMotion ? 0 : (typeof resultRevealDelayMs === "number" ? resultRevealDelayMs : 1150);
   if (revealDelay > 0) {
     await new Promise((resolve) => setTimeout(resolve, revealDelay));
   }

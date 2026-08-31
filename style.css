@@ -8824,6 +8824,8 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 
 .spielothek-slot-reels {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
   animation: spielothekReelsWobble .35s ease-in-out;
 }
