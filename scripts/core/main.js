@@ -65,6 +65,10 @@ function changePage(pageID) {
     updateLoginPage(pageID);
   }
 
+  if (typeof updateDetectiveCasePage === "function") {
+    updateDetectiveCasePage(pageID);
+  }
+
   updateActiveNavHighlight(pageID);
   closeMenu();
 }
@@ -654,7 +658,7 @@ async function checkCode() {
       }
 
       try {
-        await redeemCurrencyCode(codeId, match.currencyReward);
+        await redeemCurrencyCode(codeId, match.currencyReward, match.avatarUnlockSecure || null);
       } catch (err) {
         if (err.message === "already-redeemed") {
           if (typeof markCodeCrackedLocally === "function") {

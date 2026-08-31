@@ -79,6 +79,7 @@ async function migrateCrackedCodesFormat() {
 window.addEventListener("DOMContentLoaded", () => {
   migrateCrackedCodesFormat();
   renderAvatarPicker();
+  syncUnlockedAvatarsFromServer();
 });
 
 function isCodeAlreadyCracked(codeId) {
@@ -704,6 +705,74 @@ function unlockAvatar(avatarId) {
 
   renderAvatarPicker();
   showAvatarUnlockToast(entry);
+}
+
+/* ------------------------------------------------------
+   SERVERSEITIG FREIGESCHALTETEN AVATAR LOKAL SPIEGELN
+   ---------------------------------------------------
+   Gegenstueck zu unlockAvatar() (oben) fuer Avatare, die NICHT rein
+   clientseitig, sondern ueber players.unlocked_avatars vergeben
+   wurden (aktuell nur "meisterdetektiv", siehe redeemCurrencyCode()).
+   Der eigentliche, faelschungssichere Schreibvorgang ist zu diesem
+   Zeitpunkt bereits serverseitig bestaetigt - hier wird nur noch die
+   schnelle lokale Anzeige (Avatar-Auswahl beim Login/Schatzrad) auf
+   denselben Stand gebracht, exakt wie bei unlockAvatar().
+------------------------------------------------------ */
+function markAvatarUnlockedLocally(avatarId) {
+  if (typeof wheelSpecialAvatars === "undefined") return;
+
+  const entry = wheelSpecialAvatars.find((a) => a.id === avatarId);
+  if (!entry) return;
+
+  const unlockedIds = getUnlockedAvatarIds();
+  if (unlockedIds.includes(avatarId)) return;
+
+  unlockedIds.push(avatarId);
+  localStorage.setItem("unlockedAvatars", JSON.stringify(unlockedIds));
+
+  renderAvatarPicker();
+  showAvatarUnlockToast(entry);
+}
+
+/* ------------------------------------------------------
+   SERVER-STAND DER DAUERHAFTEN AVATARE ABGLEICHEN
+   ---------------------------------------------------
+   Analog zu syncTempAvatarFromServer()/syncOwnedShopItemsFromServer()
+   im Shop: players.unlocked_avatars ist die alleinige Wahrheit fuer
+   Avatare, die ueber den serverseitigen Weg (redeemCurrencyCode() mit
+   avatarUnlockSecure) vergeben wurden - localStorage ist nur eine
+   schnelle, NACHGEORDNETE Kopie. Noetig, damit ein zweites Geraet
+   (oder ein geleertes localStorage) den Avatar nach dem Einloesen
+   trotzdem sieht. Rein additiv (Union statt Ersetzen) - ein aelterer,
+   rein clientseitiger unlockAvatar()-Eintrag geht dadurch nie verloren.
+------------------------------------------------------ */
+async function syncUnlockedAvatarsFromServer() {
+  if (!supabaseClient) return;
+
+  try {
+    const uid = await wheelAuthReady;
+    if (!uid) return;
+
+    const { data, error } = await supabaseClient
+      .from("players")
+      .select("unlocked_avatars")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (error || !data) return;
+
+    const serverIds = data.unlocked_avatars || [];
+    if (!serverIds.length) return;
+
+    const localIds = getUnlockedAvatarIds();
+    const merged = [...new Set([...localIds, ...serverIds])];
+
+    if (merged.length !== localIds.length) {
+      localStorage.setItem("unlockedAvatars", JSON.stringify(merged));
+      renderAvatarPicker();
+    }
+  } catch (err) {
+    console.warn("Freigeschaltete Avatare konnten nicht mit dem Server abgeglichen werden:", err);
+  }
 }
 
 function showAvatarUnlockToast(entry) {
@@ -1397,8 +1466,19 @@ function recordCodeCrack(codeId, reward) {
    message === "already-redeemed"; bei jedem anderen Fehler den
    echten Fehler (der Aufrufer zeigt dann eine ehrliche Fehler-
    meldung statt eines vorgetäuschten Erfolgs).
+
+   avatarUnlockId (optional): fuer Codes mit "avatarUnlockSecure" in
+   codes-data.js (aktuell nur der Detektiv-Faelle-Code, siehe scripts/
+   detective/) - schaltet im SELBEN atomaren Schreibvorgang zusaetzlich
+   einen dauerhaften Spezial-Avatar frei (players.unlocked_avatars,
+   serverseitig geprueft von app.valid_avatar_unlock() in supabase/
+   game-migration/01-players-ship-progression.sql: nur EIN neuer
+   Eintrag erlaubt, und nur zusammen mit dem Nachweis, dass genau
+   dieser Code gerade eingeloest wurde). Anders als das aeltere
+   unlockAvatar() (rein localStorage, siehe dort) ist das nicht per
+   localStorage-Manipulation faelschbar.
 ------------------------------------------------------ */
-async function redeemCurrencyCode(codeId, amount) {
+async function redeemCurrencyCode(codeId, amount, avatarUnlockId) {
   if (!supabaseClient) throw new Error("no-db");
   const uid = await wheelAuthReady;
   if (!uid) throw new Error("no-uid");
@@ -1412,7 +1492,7 @@ async function redeemCurrencyCode(codeId, amount) {
 
   const { data: current, error: readError } = await supabaseClient
     .from("players")
-    .select("currency, total_currency_earned, codes_cracked, redeemed_currency_codes")
+    .select("currency, total_currency_earned, codes_cracked, redeemed_currency_codes, unlocked_avatars")
     .eq("firebase_uid", uid)
     .maybeSingle();
   if (readError) throw readError;
@@ -1438,6 +1518,11 @@ async function redeemCurrencyCode(codeId, amount) {
   };
   if (nickname) fields.nickname = nickname;
 
+  const existingUnlocked = data.unlocked_avatars || [];
+  if (avatarUnlockId && !existingUnlocked.includes(avatarUnlockId)) {
+    fields.unlocked_avatars = [...existingUnlocked, avatarUnlockId];
+  }
+
   // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
   const { data: updated, error: writeError } = await withSupabaseRlsColdStartRetry(() =>
     supabaseClient
@@ -1450,6 +1535,10 @@ async function redeemCurrencyCode(codeId, amount) {
 
   if (writeError || !updated) {
     throw new Error("redeem-failed");
+  }
+
+  if (fields.unlocked_avatars && typeof markAvatarUnlockedLocally === "function") {
+    markAvatarUnlockedLocally(avatarUnlockId);
   }
 }
 
@@ -1730,6 +1819,7 @@ function updateWheelPage(pageID) {
   syncCodesToDatabase();
   syncTempAvatarFromServer();
   syncWheelCooldownFromServer();
+  syncUnlockedAvatarsFromServer();
   refreshWheelStatus();
 }
 

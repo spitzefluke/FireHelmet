@@ -56,6 +56,17 @@ const wheelSpecialAvatars = [
   { id: "Admin", avatar: "scripts/avatare/11.png", label: "Admin" },
   { id: "boss-slayer", avatar: "🏅", label: "Boss-Bezwinger (Top 3 Schaden)" },
 
+  // "Der Fall der verschwundenen Dublonen" (scripts/detective/) -
+  // einziger Weg diesen Avatar zu bekommen: den Geheimcode am Ende des
+  // Falls loesen. Anders als die uebrigen Eintraege hier wird dieser
+  // NICHT ueber unlockAvatar()/"unlockedAvatars" lokal, sondern
+  // serverseitig ueber players.unlocked_avatars vergeben (siehe
+  // app.valid_avatar_unlock() in supabase/game-migration/
+  // 01-players-ship-progression.sql sowie redeemCurrencyCode() in
+  // wheel.js) - markAvatarUnlockedLocally() in wheel.js spiegelt das
+  // Ergebnis danach nur noch in dieses lokale Array.
+  { id: "meisterdetektiv", avatar: "🕵️", label: "🕵️ Meisterdetektiv" },
+
   // Zeitlich befristete Schatzrad-Belohnung (siehe wheel-data.js:
   // wheelPrizes -> type "tempAvatar" -> avatarId "Ändii"). Nutzt das
   // bereits vorhandene Ändii-Bild aus dem Charaktersystem (scripts/

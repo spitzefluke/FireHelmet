@@ -217,6 +217,24 @@ const codes = [
   },
 
   /* ------------------------------------------------------
+     "DER FALL DER VERSCHWUNDENEN DUBLONEN" - siehe scripts/detective/.
+     Einziger Code, der GLEICHZEITIG Dublonen UND einen dauerhaften
+     Avatar vergibt - "avatarUnlockSecure" (statt des aelteren, rein
+     clientseitigen "avatarUnlock") laeuft ueber dieselbe atomare,
+     server-verifizierte Transaktion wie currencyReward (siehe
+     redeemCurrencyCode() in wheel.js + app.valid_avatar_unlock() in
+     supabase/game-migration/01-players-ship-progression.sql) - kann
+     also nicht per localStorage-Manipulation gefaelscht werden.
+  ------------------------------------------------------ */
+  {
+    hash: "5836a4ee100cdabe7e2cf26b1a73d9dba43e43b17e27a4d159de60ebc6b41d22", // flame-400-detektiv
+    message: "🕵️ Fall gelöst! +400 Dublonen und der exklusive Meisterdetektiv-Avatar sind jetzt dein.",
+    currencyReward: 400,
+    avatarUnlockSecure: "meisterdetektiv",
+    reward: "🕵️ Meisterdetektiv-Avatar",
+  },
+
+  /* ------------------------------------------------------
      10 ZUFALLSCODES - "hacked"
      Codes im Klartext (nirgendwo sonst gespeichert, hier nur
      als Kommentar zur eigenen Referenz): prsbn19i, d4v7gre6,
