@@ -436,6 +436,32 @@ body.lang-en {
   filter: drop-shadow(0 0 12px rgba(var(--menu-rgb1),.45));
 }
 
+/* Gruppenueberschriften im Menue (Hamburger- UND feste Desktop-
+   Sidebar teilen sich dieselbe Klasse) - rein visuelle Gliederung
+   der bisher einen flachen Liste, aendert nichts an data-page/
+   onclick der Links selbst. */
+.fh-nav-section-label {
+  margin: 22px 4px 10px;
+  padding: 0 16px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg, #8296ad);
+  opacity: .8;
+}
+
+.sidebar .fh-nav-section-label:first-of-type,
+.fh-sidebar-nav .fh-nav-section-label:first-of-type {
+  margin-top: 4px;
+}
+
+.fh-sidebar-nav .fh-nav-section-label {
+  margin: 16px 0 2px;
+  padding: 0 14px;
+}
+
 @keyframes sidebarTitleShine {
   0%   { background-position: 0% 50%; }
   100% { background-position: 300% 50%; }
@@ -464,18 +490,21 @@ body.lang-en {
   animation: sidebarLinkIn .5s cubic-bezier(0.22, 0.9, 0.32, 1.3) backwards;
 }
 
-.sidebar.open a:nth-child(4)  { animation-delay: .05s; }
-.sidebar.open a:nth-child(5)  { animation-delay: .10s; }
-.sidebar.open a:nth-child(6)  { animation-delay: .15s; }
-.sidebar.open a:nth-child(7)  { animation-delay: .20s; }
-.sidebar.open a:nth-child(8)  { animation-delay: .25s; }
-.sidebar.open a:nth-child(9)  { animation-delay: .30s; }
-.sidebar.open a:nth-child(10) { animation-delay: .35s; }
-.sidebar.open a:nth-child(11) { animation-delay: .40s; }
-.sidebar.open a:nth-child(12) { animation-delay: .45s; }
-.sidebar.open a:nth-child(13) { animation-delay: .50s; }
-.sidebar.open a:nth-child(14) { animation-delay: .55s; }
-.sidebar.open a:nth-child(15) { animation-delay: .60s; }
+/* nth-of-type statt nth-child: zaehlt nur <a>-Geschwister, damit die
+   .fh-nav-section-label-<p>-Elemente (Menü-Gruppenueberschriften)
+   dazwischen die Reihenfolge/Verzoegerung nicht verschieben. */
+.sidebar.open a:nth-of-type(1)  { animation-delay: .05s; }
+.sidebar.open a:nth-of-type(2)  { animation-delay: .10s; }
+.sidebar.open a:nth-of-type(3)  { animation-delay: .15s; }
+.sidebar.open a:nth-of-type(4)  { animation-delay: .20s; }
+.sidebar.open a:nth-of-type(5)  { animation-delay: .25s; }
+.sidebar.open a:nth-of-type(6)  { animation-delay: .30s; }
+.sidebar.open a:nth-of-type(7)  { animation-delay: .35s; }
+.sidebar.open a:nth-of-type(8)  { animation-delay: .40s; }
+.sidebar.open a:nth-of-type(9)  { animation-delay: .45s; }
+.sidebar.open a:nth-of-type(10) { animation-delay: .50s; }
+.sidebar.open a:nth-of-type(11) { animation-delay: .55s; }
+.sidebar.open a:nth-of-type(12) { animation-delay: .60s; }
 
 @keyframes sidebarLinkIn {
   0%   { opacity: 0; transform: translateX(-30px) scale(.9); }
@@ -4082,6 +4111,19 @@ main {
   overflow: hidden;
 }
 
+/* Glasige Hochglanz-Kante oben auf der Leiste - macht aus dem
+   flachen Farbverlauf ein greifbareres, "poliertes" Metallrohr. */
+.boss-hp-track::after {
+  content: "";
+  position: absolute;
+  inset: 2px 3px auto 3px;
+  height: 40%;
+  border-radius: 999px 999px 40% 40% / 999px 999px 100% 100%;
+  background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0));
+  pointer-events: none;
+  z-index: 3;
+}
+
 .boss-hp-ghost {
   position: absolute;
   inset: 0;
@@ -4126,6 +4168,9 @@ main {
 }
 
 .boss-phase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 3px 12px;
   border-radius: 999px;
   border: 1px solid rgba(214,168,79,.5);
@@ -4134,6 +4179,27 @@ main {
   font-family: var(--fh-font-display);
   font-size: 11px;
   letter-spacing: .1em;
+}
+
+.boss-phase-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fh-gold-bright);
+  box-shadow: 0 0 8px rgba(240,201,106,.8);
+  animation: fhBossPhaseBadgeDotPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes fhBossPhaseBadgeDotPulse {
+  0%, 100% { opacity: .5; transform: scale(.85); }
+  50%      { opacity: 1;  transform: scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boss-phase-badge::before {
+    animation: none;
+  }
 }
 
 .boss-defeated-banner {
@@ -5594,18 +5660,21 @@ img, svg, video, canvas {
   animation: fhNavItemIn .5s cubic-bezier(0.22, 0.9, 0.32, 1.2) backwards;
 }
 
-.fh-sidebar-nav .fh-nav-item:nth-child(1)  { animation-delay: .03s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(2)  { animation-delay: .07s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(3)  { animation-delay: .11s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(4)  { animation-delay: .15s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(5)  { animation-delay: .19s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(6)  { animation-delay: .23s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(7)  { animation-delay: .27s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(8)  { animation-delay: .31s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(9)  { animation-delay: .35s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(10) { animation-delay: .39s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(11) { animation-delay: .43s; }
-.fh-sidebar-nav .fh-nav-item:nth-child(12) { animation-delay: .47s; }
+/* nth-of-type statt nth-child: zaehlt nur <a>-Geschwister, damit die
+   .fh-nav-section-label-<p>-Elemente (Menü-Gruppenueberschriften)
+   dazwischen die Reihenfolge/Verzoegerung nicht verschieben. */
+.fh-sidebar-nav .fh-nav-item:nth-of-type(1)  { animation-delay: .03s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(2)  { animation-delay: .07s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(3)  { animation-delay: .11s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(4)  { animation-delay: .15s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(5)  { animation-delay: .19s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(6)  { animation-delay: .23s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(7)  { animation-delay: .27s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(8)  { animation-delay: .31s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(9)  { animation-delay: .35s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(10) { animation-delay: .39s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(11) { animation-delay: .43s; }
+.fh-sidebar-nav .fh-nav-item:nth-of-type(12) { animation-delay: .47s; }
 
 @keyframes fhNavItemIn {
   0%   { opacity: 0; transform: translateX(-16px); }
