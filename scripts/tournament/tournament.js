@@ -154,6 +154,7 @@ async function renderTournamentPage() {
 
     tournamentCurrentUid = uid;
     container.innerHTML = buildTournamentPageHtml({ uid, tournament, finished, matches, participants, prize });
+    staggerReveal(container, ".tournament-match-card");
   } catch (err) {
     if (myGeneration !== tournamentRenderGeneration || tournamentGameInProgress) return;
     console.error("Turnier konnte nicht geladen werden:", err);
