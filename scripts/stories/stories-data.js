@@ -13,7 +13,7 @@ const stories = [
     // Welche Charaktere aus CHARACTER_DATABASE (siehe
     // scripts/characters/characters-data.js) in diesem Logbuch
     // vorkommen - daraus baut sich die Characters-Seite automatisch.
-    characters: ["dave", "finjan", "dean", "andi", "julian"],
+    characters: ["dave", "finjan", "dean", "andi", "julian", "janne", "kai"],
 
     chapters: [
       {
@@ -415,10 +415,18 @@ A clear smile appeared on Dave's face: 'All the more reason for us to deliver th
       },
       {
         id: "treasure-en-09",
-        title: "Chapter 9",
+        title: "Chapter 9 - Aground",
         language: "English",
         text: `
-Chapter 9 content.
+The crab that Dave and his crew encountered has been a loyal companion of the Flitzpiepen ever since, and they continue their exciting voyage.
+
+One sunny day, however, Finian is woken by the rays of the sun and notices that their ship has come to a stop. "Hey Captain, did we run aground?" he asked. "No, but well, the wind is gone."
+
+"What do you mean, the wind is gone?" Finian asked, wide-eyed. "Gone, that's it. There's simply no wind," Dave replied. "Crabs said that's common in this area."
+
+A few days later the ship still hasn't moved. It rocks gently back and forth, surrounded by the deep blue sea. The crew is bored: Janne fishes without success, and Dean gnaws on a dry piece of bread. The only one who seems to be having fun is Finian. He amuses himself thoroughly by really getting on Dave's and the rest of the crew's nerves. Eventually, Dave has had enough. He wanders across the deck and suddenly catches a sharp stench - it's coming from the lower deck of the ship. There's only one place that smell could be coming from: the ship's toilet. As Dave enters the lower deck, he runs into the ship's handyman, Kai Coldfeet, whom he hasn't seen the entire voyage. When he asks him where he's been, Kai answers that he was just quickly in the bathroom.
+
+Dave had an idea: if the boat wasn't going to move on its own, then it would need a little help. With Kai Coldfeet's assistance, he managed to build a kind of apparatus that could drive the boat with paddle wheels. With that, they continued their journey - though not without the nagging feeling that a break like that might not come again for a long while.
 `,
       },
       {
