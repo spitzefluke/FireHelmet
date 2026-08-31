@@ -89,6 +89,15 @@ create table public.players (
   last_spielothek_play_at timestamptz,
   temp_avatar_expires_at bigint,
   temp_avatar_id text,
+  -- Dauerhaft (nicht befristet) per Code freigeschaltete Spezial-Avatare
+  -- (siehe wheelSpecialAvatars in scripts/wheel/avatars-data.js) - im
+  -- Unterschied zum aelteren, rein clientseitigen unlockAvatar()/
+  -- "unlockedAvatars"-localStorage-Mechanismus (siehe Kommentar bei
+  -- app.valid_avatar_unlock() weiter unten) serverseitig verankert und
+  -- damit nicht per localStorage-Manipulation faelschbar. Auftrag "Der
+  -- Fall der verschwundenen Dublonen": der Meisterdetektiv-Avatar ist
+  -- der erste Eintrag, der diesen Weg nutzt.
+  unlocked_avatars text[] not null default '{}',
   updated_at timestamptz not null default now(),
 
   constraint players_nickname_len check (nickname is null or char_length(nickname) between 1 and 30),
@@ -97,6 +106,7 @@ create table public.players (
   constraint players_owned_items_len check (coalesce(array_length(owned_shop_items,1),0) <= 40),
   constraint players_rewards_len check (coalesce(array_length(rewards,1),0) <= 50),
   constraint players_daily_quests_len check (coalesce(array_length(daily_quests_claimed_days,1),0) <= 20),
+  constraint players_unlocked_avatars_len check (coalesce(array_length(unlocked_avatars,1),0) <= 50),
   constraint players_currency_nonneg check (currency >= 0),
   constraint players_games_played_nonneg check (games_played >= 0),
   constraint players_games_won_nonneg check (games_won >= 0),
@@ -347,8 +357,53 @@ begin
     when 'd422fd99131807e57e4c5b71defeeab9544b77d9d9201cf36a922f14bf5f226d' then delta = 300
     when '80ebd9ad284c580790b9d1f1e276568c455838fa1604159d7bf323b89718f27c' then delta = 500
     when '484aab2f2cd0f77b3c30f91521ba9a76c8c501112a53e100154a098c274f03d3' then delta = 300
+    -- "Der Fall der verschwundenen Dublonen": Geheimcode aus dem
+    -- Detektiv-Raetsel (scripts/detective/), vergibt zusaetzlich den
+    -- Meisterdetektiv-Avatar - siehe app.valid_avatar_unlock() unten,
+    -- das denselben neuen Codes-Eintrag als Nachweis verlangt.
+    when '5836a4ee100cdabe7e2cf26b1a73d9dba43e43b17e27a4d159de60ebc6b41d22' then delta = 400
     else false
   end;
+end;
+$$;
+
+/* ------------------------------------------------------
+   DAUERHAFT PER CODE FREIGESCHALTETE SPEZIAL-AVATARE
+   ---------------------------------------------------
+   Bisher (siehe unlockAvatar() in wheel.js) lief das Freischalten
+   eines "avatarUnlock"-Codes rein clientseitig ueber localStorage
+   ("unlockedAvatars") - unkritisch fuer bereits bestehende Codes
+   (rein kosmetisch, kein echter Vermoegenswert), aber fuer den neuen
+   Detektiv-Code (400 Dublonen + Avatar in einem Zug) reicht das nicht:
+   der Auftrag verlangt ausdruecklich eine serverseitige, nicht per
+   localStorage faelschbare Einmal-Vergabe. Deshalb hier derselbe
+   Ansatz wie bei valid_code_redemption() selbst: NUR wer im selben
+   oder einem frueheren Schreibvorgang bereits nachweislich (per
+   redeemed_currency_codes-Eintrag) den richtigen Code eingeloest hat,
+   darf ueberhaupt einen neuen Eintrag zu unlocked_avatars hinzufuegen -
+   und zwar exakt "meisterdetektiv", niemals sonst etwas. Bestehende
+   Eintraege koennen nie entfernt werden (alte_avatare <@ neue_avatare).
+------------------------------------------------------ */
+create or replace function app.valid_avatar_unlock(p_uid text, new_unlocked text[], new_codes jsonb) returns boolean
+language plpgsql stable
+as $$
+declare
+  old_unlocked text[] := coalesce((app.old_player(p_uid)).unlocked_avatars, '{}');
+  new_arr text[] := coalesce(new_unlocked, '{}');
+begin
+  if new_arr = old_unlocked then
+    return true; -- Fast-Path: unveraendert (Standardfall bei fast jedem Schreibvorgang)
+  end if;
+  if not (old_unlocked <@ new_arr) then
+    return false; -- alte Eintraege duerfen nie entfernt werden
+  end if;
+  if coalesce(array_length(new_arr,1),0) <> coalesce(array_length(old_unlocked,1),0) + 1 then
+    return false; -- genau EIN neuer Eintrag pro Schreibvorgang
+  end if;
+  if 'meisterdetektiv' = any(old_unlocked) or not ('meisterdetektiv' = any(new_arr)) then
+    return false; -- der einzige neue Eintrag muss "meisterdetektiv" sein
+  end if;
+  return new_codes ? '5836a4ee100cdabe7e2cf26b1a73d9dba43e43b17e27a4d159de60ebc6b41d22';
 end;
 $$;
 
@@ -441,7 +496,8 @@ begin
     and app.valid_daily_quests_write(p_uid, new_row.daily_quests_started_at, new_row.daily_quests_claimed_days, new_row.ship_tools)
     and app.valid_code_redemption(p_uid, new_row.redeemed_currency_codes, new_row.currency, new_row.last_wheel_spin_at, new_row.last_spielothek_play_at)
     and app.valid_wheel_fields(p_uid, new_row.last_wheel_spin_at, new_row.temp_avatar_expires_at)
-    and app.valid_spielothek_cooldown(p_uid, new_row.last_spielothek_play_at);
+    and app.valid_spielothek_cooldown(p_uid, new_row.last_spielothek_play_at)
+    and app.valid_avatar_unlock(p_uid, new_row.unlocked_avatars, new_row.redeemed_currency_codes);
 end;
 $$;
 

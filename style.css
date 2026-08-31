@@ -8337,6 +8337,258 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 
 /* =====================================================
+   "DER FALL DER VERSCHWUNDENEN DUBLONEN" (Detektiv-Mission)
+   ---------------------------------------------------
+   Nutzt bestehende Design-Tokens (--fh-gold/--fh-surface/--fh-border/
+   --fh-danger/--fh-success/--fh-font-display/--fh-ease usw.), keine
+   neuen Farben - soll sich wie ein zusaetzliches Kapitel derselben
+   Piraten-Welt anfuehlen, nicht wie ein fremdes UI-System.
+===================================================== */
+.detective-page-content {
+  max-width: 900px;
+}
+
+.detective-story {
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius);
+  padding: 18px 22px;
+  color: var(--fh-text-muted);
+  line-height: 1.6;
+  margin: 18px 0 30px;
+}
+
+.detective-section-heading {
+  font-family: var(--fh-font-display);
+  color: var(--fh-gold-bright);
+  margin: 30px 0 14px;
+}
+
+/* ---- Verdächtige ---- */
+.detective-suspects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.detective-suspect-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius);
+  padding: 20px 16px;
+  cursor: pointer;
+  transition: border-color .2s var(--fh-ease), transform .2s var(--fh-ease), box-shadow .2s var(--fh-ease);
+  color: var(--fh-text);
+  font-family: var(--fh-font-sans);
+}
+
+.detective-suspect-card:hover {
+  border-color: var(--fh-border-strong);
+  transform: translateY(-3px);
+}
+
+.detective-suspect-card.detective-suspect-selected {
+  border-color: var(--fh-gold-bright);
+  box-shadow: var(--fh-glow-gold);
+}
+
+.detective-suspect-image {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--fh-border-strong);
+}
+
+.detective-suspect-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  background: var(--fh-muted);
+}
+
+.detective-suspect-name {
+  font-family: var(--fh-font-display);
+  font-size: 17px;
+  color: var(--fh-gold-bright);
+}
+
+.detective-suspect-role {
+  font-size: 13px;
+  color: var(--fh-text-muted);
+}
+
+.detective-suspect-statement {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--fh-text-muted);
+  line-height: 1.5;
+}
+
+/* ---- Hinweise ---- */
+.detective-clues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.detective-clue-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius);
+  padding: 20px 16px;
+  font-family: var(--fh-font-sans);
+  color: var(--fh-text);
+}
+
+button.detective-clue-card {
+  cursor: pointer;
+  transition: border-color .2s var(--fh-ease), transform .2s var(--fh-ease);
+}
+
+button.detective-clue-card:hover {
+  border-color: var(--fh-gold);
+  transform: translateY(-3px);
+}
+
+.detective-clue-icon {
+  font-size: 30px;
+}
+
+.detective-clue-title {
+  font-family: var(--fh-font-display);
+  font-size: 15px;
+  color: var(--fh-gold-bright);
+}
+
+.detective-clue-cta {
+  font-size: 13px;
+  color: var(--fh-text-muted);
+}
+
+.detective-clue-revealed {
+  border-color: var(--fh-success);
+  animation: detectiveClueReveal .4s var(--fh-ease);
+}
+
+.detective-clue-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fh-text-muted);
+}
+
+@keyframes detectiveClueReveal {
+  0%   { opacity: 0; transform: scale(.92); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ---- Falsche Beschuldigung ---- */
+.detective-wrong-guess {
+  margin-top: 24px;
+  padding: 16px 20px;
+  border-radius: var(--fh-radius);
+  border: 1px solid var(--fh-danger);
+  background: rgba(229,57,53,.12);
+  animation: detectiveClueReveal .3s var(--fh-ease);
+}
+
+.detective-wrong-guess-title {
+  font-family: var(--fh-font-display);
+  color: var(--fh-danger);
+  margin-bottom: 6px;
+}
+
+.detective-wrong-guess-hint {
+  color: var(--fh-text-muted);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* ---- Beschuldigen ---- */
+.detective-accuse-box {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.detective-accuse-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* ---- Fall gelöst ---- */
+.detective-solved {
+  text-align: center;
+  animation: detectiveClueReveal .5s var(--fh-ease);
+}
+
+.detective-solved-reveal {
+  font-family: var(--fh-font-display);
+  font-size: 30px;
+  color: var(--fh-gold-bright);
+  text-shadow: var(--fh-glow-gold);
+  margin: 10px 0;
+}
+
+.detective-solved-heading {
+  font-family: var(--fh-font-display);
+  color: var(--fh-success);
+  margin: 26px 0 8px;
+}
+
+.detective-reward-list {
+  list-style: none;
+  padding: 0;
+  margin: 14px auto 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 17px;
+}
+
+.detective-secret-code {
+  font-family: var(--fh-font-display);
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--fh-gold-bright);
+  background: var(--fh-surface);
+  border: 1px dashed var(--fh-gold);
+  border-radius: var(--fh-radius-sm);
+  padding: 12px 20px;
+  display: inline-block;
+  margin: 10px 0 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detective-clue-revealed,
+  .detective-wrong-guess,
+  .detective-solved {
+    animation: none;
+  }
+  .detective-suspect-card:hover,
+  button.detective-clue-card:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .detective-suspects-grid,
+  .detective-clues-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =====================================================
    ADMIN-GATEWAY
 ===================================================== */
 .fh-gateway-link {

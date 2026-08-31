@@ -84,6 +84,7 @@
     <a data-page="community-boss" onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 Community-Boss</a>
     <a data-page="streamraetsel" onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">❓ ???</a>
     <a data-page="ship-repair" onclick="changePage('ship-repair')" data-i18n="menu.shipRepair">⚒ Repariere das Schiff</a>
+    <a data-page="detective-case" onclick="changePage('detective-case')" data-i18n="menu.detectiveCase">🕵️ Der Fall</a>
 
     <p class="fh-nav-section-label" data-i18n="menu.sectionMore">Mehr</p>
     <a data-page="support" onclick="changePage('support')" data-i18n="menu.support">🆘 Support</a>
@@ -134,6 +135,7 @@
       <a class="fh-nav-item" data-page="community-boss" onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 <span>Community-Boss</span></a>
       <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')">❓ <span data-i18n="menu.streamraetselShort">???</span></a>
       <a class="fh-nav-item" data-page="ship-repair" onclick="changePage('ship-repair')" data-i18n="menu.shipRepair">⚒ <span>Repariere das Schiff</span></a>
+      <a class="fh-nav-item" data-page="detective-case" onclick="changePage('detective-case')" data-i18n="menu.detectiveCase">🕵️ <span>Der Fall</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionMore">Mehr</p>
       <a class="fh-nav-item" data-page="support" onclick="changePage('support')" data-i18n="menu.support">🆘 <span>Support</span></a>
@@ -874,6 +876,21 @@
     </section>
 
     <!-- =====================
+         DER FALL DER VERSCHWUNDENEN DUBLONEN
+         Komplett JS-gerendert (scripts/detective/detective-case.js),
+         analog zu "Repariere das Schiff" oben - Ueberschrift/Untertitel
+         bleiben statisch, der eigentliche Fall-Inhalt (Geschichte,
+         Verdaechtige, Hinweise, Ergebnis) kommt aus renderDetectiveCasePage().
+    ===================== -->
+    <section id="detective-case" class="page">
+      <div class="page-content detective-page-content">
+        <h1 data-i18n="detectiveCase.title">🕵️ DER FALL DER VERSCHWUNDENEN DUBLONEN</h1>
+        <p class="story-subtitle" data-i18n="detectiveCase.subtitle">Auf der FireHelmet herrscht Unruhe. 400 Dublonen sind aus der Schatzkammer verschwunden. Jemand aus der Crew muss sie genommen haben.</p>
+        <div id="detective-case-content"></div>
+      </div>
+    </section>
+
+    <!-- =====================
          THE CHALLENGE (K.-o.-Turnier)
          Komplett JS-gerendert (scripts/tournament/tournament.js),
          analog zu "Repariere das Schiff" oben - die vielen
@@ -1092,6 +1109,8 @@
   <script src="scripts/characters/characters-data.js"></script>
   <script src="scripts/stories/stories.js"></script>
   <script src="scripts/characters/characters.js"></script>
+  <script src="scripts/detective/detective-case-data.js"></script>
+  <script src="scripts/detective/detective-case.js"></script>
   <script src="scripts/race/race.js"></script>
   <script src="scripts/community-boss/community-boss.js"></script>
   <script src="scripts/wheel/wheel.js"></script>

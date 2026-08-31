@@ -13,6 +13,12 @@ insert into public.players (firebase_uid, nickname, currency)
 values ('c0000000-0000-0000-0000-000000000000', 'Carla', 500);
 insert into public.players (firebase_uid, nickname, currency)
 values ('d0000000-0000-0000-0000-000000000000', 'Dieter', 500);
+insert into public.players (firebase_uid, nickname, currency)
+values ('e0000000-0000-0000-0000-000000000000', 'Elena', 500);
+insert into public.players (firebase_uid, nickname, currency)
+values ('f0000000-0000-0000-0000-000000000000', 'Finn', 500);
+insert into public.players (firebase_uid, nickname, currency)
+values ('a1111111-0000-0000-0000-000000000000', 'Greta', 500);
 insert into public.ship_repair (firebase_uid) values ('a0000000-0000-0000-0000-000000000000');
 reset role;
 
@@ -309,6 +315,76 @@ select set_config('request.jwt.claims', '{"sub":"d0000000-0000-0000-0000-0000000
 select test_expect_blocked(
   $sql$update public.players set daily_quests_started_at = now() - interval '3 days', daily_quests_claimed_days = '{}' where firebase_uid = 'd0000000-0000-0000-0000-000000000000'$sql$,
   'TEST16b Zurueckdatierter Tagesquest-Start (3 Tage) wird abgelehnt');
+reset role;
+
+-- ============================================================
+-- TEST 17: "Der Fall der verschwundenen Dublonen" -
+-- app.valid_avatar_unlock() (players.unlocked_avatars)
+-- ============================================================
+
+-- TEST17a: legitime Einloesung des Detektiv-Codes (400 Dublonen +
+-- neuer Codes-Map-Eintrag + Meisterdetektiv-Avatar in EINEM Schreibvorgang)
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"e0000000-0000-0000-0000-000000000000"}', false);
+select test_expect_ok(
+  $sql$update public.players set currency = 900, total_currency_earned = 400, codes_cracked = 1,
+    redeemed_currency_codes = '{"5836a4ee100cdabe7e2cf26b1a73d9dba43e43b17e27a4d159de60ebc6b41d22": true}'::jsonb,
+    unlocked_avatars = array['meisterdetektiv']
+    where firebase_uid = 'e0000000-0000-0000-0000-000000000000'$sql$,
+  'TEST17a Detektiv-Code (400 Dublonen + Avatar zusammen) gelingt');
+reset role;
+
+-- TEST17b: Wiederholungsversuch (Code bereits in redeemed_currency_codes) wird
+-- durch die bestehende valid_code_redemption()-Logik blockiert (kein neuer Key)
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"e0000000-0000-0000-0000-000000000000"}', false);
+select test_expect_blocked(
+  $sql$update public.players set currency = 1300, total_currency_earned = 800
+    where firebase_uid = 'e0000000-0000-0000-0000-000000000000'$sql$,
+  'TEST17b Erneutes Einloesen desselben Detektiv-Codes wird blockiert');
+reset role;
+
+-- TEST17c: Meisterdetektiv-Avatar OHNE den zugehoerigen Code-Nachweis
+-- hinzufuegen wird blockiert (anderer Spieler, hat den Code nie eingeloest)
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"f0000000-0000-0000-0000-000000000000"}', false);
+select test_expect_blocked(
+  $sql$update public.players set unlocked_avatars = array['meisterdetektiv']
+    where firebase_uid = 'f0000000-0000-0000-0000-000000000000'$sql$,
+  'TEST17c Meisterdetektiv-Avatar ohne Code-Nachweis wird blockiert');
+reset role;
+
+-- TEST17d: ein ANDERER (frei erfundener) Avatar-Name wird selbst dann
+-- blockiert, wenn im selben Schreibvorgang gleichzeitig korrekt der
+-- Detektiv-Code eingeloest wird - nur "meisterdetektiv" ist erlaubt
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"a1111111-0000-0000-0000-000000000000"}', false);
+select test_expect_blocked(
+  $sql$update public.players set currency = 900, total_currency_earned = 400,
+    redeemed_currency_codes = '{"5836a4ee100cdabe7e2cf26b1a73d9dba43e43b17e27a4d159de60ebc6b41d22": true}'::jsonb,
+    unlocked_avatars = array['admin-fake']
+    where firebase_uid = 'a1111111-0000-0000-0000-000000000000'$sql$,
+  'TEST17d frei erfundener Avatar-Name (statt meisterdetektiv) wird blockiert');
+reset role;
+
+-- TEST17e: ein bereits freigeschalteter Avatar kann nicht wieder entfernt werden
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"e0000000-0000-0000-0000-000000000000"}', false);
+select test_expect_blocked(
+  $sql$update public.players set unlocked_avatars = '{}'
+    where firebase_uid = 'e0000000-0000-0000-0000-000000000000'$sql$,
+  'TEST17e Entfernen eines bereits freigeschalteten Avatars wird blockiert');
+reset role;
+
+-- TEST17f: falscher Betrag (999 statt 400) fuer den Detektiv-Code wird
+-- blockiert - dieselbe Pruefung wie bei den bestehenden Waehrungscodes
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"d0000000-0000-0000-0000-000000000000"}', false);
+select test_expect_blocked(
+  $sql$update public.players set currency = 1499, total_currency_earned = 999,
+    redeemed_currency_codes = '{"5836a4ee100cdabe7e2cf26b1a73d9dba43e43b17e27a4d159de60ebc6b41d22": true}'::jsonb
+    where firebase_uid = 'd0000000-0000-0000-0000-000000000000'$sql$,
+  'TEST17f falscher Betrag (999) fuer den Detektiv-Code wird blockiert');
 reset role;
 
 drop function test_expect_blocked(text, text);
