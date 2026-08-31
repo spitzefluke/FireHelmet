@@ -237,88 +237,36 @@ Kapitel 12 Inhalt.
 
       {
         id: "treasure-en-01",
-        title: "Chapter 1 - The strange freight",
+        title: "Chapter 1 - The Strange Freight",
         language: "English",
         text: `
+In 1540, at a port in a small village called Romna, lies a ship painted a deep red. It has black ornaments and belongs to Captain and seafarer Dave. Nowadays, he would be described as a retiree - a crazy, frail old man - but at this time he is an honorable, adventurous, and experienced seafarer. His crew also calls him Fliezpiepenheimer.
 
-1540 at a port in a small village called Romna, lies a strongly red painted ship.
-It has black ornaments and belongs to the Caiptain boater Dave.
-In this day and age, he would be described as a pensioner and a crazy fragile man, but at that time he is an honorable, adventurous and experienced boatman.
-His crew also calls him Fliezpiepenheimer.
-Today it is a bit strange at the port, as the crew is to ship an important and well-paid cargo for the first time.
-The crew scrubs the deck and prepares everything for the arrival of the important load.
-After a short time, the expected load arrives and the crew prepares to transport it.
-But the Caiptain has a queasy feeling about the matter.
-The load is stowed in a massive metal box with 5 locks. "What's in there?" Everyone thinks.
-The two men who brought the cargo here clearly warned the crew not to open the box under any circumstances, as this would mean the death of all crew members.
-The captain is not so interested in this, but the crew urgently needs the money that is available for the delivery, which is why he has the cargo charged.
-The crew has become poor because Ändi, a game-addicted crew member, gambled away the ship's coffers.
-The two men quickly disappeared and left behind only an empty port.
-
+Today things are a little strange at the port, as the crew is set to ship an important and well-paid cargo for the first time. The crew scrubs the deck and prepares everything for the arrival of the important shipment. Before long, the expected cargo arrives and the crew gets ready to load it. But the captain has an uneasy feeling about the whole thing. The cargo is stowed in a massive metal box secured with five locks. "What could be in there?" everyone wonders. The two men who delivered the cargo clearly warned the crew never to open the box under any circumstances, as doing so would mean death for every crew member. The captain isn't entirely comfortable with this, but the crew urgently needs the money the delivery will bring, so he has the cargo loaded aboard. The crew has fallen on hard times, since Ändii, a gambling-addicted crew member, lost the ship's entire treasury at the tables. The two men quickly vanished, leaving behind nothing but an empty harbor.
 `,
       },
       {
         id: "treasure-en-02",
-        title: "Chapter 2 - A new adventure",
+        title: "Chapter 2 - A New Adventure",
         language: "English",
         text: `
+Loaded with the strange cargo, the ship sets sail and a new adventure begins. On their journey across the vast seas, the crew faces many challenges. Finjan Backbeard, the youngest and cheekiest member of the crew, is - despite these thoroughly odd qualities - their most valuable man. He annoys the captain and stirs up plenty of mischief, but he's a master of observation. Up in his lookout, he watches over the open sea; his sharp-eyed observations have often helped the crew steer clear of danger. His gaze wanders across the wide ocean, and the ship's flag flutters in the wind - it's by this flag that Dave's crew can be recognized from far away. This, too, is thanks to Finjan, since he's the one who designed it. It shows a muscular man, behind whom a ship can be seen that looks deceptively similar to their own.
 
-Loaded with the strange cargo, the ship sets sail and a new adventure begins.
-On their journey across the vast seas, the crew faces many challenges.
-Finjan Backbeard, the youngest and cheekiest member of the crew, is their most important man despite these extremely strange qualities.
-He annoys the captain of the team and does a lot of mischief, but is a master of observation.
-On top of his look out, he overlooks the distance, his precise observations often led to the fact that the crew could avoid dangers.
-His gaze wanders over the wide sea and the flag of the ship flies in the wind, through it you can recognize Dave's crew from a distance.
-This is also thanks to Finjan, because he designed them.
-Pictured are a muscular man behind which there is a ship that looks deceptively similar to hers.
-Slowly the first day of their journey comes to an end, the crew lies down in their bunks and as the last rays of the sun fade, Dave also goes into his cabin.
-For once, the sea is calm and Dave gives the order to lower the anchor.
-Lost in thought, he sits in his armchair and thinks about their journey and the strange cargo they have loaded.
-But his thoughts are abruptly disturbed by a shock, something must have bumped into the ship.
-He grabs his iron saber decorated with gold engravings and steps on the deck of the ship ready for battle.
-The rest of the crew has already gathered there and Dave is pushing through the crowd of stinking sailors.
-When he arrives at the front end, he sees two sea creatures, so-called "saules" fighting with each other.
-These animals are a strange mixture of whale and pig, basically they are peaceful but these are apparently two females.
-These are more aggressive than their male conspecifics and defend their territory very weepingly.
-However, something is different with these exemplars, but what?
-The time to think about it is denied to Dave because Finjan pokes him in the side.
-Grinning, he asks him: "Hey Captain, do you already have a certain resemblance to these animals, are they distant relatives of theirs?" Laughing, Dave Finjan's shoulder and replies: "Watch your tongue or you can get to know my alleged relatives right away!".
-The crew watches the hustle and bustle of the Sauluppen and then gets back into their bunks.
-
+Slowly, the first day of their journey draws to a close. The crew retreats to their bunks, and as the last rays of sunlight fade, Dave withdraws to his cabin as well. For once, the sea is calm, and Dave gives the order to drop anchor. Lost in thought, he sits in his armchair, mulling over their journey and the strange cargo they've taken aboard. But his thoughts are abruptly interrupted by a jolt - something must have struck the ship. He grabs his iron saber, adorned with golden engravings, and strides onto the deck ready for battle. The rest of the crew has already gathered there, and Dave pushes his way through the crowd of reeking sailors. When he reaches the bow, he sees two sea creatures - so-called "Sauluppen" - fighting each other. These animals are a strange cross between whale and pig; normally they're peaceful, but these two are apparently females. Females are more aggressive than their male counterparts and defend their territory fiercely. Still, something about these two seems different - but what? Dave has no time to think it over, since Finjan pokes him in the side. Grinning, Finjan asks: "Hey Captain, you do look a bit like these creatures - are they distant relatives of yours?" Laughing, Dave pats Finjan's shoulder and replies: "Watch your tongue, or you'll get to meet my alleged relatives up close!" The crew watches the Sauluppen a little longer before drifting back to their bunks.
 `,
       },
       {
         id: "treasure-en-03",
-        title: "Chapter 3 - An uncertain way",
+        title: "Chapter 3 - An Uncertain Way",
         language: "English",
         text: `
+When Dave wakes up the next morning, everything seems to be in order - the ship rocks gently in the waves, and the first rays of sunlight shine through the windows of his cabin. But when Dave steps out of his cabin onto the deck, his helmsman Dean Silentmouth comes straight toward him. Dean has been the ship's helmsman for many years and one of Dave's closest confidants; few know the world's oceans as well as he does. Although he doesn't talk much, Dave trusts him completely. Dean points excitedly toward the edge of the ship, looking almost frightened. This unsettles Dave, but he pulls himself together and walks slowly to the edge of the deck. When he gets there, he's almost speechless: the water has turned into a red puddle, and floating in it are the remains of one of the Sauluppen. Dave is shaken - in all his years as a seafarer, he's never seen these animals kill one another, and the wounds on the carcass don't match anything a Sauluppe could inflict on another. Still, Dave has no time to dwell on it; he gives the order to raise the anchor and hoist the sails. Their journey continues.
 
-When Dave wakes up the next morning, everything seems to be fine, the ship rocks quietly in the waves and the first rays of sun shine through the windows of his cabin.
-However, when Dave goes out of his cabin onto the deck, his helmsman Dean Silentmouth comes directly to meet him.
-Dean has been the helmsman of her ship for many years and one of Dave's closest confidants, there are few who know the world's oceans as well as he does.
-Although he doesn't talk much, Dave trusts him completely.
-Dean points his finger excitedly at the edge of the ship, he seems almost scared.
-This worries Dave but he picks himself up and slowly walks to the edge of the ceiling.
-When he arrives there, he is almost speechless, the water has turned into a red fütze, and in it float the remains of one of the saups.
-Dave is shaken in his long years as a sailor, he has never seen these animals kill each other and also the wounds on the animal's carcass do not match those that one sale can inflict on another.
-However, Dave doesn't have time to think about it anymore, he gives the order to draw the anchor and hoist the sails.
-Your journey continues.
-Around noon, Finjan reports from the lookout: "Hey Captain over there is a really bad storm... almost as bad as her mood sometimes."
-Dave, lost in thought, reaches for the binoculars to take a closer look: "We have to go through that." He says: "Pull in the main sail and cover everything that is not rivet and nail-proof!".
-Finjan looks at him with wide eyes: "Well Captain, we'll see each other on the other side... or maybe not."
-The storm rages, water splashes up the sides of the deck and the crew staggers over the deck in a daze.
-The sky is covered with jet-black clouds that are broken by lightning every minute.
-And to make matters worse, fog now also raises, the team almost completely loses their orientation, they can only guess where they are driving, fortunately they have a compass that shows them the way... but where is the compass?
-He was just lying next to Dave and Dean on a desk, but now he's gone.
-Dave presses across the deck like a wild stallion, desperately searching for the compass.
-It takes a while but he finds it... or at least what is left of it, someone must have stepped on the compass in the restlessness of the storm, it lies smashed in its individual parts on the ground.
-"How are we supposed to move forward now?" Dave thought to himself.
-The storm is still raging, and panic is spreading among the crew.  
-They've never been in a situation like this before; without a compass, they're completely disoriented.  
-Dave tries to stay calm amidst all the chaos, but even for him, with all his years of experience, it's hard to keep a cool head.  
-Through the screaming of the storm, the crew suddenly hears strange noises, loud ones that make their blood freeze.  
-A shadow leans over the ship's hull, two glowing red eyes staring into Dave's soul.
+Around midday, Finjan calls down from the lookout: "Hey Captain, there's a really nasty storm brewing back there... almost as nasty as your mood sometimes." Lost in thought, Dave grabs the spyglass for a closer look. "We have to go through it," he says. "Bring in the mainsail and lash down anything that isn't nailed shut!" Finjan looks at him wide-eyed: "Alright, Captain - see you on the other side... or maybe not."
 
+The storm rages; water sprays up the sides of the deck, and the crew stumbles across it, dazed. The sky is blanketed in pitch-black clouds, torn open by lightning every other minute. And to make matters worse, fog rolls in too - the crew nearly loses all sense of direction, able only to guess which way they're heading. Fortunately, they have a compass to show them the way... but where is the compass? It had just been lying on the chart table next to Dave and Dean, but now it's gone. Dave storms across the deck like a wild stallion, desperately searching for the compass. It takes a while, but he finds it... or at least what's left of it - someone must have stepped on it in the chaos of the storm, and it now lies shattered into pieces on the deck.
+
+"How are we supposed to find our way now?" Dave wonders. The storm keeps raging, and panic spreads among the crew. They've never been in a situation like this before; without a compass, they're completely lost. Dave tries to stay calm amid the chaos, but even with all his years of experience, keeping a cool head proves difficult. Through the shrieking of the storm, the crew suddenly hears strange sounds - loud enough to freeze the blood in their veins. A shadow looms over the ship's hull, two glowing red eyes staring straight into Dave's soul.
 `,
       },
       {
@@ -326,107 +274,73 @@ A shadow leans over the ship's hull, two glowing red eyes staring into Dave's so
         title: "Chapter 4 - Kidnapping",
         language: "English",
         text: `
+Before Dave can even realize it, a huge tentacle grabs him and drags him across the deck. His men desperately try to bring down the monster with muskets and cannons and to free Dave from its tentacles. But to everyone's despair, their attacks hardly affect the creature. Dave fights back with everything he has; he kicks and strikes the tentacle, but it does no good. The monster dives underwater and moves away from the ship.
 
-Before Dave can even realize it, a huge tentacle grabs him and drags him across the deck. His men desperately try to bring down the monster with muskets and cannons and to free Dave from its tentacles. 
-But to everyone's despair, their attacks hardly affect the creature. 
-Dave fights back with everything he has; he kicks and strikes the tentacle, but it does no good. The monster dives underwater and moves away from the ship. 
-Dave slowly loses consciousness, air becomes scarce, and his vision goes black. When Dave came to, he only had vague memories of what had happened. 
-He knew he was no longer on the ship, but he had no idea how long he had been gone. 
-Historians still speculate today whether this sudden memory gap was caused by the traumatic experience or simply by Dave's old age. 
-In any case, after waking up, Dave found himself in a cave again, but unlike what you would expect, it wasn't dark there; the cave was lit by a bluish glow. 
-Dave carefully made his way forward, noticing the outlines of destroyed ships scattered all over the cave. 
-Suddenly, he saw movement in the darkness—a large shadow that looked terrifyingly familiar. 
-The beast moved through the cave almost as if it were searching for something, but Dave didn't have time to think about that; he had to find an exit.
+Dave slowly loses consciousness, air becomes scarce, and his vision goes black. When Dave came to, he only had vague memories of what had happened. He knew he was no longer on the ship, but he had no idea how long he had been gone. Historians still speculate today whether this sudden memory gap was caused by the traumatic experience or simply by Dave's old age.
 
+In any case, after waking up, Dave found himself in a cave, but unlike what you would expect, it wasn't dark there; the cave was lit by a bluish glow. Dave carefully made his way forward, noticing the outlines of destroyed ships scattered all over the cave. Suddenly, he saw movement in the darkness - a large shadow that looked terrifyingly familiar. The beast moved through the cave almost as if it were searching for something, but Dave didn't have time to think about that; he had to find an exit.
+
+The crew was shaken. First their compass broke, and now their captain was gone too. The mood was at rock bottom, and not even Finjan's jokes could lift it again. They were all sad, but also determined - none of them wanted to leave Dave behind. Dean set course for Deadmansisland, the only place that bastard could have taken Dave to. And so Dave's crew set off on a determined rescue mission. The wind was good, and the ship glided gleaming through the blue water. Everything seemed calm until Finjan called out from the lookout: "Island ahead!"
 `,
       },
       {
         id: "treasure-en-05",
-        title: "Chapter 5 - Separate Ways",
+        title: "Chapter 5 - The Rescue",
         language: "English",
         text: `
+Dave kept crawling across the ground, looking for an exit; the strange blue light helped him find his way through the cave. Over time, however, he lost track of time; he didn't know if he had been crawling for hours, days, or weeks. His hands felt something in the darkness, something round. As Dave looked more closely at the object, a brief shock of joy ran through him - it was a compass!
 
-The crew was shaken. First their compass broke, and now their captain was gone too.  
-The mood was at rock bottom, and not even Finian's jokes could lift it again.  
-They were all sad, but also determined—none of them wanted to leave Dave behind.  
-Dean set course for Deadmansisland, the only place that bastard Dave could be taken to.  
-And so Dave's crew set off on a determined rescue mission.  
-The wind was good, and the ship glided gleaming through the blue water.  
-Everything seemed calm until Finian called out from the lookout: 'Island ahead!'
+Overjoyed, Dave rolled on the ground... and rolled over a pile of bones. The cracking of them was almost impossible to miss in the silence of the cave, and the beast heard it too; it loomed over Dave, its red eyes glowing savagely. Boom! A crash echoed through the cave, and one of the rock walls collapsed. The sunlight blinded Dave, and only after a few seconds did he see what had come through the wall. It was his ship! His crew! They had apparently managed to blast a hole through the wall with the black powder that was still on the ship.
 
+"Finish it off," it shouted from the ship, and Dave heard more explosions. The beast had no choice and retreated further into the cave, trying to grab Dave with its tentacles as he ran toward his ship. At the last moment, he managed to grab the hands of two of his crew. Finjan and Julian held on tight and didn't look like they were going to let go: "Hold on, Captain, or you'll be Monster Tatar!" Finjan said casually. Barely, but in one piece, they managed to maneuver the ship out of the cave and escape the monster. Dave, overjoyed to have his crew back, shouted: "Set course, men! We've got cargo to deliver!"
 `,
       },
       {
         id: "treasure-en-06",
-        title: "Chapter 6 - One less?",
+        title: "Chapter 6 - A Crabby Encounter",
         language: "English",
         text: `
-        
-The crew was shaken. First their compass broke, and now their captain was gone too. 
-The mood was at rock bottom, and not even Finian’s jokes could cheer them up. 
-They were all sad, but also determined; no one wanted to leave Dave behind. 
-"Dean set course for Deadman's Island, that’s the only place that damn Dave could be taken to." 
-And so, Dave’s crew set off on a rescue mission with determination. The wind was favorable, and the ship slipped gleaming through the blue water. 
-Everything seemed calm until Finian called out from the lookout: "Island ahead!"
+After Dave and his crew managed to escape, they set off towards their destination. The ship gently rocks over the sea, nothing to the left or right but the calm water. Dave sits in his cabin, lost in thought. Since they set off, they've already encountered many dangers - could it have something to do with the mysterious cargo? Dave doesn't know what to do next. Up in the crow's nest, Finjan watches the azure sea. There's nothing in sight except a few Tung Tung Talahons, a type of seabird whose feathers eerily resemble the texture of a piece of wood. They aren't dangerous, but they often steal food from the sailors. Everything is calm, and after this exhausting part of the journey, the crew finally has time to take a breather.
 
+But as soon as Dave steps onto the deck, a blood-curdling scream rings out. "Not another one of those creatures," Dave thinks, grabbing his saber. He rushes to the lower deck - that's where the scream came from. When he gets there, he bursts out laughing: a crab had pinched the backside of one of the sailors. "Get this thing off! Get this thing off!" shouted the pinched sailor, who happened to be Dr. Janne Noname.
+
+"Serves you right for sitting on me!" replied the crab. The crew recoiled in shock. "What kind of witchcraft is that?" said one of the sailors. "Witchcraft?! Never seen a talking crab before, huh? I'm FollowingCrab, and you guys are pretty screwed." "Why's that?" asked Dave, eyeing the peculiar crab.
+
+"I had a look around here before this guy sat on me, and you guys have loaded up some cargo that's pretty shady," said the crab. "What you've loaded is a cursed treasure. Every crew that carried it so far has had unbelievable bad luck and failed to deliver the cargo." A clear smile appeared on Dave's face. "All the more reason for us to deliver this cargo," Dave said, smiling.
 `,
       },
       {
         id: "treasure-en-07",
-        title: "Chapter 7 - The rescue",
+        title: "Chapter 7 - Aground",
         language: "English",
         text: `
+The crab that Dave and his crew encountered has been a loyal companion of the Flitzpiepen ever since, and they continue their exciting voyage.
 
-Dave kept crawling across the ground, looking for an exit; the strange blue light helped him find his way through the cave. 
-Over time, however, he lost track of time; he didn’t know if he had been crawling for hours, days, or weeks. 
-His hands felt something in the darkness, something round. As Dave looked more closely at the object, a brief shock of joy ran through him—it was a compass! 
-Overjoyed, Dave rolled on the ground... and rolled over a pile of bones. 
-The cracking of them was almost impossible to miss in the silence of the cave, and the beast heard it too; it loomed over Dave, its red eyes glowing savagely.  
-Boom! A crash echoed through the cave, and one of the rock walls collapsed. 
-The sunlight blinded Dave, and only after a few seconds did he see what had come through the wall. 
-It was his ship! His crew! They had apparently managed to blast a hole through the wall with the black powder that was still on the ship.
-"Finish it off," it shouted from the ship, and Dave heard more explosions. 
-The beast had no choice and retreated further into the cave, trying to grab Dave with its tentacles as he ran toward his ship. 
-At the last moment, he managed to grab the hands of two of his crew. 
-Finian and Julian held on tight and didn’t look like they were going to let go: 'Hold on, Captain, or you’ll be Monster Tatar!' Finian said casually. 
-Barely, but in one piece, they managed to maneuver the ship out of the cave and escape the monster. 
-Dave, overjoyed to have his crew back, shouted: 'Set course, men! We’ve got cargo to deliver!'
+One sunny day, however, Finjan is woken by the rays of the sun and notices that their ship has come to a stop. "Hey Captain, did we run aground?" he asked. "No, but well, the wind is gone."
 
+"What do you mean, the wind is gone?" Finjan asked, wide-eyed. "Gone, that's it. There's simply no wind," Dave replied. "Crabs said that's common in this area."
+
+A few days later the ship still hasn't moved. It rocks gently back and forth, surrounded by the deep blue sea. The crew is bored: Janne fishes without success, and Dean gnaws on a dry piece of bread. The only one who seems to be having fun is Finjan. He amuses himself thoroughly by really getting on Dave's and the rest of the crew's nerves. Eventually, Dave has had enough. He wanders across the deck and suddenly catches a sharp stench - it's coming from the lower deck of the ship. There's only one place that smell could be coming from: the ship's toilet. As Dave enters the lower deck, he runs into the ship's handyman, Kai Coldfeet, whom he hasn't seen the entire voyage. When he asks him where he's been, Kai answers that he was just quickly in the bathroom.
+
+Dave had an idea: if the boat wasn't going to move on its own, then it would need a little help. With Kai Coldfeet's assistance, he managed to build a kind of apparatus that could drive the boat with paddle wheels. With that, they continued their journey - though not without the nagging feeling that a break like that might not come again for a long while.
 `,
       },
       {
         id: "treasure-en-08",
-        title: "Chapter 8 - A Crabby Encounter",
+        title: "Chapter 8 - ",
         language: "English",
         text: `
 
-After Dave and his crew managed to escape, they set off towards their destination.  
-The ship gently rocks over the sea, nothing to the left or right but the calm water.  
-Dave sits in his cabin, lost in thought. Since they set off, they’ve already encountered many dangers—could it have something to do with the mysterious cargo? Dave doesn’t know what to do next.  
-Up in the crow’s nest, Finian watches the azure sea. There’s nothing in sight except a few Tung Tung Talahons, a type of seabird whose feathers eerily resemble the texture of a piece of wood. They aren’t dangerous, but they often steal food from the sailors.  
-Everything is calm, and after this exhausting part of the journey, the crew finally has time to take a breather.  
-But as soon as Dave steps onto the deck, a blood-curdling scream rings out: 'Not another one of those creatures,' Dave thinks, grabbing his saber.  
-He rushes to the lower deck—that's where the scream came from. When he gets there, he bursts out laughing: a crab had pinched the backside of one of the sailors. "Get this thing off! Get this thing off!" shouted the pinched sailor, who happened to be Dr. Janne Noname. 
-"Serves you right for sitting on me!" replied the crab. The crew recoiled in shock. "What kind of witchcraft is that?" said one of the sailors. "Witchcraft?! Never seen a talking crab before, huh? I'm FollowingCrab, and you guys are pretty screwed." "Why's that?" asked Dave, the peculiar crab.
-"I had a look around here before this guy sat on me, and you guys have loaded up some cargo that's pretty shady," said the crab. "What you've loaded is a cursed treasure. Every crew that carried it so far has had unbelievable bad luck and failed to deliver the cargo.
-A clear smile appeared on Dave's face: 'All the more reason for us to deliver this cargo,' Dave said, smiling.
+
 
 `,
       },
       {
         id: "treasure-en-09",
-        title: "Chapter 9 - Aground",
+        title: "Chapter 9",
         language: "English",
         text: `
-The crab that Dave and his crew encountered has been a loyal companion of the Flitzpiepen ever since, and they continue their exciting voyage.
-
-One sunny day, however, Finian is woken by the rays of the sun and notices that their ship has come to a stop. "Hey Captain, did we run aground?" he asked. "No, but well, the wind is gone."
-
-"What do you mean, the wind is gone?" Finian asked, wide-eyed. "Gone, that's it. There's simply no wind," Dave replied. "Crabs said that's common in this area."
-
-A few days later the ship still hasn't moved. It rocks gently back and forth, surrounded by the deep blue sea. The crew is bored: Janne fishes without success, and Dean gnaws on a dry piece of bread. The only one who seems to be having fun is Finian. He amuses himself thoroughly by really getting on Dave's and the rest of the crew's nerves. Eventually, Dave has had enough. He wanders across the deck and suddenly catches a sharp stench - it's coming from the lower deck of the ship. There's only one place that smell could be coming from: the ship's toilet. As Dave enters the lower deck, he runs into the ship's handyman, Kai Coldfeet, whom he hasn't seen the entire voyage. When he asks him where he's been, Kai answers that he was just quickly in the bathroom.
-
-Dave had an idea: if the boat wasn't going to move on its own, then it would need a little help. With Kai Coldfeet's assistance, he managed to build a kind of apparatus that could drive the boat with paddle wheels. With that, they continued their journey - though not without the nagging feeling that a break like that might not come again for a long while.
+Chapter 9 content.
 `,
       },
       {
