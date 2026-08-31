@@ -259,6 +259,8 @@ async function renderPassPage() {
     </div>
   `;
 
+  staggerReveal(container, ".piratenpass-node");
+
   if (capReached || hasCap) upgradeCapBadgeIfImageExists();
 
   if (!piratenpassAutoScrolled) {

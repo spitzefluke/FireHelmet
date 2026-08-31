@@ -252,6 +252,7 @@ function renderLevelPathOverlay(xp, claimedIds) {
   `;
 
   document.body.appendChild(overlay);
+  staggerReveal(overlay, ".fh-levelpath-node");
   requestAnimationFrame(() => overlay.classList.add("visible"));
 
   function close() {
