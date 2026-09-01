@@ -358,11 +358,27 @@ async function playSpielothekGame() {
    korrekte Anzeige).
 ------------------------------------------------------ */
 async function refreshSpielothekCooldownFromServer() {
-  if (!supabaseClient || typeof wheelAuthReady === "undefined") return;
+  // Der Button startet in renderSpielothekPage() bewusst "disabled",
+  // damit man nicht in dem kurzen Moment vor dem ersten Cooldown-Check
+  // klicken kann, ohne dass die Seite ueberhaupt weiss, ob man gerade
+  // gesperrt ist (Auftrag: Ladezustand statt "Button sieht klickbar
+  // aus, klappt aber ueberraschend nicht"). Jeder Ausgang dieser
+  // Funktion MUSS ihn deshalb wieder freigeben, ausser der echte
+  // Cooldown greift (startSpielothekCooldownUI kuemmert sich dann
+  // selbst ums Deaktivieren/Wiederfreigeben ueber den Countdown).
+  const playBtn = document.getElementById("spielothek-play-btn");
+
+  if (!supabaseClient || typeof wheelAuthReady === "undefined") {
+    if (playBtn) playBtn.disabled = false;
+    return;
+  }
 
   try {
     const uid = await wheelAuthReady;
-    if (!uid) return;
+    if (!uid) {
+      if (playBtn) playBtn.disabled = false;
+      return;
+    }
 
     const { data: snapData } = await supabaseClient
       .from("players")
@@ -382,13 +398,13 @@ async function refreshSpielothekCooldownFromServer() {
 
     stopSpielothekCooldownUI();
     spielothekCooldownUntil = 0;
-    const playBtn = document.getElementById("spielothek-play-btn");
     if (playBtn) playBtn.disabled = false;
   } catch (err) {
     // Kein Grund, das Spiel deswegen zu blockieren - schlimmstenfalls
     // greift beim naechsten Klick einfach die serverseitige Sperre
     // (Postgres RLS, siehe supabase/game-migration/) mit der normalen
     // Fehlerbehandlung oben.
+    if (playBtn) playBtn.disabled = false;
   }
 }
 
@@ -501,6 +517,19 @@ async function renderSpielothekResult(game, handler, result, betCost) {
     // Staerkerer Effekt bei selteneren Gewinnen (Auftrag Punkt 5): mehr
     // Konfetti-Teile, laenger sichtbar, je hoeher die Gewinnstufe.
     if (!reduceMotion) triggerSpielothekConfetti(resultEl, result.tier);
+
+    // Zusaetzlicher 3D-Funkenausbruch (three.js) NUR beim Jackpot -
+    // haeufigere, kleinere Gewinne behalten bewusst ausschliesslich das
+    // 2D-Konfetti oben, damit der 3D-Effekt fuer den seltensten Moment
+    // etwas Besonderes bleibt statt bei jedem Gewinn zu wiederholen.
+    if (!reduceMotion && result.tier === "jackpot" && typeof window.fhCelebrationBurst === "function") {
+      window.fhCelebrationBurst(stageEl || resultEl, {
+        colors: [0xf0c96a, 0xff6b3d, 0xffffff],
+        count: 110,
+        duration: 1800,
+        size: 11,
+      });
+    }
   } else {
     resultEl.insertAdjacentHTML("beforeend", `
       <p class="spielothek-result-line spielothek-result-lose">
@@ -644,7 +673,7 @@ async function renderSpielothekPage() {
 
       <div class="spielothek-game-area">
         <div id="spielothek-result" class="spielothek-result"></div>
-        <button type="button" class="code-button" id="spielothek-play-btn" onclick="playSpielothekGame()" data-i18n="spielothek.playButton">SPIELEN</button>
+        <button type="button" class="code-button" id="spielothek-play-btn" onclick="playSpielothekGame()" data-i18n="spielothek.playButton" disabled>SPIELEN</button>
         <p id="spielothek-status" class="wheel-status"></p>
       </div>
     </div>
