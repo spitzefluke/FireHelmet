@@ -1713,8 +1713,14 @@ function loadLeaderboard() {
   if (!container) return;
 
   if (!supabaseClient) {
+    // !supabaseClient bedeutet nicht zwingend "nie konfiguriert" - genauso
+    // gut kann bei einem echten Besucher nur das Supabase-JS-SDK von
+    // seinem CDN nicht geladen haben (Adblocker, kurzer CDN-Ausfall,
+    // restriktive Firewall). Deshalb bewusst dieselbe freundliche,
+    // technikfreie Formulierung wie in ship-repair.js/community-boss.js,
+    // statt einen internen Dateipfad anzuzeigen.
     container.innerHTML =
-      '<p class="wheel-status">Die globale Rangliste ist noch nicht eingerichtet (Supabase-Zugangsdaten fehlen in scripts/supabase/supabase-config.js).</p>';
+      '<p class="wheel-status">⚠️ Verbindung nicht verfügbar - versuch\'s später nochmal.</p>';
     return;
   }
 

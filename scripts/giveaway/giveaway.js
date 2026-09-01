@@ -215,9 +215,10 @@ function loadGiveawayView() {
   if (inactiveEl) inactiveEl.style.display = "none";
 
   if (!supabaseClient) {
+    // Siehe Kommentar bei loadLeaderboard() in wheel.js.
     if (winnerEl) {
       winnerEl.style.display = "block";
-      winnerEl.textContent = "Das Gewinnspiel ist noch nicht eingerichtet (Supabase-Zugangsdaten fehlen).";
+      winnerEl.textContent = "⚠️ Verbindung nicht verfügbar - versuch's später nochmal.";
     }
     return;
   }

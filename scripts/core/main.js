@@ -85,6 +85,49 @@ function updateActiveNavHighlight(pageID) {
 }
 
 /* ------------------------------------------------------
+   FUNKEN-EFFEKT BEIM KLICK AUF EINEN MENUEPUNKT
+   Ein Klick zuendet ein paar kleine Goldfunken direkt an der
+   Klickposition - passend zum "Feuer"-Thema (dieselbe Farbsprache
+   wie .fh-ember auf der Home-Seite), unabhaengig von changePage()
+   selbst nutzbar. Ein EINZIGER delegierter Listener deckt alle drei
+   Navigations-Oberflaechen ab (klassisches Hamburger-Menue, feste
+   Desktop-Sidebar, mobile untere Tableiste), statt fuer jede Liste
+   einen eigenen Handler zu brauchen.
+------------------------------------------------------ */
+(function initNavClickSparks() {
+  const reduceMotion = window.matchMedia
+    ? window.matchMedia("(prefers-reduced-motion: reduce)")
+    : { matches: false };
+
+  const SPARK_COUNT = 6;
+
+  function spawnSparks(x, y) {
+    if (reduceMotion.matches) return;
+
+    for (let i = 0; i < SPARK_COUNT; i++) {
+      const spark = document.createElement("span");
+      spark.className = "fh-nav-spark";
+
+      const angle = (Math.PI * 2 * i) / SPARK_COUNT + Math.random() * 0.5;
+      const distance = 26 + Math.random() * 22;
+      spark.style.setProperty("--fh-spark-x", `${Math.cos(angle) * distance}px`);
+      spark.style.setProperty("--fh-spark-y", `${Math.sin(angle) * distance}px`);
+      spark.style.left = `${x}px`;
+      spark.style.top = `${y}px`;
+
+      document.body.appendChild(spark);
+      spark.addEventListener("animationend", () => spark.remove(), { once: true });
+    }
+  }
+
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("#sidebar a, .fh-sidebar-nav a, .fh-bottom-nav a");
+    if (!link) return;
+    spawnSparks(e.clientX, e.clientY);
+  });
+})();
+
+/* ------------------------------------------------------
    HOME HINTERGRUND-ANIMATION (Canvas)
    Kino-reifer Sternenhimmel: mehrere Parallax-Ebenen aus
    twinkelnden Sternen, langsam driftende Nebel-Wolken und

@@ -1035,6 +1035,16 @@ main {
   filter: drop-shadow(0 0 4px rgba(255,255,255,.6));
 }
 
+/* WebGL-Canvas mit Sternenfeld + Glut-Partikeln (siehe
+   scripts/home/journey-scene-3d.js) - wird per JS direkt hinter
+   .fh-layer-stars eingefuegt, .fh-layer liefert bereits
+   position/inset/pointer-events. */
+.fh-layer-webgl {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .fh-layer-moon {
   top: 8%;
   right: 12%;
@@ -1107,6 +1117,27 @@ main {
 
 .fh-layer-particles {
   overflow: hidden;
+}
+
+/* Funken beim Klick auf einen Menuepunkt (siehe initNavClickSparks()
+   in scripts/core/main.js) - dieselbe Gold-Gluehen-Sprache wie
+   .fh-ember, aber ein einmaliger Ausbruch statt einer Endlosschleife. */
+.fh-nav-spark {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--fh-gold-bright, #f0c96a);
+  box-shadow: 0 0 8px var(--fh-gold-bright, #f0c96a);
+  pointer-events: none;
+  z-index: 500;
+  animation: fhNavSparkBurst .5s cubic-bezier(.25,.8,.3,1) forwards;
+}
+
+@keyframes fhNavSparkBurst {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--fh-spark-x), var(--fh-spark-y)) scale(0); opacity: 0; }
 }
 
 .fh-ember {
@@ -1912,6 +1943,23 @@ main {
 
 .code-input::placeholder {
   color: var(--fh-text-muted, #888);
+}
+
+/* #code-confirm-btn sitzt auf dem animierten Matrix-Regen-Hintergrund
+   dieser Seite - der normale .code-button-Rahmen (--fh-border-strong,
+   dunkles Navy) und der dunkle Verlauf gehen darin optisch fast
+   unter, bis man drueberhovert. Eigener, staerkerer Look nur hier,
+   ohne .code-button selbst (an vielen anderen Stellen im Einsatz) zu
+   veraendern. */
+#code-confirm-btn {
+  border-color: var(--fh-gold, #d6a84f);
+  background: linear-gradient(160deg, rgba(38,54,74,.92), rgba(10,16,24,.92));
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 18px rgba(214,168,79,.25), var(--fh-shadow-sm);
+}
+
+#code-confirm-btn:hover {
+  box-shadow: 0 0 28px rgba(214,168,79,.45), var(--fh-shadow-sm);
 }
 
 .code-button {
