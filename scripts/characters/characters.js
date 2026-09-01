@@ -14,6 +14,44 @@
 
 let charactersBuilt = false;
 
+/* Nur echte Maeuse mit Hover (nicht Touch) bekommen den Tilt-Effekt -
+   dieselbe Konvention wie fhInitCursorParallax() in cinematic.js. */
+const CHARACTER_CARD_CAN_TILT = window.matchMedia
+  && window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  && !(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+/* ------------------------------------------------------
+   MAUS-FOLGENDER 3D-TILT (Desktop)
+   ---------------------------------------------------
+   Sitzt bewusst auf dem AEUSSEREN .character-card-v2, nicht auf
+   .character-card-inner - letzteres macht bereits den kompletten
+   Vorder-/Rueckseiten-Flip per eigenem transform (rotateY 180deg) und
+   soll dafuer unangetastet bleiben. Der Tilt ist ein zweiter,
+   unabhaengiger 3D-Transform auf der Aussenhuelle - beide vertragen
+   sich, weil .character-card-v2 sein eigenes "perspective" fuer die
+   Kinder aufspannt, unabhaengig vom eigenen Transform.
+------------------------------------------------------ */
+function attachCharacterCardTilt(card) {
+  if (!CHARACTER_CARD_CAN_TILT) return;
+
+  const maxTilt = 10;
+
+  card.addEventListener("mousemove", (e) => {
+    const rect = card.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    const tiltY = (px - 0.5) * maxTilt * 2;
+    const tiltX = (0.5 - py) * maxTilt * 2;
+    card.style.setProperty("--card-tilt-x", `${tiltX.toFixed(2)}deg`);
+    card.style.setProperty("--card-tilt-y", `${tiltY.toFixed(2)}deg`);
+  });
+
+  card.addEventListener("mouseleave", () => {
+    card.style.setProperty("--card-tilt-x", "0deg");
+    card.style.setProperty("--card-tilt-y", "0deg");
+  });
+}
+
 /* Kreisender Pool an Farb-Themen + Standard-Emblem, damit jede
    Karte optisch ihr eigenes Gesicht bekommt, unabhängig davon
    wie viele Charaktere in characters-data.js eingetragen sind. */
@@ -126,6 +164,8 @@ function buildCharacters() {
     card.addEventListener("click", () => {
       card.classList.toggle("character-card-flipped");
     });
+
+    attachCharacterCardTilt(card);
 
     container.appendChild(card);
   });

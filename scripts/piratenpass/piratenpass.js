@@ -387,5 +387,24 @@ async function claimPassTier(tier) {
 
   const rewardId = getPassRewardId(pass, tier);
   const result = await claimReward(rewardId, reward);
-  if (result.ok) renderPassPage();
+  if (result.ok) {
+    // Kleiner 3D-Funkenausbruch bei jeder eingeloesten Stufe, ein
+    // groesserer bei Meilenstein-/Finale-Stufen (dieselbe Unterscheidung
+    // wie schon bei getPassNodeSize() fuer die Knotengroesse) - anders
+    // als beim Jackpot in der Spielothek ist das Einloesen einer
+    // Pass-Stufe von Natur aus schon ein seltener, bewusster Moment
+    // (max. 50 Mal pro Saison), daher hier bei JEDER Stufe ein Effekt.
+    if (typeof window.fhCelebrationBurst === "function") {
+      const nodeEl = document.querySelector(`.piratenpass-node[data-tier="${tier}"]`);
+      const size = getPassNodeSize(pass, tier, reward);
+      const isBig = size === "milestone" || size === "finale";
+      window.fhCelebrationBurst(nodeEl || document.body, {
+        colors: [0xf0c96a, 0xd6a84f, 0xffffff],
+        count: isBig ? 100 : 45,
+        duration: isBig ? 1800 : 1100,
+        size: isBig ? 11 : 8,
+      });
+    }
+    renderPassPage();
+  }
 }
