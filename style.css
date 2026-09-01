@@ -1992,6 +1992,22 @@ main {
   outline-offset: 2px;
 }
 
+/* Fehlte bisher komplett - ein disabled .code-button sah exakt wie
+   ein normaler, klickbarer Button aus (nur der Browser-Cursor
+   aenderte sich), z.B. waehrend Spielothek/Wheel gerade einen
+   Server-Status nachladen. */
+.code-button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  filter: grayscale(.3);
+}
+
+.code-button:disabled:hover {
+  transform: none;
+  border-color: var(--fh-border-strong, transparent);
+  box-shadow: var(--fh-shadow-sm);
+}
+
 .code-message {
   min-height: 30px;
   font-size: 18px;
@@ -2707,6 +2723,14 @@ main {
   z-index: 6;
   pointer-events: none;
   overflow: visible;
+}
+
+/* Canvas von window.fhCelebrationBurst() (scripts/core/celebration-burst-3d.js) -
+   wird per JS deckungsgleich ueber dem jeweiligen Ziel-Element positioniert. */
+.fh-celebration-burst-canvas {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
 }
 
 .wheel-spark {
@@ -3987,12 +4011,33 @@ main {
 
 .wheel-login-hint {
   margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .wheel-login-hint a {
-  color: #d4af37;
-  text-decoration: underline;
+  display: inline-block;
+  padding: 10px 24px;
+  border-radius: var(--fh-radius-sm, 15px);
+  border: 1px solid rgba(214,168,79,.5);
+  background: linear-gradient(160deg, rgba(214,168,79,.16), rgba(214,168,79,.04));
+  color: var(--fh-gold-bright, #f0c96a);
+  font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
+  transition: transform .2s var(--fh-ease, ease), box-shadow .25s ease, background .25s ease;
+}
+
+.wheel-login-hint a:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--fh-glow-gold, 0 0 16px rgba(214,168,79,.4));
+  background: linear-gradient(160deg, rgba(214,168,79,.28), rgba(214,168,79,.08));
+}
+
+.wheel-login-hint a:active {
+  transform: translateY(0) scale(.97);
 }
 
 .login-divider {
@@ -9389,13 +9434,46 @@ button.detective-clue-card:hover {
   border: 1px solid var(--fh-border);
   color: var(--fh-text-muted);
   font-size: 14px;
+  transition: border-color .25s ease, box-shadow .25s ease;
 }
 
+.spielothek-rules[open] {
+  border-color: rgba(214,168,79,.4);
+  box-shadow: 0 0 20px rgba(214,168,79,.08);
+}
+
+/* Eigener Pfeil statt des uneinheitlichen nativen <details>-Dreiecks -
+   dreht sich beim Auf-/Zuklappen statt nur zu verschwinden/erscheinen. */
 .spielothek-rules summary {
   cursor: pointer;
   font-family: var(--fh-font-display);
   color: var(--fh-gold-bright);
   letter-spacing: 1px;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: color .2s ease;
+}
+
+.spielothek-rules summary::-webkit-details-marker {
+  display: none;
+}
+
+.spielothek-rules summary::after {
+  content: "▾";
+  font-size: 13px;
+  color: var(--fh-gold, #d6a84f);
+  transition: transform .25s var(--fh-ease, ease);
+}
+
+.spielothek-rules[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.spielothek-rules summary:hover {
+  color: #fff;
 }
 
 .spielothek-rules ul {
