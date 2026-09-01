@@ -1672,8 +1672,11 @@ main {
 
 .character-card-v2 {
   position: relative;
-  width: 260px;
-  height: 370px;
+  /* Vorher zwei feste Groessen (260x370 / 185x260 unterhalb 900px) mit
+     hartem Sprung genau an der Breakpoint-Grenze - jetzt durchgehend
+     fluid zwischen denselben Eckwerten, ohne Sprung. */
+  width: clamp(185px, 18vw, 260px);
+  height: clamp(260px, 25.6vw, 370px);
   border-radius: 25px;
   cursor: pointer;
   perspective: 1200px;
@@ -1709,11 +1712,15 @@ main {
 
 /* Dezenter, statischer Glow-Schatten in der individuellen Charakterfarbe */
 .character-card-v2 {
-  transition: box-shadow .3s;
+  --card-tilt-x: 0deg;
+  --card-tilt-y: 0deg;
+  transform: perspective(1200px) rotateX(var(--card-tilt-x)) rotateY(var(--card-tilt-y));
+  transition: box-shadow .3s, transform .5s cubic-bezier(.22,.9,.32,1);
 }
 
 .character-card-v2:hover {
   box-shadow: 0 0 30px var(--char-accent, #4da3ff);
+  transition: box-shadow .3s, transform .1s linear;
 }
 
 .character-face {
@@ -1891,11 +1898,6 @@ main {
 }
 
 @media (max-width: 900px) {
-  .character-card-v2 {
-    width: 185px;
-    height: 260px;
-  }
-
   .character-face-back h2 {
     font-size: 18px;
   }
