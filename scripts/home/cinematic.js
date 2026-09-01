@@ -284,6 +284,12 @@
     const layer = document.getElementById("fh-particle-layer");
     if (!layer || layer.childElementCount) return;
     if (prefersReducedMotion.matches) return;
+    // scripts/home/journey-scene-3d.js uebernimmt die Glut-Partikel als
+    // echtes 3D-Feld (WebGL), sobald verfuegbar - dann keine zusaetzlichen
+    // flachen DOM-Embers spawnen (sonst doppelte Partikeldichte). Faellt
+    // dieses Flag nie, weil three.js/WebGL nicht verfuegbar sind, bleibt
+    // dieser bisherige Weg unveraendert die Loesung.
+    if (window.fhJourney3DActive) return;
 
     const count = isMobile.matches ? 8 : 18;
 

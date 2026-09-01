@@ -602,9 +602,12 @@ function loadRaceLeaderboard() {
   const emptyEl = document.getElementById("race-track-empty");
 
   if (!supabaseClient) {
+    // Siehe Kommentar bei loadLeaderboard() in wheel.js - !supabaseClient
+    // kann auch bedeuten, dass bei einem echten Besucher nur das
+    // Supabase-JS-SDK nicht geladen hat, nicht dass die Seite nie
+    // konfiguriert wurde. Deshalb keine internen Dateipfade im UI.
     if (emptyEl) {
-      emptyEl.textContent =
-        "Das globale Rennen ist noch nicht eingerichtet (Supabase-Zugangsdaten fehlen in scripts/supabase/supabase-config.js).";
+      emptyEl.textContent = "⚠️ Verbindung nicht verfügbar - versuch's später nochmal.";
       emptyEl.style.display = "flex";
     }
     return;

@@ -1064,6 +1064,15 @@
   <script src="scripts/core/motion-fx.js"></script>
   <script src="scripts/core/gsap-init.js"></script>
 
+  <!-- three.js (WebGL-Sternenfeld/Glut-Partikel der Home-Eroeffnungs-
+       sequenz, siehe scripts/home/journey-scene-3d.js). Bewusst auf
+       0.160.0 statt "latest" gepinnt: neuere Versionen liefern keinen
+       klassischen globalen UMD-Build ("build/three.min.js") mehr,
+       nur noch ES-Module - 0.160.0 ist die letzte Version mit dem
+       klassischen <script>-Tag-Build, der zu Supabase/GSAP/Motion hier
+       passt (kein Bundler, kein Import-Map-Pattern im restlichen Projekt). -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
   <!-- SCRIPTS -->
   <script src="scripts/core/fire-helmet-config.js"></script>
   <script src="scripts/core/i18n.js"></script>
@@ -1104,6 +1113,7 @@
   <script src="scripts/core/countdown.js"></script>
   <script src="scripts/home/home-crack-data.js"></script>
   <script src="scripts/home/home-crack.js"></script>
+  <script src="scripts/home/journey-scene-3d.js"></script>
   <script src="scripts/home/cinematic.js"></script>
   <script src="scripts/stories/stories-data.js"></script>
   <script src="scripts/characters/characters-data.js"></script>
