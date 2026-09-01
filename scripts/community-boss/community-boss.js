@@ -71,7 +71,19 @@ function setupBossCanvas() {
       bossCanvas.height = stage.clientHeight;
     };
     resize();
-    window.addEventListener("resize", resize);
+
+    // ResizeObserver statt nur "window resize": ein reiner Layout-Wechsel
+    // (z.B. Sidebar auf-/zuklappen, Schriftart laedt nach) aendert die
+    // tatsaechliche Groesse von #boss-stage, OHNE dass sich die
+    // Fenstergroesse selbst aendert - die Canvas-Zeichenflaeche blieb in
+    // diesem Fall bisher auf der alten Aufloesung haengen (verzerrte/
+    // verschobene Darstellung), bis irgendwann doch noch ein echtes
+    // Fenster-Resize kam.
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(resize).observe(stage);
+    } else {
+      window.addEventListener("resize", resize);
+    }
   }
   return true;
 }
@@ -1332,6 +1344,25 @@ async function attackCommunityBoss() {
     localStorage.setItem(getBossDailyAttackKey(), todayStr());
     spawnBossHitEffect(damage);
     if (typeof awardActionXp === "function") awardActionXp("bossAttack");
+
+    // bossAfter.defeated kommt direkt aus app.attack_community_boss() -
+    // ist hier true, war genau DIESER Angriff der finale Treffer (siehe
+    // supabase/game-migration/README.md). Der 3D-Konfetti-Ausbruch
+    // (scripts/core/celebration-burst-3d.js) feiert bewusst nur den
+    // Spieler, der den Boss tatsaechlich besiegt hat - jeder spaetere
+    // Seitenbesuch sieht stattdessen nur das statische
+    // "besiegt"-Banner, ohne den Effekt erneut auszuloesen.
+    if (bossAfter.defeated && typeof window.fhCelebrationBurst === "function") {
+      const stage = document.getElementById("boss-stage");
+      if (stage) {
+        window.fhCelebrationBurst(stage, {
+          colors: [0xf0c96a, 0xff6b3d, 0x4da3ff, 0xffffff],
+          count: 130,
+          duration: 2000,
+          size: 12,
+        });
+      }
+    }
 
     if (statusEl) statusEl.textContent = `⚔️ Du hast ${damage} Schaden verursacht! Komm morgen wieder.`;
 
