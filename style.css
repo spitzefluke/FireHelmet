@@ -5704,7 +5704,19 @@ img, svg, video, canvas {
   }
 }
 
+/* Canvas von scripts/core/sidebar-ambient-3d.js - als erstes Kind
+   von #fh-sidebar eingefuegt, damit die spaeteren Geschwister
+   (Logo/Nav/Footer) im normalen Fluss darueber gerendert werden. */
+#fh-sidebar-ambient-webgl {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .fh-sidebar-logo {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -5750,6 +5762,8 @@ img, svg, video, canvas {
 }
 
 .fh-sidebar-nav {
+  position: relative;
+  z-index: 1;
   margin-top: 8px;
   flex: 1;
   display: flex;
@@ -6154,6 +6168,8 @@ img, svg, video, canvas {
 
 /* Sprach-Switch in der festen Desktop-Sidebar zentriert einpassen */
 .fh-sidebar-lang-switch {
+  position: relative;
+  z-index: 1;
   margin: 0 auto 18px;
 }
 
@@ -9543,6 +9559,8 @@ button.detective-clue-card:hover {
 
 /* ---- Sidebar-Spielerkarte (ersetzt "Crew Flitzpiepen · Online") ---- */
 .fh-sidebar-footer-wrap {
+  position: relative;
+  z-index: 1;
   padding: 18px;
 }
 
