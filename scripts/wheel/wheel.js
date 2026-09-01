@@ -177,8 +177,20 @@ function buildWheel() {
 
     const label = document.createElement("div");
     label.className = "wheel-label";
-    label.textContent = prize.label;
     label.style.transform = `rotate(${mid}deg)`;
+
+    // Segmente auf der linken Halbkreis-Seite (90-270 Grad) wuerden sonst
+    // kopfstehend/gespiegelt dargestellt, da die gesamte Box inkl. Text
+    // mitrotiert wird. Ein verschachteltes Text-Element, das nur bei
+    // Bedarf um 180 Grad zurückgedreht wird, haelt die Radial-Position
+    // der Box unveraendert und macht nur die Glyphen wieder lesbar.
+    const text = document.createElement("span");
+    text.className = "wheel-label-text";
+    text.textContent = prize.label;
+    if (mid > 90 && mid < 270) {
+      text.style.transform = "rotate(180deg)";
+    }
+    label.appendChild(text);
 
     disc.appendChild(label);
   });

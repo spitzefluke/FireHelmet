@@ -1617,6 +1617,13 @@ main {
   letter-spacing: clamp(1px, 0.8vw, 10px);
   text-shadow: 0 0 40px rgba(240,201,106,.35);
   color: var(--fh-text, #fff);
+  /* clamp() skaliert nur nach Viewport-Breite, nicht nach Wortlaenge -
+     bei langen, nicht umbrechbaren Woertern (z.B. "VERSCHWUNDENEN",
+     "BEWERTUNG") lief der Text sonst ueber den Container/Viewport
+     hinaus. overflow-wrap erlaubt als letzten Ausweg einen Umbruch
+     innerhalb des Wortes, statt es abzuschneiden. */
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .character-container {
@@ -2734,6 +2741,10 @@ main {
   padding-right: 18px;
   text-shadow: 0 0 6px rgba(0,0,0,.8);
   pointer-events: none;
+}
+
+.wheel-label-text {
+  display: inline-block;
 }
 
 /* Kompass-Nadel statt einfachem Zeiger */

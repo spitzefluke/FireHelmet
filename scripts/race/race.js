@@ -708,7 +708,10 @@ function refreshRaceDailyStatus() {
 
   if (!nickname) {
     btn.disabled = true;
-    statusEl.textContent = "Trag im 🧭 Schatzrad zuerst deinen Namen ein, um mitzufahren.";
+    // Bewusst kuerzer als der Hinweis in refreshOwnRaceProgress() (der
+    // direkt darueber steht) - sonst stehen zwei Mal fast wortgleiche
+    // Saetze untereinander, sobald kein Name gesetzt ist.
+    statusEl.textContent = "Erst nach der Anmeldung im 🧭 Schatzrad verfügbar.";
     return;
   }
 
