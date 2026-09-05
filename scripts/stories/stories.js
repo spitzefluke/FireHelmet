@@ -282,7 +282,7 @@ function openChapter(id) {
 
   if (isChapterLocked(id)) {
     const msg = typeof t === "function" ? t("story.chapterLockedMessage", "Dieses Kapitel ist noch nicht freigeschaltet.") : "Dieses Kapitel ist noch nicht freigeschaltet.";
-    alert(msg);
+    fhNotice(msg);
     return;
   }
 

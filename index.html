@@ -1110,6 +1110,11 @@
   <script src="scripts/core/sidebar-ambient-3d.js"></script>
 
   <!-- SCRIPTS -->
+  <!-- Muss vor allen Skripten stehen, die fhNotice() aufrufen
+       (discord-auth.js, twitch-auth.js, stories.js). -->
+  <script src="scripts/core/notice.js"></script>
+  <!-- Ladeplatzhalter, genutzt von wheel.js (Rangliste). -->
+  <script src="scripts/core/skeleton.js"></script>
   <script src="scripts/core/fire-helmet-config.js"></script>
   <script src="scripts/core/i18n.js"></script>
   <script src="scripts/core/audiobook-link.js"></script>

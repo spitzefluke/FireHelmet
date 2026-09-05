@@ -106,7 +106,7 @@ body.loaded {
   background: black;
   opacity: 0;
   pointer-events: none;
-  z-index: 999;
+  z-index: var(--fh-z-page-transition);
   transition: .5s;
 }
 
@@ -166,7 +166,12 @@ body.loaded {
   --fh-glow-fire: 0 0 30px rgba(255,106,42,.35);
   --fh-ease: cubic-bezier(.22,.9,.32,1);
 
-  --fh-font-display: 'Oswald', ui-sans-serif, sans-serif;
+  /* 'Arial Narrow'/'Liberation Sans Narrow' als Zwischenschritt:
+     Oswald ist schmallaufend. Faellt sie aus (Google Fonts nicht
+     erreichbar, Offline), landeten Ueberschriften und lange
+     Menuepunkte vorher auf einer deutlich breiteren Grotesk und
+     brachen um. */
+  --fh-font-display: 'Oswald', 'Arial Narrow', 'Liberation Sans Narrow', ui-sans-serif, sans-serif;
   --fh-font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
   /* ---- Ergaenzende Tokens (Design-Upgrade): dunkles Ozean-Navy,
@@ -184,6 +189,31 @@ body.loaded {
      Haupt-Token-Set zusammengefuehrt (rein kosmetische Aufraeumung,
      derselbe Variablenname/Wert). */
   --boss-accent: #7c2d12;
+
+  /* ---- Ebenen-Skala ----
+     Die z-index-Werte der Seite waren ueber 11.000 Zeilen verstreut
+     und reichten von 190 bis 10000, ohne dass irgendwo stand, was
+     eigentlich ueber was liegen soll. Die Zahlen hier sind exakt die
+     bisher verwendeten - es aendert sich nichts an der Darstellung,
+     die Reihenfolge ist jetzt nur an einer Stelle nachlesbar und
+     aenderbar. Von unten nach oben:
+  ---- */
+  --fh-z-backdrop:        190;  /* Abdunklung hinter der Schublade   */
+  --fh-z-drawer:          200;  /* Schubladen-Menue (mobil)          */
+  --fh-z-sidebar:         250;  /* feste Sidebar (Desktop)           */
+  --fh-z-bottom-nav:      260;  /* Bottom-Nav + Spielerkarte (mobil) */
+  --fh-z-menu-button:     300;  /* Hamburger-Knopf                   */
+  --fh-z-fx:              500;  /* Klick-Funken u.ae. Effekte        */
+  --fh-z-boss-flash:      900;  /* Boss-Treffer-Blitz                */
+  --fh-z-page-transition: 999;  /* Seitenuebergang                   */
+  --fh-z-overlay:        1000;  /* Update-Mitteilung                 */
+  --fh-z-toast:          1100;  /* Kurzmeldungen                     */
+  --fh-z-modal:          8500;  /* Level-Pfad                        */
+  --fh-z-modal-high:     9000;  /* Level-Aufstieg                    */
+  --fh-z-modal-tooltip:  9050;  /* Tooltip im Level-Pfad             */
+  --fh-z-modal-top:      9100;  /* Crew-Beitritt                     */
+  --fh-z-celebration:    9999;  /* 3D-Konfetti (ueber allem)         */
+  --fh-z-skip-link:     10000;  /* "Zum Inhalt springen"             */
 }
 
 /* =====================================================
@@ -247,7 +277,7 @@ body.lang-en {
   align-items: center;
   gap: 7px;
   cursor: pointer;
-  z-index: 300;
+  z-index: var(--fh-z-menu-button);
   isolation: isolate;
   transition: transform .35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -334,7 +364,7 @@ body.lang-en {
   align-items: center;
   font-size: 26px;
   cursor: pointer;
-  z-index: 300;
+  z-index: var(--fh-z-menu-button);
   transition: .3s;
 }
 
@@ -353,7 +383,7 @@ body.lang-en {
   backdrop-filter: blur(2px);
   opacity: 0;
   pointer-events: none;
-  z-index: 190;
+  z-index: var(--fh-z-backdrop);
   transition: opacity .4s ease;
 }
 
@@ -373,7 +403,7 @@ body.lang-en {
   padding: 50px 30px;
   padding-top: max(50px, env(safe-area-inset-top));
   padding-bottom: max(30px, env(safe-area-inset-bottom));
-  z-index: 200;
+  z-index: var(--fh-z-drawer);
   border-right: 1px solid rgba(255,255,255,.15);
   box-shadow: 0 0 0 rgba(77,163,255,0);
   transition: left .45s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow .45s;
@@ -1131,7 +1161,7 @@ main {
   background: var(--fh-gold-bright, #f0c96a);
   box-shadow: 0 0 8px var(--fh-gold-bright, #f0c96a);
   pointer-events: none;
-  z-index: 500;
+  z-index: var(--fh-z-fx);
   animation: fhNavSparkBurst .5s cubic-bezier(.25,.8,.3,1) forwards;
 }
 
@@ -2115,7 +2145,7 @@ main {
   position: fixed;
   bottom: 12px;
   right: 12px;
-  z-index: 500;
+  z-index: var(--fh-z-fx);
 }
 
 /* Cap-Abzeichen auf dem Avatar - siehe wrapAvatarWithCapBadge() in
@@ -2474,7 +2504,7 @@ main {
   position: fixed;
   top: 30px;
   right: 30px;
-  z-index: 1100;
+  z-index: var(--fh-z-toast);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -2732,7 +2762,7 @@ main {
 .fh-celebration-burst-canvas {
   position: fixed;
   pointer-events: none;
-  z-index: 9999;
+  z-index: var(--fh-z-celebration);
 }
 
 .wheel-spark {
@@ -3899,7 +3929,7 @@ main {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 500;
+  z-index: var(--fh-z-fx);
   overflow: hidden;
 }
 
@@ -5199,7 +5229,7 @@ main {
 .update-notice-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: var(--fh-z-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5571,7 +5601,7 @@ img, svg, video, canvas {
 .boss-counter-flash {
   position: fixed;
   inset: 0;
-  z-index: 900;
+  z-index: var(--fh-z-boss-flash);
   pointer-events: none;
   background: radial-gradient(circle, rgba(255,30,30,.05), rgba(180,0,0,.55) 120%);
   opacity: 0;
@@ -5697,7 +5727,7 @@ img, svg, video, canvas {
     left: 0;
     width: 248px;
     height: 100dvh;
-    z-index: 250;
+    z-index: var(--fh-z-sidebar);
     background: rgba(13, 21, 32, .85);
     backdrop-filter: blur(14px);
     border-right: 1px solid var(--fh-border);
@@ -6051,7 +6081,7 @@ img, svg, video, canvas {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 260;
+  z-index: var(--fh-z-bottom-nav);
   display: flex;
   flex-direction: column;
 }
@@ -6683,7 +6713,7 @@ tr.row-frame {
   position: fixed;
   top: 30px;
   right: 30px;
-  z-index: 1100;
+  z-index: var(--fh-z-toast);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -9682,7 +9712,7 @@ button.detective-clue-card:hover {
 .fh-levelup-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9000;
+  z-index: var(--fh-z-modal-high);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9798,7 +9828,7 @@ button.detective-clue-card:hover {
 .fh-crewjoin-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9100;
+  z-index: var(--fh-z-modal-top);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10279,7 +10309,7 @@ button.detective-clue-card:hover {
 .piratenpass-tooltip-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9000;
+  z-index: var(--fh-z-modal-high);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10505,7 +10535,7 @@ button.detective-clue-card:hover {
 .fh-levelpath-overlay {
   position: fixed;
   inset: 0;
-  z-index: 8500;
+  z-index: var(--fh-z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10900,7 +10930,7 @@ button.detective-clue-card:hover {
 .fh-levelpath-tooltip-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9050;
+  z-index: var(--fh-z-modal-tooltip);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11552,7 +11582,7 @@ p,
   position: absolute;
   top: 10px;
   left: 10px;
-  z-index: 10000;
+  z-index: var(--fh-z-skip-link);
   padding: 12px 20px;
   border-radius: var(--fh-radius-sm);
   border: 1px solid var(--fh-gold);
@@ -11572,4 +11602,213 @@ p,
   transform: translateY(0);
   outline: 2px solid var(--fh-gold-bright);
   outline-offset: 3px;
+}
+
+/* =====================================================
+   FH NOTICE (siehe scripts/core/notice.js)
+   ---------------------------------------------------
+   Allzweck-Kurzhinweis anstelle von window.alert().
+   Position und Bewegung bewusst identisch zu .currency-toast,
+   damit alle Kurzmeldungen der Seite von derselben Stelle
+   kommen.
+===================================================== */
+.fh-notice {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  z-index: var(--fh-z-toast);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: min(420px, calc(100vw - 60px));
+  padding: 14px 16px 14px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(28,42,58,.96), rgba(10,10,20,.97));
+  border: 1px solid var(--fh-border-strong);
+  color: var(--fh-fg);
+  font-family: var(--fh-font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  box-shadow: var(--fh-shadow);
+  transform: translateX(120%);
+  transition: transform .4s cubic-bezier(0.22, 0.9, 0.32, 1.2);
+}
+
+.fh-notice.visible { transform: translateX(0); }
+
+.fh-notice-error {
+  border-color: rgba(229,57,53,.6);
+  box-shadow: var(--fh-shadow), 0 0 25px rgba(229,57,53,.2);
+}
+
+.fh-notice-success {
+  border-color: rgba(85,200,120,.55);
+  box-shadow: var(--fh-shadow), 0 0 25px rgba(85,200,120,.18);
+}
+
+.fh-notice-icon {
+  flex: 0 0 auto;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+.fh-notice-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-wrap: pretty;
+}
+
+.fh-notice-close {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  margin: -3px -4px 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--fh-muted-fg);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color .2s, background .2s;
+}
+
+.fh-notice-close:hover {
+  color: var(--fh-fg);
+  background: rgba(255,255,255,.08);
+}
+
+.fh-notice-close:focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .fh-notice {
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-notice { transition: none; }
+}
+
+/* =====================================================
+   FH SKELETON (siehe scripts/core/skeleton.js)
+   ---------------------------------------------------
+   Platzhalter in der Form der spaeteren Liste. Der
+   Schimmer laeuft ueber alle Zeilen, leicht versetzt
+   (--fh-skeleton-delay), damit es nicht wie ein
+   gleichfoermig blinkender Block wirkt.
+===================================================== */
+.fh-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 4px 0;
+}
+
+/* Nur fuer Screenreader - optisch sprechen die Balken fuer sich. */
+.fh-skeleton-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fh-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--fh-radius-sm);
+  border: 1px solid var(--fh-border);
+  background: var(--fh-surface);
+  opacity: 0;
+  animation: fhSkeletonIn .45s var(--fh-ease) forwards;
+  animation-delay: var(--fh-skeleton-delay, 0s);
+}
+
+@keyframes fhSkeletonIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.fh-skeleton-cell {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--fh-muted) 0%,
+    var(--fh-surface-light) 40%,
+    var(--fh-muted) 80%
+  );
+  background-size: 240% 100%;
+  animation: fhSkeletonShimmer 1.6s ease-in-out infinite;
+  animation-delay: var(--fh-skeleton-delay, 0s);
+}
+
+@keyframes fhSkeletonShimmer {
+  from { background-position: 140% 0; }
+  to   { background-position: -60% 0; }
+}
+
+.fh-skeleton-rank   { width: 22px; }
+.fh-skeleton-avatar { width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto; }
+.fh-skeleton-name   { flex: 0 0 auto; }
+.fh-skeleton-value  { width: 52px; margin-left: auto; }
+
+@media (max-width: 640px) {
+  .fh-skeleton-row { padding: 12px 14px; gap: 10px; }
+  .fh-skeleton-value { width: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-skeleton-row  { opacity: 1; animation: none; }
+  .fh-skeleton-cell { animation: none; background: var(--fh-muted); }
+}
+
+/* =====================================================
+   KOERNUNG
+   ---------------------------------------------------
+   Die Seite besteht aus sehr grossen, sehr dunklen
+   Flaechen mit weichen Farbverlaeufen. Auf guten Displays
+   sieht man darin Streifenbildung (Banding), auf allen
+   wirkt es flach und digital. Eine feine, unbewegte
+   Koernung darueber bricht beides auf.
+
+   Bewusst am <body>::after statt an jeder Sektion: ein
+   einziger, fixierter Layer ohne Pointer-Events, der die
+   bestehenden Hintergruende nicht anfasst. Der Wert ist
+   absichtlich sehr niedrig (.028) - er soll spuerbar,
+   aber nicht sichtbar sein.
+===================================================== */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  /* Unter der gesamten Bedien-Ebene (Backdrop = 190), damit weder
+     Menue noch Overlays davon ueberzogen werden. */
+  z-index: 100;
+  pointer-events: none;
+  opacity: .028;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Buch-/Logbuchansicht hat ihre eigene, helle Pergament-Optik
+   (Sepia, Georgia) - dort wuerde die Koernung wie Schmutz wirken. */
+body:has(#book-reader.active-page)::after,
+body:has(#story-detail.active-page)::after {
+  opacity: 0;
 }

@@ -14,7 +14,8 @@ function isTwitchConfigured() {
 
 function loginWithTwitch() {
   if (!isTwitchConfigured()) {
-    alert("Twitch-Login ist noch nicht eingerichtet (scripts/twitch-config.js fehlt die Client ID).");
+    console.warn("Twitch-Login nicht eingerichtet: scripts/twitch-config.js fehlt die Client ID.");
+    fhNotice("Twitch-Login ist gerade nicht verfuegbar.", "error");
     return;
   }
 
@@ -99,7 +100,7 @@ function fetchTwitchUser(token) {
     })
     .catch((err) => {
       console.error("Twitch-Login fehlgeschlagen:", err);
-      alert("Twitch-Login hat leider nicht geklappt. Versuch es nochmal.");
+      fhNotice("Twitch-Login hat nicht geklappt. Versuch es nochmal.", "error");
     });
 }
 
