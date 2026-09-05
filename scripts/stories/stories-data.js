@@ -383,7 +383,7 @@ Chapter 12 content.
   {
     id: "lost-route",
     title: "Das Tagebuch des Schifffahrers",
-    cover: "scripts/image/logbook-ii-cover.svg",
+    cover: "scripts/image/logbuch2.png",
     description:
       "Eine uralte Karte, ein grünes Licht, das niemand erklären kann, und eine Insel, die auf keiner Seekarte verzeichnet ist. Schifffahrer Daves eigene Aufzeichnungen von der Suche nach dem legendären Schatz - und von dem, was am Ende wirklich in der Truhe lag.",
 
