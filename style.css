@@ -5777,8 +5777,8 @@ img, svg, video, canvas {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 10px 12px;
   border-radius: 10px;
   font-family: var(--fh-font-display);
   font-size: 14px;
@@ -11448,4 +11448,128 @@ button.detective-clue-card:hover {
   margin: 0 auto 8px;
   display: block;
   border: 1px solid var(--fh-border-strong);
+}
+
+/* =====================================================
+   NAVIGATION: EIGENE ICON-SPALTE
+   ---------------------------------------------------
+   Die Menuepunkte trugen ihr Emoji bisher im Uebersetzungstext
+   selbst ("menu.home": "🏠 Home"). Weil i18n.js per textContent
+   setzt, wurde damit bei den meisten Punkten der komplette
+   Link-Inhalt zu EINEM Textknoten - bei den drei Punkten, die
+   data-i18n stattdessen am inneren <span> hatten, blieb das
+   Emoji dagegen ein eigener Knoten. Ergebnis: die Beschriftungen
+   starteten je nach Variante an unterschiedlichen X-Positionen,
+   und in der mobilen Bottom-Nav erschien das Emoji doppelt
+   (einmal als .fh-bottom-nav-icon, einmal im Label).
+
+   Jetzt liegt das Emoji einheitlich in <span class="fh-nav-icon">
+   und die Uebersetzung nur noch im .fh-nav-label. Die feste
+   Breite gibt allen Punkten dieselbe Icon-Spalte, unabhaengig
+   davon wie breit die einzelne Emoji-Glyphe gerendert wird.
+===================================================== */
+.fh-nav-icon {
+  /* 1.35em + der auf 10px reduzierte .fh-nav-item-Abstand halten den
+     laengsten Punkt ("Repariere das Schiff") noch einzeilig - mit den
+     urspruenglichen 1.55em/14px brach er auf zwei Zeilen um. */
+  flex: 0 0 1.35em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  line-height: 1;
+  /* Emoji nie kursiv/gesperrt mitziehen, wenn der Link im
+     Hover/Active-Zustand letter-spacing veraendert. */
+  letter-spacing: 0;
+  font-style: normal;
+}
+
+.fh-nav-label {
+  min-width: 0;
+}
+
+/* =====================================================
+   ZAHLEN LAUFEN NICHT MEHR
+   ---------------------------------------------------
+   Tickende Werte (Countdowns, Dublonen, HP, Punkte) standen in
+   proportionalen Ziffern - dadurch aendert sich bei jedem Tick
+   die Textbreite und das Element zappelt. tabular-nums gibt
+   allen Ziffern dieselbe Laufweite.
+===================================================== */
+.countdown,
+.package-countdown,
+.shop-rotation-countdown,
+.streamraetsel-countdown,
+.boss-reset-countdown,
+.boss-hp-numeric,
+.boss-hp-text,
+.boss-hit-number,
+.fh-boss-stat-value,
+.fh-podium-score,
+.fh-ship-phase-timer,
+.fh-ship-phase-timer-value,
+.fh-ship-overall-progress-count,
+.fh-levelpath-node-number,
+.piratenpass-node-number,
+.shop-item-price,
+.spielothek-bet-value,
+.tournament-match-player-score,
+.gateway-status-value {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* =====================================================
+   TEXTUMBRUCH
+   ---------------------------------------------------
+   Ohne text-wrap landete regelmaessig ein einzelnes Wort allein
+   in der letzten Zeile von Ueberschriften und Fliesstext.
+   "balance" gleicht kurze Ueberschriften aus, "pretty" verhindert
+   im Fliesstext nur die Schusterjungen - beide degradieren in
+   aelteren Browsern still zu normalem Umbruch.
+===================================================== */
+h1, h2, h3,
+.page-subtitle,
+.fh-hero-kicker,
+.fh-section-title {
+  text-wrap: balance;
+}
+
+p,
+.page-content li,
+.fh-hero-sub {
+  text-wrap: pretty;
+}
+
+/* =====================================================
+   "ZUM INHALT SPRINGEN"
+   ---------------------------------------------------
+   Ohne diesen Link muessen Tastatur-Nutzer sich auf jeder Seite
+   erst durch alle 19 Menuepunkte tabben. Sichtbar wird er nur
+   bei Tastatur-Fokus.
+===================================================== */
+.fh-skip-link {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10000;
+  padding: 12px 20px;
+  border-radius: var(--fh-radius-sm);
+  border: 1px solid var(--fh-gold);
+  background: var(--fh-surface);
+  color: var(--fh-gold-bright);
+  font-family: var(--fh-font-display);
+  font-size: 14px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: var(--fh-shadow-sm);
+  transform: translateY(-160%);
+  transition: transform .2s var(--fh-ease);
+}
+
+.fh-skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 3px;
 }

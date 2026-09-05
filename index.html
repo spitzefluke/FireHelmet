@@ -3,7 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Project</title>
+  <title>FireHelmet - Pirate Saga</title>
+
+  <!-- ============================================================
+       SEO / SOCIAL-VORSCHAU
+       Der Titel war bis hierhin noch der Projekt-Platzhalter
+       ("Countdown Project"), und es gab weder Beschreibung noch
+       Open-Graph-Daten - geteilte Links (Discord, WhatsApp, Twitter)
+       zeigten dadurch weder einen sinnvollen Titel noch ein Bild.
+       og:url/og:image brauchen absolute URLs, deshalb hier bewusst
+       der volle GitHub-Pages-Pfad statt der sonst ueblichen
+       relativen Pfade.
+  ============================================================ -->
+  <meta name="description" content="Interaktive Piraten-Saga rund um FireHelmet: Logbuecher lesen, Geheimcodes knacken, am Schatzrad drehen und mit der Crew den Community-Boss jagen.">
+  <meta name="theme-color" content="#05070b">
+  <link rel="canonical" href="https://spitzefluke.github.io/FireHelmet/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FireHelmet - Pirate Saga">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:title" content="FireHelmet - Pirate Saga">
+  <meta property="og:description" content="Logbuecher lesen, Geheimcodes knacken, am Schatzrad drehen und mit der Crew den Community-Boss jagen.">
+  <meta property="og:url" content="https://spitzefluke.github.io/FireHelmet/">
+  <meta property="og:image" content="https://spitzefluke.github.io/FireHelmet/assets/og/og-cover.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="FireHelmet Pirate Saga - Flammenwappen ueber naechtlichem Sternenhimmel">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FireHelmet - Pirate Saga">
+  <meta name="twitter:description" content="Logbuecher lesen, Geheimcodes knacken, am Schatzrad drehen und mit der Crew den Community-Boss jagen.">
+  <meta name="twitter:image" content="https://spitzefluke.github.io/FireHelmet/assets/og/og-cover.jpg">
   <!-- Relative Pfade (kein fuehrender "/") - GitHub Pages liefert das
        Projekt unter /FireHelmet/ aus, ein absoluter Root-Pfad wie
        "/favicon.ico" wuerde dort ins Leere zeigen (404). -->
@@ -17,6 +47,10 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- Tastatur-Einstieg: springt an der kompletten Navigation vorbei
+       direkt in den Seiteninhalt. Nur bei Tastatur-Fokus sichtbar. -->
+  <a class="fh-skip-link" href="#fh-main" data-i18n="a11y.skipToContent">Zum Inhalt springen</a>
 
   <!-- Cloudflare-Turnstile-Widget fuer die anonyme Anmeldung (Bot-Schutz),
        siehe scripts/supabase/turnstile-config.js + supabase-client.js.
@@ -65,31 +99,31 @@
       <span class="lang-switch-label lang-switch-label-en">🇬🇧 EN</span>
       <span class="lang-switch-knob"></span>
     </button>
-    <a data-page="login" onclick="changePage('login')" data-i18n="menu.login">🎮 Anmelden</a>
+    <a data-page="login" onclick="changePage('login')"><span class="fh-nav-icon" aria-hidden="true">🎮</span><span class="fh-nav-label" data-i18n="menu.login">Anmelden</span></a>
 
     <p class="fh-nav-section-label" data-i18n="menu.sectionExplore">Erkunden</p>
-    <a data-page="home" onclick="changePage('home')" data-i18n="menu.home">🏠 Home</a>
-    <a data-page="story" onclick="changePage('story')" data-i18n="menu.story">📖 Stories</a>
-    <a data-page="characters" onclick="changePage('characters')" data-i18n="menu.characters">👤 Characters</a>
-    <a data-page="socials" onclick="changePage('socials')" data-i18n="menu.socials">🌐 Socials</a>
+    <a data-page="home" onclick="changePage('home')"><span class="fh-nav-icon" aria-hidden="true">🏠</span><span class="fh-nav-label" data-i18n="menu.home">Home</span></a>
+    <a data-page="story" onclick="changePage('story')"><span class="fh-nav-icon" aria-hidden="true">📖</span><span class="fh-nav-label" data-i18n="menu.story">Stories</span></a>
+    <a data-page="characters" onclick="changePage('characters')"><span class="fh-nav-icon" aria-hidden="true">👤</span><span class="fh-nav-label" data-i18n="menu.characters">Characters</span></a>
+    <a data-page="socials" onclick="changePage('socials')"><span class="fh-nav-icon" aria-hidden="true">🌐</span><span class="fh-nav-label" data-i18n="menu.socials">Socials</span></a>
 
     <p class="fh-nav-section-label" data-i18n="menu.sectionGames">Spiele</p>
-    <a data-page="shop" onclick="changePage('shop')" data-i18n="menu.shop">🛒 Shop</a>
-    <a data-page="code" onclick="changePage('code')" data-i18n="menu.code">🔑 Code</a>
-    <a data-page="wheel" onclick="changePage('wheel')" data-i18n="menu.wheel">🧭 Schatzrad</a>
-    <a data-page="spielothek" onclick="changePage('spielothek')" data-i18n="menu.spielothek">🎰 Ändiis Spielothek</a>
-    <a data-page="leaderboard" onclick="changePage('leaderboard')" data-i18n="menu.leaderboard">🏆 Rangliste</a>
-    <a data-page="tournament" onclick="changePage('tournament')"><img class="fh-nav-cap-icon" src="assets/piratenpass/cap.webp" alt="" aria-hidden="true"> <span data-i18n="menu.tournament">THE CHALLENGE</span></a>
-    <a data-page="race" onclick="changePage('race')" data-i18n="menu.race">🏎️ Wochenrennen</a>
-    <a data-page="community-boss" onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 Community-Boss</a>
-    <a data-page="streamraetsel" onclick="changePage('streamraetsel')" data-i18n="menu.streamraetsel">❓ ???</a>
-    <a data-page="ship-repair" onclick="changePage('ship-repair')" data-i18n="menu.shipRepair">⚒ Repariere das Schiff</a>
-    <a data-page="detective-case" onclick="changePage('detective-case')" data-i18n="menu.detectiveCase">🕵️ Der Fall</a>
+    <a data-page="shop" onclick="changePage('shop')"><span class="fh-nav-icon" aria-hidden="true">🛒</span><span class="fh-nav-label" data-i18n="menu.shop">Shop</span></a>
+    <a data-page="code" onclick="changePage('code')"><span class="fh-nav-icon" aria-hidden="true">🔑</span><span class="fh-nav-label" data-i18n="menu.code">Code</span></a>
+    <a data-page="wheel" onclick="changePage('wheel')"><span class="fh-nav-icon" aria-hidden="true">🧭</span><span class="fh-nav-label" data-i18n="menu.wheel">Schatzrad</span></a>
+    <a data-page="spielothek" onclick="changePage('spielothek')"><span class="fh-nav-icon" aria-hidden="true">🎰</span><span class="fh-nav-label" data-i18n="menu.spielothek">Ändiis Spielothek</span></a>
+    <a data-page="leaderboard" onclick="changePage('leaderboard')"><span class="fh-nav-icon" aria-hidden="true">🏆</span><span class="fh-nav-label" data-i18n="menu.leaderboard">Rangliste</span></a>
+    <a data-page="tournament" onclick="changePage('tournament')"><span class="fh-nav-icon" aria-hidden="true"><img class="fh-nav-cap-icon" src="assets/piratenpass/cap.webp" alt="" aria-hidden="true"></span><span class="fh-nav-label" data-i18n="menu.tournament">THE CHALLENGE</span></a>
+    <a data-page="race" onclick="changePage('race')"><span class="fh-nav-icon" aria-hidden="true">🏎️</span><span class="fh-nav-label" data-i18n="menu.race">Wochenrennen</span></a>
+    <a data-page="community-boss" onclick="changePage('community-boss')"><span class="fh-nav-icon" aria-hidden="true">🐙</span><span class="fh-nav-label" data-i18n="menu.communityBoss">Community-Boss</span></a>
+    <a data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true">❓</span><span class="fh-nav-label" data-i18n="menu.streamraetsel">???</span></a>
+    <a data-page="ship-repair" onclick="changePage('ship-repair')"><span class="fh-nav-icon" aria-hidden="true">⚒</span><span class="fh-nav-label" data-i18n="menu.shipRepair">Repariere das Schiff</span></a>
+    <a data-page="detective-case" onclick="changePage('detective-case')"><span class="fh-nav-icon" aria-hidden="true">🕵️</span><span class="fh-nav-label" data-i18n="menu.detectiveCase">Der Fall</span></a>
 
     <p class="fh-nav-section-label" data-i18n="menu.sectionMore">Mehr</p>
-    <a data-page="support" onclick="changePage('support')" data-i18n="menu.support">🆘 Support</a>
-    <a data-page="rating" onclick="changePage('rating')" data-i18n="menu.rating">⭐ Bewertung</a>
-    <a href="https://spitzefluke.github.io/daveawards/" target="_blank" rel="noopener noreferrer" data-i18n="menu.daveAwards">🏅 Dave Awards</a>
+    <a data-page="support" onclick="changePage('support')"><span class="fh-nav-icon" aria-hidden="true">🆘</span><span class="fh-nav-label" data-i18n="menu.support">Support</span></a>
+    <a data-page="rating" onclick="changePage('rating')"><span class="fh-nav-icon" aria-hidden="true">⭐</span><span class="fh-nav-label" data-i18n="menu.rating">Bewertung</span></a>
+    <a href="https://spitzefluke.github.io/daveawards/" target="_blank" rel="noopener noreferrer"><span class="fh-nav-icon" aria-hidden="true">🏅</span><span class="fh-nav-label" data-i18n="menu.daveAwards">Dave Awards</span></a>
     <a data-page="gateway" onclick="changePage('gateway')" class="fh-gateway-link">⚙ Gateway</a>
   </nav>
 
@@ -116,31 +150,31 @@
     </button>
 
     <nav class="fh-sidebar-nav">
-      <a class="fh-nav-item" data-page="login" onclick="changePage('login')" data-i18n="menu.login">🎮 <span>Anmelden</span></a>
+      <a class="fh-nav-item" data-page="login" onclick="changePage('login')"><span class="fh-nav-icon" aria-hidden="true">🎮</span><span class="fh-nav-label" data-i18n="menu.login">Anmelden</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionExplore">Erkunden</p>
-      <a class="fh-nav-item" data-page="home" onclick="changePage('home')" data-i18n="menu.home">🏠 <span>Home</span></a>
-      <a class="fh-nav-item" data-page="story" onclick="changePage('story')" data-i18n="menu.story">📖 <span>Stories</span></a>
-      <a class="fh-nav-item" data-page="characters" onclick="changePage('characters')" data-i18n="menu.characters">👤 <span>Characters</span></a>
-      <a class="fh-nav-item" data-page="socials" onclick="changePage('socials')" data-i18n="menu.socials">🌐 <span>Socials</span></a>
+      <a class="fh-nav-item" data-page="home" onclick="changePage('home')"><span class="fh-nav-icon" aria-hidden="true">🏠</span><span class="fh-nav-label" data-i18n="menu.home">Home</span></a>
+      <a class="fh-nav-item" data-page="story" onclick="changePage('story')"><span class="fh-nav-icon" aria-hidden="true">📖</span><span class="fh-nav-label" data-i18n="menu.story">Stories</span></a>
+      <a class="fh-nav-item" data-page="characters" onclick="changePage('characters')"><span class="fh-nav-icon" aria-hidden="true">👤</span><span class="fh-nav-label" data-i18n="menu.characters">Characters</span></a>
+      <a class="fh-nav-item" data-page="socials" onclick="changePage('socials')"><span class="fh-nav-icon" aria-hidden="true">🌐</span><span class="fh-nav-label" data-i18n="menu.socials">Socials</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionGames">Spiele</p>
-      <a class="fh-nav-item" data-page="shop" onclick="changePage('shop')" data-i18n="menu.shop">🛒 <span>Shop</span></a>
-      <a class="fh-nav-item" data-page="code" onclick="changePage('code')" data-i18n="menu.code">🔑 <span>Code</span></a>
-      <a class="fh-nav-item" data-page="wheel" onclick="changePage('wheel')" data-i18n="menu.wheel">🧭 <span>Schatzrad</span></a>
-      <a class="fh-nav-item" data-page="spielothek" onclick="changePage('spielothek')">🎰 <span data-i18n="menu.spielothekShort">Spielothek</span></a>
-      <a class="fh-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')" data-i18n="menu.leaderboard">🏆 <span>Rangliste</span></a>
-      <a class="fh-nav-item" data-page="tournament" onclick="changePage('tournament')"><img class="fh-nav-cap-icon" src="assets/piratenpass/cap.webp" alt="" aria-hidden="true"> <span data-i18n="menu.tournament">THE CHALLENGE</span></a>
-      <a class="fh-nav-item" data-page="race" onclick="changePage('race')" data-i18n="menu.race">🏎️ <span>Wochenrennen</span></a>
-      <a class="fh-nav-item" data-page="community-boss" onclick="changePage('community-boss')" data-i18n="menu.communityBoss">🐙 <span>Community-Boss</span></a>
-      <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')">❓ <span data-i18n="menu.streamraetselShort">???</span></a>
-      <a class="fh-nav-item" data-page="ship-repair" onclick="changePage('ship-repair')" data-i18n="menu.shipRepair">⚒ <span>Repariere das Schiff</span></a>
-      <a class="fh-nav-item" data-page="detective-case" onclick="changePage('detective-case')" data-i18n="menu.detectiveCase">🕵️ <span>Der Fall</span></a>
+      <a class="fh-nav-item" data-page="shop" onclick="changePage('shop')"><span class="fh-nav-icon" aria-hidden="true">🛒</span><span class="fh-nav-label" data-i18n="menu.shop">Shop</span></a>
+      <a class="fh-nav-item" data-page="code" onclick="changePage('code')"><span class="fh-nav-icon" aria-hidden="true">🔑</span><span class="fh-nav-label" data-i18n="menu.code">Code</span></a>
+      <a class="fh-nav-item" data-page="wheel" onclick="changePage('wheel')"><span class="fh-nav-icon" aria-hidden="true">🧭</span><span class="fh-nav-label" data-i18n="menu.wheel">Schatzrad</span></a>
+      <a class="fh-nav-item" data-page="spielothek" onclick="changePage('spielothek')"><span class="fh-nav-icon" aria-hidden="true">🎰</span><span class="fh-nav-label" data-i18n="menu.spielothekShort">Spielothek</span></a>
+      <a class="fh-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')"><span class="fh-nav-icon" aria-hidden="true">🏆</span><span class="fh-nav-label" data-i18n="menu.leaderboard">Rangliste</span></a>
+      <a class="fh-nav-item" data-page="tournament" onclick="changePage('tournament')"><span class="fh-nav-icon" aria-hidden="true"><img class="fh-nav-cap-icon" src="assets/piratenpass/cap.webp" alt="" aria-hidden="true"></span><span class="fh-nav-label" data-i18n="menu.tournament">THE CHALLENGE</span></a>
+      <a class="fh-nav-item" data-page="race" onclick="changePage('race')"><span class="fh-nav-icon" aria-hidden="true">🏎️</span><span class="fh-nav-label" data-i18n="menu.race">Wochenrennen</span></a>
+      <a class="fh-nav-item" data-page="community-boss" onclick="changePage('community-boss')"><span class="fh-nav-icon" aria-hidden="true">🐙</span><span class="fh-nav-label" data-i18n="menu.communityBoss">Community-Boss</span></a>
+      <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true">❓</span><span class="fh-nav-label" data-i18n="menu.streamraetselShort">???</span></a>
+      <a class="fh-nav-item" data-page="ship-repair" onclick="changePage('ship-repair')"><span class="fh-nav-icon" aria-hidden="true">⚒</span><span class="fh-nav-label" data-i18n="menu.shipRepair">Repariere das Schiff</span></a>
+      <a class="fh-nav-item" data-page="detective-case" onclick="changePage('detective-case')"><span class="fh-nav-icon" aria-hidden="true">🕵️</span><span class="fh-nav-label" data-i18n="menu.detectiveCase">Der Fall</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionMore">Mehr</p>
-      <a class="fh-nav-item" data-page="support" onclick="changePage('support')" data-i18n="menu.support">🆘 <span>Support</span></a>
-      <a class="fh-nav-item" data-page="rating" onclick="changePage('rating')" data-i18n="menu.rating">⭐ <span>Bewertung</span></a>
-      <a class="fh-nav-item" href="https://spitzefluke.github.io/daveawards/" target="_blank" rel="noopener noreferrer">🏅 <span>Dave Awards</span></a>
+      <a class="fh-nav-item" data-page="support" onclick="changePage('support')"><span class="fh-nav-icon" aria-hidden="true">🆘</span><span class="fh-nav-label" data-i18n="menu.support">Support</span></a>
+      <a class="fh-nav-item" data-page="rating" onclick="changePage('rating')"><span class="fh-nav-icon" aria-hidden="true">⭐</span><span class="fh-nav-label" data-i18n="menu.rating">Bewertung</span></a>
+      <a class="fh-nav-item" href="https://spitzefluke.github.io/daveawards/" target="_blank" rel="noopener noreferrer"><span class="fh-nav-icon" aria-hidden="true">🏅</span><span class="fh-nav-label">Dave Awards</span></a>
     </nav>
 
     <div class="fh-sidebar-footer-wrap">
@@ -181,11 +215,11 @@
       </a>
       <a class="fh-bottom-nav-item" data-page="community-boss" onclick="changePage('community-boss')">
         <span class="fh-bottom-nav-icon">🐙</span>
-        <span class="fh-bottom-nav-label" data-i18n="menu.communityBoss">Boss</span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.bottomBoss">Boss</span>
       </a>
       <a class="fh-bottom-nav-item" data-page="race" onclick="changePage('race')">
         <span class="fh-bottom-nav-icon">🏎️</span>
-        <span class="fh-bottom-nav-label" data-i18n="menu.race">Rennen</span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.bottomRace">Rennen</span>
       </a>
       <a class="fh-bottom-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')">
         <span class="fh-bottom-nav-icon">🏆</span>
@@ -193,12 +227,12 @@
       </a>
       <button type="button" class="fh-bottom-nav-item fh-bottom-nav-more" onclick="openMenu()">
         <span class="fh-bottom-nav-icon">☰</span>
-        <span class="fh-bottom-nav-label">Mehr</span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.bottomMore">Mehr</span>
       </button>
     </nav>
   </div>
 
-  <main>
+  <main id="fh-main" tabindex="-1">
 
     <!-- =====================
          HOME
