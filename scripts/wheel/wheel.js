@@ -1724,7 +1724,9 @@ function loadLeaderboard() {
     return;
   }
 
-  container.innerHTML = '<p class="wheel-status">Lade Rangliste ...</p>';
+  // Platzhalter in Zeilenform statt einer blossen Textzeile - siehe
+  // scripts/core/skeleton.js.
+  container.innerHTML = fhSkeletonList(6, { label: "Lade Rangliste ..." });
 
   // players_select_public erlaubt jedem (auch anonym) das Lesen ALLER
   // Spielerzeilen (Firestore: "allow read: if true") - wir laden daher

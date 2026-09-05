@@ -20,24 +20,37 @@ const translations = {
     "menu.sectionExplore": "Erkunden",
     "menu.sectionGames": "Spiele",
     "menu.sectionMore": "Mehr",
-    "menu.login": "🎮 Anmelden",
-    "menu.shop": "🛒 Shop",
-    "menu.home": "🏠 Home",
-    "menu.story": "📖 Stories",
-    "menu.characters": "👤 Characters",
-    "menu.socials": "🌐 Socials",
-    "menu.code": "🔑 Code",
-    "menu.wheel": "🧭 Schatzrad",
-    "menu.spielothek": "🎰 Ändiis Spielothek",
+    "menu.bottomBoss": "Boss",
+    "menu.bottomRace": "Rennen",
+    "menu.bottomMore": "Mehr",
+    "a11y.skipToContent": "Zum Inhalt springen",
+    "search.trigger": "Seite suchen",
+    "search.placeholder": "Wohin?",
+    "search.empty": "Nichts gefunden.",
+    "search.hintSelect": "wählen",
+    "search.hintOpen": "öffnen",
+    "share.button": "Seite teilen",
+    "share.text": "FireHelmet - Pirate Saga",
+    "share.copied": "Link kopiert.",
+    "share.failed": "Link konnte nicht kopiert werden.",
+    "menu.login": "Anmelden",
+    "menu.shop": "Shop",
+    "menu.home": "Home",
+    "menu.story": "Stories",
+    "menu.characters": "Characters",
+    "menu.socials": "Socials",
+    "menu.code": "Code",
+    "menu.wheel": "Schatzrad",
+    "menu.spielothek": "Ändiis Spielothek",
     "menu.spielothekShort": "Spielothek",
-    "menu.leaderboard": "🏆 Rangliste",
-    "menu.race": "🏎️ Wochenrennen",
-    "menu.communityBoss": "🐙 Community-Boss",
-    "menu.streamraetsel": "❓ ???",
+    "menu.leaderboard": "Rangliste",
+    "menu.race": "Wochenrennen",
+    "menu.communityBoss": "Community-Boss",
+    "menu.streamraetsel": "???",
     "menu.streamraetselShort": "???",
-    "menu.support": "🆘 Support",
-    "menu.rating": "⭐ Bewertung",
-    "menu.daveAwards": "🏅 Dave Awards",
+    "menu.support": "Support",
+    "menu.rating": "Bewertung",
+    "menu.daveAwards": "Dave Awards",
 
     "support.title": "SUPPORT",
     "support.subtitle": "Melde ein Problem oder ein Anliegen",
@@ -224,9 +237,9 @@ const translations = {
     "ship.stagesHeading": "Reparatur-Etappen",
     "ship.puzzlesHeading": "⚓ Rätsel des Kapitäns",
 
-    "menu.shipRepair": "⚒ Repariere das Schiff",
+    "menu.shipRepair": "Repariere das Schiff",
     "menu.tournament": "THE CHALLENGE",
-    "menu.detectiveCase": "🕵️ Der Fall",
+    "menu.detectiveCase": "Der Fall",
 
     "detectiveCase.title": "🕵️ DER FALL DER VERSCHWUNDENEN DUBLONEN",
     "detectiveCase.subtitle": "„Auf der FireHelmet herrscht Unruhe. 400 Dublonen sind aus der Schatzkammer verschwunden. Jemand aus der Crew muss sie genommen haben.“",
@@ -357,24 +370,37 @@ const translations = {
     "menu.sectionExplore": "Explore",
     "menu.sectionGames": "Games",
     "menu.sectionMore": "More",
-    "menu.login": "🎮 Login",
-    "menu.shop": "🛒 Shop",
-    "menu.home": "🏠 Home",
-    "menu.story": "📖 Stories",
-    "menu.characters": "👤 Characters",
-    "menu.socials": "🌐 Socials",
-    "menu.code": "🔑 Code",
-    "menu.wheel": "🧭 Treasure Wheel",
-    "menu.spielothek": "🎰 Ändii's Arcade",
+    "menu.bottomBoss": "Boss",
+    "menu.bottomRace": "Race",
+    "menu.bottomMore": "More",
+    "a11y.skipToContent": "Skip to content",
+    "search.trigger": "Search pages",
+    "search.placeholder": "Where to?",
+    "search.empty": "Nothing found.",
+    "search.hintSelect": "select",
+    "search.hintOpen": "open",
+    "share.button": "Share page",
+    "share.text": "FireHelmet - Pirate Saga",
+    "share.copied": "Link copied.",
+    "share.failed": "Could not copy the link.",
+    "menu.login": "Login",
+    "menu.shop": "Shop",
+    "menu.home": "Home",
+    "menu.story": "Stories",
+    "menu.characters": "Characters",
+    "menu.socials": "Socials",
+    "menu.code": "Code",
+    "menu.wheel": "Treasure Wheel",
+    "menu.spielothek": "Ändii's Arcade",
     "menu.spielothekShort": "Arcade",
-    "menu.leaderboard": "🏆 Leaderboard",
-    "menu.race": "🏎️ Weekly Race",
-    "menu.communityBoss": "🐙 Community Boss",
-    "menu.streamraetsel": "❓ ???",
+    "menu.leaderboard": "Leaderboard",
+    "menu.race": "Weekly Race",
+    "menu.communityBoss": "Community Boss",
+    "menu.streamraetsel": "???",
     "menu.streamraetselShort": "???",
-    "menu.support": "🆘 Support",
-    "menu.rating": "⭐ Rating",
-    "menu.daveAwards": "🏅 Dave Awards",
+    "menu.support": "Support",
+    "menu.rating": "Rating",
+    "menu.daveAwards": "Dave Awards",
 
     "support.title": "SUPPORT",
     "support.subtitle": "Report a problem or an issue",
@@ -561,9 +587,9 @@ const translations = {
     "ship.stagesHeading": "Repair Stages",
     "ship.puzzlesHeading": "⚓ Captain's Riddles",
 
-    "menu.shipRepair": "⚒ Repair the Ship",
+    "menu.shipRepair": "Repair the Ship",
     "menu.tournament": "THE CHALLENGE",
-    "menu.detectiveCase": "🕵️ The Case",
+    "menu.detectiveCase": "The Case",
 
     "detectiveCase.title": "🕵️ THE CASE OF THE MISSING DOUBLOONS",
     "detectiveCase.subtitle": "\"There's unrest aboard the FireHelmet. 400 doubloons have vanished from the treasure chamber. Someone from the crew must have taken them.\"",
@@ -730,6 +756,22 @@ function applyTranslations() {
     const key = el.getAttribute("data-i18n-placeholder");
     if (dict[key]) {
       el.setAttribute("placeholder", dict[key]);
+    }
+  });
+
+  // Tooltip (title) und Vorlesetext (aria-label) blieben bisher immer
+  // auf Deutsch stehen, weil nur Text und Platzhalter uebersetzt wurden.
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-title");
+    if (dict[key]) {
+      el.setAttribute("title", dict[key]);
+    }
+  });
+
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-aria-label");
+    if (dict[key]) {
+      el.setAttribute("aria-label", dict[key]);
     }
   });
 

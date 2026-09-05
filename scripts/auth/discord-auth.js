@@ -15,7 +15,8 @@ function isDiscordConfigured() {
 
 function loginWithDiscord() {
   if (!isDiscordConfigured()) {
-    alert("Discord-Login ist noch nicht eingerichtet (scripts/discord-config.js fehlt die Client ID).");
+    console.warn("Discord-Login nicht eingerichtet: scripts/discord-config.js fehlt die Client ID.");
+    fhNotice("Discord-Login ist gerade nicht verfuegbar.", "error");
     return;
   }
 
@@ -67,7 +68,7 @@ function fetchDiscordUser(token) {
     })
     .catch((err) => {
       console.error("Discord-Login fehlgeschlagen:", err);
-      alert("Discord-Login hat leider nicht geklappt. Versuch es nochmal.");
+      fhNotice("Discord-Login hat nicht geklappt. Versuch es nochmal.", "error");
     });
 }
 

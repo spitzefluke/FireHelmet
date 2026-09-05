@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abgetrieben - FireHelmet</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#05070b">
+
+  <!-- Absolute Pfade (mit /FireHelmet/-Praefix) statt relativer:
+       GitHub Pages liefert diese Seite fuer JEDEN unbekannten Pfad
+       aus, also auch fuer /FireHelmet/tief/verschachtelt/quatsch -
+       relative Pfade wuerden dort ins Leere zeigen. -->
+  <link rel="icon" href="/FireHelmet/assets/favicon/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/FireHelmet/assets/favicon/favicon-32.png">
+  <link rel="apple-touch-icon" href="/FireHelmet/assets/favicon/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Bewusst eigenstaendiges CSS statt style.css: die Datei ist
+       ~11.500 Zeilen und komplett auf die Single-Page-App ausgelegt
+       (.page/.active-page-Umschaltung). Fuer diese eine statische
+       Seite waere das nur Ballast - und eine kaputte Fehlerseite
+       waere besonders aergerlich. -->
+  <style>
+    :root {
+      --bg: #05070b;
+      --fg: #e8edf4;
+      --muted: #8296ad;
+      --gold: #d6a84f;
+      --gold-bright: #f0c96a;
+      --fire: #ff6a2a;
+      --surface: #0d1520;
+      --border: #1c2a3a;
+      --ease: cubic-bezier(.22,.9,.32,1);
+      --display: 'Oswald', ui-sans-serif, sans-serif;
+      --sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      color-scheme: dark;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      font-family: var(--sans);
+      color: var(--fg);
+      background:
+        radial-gradient(720px 460px at 80% 12%, rgba(240,201,106,.13), transparent 62%),
+        radial-gradient(860px 520px at 8% 100%, rgba(255,106,42,.11), transparent 60%),
+        linear-gradient(170deg, #070c14 0%, var(--bg) 50%, #0b1824 100%);
+      overflow: hidden;
+    }
+
+    /* Sternenfeld + Grain, damit die Flaeche nicht als toter
+       Farbverlauf dasteht - dieselbe Bildsprache wie auf Home. */
+    /* width/height explizit: ein <svg> ohne diese Angaben faellt auf
+       seine Standardgroesse 300x150 zurueck und schneidet die
+       Sterne rechts/unten ab. */
+    .sky, .grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .grain {
+      opacity: .045;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .wrap {
+      position: relative;
+      width: min(620px, 100%);
+      text-align: center;
+      animation: rise .6s var(--ease) both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .mark {
+      width: 78px;
+      height: 78px;
+      margin: 0 auto 30px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(240,201,106,.45), 0 14px 40px rgba(0,0,0,.6);
+      animation: bob 6s ease-in-out infinite;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      50%      { transform: translateY(-9px) rotate(2deg); }
+    }
+
+    .code {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: clamp(74px, 17vw, 132px);
+      line-height: .9;
+      letter-spacing: .08em;
+      background: linear-gradient(180deg, #f4f7fb 0%, #8fa3ba 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 500;
+      font-size: clamp(21px, 4.4vw, 30px);
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+      margin-top: 14px;
+      text-wrap: balance;
+    }
+
+    p {
+      margin: 22px auto 0;
+      max-width: 46ch;
+      font-size: 17px;
+      line-height: 1.65;
+      color: var(--muted);
+      text-wrap: pretty;
+    }
+
+    .rule {
+      width: 92px;
+      height: 3px;
+      margin: 30px auto 0;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--gold-bright), var(--fire));
+    }
+
+    .actions {
+      margin-top: 34px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 26px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      font-family: var(--display);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .2s var(--ease), border-color .2s, box-shadow .2s, color .2s;
+    }
+
+    .btn-primary {
+      border-color: rgba(240,201,106,.55);
+      color: var(--gold-bright);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+      box-shadow: 0 10px 26px rgba(0,0,0,.5), 0 0 24px rgba(240,201,106,.16);
+    }
+
+    .btn:active { transform: translateY(0); }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--gold-bright);
+      outline-offset: 3px;
+    }
+
+    .path {
+      margin-top: 30px;
+      font-family: ui-monospace, 'Courier New', monospace;
+      font-size: 13px;
+      color: #5f7690;
+      word-break: break-all;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wrap, .mark { animation: none; }
+      .btn { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <svg class="sky" aria-hidden="true"><g id="stars"></g></svg>
+  <div class="grain" aria-hidden="true"></div>
+
+  <main class="wrap">
+    <img class="mark" src="/FireHelmet/assets/favicon/favicon-192.png"
+         alt="" width="78" height="78" aria-hidden="true">
+
+    <div class="code">404</div>
+    <h1>Abgetrieben</h1>
+
+    <p>
+      Diese Seite steht auf keiner Karte der Crew. Vielleicht hat der Wind
+      die Adresse verweht - oder das Logbuch liegt inzwischen woanders.
+    </p>
+
+    <div class="rule"></div>
+
+    <div class="actions">
+      <a class="btn btn-primary" href="/FireHelmet/">Zurück an Bord</a>
+      <button class="btn" type="button" id="back">Eine Seite zurück</button>
+    </div>
+
+    <p class="path" id="path"></p>
+  </main>
+
+  <script>
+    // Sternenfeld: rein dekorativ, deshalb erst nach dem Rendern und
+    // ohne jede Abhaengigkeit - faellt JS aus, bleibt die Seite ganz.
+    (function () {
+      var svg = document.getElementById("stars");
+      if (!svg) return;
+      var ns = "http://www.w3.org/2000/svg";
+      var w = window.innerWidth, h = window.innerHeight;
+      var n = Math.min(130, Math.round((w * h) / 12000));
+      for (var i = 0; i < n; i++) {
+        var c = document.createElementNS(ns, "circle");
+        c.setAttribute("cx", (Math.random() * w).toFixed(1));
+        c.setAttribute("cy", (Math.random() * h).toFixed(1));
+        c.setAttribute("r", (0.5 + Math.random() * 1.3).toFixed(2));
+        c.setAttribute("fill", "#e8edf4");
+        c.setAttribute("opacity", (0.12 + Math.random() * 0.5).toFixed(2));
+        svg.appendChild(c);
+      }
+    })();
+
+    // Angefragten Pfad zeigen - hilft beim Melden kaputter Links.
+    document.getElementById("path").textContent = location.pathname + location.search;
+
+    // "Zurueck" nur anbieten, wenn es ueberhaupt eine Historie gibt.
+    var back = document.getElementById("back");
+    if (window.history.length > 1) {
+      back.addEventListener("click", function () { window.history.back(); });
+    } else {
+      back.remove();
+    }
+  </script>
+
+</body>
+</html>
