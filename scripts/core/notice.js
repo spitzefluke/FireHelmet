@@ -61,7 +61,7 @@
     const closeEl = document.createElement("button");
     closeEl.type = "button";
     closeEl.className = "fh-notice-close";
-    closeEl.setAttribute("aria-label", "Hinweis schliessen");
+    closeEl.setAttribute("aria-label", "Hinweis schließen");
     closeEl.textContent = "×";
     closeEl.addEventListener("click", () => dismiss(el));
 

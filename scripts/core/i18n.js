@@ -24,6 +24,15 @@ const translations = {
     "menu.bottomRace": "Rennen",
     "menu.bottomMore": "Mehr",
     "a11y.skipToContent": "Zum Inhalt springen",
+    "search.trigger": "Seite suchen",
+    "search.placeholder": "Wohin?",
+    "search.empty": "Nichts gefunden.",
+    "search.hintSelect": "wählen",
+    "search.hintOpen": "öffnen",
+    "share.button": "Seite teilen",
+    "share.text": "FireHelmet - Pirate Saga",
+    "share.copied": "Link kopiert.",
+    "share.failed": "Link konnte nicht kopiert werden.",
     "menu.login": "Anmelden",
     "menu.shop": "Shop",
     "menu.home": "Home",
@@ -365,6 +374,15 @@ const translations = {
     "menu.bottomRace": "Race",
     "menu.bottomMore": "More",
     "a11y.skipToContent": "Skip to content",
+    "search.trigger": "Search pages",
+    "search.placeholder": "Where to?",
+    "search.empty": "Nothing found.",
+    "search.hintSelect": "select",
+    "search.hintOpen": "open",
+    "share.button": "Share page",
+    "share.text": "FireHelmet - Pirate Saga",
+    "share.copied": "Link copied.",
+    "share.failed": "Could not copy the link.",
     "menu.login": "Login",
     "menu.shop": "Shop",
     "menu.home": "Home",
@@ -738,6 +756,22 @@ function applyTranslations() {
     const key = el.getAttribute("data-i18n-placeholder");
     if (dict[key]) {
       el.setAttribute("placeholder", dict[key]);
+    }
+  });
+
+  // Tooltip (title) und Vorlesetext (aria-label) blieben bisher immer
+  // auf Deutsch stehen, weil nur Text und Platzhalter uebersetzt wurden.
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-title");
+    if (dict[key]) {
+      el.setAttribute("title", dict[key]);
+    }
+  });
+
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-aria-label");
+    if (dict[key]) {
+      el.setAttribute("aria-label", dict[key]);
     }
   });
 

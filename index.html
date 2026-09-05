@@ -76,6 +76,26 @@
   <!-- Hintergrundmusik: läuft nur auf der Home/Countdown-Seite (Playlist über main.js) -->
   <audio id="bg-music"></audio>
 
+  <!-- Teilen: nur auf der Startseite sichtbar (per CSS), nutzt die
+       native Teilen-Auswahl des Geraets bzw. die Zwischenablage.
+       Siehe scripts/core/share.js. -->
+  <button type="button" class="fh-share-button" onclick="fhShareSite()"
+          data-i18n-aria-label="share.button" aria-label="Seite teilen"
+          data-i18n-title="share.button" title="Seite teilen">
+    <!-- Inline-SVG statt Emoji: die Emoji-Varianten fuer "teilen"
+         sehen je nach Betriebssystem voellig anders aus, und ein
+         blosser Pfeil (↪) liest sich eher als "zurueck". -->
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none"
+         stroke="currentColor" stroke-width="1.9" stroke-linecap="round"
+         stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <circle cx="18" cy="5" r="3"/>
+      <circle cx="6" cy="12" r="3"/>
+      <circle cx="18" cy="19" r="3"/>
+      <line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/>
+      <line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/>
+    </svg>
+  </button>
+
   <!-- Musik Mute-Button (nur sichtbar, wenn Musik läuft/laufen könnte) -->
   <div class="music-toggle" id="music-toggle" onclick="toggleMusic()">🔊</div>
 
@@ -150,6 +170,16 @@
     </button>
 
     <nav class="fh-sidebar-nav">
+      <!-- Sichtbarer Einstieg in die Schnellsuche - die
+           Tastenkombination allein waere auf Touch-Geraeten
+           unerreichbar. Siehe scripts/core/quick-search.js. -->
+      <button type="button" class="fh-qs-trigger"
+              onclick="fhQuickSearch.open()" aria-haspopup="dialog">
+        <span aria-hidden="true">&#8981;</span>
+        <span class="fh-qs-trigger-label" data-i18n="search.trigger">Seite suchen</span>
+        <kbd>Strg K</kbd>
+      </button>
+
       <a class="fh-nav-item" data-page="login" onclick="changePage('login')"><span class="fh-nav-icon" aria-hidden="true">🎮</span><span class="fh-nav-label" data-i18n="menu.login">Anmelden</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionExplore">Erkunden</p>
@@ -1115,6 +1145,8 @@
   <script src="scripts/core/notice.js"></script>
   <!-- Ladeplatzhalter, genutzt von wheel.js (Rangliste). -->
   <script src="scripts/core/skeleton.js"></script>
+  <script src="scripts/core/quick-search.js"></script>
+  <script src="scripts/core/share.js"></script>
   <script src="scripts/core/fire-helmet-config.js"></script>
   <script src="scripts/core/i18n.js"></script>
   <script src="scripts/core/audiobook-link.js"></script>
