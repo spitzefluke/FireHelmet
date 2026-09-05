@@ -1,1 +1,9 @@
 node_modules/
+
+# Design-/Frontend-Skills fuer die Entwicklung mit KI-Agenten, installiert
+# per "npx skills add ..." bzw. aus pbakaus/impeccable. Reine Markdown-
+# Anleitungen ohne Einfluss auf die ausgelieferte Seite - sie gehoeren zur
+# Arbeitsumgebung, nicht zum Projekt, und werden bei Bedarf neu installiert.
+.agents/skills/
+.claude/skills/
+skills-lock.json
