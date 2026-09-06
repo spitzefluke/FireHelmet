@@ -276,6 +276,12 @@ function renderLevelPathOverlay(xp, claimedIds) {
     scrollToCurrentLevelNode();
     levelPathAutoScrolled = true;
   }
+
+  // Erreichte Verbinder von links nach rechts wachsen lassen -
+  // siehe scripts/core/path-draw.js.
+  if (typeof fhDrawConnectors === "function") {
+    fhDrawConnectors(overlay, ".fh-levelpath-connector-filled");
+  }
 }
 
 /* ------------------------------------------------------

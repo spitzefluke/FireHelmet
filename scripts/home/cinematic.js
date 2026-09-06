@@ -341,9 +341,65 @@
     );
   }
 
+  /* ------------------------------------------------------
+     TITEL BUCHSTABENWEISE (GSAP SplitText)
+     ---------------------------------------------------
+     "FIREHELMET" fuhr bisher als ein Block mit dem ganzen
+     Opening-Block ein (CSS-Keyframe fhCopyOpeningIn). Die
+     Buchstaben kommen jetzt leicht versetzt hoch - aus einem
+     Einblenden wird ein Auftritt.
+
+     Bewusst NUR die Buchstaben INNERHALB der Ueberschrift. Der
+     umgebende .fh-copy-opening behaelt seine eigene Bewegung:
+     seine Deckkraft und Skalierung haengen per calc() am
+     Scroll-Fortschritt (--fh-progress), da wird nichts
+     angefasst.
+
+     Nach dem Lauf wird die Aufteilung wieder zurueckgenommen
+     (revert). Sonst stuenden die Buchstaben dauerhaft in
+     eigenen <div>s - und der naechste Sprachwechsel wuerde sie
+     ueber textContent ohnehin platt machen, siehe
+     applyTranslations() in i18n.js.
+  ------------------------------------------------------ */
+  function fhInitTitleReveal() {
+    if (prefersReducedMotion.matches) return;
+    if (typeof gsap === "undefined" || typeof SplitText === "undefined") return;
+
+    const titel = document.querySelector("#fh-copy-opening .fh-cinematic-title");
+    if (!titel) return;
+
+    let split;
+    try {
+      split = new SplitText(titel, { type: "chars" });
+    } catch (err) {
+      return;
+    }
+
+    if (!split.chars || !split.chars.length) {
+      if (split.revert) split.revert();
+      return;
+    }
+
+    gsap.from(split.chars, {
+      yPercent: 60,
+      opacity: 0,
+      duration: 0.7,
+      ease: "power3.out",
+      stagger: 0.045,
+      // Etwas Vorlauf, damit der Block erst da ist (sein
+      // CSS-Einblenden laeuft 1,4s) und die Buchstaben nicht ins
+      // Leere laufen.
+      delay: 0.35,
+      onComplete: () => {
+        if (split.revert) split.revert();
+      },
+    });
+  }
+
   window.addEventListener("DOMContentLoaded", () => {
     fhInitReveal();
     fhInitShipJourney();
     fhInitCursorParallax();
+    fhInitTitleReveal();
   });
 })();

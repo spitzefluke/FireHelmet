@@ -1140,6 +1140,19 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollSmoother.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js" defer></script>
 
+  <!-- Seit GSAP 3.13 sind alle frueheren Club-Plugins frei nutzbar.
+       Diese vier kommen neu dazu:
+       SplitText     - Titel buchstabenweise einblenden (cinematic.js)
+       DrawSVGPlugin - Rennstrecke zeichnen (race.js)
+       Flip          - Ranglisten-Plaetze umsortieren (wheel.js)
+       CustomEase    - eigene Auslauf-Kurve fuers Schatzrad (wheel.js)
+       Jedes davon wird einzeln geprueft, siehe gsap-init.js -
+       faellt eines aus, laufen die anderen weiter. -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/DrawSVGPlugin.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/Flip.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/CustomEase.min.js" defer></script>
+
   <!-- Motion (npm-Paket "motion", siehe package.json) - UMD-Build wie
        oben bei GSAP, haengt sich global als "Motion" an window (kein
        Bundler vorhanden, daher kein "import { animate } from 'motion'").
@@ -1167,6 +1180,7 @@
   <script src="scripts/core/skeleton.js" defer></script>
   <script src="scripts/core/field-counter.js" defer></script>
   <script src="scripts/core/nav-sync.js" defer></script>
+  <script src="scripts/core/path-draw.js" defer></script>
   <script src="scripts/core/quick-search.js" defer></script>
   <script src="scripts/core/share.js" defer></script>
   <script src="scripts/core/fire-helmet-config.js" defer></script>
