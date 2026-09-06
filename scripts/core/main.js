@@ -67,6 +67,13 @@ function changePage(pageID) {
     refreshShopCurrencyDisplay();
   }
 
+  // Die Startseiten-Uebersicht zeigt Lesestand, Schatzrad, Rennen und
+  // Codes. Wer von einer dieser Seiten zurueckkommt, soll den neuen
+  // Stand sehen und nicht den vom Seitenaufruf.
+  if (pageID === "home" && typeof fhRenderHomeDashboard === "function") {
+    fhRenderHomeDashboard();
+  }
+
   if (typeof updateRatingPage === "function") {
     updateRatingPage(pageID);
   }

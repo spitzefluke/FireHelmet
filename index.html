@@ -411,6 +411,7 @@
                Endphase desselben Ablaufs (siehe Kommentar oben), also
                eine Unterueberschrift. Optisch aendert sich nichts, die
                CSS-Regeln greifen weiterhin ueber .hero. -->
+          <p class="fh-hero-kicker" data-i18n="home.kicker">Logbuch der Crew</p>
           <h2 data-i18n="home.title">COUNTDOWN</h2>
           <p class="subtitle" data-i18n="home.subtitle">The new Story starts in ...</p>
 
@@ -434,6 +435,32 @@
           </div>
         </div>
       </div>
+
+      <!-- ============================================================
+           FH DASHBOARD (Entwurf 1c)
+           Karten-Uebersicht unter der Cinematic-Sequenz: der Besucher
+           sieht auf einen Blick, wo er ueberall stehengeblieben ist,
+           statt sich das aus fuenf Unterseiten zusammensuchen zu
+           muessen.
+
+           Die Karten sind LEER im Markup und werden von
+           scripts/home/dashboard.js aus dem echten Stand befuellt
+           (gelesene Kapitel, Schatzrad-Status, Rennfortschritt,
+           geknackte Codes, Rangliste). Faellt das Skript aus, bleibt
+           der Abschnitt schlicht leer - der Rest der Startseite
+           laeuft unveraendert weiter.
+      ============================================================ -->
+      <section class="fh-dash" id="fh-dash" aria-labelledby="fh-dash-heading">
+        <h2 class="fh-visually-hidden" id="fh-dash-heading" data-i18n="dash.heading">Dein Stand</h2>
+
+        <div class="fh-dash-grid">
+          <article class="fh-card fh-card-wide" id="fh-dash-read"></article>
+          <article class="fh-card fh-card-gold" id="fh-dash-wheel"></article>
+          <article class="fh-card" id="fh-dash-race"></article>
+          <article class="fh-card" id="fh-dash-code"></article>
+          <article class="fh-card" id="fh-dash-board"></article>
+        </div>
+      </section>
 
     </section>
 
@@ -1267,6 +1294,11 @@
   <script src="scripts/codes/code-button-effect.js" defer></script>
   <script src="scripts/codes/code-ambient-fx.js" defer></script>
   <script src="scripts/codes/code-history.js" defer></script>
+
+  <!-- Ganz zum Schluss: die Startseiten-Uebersicht liest aus stories.js,
+       wheel.js, race.js und codes-data.js und muss daher nach allen
+       vieren stehen. -->
+  <script src="scripts/home/dashboard.js" defer></script>
 
 </body>
 </html>

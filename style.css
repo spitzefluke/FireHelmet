@@ -12680,3 +12680,323 @@ body:has(#story-detail.active-page)::after {
     transition: none;
   }
 }
+
+/* =====================================================
+   ENTWURF 1c - KARTEN-BILDSPRACHE
+   ---------------------------------------------------
+   Die Bausteine, aus denen der Entwurf seine Karten setzt.
+   Bewusst als eigenstaendige, wiederverwendbare Klassen und NICHT
+   in .fh-dash eingebettet: die naechsten Runden bauen Stories,
+   Characters und Wochenrennen aus denselben Teilen. Bestehende
+   Karten der Seite (.chapter-card, .shop-item, .character-card
+   usw.) bleiben unberuehrt - sie werden nicht umbenannt.
+===================================================== */
+.fh-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid var(--fh-border);
+  background: linear-gradient(160deg, var(--fh-surface-light), #0b111a);
+}
+
+.fh-card[hidden] {
+  display: none;
+}
+
+/* Hervorgehobene Karte (im Entwurf das Schatzrad): goldener Rand,
+   waermerer Verlauf. */
+.fh-card-gold {
+  border-color: rgba(214,168,79,.32);
+  background: linear-gradient(160deg, rgba(32,26,14,.9), #0b111a);
+}
+
+.fh-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fh-card-kicker {
+  margin: 0;
+  font-family: var(--fh-font-display);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+.fh-card-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.fh-card-title {
+  margin: 0;
+  font-family: var(--fh-font-display);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  color: var(--fh-fg);
+}
+
+.fh-card-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-card-note-sm {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Drueckt alles Folgende (in der Regel die Schaltflaeche) an den
+   unteren Rand, damit in einer Reihe alle Knoepfe auf einer Linie
+   sitzen - auch wenn die Karten unterschiedlich viel Text haben. */
+.fh-card-spacer {
+  flex: 1;
+  min-height: 4px;
+}
+
+.fh-card-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.fh-card-figure-value {
+  font-family: var(--fh-font-display);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--fh-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Fortschrittsbalken ---- */
+.fh-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.07);
+  overflow: hidden;
+}
+
+.fh-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width .5s var(--fh-ease);
+}
+
+/* ---- Schaltflaeche im Kartenstil ---- */
+.fh-cta {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(214,168,79,.55);
+  background: none;
+  color: var(--fh-gold-bright);
+  font-family: var(--fh-font-display);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+
+.fh-cta:hover {
+  background: rgba(214,168,79,.12);
+  border-color: var(--fh-gold-bright);
+}
+
+.fh-cta:focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 2px;
+}
+
+.fh-cta .ph {
+  font-size: 16px;
+}
+
+/* ---- Coverbild (Weiterlesen-Karte) ---- */
+.fh-card-cover {
+  flex: 0 0 auto;
+  width: 108px;
+  height: 148px;
+  border-radius: 10px;
+  border: 1px solid var(--fh-border-strong);
+  object-fit: cover;
+}
+
+/* ---- Rangliste in Kartenform ---- */
+.fh-card-ranks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fh-card-rank {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fh-card-rank-nr {
+  width: 18px;
+  font-family: var(--fh-font-display);
+  font-size: 15px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-card-rank-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--fh-border-strong);
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.fh-card-rank-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fh-card-rank-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--fh-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fh-card-rank-score {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-bar-fill,
+  .fh-cta { transition: none; }
+}
+
+/* =====================================================
+   ENTWURF 1c - STARTSEITEN-UEBERSICHT
+   ---------------------------------------------------
+   Liegt UNTER der Cinematic-Sequenz und dem Countdown, nicht
+   an deren Stelle: die Scroll-Reise ist der Auftakt der Seite
+   und bleibt vollstaendig erhalten. Die Uebersicht ist das,
+   was der Entwurf unter seinem Kopfbild zeigt - der eigene
+   Stand auf einen Blick.
+===================================================== */
+.fh-dash {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 40px 34px 64px;
+}
+
+.fh-dash-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Die Weiterlesen-Karte nimmt zwei Spalten und stellt Cover und
+   Text nebeneinander. */
+.fh-card-wide {
+  grid-column: span 2;
+  flex-direction: row;
+  gap: 16px;
+}
+
+.fh-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Unter 1024px sind zwei Spalten die ruhigere Aufteilung - drei
+   Karten nebeneinander werden dort zu schmal fuer die
+   Ueberschriften. */
+@media (max-width: 1023px) {
+  .fh-dash {
+    padding: 32px 22px 56px;
+  }
+
+  .fh-dash-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .fh-dash {
+    padding: 26px 16px 48px;
+  }
+
+  .fh-dash-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fh-card-wide {
+    grid-column: auto;
+  }
+
+  /* Auf dem Handy steht das Cover ueber dem Text - nebeneinander
+     blieben von der Ueberschrift zwei Woerter pro Zeile. */
+  .fh-card-cover {
+    width: 84px;
+    height: 116px;
+  }
+}
+
+/* =====================================================
+   ENTWURF 1c - HERO-VORZEILE
+   ---------------------------------------------------
+   Die goldene Kleinschrift ueber dem Countdown-Titel. Sie
+   ordnet den Countdown ein ("Logbuch der Crew"), bevor die
+   grosse Zeile kommt - genau wie im Entwurf.
+===================================================== */
+.fh-hero-kicker {
+  margin: 0 0 14px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .42em;
+  text-transform: uppercase;
+  color: var(--fh-gold-bright);
+}
+
+/* ---- Countdown im Entwurfs-Stil: gerahmte Ziffernkaesten ---- */
+.hero .countdown .time-box {
+  border: 1px solid var(--fh-border-strong);
+  border-radius: 8px;
+  background: rgba(17, 26, 38, .8);
+}
+
+.hero .countdown .time-box small {
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}

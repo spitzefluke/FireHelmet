@@ -155,6 +155,38 @@ const translations = {
 
     "home.title": "COUNTDOWN",
     "home.subtitle": "Die neue Story startet in ...",
+    "home.kicker": "Logbuch der Crew",
+
+    /* Startseiten-Uebersicht (scripts/home/dashboard.js) */
+    "dash.heading": "Dein Stand",
+    "dash.readKicker": "Weiterlesen",
+    "dash.readChapters": "Kapitel gelesen",
+    "dash.readOpen": "Kapitel öffnen",
+    "dash.readAgain": "Logbuch öffnen",
+    "dash.readDone": "Alles gelesen",
+    "dash.wheelKicker": "Schatzrad",
+    "dash.wheelReady": "Dreh frei",
+    "dash.wheelDone": "Heute schon gedreht",
+    "dash.wheelNoName": "Erst anmelden",
+    "dash.wheelNoNameNote": "Mit einem Namen darfst du täglich einmal drehen.",
+    "dash.wheelStreak": "Tage in Folge",
+    "dash.wheelComeBack": "Morgen geht es weiter.",
+    "dash.wheelFirst": "Deine erste Drehung wartet.",
+    "dash.wheelCta": "Zum Schatzrad",
+    "dash.wheelCtaLogin": "Namen wählen",
+    "dash.raceKicker": "Wochenrennen",
+    "dash.raceOf": "von",
+    "dash.raceTrack": "Strecke",
+    "dash.racePerSpin": "pro Drehung",
+    "dash.racePerCode": "pro Code",
+    "dash.raceCta": "Zum Rennen",
+    "dash.codeKicker": "Geheimcode",
+    "dash.codeOf": "von",
+    "dash.codeOpen": "noch nicht geknackt",
+    "dash.codeCta": "Code eingeben",
+    "dash.boardKicker": "Rangliste",
+    "dash.boardLoading": "Lade Rangliste ...",
+    "dash.boardCta": "Ganze Rangliste",
 
     "home.cinematicEyebrow": "Eine Reise beginnt",
     "home.cinematicTitle": "FIREHELMET",
@@ -509,6 +541,38 @@ const translations = {
 
     "home.title": "COUNTDOWN",
     "home.subtitle": "The new Story starts in ...",
+    "home.kicker": "The crew's logbook",
+
+    /* Home dashboard (scripts/home/dashboard.js) */
+    "dash.heading": "Your progress",
+    "dash.readKicker": "Keep reading",
+    "dash.readChapters": "chapters read",
+    "dash.readOpen": "Open chapter",
+    "dash.readAgain": "Open logbook",
+    "dash.readDone": "All read",
+    "dash.wheelKicker": "Treasure Wheel",
+    "dash.wheelReady": "Spin ready",
+    "dash.wheelDone": "Already spun today",
+    "dash.wheelNoName": "Sign in first",
+    "dash.wheelNoNameNote": "Pick a name and you get one spin a day.",
+    "dash.wheelStreak": "days in a row",
+    "dash.wheelComeBack": "Back again tomorrow.",
+    "dash.wheelFirst": "Your first spin is waiting.",
+    "dash.wheelCta": "To the wheel",
+    "dash.wheelCtaLogin": "Pick a name",
+    "dash.raceKicker": "Weekly race",
+    "dash.raceOf": "of",
+    "dash.raceTrack": "Track",
+    "dash.racePerSpin": "per spin",
+    "dash.racePerCode": "per code",
+    "dash.raceCta": "To the race",
+    "dash.codeKicker": "Secret code",
+    "dash.codeOf": "of",
+    "dash.codeOpen": "still unsolved",
+    "dash.codeCta": "Enter a code",
+    "dash.boardKicker": "Leaderboard",
+    "dash.boardLoading": "Loading leaderboard ...",
+    "dash.boardCta": "Full leaderboard",
 
     "home.cinematicEyebrow": "A journey begins",
     "home.cinematicTitle": "FIREHELMET",
@@ -803,6 +867,10 @@ function setLanguage(lang) {
   if (typeof loadLeaderboard === "function" && document.getElementById("leaderboard")?.classList.contains("active-page")) {
     loadLeaderboard();
   }
+  // Die Startseiten-Uebersicht baut ihre Texte beim Rendern zusammen
+  // und traegt daher keine data-i18n-Marken, die applyTranslations()
+  // nachziehen koennte - sie muss neu aufgebaut werden.
+  if (typeof fhRenderHomeDashboard === "function") fhRenderHomeDashboard();
   if (typeof renderRarityLegend === "function") renderRarityLegend();
   if (typeof renderShopGrid === "function" && document.getElementById("shop")?.classList.contains("active-page")) {
     renderShopGrid({ quiet: true });
