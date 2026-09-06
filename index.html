@@ -410,7 +410,13 @@
         </div>
 
         <div class="hero">
-          <h1 data-i18n="home.title">COUNTDOWN</h1>
+          <!-- War ein zweites <h1> auf derselben Seite. Die Startseite
+               hat aber genau EINEN Titel - "FIREHELMET" im Cinematic-
+               Auftakt weiter oben. Dieser Block hier ist bewusst die
+               Endphase desselben Ablaufs (siehe Kommentar oben), also
+               eine Unterueberschrift. Optisch aendert sich nichts, die
+               CSS-Regeln greifen weiterhin ueber .hero. -->
+          <h2 data-i18n="home.title">COUNTDOWN</h2>
           <p class="subtitle" data-i18n="home.subtitle">The new Story starts in ...</p>
 
           <div class="countdown">
@@ -524,7 +530,7 @@
           </a>
           <a href="https://discord.com" target="_blank" class="social-btn social-discord">
             <svg viewBox="0 0 24 24" class="social-icon"><path d="M20.3 4.4c-1.5-.7-3.1-1.2-4.7-1.4-.2.4-.4.9-.6 1.3-1.7-.3-3.5-.3-5.2 0-.2-.4-.4-.9-.6-1.3-1.6.3-3.2.7-4.7 1.4C1.5 8.4.8 12.4 1.1 16.3c1.8 1.3 3.5 2.1 5.2 2.7.4-.6.8-1.2 1.1-1.9-.6-.2-1.2-.5-1.7-.8.1-.1.3-.2.4-.3 3.3 1.5 6.9 1.5 10.2 0 .1.1.3.2.4.3-.6.3-1.1.6-1.7.8.3.7.7 1.3 1.1 1.9 1.7-.5 3.4-1.4 5.2-2.7.4-4.5-.8-8.4-2.9-11.9zM8.7 13.9c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9zm6.6 0c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9z"/></svg>
-            <span>Discord Channel</span>
+            <span>Discord</span>
           </a>
           <a href="https://instagram.com" target="_blank" class="social-btn social-instagram">
             <svg viewBox="0 0 24 24" class="social-icon"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.9.3 2.3.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.3 1.1.4 2.3.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.9-.4 2.3-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1.1.3-2.3.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.9-.3-2.3-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.3-1.1-.4-2.3C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.9.4-2.3.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1.1-.3 2.3-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1 .1-1.6.2-1.9.4-.5.2-.8.4-1.2.8-.4.4-.6.7-.8 1.2-.1.3-.3.9-.4 1.9-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c.1 1 .2 1.6.4 1.9.2.5.4.8.8 1.2.4.4.7.6 1.2.8.3.1.9.3 1.9.4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1-.1 1.6-.2 1.9-.4.5-.2.8-.4 1.2-.8.4-.4.6-.7.8-1.2.1-.3.3-.9.4-1.9.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-1-.2-1.6-.4-1.9-.2-.5-.4-.8-.8-1.2-.4-.4-.7-.6-1.2-.8-.3-.1-.9-.3-1.9-.4-1.2-.1-1.6-.1-4.7-.1zm0 3.5c3 0 5.5 2.5 5.5 5.5s-2.5 5.5-5.5 5.5-5.5-2.5-5.5-5.5S9 7.5 12 7.5zm0 9.1c2 0 3.6-1.6 3.6-3.6S14 9.4 12 9.4 8.4 11 8.4 13s1.6 3.6 3.6 3.6zm5.7-9.3c0 .7-.6 1.3-1.3 1.3s-1.3-.6-1.3-1.3.6-1.3 1.3-1.3 1.3.6 1.3 1.3z"/></svg>
@@ -535,16 +541,16 @@
         <a class="fh-audiobook-card" id="fh-audiobook-card" href="#" target="_blank" rel="noopener noreferrer" aria-label="Fire Helmet Hörspiel auf Spotify anhören">
           <span class="fh-audiobook-icon">🎧</span>
           <span class="fh-audiobook-copy">
-            <span class="fh-audiobook-title" data-i18n="socials.audiobookTitle">🎧 Das Fire-Helmet-Hörspiel</span>
+            <span class="fh-audiobook-title" data-i18n="socials.audiobookTitle">Das Fire-Helmet-Hörspiel</span>
             <span class="fh-audiobook-text" data-i18n="socials.audiobookText">Tauche noch tiefer in die Geschichte ein.</span>
           </span>
           <span class="fh-audiobook-button" data-i18n="socials.audiobookButton">Auf Spotify anhören</span>
         </a>
 
-        <a class="fh-audiobook-card" id="fh-game-card" href="https://rosebud.ai/play/andiis-schatzraub" target="_blank" rel="noopener noreferrer" aria-label="Andiis Schatzraub spielen">
+        <a class="fh-audiobook-card fh-audiobook-card-game" id="fh-game-card" href="https://rosebud.ai/play/andiis-schatzraub" target="_blank" rel="noopener noreferrer" aria-label="Andiis Schatzraub spielen">
           <span class="fh-audiobook-icon">🎮</span>
           <span class="fh-audiobook-copy">
-            <span class="fh-audiobook-title" data-i18n="socials.gameTitle">🎮 Andiis Schatzraub</span>
+            <span class="fh-audiobook-title" data-i18n="socials.gameTitle">Andiis Schatzraub</span>
             <span class="fh-audiobook-text" data-i18n="socials.gameText">Spiel das Schatzraub-Game und stell dein Glück auf die Probe.</span>
           </span>
           <span class="fh-audiobook-button" data-i18n="socials.gameButton">Jetzt spielen</span>

@@ -783,7 +783,8 @@ main {
   transition: transform .12s ease-out;
 }
 
-.hero h1 {
+.hero h1,
+.hero h2 {
   font-family: var(--fh-font-display);
   font-size: clamp(1.9rem, 8vw, 6.4rem);
   letter-spacing: clamp(1px, 1.3vw, 20px);
@@ -2292,7 +2293,8 @@ main {
    14. MOBILE
 ========================= */
 @media (max-width: 900px) {
-  .hero h1 {
+  .hero h1,
+  .hero h2 {
     font-size: clamp(1.9rem, 8vw, 50px);
     letter-spacing: clamp(1px, 1.3vw, 8px);
   }
@@ -5466,7 +5468,8 @@ main {
    (kleine Handys, ca. iPhone SE und schmaler)
 ===================================================== */
 @media (max-width: 400px) {
-  .hero h1 {
+  .hero h1,
+  .hero h2 {
     font-size: clamp(26px, 9.5vw, 38px);
     letter-spacing: clamp(1px, 0.5vw, 4px);
   }
@@ -12183,4 +12186,104 @@ body:has(#home.active-page) .fh-share-button { display: flex; }
    bleibt davon unberuehrt. */
 #fh-main:focus {
   outline: none;
+}
+
+/* =====================================================
+   SOCIALS-SEITE: RASTER UND FARBWELT
+   ---------------------------------------------------
+   Zwei Probleme, beide gemessen:
+
+   1. Bei 1440px war der Container 1073px breit, vier Karten
+      brauchten mit 250px Breite und 30px Abstand aber 1090px -
+      17px zu viel. Instagram rutschte dadurch allein in eine
+      zweite Reihe. Schmalere Karten und ein knapperer Abstand
+      lassen alle vier nebeneinander; wird es enger, bricht es
+      auf 2x2 um statt auf 3+1.
+
+   2. Die beiden Aktionskarten (Hoerspiel, Schatzraub) waren im
+      RUHEZUSTAND Spotify-gruen. Alle anderen Karten der Seite
+      sind neutral und zeigen ihre Plattformfarbe erst beim
+      Hover (siehe .social-youtube:hover usw.). Die zwei fielen
+      dadurch aus der Seite heraus - und die Schatzraub-Karte
+      trug Spotify-Gruen, obwohl sie gar nicht zu Spotify fuehrt.
+      Jetzt folgen beide derselben Regel: neutral, Farbe beim
+      Hover - Gruen fuers Hoerspiel, Gold fuer das Spiel.
+===================================================== */
+.social-container {
+  gap: 24px;
+}
+
+/* Prozentuale Spalten statt fester Kartenbreite: der Inhaltsbereich
+   ist je nach Breakpoint zwischen 576px und 1073px breit, und keine
+   feste Breite ergibt ueber diese ganze Spanne verlaesslich zwei
+   Karten pro Reihe - mal passten drei rein, mal nur eine. Mit
+   calc(50% - Abstand) sind es IMMER genau zwei, unabhaengig davon,
+   wie breit der Container gerade ist. */
+.social-container a {
+  width: auto;
+  flex: 0 0 calc(50% - 12px);
+  max-width: 340px;
+}
+
+/* Erst ab 1400px ist genug Platz fuer alle vier nebeneinander. */
+@media (min-width: 1400px) {
+  .social-container a {
+    flex-basis: calc(25% - 18px);
+    max-width: 260px;
+  }
+}
+
+/* ---- Aktionskarten: Ruhezustand neutral wie die Plattformkarten ---- */
+.fh-audiobook-card {
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border-color: var(--fh-border);
+}
+
+.fh-audiobook-card:hover {
+  border-color: rgba(30, 185, 84, .75);
+  box-shadow: var(--fh-shadow), 0 0 40px rgba(30, 185, 84, .28);
+}
+
+.fh-audiobook-button {
+  background: transparent;
+  border: 1px solid rgba(30, 185, 84, .6);
+  color: #4ade80;
+}
+
+.fh-audiobook-card:hover .fh-audiobook-button {
+  background: #1eb954;
+  border-color: #1eb954;
+  color: #04170c;
+}
+
+/* ---- Die Spiel-Karte fuehrt nicht zu Spotify: Hausfarbe statt Gruen ---- */
+.fh-audiobook-card-game:hover {
+  border-color: rgba(240, 201, 106, .75);
+  box-shadow: var(--fh-shadow), 0 0 40px rgba(240, 201, 106, .25);
+}
+
+.fh-audiobook-card-game .fh-audiobook-button {
+  border-color: rgba(240, 201, 106, .6);
+  color: var(--fh-gold-bright);
+}
+
+.fh-audiobook-card-game:hover .fh-audiobook-button {
+  background: var(--fh-gold-bright);
+  border-color: var(--fh-gold-bright);
+  color: #221703;
+}
+
+/* Das Icon-Rund traegt ebenfalls Spotify-Gruen (radialer Verlauf +
+   Rand). Fuer die Spiel-Karte ebenfalls auf die Hausfarbe. */
+.fh-audiobook-card-game .fh-audiobook-icon {
+  background: radial-gradient(circle at 35% 30%, rgba(240,201,106,.35), rgba(6,9,15,.9));
+  border-color: rgba(240,201,106,.5);
+}
+
+/* Unter 640px eine Karte pro Reihe. */
+@media (max-width: 640px) {
+  .social-container a {
+    flex-basis: 100%;
+    max-width: 320px;
+  }
 }

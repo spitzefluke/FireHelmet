@@ -135,11 +135,11 @@ const translations = {
     "spielothek.andiLose19": "Die Würfel mögen dich heute nicht besonders.",
     "spielothek.andiLose20": "Ich hab schon Papageien besser spielen sehen.",
 
-    "socials.audiobookTitle": "🎧 Das Fire-Helmet-Hörspiel",
+    "socials.audiobookTitle": "Das Fire-Helmet-Hörspiel",
     "socials.audiobookText": "Tauche noch tiefer in die Geschichte ein.",
     "socials.audiobookButton": "Auf Spotify anhören",
 
-    "socials.gameTitle": "🎮 Andiis Schatzraub",
+    "socials.gameTitle": "Andiis Schatzraub",
     "socials.gameText": "Spiel das Schatzraub-Game und stell dein Glück auf die Probe.",
     "socials.gameButton": "Jetzt spielen",
 
@@ -489,11 +489,11 @@ const translations = {
     "spielothek.andiLose19": "The dice just don't like you much today.",
     "spielothek.andiLose20": "I've seen parrots play better than that.",
 
-    "socials.audiobookTitle": "🎧 The Fire Helmet Audio Drama",
+    "socials.audiobookTitle": "The Fire Helmet Audio Drama",
     "socials.audiobookText": "Dive even deeper into the story.",
     "socials.audiobookButton": "Listen on Spotify",
 
-    "socials.gameTitle": "🎮 Andii's Treasure Heist",
+    "socials.gameTitle": "Andii's Treasure Heist",
     "socials.gameText": "Play the treasure heist game and test your luck.",
     "socials.gameButton": "Play now",
 
