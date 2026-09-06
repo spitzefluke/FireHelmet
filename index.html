@@ -119,31 +119,13 @@
       <span class="lang-switch-label lang-switch-label-en">🇬🇧 EN</span>
       <span class="lang-switch-knob"></span>
     </button>
-    <a data-page="login" onclick="changePage('login')"><span class="fh-nav-icon" aria-hidden="true">🎮</span><span class="fh-nav-label" data-i18n="menu.login">Anmelden</span></a>
 
-    <p class="fh-nav-section-label" data-i18n="menu.sectionExplore">Erkunden</p>
-    <a data-page="home" onclick="changePage('home')"><span class="fh-nav-icon" aria-hidden="true">🏠</span><span class="fh-nav-label" data-i18n="menu.home">Home</span></a>
-    <a data-page="story" onclick="changePage('story')"><span class="fh-nav-icon" aria-hidden="true">📖</span><span class="fh-nav-label" data-i18n="menu.story">Stories</span></a>
-    <a data-page="characters" onclick="changePage('characters')"><span class="fh-nav-icon" aria-hidden="true">👤</span><span class="fh-nav-label" data-i18n="menu.characters">Characters</span></a>
-    <a data-page="socials" onclick="changePage('socials')"><span class="fh-nav-icon" aria-hidden="true">🌐</span><span class="fh-nav-label" data-i18n="menu.socials">Socials</span></a>
+    <!-- Die Menuepunkte werden hier zur Laufzeit aus der
+         Desktop-Sidebar (.fh-sidebar-nav) eingesetzt, damit die
+         Liste nur EINMAL gepflegt werden muss.
+         Siehe scripts/core/nav-sync.js. -->
+    <div data-fh-nav-slot hidden></div>
 
-    <p class="fh-nav-section-label" data-i18n="menu.sectionGames">Spiele</p>
-    <a data-page="shop" onclick="changePage('shop')"><span class="fh-nav-icon" aria-hidden="true">🛒</span><span class="fh-nav-label" data-i18n="menu.shop">Shop</span></a>
-    <a data-page="code" onclick="changePage('code')"><span class="fh-nav-icon" aria-hidden="true">🔑</span><span class="fh-nav-label" data-i18n="menu.code">Code</span></a>
-    <a data-page="wheel" onclick="changePage('wheel')"><span class="fh-nav-icon" aria-hidden="true">🧭</span><span class="fh-nav-label" data-i18n="menu.wheel">Schatzrad</span></a>
-    <a data-page="spielothek" onclick="changePage('spielothek')"><span class="fh-nav-icon" aria-hidden="true">🎰</span><span class="fh-nav-label" data-i18n="menu.spielothek">Ändiis Spielothek</span></a>
-    <a data-page="leaderboard" onclick="changePage('leaderboard')"><span class="fh-nav-icon" aria-hidden="true">🏆</span><span class="fh-nav-label" data-i18n="menu.leaderboard">Rangliste</span></a>
-    <a data-page="tournament" onclick="changePage('tournament')"><span class="fh-nav-icon" aria-hidden="true"><img class="fh-nav-cap-icon" src="assets/piratenpass/cap.webp" alt="" aria-hidden="true"></span><span class="fh-nav-label" data-i18n="menu.tournament">THE CHALLENGE</span></a>
-    <a data-page="race" onclick="changePage('race')"><span class="fh-nav-icon" aria-hidden="true">🏎️</span><span class="fh-nav-label" data-i18n="menu.race">Wochenrennen</span></a>
-    <a data-page="community-boss" onclick="changePage('community-boss')"><span class="fh-nav-icon" aria-hidden="true">🐙</span><span class="fh-nav-label" data-i18n="menu.communityBoss">Community-Boss</span></a>
-    <a data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true">❓</span><span class="fh-nav-label" data-i18n="menu.streamraetsel">???</span></a>
-    <a data-page="ship-repair" onclick="changePage('ship-repair')"><span class="fh-nav-icon" aria-hidden="true">⚒</span><span class="fh-nav-label" data-i18n="menu.shipRepair">Repariere das Schiff</span></a>
-    <a data-page="detective-case" onclick="changePage('detective-case')"><span class="fh-nav-icon" aria-hidden="true">🕵️</span><span class="fh-nav-label" data-i18n="menu.detectiveCase">Der Fall</span></a>
-
-    <p class="fh-nav-section-label" data-i18n="menu.sectionMore">Mehr</p>
-    <a data-page="support" onclick="changePage('support')"><span class="fh-nav-icon" aria-hidden="true">🆘</span><span class="fh-nav-label" data-i18n="menu.support">Support</span></a>
-    <a data-page="rating" onclick="changePage('rating')"><span class="fh-nav-icon" aria-hidden="true">⭐</span><span class="fh-nav-label" data-i18n="menu.rating">Bewertung</span></a>
-    <a href="https://spitzefluke.github.io/daveawards/" target="_blank" rel="noopener noreferrer"><span class="fh-nav-icon" aria-hidden="true">🏅</span><span class="fh-nav-label" data-i18n="menu.daveAwards">Dave Awards</span></a>
     <a data-page="gateway" onclick="changePage('gateway')" class="fh-gateway-link">⚙ Gateway</a>
   </nav>
 
@@ -1158,6 +1140,19 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollSmoother.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js" defer></script>
 
+  <!-- Seit GSAP 3.13 sind alle frueheren Club-Plugins frei nutzbar.
+       Diese vier kommen neu dazu:
+       SplitText     - Titel buchstabenweise einblenden (cinematic.js)
+       DrawSVGPlugin - Rennstrecke zeichnen (race.js)
+       Flip          - Ranglisten-Plaetze umsortieren (wheel.js)
+       CustomEase    - eigene Auslauf-Kurve fuers Schatzrad (wheel.js)
+       Jedes davon wird einzeln geprueft, siehe gsap-init.js -
+       faellt eines aus, laufen die anderen weiter. -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/DrawSVGPlugin.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/Flip.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/CustomEase.min.js" defer></script>
+
   <!-- Motion (npm-Paket "motion", siehe package.json) - UMD-Build wie
        oben bei GSAP, haengt sich global als "Motion" an window (kein
        Bundler vorhanden, daher kein "import { animate } from 'motion'").
@@ -1184,6 +1179,8 @@
   <!-- Ladeplatzhalter, genutzt von wheel.js (Rangliste). -->
   <script src="scripts/core/skeleton.js" defer></script>
   <script src="scripts/core/field-counter.js" defer></script>
+  <script src="scripts/core/nav-sync.js" defer></script>
+  <script src="scripts/core/path-draw.js" defer></script>
   <script src="scripts/core/quick-search.js" defer></script>
   <script src="scripts/core/share.js" defer></script>
   <script src="scripts/core/fire-helmet-config.js" defer></script>

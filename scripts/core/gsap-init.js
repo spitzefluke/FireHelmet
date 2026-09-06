@@ -35,6 +35,10 @@
     "ScrollTrigger",
     "ScrollSmoother",
     "ScrollToPlugin",
+    "SplitText",
+    "DrawSVGPlugin",
+    "Flip",
+    "CustomEase",
   ];
 
   const fehlend = [];

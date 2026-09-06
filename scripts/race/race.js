@@ -783,6 +783,44 @@ function playDailyBonusAnimation(points) {
 /* ------------------------------------------------------
    SEITENWECHSEL-HOOK
 ------------------------------------------------------ */
+/* ------------------------------------------------------
+   STRECKE ZEICHNEN (GSAP DrawSVGPlugin)
+   ---------------------------------------------------
+   Die Fahrbahn war beim Betreten der Seite einfach da. Jetzt
+   waechst sie in gut einer Sekunde von der Ziellinie aus - erst
+   der dunkle Asphalt, kurz versetzt die hellere Innenbahn, zum
+   Schluss die gestrichelte Mittellinie.
+
+   DrawSVG arbeitet ueber stroke-dasharray/-dashoffset. Das
+   beruehrt getPointAtLength() NICHT, mit dem race.js die
+   Kart-Positionen auf dem Pfad berechnet - die Karts stehen also
+   waehrenddessen und danach exakt richtig.
+
+   Die Mittellinie ist bewusst ausgenommen: sie traegt schon ein
+   eigenes stroke-dasharray (die Striche), das DrawSVG
+   ueberschreiben wuerde. Sie wird stattdessen eingeblendet.
+------------------------------------------------------ */
+function drawRaceTrack() {
+  const prefersReduced = window.matchMedia
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReduced) return;
+  if (typeof gsap === "undefined" || typeof DrawSVGPlugin === "undefined") return;
+
+  const road = document.getElementById("race-track-path");
+  const inner = document.getElementById("race-road-inner");
+  const center = document.getElementById("race-center-line");
+  if (!road || !road.getAttribute("d")) return;
+
+  const tl = gsap.timeline();
+  tl.fromTo(road, { drawSVG: "0%" }, { drawSVG: "100%", duration: 1.1, ease: "power2.inOut" });
+  if (inner) {
+    tl.fromTo(inner, { drawSVG: "0%" }, { drawSVG: "100%", duration: 1.1, ease: "power2.inOut" }, 0.12);
+  }
+  if (center) {
+    tl.fromTo(center, { opacity: 0 }, { opacity: 0.45, duration: 0.4 }, 0.95);
+  }
+}
+
 function updateRacePage(pageID) {
   if (pageID !== "race") {
     stopRaceCountdown();
@@ -791,6 +829,7 @@ function updateRacePage(pageID) {
   }
 
   buildRaceTrack();
+  drawRaceTrack();
   refreshOwnRaceProgress();
   refreshRaceDailyStatus();
   loadRaceLeaderboard();

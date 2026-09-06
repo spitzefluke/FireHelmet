@@ -502,6 +502,11 @@ body.lang-en {
   position: relative;
   display: flex;
   align-items: center;
+  /* Seit die Menuepunkte ihr Emoji in einer eigenen Icon-Spalte
+     tragen, braucht es hier einen Abstand - vorher klebte der Text
+     direkt am Icon ("🎮Anmelden"). Die Desktop-Sidebar hat ihn
+     ueber .fh-nav-item schon. */
+  gap: 12px;
   min-height: 48px;
   padding: 14px 20px;
   margin-bottom: 12px;

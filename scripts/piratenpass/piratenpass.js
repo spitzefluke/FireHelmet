@@ -263,6 +263,12 @@ async function renderPassPage() {
 
   staggerReveal(container, ".piratenpass-node");
 
+  // Erreichte Verbinder von links nach rechts wachsen lassen -
+  // siehe scripts/core/path-draw.js.
+  if (typeof fhDrawConnectors === "function") {
+    fhDrawConnectors(container, ".piratenpass-connector-filled");
+  }
+
   if (capReached || hasCap) upgradeCapBadgeIfImageExists();
 
   if (!piratenpassAutoScrolled) {

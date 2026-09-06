@@ -1135,8 +1135,43 @@ function spinWheel() {
   setTimeout(() => {
     if (wrapper) wrapper.classList.add("wheel-spinning");
 
-    disc.style.transition = "transform 4.8s cubic-bezier(0.15, 0.7, 0.15, 1)";
-    disc.style.transform = `rotate(${finalRotation}deg)`;
+    // Auslauf des Rades. Die DAUER bleibt in beiden Faellen exakt 4,8s -
+    // die Gutschrift haengt am setTimeout weiter unten (5200ms) und darf
+    // sich auf keinen Fall gegen die sichtbare Landung verschieben.
+    if (typeof gsap !== "undefined" && typeof CustomEase !== "undefined") {
+      // Eine cubic-bezier-Kurve hat nur zwei Kontrollpunkte und kann
+      // deshalb nur "schnell, dann langsam". Ein echtes Rad rennt erst,
+      // rollt lange aus und kriecht die letzten Grad fast unmerklich -
+      // dafuer braucht es mehr Stuetzpunkte, als eine Bezier hergibt.
+      if (!CustomEase.get("fhWheelSettle")) {
+        // Nachgemessen gegen die alte Kurve: die brachte nach einem
+        // Viertel der Zeit schon 77,8 % der Drehung hinter sich, nach der
+        // Haelfte 94 % - das Rad stand gefuehlt fast, waehrend die Uhr
+        // noch lief. Ein Rad, das nur von Reibung gebremst wird, kommt
+        // bei gleichmaessiger Verzoegerung auf 43,8 / 75 / 93,8 %.
+        // Diese Kurve liegt mit 38,8 / 71,6 / 92,2 % nah daran: es
+        // rollt sichtbar bis in die letzte Sekunde weiter.
+        CustomEase.create(
+          "fhWheelSettle",
+          "M0,0 C0.1,0.13 0.24,0.4 0.42,0.63 0.58,0.81 0.72,0.92 0.85,0.972 0.92,0.992 0.97,1 1,1"
+        );
+      }
+      disc.style.transition = "none";
+      // fromTo statt to: die Zeilen weiter oben setzen "transform"
+      // direkt per Inline-Style (rotate(0deg), dann rotate(-14deg)).
+      // GSAP fuehrt fuer Transforms einen eigenen Zwischenspeicher und
+      // bekaeme davon nichts mit - beim ZWEITEN Dreh in derselben
+      // Sitzung wuerde der Tween sonst vom zuletzt getweenten Winkel
+      // statt von -14 Grad starten und das Rad spraenge sichtbar.
+      gsap.fromTo(
+        disc,
+        { rotation: -14 },
+        { rotation: finalRotation, duration: 4.8, ease: "fhWheelSettle" }
+      );
+    } else {
+      disc.style.transition = "transform 4.8s cubic-bezier(0.15, 0.7, 0.15, 1)";
+      disc.style.transform = `rotate(${finalRotation}deg)`;
+    }
   }, 360);
 
   // Das Rad landet visuell nach ~5.15s (.35s Anlauf + 4.8s Drehung) -
