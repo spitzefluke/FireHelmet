@@ -746,6 +746,15 @@ async function checkCode() {
       playCodeAudio(match);
 
       if (match.image && imageEl) {
+        // Absicherung: laedt das Bild nicht (Datei fehlt, falscher Pfad,
+        // kaputte Datei), soll KEIN zerbrochenes Bild-Symbol stehen
+        // bleiben - dann bleibt nur die Nachricht. Genau das war bei
+        // raetsel1.png der Fall, siehe Kommentar in codes-data.js.
+        imageEl.onerror = () => {
+          imageEl.classList.remove("visible");
+          imageEl.removeAttribute("src");
+          console.warn("Code-Bild konnte nicht geladen werden:", match.image);
+        };
         imageEl.src = match.image;
         imageEl.classList.add("visible");
       } else if (imageEl) {
@@ -780,6 +789,15 @@ async function checkCode() {
       playCodeAudio(match);
 
       if (match.image && imageEl) {
+        // Absicherung: laedt das Bild nicht (Datei fehlt, falscher Pfad,
+        // kaputte Datei), soll KEIN zerbrochenes Bild-Symbol stehen
+        // bleiben - dann bleibt nur die Nachricht. Genau das war bei
+        // raetsel1.png der Fall, siehe Kommentar in codes-data.js.
+        imageEl.onerror = () => {
+          imageEl.classList.remove("visible");
+          imageEl.removeAttribute("src");
+          console.warn("Code-Bild konnte nicht geladen werden:", match.image);
+        };
         imageEl.src = match.image;
         imageEl.classList.add("visible");
       } else if (imageEl) {

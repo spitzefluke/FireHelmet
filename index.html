@@ -1107,26 +1107,44 @@
   <!-- Supabase (Anmeldung UND Spieler-Datenbank, siehe supabase/game-migration/README.md - Firebase wurde komplett entfernt,
        nachdem sich die Firebase<->Supabase-Bruecke ("Third-Party Auth") auf dem echten Projekt als nicht zuverlaessig erwiesen hat).
        Version bewusst fest gepinnt (nicht "@2" o.ä.), damit ein Update der CDN-Version nicht ungetestet auf der Live-Seite landet. -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
+  <!-- ============================================================
+       ALLE SKRIPTE MIT defer
+       ---------------------------------------------------
+       Vorher blockierten alle 86 <script>-Tags den Seitenaufbau:
+       der Browser musste jedes einzelne laden und ausfuehren,
+       bevor er weiterzeichnen durfte.
+
+       defer aendert NICHTS an der Reihenfolge - deferred Skripte
+       laufen weiterhin exakt in Dokumentreihenfolge, nur eben erst
+       nach dem Parsen und noch vor DOMContentLoaded. Beides ist
+       hier Voraussetzung: gsap-init.js braucht die GSAP-Tags davor,
+       supabase-client.js braucht turnstile-config.js, und 20 Dateien
+       haengen an DOMContentLoaded.
+
+       Die Inline-Handler im Markup (onclick="changePage(...)")
+       brauchen ihre Funktionen erst beim Klick, also lange nachdem
+       alle Skripte gelaufen sind.
+  ============================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js" defer></script>
 
   <!-- GSAP (Animationen). Kein Bundler hier, daher als globale
        <script>-Tags statt "import { gsap } from 'gsap'" - jedes
        Plugin haengt sich als globale Variable an window, die
        registerPlugin()-Aufrufe stehen in scripts/core/gsap-init.js. -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/MotionPathPlugin.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/MorphSVGPlugin.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollSmoother.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/MotionPathPlugin.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/MorphSVGPlugin.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollSmoother.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js" defer></script>
 
   <!-- Motion (npm-Paket "motion", siehe package.json) - UMD-Build wie
        oben bei GSAP, haengt sich global als "Motion" an window (kein
        Bundler vorhanden, daher kein "import { animate } from 'motion'").
        Version fest auf die lokal installierte gepinnt. -->
-  <script src="https://cdn.jsdelivr.net/npm/motion@13.1.1/dist/motion.js"></script>
-  <script src="scripts/core/motion-fx.js"></script>
-  <script src="scripts/core/gsap-init.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/motion@13.1.1/dist/motion.js" defer></script>
+  <script src="scripts/core/motion-fx.js" defer></script>
+  <script src="scripts/core/gsap-init.js" defer></script>
 
   <!-- three.js (WebGL-Sternenfeld/Glut-Partikel der Home-Eroeffnungs-
        sequenz, siehe scripts/home/journey-scene-3d.js). Bewusst auf
@@ -1135,87 +1153,87 @@
        nur noch ES-Module - 0.160.0 ist die letzte Version mit dem
        klassischen <script>-Tag-Build, der zu Supabase/GSAP/Motion hier
        passt (kein Bundler, kein Import-Map-Pattern im restlichen Projekt). -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script src="scripts/core/celebration-burst-3d.js"></script>
-  <script src="scripts/core/sidebar-ambient-3d.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
+  <script src="scripts/core/celebration-burst-3d.js" defer></script>
+  <script src="scripts/core/sidebar-ambient-3d.js" defer></script>
 
   <!-- SCRIPTS -->
   <!-- Muss vor allen Skripten stehen, die fhNotice() aufrufen
        (discord-auth.js, twitch-auth.js, stories.js). -->
-  <script src="scripts/core/notice.js"></script>
+  <script src="scripts/core/notice.js" defer></script>
   <!-- Ladeplatzhalter, genutzt von wheel.js (Rangliste). -->
-  <script src="scripts/core/skeleton.js"></script>
-  <script src="scripts/core/quick-search.js"></script>
-  <script src="scripts/core/share.js"></script>
-  <script src="scripts/core/fire-helmet-config.js"></script>
-  <script src="scripts/core/i18n.js"></script>
-  <script src="scripts/core/audiobook-link.js"></script>
-  <script src="scripts/core/update-notice-data.js"></script>
-  <script src="scripts/core/update-notice.js"></script>
-  <script src="scripts/codes/codes-data.js"></script>
-  <script src="scripts/music/music-data.js"></script>
-  <script src="scripts/music/music-player.js"></script>
-  <script src="scripts/wheel/wheel-data.js"></script>
-  <script src="scripts/wheel/avatars-data.js"></script>
-  <script src="scripts/core/progression-data.js"></script>
-  <script src="scripts/wheel/nickname-filter-data.js"></script>
-  <script src="scripts/wheel/nickname-filter.js"></script>
-  <script src="scripts/race/race-data.js"></script>
-  <script src="scripts/community-boss/community-boss-data.js"></script>
-  <script src="scripts/streamraetsel/streamraetsel-data.js"></script>
-  <script src="scripts/auth/twitch-config.js"></script>
-  <script src="scripts/auth/twitch-auth.js"></script>
-  <script src="scripts/auth/discord-config.js"></script>
-  <script src="scripts/auth/discord-auth.js"></script>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
-  <script src="scripts/supabase/turnstile-config.js"></script>
-  <script src="scripts/supabase/supabase-config.js"></script>
-  <script src="scripts/supabase/supabase-proxy-data.js"></script>
-  <script src="scripts/supabase/supabase-client.js"></script>
-  <script src="scripts/supabase/supabase-players.js"></script>
-  <script src="scripts/tournament/tournament-api.js"></script>
-  <script src="scripts/tournament/tournament-data.js"></script>
-  <script src="scripts/tournament/tournament-bracket.js"></script>
-  <script src="scripts/tournament/games/reaction-game.js"></script>
-  <script src="scripts/tournament/tournament.js"></script>
-  <script src="scripts/supabase/supabase-games.js"></script>
-  <script src="scripts/supabase/supabase-statistics.js"></script>
-  <script src="scripts/core/site-config.js"></script>
-  <script src="scripts/core/discord-notify-data.js"></script>
-  <script src="scripts/core/discord-notify.js"></script>
-  <script src="scripts/core/countdown.js"></script>
-  <script src="scripts/home/home-crack-data.js"></script>
-  <script src="scripts/home/home-crack.js"></script>
-  <script src="scripts/home/journey-scene-3d.js"></script>
-  <script src="scripts/home/cinematic.js"></script>
-  <script src="scripts/stories/stories-data.js"></script>
-  <script src="scripts/characters/characters-data.js"></script>
-  <script src="scripts/stories/stories.js"></script>
-  <script src="scripts/characters/characters.js"></script>
-  <script src="scripts/detective/detective-case-data.js"></script>
-  <script src="scripts/detective/detective-case.js"></script>
-  <script src="scripts/race/race.js"></script>
-  <script src="scripts/community-boss/community-boss.js"></script>
-  <script src="scripts/wheel/wheel.js"></script>
-  <script src="scripts/core/progression.js"></script>
-  <script src="scripts/core/level-path.js"></script>
-  <script src="scripts/piratenpass/piratenpass.js"></script>
-  <script src="scripts/spielothek/spielothek-data.js"></script>
-  <script src="scripts/spielothek/games/slot.js"></script>
-  <script src="scripts/spielothek/spielothek.js"></script>
-  <script src="scripts/shop/shop-data.js"></script>
-  <script src="scripts/shop/shop-rotation.js"></script>
-  <script src="scripts/shop/shop.js"></script>
-  <script src="scripts/streamraetsel/streamraetsel.js"></script>
-  <script src="scripts/ship/ship-repair-data.js"></script>
-  <script src="scripts/ship/ship-repair.js"></script>
-  <script src="scripts/core/admin-gateway.js"></script>
-  <script src="scripts/support/support.js"></script>
-  <script src="scripts/rating/rating.js"></script>
-  <script src="scripts/core/main.js"></script>
-  <script src="scripts/codes/code-button-effect.js"></script>
-  <script src="scripts/codes/code-ambient-fx.js"></script>
-  <script src="scripts/codes/code-history.js"></script>
+  <script src="scripts/core/skeleton.js" defer></script>
+  <script src="scripts/core/quick-search.js" defer></script>
+  <script src="scripts/core/share.js" defer></script>
+  <script src="scripts/core/fire-helmet-config.js" defer></script>
+  <script src="scripts/core/i18n.js" defer></script>
+  <script src="scripts/core/audiobook-link.js" defer></script>
+  <script src="scripts/core/update-notice-data.js" defer></script>
+  <script src="scripts/core/update-notice.js" defer></script>
+  <script src="scripts/codes/codes-data.js" defer></script>
+  <script src="scripts/music/music-data.js" defer></script>
+  <script src="scripts/music/music-player.js" defer></script>
+  <script src="scripts/wheel/wheel-data.js" defer></script>
+  <script src="scripts/wheel/avatars-data.js" defer></script>
+  <script src="scripts/core/progression-data.js" defer></script>
+  <script src="scripts/wheel/nickname-filter-data.js" defer></script>
+  <script src="scripts/wheel/nickname-filter.js" defer></script>
+  <script src="scripts/race/race-data.js" defer></script>
+  <script src="scripts/community-boss/community-boss-data.js" defer></script>
+  <script src="scripts/streamraetsel/streamraetsel-data.js" defer></script>
+  <script src="scripts/auth/twitch-config.js" defer></script>
+  <script src="scripts/auth/twitch-auth.js" defer></script>
+  <script src="scripts/auth/discord-config.js" defer></script>
+  <script src="scripts/auth/discord-auth.js" defer></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
+  <script src="scripts/supabase/turnstile-config.js" defer></script>
+  <script src="scripts/supabase/supabase-config.js" defer></script>
+  <script src="scripts/supabase/supabase-proxy-data.js" defer></script>
+  <script src="scripts/supabase/supabase-client.js" defer></script>
+  <script src="scripts/supabase/supabase-players.js" defer></script>
+  <script src="scripts/tournament/tournament-api.js" defer></script>
+  <script src="scripts/tournament/tournament-data.js" defer></script>
+  <script src="scripts/tournament/tournament-bracket.js" defer></script>
+  <script src="scripts/tournament/games/reaction-game.js" defer></script>
+  <script src="scripts/tournament/tournament.js" defer></script>
+  <script src="scripts/supabase/supabase-games.js" defer></script>
+  <script src="scripts/supabase/supabase-statistics.js" defer></script>
+  <script src="scripts/core/site-config.js" defer></script>
+  <script src="scripts/core/discord-notify-data.js" defer></script>
+  <script src="scripts/core/discord-notify.js" defer></script>
+  <script src="scripts/core/countdown.js" defer></script>
+  <script src="scripts/home/home-crack-data.js" defer></script>
+  <script src="scripts/home/home-crack.js" defer></script>
+  <script src="scripts/home/journey-scene-3d.js" defer></script>
+  <script src="scripts/home/cinematic.js" defer></script>
+  <script src="scripts/stories/stories-data.js" defer></script>
+  <script src="scripts/characters/characters-data.js" defer></script>
+  <script src="scripts/stories/stories.js" defer></script>
+  <script src="scripts/characters/characters.js" defer></script>
+  <script src="scripts/detective/detective-case-data.js" defer></script>
+  <script src="scripts/detective/detective-case.js" defer></script>
+  <script src="scripts/race/race.js" defer></script>
+  <script src="scripts/community-boss/community-boss.js" defer></script>
+  <script src="scripts/wheel/wheel.js" defer></script>
+  <script src="scripts/core/progression.js" defer></script>
+  <script src="scripts/core/level-path.js" defer></script>
+  <script src="scripts/piratenpass/piratenpass.js" defer></script>
+  <script src="scripts/spielothek/spielothek-data.js" defer></script>
+  <script src="scripts/spielothek/games/slot.js" defer></script>
+  <script src="scripts/spielothek/spielothek.js" defer></script>
+  <script src="scripts/shop/shop-data.js" defer></script>
+  <script src="scripts/shop/shop-rotation.js" defer></script>
+  <script src="scripts/shop/shop.js" defer></script>
+  <script src="scripts/streamraetsel/streamraetsel.js" defer></script>
+  <script src="scripts/ship/ship-repair-data.js" defer></script>
+  <script src="scripts/ship/ship-repair.js" defer></script>
+  <script src="scripts/core/admin-gateway.js" defer></script>
+  <script src="scripts/support/support.js" defer></script>
+  <script src="scripts/rating/rating.js" defer></script>
+  <script src="scripts/core/main.js" defer></script>
+  <script src="scripts/codes/code-button-effect.js" defer></script>
+  <script src="scripts/codes/code-ambient-fx.js" defer></script>
+  <script src="scripts/codes/code-history.js" defer></script>
 
 </body>
 </html>
