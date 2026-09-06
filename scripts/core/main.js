@@ -6,6 +6,12 @@
    SEITENWECHSEL
 ------------------------------------------------------ */
 function changePage(pageID) {
+  // VOR dem Umschalten merken, wo der Fokus war: sobald die alte Seite
+  // auf display:none geht, setzt der Browser den Fokus von selbst auf
+  // <body> zurueck - danach liesse sich nicht mehr feststellen, ob der
+  // Nutzer gerade in einem Feld getippt hat.
+  const fokusVorher = document.activeElement;
+
   const pages = document.querySelectorAll(".page");
   pages.forEach((page) => page.classList.remove("active-page"));
 
@@ -71,6 +77,51 @@ function changePage(pageID) {
 
   updateActiveNavHighlight(pageID);
   closeMenu();
+  moveFocusToPage(pageID, fokusVorher);
+}
+
+/* ------------------------------------------------------
+   FOKUS AUF DIE NEUE SEITE
+   ---------------------------------------------------
+   Nach einem Seitenwechsel blieb der Fokus auf <body>. Wer mit
+   der Tastatur navigiert, landete beim naechsten Tab wieder ganz
+   oben in der Navigation statt im Inhalt - und Screenreader
+   bekamen vom Wechsel gar nichts mit, weil die Seite technisch
+   nie neu geladen wird.
+
+   Absichtlich nur bei einem ECHTEN Wechsel und ohne Scroll-
+   Sprung (preventScroll), damit die Seite dabei nicht springt.
+   Der Fokus geht auf <main id="fh-main">, nicht auf ein Element
+   innerhalb der Seite - so bleibt die Tab-Reihenfolge danach die
+   natuerliche.
+------------------------------------------------------ */
+let fhLastFocusedPage = null;
+
+function moveFocusToPage(pageID, fokusVorher) {
+  if (pageID === fhLastFocusedPage) return;
+  fhLastFocusedPage = pageID;
+
+  const main = document.getElementById("fh-main");
+  if (!main) return;
+
+  // Nicht dazwischenfunken, wenn der Nutzer in einem Feld getippt hat,
+  // DAS ES NOCH GIBT - etwa weil das Feld ausserhalb der Seiten liegt.
+  // Ein Feld auf der verlassenen Seite ist dagegen weg, dort waere ein
+  // Fokus auf <body> das schlechtere Ergebnis.
+  if (
+    fokusVorher &&
+    /^(INPUT|TEXTAREA|SELECT)$/.test(fokusVorher.tagName) &&
+    fokusVorher.isConnected &&
+    fokusVorher.offsetParent !== null
+  ) {
+    return;
+  }
+
+  try {
+    main.focus({ preventScroll: true });
+  } catch (err) {
+    main.focus();
+  }
 }
 
 /* ------------------------------------------------------

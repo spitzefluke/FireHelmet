@@ -598,12 +598,15 @@
 
         <div id="wheel-nickname-box" class="wheel-nickname-box">
           <div id="wheel-avatar-picker" class="wheel-avatar-picker"></div>
+          <label class="fh-visually-hidden" for="wheel-nickname-input"
+                 data-i18n="login.nameLabel">Dein Name in der Crew</label>
           <input
             type="text"
             id="wheel-nickname-input"
             class="code-input"
             placeholder="Namen manuell eintragen" data-i18n-placeholder="login.namePlaceholder"
             maxlength="18"
+            data-fh-counter
             autocomplete="off">
           <button class="code-button" onclick="saveNickname()" data-i18n="common.save">Speichern</button>
           <p id="nickname-error" class="nickname-error"></p>
@@ -677,6 +680,8 @@
         <audio id="code-audio-player"></audio>
 
         <div class="code-box">
+          <label class="fh-visually-hidden" for="code-input"
+                 data-i18n="code.inputLabel">Geheimcode</label>
           <input
             type="text"
             id="code-input"
@@ -1049,7 +1054,13 @@
 
         <div id="support-report-box" class="support-report-box">
           <h2 data-i18n="support.reportTitle">🐞 Fehler melden / Anliegen</h2>
-          <textarea id="support-report-message" class="support-report-textarea" placeholder="Beschreibe kurz, was los ist ..." data-i18n-placeholder="support.reportPlaceholder"></textarea>
+          <label class="fh-visually-hidden" for="support-report-message"
+                 data-i18n="support.reportLabel">Beschreibung des Problems</label>
+          <!-- maxlength spiegelt die Datenbank-Grenze aus
+               supabase/game-migration/05-site-data.sql (1 bis 2000
+               Zeichen). Vorher wurde zu langer Text erst beim
+               Absenden abgewiesen. -->
+          <textarea id="support-report-message" class="support-report-textarea" placeholder="Beschreibe kurz, was los ist ..." data-i18n-placeholder="support.reportPlaceholder" maxlength="2000" data-fh-counter></textarea>
           <button class="code-button" onclick="submitSupportReport()" data-i18n="support.reportSend">Absenden</button>
           <p id="support-report-status" class="wheel-status"></p>
         </div>
@@ -1078,7 +1089,10 @@
             <span class="rating-star" data-value="5">★</span>
           </div>
 
-          <textarea id="rating-comment" class="support-report-textarea" placeholder="Was gefällt dir, was können wir besser machen? (optional)" data-i18n-placeholder="rating.commentPlaceholder"></textarea>
+          <label class="fh-visually-hidden" for="rating-comment"
+                 data-i18n="rating.commentLabel">Dein Kommentar (optional)</label>
+          <!-- maxlength spiegelt site_ratings_comment_len (max. 500). -->
+          <textarea id="rating-comment" class="support-report-textarea" placeholder="Was gefällt dir, was können wir besser machen? (optional)" data-i18n-placeholder="rating.commentPlaceholder" maxlength="500" data-fh-counter></textarea>
 
           <button class="code-button" onclick="submitRating()" data-i18n="rating.submitButton">Bewertung abschicken</button>
           <p id="rating-status" class="wheel-status"></p>
@@ -1163,6 +1177,7 @@
   <script src="scripts/core/notice.js" defer></script>
   <!-- Ladeplatzhalter, genutzt von wheel.js (Rangliste). -->
   <script src="scripts/core/skeleton.js" defer></script>
+  <script src="scripts/core/field-counter.js" defer></script>
   <script src="scripts/core/quick-search.js" defer></script>
   <script src="scripts/core/share.js" defer></script>
   <script src="scripts/core/fire-helmet-config.js" defer></script>
