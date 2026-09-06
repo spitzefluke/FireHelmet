@@ -20,6 +20,10 @@
 (function () {
   let bgMusic = null;
   let musicToggle = null;
+  // Zweiter Schalter in der Topbar (Entwurf 1c). Der alte frei
+  // schwebende Knopf bleibt fuer alles unter 1024px bestehen, wo es
+  // keine Topbar gibt - beide zeigen denselben Zustand.
+  let topbarToggle = null;
 
   let musicMuted = false;
   let pendingAutoplay = false;
@@ -149,8 +153,14 @@
   }
 
   function updateToggleIcon() {
-    if (!musicToggle) return;
-    musicToggle.textContent = musicMuted ? "🔇" : "🔊";
+    if (musicToggle) musicToggle.textContent = musicMuted ? "🔇" : "🔊";
+
+    // Die Topbar arbeitet mit Phosphor-Symbolen statt Emoji.
+    const icon = topbarToggle && topbarToggle.querySelector("i");
+    if (icon) {
+      icon.classList.toggle("ph-speaker-high", !musicMuted);
+      icon.classList.toggle("ph-speaker-slash", musicMuted);
+    }
   }
 
   function updateMusicForPage(pageID) {
@@ -159,9 +169,11 @@
     onHomePage = pageID === "home";
 
     if (!musicToggle) musicToggle = document.getElementById("music-toggle");
+    if (!topbarToggle) topbarToggle = document.getElementById("fh-topbar-music");
 
     if (onHomePage) {
       if (musicToggle) musicToggle.style.display = "flex";
+      if (topbarToggle) topbarToggle.style.display = "inline-flex";
 
       if (!bgMusic.src) {
         loadRandomNextTrack();
@@ -179,6 +191,7 @@
       startWatchdog();
     } else {
       if (musicToggle) musicToggle.style.display = "none";
+      if (topbarToggle) topbarToggle.style.display = "none";
       stopWatchdog();
 
       // Sanft ausblenden statt hart zu stoppen, dann erst pausieren
@@ -230,6 +243,7 @@
   function init() {
     bgMusic = document.getElementById("bg-music");
     musicToggle = document.getElementById("music-toggle");
+    topbarToggle = document.getElementById("fh-topbar-music");
     if (!bgMusic) return;
 
     bgMusic.addEventListener("ended", playNextTrack);

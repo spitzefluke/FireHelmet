@@ -274,14 +274,34 @@ async function buyShopItem(itemId) {
 /* ------------------------------------------------------
    WÄHRUNGSANZEIGE
 ------------------------------------------------------ */
-async function refreshShopCurrencyDisplay() {
+/* Schreibt einen Betrag in ALLE Anzeigen, die ihn zeigen: die grosse
+   Zahl im Shop und - seit dem 1c-Umbau - die Muenz-Pille in der
+   Topbar. Beide holen ihren Wert also aus derselben Abfrage, statt
+   dass die Topbar eine eigene, moeglicherweise abweichende
+   Zaehlung bekaeme. */
+function setCurrencyDisplays(currency, angemeldet) {
+  const text = currency.toLocaleString("de-DE");
+
   const amountEl = document.getElementById("shop-currency-amount");
-  if (!amountEl || !supabaseClient) return;
+  if (amountEl) amountEl.textContent = text;
+
+  document.querySelectorAll("[data-fh-currency]").forEach((el) => {
+    el.textContent = text;
+  });
+
+  // Ohne Anmeldung gibt es keinen Stand - die Pille bliebe sonst mit
+  // einer nichtssagenden 0 stehen.
+  const pille = document.getElementById("fh-topbar-coins");
+  if (pille) pille.hidden = !angemeldet;
+}
+
+async function refreshShopCurrencyDisplay() {
+  if (!supabaseClient) return;
 
   try {
     const uid = await wheelAuthReady;
     if (!uid) {
-      amountEl.textContent = "0";
+      setCurrencyDisplays(0, false);
       return;
     }
 
@@ -291,7 +311,7 @@ async function refreshShopCurrencyDisplay() {
       .eq("firebase_uid", uid)
       .maybeSingle();
     const currency = data ? data.currency || 0 : 0;
-    amountEl.textContent = currency.toLocaleString("de-DE");
+    setCurrencyDisplays(currency, true);
   } catch (err) {
     console.warn("Dublonen-Stand konnte nicht geladen werden:", err);
   }

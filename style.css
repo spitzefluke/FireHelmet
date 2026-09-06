@@ -166,6 +166,13 @@ body.loaded {
   --fh-glow-fire: 0 0 30px rgba(255,106,42,.35);
   --fh-ease: cubic-bezier(.22,.9,.32,1);
 
+  /* ---- Rahmenmasse (Entwurf 1c): schmale Icon-Leiste statt der
+     bisherigen 248px breiten Sidebar mit Beschriftungen. Als Token,
+     damit der Inhaltsbereich (main) und die Ausrichtung der Topbar
+     nicht getrennt nachgezogen werden muessen. ---- */
+  --fh-rail-w: 76px;
+  --fh-topbar-h: 60px;
+
   /* 'Arial Narrow'/'Liberation Sans Narrow' als Zwischenschritt:
      Oswald ist schmallaufend. Faellt sie aus (Google Fonts nicht
      erreichbar, Offline), landeten Ueberschriften und lange
@@ -676,8 +683,8 @@ main {
 
 @media (min-width: 1024px) {
   main {
-    margin-left: 248px;
-    width: calc(100% - 248px);
+    margin-left: var(--fh-rail-w);
+    width: calc(100% - var(--fh-rail-w));
   }
 }
 
@@ -5734,11 +5741,13 @@ img, svg, video, canvas {
     position: fixed;
     top: 0;
     left: 0;
-    width: 248px;
+    align-items: center;
+    width: var(--fh-rail-w);
     height: 100dvh;
+    padding: 14px 0 10px;
     z-index: var(--fh-z-sidebar);
-    background: rgba(13, 21, 32, .85);
-    backdrop-filter: blur(14px);
+    background: rgba(11, 18, 28, .86);
+    backdrop-filter: blur(16px);
     border-right: 1px solid var(--fh-border);
   }
 }
@@ -6203,13 +6212,6 @@ img, svg, video, canvas {
     */
     padding-bottom: calc(var(--fh-mobile-stack-height, 78px) + 16px);
   }
-}
-
-/* Sprach-Switch in der festen Desktop-Sidebar zentriert einpassen */
-.fh-sidebar-lang-switch {
-  position: relative;
-  z-index: 1;
-  margin: 0 auto 18px;
 }
 
 /* =====================================================
@@ -12061,70 +12063,6 @@ body:has(#story-detail.active-page)::after {
 }
 
 /* =====================================================
-   TEILEN-KNOPF (siehe scripts/core/share.js)
-   ---------------------------------------------------
-   Sitzt links neben dem Musik-Schalter und teilt dieselbe
-   Formensprache. Sichtbar nur auf der Startseite - dort
-   landet, wer die Seite gerade jemandem zeigen will.
-   Die Sichtbarkeit haengt per :has() an der aktiven Seite,
-   ohne dass changePage() etwas davon wissen muss.
-===================================================== */
-.fh-share-button {
-  position: fixed;
-  top: 30px;
-  /* Musik-Schalter: right 30px, 60px breit -> 14px Abstand daneben. */
-  right: 104px;
-  width: 60px;
-  height: 60px;
-  padding: 0;
-  border: none;
-  border-radius: 20px;
-  background: rgba(255,255,255,.08);
-  backdrop-filter: blur(20px);
-  color: var(--fh-fg);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  line-height: 1;
-  cursor: pointer;
-  z-index: var(--fh-z-menu-button);
-  transition: background .3s, transform .3s, color .3s;
-}
-
-body:has(#home.active-page) .fh-share-button { display: flex; }
-
-.fh-share-button svg { display: block; }
-
-.fh-share-button:hover {
-  background: rgba(240,201,106,.16);
-  color: var(--fh-gold-bright);
-  transform: translateY(-2px);
-}
-
-.fh-share-button:active { transform: translateY(0); }
-
-.fh-share-button:focus-visible {
-  outline: 2px solid var(--fh-gold-bright);
-  outline-offset: 3px;
-}
-
-@media (max-width: 768px) {
-  .fh-share-button {
-    width: 50px;
-    height: 50px;
-    top: max(20px, env(safe-area-inset-top));
-    /* Musik-Schalter dort: right 20px, 50px breit. */
-    right: 82px;
-  }
-
-  .fh-share-button svg { width: 19px; height: 19px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fh-share-button { transition: none; }
-}
-
-/* =====================================================
    NUR FUER SCREENREADER
    ---------------------------------------------------
    Vier Eingabefelder (Nickname, Code, Support-Text,
@@ -12290,5 +12228,455 @@ body:has(#home.active-page) .fh-share-button { display: flex; }
   .social-container a {
     flex-basis: 100%;
     max-width: 320px;
+  }
+}
+
+/* =====================================================
+   ENTWURF 1c - RAHMEN: ICON-LEISTE + TOPBAR
+   ---------------------------------------------------
+   Uebertraegt die Bildsprache aus dem Entwurf "1c" auf den festen
+   Seitenrahmen. Zwei Dinge aendern sich:
+
+   1. Die Desktop-Sidebar wird von 248px auf eine 76px schmale
+      Icon-Leiste eingedampft. Die Beschriftungen bleiben im Markup
+      stehen und werden nur optisch ausgeblendet - sie werden an
+      zwei Stellen weiterverwendet:
+        - scripts/core/nav-sync.js klont die Punkte samt Label in
+          die Schublade (dort weiterhin mit Text),
+        - scripts/core/quick-search.js liest die Labels als
+          Suchbegriffe.
+      Statt eines Labels erscheint beim Hover eine Sprechblase
+      neben der Leiste (scripts/core/rail-flyout.js).
+
+   2. Alles, was vorher frei in der Ecke schwebte (Musik, Teilen)
+      oder in der Sidebar sass (Suche, Sprache), sammelt sich in
+      einer Topbar. Die Leiste selbst nimmt bewusst KEINE Klicks an
+      (pointer-events: none) und verschiebt kein Layout - nur die
+      Bedienelemente darin sind anklickbar. Der Seiteninhalt liegt
+      also unveraendert an derselben Stelle wie vorher.
+
+   Alle Regeln hier sind auf .fh-sidebar-nav bzw. .fh-topbar
+   eingegrenzt; die Schublade (.sidebar a) und die mobile
+   Tableiste bleiben unberuehrt.
+===================================================== */
+
+/* ---- Logo-Kachel ---- */
+@media (min-width: 1024px) {
+  .fh-sidebar-logo {
+    justify-content: center;
+    gap: 0;
+    padding: 0 0 4px;
+  }
+
+  /* Der Schriftzug hat in 76px keinen Platz. Er bleibt im Markup
+     (Seitentitel/Vorlesen), verschwindet aber optisch. */
+  .fh-sidebar-brand {
+    display: none;
+  }
+
+  .fh-sidebar-flame {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 20px;
+    box-shadow: 0 0 22px -6px rgba(255,106,42,.85);
+  }
+}
+
+/* ---- Navigationsliste ---- */
+@media (min-width: 1024px) {
+  .fh-sidebar-nav {
+    align-items: center;
+    width: 100%;
+    margin-top: 14px;
+    gap: 6px;
+    padding: 2px 0;
+    /* Die 19 Punkte passen bei niedrigen Fenstern nicht am Stueck
+       hinein. Die Leiste scrollt daher - ohne sichtbaren Balken,
+       der auf 76px die halbe Breite fraesse. */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    /* Statt des Balkens verlaufen die Punkte an beiden Enden ins
+       Nichts. Das ist der einzige Hinweis darauf, dass es weiter
+       geht - ohne ihn braeche die Liste einfach hart ab. */
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  }
+
+  .fh-sidebar-nav::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .fh-sidebar-nav .fh-nav-item {
+    flex: 0 0 auto;
+    justify-content: center;
+    gap: 0;
+    width: 44px;
+    height: 40px;
+    padding: 0;
+    border-radius: 10px;
+    font-size: 20px;
+    /* Sichtbar statt hidden: der goldene Aktiv-Balken sitzt links
+       ausserhalb des Feldes und wurde vorher weggeschnitten. */
+    overflow: visible;
+  }
+
+  .fh-sidebar-nav .fh-nav-icon {
+    flex: 0 0 auto;
+    font-size: 20px;
+  }
+
+  /* Beschriftung bleibt im Dokument (nav-sync/quick-search lesen
+     sie), ist aber unsichtbar. Kein display:none - das haette sie
+     auch fuer Screenreader entfernt. */
+  .fh-sidebar-nav .fh-nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Fluessigkeits-Effekt und Glanzstreifen waren auf einen breiten
+     Balken zugeschnitten. Auf 44px Quadraten wirken sie unruhig -
+     der Entwurf setzt hier auf eine schlichte Goldflaeche. */
+  .fh-sidebar-nav .fh-nav-item::after {
+    display: none;
+  }
+
+  .fh-sidebar-nav .fh-nav-item:not(.fh-nav-active)::before {
+    display: none;
+  }
+
+  .fh-sidebar-nav .fh-nav-item:hover {
+    transform: none;
+    color: var(--fh-gold-bright);
+    background: rgba(214,168,79,.12);
+  }
+
+  /* Beim Antabben derselbe Zustand wie beim Zeigen - dazu kommt der
+     Rahmen, damit sichtbar ist, wo man gerade steht. Die Blase
+     daneben nennt den Punkt beim Namen (rail-flyout.js). */
+  .fh-sidebar-nav .fh-nav-item:focus-visible {
+    color: var(--fh-gold-bright);
+    background: rgba(214,168,79,.12);
+    outline: 2px solid var(--fh-gold-bright);
+    outline-offset: 2px;
+  }
+
+  .fh-sidebar-nav .fh-nav-item.fh-nav-active {
+    color: var(--fh-gold-bright);
+    background: rgba(214,168,79,.14);
+    border: 0;
+    /* Ohne den Puls aus der breiten Fassung: der Schein lag dort um
+       einen langen Balken, um ein kleines Quadrat flackert er. */
+    animation: fhNavItemIn .5s cubic-bezier(0.22, 0.9, 0.32, 1.2) backwards;
+  }
+
+  /* Goldener Streifen an der linken Kante der Leiste.
+     -16px = (76px Leiste - 44px Feld) / 2, also buendig mit dem Rand. */
+  .fh-sidebar-nav .fh-nav-item.fh-nav-active::before {
+    left: -16px;
+  }
+
+  /* Gruppenueberschriften werden zu Trennstrichen. Der Text bleibt
+     im Markup, damit nav-sync ihn mit in die Schublade nimmt, wo er
+     weiterhin als Ueberschrift erscheint. */
+  .fh-sidebar-nav .fh-nav-section-label {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 1px;
+    margin: 10px 0 8px;
+    padding: 0;
+    font-size: 0;
+    overflow: hidden;
+    opacity: 1;
+    background: linear-gradient(90deg, transparent, var(--fh-border-strong), transparent);
+  }
+
+  .fh-sidebar-nav .fh-nav-section-label:first-of-type {
+    margin-top: 4px;
+  }
+}
+
+/* ---- Fuss der Leiste: Spielerbild + Gateway ---- */
+@media (min-width: 1024px) {
+  .fh-sidebar-footer-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0 0;
+  }
+
+  .fh-sidebar-footer {
+    min-height: 0;
+  }
+
+  /* Die Spielerkarte schrumpft auf ihr Bild zusammen. Der Knopf
+     bleibt derselbe und oeffnet weiterhin den Levelpfad. */
+  .fh-sidebar-footer .fh-player-card {
+    width: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    gap: 0;
+  }
+
+  .fh-sidebar-footer .fh-player-card-info {
+    display: none;
+  }
+
+  .fh-sidebar-footer .fh-player-card-avatar {
+    width: 34px;
+    height: 34px;
+    border: 2px solid var(--fh-border-strong);
+    font-size: 16px;
+    transition: border-color .2s;
+  }
+
+  .fh-sidebar-footer .fh-player-card:hover .fh-player-card-avatar,
+  .fh-sidebar-footer .fh-player-card:focus-visible .fh-player-card-avatar {
+    border-color: rgba(240,201,106,.6);
+  }
+
+  /* Solange niemand angemeldet ist, steht dort statt der Karte eine
+     Statuszeile. In 76px bleibt davon der Punkt uebrig. */
+  .fh-sidebar-footer .fh-sidebar-footer-status {
+    justify-content: center;
+    padding: 8px;
+    font-size: 0;
+    border: 0;
+    background: none;
+  }
+}
+
+/* =====================================================
+   SPRECHBLASE NEBEN DER ICON-LEISTE
+   ---------------------------------------------------
+   Bewusst ein einzelnes Element am <body> statt eines ::after am
+   Menuepunkt: die Navigationsliste scrollt, und ein Kind eines
+   scrollenden Bereichs wird an dessen Rand abgeschnitten. Die
+   Position setzt scripts/core/rail-flyout.js.
+===================================================== */
+.fh-rail-flyout {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--fh-z-sidebar);
+  transform: translateY(-50%);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--fh-border-strong);
+  background: rgba(13, 21, 32, .96);
+  box-shadow: var(--fh-shadow-sm);
+  font-family: var(--fh-font-display);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--fh-fg);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .16s var(--fh-ease), visibility .16s;
+}
+
+.fh-rail-flyout.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-rail-flyout { transition: none; }
+}
+
+/* =====================================================
+   TOPBAR
+===================================================== */
+.fh-topbar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .fh-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: fixed;
+    top: 0;
+    left: var(--fh-rail-w);
+    right: 0;
+    height: var(--fh-topbar-h);
+    padding: 0 22px;
+    z-index: var(--fh-z-sidebar);
+    /* Weicher Schleier statt harter Leiste: der Seiteninhalt liegt
+       unveraendert an seiner Stelle und wird nicht abgeschnitten. */
+    background: linear-gradient(180deg, rgba(5,7,11,.78), rgba(5,7,11,0));
+    /* Die Flaeche selbst faengt keine Klicks ab - sonst waere der
+       obere Rand jeder Seite tot. Nur die Bedienelemente sind aktiv. */
+    pointer-events: none;
+  }
+
+  .fh-topbar > * {
+    pointer-events: auto;
+  }
+}
+
+.fh-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Der Sucheinstieg sass vorher in der Sidebar und war dort so breit
+   wie diese. In der Topbar bekommt er eine feste, ruhige Breite. */
+@media (min-width: 1024px) {
+  .fh-topbar .fh-qs-trigger {
+    width: auto;
+    min-width: 240px;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(13, 21, 32, .8);
+  }
+
+  .fh-topbar .fh-qs-trigger .ph {
+    font-size: 16px;
+  }
+}
+
+/* Dublonenstand - dieselbe Zahl wie im Shop, gespeist von
+   refreshShopCurrencyDisplay() in scripts/shop/shop.js. */
+.fh-topbar-coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(214,168,79,.35);
+  background: rgba(214,168,79,.08);
+  color: var(--fh-gold-bright);
+  font-family: var(--fh-font-display);
+  font-size: 14px;
+  letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fh-topbar-coins[hidden] {
+  display: none;
+}
+
+.fh-topbar-coins .ph {
+  font-size: 16px;
+}
+
+/* Sprachknopf: in der Topbar ohne Schieberegler-Knubbel, nur die
+   Kurzform der aktiven Sprache. Der Umschalter selbst
+   (toggleLanguage) bleibt derselbe. */
+@media (min-width: 1024px) {
+  .fh-topbar-lang {
+    position: static;
+    display: inline-flex;
+    margin: 0;
+    overflow: visible;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 46px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--fh-border);
+    background: rgba(13, 21, 32, .8);
+    color: var(--fh-muted-fg);
+    font-family: var(--fh-font-display);
+    font-size: 12px;
+    letter-spacing: .12em;
+    cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+
+  .fh-topbar-lang:hover {
+    color: var(--fh-gold-bright);
+    border-color: rgba(214,168,79,.35);
+  }
+
+  .fh-topbar-lang .lang-switch-label {
+    position: static;
+    flex: none;
+    color: inherit;
+    font: inherit;
+  }
+
+  /* Gezeigt wird nur die gerade aktive Sprache. Den Zustand traegt
+     applyTranslations() als .is-en an JEDEN .lang-switch - dieselbe
+     Quelle, die auch den Schieberegler in der Schublade stellt. */
+  .fh-topbar-lang .lang-switch-label-en,
+  .fh-topbar-lang.is-en .lang-switch-label-de {
+    display: none;
+  }
+
+  .fh-topbar-lang.is-en .lang-switch-label-en {
+    display: inline;
+    color: inherit;
+  }
+}
+
+.fh-topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--fh-border);
+  background: rgba(13, 21, 32, .8);
+  color: var(--fh-muted-fg);
+  font-size: 18px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+
+.fh-topbar-btn:hover {
+  color: var(--fh-gold-bright);
+  border-color: rgba(214,168,79,.35);
+  background: rgba(214,168,79,.08);
+}
+
+.fh-topbar-btn:focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 2px;
+}
+
+/* Wie der alte Schalter erst auf der Startseite eingeblendet
+   (updateMusicForPage in scripts/music/music-player.js) - auf den
+   uebrigen Seiten laeuft keine Musik, die man stummschalten koennte. */
+.fh-topbar-music {
+  display: none;
+}
+
+/* Der alte frei schwebende Musikknopf oben rechts wird von der
+   Topbar-Fassung abgeloest - aber nur dort, wo es die Topbar gibt.
+   Unter 1024px bleibt er unveraendert die einzige Bedienung. */
+@media (min-width: 1024px) {
+  .music-toggle {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-topbar-btn,
+  .fh-topbar-lang,
+  .fh-sidebar-footer .fh-player-card-avatar {
+    transition: none;
   }
 }

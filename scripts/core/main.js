@@ -59,6 +59,14 @@ function changePage(pageID) {
     updateShopPage(pageID);
   }
 
+  // Der Dublonenstand steht seit dem 1c-Umbau auch in der Topbar und
+  // ist damit auf JEDER Seite sichtbar - er muss also bei jedem
+  // Wechsel nachgezogen werden, nicht mehr nur beim Betreten des
+  // Shops. Die Funktion schreibt beide Anzeigen aus einer Abfrage.
+  if (typeof refreshShopCurrencyDisplay === "function") {
+    refreshShopCurrencyDisplay();
+  }
+
   if (typeof updateRatingPage === "function") {
     updateRatingPage(pageID);
   }

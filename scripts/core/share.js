@@ -1,8 +1,13 @@
 /* ======================================================
    FH TEILEN
    ---------------------------------------------------
-   Kleiner Teilen-Knopf neben dem Musik-Schalter, sichtbar
-   nur auf der Startseite (per CSS, siehe .fh-share-button).
+   Kleiner Teilen-Knopf in der Topbar, neben Sprache und
+   Musik-Schalter (siehe .fh-topbar-btn in style.css).
+
+   Er stand vorher frei schwebend in der rechten oberen Ecke und
+   war per CSS auf die Startseite beschraenkt. In der Topbar ist
+   er jetzt auf jeder Seite erreichbar - geteilt wird ohnehin
+   immer dieselbe Adresse.
 
    Nutzt die native Teilen-Auswahl des Geraets, wo es sie gibt
    (Handy, neuere Desktop-Browser) - dort landet der Link
