@@ -75,8 +75,12 @@ const codes = [
   },
   {
     hash: "099ef95be2a4db34c612f6326988690bd92b53c4b08d9b53f447c892597c7b5a", // 01864
+    // Hier lag ein "image: scripts/image/raetsel1.png" - die Datei war
+    // aber gar kein Bild, sondern zwei Byte Text (\r\n). Wer diesen Code
+    // loeste, bekam den Satz und darunter ein kaputtes Bild. Sobald das
+    // echte Raetselbild vorliegt, hier wieder eine image-Zeile ergaenzen
+    // (Muster siehe raetsel2.png weiter unten).
     message: "Glückwunsch Seemann nun etwas schwerer löse dieses Rätsel:",
-    image: "scripts/image/raetsel1.png",
   },
   {
     hash: "b0c27fca74fa91934900c9ffcb3dcca5b807a3c059a3b516cdd0788807b5ff49", // roma

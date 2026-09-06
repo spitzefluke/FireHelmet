@@ -28,7 +28,7 @@ const CHARACTER_DATABASE = {
   dave: {
     name: "Schifffahrer Dave",
     role: "Captain der Flitzpiepen",
-    image: "scripts/image/charakter-3.png",
+    image: "scripts/image/charakter-3.webp",
     quote: "Kurs setzen, Männer - wir haben eine Fracht auszuliefern!",
     description:
       "Dave ist Captain der Crew \"Flitzpiepen\" und ein abenteuerlustiger, freundlicher und erfahrener Schifffahrer. Seine Crew nennt ihn auch Fliezpiepenheimer. Im heutigen Sinne würde man ihn als Rentner bezeichnen – zerbrechlich, aber durchgeknallt.",
@@ -36,7 +36,7 @@ const CHARACTER_DATABASE = {
   finjan: {
     name: "Finjan Backbeard",
     role: "Ausguck & Flaggendesigner",
-    image: "scripts/image/charakter-2.png",
+    image: "scripts/image/charakter-2.webp",
     quote: "Kompasse sind schließlich auch nur Seeleute mit Heimweh.",
     description:
       "Das jüngste und frechste Mitglied der Crew. Trotz seiner sonderbaren Art ist er ein Meister der Beobachtung und sitzt meistens oben im Ausguck. Er hat auch die Flagge des Schiffes entworfen.",
@@ -44,7 +44,7 @@ const CHARACTER_DATABASE = {
   dean: {
     name: "Dean Silentmouth",
     role: "Steuermann",
-    image: "scripts/image/charakter-1.png",
+    image: "scripts/image/charakter-1.webp",
     quote: "...",
     description:
       "Der Steuermann des Schiffes und einer von Daves engsten Vertrauten. Redet nicht viel, aber kennt sich auf den Weltmeeren aus wie kaum ein anderer.",
@@ -60,7 +60,7 @@ const CHARACTER_DATABASE = {
   janne: {
     name: "Dr. Janne Noname",
     role: "Biologe der Crew",
-    image: "scripts/image/Janne.png",
+    image: "scripts/image/Janne.webp",
     quote: "Macht das Vieh weg! Macht das Vieh weg!",
     description:
       "Janne Noname ist der Biologe der Crew. Seinen Namen erhielt er durch die erschreckende Tatsache, dass er sich selbst immer wieder umbenennt - was bei der Crew schon früher zu viel Verwirrung geführt hat. Allerdings halfen seine Fähigkeiten schon oft in verzweifelten Situationen.",
@@ -68,7 +68,7 @@ const CHARACTER_DATABASE = {
   kai: {
     name: "Kai Coldfeet",
     role: "Handwerker des Schiffes",
-    image: "scripts/image/Kai.png",
+    image: "scripts/image/Kai.webp",
     quote: "Ich war nur kurz auf der Toilette.",
     description:
       "Kai Coldfeet ist der Handwerker des Schiffes und ein wahrer Meister seines Handwerks - auch wenn er es kaum je ausübt. Seinen Namen verdankt er seiner Herkunft aus den kalten Bergen. Auf dem Schiff ist er nur selten anzutreffen, weshalb die Crew sich jedes Mal wundert, wenn er plötzlich wieder auftaucht.",
