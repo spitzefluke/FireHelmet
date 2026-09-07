@@ -76,18 +76,38 @@ body.loaded {
   z-index: -5;
 }
 
+/* Die Leinwand traegt Sterne, Nordlicht und Nebelschein in einem
+   einzigen Shader-Durchlauf (scripts/core/aurora-bg.js). */
+.fh-bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -5;
+  display: block;
+}
+
+/* ---- Rueckfallebene ohne WebGL ----
+   Dieselben drei Ebenen wie bisher, aber OHNE Dauerbewegung: die
+   Animationen waren zusammen der teuerste Posten der Seite (drei
+   Vollbild-Neuzeichnungen pro Bild, davon eine mit 90px-Weichzeichner).
+   Wer kein WebGL hat, sitzt in aller Regel auch nicht vor einem
+   schnellen Geraet - dort ist ein ruhiger Sternenhimmel die bessere
+   Wahl als ein ruckelnder.
+
+   Sobald die Leinwand laeuft, setzt aurora-bg.js die Klasse
+   .fh-bg-canvas-aktiv auf <body> und diese drei verschwinden. */
 .stars {
   background-image: radial-gradient(white 1px, transparent 1px);
   background-size: 70px 70px;
   opacity: .35;
-  animation: starsMove 120s linear infinite;
 }
 
 .stars2 {
   background-image: radial-gradient(#4da3ff 1px, transparent 2px);
   background-size: 120px 120px;
   opacity: .3;
-  animation: starsMove 80s linear infinite reverse;
 }
 
 .nebula {
@@ -97,18 +117,15 @@ body.loaded {
   left: 50%;
   transform: translate(-50%, -50%);
   background: radial-gradient(circle, rgba(0,150,255,.3), transparent 70%);
-  filter: blur(90px);
-  animation: nebulaMove 20s infinite alternate;
+  /* 60px statt 90px: derselbe Eindruck, spuerbar weniger Rechenarbeit
+     fuer den Weichzeichner. */
+  filter: blur(60px);
 }
 
-@keyframes starsMove {
-  from { background-position: 0 0; }
-  to   { background-position: 1000px 1000px; }
-}
-
-@keyframes nebulaMove {
-  from { transform: translate(-55%, -50%) scale(1); }
-  to   { transform: translate(-45%, -50%) scale(1.2); }
+.fh-bg-canvas-aktiv .stars,
+.fh-bg-canvas-aktiv .stars2,
+.fh-bg-canvas-aktiv .nebula {
+  display: none;
 }
 
 /* =========================
@@ -1128,17 +1145,37 @@ main {
   overflow: hidden;
 }
 
+/* Der Glanz auf dem Wasser lief ueber background-position. Das ist
+   die einzige Eigenschaft, die der Browser nicht auf der Grafikkarte
+   verschieben kann - er musste die Flaeche bei JEDEM Bild neu
+   zeichnen. Gemessen war das mit 540.000 px² die mit Abstand
+   groesste solche Flaeche der Seite; die naechstgroessere kam auf
+   13.000.
+
+   Jetzt wird stattdessen das Element selbst verschoben. Dafuer ist
+   es 420px breiter als sein Rahmen und beginnt 420px weiter links -
+   am Ende der Bewegung steht wieder genau dasselbe Muster wie am
+   Anfang, der Uebergang ist also nahtlos wie zuvor. Der Elternteil
+   .fh-layer-ocean hat bereits overflow: hidden und schneidet den
+   Ueberstand ab.
+
+   Optisch identisch: 420px Verschiebung, 16s, gleichfoermig - nur
+   eben als transform, das der Compositor allein erledigt. */
 .fh-ocean-sheen {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: -420px;
+  width: calc(100% + 420px);
   background: repeating-linear-gradient(100deg, rgba(255,255,255,.05) 0 2px, transparent 2px 42px);
   opacity: .45;
   animation: fhOceanDrift 16s linear infinite;
+  will-change: transform;
 }
 
 @keyframes fhOceanDrift {
-  from { background-position: 0 0; }
-  to   { background-position: 420px 0; }
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(420px, 0, 0); }
 }
 
 .fh-layer-mid-fog {

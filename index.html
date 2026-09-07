@@ -83,6 +83,11 @@
   <div id="update-notice-overlay" class="update-notice-overlay"></div>
 
   <!-- Hintergrund -->
+  <!-- Eine Leinwand statt dreier animierter Vollbild-Ebenen, siehe
+       scripts/core/aurora-bg.js. Die drei <div> darunter bleiben als
+       Rueckfallebene fuer Geraete ohne WebGL - dort sieht man
+       weiterhin Sterne und Nebel, dann eben unbewegt. -->
+  <canvas class="fh-bg-canvas" id="fh-bg-canvas" aria-hidden="true"></canvas>
   <div class="stars"></div>
   <div class="stars2"></div>
   <div class="nebula"></div>
@@ -1295,6 +1300,7 @@
        klassischen <script>-Tag-Build, der zu Supabase/GSAP/Motion hier
        passt (kein Bundler, kein Import-Map-Pattern im restlichen Projekt). -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
+  <script src="scripts/core/aurora-bg.js" defer></script>
   <script src="scripts/core/celebration-burst-3d.js" defer></script>
   <script src="scripts/core/sidebar-ambient-3d.js" defer></script>
 
