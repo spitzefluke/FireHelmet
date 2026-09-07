@@ -1,0 +1,1437 @@
+/* =====================================================
+   FIREHELMET - STYLE 1/8: BASIS
+   ---------------------------------------------------
+   Reset, Hintergrund, Seitenuebergang, Menue-Knopf, Schublade,
+   feste Seitenmasse, Startseite und Cinematic-Sequenz.
+
+   ACHTUNG REIHENFOLGE: diese Dateien waren bis zum Aufteilen
+   EINE Datei mit 13.539 Zeilen. An mehreren Stellen entscheidet
+   allein die Reihenfolge, welche Regel gewinnt (gleich starke
+   Selektoren, spaeter schlaegt frueher). Die Einbindung in
+   index.html muss daher genau in dieser Nummerierung bleiben -
+   eine umgestellte oder vergessene Datei aendert das Aussehen.
+===================================================== */
+
+/* =====================================================
+   COUNTDOWN PROJECT V2 – STYLE.CSS
+   Inhaltsverzeichnis:
+   1. Reset
+   2. Hintergrund (Sterne / Nebel)
+   3. Seitenübergang
+   4. Menü Button
+   5. Sidebar
+   6. Seiten / Page-Transitions
+   7. Home / Countdown
+   8. Story Archiv (Grid)
+   9. Story Detail
+   10. Book Reader
+   11. Characters
+   12. Socials + Partners
+   13. Effekte (Mouse Light, Partikel)
+   14. Mobile
+===================================================== */
+
+/* =========================
+   1. RESET
+========================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  /* War fest auf Segoe UI/Arial verdrahtet - die eigentlich vorgesehene
+     Body-Schrift (--fh-font-sans: Inter, siehe :root) kam dadurch quasi
+     nirgends auf der Seite zum Einsatz. Jede Komponente, die absichtlich
+     eine andere Schrift will (Terminal-Look, Buchleser-Serif, Oswald fuer
+     Ueberschriften), setzt ihr eigenes font-family bereits explizit und
+     ueberschreibt diesen Reset ohnehin - diese Aenderung wirkt sich also
+     nur dort aus, wo bisher gar keine Schrift bewusst gewaehlt war. */
+  font-family: var(--fh-font-sans, 'Inter'), 'Segoe UI', Arial, sans-serif;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #02030a;
+  color: white;
+  position: relative;
+}
+
+body.loaded {
+  animation: websiteLoad 1.2s ease;
+}
+
+@keyframes websiteLoad {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* =========================
+   2. HINTERGRUND
+========================= */
+.stars, .stars2, .nebula {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -5;
+}
+
+.stars {
+  background-image: radial-gradient(white 1px, transparent 1px);
+  background-size: 70px 70px;
+  opacity: .35;
+  animation: starsMove 120s linear infinite;
+}
+
+.stars2 {
+  background-image: radial-gradient(#4da3ff 1px, transparent 2px);
+  background-size: 120px 120px;
+  opacity: .3;
+  animation: starsMove 80s linear infinite reverse;
+}
+
+.nebula {
+  width: 900px;
+  height: 900px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(0,150,255,.3), transparent 70%);
+  filter: blur(90px);
+  animation: nebulaMove 20s infinite alternate;
+}
+
+@keyframes starsMove {
+  from { background-position: 0 0; }
+  to   { background-position: 1000px 1000px; }
+}
+
+@keyframes nebulaMove {
+  from { transform: translate(-55%, -50%) scale(1); }
+  to   { transform: translate(-45%, -50%) scale(1.2); }
+}
+
+/* =========================
+   3. SEITENÜBERGANG
+========================= */
+#transition {
+  position: fixed;
+  inset: 0;
+  background: black;
+  opacity: 0;
+  pointer-events: none;
+  z-index: var(--fh-z-page-transition);
+  transition: .5s;
+}
+
+#transition.active {
+  opacity: 1;
+}
+
+
+:root {
+  /* Auf das FireHelmet-Farbsystem (Gold/Feuer statt Blau/Lila)
+     umgestellt - wirkt sich additiv auf alle Stellen aus, die
+     bereits --menu-hex*/--menu-rgb* nutzten (Menü-Button-Rahmen,
+     Update-Hinweis, Code-Effekte ...), ohne deren Struktur/Klassen
+     zu veraendern. */
+  --menu-rgb1: 240,201,106;
+  --menu-rgb2: 255,106,42;
+  --menu-rgb3: 255,215,107;
+  --menu-hex1: #f0c96a;
+  --menu-hex2: #ff6a2a;
+  --menu-hex3: #ffd76b;
+
+  /* ---- Neue Design-Tokens (aus dem v0-Referenzdesign übernommen) ----
+     Rein additiv - bestehende Sektions-Variablen (--menu-*, --wheel-accent,
+     --boss-accent, --char-accent usw.) bleiben unangetastet und werden
+     NICHT automatisch ersetzt. Diese Tokens werden gezielt dort genutzt,
+     wo wir Elemente im v0-Stil neu aufbauen (Sidebar, Rangliste, Boss-UI). */
+  --fh-bg: #05070b;
+  --fh-fg: #e8edf4;
+  --fh-surface: #0d1520;
+  --fh-surface-2: #111a26;
+  --fh-border: #1c2a3a;
+  --fh-border-strong: #2c3f56;
+  --fh-muted: #162231;
+  --fh-muted-fg: #8296ad;
+
+  --fh-gold: #d6a84f;
+  --fh-gold-bright: #f0c96a;
+  --fh-fire: #ff6a2a;
+  --fh-fire-deep: #d9431e;
+  --fh-danger: #e53935;
+  --fh-success: #55c878;
+  --fh-cold: #42b8ff;
+
+  /* ---- Zusätzliche Design-System-Tokens für das professionelle
+     Redesign. Rein additiv, siehe Hinweis oben. ---- */
+  --fh-bg-secondary: #070b12;
+  --fh-surface-light: #14202f;
+  --fh-blue: #2a4a72;
+  --fh-text: var(--fh-fg);
+  --fh-text-muted: var(--fh-muted-fg);
+  --fh-radius-sm: 10px;
+  --fh-radius: 16px;
+  --fh-radius-lg: 24px;
+  --fh-shadow: 0 18px 40px rgba(0,0,0,.45);
+  --fh-shadow-sm: 0 8px 20px rgba(0,0,0,.35);
+  --fh-glow-gold: 0 0 30px rgba(240,201,106,.35);
+  --fh-glow-fire: 0 0 30px rgba(255,106,42,.35);
+  --fh-ease: cubic-bezier(.22,.9,.32,1);
+
+  /* ---- Rahmenmasse (Entwurf 1c): schmale Icon-Leiste statt der
+     bisherigen 248px breiten Sidebar mit Beschriftungen. Als Token,
+     damit der Inhaltsbereich (main) und die Ausrichtung der Topbar
+     nicht getrennt nachgezogen werden muessen. ---- */
+  --fh-rail-w: 76px;
+  --fh-topbar-h: 60px;
+
+  /* 'Arial Narrow'/'Liberation Sans Narrow' als Zwischenschritt:
+     Oswald ist schmallaufend. Faellt sie aus (Google Fonts nicht
+     erreichbar, Offline), landeten Ueberschriften und lange
+     Menuepunkte vorher auf einer deutlich breiteren Grotesk und
+     brachen um. */
+  --fh-font-display: 'Oswald', 'Arial Narrow', 'Liberation Sans Narrow', ui-sans-serif, sans-serif;
+  --fh-font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* ---- Ergaenzende Tokens (Design-Upgrade): dunkles Ozean-Navy,
+     Pergament/Sand fuer Logbuch-artige Flaechen (Stories/Buchleser
+     nutzen bereits Georgia+eigene Sepia-Farben - diese Tokens stehen
+     fuer NEUE Stellen zur Verfuegung, ersetzen dort nichts), und ein
+     gedaempftes Rot fuer Warn-/Akzentflaechen abseits von --fh-danger
+     (das bewusst kraeftiger/signalhafter bleibt). Rein additiv. ---- */
+  --fh-ocean: #0b1824;
+  --fh-paper: #e8d5a8;
+  --fh-red-deep: #7c1f1c;
+
+  /* War ein zweiter, eigenstaendiger :root-Block direkt vor der
+     COMMUNITY-BOSS-Sektion - inhaltlich hierher gehoerend, ins
+     Haupt-Token-Set zusammengefuehrt (rein kosmetische Aufraeumung,
+     derselbe Variablenname/Wert). */
+  --boss-accent: #7c2d12;
+
+  /* ---- Ebenen-Skala ----
+     Die z-index-Werte der Seite waren ueber 11.000 Zeilen verstreut
+     und reichten von 190 bis 10000, ohne dass irgendwo stand, was
+     eigentlich ueber was liegen soll. Die Zahlen hier sind exakt die
+     bisher verwendeten - es aendert sich nichts an der Darstellung,
+     die Reihenfolge ist jetzt nur an einer Stelle nachlesbar und
+     aenderbar. Von unten nach oben:
+  ---- */
+  --fh-z-backdrop:        190;  /* Abdunklung hinter der Schublade   */
+  --fh-z-drawer:          200;  /* Schubladen-Menue (mobil)          */
+  --fh-z-sidebar:         250;  /* feste Sidebar (Desktop)           */
+  --fh-z-bottom-nav:      260;  /* Bottom-Nav + Spielerkarte (mobil) */
+  --fh-z-menu-button:     300;  /* Hamburger-Knopf                   */
+  --fh-z-fx:              500;  /* Klick-Funken u.ae. Effekte        */
+  --fh-z-boss-flash:      900;  /* Boss-Treffer-Blitz                */
+  --fh-z-page-transition: 999;  /* Seitenuebergang                   */
+  --fh-z-overlay:        1000;  /* Update-Mitteilung                 */
+  --fh-z-toast:          1100;  /* Kurzmeldungen                     */
+  --fh-z-quicksearch:    1200;  /* Schnellsuche (Strg+K)             */
+  --fh-z-modal:          8500;  /* Level-Pfad                        */
+  --fh-z-modal-high:     9000;  /* Level-Aufstieg                    */
+  --fh-z-modal-tooltip:  9050;  /* Tooltip im Level-Pfad             */
+  --fh-z-modal-top:      9100;  /* Crew-Beitritt                     */
+  --fh-z-celebration:    9999;  /* 3D-Konfetti (ueber allem)         */
+  --fh-z-skip-link:     10000;  /* "Zum Inhalt springen"             */
+}
+
+/* =====================================================
+   FH SCROLL-REVEAL SYSTEM (siehe scripts/home/cinematic.js)
+   Zentrale, wiederverwendbare Einblend-Klasse fuer neue
+   Komponenten. Nutzt IntersectionObserver statt vieler
+   einzelner Scroll-Listener. Bestehende Elemente/Klassen
+   werden dadurch nicht veraendert.
+===================================================== */
+.fh-reveal {
+  opacity: 0;
+  transform: translateY(35px);
+  transition: opacity .7s var(--fh-ease), transform .7s var(--fh-ease);
+  transition-delay: var(--fh-reveal-delay, 0s);
+  will-change: opacity, transform;
+}
+
+.fh-reveal.fh-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-reveal {
+    transform: none;
+    transition: opacity .5s ease;
+    transition-delay: 0s;
+  }
+}
+
+@keyframes fhEmberRise {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  10%  { opacity: .8; }
+  100% { transform: translateY(-120px) translateX(var(--drift, 10px)); opacity: 0; }
+}
+
+body.lang-en {
+  --menu-rgb1: 255,90,40;
+  --menu-rgb2: 255,30,30;
+  --menu-rgb3: 255,176,32;
+  --menu-hex1: #ff6a3d;
+  --menu-hex2: #ff2e2e;
+  --menu-hex3: #ffb020;
+}
+
+/* =========================
+   4. MENÜ BUTTON
+========================= */
+.menu-button {
+  position: fixed;
+  top: 30px;
+  left: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  background: rgba(10,14,28,.55);
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  z-index: var(--fh-z-menu-button);
+  isolation: isolate;
+  transition: transform .35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Rotierender Regenbogen-Glow-Rand */
+.menu-button::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 22px;
+  padding: 2px;
+  background: conic-gradient(from 0deg, var(--menu-hex1), var(--menu-hex2), var(--menu-hex3), var(--menu-hex2), var(--menu-hex1));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: menuBorderSpin 3s linear infinite;
+  z-index: -1;
+  opacity: .75;
+}
+
+/* Weicher Aura-Schein dahinter, pulsiert */
+.menu-button::after {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 28px;
+  background: radial-gradient(circle, rgba(var(--menu-rgb1),.4), transparent 70%);
+  animation: menuAuraPulse 3.5s ease-in-out infinite;
+  z-index: -2;
+}
+
+@keyframes menuBorderSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes menuAuraPulse {
+  0%, 100% { opacity: .3; transform: scale(1); }
+  50%      { opacity: .7; transform: scale(1.15); }
+}
+
+.menu-button:hover {
+  transform: scale(1.15) rotate(-6deg);
+}
+
+.menu-button:hover::before {
+  animation-duration: 1s;
+}
+
+.menu-button span {
+  height: 3px;
+  width: 30px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(255,255,255,.5);
+  transition: transform .35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity .25s, width .35s;
+}
+
+/* Hamburger -> X morph, sobald die Sidebar offen ist */
+.menu-button.menu-open span:nth-child(1) {
+  transform: translateY(10px) rotate(45deg);
+}
+.menu-button.menu-open span:nth-child(2) {
+  opacity: 0;
+  width: 0;
+}
+.menu-button.menu-open span:nth-child(3) {
+  transform: translateY(-10px) rotate(-45deg);
+}
+
+/* =========================
+   4b. MUSIK BUTTON
+========================= */
+.music-toggle {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.08);
+  backdrop-filter: blur(20px);
+  display: none; /* wird per JS nur auf der Home-Seite eingeblendet */
+  justify-content: center;
+  align-items: center;
+  font-size: 26px;
+  cursor: pointer;
+  z-index: var(--fh-z-menu-button);
+  transition: .3s;
+}
+
+.music-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 40px #4da3ff;
+}
+
+/* =========================
+   5. SIDEBAR
+========================= */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: var(--fh-z-backdrop);
+  transition: opacity .4s ease;
+}
+
+.sidebar-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -350px;
+  width: 320px;
+  height: 100%;
+  background: #090c1c;
+  backdrop-filter: blur(30px);
+  padding: 50px 30px;
+  padding-top: max(50px, env(safe-area-inset-top));
+  padding-bottom: max(30px, env(safe-area-inset-bottom));
+  z-index: var(--fh-z-drawer);
+  border-right: 1px solid rgba(255,255,255,.15);
+  box-shadow: 0 0 0 rgba(77,163,255,0);
+  transition: left .45s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow .45s;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Wandernde Aurora-Farbflecken im Hintergrund der Sidebar */
+.sidebar::before {
+  content: "";
+  position: absolute;
+  inset: -50% -50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(var(--menu-rgb1),.28), transparent 45%),
+    radial-gradient(circle at 80% 40%, rgba(var(--menu-rgb2),.24), transparent 45%),
+    radial-gradient(circle at 40% 85%, rgba(var(--menu-rgb3),.2), transparent 40%);
+  animation: sidebarAuroraDrift 12s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+@keyframes sidebarAuroraDrift {
+  0%   { transform: translate(-4%, -3%) rotate(0deg); }
+  100% { transform: translate(4%, 3%) rotate(8deg); }
+}
+
+.sidebar > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Auf Mobile liegt die fixierte Spielerkarte+Tableiste
+   (.fh-mobile-bottom-stack, z-index 260) ueber dem Menue (z-index
+   200) - ohne zusaetzliches Bottom-Padding verschwinden die
+   untersten Menuepunkte (Support/Bewertung/Gateway) dahinter.
+   Gleiche live gemessene Variable wie bei .page (siehe dort). */
+@media (max-width: 1023px) {
+  .sidebar {
+    padding-bottom: calc(var(--fh-mobile-stack-height, 78px) + 30px);
+  }
+}
+
+/* Wichtig: main.js schaltet die Klasse "open" (nicht "active") */
+.sidebar.open {
+  left: 0;
+  box-shadow: 0 0 70px rgba(var(--menu-rgb1),.35), 0 0 140px rgba(var(--menu-rgb2),.18);
+}
+
+.sidebar h2 {
+  font-size: 40px;
+  letter-spacing: 10px;
+  margin-bottom: 50px;
+  background: linear-gradient(90deg, #ffffff, var(--menu-hex1), var(--menu-hex2), var(--menu-hex3), #ffffff);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sidebarTitleShine 5s linear infinite;
+  filter: drop-shadow(0 0 12px rgba(var(--menu-rgb1),.45));
+}
+
+/* Gruppenueberschriften im Menue (Hamburger- UND feste Desktop-
+   Sidebar teilen sich dieselbe Klasse) - rein visuelle Gliederung
+   der bisher einen flachen Liste, aendert nichts an data-page/
+   onclick der Links selbst. */
+.fh-nav-section-label {
+  margin: 22px 4px 10px;
+  padding: 0 16px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg, #8296ad);
+  opacity: .8;
+}
+
+.sidebar .fh-nav-section-label:first-of-type,
+.fh-sidebar-nav .fh-nav-section-label:first-of-type {
+  margin-top: 4px;
+}
+
+.fh-sidebar-nav .fh-nav-section-label {
+  margin: 16px 0 2px;
+  padding: 0 14px;
+}
+
+@keyframes sidebarTitleShine {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+.sidebar a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* Seit die Menuepunkte ihr Emoji in einer eigenen Icon-Spalte
+     tragen, braucht es hier einen Abstand - vorher klebte der Text
+     direkt am Icon ("🎮Anmelden"). Die Desktop-Sidebar hat ihn
+     ueber .fh-nav-item schon. */
+  gap: 12px;
+  min-height: 48px;
+  padding: 14px 20px;
+  margin-bottom: 12px;
+  border-radius: 15px;
+  cursor: pointer;
+  color: white;
+  text-decoration: none;
+  font-size: 17px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  transition: transform .3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color .3s, box-shadow .3s, letter-spacing .3s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Jeder Menüpunkt fliegt zeitversetzt rein, sobald die Sidebar öffnet */
+.sidebar.open a {
+  animation: sidebarLinkIn .5s cubic-bezier(0.22, 0.9, 0.32, 1.3) backwards;
+}
+
+/* nth-of-type statt nth-child: zaehlt nur <a>-Geschwister, damit die
+   .fh-nav-section-label-<p>-Elemente (Menü-Gruppenueberschriften)
+   dazwischen die Reihenfolge/Verzoegerung nicht verschieben. */
+.sidebar.open a:nth-of-type(1)  { animation-delay: .05s; }
+.sidebar.open a:nth-of-type(2)  { animation-delay: .10s; }
+.sidebar.open a:nth-of-type(3)  { animation-delay: .15s; }
+.sidebar.open a:nth-of-type(4)  { animation-delay: .20s; }
+.sidebar.open a:nth-of-type(5)  { animation-delay: .25s; }
+.sidebar.open a:nth-of-type(6)  { animation-delay: .30s; }
+.sidebar.open a:nth-of-type(7)  { animation-delay: .35s; }
+.sidebar.open a:nth-of-type(8)  { animation-delay: .40s; }
+.sidebar.open a:nth-of-type(9)  { animation-delay: .45s; }
+.sidebar.open a:nth-of-type(10) { animation-delay: .50s; }
+.sidebar.open a:nth-of-type(11) { animation-delay: .55s; }
+.sidebar.open a:nth-of-type(12) { animation-delay: .60s; }
+
+@keyframes sidebarLinkIn {
+  0%   { opacity: 0; transform: translateX(-30px) scale(.9); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.sidebar a::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(var(--menu-rgb3),.4), rgba(var(--menu-rgb1),.45), rgba(var(--menu-rgb2),.4));
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform .5s cubic-bezier(0.65, 0, 0.35, 1);
+  z-index: -1;
+  border-radius: 15px;
+}
+
+/* Glühender Unterstrich, wächst beim Hover von der Mitte aus */
+.sidebar a::after {
+  content: "";
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 6px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--menu-hex1), transparent);
+  transform: scaleX(0);
+  transition: transform .35s ease;
+}
+
+.sidebar a:hover,
+.sidebar a:active {
+  border-color: rgba(255,255,255,.25);
+  transform: translateX(12px) scale(1.03);
+  box-shadow: 0 6px 24px rgba(var(--menu-rgb1),.35), 0 0 20px rgba(var(--menu-rgb2),.22);
+  letter-spacing: .5px;
+}
+
+/* Aktive Seite deutlich markieren - main.js (updateActiveNavHighlight())
+   setzt .fh-nav-active bereits auf JEDES [data-page]-Element (auch die
+   Sidebar-Links hier), es gab dafuer aber bisher nur eine Regel fuer
+   .fh-nav-item/.fh-bottom-nav-item (Desktop-Rail/Mobile-Tableiste),
+   nicht fuer die klassischen Hamburger-Sidebar-Links. Bewusst dieselbe
+   Gold-Akzent-Sprache wie dort (linker Streifen + gedaempfter Glow),
+   aber ohne die dauerhafte Puls-Animation direkt zu duplizieren - siehe
+   reduced-motion-Block weiter unten fuer die endgueltige Fassung. */
+.sidebar a.fh-nav-active {
+  border-color: rgba(var(--menu-rgb1),.5);
+  background: linear-gradient(90deg, rgba(var(--menu-rgb1),.16), transparent 70%);
+  box-shadow: inset 3px 0 0 var(--fh-gold-bright, #f0c96a);
+}
+
+/* ---------------------------------------------------------------
+   REDUZIERTE BEWEGUNG: dauerhaft laufende Zier-Animationen
+   Mehrere rein dekorative "Endlosschleifen" liefen bisher UNABHAENGIG
+   von prefers-reduced-motion permanent weiter (Menü-Button-Regenbogen-
+   Rand + Aura-Puls, Sidebar-Aurora-Drift, aktive Nav-Markierung,
+   Ranglisten-Gold-Puls/Medaillen-Wippen/Krone/"Du"-Markierung,
+   Update-Hinweis-Puls). Andere Bereiche der Seite (Home-Cinematic,
+   Shop-Intro, Community-Boss, Spielothek) respektieren das bereits -
+   hier zentral fuer den Rest nachgezogen. Die jeweilige Grundoptik
+   (Farbe/Rahmen/Glow) bleibt sichtbar, nur das staendige Pulsieren/
+   Rotieren/Wippen stoppt. Siehe auch wheel.js/streamraetsel.js/race.js
+   fuer die JS-seitigen Partikel-Effekte, die entsprechend gegated sind.
+--------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .menu-button::before,
+  .menu-button::after,
+  .sidebar::before,
+  .sidebar a.fh-nav-active,
+  .fh-nav-item.fh-nav-active,
+  .leaderboard-top-1,
+  .leaderboard-top-1 .leaderboard-rank,
+  .leaderboard-top-2 .leaderboard-rank,
+  .leaderboard-top-3 .leaderboard-rank,
+  .leaderboard-you,
+  .leaderboard-crown,
+  .update-notice-button {
+    animation: none !important;
+  }
+}
+
+.sidebar a:hover::before,
+.sidebar a:active::before {
+  transform: scaleY(1);
+}
+
+.sidebar a:hover::after,
+.sidebar a:active::after {
+  transform: scaleX(1);
+}
+
+.close-button {
+  position: absolute;
+  right: 20px;
+  top: max(15px, env(safe-area-inset-top));
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 12px;
+  color: var(--fh-text-muted, #8296ad);
+  transition: transform .2s var(--fh-ease, ease), color .2s ease, background .2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hatte bisher ueberhaupt keinen Hover-Zustand - einziger Button auf
+   der Seite ohne jede Reaktion vor dem eigentlichen Klick. */
+.close-button:hover {
+  color: var(--fh-gold-bright, #f0c96a);
+  background: rgba(255,255,255,.06);
+  transform: rotate(90deg);
+}
+
+.close-button:active {
+  background: rgba(255,255,255,.1);
+  transform: rotate(90deg) scale(.92);
+}
+
+/* =========================
+   6. SEITEN / PAGE-TRANSITIONS
+========================= */
+main {
+  width: 100%;
+  height: 100%;
+  transition: margin-left .3s ease;
+}
+
+@media (min-width: 1024px) {
+  main {
+    margin-left: var(--fh-rail-w);
+    width: calc(100% - var(--fh-rail-w));
+  }
+}
+
+.page {
+  display: none;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(20px);
+  /* War .5s ease - etwas straffer (350ms) und mit der hochwertigeren
+     --fh-ease-Kurve statt linearem ease, fuer einen "premium" statt
+     trägen Seitenwechsel (Ziel: 200-400ms Fade+Slide). */
+  transition: opacity .35s var(--fh-ease, ease), transform .35s var(--fh-ease, ease);
+}
+
+.active-page {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+  animation: pageShow .35s var(--fh-ease, ease);
+}
+
+@keyframes pageShow {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page,
+  .active-page {
+    transition: opacity .2s ease;
+    animation: none;
+    transform: none;
+  }
+}
+
+/* =========================
+   7. HOME / COUNTDOWN
+========================= */
+#home {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Home ist die einzige Seite mit echtem Scroll-Inhalt (Cinematic
+   Intro). Nur hier wird die generische .active-page Flex-Zentrierung
+   durch echtes Scrollen innerhalb der Seite ersetzt - alle anderen
+   Seiten bleiben unveraendert fixe, zentrierte Viewports. */
+#home.active-page {
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  animation: none;
+  transform: none;
+  opacity: 1;
+}
+
+/* Bestehender Hero (Countdown + Schiff-Canvas + Riss-Effekt) bleibt
+   1:1 erhalten, bekommt aber einen eigenen positionierten Wrapper,
+   damit .home-fx{position:absolute;inset:0} weiterhin exakt einen
+   Viewport fuellt - jetzt als letzte Phase der Cinematic Experience. */
+.fh-hero-section {
+  position: relative;
+  min-height: 100dvh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+#streamraetsel {
+  position: relative;
+  overflow: hidden;
+}
+
+#race {
+  position: relative;
+  overflow: hidden;
+}
+
+.home-fx {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(20,25,55,.6), #05060f 75%);
+}
+
+.home-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  transition: transform .12s ease-out;
+}
+
+.hero h1,
+.hero h2 {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.9rem, 8vw, 6.4rem);
+  letter-spacing: clamp(1px, 1.3vw, 20px);
+  text-shadow: 0 0 60px rgba(240,201,106,.4);
+  transition: filter .12s ease-out, text-shadow .12s ease-out;
+}
+
+@keyframes titleGlow {
+  0%, 100% { text-shadow: 0 0 60px rgba(240,201,106,.4); }
+  50%      { text-shadow: 0 0 90px rgba(255,106,42,.45), 0 0 40px rgba(240,201,106,.5); }
+}
+
+.subtitle {
+  font-size: clamp(1.05rem, 2.4vw, 1.9rem);
+  margin-top: 20px;
+  color: var(--fh-text-muted, #aaa);
+  padding: 0 1rem;
+}
+
+.countdown {
+  margin-top: clamp(2.5rem, 6vw, 5rem);
+  display: flex;
+  gap: clamp(12px, 2.5vw, 30px);
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 1rem;
+}
+
+.time-box {
+  width: clamp(78px, 18vw, 160px);
+  height: clamp(78px, 18vw, 160px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(160deg, rgba(20,32,47,.75), rgba(7,11,18,.75));
+  border-radius: var(--fh-radius, 30px);
+  border: 1px solid var(--fh-border-strong, rgba(255,255,255,.2));
+  backdrop-filter: blur(20px);
+  perspective: 400px;
+  transition: transform .15s ease-out, border-color .3s, box-shadow .15s ease-out;
+  box-shadow: 0 0 25px rgba(240,201,106,.15), var(--fh-shadow-sm);
+}
+
+.time-box:hover {
+  transform: translateY(-8px);
+  border-color: var(--fh-gold, #d6a84f);
+  box-shadow: var(--fh-glow-gold);
+}
+
+/* Kurzes, kräftiges Aufleuchten bei jedem Sekunden-Tick */
+.time-box.tick {
+  animation: boxTickGlow .5s ease;
+  border-color: rgba(240, 201, 106, .7);
+}
+
+@keyframes boxTickGlow {
+  0%   { box-shadow: 0 0 20px rgba(240,201,106,.25); }
+  35%  { box-shadow: 0 0 60px rgba(255,150,80,.7); }
+  100% { box-shadow: 0 0 25px rgba(240,201,106,.15); }
+}
+
+.time-box span {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.6rem, 5vw, 3.75rem);
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+}
+
+/* Flip-Effekt: die Zahl "klappt" beim Wechsel sichtbar um */
+.time-box span.changed {
+  animation: digitFlip .5s ease;
+}
+
+@keyframes digitFlip {
+  0%   { transform: rotateX(90deg);  opacity: 0; color: #bcdfff; }
+  55%  { transform: rotateX(-12deg); opacity: 1; }
+  100% { transform: rotateX(0deg);   opacity: 1; }
+}
+
+.time-box small {
+  font-size: clamp(.6rem, 1.6vw, 1.05rem);
+  color: var(--fh-text-muted, #aaa);
+  letter-spacing: .5px;
+}
+
+/* ======================================================
+   LADEBALKEN UNTER DEM COUNTDOWN
+   Basis: "Loader" von Uiverse.io (KSAplay), Farben auf das
+   FireHelmet-Theme umgestellt (--fh-fire-deep -> --fh-gold-bright
+   statt Original-Orange, dunkler Hintergrund via --fh-bg/--fh-surface).
+====================================================== */
+.fh-hero-loader {
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fh-hero-loader .loading-text {
+  color: var(--fh-fg, #e8edf4);
+  font-size: 14pt;
+  font-weight: 600;
+  margin-left: 10px;
+}
+
+.fh-hero-loader .dot {
+  margin-left: 3px;
+  animation: fhLoaderBlink 1.5s infinite;
+}
+.fh-hero-loader .dot:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.fh-hero-loader .dot:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.fh-hero-loader .loading-bar-background {
+  --height: 30px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 5px;
+  width: 200px;
+  height: var(--height);
+  background-color: var(--fh-surface-2, #111a26);
+  box-shadow: var(--fh-bg, #05070b) -2px 2px 4px 0px inset;
+  border-radius: calc(var(--height) / 2);
+}
+
+.fh-hero-loader .loading-bar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  --height: 20px;
+  width: 0%;
+  height: var(--height);
+  overflow: hidden;
+  background: linear-gradient(
+    0deg,
+    var(--fh-fire-deep, #d9431e) 0%,
+    var(--fh-gold-bright, #f0c96a) 100%
+  );
+  border-radius: calc(var(--height) / 2);
+  animation: fhLoaderFill 4s ease-out infinite;
+}
+
+.fh-hero-loader .white-bars-container {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.fh-hero-loader .white-bar {
+  background: linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  width: 10px;
+  height: 45px;
+  opacity: 0.3;
+  rotate: 45deg;
+}
+
+@keyframes fhLoaderFill {
+  0% {
+    width: 0;
+  }
+  80% {
+    width: 100%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes fhLoaderBlink {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* =====================================================
+   FH CINEMATIC HOME EXPERIENCE
+   Neue, scroll-gebundene Eroeffnungssequenz vor dem
+   bestehenden Hero/Countdown (siehe .fh-hero-section oben).
+   Ein einziger Scroll-Listener (scripts/home/cinematic.js)
+   schreibt den Fortschritt (0-1) als CSS-Variable
+   --fh-progress auf .fh-journey-scene; alle Bewegungen
+   laufen darueber rein per CSS calc()/clamp() auf
+   transform/opacity (GPU-freundlich, kein Layout-Thrash).
+===================================================== */
+.fh-cinematic-home {
+  position: relative;
+  max-width: 100vw;
+  background: #03040a;
+}
+
+.fh-journey-track {
+  position: relative;
+  height: 300vh;
+}
+
+.fh-journey-scene {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+  --fh-progress: 0;
+  --fh-cursor-x: 50%;
+  --fh-cursor-y: 45%;
+}
+
+/* Dezentes Licht, das der Maus folgt (nur Desktop mit echter
+   Maus, siehe fhInitCursorParallax() in cinematic.js). Auf
+   Touch-Geräten bleiben die Fallback-Werte oben stehen -
+   dann ist die Ebene einfach ein ruhiger, statischer Schein. */
+.fh-layer-cursor-light {
+  background: radial-gradient(circle at var(--fh-cursor-x) var(--fh-cursor-y), rgba(240,201,106,.12), transparent 38%);
+  mix-blend-mode: screen;
+}
+
+@media (max-width: 640px) {
+  .fh-layer-cursor-light {
+    display: none;
+  }
+}
+
+.fh-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fh-layer-sky {
+  background: linear-gradient(180deg, #03040a 0%, #060a16 55%, #0a1524 100%);
+}
+
+.fh-layer-stars {
+  background-image:
+    radial-gradient(rgba(255,255,255,.9) 1px, transparent 1.5px),
+    radial-gradient(rgba(200,220,255,.6) 1px, transparent 1.5px);
+  background-size: 180px 180px, 260px 260px;
+  background-position: 0 0, 90px 60px;
+  opacity: .75;
+  transform: translate3d(0, calc(var(--fh-progress) * -30px), 0);
+}
+
+/* Sternschnuppe: unsichtbar/opacity 0 in Ruhe, wird per GSAP
+   (fhInitShootingStar() in cinematic.js) beim Erreichen eines
+   bestimmten Scroll-Fortschritts einmal ueber den Himmel gezogen. */
+.fh-shooting-star {
+  position: absolute;
+  top: 16%;
+  left: 66%;
+  width: 90px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.9));
+  border-radius: 999px;
+  opacity: 0;
+  transform: rotate(28deg);
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,.6));
+}
+
+/* WebGL-Canvas mit Sternenfeld + Glut-Partikeln (siehe
+   scripts/home/journey-scene-3d.js) - wird per JS direkt hinter
+   .fh-layer-stars eingefuegt, .fh-layer liefert bereits
+   position/inset/pointer-events. */
+.fh-layer-webgl {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fh-layer-moon {
+  top: 8%;
+  right: 12%;
+  left: auto;
+  bottom: auto;
+  width: min(170px, 20vw);
+  height: min(170px, 20vw);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff7e0, var(--menu-hex1) 45%, #7a5a26 100%);
+  box-shadow: 0 0 80px rgba(240,201,106,.45), 0 0 160px rgba(240,201,106,.18);
+  transform: translate3d(calc(var(--fh-progress) * -6vw), calc(var(--fh-progress) * -3vh), 0) scale(calc(1 + var(--fh-progress) * .12));
+}
+
+.fh-layer-far-fog {
+  background: linear-gradient(180deg, transparent 35%, rgba(20,32,47,.55) 100%);
+  transform: translate3d(calc(var(--fh-progress) * -4vw), 0, 0);
+}
+
+.fh-layer-ocean {
+  top: 56%;
+  bottom: 0;
+  background: linear-gradient(180deg, #0b1522 0%, #060b13 55%, #030509 100%);
+  overflow: hidden;
+}
+
+.fh-ocean-sheen {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(100deg, rgba(255,255,255,.05) 0 2px, transparent 2px 42px);
+  opacity: .45;
+  animation: fhOceanDrift 16s linear infinite;
+}
+
+@keyframes fhOceanDrift {
+  from { background-position: 0 0; }
+  to   { background-position: 420px 0; }
+}
+
+.fh-layer-mid-fog {
+  background: radial-gradient(ellipse 70% 45% at 50% 62%, rgba(190,205,225,.35), transparent 70%);
+  filter: blur(6px);
+  opacity: max(0, calc(1 - var(--fh-progress) * 1.15));
+  transform: translate3d(calc(var(--fh-progress) * 6vw), 0, 0) scale(calc(1 + var(--fh-progress) * .25));
+}
+
+.fh-cinematic-video {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  /* Abgedunkelt/entsaettigt und mit weicher Vignette-Maske statt
+     hartem Rechteck-Rand, damit das Video wie ein atmosphaerischer
+     Hintergrund in der Szene wirkt statt wie ein scharf abgegrenztes
+     Video-Fenster im Vordergrund. */
+  filter: saturate(.6) brightness(.7) contrast(1.08);
+  mask-image: radial-gradient(ellipse 78% 72% at 50% 42%, #000 0%, #000 45%, transparent 92%);
+  -webkit-mask-image: radial-gradient(ellipse 78% 72% at 50% 42%, #000 0%, #000 45%, transparent 92%);
+  /* Bleibt jetzt bis ~60% der Journey-Strecke sichtbar (deckt sich mit
+     dem erweiterten ScrollTrigger-Scrub-Fenster in cinematic.js, seit
+     das Vektor-Schiff entfernt wurde) und blendet erst danach, bis
+     ~85%, sanft aus - genau dort, wo der Zielhafen (".fh-destination")
+     uebernimmt. Deckelt zusaetzlich bei .8 statt 1, damit es nie wie
+     ein grelles Vordergrund-Fenster wirkt. */
+  opacity: clamp(0, calc((0.85 - var(--fh-progress)) * 3.2), .8);
+}
+
+.fh-layer-fg-fog {
+  background: linear-gradient(0deg, rgba(6,9,15,.92), transparent 55%);
+  opacity: max(0, calc(1 - var(--fh-progress) * .6));
+}
+
+.fh-layer-particles {
+  overflow: hidden;
+}
+
+/* Funken beim Klick auf einen Menuepunkt (siehe initNavClickSparks()
+   in scripts/core/main.js) - dieselbe Gold-Gluehen-Sprache wie
+   .fh-ember, aber ein einmaliger Ausbruch statt einer Endlosschleife. */
+.fh-nav-spark {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--fh-gold-bright, #f0c96a);
+  box-shadow: 0 0 8px var(--fh-gold-bright, #f0c96a);
+  pointer-events: none;
+  z-index: var(--fh-z-fx);
+  animation: fhNavSparkBurst .5s cubic-bezier(.25,.8,.3,1) forwards;
+}
+
+@keyframes fhNavSparkBurst {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--fh-spark-x), var(--fh-spark-y)) scale(0); opacity: 0; }
+}
+
+.fh-ember {
+  position: absolute;
+  bottom: -10px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--fh-gold-bright);
+  box-shadow: 0 0 6px var(--fh-gold-bright);
+  opacity: 0;
+  animation: fhEmberRise linear infinite;
+  animation-delay: var(--fh-ember-delay, 0s);
+  animation-duration: var(--fh-ember-duration, 7s);
+  left: var(--fh-ember-x, 50%);
+}
+
+.fh-destination {
+  position: absolute;
+  left: 50%;
+  bottom: 28%;
+  width: min(420px, 58vw);
+  transform: translate3d(-50%, 0, 0) scale(calc(.85 + var(--fh-progress) * .15));
+  opacity: clamp(0, calc((var(--fh-progress) - .55) * 2.4), 1);
+}
+
+.fh-destination svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 22px 30px rgba(0,0,0,.55));
+}
+
+/* Schwenkender Leuchtturm-Lichtkegel, dreht um die Laterne
+   (215,52 im 300x200-viewBox der Ziel-SVG). */
+#fh-lighthouse-sweep {
+  transform-box: view-box;
+  transform-origin: 215px 52px;
+  mix-blend-mode: screen;
+  animation: fhLighthouseSweep 5s ease-in-out infinite;
+}
+
+@keyframes fhLighthouseSweep {
+  0%, 100% { transform: rotate(-16deg); }
+  50%      { transform: rotate(16deg); }
+}
+
+.fh-destination-glow {
+  position: absolute;
+  inset: -45%;
+  z-index: -1;
+  background: radial-gradient(circle, rgba(255,171,64,.32), transparent 70%);
+  filter: blur(22px);
+  opacity: clamp(0, calc((var(--fh-progress) - .6) * 2.4), 1);
+}
+
+.fh-cinematic-copy {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: min(720px, 88vw);
+  z-index: 5;
+  padding: 0 1rem;
+}
+
+.fh-copy-opening {
+  opacity: clamp(0, calc(1 - var(--fh-progress) * 3.2), 1);
+  /* Choreografierte Kamerafahrt beim Verlassen der Opening-Phase
+     (Punkt 30): sanftes Hineinzoomen + Weichzeichnen, statt nur
+     auszublenden - läuft rein über CSS calc() auf --fh-progress. */
+  transform: translate(-50%, -50%) scale(calc(1 + var(--fh-progress) * .12));
+  filter: blur(calc(var(--fh-progress) * 5px));
+  /* Einmaliger, sanfter Einblend-Moment beim Laden der Seite.
+     Ohne fill-mode: die Animation "gibt die Kontrolle" ueber
+     opacity/transform danach wieder an die obige, scroll-
+     gebundene calc()-Regel zurueck (kein permanenter Override). */
+  animation: fhCopyOpeningIn 1.4s var(--fh-ease) 1;
+}
+
+@keyframes fhCopyOpeningIn {
+  0%   { opacity: 0; transform: translate(-50%, -42%); }
+  100% { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-copy-opening {
+    animation: none;
+    transform: translate(-50%, -50%);
+    filter: none;
+  }
+}
+
+.fh-copy-destination {
+  top: 62%;
+  opacity: clamp(0, calc((var(--fh-progress) - .72) * 3.6), 1);
+}
+
+.fh-cinematic-eyebrow {
+  font-family: var(--fh-font-display);
+  letter-spacing: 6px;
+  color: var(--fh-gold-bright);
+  font-size: clamp(.68rem, 1.6vw, .9rem);
+  text-transform: uppercase;
+  margin: 0 0 .75rem;
+}
+
+.fh-cinematic-title {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.6rem, 7vw, 6rem);
+  letter-spacing: clamp(1px, 1vw, 14px);
+  color: var(--fh-text, #fff);
+  text-shadow: 0 0 50px rgba(240,201,106,.4);
+  margin: 0;
+}
+
+.fh-cinematic-lead {
+  margin: 1rem auto 0;
+  font-size: clamp(.95rem, 2vw, 1.3rem);
+  color: var(--fh-text-muted);
+  max-width: 46ch;
+}
+
+.fh-cinematic-meta {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.fh-cinematic-meta-item {
+  border: 1px solid var(--fh-border-strong);
+  border-radius: var(--fh-radius-sm);
+  padding: .55rem 1.1rem;
+  background: rgba(13,21,32,.55);
+  backdrop-filter: blur(6px);
+}
+
+.fh-cinematic-meta-label {
+  display: block;
+  font-size: .62rem;
+  letter-spacing: 2px;
+  color: var(--fh-text-muted);
+  text-transform: uppercase;
+}
+
+.fh-cinematic-meta-value {
+  display: block;
+  font-family: var(--fh-font-display);
+  font-size: .95rem;
+  color: var(--fh-gold-bright);
+  letter-spacing: 1px;
+  margin-top: .15rem;
+}
+
+.fh-scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  opacity: clamp(0, calc(1 - var(--fh-progress) * 6), 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4rem;
+  color: var(--fh-text-muted);
+  font-size: .65rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  z-index: 5;
+}
+
+.fh-scroll-cue-arrow {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--fh-gold-bright);
+  border-bottom: 2px solid var(--fh-gold-bright);
+  transform: rotate(45deg);
+  animation: fhScrollCueBounce 1.8s ease-in-out infinite;
+}
+
+@keyframes fhScrollCueBounce {
+  0%, 100% { transform: rotate(45deg) translate(0, 0); }
+  50%      { transform: rotate(45deg) translate(4px, 4px); }
+}
+
+/* Dezente Fortschrittsanzeige der Cinematic-Sequenz (Punkt 31) -
+   reine CSS-Breite aus --fh-progress, kein zusätzlicher JS-Code. */
+.fh-journey-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 2.2%;
+  transform: translateX(-50%);
+  width: min(220px, 46vw);
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  overflow: hidden;
+  z-index: 5;
+}
+
+.fh-journey-progress-fill {
+  height: 100%;
+  width: calc(var(--fh-progress) * 100%);
+  background: linear-gradient(90deg, var(--fh-fire), var(--fh-gold-bright));
+  box-shadow: 0 0 8px rgba(240,201,106,.6);
+}
+
+@media (max-width: 640px) {
+  .fh-journey-track { height: 260vh; }
+  .fh-layer-mid-fog, .fh-layer-far-fog { filter: blur(3px); }
+  .fh-destination { width: min(280px, 76vw); }
+  .fh-cinematic-video { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-layer-stars,
+  .fh-layer-moon,
+  .fh-layer-far-fog,
+  .fh-layer-mid-fog,
+  .fh-destination {
+    transform: none !important;
+  }
+
+  .fh-scroll-cue-arrow,
+  .fh-ocean-sheen,
+  .fh-ember,
+  #fh-lighthouse-sweep {
+    animation: none !important;
+  }
+
+  .fh-shooting-star,
+  .fh-cinematic-video {
+    display: none !important;
+  }
+}
+

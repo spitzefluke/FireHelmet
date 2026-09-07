@@ -304,7 +304,7 @@ function renderStreamRaetselContent() {
   if (!contentEl) return;
 
   const imageHtml = streamRaetselConfig.image
-    ? `<img src="${streamRaetselConfig.image}" class="detail-cover" style="margin-bottom:30px;">`
+    ? `<img src="${streamRaetselConfig.image}" class="detail-cover" alt="" style="margin-bottom:30px;">`
     : "";
 
   contentEl.innerHTML = `
