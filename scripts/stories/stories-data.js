@@ -6,7 +6,7 @@ const stories = [
   {
     id: "treasure",
     title: "The Legendary Treasure",
-    cover: "scripts/Legendary.png",
+    cover: "scripts/Legendary.webp",
     description:
       "Eine mysteriöse Reise auf der Suche nach einem legendären Schatz. Ein Abenteuer voller Geheimnisse, Gefahren und vergessener Geschichten.",
 
@@ -383,7 +383,7 @@ Chapter 12 content.
   {
     id: "lost-route",
     title: "Das Tagebuch des Schifffahrers",
-    cover: "scripts/image/logbuch2.png",
+    cover: "scripts/image/logbuch2.webp",
     description:
       "Eine uralte Karte, ein grünes Licht, das niemand erklären kann, und eine Insel, die auf keiner Seekarte verzeichnet ist. Schifffahrer Daves eigene Aufzeichnungen von der Suche nach dem legendären Schatz - und von dem, was am Ende wirklich in der Truhe lag.",
 

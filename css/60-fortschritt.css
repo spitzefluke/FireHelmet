@@ -1,0 +1,2541 @@
+/* =====================================================
+   FIREHELMET - STYLE 7/8: FORTSCHRITT
+   ---------------------------------------------------
+   Aendiis Spielothek, Progressionssystem, Piratenpass,
+   persoenlicher Levelpfad und das Turnier.
+
+   ACHTUNG REIHENFOLGE: diese Dateien waren bis zum Aufteilen
+   EINE Datei mit 13.539 Zeilen. An mehreren Stellen entscheidet
+   allein die Reihenfolge, welche Regel gewinnt (gleich starke
+   Selektoren, spaeter schlaegt frueher). Die Einbindung in
+   index.html muss daher genau in dieser Nummerierung bleiben -
+   eine umgestellte oder vergessene Datei aendert das Aussehen.
+===================================================== */
+
+/* =====================================================
+   ÄNDIIS SPIELOTHEK
+   Piraten-/Schatz-Stil (Holz, Gold, dunkle Karten) statt
+   modernem Casino-Look - siehe scripts/spielothek/*.
+===================================================== */
+.spielothek-page-content {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+  text-align: center;
+}
+
+/* ------------------------------------------------------
+   OEFFNUNGS-ANIMATION
+   ---------------------------------------------------
+   renderSpielothekPage() baut #spielothek-content bei JEDEM
+   Seitenaufruf komplett neu auf (siehe spielothek.js) - dadurch
+   sind es immer frische DOM-Elemente und die Animation spielt
+   automatisch bei jedem erneuten Oeffnen erneut ab, ganz ohne
+   zusaetzlichen JS-Aufwand. Rein CSS (transform/opacity), in
+   mehreren gestaffelten Phasen ueber insgesamt ca. 1,8s:
+   Hintergrund -> Titel -> Kontostand/Einsatz -> Spieltisch-Rahmen
+   -> Ändii -> Spielbereich -> Regeln -> abschliessender
+   Bounce/Glow. "backwards" haelt jedes Element bis zu seinem
+   eigenen Start unsichtbar, die Spiele sind so nie sofort
+   komplett sichtbar. Alle Animationen sind einmalige, endliche
+   CSS-Keyframes (kein setInterval/requestAnimationFrame-Loop).
+------------------------------------------------------ */
+.spielothek-page-content {
+  animation: spielothekBgIn .4s ease-out backwards;
+}
+
+.spielothek-game-heading {
+  animation: spielothekSlideDown .5s cubic-bezier(.22, .9, .32, 1.1) .15s backwards;
+}
+
+.spielothek-currency-bar {
+  animation: spielothekEnter .45s cubic-bezier(.22, .9, .32, 1.1) .38s backwards;
+}
+
+.spielothek-bet-hint {
+  animation: spielothekEnter .4s cubic-bezier(.22, .9, .32, 1.1) .55s backwards;
+}
+
+.spielothek-stage {
+  animation:
+    spielothekEnter .5s cubic-bezier(.22, .9, .32, 1.1) .7s backwards,
+    spielothekFinalBounce .4s ease-out 1.55s;
+}
+
+.spielothek-andi {
+  animation: spielothekSlideLeft .5s cubic-bezier(.22, .9, .32, 1.1) .95s backwards;
+}
+
+.spielothek-game-area {
+  animation: spielothekSlideRight .5s cubic-bezier(.22, .9, .32, 1.1) 1.15s backwards;
+}
+
+.spielothek-rules {
+  animation: spielothekEnter .45s cubic-bezier(.22, .9, .32, 1.1) 1.4s backwards;
+}
+
+@keyframes spielothekBgIn {
+  0%   { opacity: 0; transform: scale(.98); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spielothekSlideDown {
+  0%   { opacity: 0; transform: translateY(-18px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spielothekSlideLeft {
+  0%   { opacity: 0; transform: translateX(-26px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spielothekSlideRight {
+  0%   { opacity: 0; transform: translateX(26px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spielothekEnter {
+  0%   { opacity: 0; transform: translateY(16px) scale(.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes spielothekFinalBounce {
+  0%   { transform: scale(1); box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
+  45%  { transform: scale(1.015); box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 44px rgba(240,201,106,.5); }
+  100% { transform: scale(1); box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-page-content,
+  .spielothek-game-heading,
+  .spielothek-currency-bar,
+  .spielothek-bet-hint,
+  .spielothek-stage,
+  .spielothek-andi,
+  .spielothek-game-area,
+  .spielothek-rules {
+    animation: none;
+  }
+}
+
+.spielothek-game-heading {
+  margin-top: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.spielothek-game-emoji {
+  font-size: 34px;
+  filter: drop-shadow(0 0 14px rgba(240,201,106,.4));
+}
+
+.spielothek-game-name {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.2rem, 3.4vw, 1.7rem);
+  letter-spacing: 2px;
+  color: var(--fh-gold-bright);
+  text-shadow: 0 0 24px rgba(240,201,106,.35);
+}
+
+.spielothek-bet-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.spielothek-bet-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.spielothek-bet-picker input[type="range"] {
+  width: clamp(120px, 40vw, 220px);
+  accent-color: var(--fh-gold-bright, #f0c96a);
+}
+
+.spielothek-bet-value {
+  min-width: 58px;
+  font-weight: bold;
+  color: var(--fh-gold-bright, #f0c96a);
+}
+
+.spielothek-rules-bet-hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.spielothek-stage {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: stretch;
+  justify-content: center;
+  padding: 28px 24px;
+  border-radius: var(--fh-radius-lg);
+  background:
+    linear-gradient(160deg, rgba(58,44,28,.55), rgba(15,10,6,.9)),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, transparent 2px 22px);
+  border: 1px solid rgba(214,168,79,.35);
+  box-shadow: 0 30px 70px rgba(0,0,0,.55), inset 0 0 50px rgba(0,0,0,.35);
+  transition: box-shadow .4s ease;
+}
+
+.spielothek-stage-win {
+  animation: spielothekStageWinFlash 1s ease-out;
+}
+
+.spielothek-stage-lose {
+  animation: spielothekStageLoseFlash .6s ease-out;
+}
+
+@keyframes spielothekStageWinFlash {
+  0%   { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
+  30%  { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 60px rgba(240,201,106,.55); }
+  100% { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
+}
+
+@keyframes spielothekStageLoseFlash {
+  0%   { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(220,50,50,0); }
+  35%  { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 40px rgba(220,50,50,.45); }
+  100% { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(220,50,50,0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-stage-win,
+  .spielothek-stage-lose {
+    animation: none;
+  }
+}
+
+.spielothek-andi {
+  flex: 0 0 auto;
+  width: min(200px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.spielothek-andi-image {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(214,168,79,.55);
+  box-shadow: 0 0 30px rgba(0,0,0,.5);
+}
+
+.spielothek-andi-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 54px;
+  background: radial-gradient(circle, rgba(214,168,79,.22), rgba(20,14,8,.9));
+}
+
+.spielothek-andi-quote {
+  position: relative;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(10,7,5,.6);
+  border: 1px solid rgba(214,168,79,.3);
+  color: var(--fh-fg);
+  font-size: 14px;
+  font-style: italic;
+  min-height: 3.4em;
+}
+
+/* --- Ändii-Reaktion bei Niederlage (Punkt 10): Avatar kommt von der
+   Seite herein -> Spruch erscheint -> kurzer Bounce. Klasse wird von
+   renderSpielothekResult() nur bei Verlust gesetzt und vor jedem neuen
+   Ergebnis wieder entfernt (siehe spielothek.js), spielt dadurch bei
+   jeder Niederlage frisch ab. --- */
+.spielothek-andi-lose-react .spielothek-andi-image {
+  animation: spielothekAndiSlideIn .45s cubic-bezier(.22, .9, .32, 1.1) backwards;
+}
+
+.spielothek-andi-lose-react .spielothek-andi-quote {
+  animation: spielothekEnter .4s cubic-bezier(.22, .9, .32, 1.1) .25s backwards;
+}
+
+.spielothek-andi-lose-react {
+  animation: spielothekAndiBounce .4s ease-out .55s;
+}
+
+@keyframes spielothekAndiSlideIn {
+  0%   { opacity: 0; transform: translateX(-34px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spielothekAndiBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.06); }
+  70%  { transform: scale(.98); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-andi-lose-react .spielothek-andi-image,
+  .spielothek-andi-lose-react .spielothek-andi-quote,
+  .spielothek-andi-lose-react {
+    animation: none;
+  }
+}
+
+.spielothek-game-area {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.spielothek-result {
+  position: relative;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.spielothek-slot-reels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  animation: spielothekReelsWobble .35s ease-in-out;
+}
+
+/* Kurzes Wackeln beim Start des Spins (Auftrag Punkt 5) - laeuft
+   EINMAL beim Erscheinen des .spielothek-slot-reels-Elements ab,
+   bevor die eigentliche Dreh-Animation der Walzen greift. */
+@keyframes spielothekReelsWobble {
+  0%   { transform: translateX(0) rotate(0deg); }
+  20%  { transform: translateX(-3px) rotate(-1deg); }
+  40%  { transform: translateX(3px) rotate(1deg); }
+  60%  { transform: translateX(-2px) rotate(-.5deg); }
+  80%  { transform: translateX(2px) rotate(.5deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+.spielothek-slot-symbol {
+  --slot-symbol-size: 64px;
+  --slot-reel-duration: 900ms;
+  position: relative;
+  width: var(--slot-symbol-size);
+  height: var(--slot-symbol-size);
+  display: flex;
+  /* Wichtig: NICHT vertikal zentrieren (align-items: center wuerde den
+     hochkant liegenden .spielothek-slot-strip mittig statt oben
+     ausrichten und damit die translateY-Zielposition der Dreh-
+     Animation verschieben - das Fenster muss oben am Streifen
+     "andocken", damit die Animation exakt auf dem letzten/echten
+     Symbol landet). */
+  align-items: flex-start;
+  justify-content: center;
+  font-size: 34px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #2a1f14, #14100a);
+  border: 2px solid rgba(214,168,79,.5);
+  box-shadow: inset 0 0 12px rgba(0,0,0,.6);
+  overflow: hidden;
+}
+
+/* Kurzer Licht-/Glow-Impuls, GENAU wenn diese Walze landet - Klasse
+   wird von spielothek.js per JS zeitgleich mit dem tatsaechlichen
+   Animationsende dieser Walze gesetzt (kennt SLOT_REEL_STOP_TIMES_MS
+   aus slot.js), keine Ratewerte. Bewegungsunschaerfe waehrend des
+   Drehens simuliert der leicht reduzierte Kontrast/Blur-Filter unten. */
+.spielothek-slot-symbol.spielothek-slot-spin {
+  filter: blur(1.5px) brightness(1.08);
+}
+
+.spielothek-slot-symbol-landed {
+  filter: none;
+  animation: spielothekReelLand .5s cubic-bezier(.34, 1.5, .64, 1);
+}
+
+.spielothek-slot-symbol-landed::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 12px;
+  background: radial-gradient(circle, rgba(255,230,170,.75), transparent 70%);
+  animation: spielothekReelGlow .5s ease-out;
+  pointer-events: none;
+}
+
+@keyframes spielothekReelLand {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.12) translateY(-2px); }
+  100% { transform: scale(1); }
+}
+
+@keyframes spielothekReelGlow {
+  0%   { opacity: 0; }
+  35%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ---- Tier-abhaengige Verstaerkung beim Landen (Auftrag Punkt 5:
+   "staerkerer Effekt bei seltenen Gewinnen") ---- */
+.spielothek-slot-reels-tier-big .spielothek-slot-symbol-landed::after,
+.spielothek-slot-reels-tier-veryBig .spielothek-slot-symbol-landed::after {
+  background: radial-gradient(circle, rgba(125,211,252,.85), transparent 70%);
+}
+
+.spielothek-slot-reels-tier-jackpot .spielothek-slot-symbol-landed::after {
+  background: radial-gradient(circle, rgba(255,106,42,.9), transparent 70%);
+}
+
+.spielothek-slot-reels-tier-jackpot .spielothek-slot-symbol-landed {
+  animation: spielothekReelLandBig .6s cubic-bezier(.34, 1.5, .64, 1);
+}
+
+@keyframes spielothekReelLandBig {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.24) translateY(-4px); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-slot-reels {
+    animation: none;
+  }
+  .spielothek-slot-symbol.spielothek-slot-spin {
+    filter: none;
+  }
+  .spielothek-slot-symbol-landed,
+  .spielothek-slot-reels-tier-jackpot .spielothek-slot-symbol-landed {
+    animation: none;
+  }
+  .spielothek-slot-symbol-landed::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------
+   WALZEN-DREH-ANIMATION (Punkt 6)
+   ---------------------------------------------------
+   Klassischer Slot-Machine-Trick, rein per CSS transform: jede
+   Walze ist ein "Fenster" (.spielothek-slot-symbol, overflow:
+   hidden) mit einem senkrechten Streifen aus mehreren Symbolen
+   darin (.spielothek-slot-strip) - das ECHTE Ergebnis steht ganz
+   unten im Streifen. Der Streifen faehrt per @keyframes genau bis
+   dahin und wird langsamer (Ease-Out) statt abrupt zu stoppen.
+   Kein JS-Intervall noetig, keine Dauerschleife - die Animation
+   laeuft genau einmal pro Spielrunde und endet dann von selbst.
+------------------------------------------------------ */
+.spielothek-slot-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.spielothek-slot-strip > span {
+  height: var(--slot-symbol-size);
+  width: var(--slot-symbol-size);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spielothek-slot-spin .spielothek-slot-strip {
+  animation: spielothekReelSpin var(--slot-reel-duration, 900ms) cubic-bezier(.13, .82, .22, 1) both;
+}
+
+@keyframes spielothekReelSpin {
+  from { transform: translateY(0); }
+  to   { transform: translateY(calc(-14 * var(--slot-symbol-size))); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-slot-spin .spielothek-slot-strip {
+    animation: none;
+    transform: translateY(calc(-14 * var(--slot-symbol-size)));
+  }
+}
+
+.spielothek-result-line {
+  font-family: var(--fh-font-display);
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+.spielothek-result-win {
+  color: var(--fh-success);
+}
+
+.spielothek-result-lose {
+  color: var(--fh-danger);
+}
+
+/* --- Gewinn-Ablauf in zwei Schritten (Punkt 11): "Gewinn!" wird zuerst
+   aufgedeckt, dann poppt der Betrag mit demselben Effekt nach, waehrend
+   triggerSpielothekConfetti() (spielothek.js) ein paar Konfetti-Punkte
+   auseinanderfliegen laesst. --- */
+.spielothek-result-reveal {
+  animation: spielothekResultPop .35s cubic-bezier(.34, 1.5, .64, 1) backwards;
+}
+
+.spielothek-amount-pop {
+  animation: spielothekResultPop .4s cubic-bezier(.34, 1.5, .64, 1);
+}
+
+@keyframes spielothekResultPop {
+  0%   { opacity: 0; transform: scale(.7); }
+  60%  { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.spielothek-confetti-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.spielothek-confetti-piece {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--fh-confetti-color, #f0c96a);
+  animation: spielothekConfettiPop .75s ease-out both;
+  animation-delay: var(--fh-confetti-delay, 0ms);
+}
+
+@keyframes spielothekConfettiPop {
+  0%   { opacity: 1; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(0) scale(1); }
+  100% { opacity: 0; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(-48px) scale(.4); }
+}
+
+/* Jackpot: deutlich weiterer, laengerer Konfetti-Wurf UND groessere
+   Partikel (Auftrag Punkt 5: "staerkerer Effekt bei seltenen
+   Gewinnen") - eigene Keyframe statt nur mehr Teilchen derselben
+   Groesse/Reichweite. */
+.spielothek-confetti-burst-jackpot .spielothek-confetti-piece {
+  width: 8px;
+  height: 8px;
+  animation-name: spielothekConfettiPopJackpot;
+  animation-duration: 1.4s;
+}
+
+@keyframes spielothekConfettiPopJackpot {
+  0%   { opacity: 1; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(0) scale(1); }
+  100% { opacity: 0; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(-92px) scale(.3); }
+}
+
+/* Grosse Gewinne heben sich zusaetzlich farblich/optisch ab */
+.spielothek-result-win-big {
+  color: var(--menu-hex3);
+  text-shadow: 0 0 18px rgba(255,215,107,.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spielothek-result-reveal,
+  .spielothek-amount-pop,
+  .spielothek-confetti-piece {
+    animation: none;
+  }
+}
+
+.spielothek-rules {
+  margin: 26px auto 0;
+  max-width: 480px;
+  text-align: left;
+  padding: 14px 18px;
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  color: var(--fh-text-muted);
+  font-size: 14px;
+  transition: border-color .25s ease, box-shadow .25s ease;
+}
+
+.spielothek-rules[open] {
+  border-color: rgba(214,168,79,.4);
+  box-shadow: 0 0 20px rgba(214,168,79,.08);
+}
+
+/* Eigener Pfeil statt des uneinheitlichen nativen <details>-Dreiecks -
+   dreht sich beim Auf-/Zuklappen statt nur zu verschwinden/erscheinen. */
+.spielothek-rules summary {
+  cursor: pointer;
+  font-family: var(--fh-font-display);
+  color: var(--fh-gold-bright);
+  letter-spacing: 1px;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: color .2s ease;
+}
+
+.spielothek-rules summary::-webkit-details-marker {
+  display: none;
+}
+
+.spielothek-rules summary::after {
+  content: "▾";
+  font-size: 13px;
+  color: var(--fh-gold, #d6a84f);
+  transition: transform .25s var(--fh-ease, ease);
+}
+
+.spielothek-rules[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.spielothek-rules summary:hover {
+  color: #fff;
+}
+
+.spielothek-rules ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+/* Transparente Gewinntabelle (Auftrag Punkt 8) - eigene Liste ohne
+   Aufzaehlungspunkte, damit Symbol/Bezeichnung/Betrag wie eine
+   kleine Tabelle wirken. */
+.spielothek-rules-tiers {
+  list-style: none;
+  padding-left: 0 !important;
+  margin: 0 0 12px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spielothek-rules-tiers li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spielothek-rules-symbols {
+  font-size: 15px;
+  min-width: 76px;
+}
+
+@media (max-width: 640px) {
+  .spielothek-stage {
+    flex-direction: column;
+    align-items: center;
+  }
+  .spielothek-slot-symbol {
+    --slot-symbol-size: 52px;
+    width: var(--slot-symbol-size);
+    height: var(--slot-symbol-size);
+    font-size: 28px;
+  }
+}
+
+/* =====================================================
+   PROGRESSION-SYSTEM: SPIELERKARTE, LEVEL-UP, MEILENSTEINE,
+   PIRATENPASS (NEU)
+   Nutzt bestehende Design-Tokens (--fh-gold/--fh-muted/--fh-border/
+   --fh-success/--fh-font-display/--fh-ease usw.), keine neuen Farben.
+===================================================== */
+
+/* ---- Sidebar-Spielerkarte (ersetzt "Crew Flitzpiepen · Online") ---- */
+.fh-sidebar-footer-wrap {
+  position: relative;
+  z-index: 1;
+  padding: 18px;
+}
+
+.fh-sidebar-footer {
+  min-height: 32px;
+}
+
+.fh-player-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  background: var(--fh-muted);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-sm);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+
+.fh-player-card:hover,
+.fh-player-card:focus-visible {
+  border-color: rgba(240,201,106,.4);
+  background: var(--fh-surface-light);
+  outline: none;
+}
+
+.fh-player-card-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fh-surface-2);
+  border: 1px solid var(--fh-border-strong);
+  font-size: 20px;
+}
+
+.fh-player-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fh-player-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fh-player-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fh-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fh-player-card-level {
+  font-family: var(--fh-font-display);
+  letter-spacing: .1em;
+  font-size: 11px;
+  color: var(--fh-gold-bright);
+}
+
+.fh-player-card-xpbar {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fh-surface-2);
+  overflow: hidden;
+  margin-top: 1px;
+}
+
+.fh-player-card-xpfill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--fh-gold), var(--fh-fire));
+  transition: width .5s var(--fh-ease);
+}
+
+.fh-player-card-xptext {
+  font-size: 10px;
+  color: var(--fh-muted-fg);
+}
+
+/* ---- Mobile Spielerkarte (unter 1024px, ueber der Tableiste) ----
+   Zeigt dieselbe renderPlayerCardHtml()-Ausgabe wie die Desktop-
+   Sidebar, da .fh-sidebar unterhalb 1024px komplett display:none
+   ist (siehe .fh-sidebar-Regel weiter oben) und der Levelbereich
+   dort sonst fuer die meisten Besucher (Smartphones) unsichtbar
+   bliebe. */
+.fh-mobile-player-card {
+  padding: 8px 10px 0;
+}
+
+.fh-mobile-player-card .fh-player-card {
+  background: rgba(10, 14, 24, .92);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 -2px 14px rgba(0, 0, 0, .25);
+}
+
+.fh-mobile-player-card-empty,
+.fh-mobile-player-card:empty {
+  display: none;
+}
+
+/* ---- Level-Up-Overlay ---- */
+.fh-levelup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--fh-z-modal-high);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5,7,11,.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s var(--fh-ease);
+  padding: 20px;
+}
+
+.fh-levelup-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fh-levelup-card {
+  position: relative;
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid rgba(240,201,106,.35);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow), var(--fh-glow-gold);
+  padding: 36px 32px;
+  text-align: center;
+  max-width: 340px;
+  width: 100%;
+  transform: scale(.9);
+  transition: transform .35s var(--fh-ease);
+}
+
+.fh-levelup-overlay.visible .fh-levelup-card {
+  transform: scale(1);
+}
+
+.fh-levelup-overlay.fh-reduced-motion,
+.fh-levelup-overlay.fh-reduced-motion .fh-levelup-card {
+  transition: opacity .2s linear;
+  transform: none;
+}
+
+.fh-levelup-title {
+  font-family: var(--fh-font-display);
+  font-size: 26px;
+  letter-spacing: .08em;
+  color: var(--fh-gold-bright);
+  margin: 0 0 6px;
+}
+
+.fh-levelup-level {
+  font-size: 15px;
+  color: var(--fh-fg);
+  margin: 0 0 14px;
+}
+
+.fh-levelup-reward {
+  font-size: 15px;
+  color: var(--fh-fg);
+  background: var(--fh-muted);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-sm);
+  padding: 10px 14px;
+  margin: 0 0 18px;
+}
+
+.fh-levelup-close {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, var(--fh-gold), var(--fh-fire));
+  border: none;
+  border-radius: 999px;
+  color: #1a0a05;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, filter .2s;
+}
+
+.fh-levelup-close:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.fh-levelup-confetti {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(240,201,106,.5) 0 3px, transparent 4px),
+    radial-gradient(circle at 80% 15%, rgba(255,106,42,.5) 0 3px, transparent 4px),
+    radial-gradient(circle at 30% 85%, rgba(85,200,120,.4) 0 3px, transparent 4px),
+    radial-gradient(circle at 70% 80%, rgba(240,201,106,.4) 0 3px, transparent 4px),
+    radial-gradient(circle at 50% 50%, rgba(255,215,107,.35) 0 3px, transparent 4px);
+  animation: fhConfettiDrift 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes fhConfettiDrift {
+  from { transform: translateY(-4px); opacity: .9; }
+  to { transform: translateY(4px); opacity: .5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-levelup-overlay,
+  .fh-levelup-overlay .fh-levelup-card {
+    transition: opacity .2s linear !important;
+    transform: none !important;
+  }
+  .fh-levelup-confetti {
+    animation: none;
+  }
+}
+
+/* ---- "Crew beigetreten"-Animation (nur beim allerersten anonymen
+   Login, siehe showCrewJoinAnimation() in scripts/core/progression.js) ---- */
+.fh-crewjoin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--fh-z-modal-top);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5,7,11,.82);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s var(--fh-ease);
+  padding: 20px;
+  cursor: pointer;
+}
+
+.fh-crewjoin-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fh-crewjoin-card {
+  position: relative;
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+  transform: scale(.85);
+  transition: transform .45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fh-crewjoin-overlay.visible .fh-crewjoin-card {
+  transform: scale(1);
+}
+
+.fh-crewjoin-flag {
+  font-size: 64px;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 18px rgba(240,201,106,.5));
+  animation: fhCrewJoinFlagWave 1.8s ease-in-out infinite;
+}
+
+@keyframes fhCrewJoinFlagWave {
+  0%, 100% { transform: rotate(-4deg) translateY(0); }
+  50% { transform: rotate(4deg) translateY(-4px); }
+}
+
+.fh-crewjoin-title {
+  font-family: var(--fh-font-display);
+  font-size: 24px;
+  letter-spacing: .06em;
+  color: var(--fh-gold-bright);
+  margin: 0 0 6px;
+  text-shadow: 0 0 20px rgba(240,201,106,.4);
+}
+
+.fh-crewjoin-name {
+  font-size: 16px;
+  color: var(--fh-fg);
+  margin: 0;
+}
+
+.fh-crewjoin-confetti {
+  position: absolute;
+  inset: -60px -40px;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(240,201,106,.55) 0 3px, transparent 4px),
+    radial-gradient(circle at 85% 20%, rgba(255,106,42,.5) 0 3px, transparent 4px),
+    radial-gradient(circle at 20% 90%, rgba(85,200,120,.4) 0 3px, transparent 4px),
+    radial-gradient(circle at 75% 85%, rgba(240,201,106,.45) 0 3px, transparent 4px),
+    radial-gradient(circle at 50% 50%, rgba(255,215,107,.35) 0 3px, transparent 4px),
+    radial-gradient(circle at 40% 30%, rgba(77,163,255,.35) 0 3px, transparent 4px);
+  animation: fhConfettiDrift 2.4s ease-in-out infinite alternate;
+}
+
+.fh-crewjoin-overlay.fh-reduced-motion,
+.fh-crewjoin-overlay.fh-reduced-motion .fh-crewjoin-card,
+.fh-crewjoin-overlay.fh-reduced-motion .fh-crewjoin-flag {
+  transition: opacity .2s linear;
+  animation: none;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-crewjoin-overlay,
+  .fh-crewjoin-overlay .fh-crewjoin-card,
+  .fh-crewjoin-flag {
+    transition: opacity .2s linear !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ---- Expedition-Meilensteine (story-progress-bar aus stories.js) ---- */
+.story-progress-bar {
+  position: relative;
+  overflow: visible;
+}
+
+.story-milestone-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.story-milestone-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--fh-bg);
+  background: var(--fh-muted-fg);
+}
+
+.story-milestone-marker.story-milestone-ready .story-milestone-dot {
+  background: var(--fh-gold-bright);
+  box-shadow: 0 0 6px var(--fh-gold-bright);
+}
+
+.story-milestone-marker.story-milestone-claimed .story-milestone-dot {
+  background: var(--fh-success);
+  box-shadow: 0 0 6px var(--fh-success);
+}
+
+.story-milestone-icon {
+  position: absolute;
+  top: 14px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.story-milestone-banner-slot:empty {
+  display: none;
+}
+
+.story-milestone-banner {
+  margin-top: 40px;
+  background: var(--fh-surface-light);
+  border: 1px solid rgba(240,201,106,.35);
+  border-radius: var(--fh-radius);
+  padding: 16px 18px;
+  max-width: 420px;
+}
+
+.story-milestone-banner-title {
+  font-family: var(--fh-font-display);
+  letter-spacing: .05em;
+  color: var(--fh-gold-bright);
+  margin: 0 0 4px;
+}
+
+.story-milestone-banner-subtitle {
+  font-size: 13px;
+  color: var(--fh-fg);
+  margin: 0 0 8px;
+}
+
+.story-milestone-banner-reward {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  margin: 0 0 12px;
+}
+
+.story-milestone-banner-btn {
+  padding: 9px 20px;
+  background: linear-gradient(135deg, var(--fh-gold), var(--fh-fire));
+  border: none;
+  border-radius: 999px;
+  color: #1a0a05;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, filter .2s;
+}
+
+.story-milestone-banner-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* =====================================================
+   PIRATENPASS: HORIZONTALE SCHATZROUTE (ersetzt den bestehenden
+   "???"-Bereich, siehe #streamraetsel-content in index.html)
+   ---------------------------------------------------
+   Alle Selektoren mit "piratenpass-" praefigiert und ausschliesslich
+   INNERHALB von #streamraetsel-content wirksam - keine globalen
+   Regeln, die andere Seiten beeinflussen koennten. Nutzt
+   ausschliesslich bestehende Design-Tokens (--fh-gold/--fh-fire/
+   --fh-muted/--fh-border/--fh-radius/--fh-shadow/--fh-font-display/
+   --fh-ease usw.), keine neuen Farben.
+===================================================== */
+
+.piratenpass-wrap {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.piratenpass-empty-state {
+  color: var(--fh-muted-fg);
+}
+
+/* ---- Kompakter Header ---- */
+.piratenpass-header {
+  margin-bottom: 6px;
+}
+
+.piratenpass-header h1 {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.3rem, 3.4vw, 1.9rem);
+  letter-spacing: .06em;
+  text-shadow: 0 0 30px rgba(240,201,106,.3);
+  color: var(--fh-fg);
+  margin: 0 0 8px;
+}
+
+.piratenpass-header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.piratenpass-season-label {
+  font-family: var(--fh-font-display);
+  letter-spacing: .1em;
+  font-size: 13px;
+  color: var(--fh-gold-bright);
+}
+
+.piratenpass-days-left {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.piratenpass-tier-heading {
+  font-size: 13px;
+  color: var(--fh-fg);
+  margin: 0 0 6px;
+}
+
+.piratenpass-header-progressbar {
+  width: min(360px, 100%);
+  margin: 0 auto;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--fh-muted);
+  border: 1px solid var(--fh-border);
+  overflow: hidden;
+}
+
+.piratenpass-header-progressbar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fh-gold), var(--fh-fire));
+  transition: width .6s var(--fh-ease);
+}
+
+.piratenpass-header-xp {
+  display: block;
+  font-size: 11px;
+  color: var(--fh-muted-fg);
+  margin-top: 4px;
+}
+
+/* ---- Horizontal scrollbare Route (NUR dieser Bereich scrollt,
+   nie die gesamte Website - siehe max-width:100% + overflow-x auf
+   dem inneren Container, waehrend .piratenpass-route breiter als
+   der Viewport werden darf) ---- */
+.piratenpass-scroll {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 34px 24px 30px;
+  margin-top: 14px;
+  border-radius: var(--fh-radius);
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(240,201,106,.07), transparent 55%),
+    radial-gradient(ellipse at 85% 100%, rgba(255,106,42,.06), transparent 55%),
+    var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  scrollbar-width: thin;
+  scrollbar-color: var(--fh-gold) var(--fh-muted);
+}
+
+.piratenpass-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.piratenpass-scroll::-webkit-scrollbar-track {
+  background: var(--fh-muted);
+  border-radius: 999px;
+}
+.piratenpass-scroll::-webkit-scrollbar-thumb {
+  background: var(--fh-gold);
+  border-radius: 999px;
+}
+
+.piratenpass-route {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  min-width: 100%;
+}
+
+.piratenpass-start-flag {
+  flex-shrink: 0;
+  font-size: 20px;
+  margin-right: 10px;
+  opacity: .8;
+}
+
+/* ---- Verbindungslinie: zeigt den Fortschritt zwischen Stufen ---- */
+.piratenpass-connector {
+  flex-shrink: 0;
+  width: 34px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--fh-border);
+  margin: 0 -2px;
+}
+
+.piratenpass-connector-filled {
+  background: linear-gradient(90deg, var(--fh-gold), var(--fh-fire));
+  box-shadow: 0 0 6px rgba(240,201,106,.4);
+}
+
+/* ---- Stufen-Knoten ---- */
+.piratenpass-node {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--fh-muted);
+  border: 2px solid var(--fh-border-strong);
+  cursor: pointer;
+  transition: transform .15s, border-color .2s, box-shadow .2s;
+  font-size: 17px;
+}
+
+.piratenpass-node:hover,
+.piratenpass-node:focus-visible {
+  transform: translateY(-3px);
+  outline: none;
+  border-color: var(--fh-gold-bright);
+}
+
+.piratenpass-node-number {
+  position: absolute;
+  bottom: -18px;
+  font-size: 10px;
+  color: var(--fh-muted-fg);
+  font-family: var(--fh-font-display);
+  white-space: nowrap;
+}
+
+.piratenpass-node-status-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  background: var(--fh-bg);
+  border: 1px solid var(--fh-border-strong);
+  line-height: 1;
+}
+
+/* Gesperrt: gedimmt/entsaettigt */
+.piratenpass-node-locked {
+  opacity: .45;
+  filter: grayscale(.5);
+}
+
+/* Erreicht (eingeloest ODER abholbereit): leuchtender Rand */
+.piratenpass-node-claimed,
+.piratenpass-node-ready {
+  border-color: var(--fh-gold);
+  background: var(--fh-surface-light);
+  box-shadow: 0 0 10px rgba(240,201,106,.25);
+}
+
+.piratenpass-node-claimed {
+  opacity: .8;
+}
+
+.piratenpass-node-claimed .piratenpass-node-status-badge {
+  color: var(--fh-success);
+  border-color: var(--fh-success);
+}
+
+.piratenpass-node-ready .piratenpass-node-status-badge {
+  color: var(--fh-gold-bright);
+  border-color: var(--fh-gold-bright);
+}
+
+/* Aktuelle Stufe ("DU HIER") - deutlich groesser + Glow-Puls */
+.piratenpass-node-current {
+  width: 60px;
+  height: 60px;
+  font-size: 22px;
+  border-color: var(--fh-gold-bright);
+  box-shadow: 0 0 0 4px rgba(240,201,106,.15), 0 0 22px rgba(240,201,106,.5);
+  animation: piratenpassCurrentPulse 2.4s ease-in-out infinite;
+  z-index: 1;
+}
+
+.piratenpass-node-current-tag {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--fh-font-display);
+  font-size: 9px;
+  letter-spacing: .1em;
+  color: var(--fh-gold-bright);
+  white-space: nowrap;
+}
+
+@keyframes piratenpassCurrentPulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(240,201,106,.15), 0 0 18px rgba(240,201,106,.45); }
+  50% { box-shadow: 0 0 0 7px rgba(240,201,106,.08), 0 0 28px rgba(240,201,106,.65); }
+}
+
+/* Groessen-Varianten (Auftrag Punkt 5: nicht alle Stufen gleich groß) */
+.piratenpass-node-special {
+  width: 54px;
+  height: 54px;
+  font-size: 21px;
+}
+
+.piratenpass-node-milestone {
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  border-width: 3px;
+}
+
+.piratenpass-node-milestone.piratenpass-node-claimed,
+.piratenpass-node-milestone.piratenpass-node-ready {
+  border-color: var(--fh-fire);
+  box-shadow: 0 0 14px rgba(255,106,42,.4);
+}
+
+/* Finale (Stufe 50) - große "Schatzinsel" */
+.piratenpass-node-finale {
+  width: 104px;
+  height: 104px;
+  border-radius: 38% 38% 46% 46% / 44% 44% 56% 56%;
+  font-size: 32px;
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 3px solid var(--fh-gold);
+  box-shadow: var(--fh-glow-gold);
+}
+
+.piratenpass-node-finale .piratenpass-node-number {
+  bottom: -22px;
+  font-size: 11px;
+}
+
+.piratenpass-node-finale.piratenpass-node-current {
+  width: 118px;
+  height: 118px;
+}
+
+/* ---- Stufen-Tooltip (beim Anklicken/Tappen, wie Level-Up-Overlay
+   aufgebaut - gleiches, bereits etabliertes Muster) ---- */
+.piratenpass-tooltip-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--fh-z-modal-high);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5,7,11,.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s var(--fh-ease);
+  padding: 20px;
+}
+
+.piratenpass-tooltip-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.piratenpass-tooltip-card {
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid rgba(240,201,106,.35);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow);
+  padding: 26px 28px;
+  max-width: 300px;
+  width: 100%;
+  text-align: center;
+  transform: scale(.92);
+  transition: transform .3s var(--fh-ease);
+}
+
+.piratenpass-tooltip-overlay.visible .piratenpass-tooltip-card {
+  transform: scale(1);
+}
+
+.piratenpass-tooltip-title {
+  font-family: var(--fh-font-display);
+  letter-spacing: .05em;
+  color: var(--fh-gold-bright);
+  font-size: 15px;
+  margin: 0 0 10px;
+}
+
+.piratenpass-tooltip-reward {
+  font-size: 16px;
+  color: var(--fh-fg);
+  margin: 0 0 12px;
+}
+
+.piratenpass-tooltip-status {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  margin: 0 0 16px;
+}
+
+.piratenpass-tooltip-status.is-ready {
+  color: var(--fh-gold-bright);
+}
+
+.piratenpass-tooltip-claim-btn,
+.piratenpass-tooltip-close-btn {
+  padding: 9px 22px;
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform .15s, filter .2s;
+}
+
+.piratenpass-tooltip-claim-btn {
+  background: linear-gradient(135deg, var(--fh-gold), var(--fh-fire));
+  color: #1a0a05;
+}
+
+.piratenpass-tooltip-close-btn {
+  background: var(--fh-muted);
+  color: var(--fh-fg);
+  border: 1px solid var(--fh-border);
+  margin-top: 10px;
+}
+
+.piratenpass-tooltip-claim-btn:hover,
+.piratenpass-tooltip-close-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* ---- Finale-Banner (Stufe 50 abgeschlossen) ---- */
+.piratenpass-cap-banner {
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid rgba(240,201,106,.4);
+  border-radius: var(--fh-radius);
+}
+
+.piratenpass-cap-banner-title {
+  font-family: var(--fh-font-display);
+  color: var(--fh-gold-bright);
+  font-size: 17px;
+  margin: 0 0 6px;
+}
+
+.piratenpass-cap-banner-sub {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  margin: 0 0 10px;
+}
+
+.piratenpass-cap-banner-note {
+  font-size: 12px;
+  color: var(--fh-muted-fg);
+  opacity: .8;
+  margin: 10px 0;
+}
+
+.piratenpass-cap-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--fh-radius);
+  background: var(--fh-surface-2);
+  border: 1px solid var(--fh-border-strong);
+  margin: 0 auto 14px;
+  overflow: hidden;
+}
+
+.piratenpass-cap-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.piratenpass-cap-badge-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.piratenpass-cap-badge-emoji {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.piratenpass-cap-badge-label {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--fh-muted-fg);
+  text-align: center;
+}
+
+/* ---- Reduzierte Bewegung: Puls-Animation und sanftes Scrollen
+   abschalten, Status bleibt weiterhin ueber Icon+Text erkennbar
+   (nicht nur ueber Farbe/Animation) ---- */
+@media (prefers-reduced-motion: reduce) {
+  .piratenpass-node-current {
+    animation: none;
+  }
+  .piratenpass-scroll {
+    scroll-behavior: auto;
+  }
+  .piratenpass-tooltip-overlay,
+  .piratenpass-tooltip-overlay .piratenpass-tooltip-card {
+    transition: opacity .15s linear;
+    transform: none;
+  }
+}
+
+/* ---- Mobile: kompaktere Knoten, gleiche horizontale
+   Scroll-Mechanik (siehe Auftrag Punkt 8: nur DIESER Bereich darf
+   scrollen, niemals die gesamte Website) ---- */
+@media (max-width: 640px) {
+  .piratenpass-scroll {
+    padding: 28px 16px 26px;
+  }
+  .piratenpass-node {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+  }
+  .piratenpass-node-special {
+    width: 46px;
+    height: 46px;
+    font-size: 17px;
+  }
+  .piratenpass-node-milestone {
+    width: 50px;
+    height: 50px;
+    font-size: 19px;
+  }
+  .piratenpass-node-finale {
+    width: 84px;
+    height: 84px;
+    font-size: 25px;
+  }
+  .piratenpass-node-finale.piratenpass-node-current {
+    width: 96px;
+    height: 96px;
+  }
+  .piratenpass-node-current {
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+  }
+  .piratenpass-connector {
+    width: 20px;
+  }
+}
+
+/* =========================================================
+   PERSÖNLICHER LEVELPFAD (scripts/core/level-path.js)
+   ---------------------------------------------------
+   Eigenes Praefix "fh-levelpath-" (keine geteilten Klassen mit
+   piratenpass-*) und ein KUEHLER Blau/Silber-Akzent statt des
+   warmen Piratenpass-Golds - macht auf den ersten Blick klar, dass
+   dies die DAUERHAFTE persoenliche Reise ist, nicht die saisonale
+   Passroute (siehe Abgrenzungs-Kommentar in level-path.js).
+========================================================= */
+.fh-levelpath-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--fh-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5,7,11,.78);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s var(--fh-ease);
+  padding: 20px;
+}
+
+.fh-levelpath-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fh-levelpath-card {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  max-height: min(720px, 92vh);
+  overflow-y: auto;
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid rgba(125,211,252,.35);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow), 0 0 30px rgba(77,163,255,.18);
+  padding: 28px 26px;
+  text-align: center;
+  transform: scale(.94);
+  transition: transform .3s var(--fh-ease);
+}
+
+.fh-levelpath-overlay.visible .fh-levelpath-card {
+  transform: scale(1);
+}
+
+.fh-levelpath-close-btn {
+  position: sticky;
+  float: right;
+  top: 0;
+  margin: -8px -6px 0 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--fh-border);
+  background: var(--fh-muted);
+  color: var(--fh-fg);
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform .15s, filter .2s;
+}
+
+.fh-levelpath-close-btn:hover {
+  filter: brightness(1.15);
+  transform: scale(1.06);
+}
+
+/* ---- Spieler-Kopf (Avatar/Name/Level/XP - dieselben Daten wie die
+   Spielerkarte, siehe buildLevelPathPlayerHeaderHtml()) ---- */
+.fh-levelpath-player {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  clear: both;
+  margin: 4px auto 18px;
+  padding: 12px 16px;
+  max-width: 360px;
+  border-radius: var(--fh-radius);
+  background: var(--fh-surface-2);
+  border: 1px solid var(--fh-border);
+  text-align: left;
+}
+
+.fh-levelpath-player-avatar {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: var(--fh-muted);
+  border: 2px solid rgba(125,211,252,.4);
+  overflow: hidden;
+}
+
+.fh-levelpath-player-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fh-levelpath-player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.fh-levelpath-player-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fh-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fh-levelpath-player-level {
+  margin: 1px 0 5px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: #7dd3fc;
+}
+
+.fh-levelpath-player-xpbar {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fh-muted);
+  border: 1px solid var(--fh-border);
+  overflow: hidden;
+}
+
+.fh-levelpath-player-xpfill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #4da3ff, #7dd3fc);
+  transition: width .6s var(--fh-ease);
+}
+
+.fh-levelpath-player-xptext {
+  margin: 3px 0 0;
+  font-size: 10px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-levelpath-eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: #7dd3fc;
+}
+
+.fh-levelpath-title {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.2rem, 3.2vw, 1.7rem);
+  letter-spacing: .05em;
+  color: var(--fh-fg);
+  text-shadow: 0 0 26px rgba(77,163,255,.3);
+  margin: 0 0 10px;
+}
+
+.fh-levelpath-heading {
+  font-size: 13px;
+  color: var(--fh-fg);
+  margin: 0 0 6px;
+}
+
+.fh-levelpath-header-progressbar {
+  width: min(360px, 100%);
+  margin: 0 auto;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--fh-muted);
+  border: 1px solid var(--fh-border);
+  overflow: hidden;
+}
+
+.fh-levelpath-header-progressbar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fh-blue), #4da3ff);
+  transition: width .6s var(--fh-ease);
+}
+
+/* ---- Horizontal scrollbare Route (NUR dieser Bereich scrollt, nie
+   die gesamte Website) ---- */
+.fh-levelpath-scroll {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 34px 24px 30px;
+  margin-top: 16px;
+  border-radius: var(--fh-radius);
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(77,163,255,.08), transparent 55%),
+    radial-gradient(ellipse at 85% 100%, rgba(125,211,252,.06), transparent 55%),
+    var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  scrollbar-width: thin;
+  scrollbar-color: #4da3ff var(--fh-muted);
+}
+
+.fh-levelpath-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.fh-levelpath-scroll::-webkit-scrollbar-track {
+  background: var(--fh-muted);
+  border-radius: 999px;
+}
+.fh-levelpath-scroll::-webkit-scrollbar-thumb {
+  background: #4da3ff;
+  border-radius: 999px;
+}
+
+.fh-levelpath-route {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  min-width: 100%;
+}
+
+.fh-levelpath-start-flag {
+  flex-shrink: 0;
+  font-size: 20px;
+  margin-right: 10px;
+  opacity: .8;
+}
+
+.fh-levelpath-connector {
+  flex-shrink: 0;
+  width: 28px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--fh-border);
+  margin: 0 -2px;
+}
+
+.fh-levelpath-connector-filled {
+  background: linear-gradient(90deg, var(--fh-blue), #4da3ff);
+  box-shadow: 0 0 6px rgba(77,163,255,.4);
+}
+
+/* ---- Level-Knoten ---- */
+.fh-levelpath-node {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--fh-muted);
+  border: 2px solid var(--fh-border-strong);
+  cursor: pointer;
+  transition: transform .15s, border-color .2s, box-shadow .2s;
+  font-size: 14px;
+}
+
+.fh-levelpath-node:hover,
+.fh-levelpath-node:focus-visible {
+  transform: translateY(-3px);
+  outline: none;
+  border-color: #7dd3fc;
+}
+
+/* Standard: die Levelnummer selbst ist der zentrierte Hauptinhalt
+   des Knotens (die meisten Level haben keine Belohnung). Nur wenn
+   der Knoten ein Belohnungs-/Finale-Icon zeigt (.fh-levelpath-node-
+   has-icon), ruckt die Nummer als kleine Bildunterschrift nach unten,
+   damit das Icon stattdessen zentriert im Kreis erscheint - analog
+   zur Stufennummer im Piratenpass, wo IMMER ein Icon zentriert ist. */
+.fh-levelpath-node-number {
+  font-family: var(--fh-font-display);
+  font-weight: 700;
+}
+
+.fh-levelpath-node-has-icon .fh-levelpath-node-number {
+  position: absolute;
+  bottom: -18px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--fh-muted-fg);
+  white-space: nowrap;
+}
+
+.fh-levelpath-node-status-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  background: var(--fh-bg);
+  border: 1px solid var(--fh-border-strong);
+  line-height: 1;
+}
+
+.fh-levelpath-node-locked {
+  opacity: .45;
+  filter: grayscale(.5);
+}
+
+.fh-levelpath-node-reached,
+.fh-levelpath-node-claimed,
+.fh-levelpath-node-ready {
+  border-color: #4da3ff;
+  background: var(--fh-surface-light);
+  box-shadow: 0 0 10px rgba(77,163,255,.22);
+}
+
+.fh-levelpath-node-claimed {
+  opacity: .85;
+}
+
+.fh-levelpath-node-claimed .fh-levelpath-node-status-badge {
+  color: var(--fh-success);
+  border-color: var(--fh-success);
+}
+
+.fh-levelpath-node-ready .fh-levelpath-node-status-badge {
+  color: #7dd3fc;
+  border-color: #7dd3fc;
+}
+
+.fh-levelpath-node-current {
+  width: 54px;
+  height: 54px;
+  font-size: 19px;
+  border-color: #7dd3fc;
+  box-shadow: 0 0 0 4px rgba(125,211,252,.15), 0 0 22px rgba(77,163,255,.5);
+  animation: fhLevelPathCurrentPulse 2.4s ease-in-out infinite;
+  z-index: 1;
+}
+
+.fh-levelpath-node-current-tag {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--fh-font-display);
+  font-size: 9px;
+  letter-spacing: .1em;
+  color: #7dd3fc;
+  white-space: nowrap;
+}
+
+@keyframes fhLevelPathCurrentPulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(125,211,252,.15), 0 0 18px rgba(77,163,255,.45); }
+  50% { box-shadow: 0 0 0 7px rgba(125,211,252,.08), 0 0 28px rgba(77,163,255,.65); }
+}
+
+.fh-levelpath-node-special {
+  width: 48px;
+  height: 48px;
+  font-size: 18px;
+}
+
+.fh-levelpath-node-milestone {
+  width: 54px;
+  height: 54px;
+  font-size: 21px;
+  border-width: 3px;
+}
+
+.fh-levelpath-node-milestone.fh-levelpath-node-claimed,
+.fh-levelpath-node-milestone.fh-levelpath-node-ready {
+  border-color: #7dd3fc;
+  box-shadow: 0 0 14px rgba(125,211,252,.4);
+}
+
+/* Finale (Level PROGRESSION_MAX_LEVEL) - grosse Kompassrose-Silhouette */
+.fh-levelpath-node-finale {
+  width: 92px;
+  height: 92px;
+  border-radius: 38% 38% 46% 46% / 44% 44% 56% 56%;
+  font-size: 28px;
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 3px solid #4da3ff;
+  box-shadow: 0 0 30px rgba(77,163,255,.35);
+}
+
+.fh-levelpath-node-finale .fh-levelpath-node-number {
+  bottom: -22px;
+  font-size: 11px;
+}
+
+.fh-levelpath-node-finale.fh-levelpath-node-current {
+  width: 104px;
+  height: 104px;
+}
+
+/* ---- Level-Tooltip (beim Anklicken/Tappen) ---- */
+.fh-levelpath-tooltip-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--fh-z-modal-tooltip);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5,7,11,.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s var(--fh-ease);
+  padding: 20px;
+}
+
+.fh-levelpath-tooltip-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fh-levelpath-tooltip-card {
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid rgba(125,211,252,.35);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow);
+  padding: 26px 28px;
+  max-width: 300px;
+  width: 100%;
+  text-align: center;
+  transform: scale(.92);
+  transition: transform .3s var(--fh-ease);
+}
+
+.fh-levelpath-tooltip-overlay.visible .fh-levelpath-tooltip-card {
+  transform: scale(1);
+}
+
+.fh-levelpath-tooltip-title {
+  font-family: var(--fh-font-display);
+  letter-spacing: .05em;
+  color: #7dd3fc;
+  font-size: 15px;
+  margin: 0 0 10px;
+}
+
+.fh-levelpath-tooltip-reward-label {
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+  margin: 0 0 2px;
+}
+
+.fh-levelpath-tooltip-reward {
+  font-size: 16px;
+  color: var(--fh-fg);
+  margin: 0 0 12px;
+}
+
+.fh-levelpath-tooltip-status {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  margin: 0 0 16px;
+}
+
+.fh-levelpath-tooltip-status.is-ready {
+  color: #7dd3fc;
+}
+
+.fh-levelpath-tooltip-claim-btn,
+.fh-levelpath-tooltip-close-btn {
+  padding: 9px 22px;
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform .15s, filter .2s;
+}
+
+.fh-levelpath-tooltip-claim-btn {
+  background: linear-gradient(135deg, var(--fh-blue), #4da3ff);
+  color: #04121f;
+}
+
+.fh-levelpath-tooltip-close-btn {
+  background: var(--fh-muted);
+  color: var(--fh-fg);
+  border: 1px solid var(--fh-border);
+  margin-top: 10px;
+}
+
+.fh-levelpath-tooltip-claim-btn:hover,
+.fh-levelpath-tooltip-close-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+/* ---- Max-Level-Banner ---- */
+.fh-levelpath-max-banner {
+  margin-top: 20px;
+  padding: 18px;
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid rgba(125,211,252,.4);
+  border-radius: var(--fh-radius);
+}
+
+.fh-levelpath-max-banner-title {
+  font-family: var(--fh-font-display);
+  color: #7dd3fc;
+  font-size: 16px;
+  margin: 0 0 6px;
+}
+
+.fh-levelpath-max-banner-sub {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  margin: 0 0 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-levelpath-node-current {
+    animation: none;
+  }
+  .fh-levelpath-scroll {
+    scroll-behavior: auto;
+  }
+  .fh-levelpath-overlay,
+  .fh-levelpath-overlay .fh-levelpath-card,
+  .fh-levelpath-tooltip-overlay,
+  .fh-levelpath-tooltip-overlay .fh-levelpath-tooltip-card {
+    transition: opacity .15s linear;
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .fh-levelpath-card {
+    padding: 22px 16px;
+  }
+  .fh-levelpath-player {
+    max-width: 100%;
+  }
+  .fh-levelpath-scroll {
+    padding: 28px 16px 26px;
+  }
+  .fh-levelpath-node {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+  .fh-levelpath-node-special {
+    width: 42px;
+    height: 42px;
+    font-size: 15px;
+  }
+  .fh-levelpath-node-milestone {
+    width: 46px;
+    height: 46px;
+    font-size: 17px;
+  }
+  .fh-levelpath-node-finale {
+    width: 76px;
+    height: 76px;
+    font-size: 22px;
+  }
+  .fh-levelpath-node-finale.fh-levelpath-node-current {
+    width: 88px;
+    height: 88px;
+  }
+  .fh-levelpath-node-current {
+    width: 46px;
+    height: 46px;
+    font-size: 16px;
+  }
+  .fh-levelpath-connector {
+    width: 18px;
+  }
+}
+
+/* ======================================================
+   THE CHALLENGE - TURNIER-BRACKET (Phase 5)
+   ---------------------------------------------------
+   Nutzt ausschliesslich bestehende --fh-* Design-Tokens (siehe
+   scripts/tournament/tournament-bracket.js fuer die HTML-Struktur).
+   Bewusst nur eine state-getriggerte transition (Rahmen/Glow auf
+   .is-mine), kein durchlaufendes Keyframe - daher kein zusaetzlicher
+   prefers-reduced-motion-Block noetig (Konvention dieser Datei:
+   nur durchlaufende/loopende Animationen werden dort gedrosselt).
+====================================================== */
+
+.tournament-bracket {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  padding: 8px 4px 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tournament-round {
+  flex: 0 0 auto;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tournament-round-title {
+  font-family: var(--fh-font-display);
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--fh-gold-bright);
+  text-align: center;
+  margin: 0 0 12px;
+}
+
+.tournament-round-matches {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 16px;
+  flex: 1;
+}
+
+.tournament-match-card {
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-sm);
+  padding: 10px 12px;
+  box-shadow: var(--fh-shadow-sm);
+  transition: border-color .25s ease, box-shadow .25s ease;
+}
+
+.tournament-match-card.is-mine {
+  border-color: var(--fh-gold);
+  box-shadow: var(--fh-glow-gold), var(--fh-shadow-sm);
+}
+
+.tournament-match-player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-family: var(--fh-font-sans);
+  font-size: 14px;
+  color: var(--fh-text-muted);
+}
+
+.tournament-match-player.is-winner {
+  color: var(--fh-text);
+  font-weight: 600;
+}
+
+.tournament-match-player.is-winner .tournament-match-player-name::before {
+  content: "🏆 ";
+}
+
+.tournament-match-player.is-loser {
+  opacity: .55;
+  text-decoration: line-through;
+}
+
+.tournament-match-player.is-pending,
+.tournament-match-player.is-bye {
+  font-style: italic;
+  opacity: .6;
+}
+
+.tournament-match-player-score {
+  font-family: var(--fh-font-display);
+  font-size: 12px;
+  color: var(--fh-cold);
+}
+
+.tournament-match-divider {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--fh-muted-fg);
+  text-transform: uppercase;
+  margin: 2px 0;
+}
+
+.tournament-round-champion {
+  justify-content: center;
+}
+
+.tournament-champion-card {
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  border: 1px solid var(--fh-gold);
+  border-radius: var(--fh-radius);
+  padding: 20px;
+  text-align: center;
+  box-shadow: var(--fh-glow-gold), var(--fh-shadow);
+}
+
+.tournament-champion-name {
+  font-family: var(--fh-font-display);
+  font-size: 20px;
+  color: var(--fh-gold-bright);
+}
+
+@media (max-width: 640px) {
+  .tournament-round {
+    width: 180px;
+  }
+}
+
+/* ======================================================
+   THE CHALLENGE - MINI-GAME: REAKTIONSTEST (Phase 6)
+   ---------------------------------------------------
+   Farbwechsel je Phase sind bewusst reine Farb-/Rahmen-Transitions
+   (kein durchlaufendes Keyframe), ausgeloest durch Klassenwechsel bei
+   Phasenuebergang - kein zusaetzlicher prefers-reduced-motion-Block
+   noetig, siehe Konvention im Bracket-Block oben.
+====================================================== */
+
+.tournament-reaction-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.tournament-reaction-status {
+  font-family: var(--fh-font-display);
+  font-size: 18px;
+  letter-spacing: .5px;
+  color: var(--fh-text);
+  margin: 0;
+}
+
+.tournament-reaction-substatus {
+  font-family: var(--fh-font-sans);
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  margin: 0;
+}
+
+.tournament-reaction-button {
+  width: 100%;
+  max-width: 320px;
+  min-height: 96px;
+  font-size: 20px;
+  transition: transform .2s var(--fh-ease), border-color .25s ease, box-shadow .25s ease, background .35s ease;
+}
+
+.tournament-reaction-button.is-waiting {
+  background: linear-gradient(160deg, #3a1a18, var(--fh-surface));
+  border-color: var(--fh-danger);
+}
+
+.tournament-reaction-button.is-active {
+  background: linear-gradient(160deg, #17361f, var(--fh-surface));
+  border-color: var(--fh-success);
+  box-shadow: 0 0 30px rgba(85, 200, 120, .35), var(--fh-shadow-sm);
+}
+
+.tournament-reaction-button.is-done {
+  border-color: var(--fh-gold);
+  box-shadow: var(--fh-glow-gold), var(--fh-shadow-sm);
+  cursor: default;
+  opacity: .85;
+}
+
+.tournament-reaction-button:disabled {
+  cursor: default;
+  transform: none;
+}
+
+/* ======================================================
+   THE CHALLENGE - TURNIER-SEITE (Phase 7)
+   ---------------------------------------------------
+   Nutzt weiterhin ausschliesslich --fh-* Tokens. Der Preis-Banner ist
+   bewusst der einzige Ort mit staerkerem Gold-Glow auf dieser Seite -
+   er ist laut Auftrag "immer sichtbar" die wichtigste Information
+   (WIN THE TOURNAMENT -> GET THE LIMITED CAP), alles andere bleibt
+   ruhiger.
+====================================================== */
+
+/* Der Turnierkopf traegt jetzt .fh-page-head; hier bleibt nur,
+   was ihn von den uebrigen Seiten unterscheidet: der Titel steht
+   in Gold statt in Weiss - "The Challenge" ist der Name des
+   Turniers, nicht nur eine Seitenueberschrift. */
+.tournament-hero-title {
+  color: var(--fh-gold-bright);
+}
+
+.tournament-prize-banner {
+  max-width: 560px;
+  margin: 0 auto 20px;
+  padding: 16px 20px;
+  border-radius: var(--fh-radius);
+  text-align: center;
+  border: 1px solid var(--fh-border);
+  background: linear-gradient(160deg, var(--fh-surface-light), var(--fh-surface));
+  box-shadow: var(--fh-shadow-sm);
+}
+
+.tournament-prize-banner.is-won {
+  border-color: var(--fh-gold);
+  box-shadow: var(--fh-glow-gold), var(--fh-shadow);
+}
+
+.tournament-prize-headline {
+  font-family: var(--fh-font-display);
+  font-size: 18px;
+  color: var(--fh-gold-bright);
+  margin: 0 0 4px;
+}
+
+.tournament-prize-sub {
+  font-family: var(--fh-font-sans);
+  font-size: 14px;
+  color: var(--fh-text-muted);
+  margin: 0;
+}
+
+.tournament-status-card {
+  max-width: 560px;
+  margin: 0 auto 24px;
+  padding: 24px;
+  border-radius: var(--fh-radius);
+  border: 1px solid var(--fh-border);
+  background: var(--fh-surface);
+  box-shadow: var(--fh-shadow-sm);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.tournament-explanation {
+  font-family: var(--fh-font-sans);
+  font-size: 14px;
+  color: var(--fh-muted-fg);
+  line-height: 1.5;
+  margin: 0 0 6px;
+}
+
+.tournament-status-text {
+  font-family: var(--fh-font-sans);
+  font-size: 15px;
+  color: var(--fh-text);
+  margin: 0;
+}
+
+.tournament-status-text.is-positive { color: var(--fh-success); }
+.tournament-status-text.is-negative { color: var(--fh-danger); }
+.tournament-status-text.is-warning { color: var(--fh-fire); }
+
+.tournament-champion-headline {
+  font-family: var(--fh-font-display);
+  font-size: 20px;
+}
+
+.tournament-enter-button,
+.tournament-play-button,
+.tournament-refresh-button {
+  width: 100%;
+  max-width: 320px;
+}
+
+.tournament-opponent-label {
+  font-family: var(--fh-font-sans);
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+.tournament-opponent-name {
+  font-family: var(--fh-font-display);
+  font-size: 24px;
+  color: var(--fh-text);
+  margin: 0 0 8px;
+}
+
+.tournament-game-slot {
+  width: 100%;
+}
+
+.tournament-match-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0;
+}
+
+.tournament-match-result-score {
+  font-family: var(--fh-font-display);
+  font-size: 28px;
+  color: var(--fh-text);
+  margin: 0;
+}
+
+.tournament-match-result-headline {
+  font-family: var(--fh-font-sans);
+  font-size: 16px;
+  margin: 0;
+}
+
+.tournament-match-result.is-win .tournament-match-result-headline { color: var(--fh-success); }
+.tournament-match-result.is-loss .tournament-match-result-headline { color: var(--fh-danger); }
+.tournament-match-result.is-waiting .tournament-match-result-headline { color: var(--fh-cold); }
+
+.tournament-bracket-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .tournament-status-card {
+    padding: 18px;
+  }
+}
+
+/* Nav-Icon fuer "THE CHALLENGE" - dasselbe Cap-Bild wie beim
+   Piratenpass-Maximallevel statt eines Emojis. */
+.fh-nav-cap-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.tournament-prize-cap-icon {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--fh-radius-sm);
+  margin: 0 auto 8px;
+  display: block;
+  border: 1px solid var(--fh-border-strong);
+}
+

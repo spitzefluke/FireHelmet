@@ -1,0 +1,1042 @@
+/* =====================================================
+   FIREHELMET - STYLE 2/8: INHALTSSEITEN
+   ---------------------------------------------------
+   Story-Archiv, Story-Detail, Buchleser, Characters,
+   Code-Eingabe, Socials und die alten Mobile-Anpassungen.
+
+   ACHTUNG REIHENFOLGE: diese Dateien waren bis zum Aufteilen
+   EINE Datei mit 13.539 Zeilen. An mehreren Stellen entscheidet
+   allein die Reihenfolge, welche Regel gewinnt (gleich starke
+   Selektoren, spaeter schlaegt frueher). Die Einbindung in
+   index.html muss daher genau in dieser Nummerierung bleiben -
+   eine umgestellte oder vergessene Datei aendert das Aussehen.
+===================================================== */
+
+/* =========================
+   8. STORY ARCHIV (GRID)
+========================= */
+.story-library {
+  width: 92%;
+  max-width: 1180px;
+  margin: auto;
+  /* Linksbuendig wie im Entwurf. Mittig gesetzt musste das Auge bei
+     jeder Karte und jeder Kapitelzeile neu ansetzen. */
+  text-align: left;
+  overflow: auto;
+  max-height: 90%;
+  padding: 40px 20px;
+}
+
+/* .story-subtitle ist mit Runde 4 entfallen: alle Seiten, die sie
+   als Unterzeile benutzten, tragen jetzt .fh-page-lead. */
+
+/* Der Entwurf setzt zwei Logbuecher nebeneinander. minmax statt
+   fester Spalten, damit ein drittes Logbuch spaeter von selbst
+   umbricht statt zu quetschen. */
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+/* Kartenrahmen aus der gemeinsamen 1c-Sprache (vgl. .fh-card).
+   Das grosse Cover bleibt: der Entwurf zeigt an dieser Stelle nur
+   ein 104px schmales Platzhalterbild, weil ihm die echten Cover
+   nicht vorlagen - die sind hier das Beste an der Seite. */
+.story-card {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, var(--fh-surface-light), #0b111a);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .35s var(--fh-ease), box-shadow .35s var(--fh-ease), border-color .2s ease;
+  border: 1px solid var(--fh-border);
+}
+
+.story-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(214,168,79,.5);
+  box-shadow: var(--fh-shadow);
+}
+
+.story-card img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+.story-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+}
+
+.story-card h2 {
+  margin: 0;
+  font-family: var(--fh-font-display);
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  color: var(--fh-fg);
+}
+
+.story-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fh-muted-fg);
+  text-wrap: pretty;
+}
+
+.story-card-progress {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================
+   9. STORY DETAIL
+========================= */
+.story-detail-container {
+  width: 92%;
+  max-width: 1180px;
+  max-height: 90%;
+  overflow: auto;
+  margin: auto;
+  text-align: left;
+}
+
+.story-header {
+  display: flex;
+  gap: 34px;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.detail-cover {
+  flex: 0 0 auto;
+  width: 200px;
+  border-radius: 12px;
+  border: 1px solid var(--fh-border-strong);
+  box-shadow: 0 20px 45px rgba(0,0,0,.45);
+}
+
+/* Titel und Beschreibung in der Kopfsprache des Entwurfs. Der
+   Titel stand vorher in der Grotesk der Seite, waehrend jede
+   andere Ueberschrift Oswald benutzt. */
+#detail-title {
+  margin: 0 0 14px;
+  font-family: var(--fh-font-display);
+  font-size: clamp(2rem, 5.2vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: .03em;
+  color: var(--fh-fg);
+}
+
+#detail-description {
+  max-width: 54ch;
+  font-size: 16px;
+  line-height: 1.55;
+  color: #a6b6c9;
+  text-wrap: pretty;
+}
+
+@media (max-width: 700px) {
+  .story-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .detail-cover {
+    width: 150px;
+  }
+}
+
+.chapter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Kapitel als kompakte Zeilen (Entwurf 2a). Form und Abstaende
+   kommen aus .fh-row - hier steht nur, was fuer Kapitel eigen ist.
+   Die frueheren .chapter-card-Regeln (25px/30px Innenabstand,
+   28px-Ueberschrift) sind entfallen: jede Zeile Text stand in einer
+   150px hohen Karte, 24 Kapitel ergaben ueber 3000px Scrollweg. */
+.chapter-row-locked {
+  opacity: .55;
+}
+
+.chapter-row-locked:hover {
+  border-color: var(--fh-border);
+  background: rgba(17, 26, 38, .6);
+}
+
+/* Sprachfahne als ruhiger Umriss statt gefuellter Flaeche: in der
+   alten Karte stand sie allein unter der Ueberschrift, in der Zeile
+   sass ein blauer Block direkt neben dem Kapiteltitel und zog mehr
+   Blick auf sich als dieser. Die Farbe bleibt erhalten - nur als
+   Rand und Schrift statt als Hintergrund. */
+/* Zwei Klassen im Selektor, weil .language-de/.language-en weiter
+   unten in dieser Datei stehen und sonst ihren gefuellten
+   Hintergrund zurueckholen wuerden. */
+.chapter-row .chapter-row-lang {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  background: none;
+  border: 1px solid currentColor;
+  opacity: .75;
+}
+
+.chapter-row .chapter-row-lang.language-de { color: #6f92ff; }
+.chapter-row .chapter-row-lang.language-en { color: #ff9f6b; }
+
+/* Etwas Luft zwischen Expeditionsleiste und Kapitelliste - die
+   Meilenstein-Symbole ragen unter ihren Balken hinaus. */
+#story-detail .fh-section-label {
+  margin-top: 34px;
+}
+
+@media (max-width: 640px) {
+  /* Auf dem Handy hat die Zeile nur Platz fuer Titel und Zustand. */
+  .chapter-row-lang {
+    display: none;
+  }
+}
+
+.story-progress {
+  margin: 18px 0 26px;
+}
+
+.story-progress-label {
+  font-family: var(--fh-font-display);
+  letter-spacing: 2px;
+  font-size: 13px;
+  color: var(--fh-gold-bright, #f0c96a);
+}
+
+.story-progress-bar {
+  margin-top: 8px;
+  width: min(360px, 100%);
+  height: 10px;
+  border-radius: 999px;
+  background: var(--fh-muted, #162231);
+  border: 1px solid var(--fh-border, #1c2a3a);
+  overflow: hidden;
+}
+
+.story-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fh-gold, #d6a84f), var(--fh-fire, #ff6a2a));
+  transition: width .6s var(--fh-ease, ease);
+}
+
+.language {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #2d5eff;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+/* Sprachspezifische Farben */
+.language-de {
+  background: #2d5eff; /* Blau */
+}
+
+.language-en {
+  background: #d64545; /* Rot */
+}
+
+.back-button {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 30px;
+  font-size: 16px;
+  background: rgba(255,255,255,.12);
+  color: white;
+  transition: .3s;
+}
+
+.back-button:hover {
+  background: #4da3ff;
+}
+
+/* =========================
+   10. BOOK READER
+========================= */
+.book {
+  width: 90%;
+  max-width: 1100px;
+  max-height: 90%;
+  overflow: auto;
+  margin: auto;
+  background: #181818;
+  border-radius: 20px;
+  padding: 50px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  animation: bookAppear .8s ease;
+}
+
+@keyframes bookAppear {
+  from { opacity: 0; transform: scale(.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+#book-title {
+  font-size: 52px;
+  margin-bottom: 10px;
+}
+
+#book-language {
+  margin-bottom: 40px;
+}
+
+.book-content {
+  background: rgba(255,255,255,.05);
+  padding: 40px;
+  border-radius: 20px;
+}
+
+.book-content p {
+  font-size: 22px;
+  line-height: 2;
+  white-space: pre-wrap;
+  color: #f1e6d0;
+}
+
+/* =========================
+   11. CHARACTERS
+========================= */
+/* Gemeinsame Spalte aller Unterseiten. Bis Runde 4 war sie 90%
+   breit ohne Obergrenze und mittig gesetzt: der Seitenkopf begann
+   dadurch ganz links am Bildschirmrand, waehrend der Inhalt
+   darunter in der Mitte stand. Jetzt dieselbe Spaltenbreite wie
+   Startseite, Stories und Rennen (1180px), damit Kopf und Inhalt
+   an derselben Kante beginnen. */
+.page-content {
+  width: 92%;
+  max-width: 1180px;
+  margin-inline: auto;
+  max-height: 90%;
+  overflow: auto;
+  text-align: left;
+}
+
+.page-content h1 {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.7rem, 6vw, 5rem);
+  letter-spacing: clamp(1px, 0.8vw, 10px);
+  text-shadow: 0 0 40px rgba(240,201,106,.35);
+  color: var(--fh-text, #fff);
+  /* clamp() skaliert nur nach Viewport-Breite, nicht nach Wortlaenge -
+     bei langen, nicht umbrechbaren Woertern (z.B. "VERSCHWUNDENEN",
+     "BEWERTUNG") lief der Text sonst ueber den Container/Viewport
+     hinaus. overflow-wrap erlaubt als letzten Ausweg einen Umbruch
+     innerhalb des Wortes, statt es abzuschneiden. */
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+.character-container {
+  margin-top: 60px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+/* Neue Charakter-Karte: echter 3D-Flip zwischen Bild und Beschreibung */
+.character-container {
+  perspective: 1200px;
+}
+
+.character-card-v2 {
+  position: relative;
+  /* Vorher zwei feste Groessen (260x370 / 185x260 unterhalb 900px) mit
+     hartem Sprung genau an der Breakpoint-Grenze - jetzt durchgehend
+     fluid zwischen denselben Eckwerten, ohne Sprung. */
+  width: clamp(185px, 18vw, 260px);
+  height: clamp(260px, 25.6vw, 370px);
+  border-radius: 25px;
+  cursor: pointer;
+  perspective: 1200px;
+  animation: characterCardIn .6s cubic-bezier(0.22, 0.9, 0.32, 1.3) backwards;
+}
+
+.character-card-v2:nth-child(1) { animation-delay: .03s; }
+.character-card-v2:nth-child(2) { animation-delay: .09s; }
+.character-card-v2:nth-child(3) { animation-delay: .15s; }
+.character-card-v2:nth-child(4) { animation-delay: .21s; }
+.character-card-v2:nth-child(5) { animation-delay: .27s; }
+.character-card-v2:nth-child(6) { animation-delay: .33s; }
+.character-card-v2:nth-child(n+7) { animation-delay: .38s; }
+
+@keyframes characterCardIn {
+  0%   { opacity: 0; transform: translateY(40px) scale(.85) rotateX(20deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotateX(0deg); }
+}
+
+.character-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform .7s cubic-bezier(0.34, 1.4, 0.4, 1);
+}
+
+.character-card-v2:hover .character-card-inner,
+.character-card-v2:focus .character-card-inner,
+.character-card-v2.character-card-flipped .character-card-inner {
+  transform: rotateY(180deg);
+}
+
+/* Dezenter, statischer Glow-Schatten in der individuellen Charakterfarbe */
+.character-card-v2 {
+  --card-tilt-x: 0deg;
+  --card-tilt-y: 0deg;
+  transform: perspective(1200px) rotateX(var(--card-tilt-x)) rotateY(var(--card-tilt-y));
+  transition: box-shadow .3s, transform .5s cubic-bezier(.22,.9,.32,1);
+}
+
+.character-card-v2:hover {
+  box-shadow: 0 0 30px var(--char-accent, #4da3ff);
+  transition: box-shadow .3s, transform .1s linear;
+}
+
+.character-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 25px;
+  overflow: hidden;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border: 1px solid rgba(255,255,255,.2);
+  box-shadow: 0 15px 35px rgba(0,0,0,.5);
+}
+
+.character-face-front {
+  transform: rotateY(0deg);
+}
+
+.character-face-back {
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 22px;
+  overflow-y: auto;
+  background: #050608;
+  background: radial-gradient(circle at 50% 15%, color-mix(in srgb, var(--char-accent, #4da3ff) 22%, transparent), rgba(2,3,10,.96) 65%),
+              linear-gradient(160deg, color-mix(in srgb, var(--char-accent2, #0a1f33) 45%, #050608), #050608);
+}
+
+.character-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.character-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 70px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--char-accent, #4da3ff) 25%, transparent), rgba(255,255,255,.04));
+  color: rgba(255,255,255,.85);
+  filter: drop-shadow(0 0 12px var(--char-accent, #4da3ff));
+}
+
+/* Kleines Emblem-Abzeichen oben, individuell je Charakter */
+.character-emblem-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 16px;
+  background: rgba(5,6,10,.6);
+  border: 1px solid var(--char-accent, #4da3ff);
+  box-shadow: 0 0 12px var(--char-accent, #4da3ff);
+  backdrop-filter: blur(4px);
+}
+
+.character-emblem-back {
+  font-size: 34px;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 0 10px var(--char-accent, #4da3ff));
+  animation: characterEmblemPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes characterEmblemPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.12); }
+}
+
+.character-name-tag {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 17px;
+  background: linear-gradient(to top, rgba(0,0,0,.92), transparent);
+  border-top: 2px solid var(--char-accent, #4da3ff);
+  letter-spacing: .5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: transform .3s ease;
+}
+
+.character-name-tag-name {
+  transition: color .3s ease, text-shadow .3s ease;
+}
+
+.character-name-tag-role {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--char-accent, #4da3ff);
+  opacity: .85;
+}
+
+.character-card-v2:hover .character-name-tag {
+  transform: translateY(-3px);
+}
+
+.character-card-v2:hover .character-name-tag-name {
+  color: var(--char-accent, #4da3ff);
+  text-shadow: 0 0 14px var(--char-accent, #4da3ff);
+}
+
+.character-face-back .character-role {
+  margin: -6px 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--char-accent, #4da3ff);
+}
+
+.character-face-back .character-quote {
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-style: italic;
+  color: #f1e6cf;
+  opacity: .9;
+}
+
+.character-face-back h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  background: linear-gradient(90deg, var(--char-accent, #4da3ff), #ffffff, var(--char-accent, #4da3ff));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sidebarTitleShine 4s linear infinite;
+}
+
+.character-face-back p {
+  font-size: 14px;
+  color: #ccc;
+  line-height: 1.5;
+}
+
+/* Erst der kurze Spruch (character-quote), dann - mit spuerbarer
+   Verzoegerung - die eigentliche Beschreibung: beim Umdrehen der
+   Karte (Hover/Fokus/Antippen, siehe .character-card-flipped) ist
+   der Spruch sofort da, die Beschreibung blendet sich erst danach
+   ein, statt gleichzeitig zu erscheinen. Gilt fuer Maus, Tastatur
+   UND Touch, da alle drei denselben Flip-Zustand ansteuern - es
+   braucht also KEIN zweites Antippen auf Mobilgeraeten. */
+.character-face-back .character-description {
+  opacity: 0;
+  transition: opacity .4s ease;
+}
+
+.character-card-v2:hover .character-face-back .character-description,
+.character-card-v2:focus .character-face-back .character-description,
+.character-card-v2.character-card-flipped .character-face-back .character-description {
+  opacity: 1;
+  transition-delay: .55s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character-face-back .character-description {
+    transition-delay: 0s !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .character-face-back h2 {
+    font-size: 18px;
+  }
+
+  .character-face-back p {
+    font-size: 13px;
+  }
+}
+
+/* =========================
+   11b. CODE EINGABE
+========================= */
+.code-content {
+  max-width: 600px;
+  margin: auto;
+}
+
+.code-box {
+  margin-top: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.code-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px 25px;
+  border-radius: var(--fh-radius, 20px);
+  border: 1px solid var(--fh-border-strong, rgba(255,255,255,.2));
+  background: linear-gradient(160deg, var(--fh-surface, #0d1520), var(--fh-bg-secondary, #070b12));
+  backdrop-filter: blur(20px);
+  color: var(--fh-text, white);
+  font-size: 20px;
+  text-align: center;
+  outline: none;
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+
+.code-input:focus {
+  border-color: var(--fh-gold-bright, #4da3ff);
+  box-shadow: 0 0 0 3px rgba(240,201,106,.15), var(--fh-glow-gold);
+}
+
+.code-input::placeholder {
+  color: var(--fh-text-muted, #888);
+}
+
+/* #code-confirm-btn sitzt auf dem animierten Matrix-Regen-Hintergrund
+   dieser Seite - der normale .code-button-Rahmen (--fh-border-strong,
+   dunkles Navy) und der dunkle Verlauf gehen darin optisch fast
+   unter, bis man drueberhovert. Eigener, staerkerer Look nur hier,
+   ohne .code-button selbst (an vielen anderen Stellen im Einsatz) zu
+   veraendern. */
+#code-confirm-btn {
+  border-color: var(--fh-gold, #d6a84f);
+  background: linear-gradient(160deg, rgba(38,54,74,.92), rgba(10,16,24,.92));
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 18px rgba(214,168,79,.25), var(--fh-shadow-sm);
+}
+
+#code-confirm-btn:hover {
+  box-shadow: 0 0 28px rgba(214,168,79,.45), var(--fh-shadow-sm);
+}
+
+.code-button {
+  padding: 16px 40px;
+  border: 1px solid var(--fh-border-strong, transparent);
+  border-radius: var(--fh-radius-sm, 15px);
+  background: linear-gradient(160deg, var(--fh-surface-light, #1a2636), var(--fh-surface, #0d1520));
+  color: var(--fh-text, white);
+  font-family: var(--fh-font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  cursor: pointer;
+  box-shadow: var(--fh-shadow-sm);
+  transition: transform .2s var(--fh-ease), border-color .25s ease, box-shadow .25s ease, background .25s ease;
+}
+
+.code-button:hover {
+  border-color: var(--fh-gold, #4da3ff);
+  box-shadow: var(--fh-glow-gold), var(--fh-shadow-sm);
+  transform: translateY(-2px);
+}
+
+.code-button:active {
+  transform: translateY(0px) scale(.98);
+}
+
+.code-button:focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 2px;
+}
+
+/* Fehlte bisher komplett - ein disabled .code-button sah exakt wie
+   ein normaler, klickbarer Button aus (nur der Browser-Cursor
+   aenderte sich), z.B. waehrend Spielothek/Wheel gerade einen
+   Server-Status nachladen. */
+.code-button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  filter: grayscale(.3);
+}
+
+.code-button:disabled:hover {
+  transform: none;
+  border-color: var(--fh-border-strong, transparent);
+  box-shadow: var(--fh-shadow-sm);
+}
+
+.code-message {
+  min-height: 30px;
+  font-size: 18px;
+  max-width: 450px;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.combo-audio-btn {
+  display: block;
+  margin: 12px auto 0 auto;
+}
+
+.code-message.code-success {
+  color: #6dff9e;
+}
+
+.code-message.code-error {
+  color: #ff6d6d;
+}
+
+.code-image {
+  display: none;
+  max-width: 100%;
+  max-height: 320px;
+  border-radius: 20px;
+  box-shadow: 0 20px 45px rgba(0,0,0,.45);
+}
+
+.code-image.visible {
+  display: block;
+  animation: pageShow .5s ease;
+}
+
+.code-history {
+  display: none;
+  width: 100%;
+  max-width: 500px;
+  margin: 40px auto 0;
+  padding: 20px 22px;
+  border-radius: var(--fh-radius, 20px);
+  border: 1px solid var(--fh-border, rgba(255,255,255,.12));
+  background: var(--fh-surface, #0d1520);
+  box-shadow: var(--fh-shadow-sm);
+}
+
+.code-history-heading {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  color: var(--fh-text-muted, #999);
+  text-align: center;
+}
+
+.code-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.code-history-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 3px;
+  padding: 10px 14px;
+  border-radius: var(--fh-radius-sm, 12px);
+  background: var(--fh-surface-light, rgba(255,255,255,.04));
+  border: 1px solid var(--fh-border, rgba(255,255,255,.08));
+}
+
+.code-history-code {
+  order: 1;
+  font-family: var(--fh-font-display);
+  font-weight: 700;
+  color: var(--fh-gold-bright, #f0c96a);
+  font-size: 14px;
+  letter-spacing: .3px;
+}
+
+.code-history-date {
+  order: 2;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--fh-text-muted, #888);
+  white-space: nowrap;
+}
+
+.code-history-message {
+  order: 3;
+  flex: 1 1 100%;
+  font-size: 13px;
+  color: var(--fh-text, #ddd);
+}
+
+.turnstile-widget {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  z-index: var(--fh-z-fx);
+}
+
+/* Cap-Abzeichen auf dem Avatar - siehe wrapAvatarWithCapBadge() in
+   scripts/wheel/wheel.js (Rangliste, Spielerkarte, Boss-Rangliste) */
+.avatar-cap-wrap {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.avatar-cap-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 15px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--fh-border-strong, rgba(255,255,255,.4));
+  box-shadow: 0 1px 4px rgba(0,0,0,.55);
+  pointer-events: none;
+}
+
+.avatar-cap-badge-emoji {
+  font-size: 12px;
+  line-height: 1;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+/* =========================
+   12. SOCIALS + PARTNERS
+========================= */
+.social-container {
+  margin-top: 60px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.social-container a {
+  width: 250px;
+  padding: 30px;
+  border-radius: var(--fh-radius, 25px);
+  background: linear-gradient(160deg, var(--fh-surface-light, #1a2636), var(--fh-surface, #0d1520));
+  border: 1px solid var(--fh-border, rgba(255,255,255,.2));
+  color: var(--fh-fg, white);
+  text-decoration: none;
+  font-size: 25px;
+  text-align: center;
+  transition: transform .3s var(--fh-ease, ease), border-color .3s ease, box-shadow .3s ease, background .3s ease;
+  backdrop-filter: blur(20px);
+}
+
+.social-container a:hover {
+  transform: translateY(-8px);
+  border-color: var(--fh-gold, #d6a84f);
+  box-shadow: var(--fh-glow-gold), var(--fh-shadow-sm);
+}
+
+/* Social-Buttons mit Marken-Icon und -Farbe */
+.social-btn {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.social-icon {
+  width: 42px;
+  height: 42px;
+  fill: white;
+  transition: transform .4s;
+}
+
+.social-btn:hover .social-icon {
+  transform: scale(1.15);
+}
+
+.social-youtube:hover {
+  background: rgba(255,0,0,.25) !important;
+  border-color: #ff0000;
+  box-shadow: 0 0 40px #ff0000 !important;
+}
+
+.social-tiktok:hover {
+  background: linear-gradient(135deg, rgba(255,0,80,.25), rgba(0,242,234,.25)) !important;
+  border-color: #00f2ea;
+  box-shadow: 0 0 40px #00f2ea, 0 0 40px #ff0050 !important;
+}
+
+.social-discord:hover {
+  background: rgba(88,101,242,.3) !important;
+  border-color: #5865f2;
+  box-shadow: 0 0 40px #5865f2 !important;
+}
+
+.social-instagram:hover {
+  background: linear-gradient(135deg, rgba(221,42,123,.3), rgba(247,119,55,.3)) !important;
+  border-color: #dd2a7b;
+  box-shadow: 0 0 40px #dd2a7b, 0 0 40px #f77737 !important;
+}
+
+/* =========================
+   13. EFFEKTE
+========================= */
+.mouse-light {
+  position: fixed;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(77,163,255,.3), transparent 70%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+}
+
+.particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -2;
+}
+
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: white;
+  animation: particleMove linear infinite;
+}
+
+@keyframes particleMove {
+  from { transform: translateY(0); opacity: 0; }
+  50%  { opacity: 1; }
+  to   { transform: translateY(-120vh); opacity: 0; }
+}
+
+/* =========================
+   14. MOBILE
+========================= */
+@media (max-width: 900px) {
+  .hero h1,
+  .hero h2 {
+    font-size: clamp(1.9rem, 8vw, 50px);
+    letter-spacing: clamp(1px, 1.3vw, 8px);
+  }
+
+  .boss-stage {
+    width: 220px;
+    height: 220px;
+  }
+
+  .boss-name {
+    font-size: 24px;
+  }
+
+  .countdown {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .time-box {
+    width: 120px;
+    height: 120px;
+  }
+
+  .time-box span {
+    font-size: 40px;
+  }
+
+  .story-library h1,
+  .page-content h1 {
+    font-size: clamp(1.7rem, 8vw, 50px);
+  }
+
+  .sidebar {
+    width: min(82vw, 320px);
+    left: -100vw;
+  }
+
+  .sidebar h2 {
+    font-size: 28px;
+    letter-spacing: 6px;
+    margin-bottom: 35px;
+  }
+
+  .sidebar a {
+    font-size: 16px;
+  }
+
+  .menu-button,
+  .music-toggle {
+    width: 50px;
+    height: 50px;
+    top: max(20px, env(safe-area-inset-top));
+  }
+
+  .menu-button {
+    left: 20px;
+  }
+
+  .music-toggle {
+    right: 20px;
+  }
+
+  .menu-button span {
+    width: 24px;
+  }
+
+  /* Linksbuendig wie auf dem Desktop (Entwurf 2a). Mittig gesetzt
+     sass der Titel ueber einer linksbuendigen Kapitelliste, die
+     Zeilen begannen also an zwei verschiedenen Stellen. Breite und
+     Umbruch regelt jetzt die Regel bei 700px weiter oben. */
+  .story-header {
+    flex-direction: column;
+    text-align: left;
+  }
+
+  .book {
+    width: 90%;
+    padding: 30px;
+  }
+
+  .book-content p {
+    font-size: 18px;
+  }
+}
+

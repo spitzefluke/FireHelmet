@@ -1,0 +1,2105 @@
+/* =====================================================
+   FIREHELMET - STYLE 6/8: REDESIGN
+   ---------------------------------------------------
+   Das grosse Redesign-Upgrade sowie die Seiten "Repariere das
+   Schiff", "Der Fall der verschwundenen Dublonen" und das
+   Admin-Gateway.
+
+   ACHTUNG REIHENFOLGE: diese Dateien waren bis zum Aufteilen
+   EINE Datei mit 13.539 Zeilen. An mehreren Stellen entscheidet
+   allein die Reihenfolge, welche Regel gewinnt (gleich starke
+   Selektoren, spaeter schlaegt frueher). Die Einbindung in
+   index.html muss daher genau in dieser Nummerierung bleiben -
+   eine umgestellte oder vergessene Datei aendert das Aussehen.
+===================================================== */
+
+/* =====================================================
+   FIRE HELMET - MASSIVES REDESIGN-UPGRADE
+   Schwarzmarkt-Rotation + Seltenheiten, Spotify-Karte,
+   Boss-Arena-Hintergrund, Logbuch-Papier-Optik. Alles
+   additiv unter einem eigenen "fh-" bzw. "shop-*" Namespace,
+   bestehende Klassen/IDs bleiben unangetastet.
+===================================================== */
+
+/* #shop braucht position:relative, damit .fh-shop-intro-overlay
+   (position:absolute;inset:0) exakt die Shop-Seite abdeckt statt
+   sich am nächsten positionierten Vorfahren (z.B. main) zu
+   orientieren. */
+#shop {
+  position: relative;
+}
+
+/* ---------- SCHWARZMARKT: ROTATION + SELTENHEITEN ---------- */
+.shop-rotation-label {
+  margin-top: 14px;
+  font-family: var(--fh-font-display);
+  font-size: 14px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+.shop-rotation-countdown {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(214,168,79,.4);
+  background: rgba(214,168,79,.1);
+  color: var(--fh-gold-bright);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+
+.shop-rarities-heading {
+  margin-top: 34px;
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fh-text);
+}
+
+.fh-rarity-legend {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.fh-rarity-chip {
+  --rarity-color: #9aa4b2;
+  --rarity-glow: 154,164,178;
+  position: relative;
+  padding: 12px 16px;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--rarity-color) 55%, transparent);
+  background: rgba(255,255,255,.03);
+  color: var(--rarity-color);
+  font-family: var(--fh-font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  cursor: help;
+  transition: transform .2s var(--fh-ease), box-shadow .25s ease, background .25s ease;
+}
+
+.fh-rarity-chip:hover,
+.fh-rarity-chip:focus-visible {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,.06);
+  box-shadow: 0 0 18px rgba(var(--rarity-glow),.45);
+  outline: none;
+}
+
+.fh-rarity-chip-desc {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translate(-50%, 6px);
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(6,9,15,.96);
+  border: 1px solid color-mix(in srgb, var(--rarity-color) 50%, transparent);
+  color: var(--fh-text);
+  font-family: var(--fh-font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-align: center;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 12px 30px rgba(0,0,0,.5);
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.fh-rarity-chip:hover .fh-rarity-chip-desc,
+.fh-rarity-chip:focus-visible .fh-rarity-chip-desc {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-rarity-chip:hover,
+  .fh-rarity-chip:focus-visible {
+    transform: none;
+  }
+}
+
+/* Seltenheits-Rand/-Glow + Badge je Shop-Artikel. Die konkrete
+   Farbe kommt per Inline-Style (--rarity-color/--rarity-glow,
+   siehe renderShopGrid in shop.js) direkt aus der zentralen
+   Konfiguration - hier nur die generische Optik. */
+.shop-item {
+  --rarity-color: #9aa4b2;
+  --rarity-glow: 154,164,178;
+  border: 1px solid color-mix(in srgb, var(--rarity-color) 40%, rgba(255,255,255,.1));
+}
+
+.shop-item:hover {
+  border-color: var(--rarity-color);
+  box-shadow: 0 20px 45px rgba(0,0,0,.45), 0 0 26px rgba(var(--rarity-glow),.35);
+}
+
+.shop-item-rarity-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--rarity-color);
+  border: 1px solid color-mix(in srgb, var(--rarity-color) 55%, transparent);
+  background: color-mix(in srgb, var(--rarity-color) 16%, rgba(6,9,15,.75));
+}
+
+/* Jede Seltenheitsstufe fühlt sich spürbar anders an, nicht nur
+   andersfarbig (Punkt 15): Common/Uncommon/Rare bleiben ruhig
+   (nur Rand-/Badge-Farbe), Epic bekommt einen weichen Puls,
+   Legendary zusätzlich einen ständig sichtbaren, langsam
+   rotierenden Goldrahmen, Mythic eine eigene, kräftigere
+   Variante mit schnellerem, mehrfarbigem Rahmen. */
+.shop-item-rarity-epic {
+  animation: fhRarityPulseSoft 3.4s ease-in-out infinite;
+}
+
+@keyframes fhRarityPulseSoft {
+  0%, 100% { box-shadow: 0 0 0 rgba(var(--rarity-glow),0); }
+  50%      { box-shadow: 0 0 16px rgba(var(--rarity-glow),.3); }
+}
+
+.shop-item-rarity-legendary,
+.shop-item-rarity-mythic {
+  animation: fhRarityPulse 2.6s ease-in-out infinite;
+}
+
+@keyframes fhRarityPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(var(--rarity-glow),0); }
+  50%      { box-shadow: 0 0 24px rgba(var(--rarity-glow),.4); }
+}
+
+.shop-item-rarity-legendary::before {
+  opacity: .5;
+  animation-duration: 6s;
+}
+
+.shop-item-rarity-mythic {
+  animation-name: fhRarityPulseMythic;
+  animation-duration: 1.9s;
+}
+
+@keyframes fhRarityPulseMythic {
+  0%, 100% { box-shadow: 0 0 0 rgba(255,85,85,0); }
+  50%      { box-shadow: 0 0 28px rgba(255,85,85,.5), 0 0 46px rgba(240,201,106,.28); }
+}
+
+.shop-item-rarity-mythic::before {
+  opacity: .65;
+  animation-duration: 2.4s;
+  background: conic-gradient(from 0deg, #ff5555, var(--menu-hex1), #ff5555, #7c1d1d, #ff5555);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-item-rarity-epic,
+  .shop-item-rarity-legendary,
+  .shop-item-rarity-mythic,
+  .shop-item-rarity-legendary::before,
+  .shop-item-rarity-mythic::before {
+    animation: none;
+  }
+}
+
+/* ---------- ITEM-INFO PANEL (Hover Desktop / Tap Mobile) ---------- */
+.shop-item-info-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.25);
+  background: rgba(6,9,15,.6);
+  color: var(--fh-text-muted);
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-style: italic;
+  cursor: pointer;
+  transition: color .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+/* Groesserer, unsichtbarer Treffbereich fuer Touch (Punkt 1: Buttons
+   muessen auf kleinen Bildschirmen gut erreichbar sein) - das
+   sichtbare Icon bleibt klein/dezent, nur die tatsaechliche Tippflaeche
+   waechst auf ca. 44x44px, siehe https://web.dev/accessible-tap-targets/ */
+.shop-item-info-btn::after {
+  content: "";
+  position: absolute;
+  inset: -11px;
+}
+
+.shop-item-info-btn:hover,
+.shop-item-info-btn[aria-expanded="true"] {
+  color: var(--rarity-color);
+  border-color: var(--rarity-color);
+  transform: scale(1.1);
+}
+
+.shop-item-info-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 16px;
+  text-align: center;
+  background: rgba(4,6,11,.96);
+  border-radius: inherit;
+  opacity: 0;
+  transform: scale(.98);
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.shop-item:hover .shop-item-info-panel,
+.shop-item.shop-item-info-open .shop-item-info-panel {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.shop-item-info-name {
+  font-family: var(--fh-font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fh-text);
+}
+
+.shop-item-info-rarity {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--rarity-color);
+}
+
+.shop-item-info-desc {
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--fh-text-muted);
+  line-height: 1.4;
+}
+
+.shop-item-info-meta {
+  margin-top: 4px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  font-size: 11.5px;
+  color: var(--fh-gold-bright);
+  font-weight: 600;
+}
+
+@media (hover: none) {
+  /* Auf reinen Touch-Geräten nur per Tap öffnen, kein :hover-Zufall */
+  .shop-item:hover .shop-item-info-panel {
+    opacity: 0;
+    transform: scale(.98);
+    pointer-events: none;
+  }
+
+  .shop-item.shop-item-info-open .shop-item-info-panel {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+}
+
+/* Eingangsanimation (spielt nur bei echtem Seitenaufruf/Tab-
+   Wechsel/Rotationswechsel, siehe shop-grid-quiet unten) */
+.shop-item {
+  animation-name: shopItemReveal;
+}
+
+@keyframes shopItemReveal {
+  0%   { opacity: 0; transform: translateY(26px) scale(.92); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* "quiet" = nach Kauf/Ausrüsten neu gerendert: keine erneute
+   Eingangsanimation, Karten stehen sofort da (Punkt 11:
+   "darf nicht bei jedem State-Update erneut abgespielt werden") */
+.shop-grid-quiet .shop-item {
+  animation: none !important;
+}
+
+/* Ganzer Shop-"Öffnen"-Moment (~1.8s), wie das Betreten eines
+   geheimen Marktes:
+     1) Bildschirm dunkelt ab
+     2) eine Pergament-/Handelskarte rollt sich in der Mitte auf
+     3) der Titel "DER SCHWARZMARKT" blendet darüber ein
+     4) das Pergament zieht sich wieder zurück
+     5) die eigentliche Shop-Oberfläche fährt hoch/fällt in Fokus,
+        die Artikel selbst erscheinen einzeln nachfolgend (siehe
+        .shop-item / shopItemReveal weiter unten). */
+.fh-shop-intro-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 20%, rgba(214,168,79,.18), rgba(2,3,10,.92) 70%);
+  opacity: 0;
+  overflow: hidden;
+}
+
+.fh-shop-intro-overlay.fh-shop-intro-play {
+  animation: fhShopIntroFade 2.3s ease forwards;
+}
+
+@keyframes fhShopIntroFade {
+  0%   { opacity: 0; transform: scale(1.06); }
+  14%  { opacity: 1; transform: scale(1); }
+  80%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+
+/* Langsam driftender Nebel hinter dem Pergament - reine
+   CSS-Ebene, keine Partikel, kostet praktisch nichts. */
+.fh-shop-intro-fog {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(ellipse 40% 30% at 30% 60%, rgba(180,190,210,.10), transparent 70%),
+    radial-gradient(ellipse 45% 32% at 72% 45%, rgba(180,190,210,.08), transparent 70%);
+  filter: blur(18px);
+  opacity: 0;
+}
+
+.fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-fog {
+  animation: fhShopIntroFogDrift 2.3s ease-out forwards;
+}
+
+@keyframes fhShopIntroFogDrift {
+  0%   { opacity: 0; transform: translate3d(-2%, 1%, 0) scale(1); }
+  25%  { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(3%, -2%, 0) scale(1.12); }
+}
+
+/* Kurze, geheimnisvolle Lichtstrahlen die einmalig hinter dem
+   Pergament aufblenden und langsam weiterdrehen. */
+.fh-shop-intro-rays {
+  position: absolute;
+  width: 140%;
+  height: 140%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(240,201,106,.12) 4deg,
+    transparent 10deg,
+    transparent 96deg,
+    rgba(240,201,106,.09) 100deg,
+    transparent 108deg,
+    transparent 190deg,
+    rgba(240,201,106,.1) 195deg,
+    transparent 202deg,
+    transparent 360deg
+  );
+  opacity: 0;
+}
+
+.fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-rays {
+  animation: fhShopIntroRays 2.3s ease-out forwards;
+}
+
+@keyframes fhShopIntroRays {
+  0%   { opacity: 0; transform: rotate(-8deg) scale(.9); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(10deg) scale(1.05); }
+}
+
+/* Einzelne, einmalig aufsteigende Goldstaub-Partikel (JS-gespawnt,
+   siehe spawnShopIntroParticles() in shop.js) - eigene, NICHT
+   endlos laufende Animation, damit nichts dauerhaft rechnet. */
+.fh-shop-intro-particles {
+  position: absolute;
+  inset: 0;
+}
+
+.fh-shop-intro-particle {
+  position: absolute;
+  bottom: 30%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--fh-gold-bright);
+  box-shadow: 0 0 6px rgba(240,201,106,.8);
+  opacity: 0;
+  left: var(--fh-particle-x, 50%);
+  animation: fhShopIntroParticleDrift var(--fh-particle-duration, 2s) ease-out forwards;
+  animation-delay: var(--fh-particle-delay, 0s);
+}
+
+@keyframes fhShopIntroParticleDrift {
+  0%   { opacity: 0; transform: translateY(0) scale(.6); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-90px) scale(1); }
+}
+
+.fh-shop-intro-parchment {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 34px 46px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #3a2c1c, #1c140c);
+  border: 1px solid rgba(214,168,79,.5);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 60px rgba(214,168,79,.2);
+  opacity: 0;
+  transform: scaleY(.05) scaleX(.7);
+  transform-origin: 50% 50%;
+}
+
+.fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-parchment {
+  animation: fhShopParchmentUnroll 1.8s var(--fh-ease) forwards;
+}
+
+@keyframes fhShopParchmentUnroll {
+  0%   { opacity: 0; transform: scaleY(.05) scaleX(.7); }
+  22%  { opacity: 1; transform: scaleY(1) scaleX(1); }
+  70%  { opacity: 1; transform: scaleY(1) scaleX(1); }
+  100% { opacity: 0; transform: scaleY(.6) scaleX(.85); }
+}
+
+.fh-shop-intro-compass {
+  font-size: 34px;
+  opacity: 0;
+  filter: drop-shadow(0 0 14px rgba(240,201,106,.6));
+}
+
+.fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-compass {
+  animation: fhShopIntroFadeInSpin 1.8s var(--fh-ease) forwards;
+}
+
+@keyframes fhShopIntroFadeInSpin {
+  0%   { opacity: 0; transform: rotate(-90deg); }
+  30%  { opacity: 1; transform: rotate(0deg); }
+  70%  { opacity: 1; transform: rotate(0deg); }
+  100% { opacity: 0; transform: rotate(20deg); }
+}
+
+.fh-shop-intro-title {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.3rem, 4vw, 2rem);
+  letter-spacing: .12em;
+  color: var(--fh-gold-bright);
+  text-shadow: 0 0 24px rgba(240,201,106,.5);
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-title {
+  animation: fhShopIntroTitleIn 1.8s var(--fh-ease) forwards;
+}
+
+@keyframes fhShopIntroTitleIn {
+  0%   { opacity: 0; transform: translateY(10px); }
+  32%  { opacity: 0; transform: translateY(10px); }
+  48%  { opacity: 1; transform: translateY(0); }
+  72%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+.shop-content {
+  opacity: 1;
+}
+
+.shop-content.fh-shop-content-in {
+  animation: fhShopContentIn .8s var(--fh-ease) 1.1s both;
+}
+
+@keyframes fhShopContentIn {
+  0%   { opacity: 0; transform: translateY(24px) scale(.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Kürzere "Refresh"-Version für einen reinen Rotationswechsel
+   (nicht das volle Markt-Intro - siehe tickShopRotation() in
+   shop-rotation.js) */
+.shop-content.fh-shop-content-refresh {
+  animation: fhShopContentRefresh .5s var(--fh-ease) both;
+}
+
+@keyframes fhShopContentRefresh {
+  0%   { filter: brightness(1); }
+  40%  { filter: brightness(1.35); }
+  100% { filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-shop-intro-overlay.fh-shop-intro-play,
+  .fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-parchment,
+  .fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-compass,
+  .fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-title,
+  .fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-fog,
+  .fh-shop-intro-overlay.fh-shop-intro-play .fh-shop-intro-rays,
+  .fh-shop-intro-particle,
+  .shop-content.fh-shop-content-in,
+  .shop-content.fh-shop-content-refresh {
+    animation: none;
+  }
+}
+
+/* Toast bei Rotationswechsel - nutzt dieselbe Optik wie die
+   bestehende Dublonen-Toast-Benachrichtigung */
+.shop-rotation-toast {
+  top: auto;
+  bottom: 30px;
+}
+
+@media (max-width: 600px) {
+  .shop-rotation-toast {
+    bottom: 16px;
+  }
+}
+
+/* ---------- SOCIALS: SPOTIFY-HÖRSPIEL-KARTE ---------- */
+.fh-audiobook-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  max-width: 640px;
+  margin: 40px auto 0;
+  padding: 22px 28px;
+  border-radius: var(--fh-radius-lg, 24px);
+  background: linear-gradient(135deg, rgba(30,185,84,.14), rgba(13,21,32,.9));
+  border: 1px solid rgba(30,185,84,.4);
+  box-shadow: var(--fh-shadow);
+  text-decoration: none;
+  color: var(--fh-text);
+  overflow: hidden;
+  transition: transform .25s var(--fh-ease), box-shadow .25s ease, border-color .25s ease;
+}
+
+.fh-audiobook-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,.04) 0 2px, transparent 2px 40px);
+  opacity: .5;
+  pointer-events: none;
+}
+
+.fh-audiobook-card:hover {
+  transform: translateY(-4px);
+  border-color: #1eb954;
+  box-shadow: 0 20px 50px rgba(0,0,0,.5), 0 0 30px rgba(30,185,84,.3);
+}
+
+.fh-audiobook-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 26px;
+  background: radial-gradient(circle at 35% 30%, rgba(30,185,84,.4), rgba(6,9,15,.9));
+  border: 1px solid rgba(30,185,84,.5);
+}
+
+.fh-audiobook-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  min-width: 0;
+}
+
+.fh-audiobook-title {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1rem, 2.4vw, 1.2rem);
+  font-weight: 700;
+  color: var(--fh-text);
+}
+
+.fh-audiobook-text {
+  font-size: 13px;
+  color: var(--fh-text-muted);
+}
+
+.fh-audiobook-button {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: #1eb954;
+  color: #04170c;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  transition: transform .2s var(--fh-ease, ease), box-shadow .2s ease, filter .2s ease;
+}
+
+/* Hatte bisher weder Hover-Zustand noch transition - Spotify-Gruen
+   bleibt bewusst als Marken-Farbe erhalten, nur die Hover-Reaktion ist
+   neu (passend zur restlichen Button-Sprache der Seite: leichtes
+   Anheben + Glow statt Farbwechsel). */
+.fh-audiobook-button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 18px rgba(30,185,84,.4);
+}
+
+.fh-audiobook-button:active {
+  transform: translateY(0) scale(.97);
+}
+
+.fh-audiobook-card-soon {
+  cursor: default;
+  opacity: .75;
+}
+
+.fh-audiobook-card-soon:hover {
+  transform: none;
+  border-color: rgba(30,185,84,.4);
+  box-shadow: var(--fh-shadow);
+}
+
+.fh-audiobook-card-soon .fh-audiobook-button {
+  background: rgba(255,255,255,.12);
+  color: var(--fh-text-muted);
+}
+
+body.lang-de .fh-audiobook-card-soon .fh-audiobook-button::after { content: " · bald verfügbar"; }
+body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " · coming soon"; }
+
+@media (max-width: 600px) {
+  .fh-audiobook-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 22px 20px;
+  }
+
+  .fh-audiobook-copy {
+    text-align: center;
+  }
+}
+
+/* ---------- COMMUNITY-BOSS: ARENA-HINTERGRUND ---------- */
+#community-boss {
+  position: relative;
+  overflow: hidden;
+}
+
+.boss-content {
+  position: relative;
+  z-index: 1;
+  padding: 10px 10px 30px;
+}
+
+.boss-content::before {
+  content: "";
+  position: absolute;
+  inset: -30px -8vw;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 18%, color-mix(in srgb, var(--boss-accent, #7c2d12) 30%, transparent), transparent 70%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0,0,0,.6), transparent 70%);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+/* Mehrere unabhängig, langsam bewegte Hintergrund-Ebenen (Punkt 4):
+   Himmel, Wolken, Lichtkegel, Nebel (fern/nah), Glut. Läuft immer
+   ambient im Hintergrund, unabhängig von der Eintrittssequenz. */
+.fh-boss-arena-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fh-boss-layer {
+  position: absolute;
+  inset: -4% -2%;
+}
+
+.fh-boss-layer-sky {
+  background: radial-gradient(ellipse at 50% 18%, color-mix(in srgb, var(--boss-accent, #7c2d12) 35%, transparent), var(--fh-bg) 72%);
+  transition: background 1.2s ease;
+}
+
+.fh-boss-layer-clouds {
+  background:
+    repeating-radial-gradient(circle at 18% 28%, rgba(255,255,255,.035) 0 40px, transparent 40px 150px),
+    repeating-radial-gradient(circle at 82% 62%, rgba(255,255,255,.025) 0 60px, transparent 60px 190px);
+  animation: fhBossCloudsDrift 70s linear infinite;
+  opacity: .6;
+}
+
+@keyframes fhBossCloudsDrift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-6%); }
+}
+
+.fh-boss-layer-rays {
+  background: conic-gradient(from 200deg at 50% 26%,
+    transparent 0deg, color-mix(in srgb, var(--boss-accent, #7c2d12) 55%, transparent) 6deg,
+    transparent 18deg, transparent 342deg,
+    color-mix(in srgb, var(--boss-accent, #7c2d12) 45%, transparent) 352deg, transparent 360deg);
+  mix-blend-mode: screen;
+  opacity: .5;
+  animation: fhBossRaysSpin 50s linear infinite;
+}
+
+@keyframes fhBossRaysSpin {
+  to { transform: rotate(360deg); }
+}
+
+.fh-boss-layer-fog-far {
+  background: linear-gradient(180deg, transparent 50%, rgba(15,8,6,.6) 100%);
+  animation: fhBossFogDrift 28s ease-in-out infinite alternate;
+}
+
+@keyframes fhBossFogDrift {
+  from { transform: translateX(-3%); }
+  to   { transform: translateX(3%); }
+}
+
+.fh-boss-layer-embers {
+  inset: 0;
+  overflow: hidden;
+}
+
+.fh-boss-layer-fog-near {
+  inset: 0;
+  background: radial-gradient(ellipse 95% 45% at 50% 105%, rgba(0,0,0,.7), transparent 68%);
+}
+
+/* Dunkler werdender Puls beim Eintritt (Punkt 5.1) */
+.fh-boss-arena-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(2,3,6,.9) 100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fh-boss-arena-bg.fh-boss-arena-play::after {
+  animation: fhBossArenaDarkenPulse 1.6s ease forwards;
+}
+
+@keyframes fhBossArenaDarkenPulse {
+  0%   { opacity: 0; }
+  35%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-boss-layer-clouds,
+  .fh-boss-layer-rays,
+  .fh-boss-layer-fog-far,
+  .fh-boss-arena-bg.fh-boss-arena-play::after {
+    animation: none;
+  }
+}
+
+/* ---------- BOSS-EINTRITTSSEQUENZ (Punkt 5) ---------- */
+.fh-boss-stage-wrap {
+  position: relative;
+}
+
+#boss-content-panel.fh-boss-entrance-play .fh-boss-stage-wrap {
+  animation: fhBossStageIn 1s var(--fh-ease) both;
+}
+
+@keyframes fhBossStageIn {
+  0%   { opacity: 0; transform: scale(.7); filter: blur(10px); }
+  55%  { opacity: 1; filter: blur(2px); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+#boss-content-panel.fh-boss-entrance-play #boss-name {
+  animation: fhBossFadeUp .6s var(--fh-ease) .55s both;
+}
+
+#boss-content-panel.fh-boss-entrance-play #boss-flavor {
+  animation: fhBossFadeUp .6s var(--fh-ease) .68s both;
+}
+
+#boss-content-panel.fh-boss-entrance-play .fh-boss-panel {
+  animation: fhBossFadeUp .7s var(--fh-ease) .85s both;
+}
+
+#boss-content-panel.fh-boss-entrance-play .boss-leaderboard-title,
+#boss-content-panel.fh-boss-entrance-play .boss-leaderboard-hint,
+#boss-content-panel.fh-boss-entrance-play #boss-leaderboard {
+  animation: fhBossFadeUp .7s var(--fh-ease) 1.05s both;
+}
+
+@keyframes fhBossFadeUp {
+  0%   { opacity: 0; transform: translateY(18px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #boss-content-panel.fh-boss-entrance-play .fh-boss-stage-wrap,
+  #boss-content-panel.fh-boss-entrance-play #boss-name,
+  #boss-content-panel.fh-boss-entrance-play #boss-flavor,
+  #boss-content-panel.fh-boss-entrance-play .fh-boss-panel,
+  #boss-content-panel.fh-boss-entrance-play .boss-leaderboard-title,
+  #boss-content-panel.fh-boss-entrance-play .boss-leaderboard-hint,
+  #boss-content-panel.fh-boss-entrance-play #boss-leaderboard {
+    animation: none;
+  }
+}
+
+/* ---------- BOSS-ANGRIFF: ARENA-WEITER IMPACT (Punkt 6) ---------- */
+.fh-boss-impact {
+  animation: fhBossImpactShake .35s ease;
+}
+
+@keyframes fhBossImpactShake {
+  0%   { transform: translate3d(0,0,0); }
+  20%  { transform: translate3d(-6px,2px,0); }
+  40%  { transform: translate3d(5px,-2px,0); }
+  60%  { transform: translate3d(-4px,1px,0); }
+  80%  { transform: translate3d(3px,-1px,0); }
+  100% { transform: translate3d(0,0,0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-boss-impact {
+    animation: none;
+  }
+}
+
+/* ---------- BOSS-PHASEN (Punkt 7) - rein visuell anhand HP% ---------- */
+.fh-boss-panel {
+  position: relative;
+  max-width: 480px;
+  margin: 26px auto 0;
+  padding: 24px 22px 20px;
+  border-radius: var(--fh-radius-lg, 24px);
+  background: linear-gradient(165deg, rgba(28,20,14,.85), rgba(10,7,5,.92));
+  border: 1px solid rgba(214,168,79,.3);
+  box-shadow: 0 30px 70px rgba(0,0,0,.55), inset 0 0 40px rgba(0,0,0,.4);
+}
+
+.fh-boss-panel::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: calc(var(--fh-radius-lg, 24px) - 4px);
+  border: 1px solid rgba(214,168,79,.18);
+  pointer-events: none;
+}
+
+#fh-boss-panel.fh-boss-phase-wounded {
+  border-color: rgba(255,190,110,.4);
+}
+
+#fh-boss-panel.fh-boss-phase-enraged {
+  border-color: rgba(255,150,60,.45);
+}
+
+#fh-boss-panel.fh-boss-phase-critical {
+  border-color: rgba(255,90,60,.55);
+  animation: fhBossPanelCriticalPulse 2.2s ease-in-out infinite;
+}
+
+#fh-boss-panel.fh-boss-phase-final {
+  border-color: rgba(255,50,50,.7);
+  animation: fhBossPanelCriticalPulse 1.1s ease-in-out infinite;
+}
+
+#fh-boss-panel.fh-boss-phase-defeated {
+  border-color: rgba(214,168,79,.5);
+  filter: saturate(.7);
+}
+
+@keyframes fhBossPanelCriticalPulse {
+  0%, 100% { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(255,60,60,0); }
+  50%      { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 34px rgba(255,60,60,.35); }
+}
+
+#fh-boss-arena-bg.fh-boss-phase-critical .fh-boss-layer-sky,
+#fh-boss-arena-bg.fh-boss-phase-final .fh-boss-layer-sky {
+  background: radial-gradient(ellipse at 50% 18%, rgba(217,67,30,.5), var(--fh-bg) 72%);
+}
+
+#fh-boss-arena-bg.fh-boss-phase-final .fh-boss-layer-clouds {
+  animation-duration: 30s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #fh-boss-panel.fh-boss-phase-critical,
+  #fh-boss-panel.fh-boss-phase-final {
+    animation: none;
+  }
+}
+
+/* Kurzer Skalier-"Kamera-Ruck" bei jedem Treffer, unabhängig vom
+   Zittern (.fh-boss-impact) - sitzt auf der Bühne selbst, damit
+   der Treffer mehr Gewicht bekommt (Punkt 22). */
+.fh-boss-camera-jolt {
+  animation: fhBossCameraJolt .3s ease-out;
+}
+
+@keyframes fhBossCameraJolt {
+  0%   { transform: scale(1) rotate(0deg); }
+  30%  { transform: scale(1.035) rotate(-0.6deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-boss-camera-jolt {
+    animation: none;
+  }
+}
+
+/* ---------- BOSS-STATISTIK-ZEILE (Schaden / Angreifer) ---------- */
+.fh-boss-stats-row {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+
+.fh-boss-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.fh-boss-stat-value {
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  font-weight: 700;
+  color: var(--fh-gold-bright);
+  text-shadow: 0 0 16px rgba(240,201,106,.4);
+  font-variant-numeric: tabular-nums;
+}
+
+.fh-boss-stat-label {
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+.fh-boss-stat-divider {
+  width: 1px;
+  height: 30px;
+  background: linear-gradient(180deg, transparent, rgba(214,168,79,.5), transparent);
+}
+
+/* Dekorativer Arena-Ring ÜBER dem Canvas (::after wird nach dem
+   per JS eingefügten <canvas> gemalt, also oben drauf) - rahmt
+   die Boss-Kreatur wie eine Kampf-Arena, ohne Angriffs-Effekte
+   im Canvas selbst zu beschneiden. */
+.boss-stage::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--boss-accent, #7c2d12) 55%, transparent);
+  box-shadow:
+    0 0 40px color-mix(in srgb, var(--boss-accent, #7c2d12) 45%, transparent),
+    inset 0 0 50px rgba(0,0,0,.55);
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .boss-stage {
+    width: 380px;
+    height: 380px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .boss-stage {
+    width: 440px;
+    height: 440px;
+  }
+}
+
+/* ---------- STORIES: LOGBUCH-PAPIER-OPTIK ---------- */
+.book {
+  position: relative;
+  background:
+    radial-gradient(ellipse 120% 60% at 50% -10%, rgba(214,168,79,.08), transparent 60%),
+    linear-gradient(160deg, #1c1712, #100d0a 60%, #0a0807);
+  border: 1px solid rgba(214,168,79,.25);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), inset 0 0 120px rgba(0,0,0,.5);
+}
+
+.book::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 4% 6%, rgba(0,0,0,.55), transparent 22%),
+    radial-gradient(circle at 96% 8%, rgba(0,0,0,.5), transparent 24%),
+    radial-gradient(circle at 8% 96%, rgba(0,0,0,.5), transparent 22%),
+    radial-gradient(circle at 95% 94%, rgba(0,0,0,.55), transparent 24%);
+  mix-blend-mode: multiply;
+}
+
+.book-content {
+  position: relative;
+  background: rgba(255,247,225,.04);
+  border: 1px solid rgba(214,168,79,.18);
+}
+
+.book-content p {
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #f1e6cf;
+  text-shadow: 0 1px 0 rgba(0,0,0,.4);
+}
+
+#book-title {
+  font-family: var(--fh-font-display);
+  color: var(--fh-gold-bright);
+  text-shadow: 0 0 24px rgba(240,201,106,.35);
+}
+
+/* =====================================================
+   "REPARIERE DAS SCHIFF" - EVENT
+   Baut bewusst auf den bestehenden .streamraetsel-* Klassen
+   (Layout/Countdown) auf und überschreibt nur die Farbgebung
+   (rot/Glitch -> Gold/Feuer, damit es zur restlichen Seite
+   passt) über die zusätzlichen .fh-ship-* Klassen.
+===================================================== */
+
+/* --- Vorschau/Preview-Gate Hinweis (Punkt 5) --- */
+.fh-dev-badge {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(255,106,42,.15);
+  border: 1px dashed rgba(255,106,42,.6);
+  color: #ffb37a;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.fh-dev-panel {
+  margin: 0 auto 24px;
+  padding: 16px 18px;
+  max-width: 560px;
+  border-radius: var(--fh-radius);
+  border: 1px dashed rgba(255,106,42,.5);
+  background: rgba(255,106,42,.06);
+}
+
+.fh-dev-panel .fh-dev-badge {
+  margin-top: 0;
+}
+
+.fh-dev-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.fh-dev-panel-actions .code-button {
+  font-size: 13px;
+  padding: 10px 16px;
+}
+
+/* --- Gesperrte Ansicht: kaputtes Schiff + Countdown --- */
+.fh-ship-wreck-scene {
+  position: relative;
+  width: min(480px, 88vw);
+  margin: 0 auto 6px;
+}
+
+.fh-ship-wreck-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 20px 30px rgba(0,0,0,.6));
+  position: relative;
+  z-index: 1;
+}
+
+.fh-ship-wreck-fog {
+  position: absolute;
+  inset: -25% -10% 5% -10%;
+  background: radial-gradient(ellipse 65% 55% at 50% 55%, rgba(100,112,128,.45), transparent 70%);
+  filter: blur(16px);
+  animation: fhShipSmokeDrift 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes fhShipSmokeDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: .85; }
+  50%      { transform: translate(2%, -3%) scale(1.06); opacity: 1; }
+}
+
+.fh-ship-badge {
+  background: rgba(240,201,106,.15);
+  border-color: rgba(240,201,106,.55);
+  color: var(--fh-gold-bright);
+}
+
+.fh-ship-badge::before {
+  background: var(--fh-fire);
+  box-shadow: 0 0 10px var(--fh-fire);
+}
+
+.fh-ship-title {
+  color: #fff2d6;
+  text-shadow: 0 0 60px rgba(255,106,42,.55);
+  animation: fhShipTitleFlicker 4.5s ease-in-out infinite;
+}
+
+@keyframes fhShipTitleFlicker {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .93; }
+}
+
+.fh-ship-lead {
+  color: #ffd9a8;
+  font-style: normal;
+}
+
+.fh-ship-locked .streamraetsel-countdown .time-box {
+  border-color: rgba(240,201,106,.4);
+  animation: fhShipBoxBreathe 3.6s ease-in-out infinite;
+}
+
+@keyframes fhShipBoxBreathe {
+  0%, 100% { box-shadow: 0 0 25px rgba(240,201,106,.2); }
+  50%      { box-shadow: 0 0 55px rgba(255,106,42,.5); }
+}
+
+/* --- Freigeschaltete Ansicht --- */
+.fh-ship-section-heading {
+  margin: 34px 0 14px;
+  font-family: var(--fh-font-display);
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: var(--fh-gold-bright);
+}
+
+.fh-ship-complete-banner {
+  margin: 20px auto 10px;
+  padding: 28px 20px;
+  max-width: 560px;
+  border-radius: var(--fh-radius-lg);
+  background: linear-gradient(160deg, rgba(214,168,79,.18), rgba(10,14,20,.9));
+  border: 1px solid rgba(214,168,79,.5);
+  box-shadow: var(--fh-shadow), 0 0 40px rgba(240,201,106,.25);
+}
+
+.fh-ship-complete-eyebrow {
+  font-family: var(--fh-font-display);
+  letter-spacing: 3px;
+  color: var(--fh-gold-bright);
+  font-size: 17px;
+  text-shadow: 0 0 24px rgba(240,201,106,.4);
+}
+
+.fh-ship-complete-name {
+  margin-top: 10px;
+  font-family: var(--fh-font-display);
+  font-size: 38px;
+  color: #fff2d6;
+}
+
+.fh-ship-complete-captain {
+  margin-top: 6px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-ship-complete-hint {
+  margin-top: 16px;
+  color: var(--fh-muted-fg);
+  font-size: 15px;
+}
+
+.fh-ship-phase-card {
+  margin: 24px auto;
+  padding: 24px 20px;
+  max-width: 560px;
+  border-radius: var(--fh-radius);
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border-strong);
+  text-align: center;
+}
+
+.fh-ship-phase-progress {
+  font-family: var(--fh-font-display);
+  letter-spacing: 2px;
+  color: var(--fh-muted-fg);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.fh-ship-phase-label {
+  margin-top: 8px;
+  font-family: var(--fh-font-display);
+  font-size: 26px;
+  color: var(--fh-gold-bright);
+}
+
+.fh-ship-phase-desc {
+  margin-top: 10px;
+  color: var(--fh-text-muted);
+  line-height: 1.5;
+}
+
+.fh-ship-phase-tool-req {
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-ship-phase-timer {
+  margin-top: 14px;
+}
+
+.fh-ship-phase-progress-bar {
+  margin-top: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid var(--fh-border-strong);
+  overflow: hidden;
+}
+
+.fh-ship-phase-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--fh-fire), var(--fh-gold-bright));
+  transition: width 1s linear;
+}
+
+.fh-ship-phase-timer-value {
+  font-family: var(--fh-font-display);
+  font-size: 32px;
+  color: var(--fh-fire);
+  letter-spacing: 2px;
+  margin-top: 6px;
+}
+
+.fh-ship-phase-timer-by {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-ship-phase-card .code-button {
+  margin-top: 6px;
+}
+
+/* --- Werkzeug-Inventar --- */
+.ship-tool-inventory {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.ship-tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--fh-surface-2);
+  border: 1px solid var(--fh-border);
+  color: var(--fh-fg);
+  font-weight: 600;
+}
+
+.ship-tool-chip-emoji {
+  font-size: 18px;
+}
+
+.ship-tool-chip {
+  opacity: .55;
+}
+
+.ship-tool-chip-owned {
+  opacity: 1;
+  border-color: rgba(214,168,79,.55);
+  background: rgba(214,168,79,.1);
+}
+
+/* --- Gesamt-Fortschrittsbalken (20 Etappen) --- */
+.fh-ship-overall-progress {
+  max-width: 480px;
+  margin: 22px auto 0;
+  text-align: center;
+}
+
+.fh-ship-overall-progress-label {
+  font-family: var(--fh-font-display);
+  letter-spacing: 2px;
+  color: var(--fh-muted-fg);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.fh-ship-overall-progress-bar {
+  margin-top: 8px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid var(--fh-border-strong);
+  overflow: hidden;
+}
+
+.fh-ship-overall-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--fh-fire), var(--fh-gold-bright));
+  transition: width .6s var(--fh-ease);
+}
+
+.fh-ship-overall-progress-count {
+  margin-top: 6px;
+  font-family: var(--fh-font-display);
+  color: var(--fh-gold-bright);
+  letter-spacing: 1px;
+}
+
+/* --- Etappen-Checkliste (20 Zeilen) --- */
+.fh-ship-stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 560px;
+  margin: 10px auto 0;
+  text-align: left;
+}
+
+.fh-ship-stage-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: var(--fh-radius-sm);
+  border: 1px solid var(--fh-border);
+  background: var(--fh-surface);
+  font-size: 14px;
+}
+
+.fh-ship-stage-row-icon {
+  flex: 0 0 auto;
+  width: 22px;
+  text-align: center;
+}
+
+.fh-ship-stage-row-number {
+  flex: 0 0 auto;
+  color: var(--fh-muted-fg);
+  font-size: 12px;
+  min-width: 70px;
+}
+
+.fh-ship-stage-row-label {
+  color: var(--fh-fg);
+}
+
+.fh-ship-stage-row-done {
+  border-color: rgba(85,200,120,.5);
+  background: rgba(85,200,120,.06);
+}
+
+.fh-ship-stage-row-done .fh-ship-stage-row-icon {
+  color: var(--fh-success);
+}
+
+.fh-ship-stage-row-active {
+  border-color: rgba(214,168,79,.6);
+  background: rgba(214,168,79,.08);
+}
+
+.fh-ship-stage-row-active .fh-ship-stage-row-label {
+  font-weight: 700;
+  color: var(--fh-gold-bright);
+}
+
+.fh-ship-stage-row-locked {
+  opacity: .5;
+}
+
+/* --- Tagesquest-Karte --- */
+.fh-daily-quest-card {
+  margin: 24px auto;
+  padding: 20px;
+  max-width: 480px;
+  border-radius: var(--fh-radius);
+  background: var(--fh-surface);
+  border: 1px solid rgba(214,168,79,.4);
+  text-align: center;
+}
+
+.fh-daily-quest-heading {
+  font-family: var(--fh-font-display);
+  letter-spacing: 1px;
+  color: var(--fh-gold-bright);
+  font-size: 17px;
+}
+
+.fh-daily-quest-desc {
+  margin-top: 8px;
+  color: var(--fh-text-muted);
+  line-height: 1.5;
+}
+
+.fh-daily-quest-reward {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-daily-quest-progress {
+  margin-top: 10px;
+  font-family: var(--fh-font-display);
+  color: var(--fh-fire);
+  letter-spacing: 1px;
+}
+
+.fh-daily-quest-card .code-button {
+  margin-top: 10px;
+}
+
+.fh-daily-quest-card-done {
+  border-color: rgba(85,200,120,.5);
+  background: rgba(85,200,120,.06);
+}
+
+.fh-daily-quest-complete {
+  margin-top: 8px;
+  color: var(--fh-success);
+}
+
+@media (max-width: 600px) {
+  .fh-ship-stage-row-number { display: none; }
+}
+
+/* --- Rätsel-Bank --- */
+.ship-puzzle-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  text-align: left;
+}
+
+.ship-puzzle-card {
+  padding: 18px;
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border);
+}
+
+.ship-puzzle-card-solved {
+  border-color: rgba(85,200,120,.5);
+  background: rgba(85,200,120,.06);
+}
+
+.ship-puzzle-question {
+  color: var(--fh-fg);
+  line-height: 1.5;
+}
+
+.ship-puzzle-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.ship-puzzle-input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.ship-puzzle-result {
+  margin-top: 10px;
+  font-size: 14px;
+  min-height: 1em;
+  line-height: 1.5;
+}
+
+.ship-puzzle-result-success {
+  color: var(--fh-success);
+}
+
+.ship-puzzle-result-error {
+  color: var(--fh-danger);
+}
+
+.ship-puzzle-code {
+  font-family: var(--fh-font-display);
+  letter-spacing: 1px;
+  color: var(--fh-gold-bright);
+}
+
+/* --- Schiff-Bühne mit Reparatur-Layern --- */
+.fh-ship-repair-stage {
+  position: relative;
+  width: min(560px, 92vw);
+  margin: 26px auto;
+}
+
+.fh-ship-repair-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 18px 26px rgba(0,0,0,.5));
+  transition: filter 1.2s var(--fh-ease);
+}
+
+.fh-ship-repair-smoke {
+  position: absolute;
+  inset: -14% -8% 30% -8%;
+  background: radial-gradient(ellipse 60% 50% at 50% 60%, rgba(120,120,130,.4), transparent 70%);
+  filter: blur(12px);
+  animation: fhShipSmokeDrift 8s ease-in-out infinite;
+  opacity: 1;
+  transition: opacity 1.4s var(--fh-ease);
+  pointer-events: none;
+}
+
+.fh-ship-part-hull-fixed,
+.fh-ship-part-mast-fixed,
+.fh-ship-part-sails-fixed,
+.fh-ship-part-rudder-fixed,
+.fh-ship-part-final-fixed {
+  opacity: 0;
+  transition: opacity .9s var(--fh-ease);
+}
+
+.fh-ship-part-hull-broken,
+.fh-ship-part-mast-broken,
+.fh-ship-part-sails-broken,
+.fh-ship-part-rudder-broken {
+  opacity: 1;
+  transition: opacity .9s var(--fh-ease);
+}
+
+#fh-ship-repair-stage.fh-phase-hull-done .fh-ship-part-hull-broken   { opacity: 0; }
+#fh-ship-repair-stage.fh-phase-hull-done .fh-ship-part-hull-fixed    { opacity: 1; }
+#fh-ship-repair-stage.fh-phase-mast-done .fh-ship-part-mast-broken   { opacity: 0; }
+#fh-ship-repair-stage.fh-phase-mast-done .fh-ship-part-mast-fixed    { opacity: 1; }
+#fh-ship-repair-stage.fh-phase-sails-done .fh-ship-part-sails-broken { opacity: 0; }
+#fh-ship-repair-stage.fh-phase-sails-done .fh-ship-part-sails-fixed  { opacity: 1; }
+#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-part-rudder-broken { opacity: 0; }
+#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-part-rudder-fixed  { opacity: 1; }
+#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-part-final-fixed   { opacity: 1; }
+
+#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-repair-svg {
+  filter: drop-shadow(0 18px 26px rgba(0,0,0,.5)) saturate(1.25) brightness(1.08);
+}
+
+#fh-ship-repair-stage.fh-phase-hull-done.fh-phase-mast-done .fh-ship-repair-smoke { opacity: .55; }
+#fh-ship-repair-stage.fh-phase-sails-done.fh-phase-rudder-done .fh-ship-repair-smoke { opacity: .25; }
+#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-repair-smoke { opacity: 0; }
+
+/* --- Reparatur-Abschluss-Toast (nutzt .currency-toast Basisstil) --- */
+.ship-repair-done-toast {
+  background: linear-gradient(135deg, rgba(255,106,42,.3), rgba(10,10,20,.95));
+  border-color: rgba(255,106,42,.6);
+  color: #ffe0c2;
+  max-width: 360px;
+}
+
+@media (max-width: 900px) {
+  .fh-ship-complete-name   { font-size: 26px; }
+  .fh-ship-phase-label     { font-size: 21px; }
+  .fh-ship-phase-timer-value { font-size: 26px; }
+  .ship-puzzle-list        { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .fh-ship-wreck-scene     { width: 82vw; }
+  .fh-ship-phase-card      { padding: 18px 14px; }
+  .fh-dev-panel-actions    { flex-direction: column; }
+  .fh-dev-panel-actions .code-button { width: 100%; }
+  .ship-puzzle-input-row   { flex-direction: column; }
+  .ship-puzzle-input-row .code-button { width: 100%; }
+  .ship-puzzle-input       { width: 100%; }
+}
+
+/* =====================================================
+   "DER FALL DER VERSCHWUNDENEN DUBLONEN" (Detektiv-Mission)
+   ---------------------------------------------------
+   Nutzt bestehende Design-Tokens (--fh-gold/--fh-surface/--fh-border/
+   --fh-danger/--fh-success/--fh-font-display/--fh-ease usw.), keine
+   neuen Farben - soll sich wie ein zusaetzliches Kapitel derselben
+   Piraten-Welt anfuehlen, nicht wie ein fremdes UI-System.
+===================================================== */
+.detective-page-content {
+  max-width: 900px;
+}
+
+.detective-story {
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius);
+  padding: 18px 22px;
+  color: var(--fh-text-muted);
+  line-height: 1.6;
+  margin: 18px 0 30px;
+}
+
+.detective-section-heading {
+  font-family: var(--fh-font-display);
+  color: var(--fh-gold-bright);
+  margin: 30px 0 14px;
+}
+
+/* ---- Verdächtige ---- */
+.detective-suspects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.detective-suspect-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius);
+  padding: 20px 16px;
+  cursor: pointer;
+  transition: border-color .2s var(--fh-ease), transform .2s var(--fh-ease), box-shadow .2s var(--fh-ease);
+  color: var(--fh-text);
+  font-family: var(--fh-font-sans);
+}
+
+.detective-suspect-card:hover {
+  border-color: var(--fh-border-strong);
+  transform: translateY(-3px);
+}
+
+.detective-suspect-card.detective-suspect-selected {
+  border-color: var(--fh-gold-bright);
+  box-shadow: var(--fh-glow-gold);
+}
+
+.detective-suspect-image {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--fh-border-strong);
+}
+
+.detective-suspect-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  background: var(--fh-muted);
+}
+
+.detective-suspect-name {
+  font-family: var(--fh-font-display);
+  font-size: 17px;
+  color: var(--fh-gold-bright);
+}
+
+.detective-suspect-role {
+  font-size: 13px;
+  color: var(--fh-text-muted);
+}
+
+.detective-suspect-statement {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--fh-text-muted);
+  line-height: 1.5;
+}
+
+/* ---- Hinweise ---- */
+.detective-clues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.detective-clue-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius);
+  padding: 20px 16px;
+  font-family: var(--fh-font-sans);
+  color: var(--fh-text);
+}
+
+button.detective-clue-card {
+  cursor: pointer;
+  transition: border-color .2s var(--fh-ease), transform .2s var(--fh-ease);
+}
+
+button.detective-clue-card:hover {
+  border-color: var(--fh-gold);
+  transform: translateY(-3px);
+}
+
+.detective-clue-icon {
+  font-size: 30px;
+}
+
+.detective-clue-title {
+  font-family: var(--fh-font-display);
+  font-size: 15px;
+  color: var(--fh-gold-bright);
+}
+
+.detective-clue-cta {
+  font-size: 13px;
+  color: var(--fh-text-muted);
+}
+
+.detective-clue-revealed {
+  border-color: var(--fh-success);
+  animation: detectiveClueReveal .4s var(--fh-ease);
+}
+
+.detective-clue-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fh-text-muted);
+}
+
+@keyframes detectiveClueReveal {
+  0%   { opacity: 0; transform: scale(.92); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ---- Falsche Beschuldigung ---- */
+.detective-wrong-guess {
+  margin-top: 24px;
+  padding: 16px 20px;
+  border-radius: var(--fh-radius);
+  border: 1px solid var(--fh-danger);
+  background: rgba(229,57,53,.12);
+  animation: detectiveClueReveal .3s var(--fh-ease);
+}
+
+.detective-wrong-guess-title {
+  font-family: var(--fh-font-display);
+  color: var(--fh-danger);
+  margin-bottom: 6px;
+}
+
+.detective-wrong-guess-hint {
+  color: var(--fh-text-muted);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* ---- Beschuldigen ---- */
+.detective-accuse-box {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.detective-accuse-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* ---- Fall gelöst ---- */
+.detective-solved {
+  text-align: center;
+  animation: detectiveClueReveal .5s var(--fh-ease);
+}
+
+.detective-solved-reveal {
+  font-family: var(--fh-font-display);
+  font-size: 30px;
+  color: var(--fh-gold-bright);
+  text-shadow: var(--fh-glow-gold);
+  margin: 10px 0;
+}
+
+.detective-solved-heading {
+  font-family: var(--fh-font-display);
+  color: var(--fh-success);
+  margin: 26px 0 8px;
+}
+
+.detective-reward-list {
+  list-style: none;
+  padding: 0;
+  margin: 14px auto 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 17px;
+}
+
+.detective-secret-code {
+  font-family: var(--fh-font-display);
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--fh-gold-bright);
+  background: var(--fh-surface);
+  border: 1px dashed var(--fh-gold);
+  border-radius: var(--fh-radius-sm);
+  padding: 12px 20px;
+  display: inline-block;
+  margin: 10px 0 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detective-clue-revealed,
+  .detective-wrong-guess,
+  .detective-solved {
+    animation: none;
+  }
+  .detective-suspect-card:hover,
+  button.detective-clue-card:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .detective-suspects-grid,
+  .detective-clues-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =====================================================
+   ADMIN-GATEWAY
+===================================================== */
+.fh-gateway-link {
+  opacity: .55;
+  font-size: 14px;
+}
+
+.fh-sidebar-gateway-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--fh-border);
+  cursor: pointer;
+  color: var(--fh-muted-fg);
+  text-decoration: none;
+}
+
+.fh-sidebar-gateway-link:hover {
+  color: var(--fh-gold-bright);
+  border-color: rgba(240,201,106,.4);
+}
+
+.gateway-page-content {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+}
+
+.gateway-content {
+  margin-top: 24px;
+}
+
+.gateway-login-box {
+  text-align: center;
+  padding: 40px 20px;
+  border-radius: var(--fh-radius);
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border-strong);
+}
+
+.gateway-login-lead {
+  margin-bottom: 20px;
+  color: var(--fh-text-muted);
+}
+
+.gateway-denied {
+  color: var(--fh-danger);
+}
+
+.gateway-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--fh-success, #55c878) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fh-success, #55c878) 30%, transparent);
+  color: var(--fh-fg);
+  font-size: 14px;
+}
+
+.gateway-logout-link {
+  background: none;
+  border: 1px solid var(--fh-border);
+  color: var(--fh-muted-fg);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.gateway-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.gateway-status-card {
+  padding: 14px 16px;
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-surface-2);
+  border: 1px solid var(--fh-border);
+}
+
+.gateway-status-label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+.gateway-status-value {
+  margin-top: 6px;
+  font-family: var(--fh-font-display);
+  color: var(--fh-fg);
+  font-size: 15px;
+}
+
+.gateway-status-sub {
+  margin-top: 10px;
+  color: var(--fh-muted-fg);
+  font-size: 14px;
+}
+
+.gateway-inline-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.gateway-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.gateway-form-row label {
+  flex: 1;
+  min-width: 220px;
+  color: var(--fh-muted-fg);
+  font-size: 13px;
+}
+
+.gateway-form-row input {
+  margin-top: 6px;
+  width: 100%;
+}
+
+.gateway-chapter-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.gateway-chapter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--fh-surface-2);
+  border: 1px solid var(--fh-border);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.gateway-chapter-row input[type="checkbox"] {
+  accent-color: var(--fh-gold);
+}
+
+.gateway-chapter-row small {
+  color: var(--fh-muted-fg);
+}
+
+.gateway-preview-hint {
+  margin-top: 10px;
+  color: var(--fh-text-muted);
+  font-size: 14px;
+}
+
+.gateway-preview-frame {
+  margin-top: 12px;
+  width: 100%;
+  height: 480px;
+  border: 1px solid var(--fh-border-strong);
+  border-radius: var(--fh-radius);
+  background: var(--fh-bg);
+}
+
+@media (max-width: 600px) {
+  .gateway-form-row { flex-direction: column; }
+  .gateway-preview-frame { height: 340px; }
+}
+

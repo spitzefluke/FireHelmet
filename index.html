@@ -48,7 +48,23 @@
        Stylesheet VOR style.css, damit dortige Regeln gewinnen. -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
-  <link rel="stylesheet" href="style.css">
+  <!-- Das Stylesheet lag als EINE Datei mit 13.539 Zeilen vor. Es ist
+       jetzt nach Themen aufgeteilt, damit man beim Aendern nicht mehr
+       suchen muss.
+
+       DIE REIHENFOLGE IST TEIL DER GESTALTUNG: an mehreren Stellen
+       entscheidet allein sie, welche von zwei gleich starken Regeln
+       gewinnt (z.B. .fh-row nach .chapter-card, .fh-page-title nach
+       .page-content h1). Diese Liste darf daher weder umsortiert noch
+       um einen Eintrag verkuerzt werden. -->
+  <link rel="stylesheet" href="css/00-basis.css">
+  <link rel="stylesheet" href="css/10-inhaltsseiten.css">
+  <link rel="stylesheet" href="css/20-spiele.css">
+  <link rel="stylesheet" href="css/30-events.css">
+  <link rel="stylesheet" href="css/40-shop.css">
+  <link rel="stylesheet" href="css/50-redesign.css">
+  <link rel="stylesheet" href="css/60-fortschritt.css">
+  <link rel="stylesheet" href="css/70-entwurf-1c.css">
 </head>
 <body>
 
@@ -235,23 +251,23 @@
          alle restlichen Seiten erhalten (openMenu()). -->
     <nav class="fh-bottom-nav" id="fh-bottom-nav">
       <a class="fh-bottom-nav-item" data-page="home" onclick="changePage('home')">
-        <span class="fh-bottom-nav-icon">🏠</span>
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-house"></i></span>
         <span class="fh-bottom-nav-label" data-i18n="menu.home">Home</span>
       </a>
       <a class="fh-bottom-nav-item" data-page="community-boss" onclick="changePage('community-boss')">
-        <span class="fh-bottom-nav-icon">🐙</span>
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-skull"></i></span>
         <span class="fh-bottom-nav-label" data-i18n="menu.bottomBoss">Boss</span>
       </a>
       <a class="fh-bottom-nav-item" data-page="race" onclick="changePage('race')">
-        <span class="fh-bottom-nav-icon">🏎️</span>
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-flag-checkered"></i></span>
         <span class="fh-bottom-nav-label" data-i18n="menu.bottomRace">Rennen</span>
       </a>
       <a class="fh-bottom-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')">
-        <span class="fh-bottom-nav-icon">🏆</span>
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-trophy"></i></span>
         <span class="fh-bottom-nav-label" data-i18n="menu.leaderboard">Rangliste</span>
       </a>
       <button type="button" class="fh-bottom-nav-item fh-bottom-nav-more" onclick="openMenu()">
-        <span class="fh-bottom-nav-icon">☰</span>
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-list"></i></span>
         <span class="fh-bottom-nav-label" data-i18n="menu.bottomMore">Mehr</span>
       </button>
     </nav>
@@ -490,7 +506,7 @@
         <button class="back-button" onclick="changePage('story')" data-i18n="common.back">← Zurück</button>
 
         <div class="story-header">
-          <img id="detail-cover" class="detail-cover">
+          <img id="detail-cover" class="detail-cover" alt="">
           <div>
             <h1 id="detail-title"></h1>
             <p id="detail-description"></p>
