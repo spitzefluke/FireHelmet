@@ -546,7 +546,11 @@
     ===================== -->
     <section id="socials" class="page">
       <div class="page-content">
-        <h1 data-i18n="socials.title">SOCIALS</h1>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="socials.kicker">Folge der Crew</p>
+          <h1 class="fh-page-title" data-i18n="socials.title">Socials</h1>
+          <p class="fh-page-lead" data-i18n="socials.lead">Alle Kanäle der Crew an einer Stelle.</p>
+        </div>
 
         <div class="social-container">
           <a href="https://youtube.com" target="_blank" class="social-btn social-youtube">
@@ -605,8 +609,11 @@
     ===================== -->
     <section id="login" class="page">
       <div class="page-content">
-        <h1 data-i18n="login.title">ANMELDUNG</h1>
-        <p class="story-subtitle" data-i18n="login.subtitle">Melde dich an, um in Rangliste und Wochenrennen zu erscheinen</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="login.kicker">Zugang</p>
+          <h1 class="fh-page-title" data-i18n="login.title">Anmeldung</h1>
+          <p class="fh-page-lead" data-i18n="login.subtitle">Melde dich an, um in Rangliste und Wochenrennen zu erscheinen</p>
+        </div>
 
         <div class="twitch-login-area">
           <button id="twitch-login-btn" class="twitch-login-btn" onclick="loginWithTwitch()">
@@ -668,8 +675,11 @@
       </div>
 
       <div class="page-content shop-content">
-        <h1 data-i18n="shop.title">🛒 SCHWARZMARKT DER FLITZPIEPEN</h1>
-        <p class="story-subtitle" data-i18n="shop.subtitle">Jede Stunde neue Ware - gib deine Dublonen für Rahmen und Extras aus</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="shop.kicker">Schwarzmarkt der Flitzpiepen</p>
+          <h1 class="fh-page-title" data-i18n="shop.title">Shop</h1>
+          <p class="fh-page-lead" data-i18n="shop.subtitle">Jede Stunde neue Ware - gib deine Dublonen für Rahmen und Extras aus</p>
+        </div>
 
         <div class="shop-currency-bar">
           <span class="shop-currency-icon">💰</span>
@@ -709,8 +719,11 @@
     <section id="code" class="page">
       <div class="code-ambient-fx" id="code-ambient-fx"></div>
       <div class="page-content code-content">
-        <h1 data-i18n="code.title">CODE</h1>
-        <p class="story-subtitle" data-i18n="code.subtitle">Gib deinen geheimen Code ein</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="code.kicker">Geheimnisse der Crew</p>
+          <h1 class="fh-page-title" data-i18n="code.title">Code</h1>
+          <p class="fh-page-lead" data-i18n="code.subtitle">Gib deinen geheimen Code ein</p>
+        </div>
 
         <audio id="code-audio-player"></audio>
 
@@ -743,8 +756,11 @@
     ===================== -->
     <section id="wheel" class="page">
       <div class="page-content wheel-content">
-        <h1 data-i18n="wheel.title">SCHATZRAD</h1>
-        <p class="story-subtitle" data-i18n="wheel.subtitle">Einmal am Tag drehen und dein Glück bei der Schatzsuche versuchen</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="wheel.kicker">Einmal am Tag</p>
+          <h1 class="fh-page-title" data-i18n="wheel.title">Schatzrad</h1>
+          <p class="fh-page-lead" data-i18n="wheel.subtitle">Einmal am Tag drehen und dein Glück bei der Schatzsuche versuchen</p>
+        </div>
 
         <p id="wheel-login-hint" class="wheel-status wheel-login-hint">
           <span data-i18n="wheel.loginHintPrefix">Noch nicht angemeldet? </span><a onclick="changePage('login')" data-i18n="wheel.loginHintLink">Hier geht's zur Anmeldung</a>
@@ -776,8 +792,11 @@
     ===================== -->
     <section id="spielothek" class="page">
       <div class="page-content spielothek-page-content">
-        <h1 data-i18n="spielothek.title">🎰 ÄNDIIS SPIELOTHEK</h1>
-        <p class="story-subtitle" data-i18n="spielothek.subtitle">Jeden Monat ein anderes Spiel - rein spielerisch, nur mit Dublonen.</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="spielothek.kicker">Ändiis Ecke</p>
+          <h1 class="fh-page-title" data-i18n="spielothek.title">Spielothek</h1>
+          <p class="fh-page-lead" data-i18n="spielothek.subtitle">Jeden Monat ein anderes Spiel - rein spielerisch, nur mit Dublonen.</p>
+        </div>
         <div id="spielothek-content" class="spielothek-content"></div>
       </div>
     </section>
@@ -787,8 +806,11 @@
     ===================== -->
     <section id="leaderboard" class="page">
       <div class="page-content">
-        <h1 data-i18n="leaderboard.title">RANGLISTE</h1>
-        <p class="story-subtitle" data-i18n="leaderboard.subtitle">Wer hat die meisten Geheimcodes geknackt?</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="leaderboard.kicker">Bestenliste</p>
+          <h1 class="fh-page-title" data-i18n="leaderboard.title">Rangliste</h1>
+          <p class="fh-page-lead" data-i18n="leaderboard.subtitle">Wer hat die meisten Geheimcodes geknackt?</p>
+        </div>
 
         <div id="leaderboard-podium" class="fh-podium"></div>
 
@@ -1014,8 +1036,11 @@
     ===================== -->
     <section id="detective-case" class="page">
       <div class="page-content detective-page-content">
-        <h1 data-i18n="detectiveCase.title">🕵️ DER FALL DER VERSCHWUNDENEN DUBLONEN</h1>
-        <p class="story-subtitle" data-i18n="detectiveCase.subtitle">Auf der FireHelmet herrscht Unruhe. 400 Dublonen sind aus der Schatzkammer verschwunden. Jemand aus der Crew muss sie genommen haben.</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="detectiveCase.kicker">Die verschwundenen Dublonen</p>
+          <h1 class="fh-page-title" data-i18n="detectiveCase.title">Der Fall</h1>
+          <p class="fh-page-lead" data-i18n="detectiveCase.subtitle">Auf der FireHelmet herrscht Unruhe. 400 Dublonen sind aus der Schatzkammer verschwunden. Jemand aus der Crew muss sie genommen haben.</p>
+        </div>
         <div id="detective-case-content"></div>
       </div>
     </section>
@@ -1055,8 +1080,11 @@
       </div>
 
       <div class="page-content boss-content" id="boss-content-panel">
-        <h1 data-i18n="boss.title">COMMUNITY-BOSS</h1>
-        <p class="story-subtitle" data-i18n="boss.subtitle">Gemeinsam besiegen, bevor der Monat endet!</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="boss.kicker">Alle gegen einen</p>
+          <h1 class="fh-page-title" data-i18n="boss.title">Community-Boss</h1>
+          <p class="fh-page-lead" data-i18n="boss.subtitle">Gemeinsam besiegen, bevor der Monat endet!</p>
+        </div>
 
         <p id="boss-reset-countdown" class="boss-reset-countdown"></p>
 
@@ -1110,8 +1138,11 @@
     ===================== -->
     <section id="support" class="page">
       <div class="page-content support-content">
-        <h1 data-i18n="support.title">SUPPORT</h1>
-        <p class="story-subtitle" data-i18n="support.subtitle">Melde ein Problem oder ein Anliegen</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="support.kicker">Hilfe an Bord</p>
+          <h1 class="fh-page-title" data-i18n="support.title">Support</h1>
+          <p class="fh-page-lead" data-i18n="support.subtitle">Melde ein Problem oder ein Anliegen</p>
+        </div>
 
         <div id="support-report-box" class="support-report-box">
           <h2 data-i18n="support.reportTitle">🐞 Fehler melden / Anliegen</h2>
@@ -1133,8 +1164,11 @@
     ===================== -->
     <section id="rating" class="page">
       <div class="page-content rating-content">
-        <h1 data-i18n="rating.title">⭐ BEWERTUNG</h1>
-        <p class="story-subtitle" data-i18n="rating.subtitle">Wie gefällt dir die Seite? Deine Meinung hilft uns weiter!</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="rating.kicker">Deine Meinung</p>
+          <h1 class="fh-page-title" data-i18n="rating.title">Bewertung</h1>
+          <p class="fh-page-lead" data-i18n="rating.subtitle">Wie gefällt dir die Seite? Deine Meinung hilft uns weiter!</p>
+        </div>
 
         <div class="rating-average" id="rating-average" style="display:none;">
           <span id="rating-average-stars" class="rating-average-stars"></span>
@@ -1171,8 +1205,11 @@
     ====================================================== -->
     <section id="gateway" class="page">
       <div class="page-content gateway-page-content">
-        <h1>⚙ ADMIN-GATEWAY</h1>
-        <p class="story-subtitle">Countdown, Story-Kapitel und Status verwalten.</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker">Verwaltung</p>
+          <h1 class="fh-page-title">Admin-Gateway</h1>
+          <p class="fh-page-lead">Countdown, Story-Kapitel und Status verwalten.</p>
+        </div>
         <div id="gateway-content" class="gateway-content"></div>
       </div>
     </section>

@@ -176,9 +176,10 @@ function buildTournamentPageHtml({ uid, tournament, finished, matches, participa
     : "";
 
   return `
-    <div class="tournament-hero">
-      <h1 class="tournament-hero-title">${escapeHtml(tt("tournament.page.title", "THE CHALLENGE"))}</h1>
-      <p class="tournament-hero-tagline">${escapeHtml(tt("tournament.page.tagline", "Gewinne das Turnier. Gewinne die limitierte Cap."))}</p>
+    <div class="fh-page-head tournament-hero">
+      <p class="fh-page-kicker">${escapeHtml(tt("tournament.page.kicker", "Turnier der Crew"))}</p>
+      <h1 class="fh-page-title tournament-hero-title">${escapeHtml(tt("tournament.page.title", "The Challenge"))}</h1>
+      <p class="fh-page-lead tournament-hero-tagline">${escapeHtml(tt("tournament.page.tagline", "Gewinne das Turnier. Gewinne die limitierte Cap."))}</p>
     </div>
 
     ${prizeHtml}

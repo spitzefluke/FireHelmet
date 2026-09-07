@@ -308,9 +308,12 @@ function renderStreamRaetselContent() {
     : "";
 
   contentEl.innerHTML = `
-    <h1>${streamRaetselConfig.title}</h1>
+    <div class="fh-page-head">
+      <p class="fh-page-kicker" data-i18n="streamraetsel.kicker">Noch verschlossen</p>
+      <h1 class="fh-page-title">${streamRaetselConfig.title}</h1>
+      <p class="fh-page-lead">${streamRaetselConfig.description}</p>
+    </div>
     ${imageHtml}
-    <p class="story-subtitle">${streamRaetselConfig.description}</p>
   `;
 }
 

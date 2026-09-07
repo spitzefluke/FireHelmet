@@ -1436,18 +1436,8 @@ main {
   padding: 40px 20px;
 }
 
-/* .story-subtitle heisst historisch so, wird aber von 13 weiteren
-   Seiten als Unterzeile benutzt (Login, Shop, Code, Schatzrad,
-   Spielothek, Rangliste, ... ). Sie bleibt daher unveraendert
-   stehen - das Stories-Archiv selbst nutzt sie nach dem Umbau
-   nicht mehr, sondern .fh-page-lead. Die uebrigen Seiten kommen in
-   Runde 4 an die Reihe. */
-.story-subtitle {
-  font-size: clamp(.95rem, 2vw, 1.25rem);
-  color: var(--fh-text-muted, #bdbdbd);
-  margin-bottom: 60px;
-  padding: 0 1rem;
-}
+/* .story-subtitle ist mit Runde 4 entfallen: alle Seiten, die sie
+   als Unterzeile benutzten, tragen jetzt .fh-page-lead. */
 
 /* Der Entwurf setzt zwei Logbuecher nebeneinander. minmax statt
    fester Spalten, damit ein drittes Logbuch spaeter von selbst
@@ -1738,11 +1728,19 @@ main {
 /* =========================
    11. CHARACTERS
 ========================= */
+/* Gemeinsame Spalte aller Unterseiten. Bis Runde 4 war sie 90%
+   breit ohne Obergrenze und mittig gesetzt: der Seitenkopf begann
+   dadurch ganz links am Bildschirmrand, waehrend der Inhalt
+   darunter in der Mitte stand. Jetzt dieselbe Spaltenbreite wie
+   Startseite, Stories und Rennen (1180px), damit Kopf und Inhalt
+   an derselben Kante beginnen. */
 .page-content {
-  width: 90%;
+  width: 92%;
+  max-width: 1180px;
+  margin-inline: auto;
   max-height: 90%;
   overflow: auto;
-  text-align: center;
+  text-align: left;
 }
 
 .page-content h1 {
@@ -11374,24 +11372,12 @@ button.detective-clue-card:hover {
    ruhiger.
 ====================================================== */
 
-.tournament-hero {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
+/* Der Turnierkopf traegt jetzt .fh-page-head; hier bleibt nur,
+   was ihn von den uebrigen Seiten unterscheidet: der Titel steht
+   in Gold statt in Weiss - "The Challenge" ist der Name des
+   Turniers, nicht nur eine Seitenueberschrift. */
 .tournament-hero-title {
-  font-family: var(--fh-font-display);
-  font-size: clamp(28px, 6vw, 44px);
-  letter-spacing: 1px;
   color: var(--fh-gold-bright);
-  margin: 0 0 6px;
-}
-
-.tournament-hero-tagline {
-  font-family: var(--fh-font-sans);
-  color: var(--fh-muted-fg);
-  font-size: 15px;
-  margin: 0;
 }
 
 .tournament-prize-banner {
@@ -13087,6 +13073,12 @@ body:has(#story-detail.active-page)::after {
   color: var(--fh-gold-bright);
 }
 
+/* h1 mit im Selektor: .page-content h1 (weiter oben in dieser
+   Datei) setzt fuer 14 Seiten eine eigene, deutlich groessere
+   Schriftgroesse mit weiter Sperrung. Ohne das zusaetzliche h1
+   waere jene Regel gewichtiger und der Seitentitel bekaeme auf
+   genau diesen Seiten nicht die Masse des Entwurfs. */
+h1.fh-page-title,
 .fh-page-title {
   margin: 0;
   font-family: var(--fh-font-display);
@@ -13464,4 +13456,33 @@ body:has(#story-detail.active-page)::after {
   .page:not(#home) {
     padding-top: var(--fh-topbar-h);
   }
+}
+
+/* =====================================================
+   ENTWURF 1c - RUNDE 4: AUSRICHTUNG DER UNTERSEITEN
+   ---------------------------------------------------
+   Die gemeinsame Spalte (.page-content) ist jetzt linksbuendig.
+   Ein paar Bloecke hingen noch an margin-inline: auto und
+   standen dadurch mittig unter einem linksbuendigen Kopf - hier
+   werden genau diese an dieselbe Kante geholt.
+
+   BEWUSST NICHT angefasst: das Schatzrad (.wheel-wrapper) und
+   seine Ergebniszeile, die Boss-Buehne und die Sternebewertung.
+   Das sind in sich runde bzw. symmetrische Bauteile, bei denen
+   mittig die richtige Ausrichtung ist - der Entwurf zeigt an
+   diesen Stellen ebenfalls zentrierte Bedienteile.
+===================================================== */
+.leaderboard-list,
+.shop-earn-hint,
+.fh-audiobook-card,
+.boss-flavor,
+.fh-boss-panel {
+  margin-inline: 0;
+}
+
+/* Reihen, die ihre Elemente in der Mitte sammelten, beginnen
+   jetzt links - sie sind Inhaltslisten, keine Bedienteile. */
+.twitch-login-area,
+.shop-tabs {
+  justify-content: flex-start;
 }
