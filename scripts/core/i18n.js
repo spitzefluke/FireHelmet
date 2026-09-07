@@ -202,8 +202,13 @@ const translations = {
     "home.metaMissionValue": "Entdecken",
     "home.scrollCue": "Scrollen",
 
-    "story.title": "STORIES",
-    "story.subtitle": "Wähle ein Logbuch aus dem Archiv",
+    "story.kicker": "Archiv der Crew",
+    "story.title": "Logbücher",
+    "story.subtitle": "Wähle ein Logbuch aus dem Archiv - jedes Kapitel bleibt offen, sobald du es einmal gelesen hast.",
+    "story.cardProgress": "{done} von {total} geöffnet",
+    "story.stateRead": "Gelesen",
+    "story.stateNew": "Offen",
+    "story.stateLocked": "Gesperrt",
     "story.chapterHeading": "Kapitel",
     "story.expeditionProgress": "EXPEDITION-FORTSCHRITT",
     "story.chapterLockedMessage": "Dieses Kapitel ist noch nicht freigeschaltet.",
@@ -215,7 +220,9 @@ const translations = {
     "progression.crewJoinWelcome": "Willkommen in der Crew!",
     "progression.close": "Schließen",
 
-    "characters.title": "CHARACTERS",
+    "characters.kicker": "An Bord",
+    "characters.title": "Die Crew",
+    "characters.lead": "Alle Namen aus den Logbüchern. Tipp auf eine Karte, um Rolle, Zitat und Beschreibung zu sehen.",
 
     "socials.title": "SOCIALS",
     "socials.daveHeading": "🚂 Socials von Zugfahrer_DaveTV",
@@ -252,10 +259,11 @@ const translations = {
     "leaderboard.subtitle": "Wer hat die meisten Geheimcodes geknackt?",
     "leaderboard.loading": "Lade Rangliste ...",
 
-    "race.title": "WOCHENRENNEN",
+    "race.title": "Wochenrennen",
+    "race.tableLabel": "Diese Woche",
     "race.subtitle": "Jede Woche neu: Fortschritt durch Schatzrad-Drehen und Codes-Knacken",
     "race.loadingWinner": "Lade Sieger der letzten Woche ...",
-    "race.dailyBonusButton": "Tagesbonus abholen 🎁",
+    "race.dailyBonusButton": "Tagesbonus abholen",
 
     "stream.liveLabel": "🔴 LIVE COUNTDOWN",
     "stream.title": "❓ ???",
@@ -588,8 +596,13 @@ const translations = {
     "home.metaMissionValue": "Discover",
     "home.scrollCue": "Scroll",
 
-    "story.title": "STORIES",
-    "story.subtitle": "Choose a logbook from the archive",
+    "story.kicker": "The crew's archive",
+    "story.title": "Logbooks",
+    "story.subtitle": "Choose a logbook from the archive - every chapter stays open once you have read it.",
+    "story.cardProgress": "{done} of {total} opened",
+    "story.stateRead": "Read",
+    "story.stateNew": "Open",
+    "story.stateLocked": "Locked",
     "story.chapterHeading": "Chapters",
     "story.expeditionProgress": "EXPEDITION PROGRESS",
     "story.chapterLockedMessage": "This chapter hasn't been unlocked yet.",
@@ -601,7 +614,9 @@ const translations = {
     "progression.crewJoinWelcome": "Welcome to the crew!",
     "progression.close": "Close",
 
-    "characters.title": "CHARACTERS",
+    "characters.kicker": "On board",
+    "characters.title": "The crew",
+    "characters.lead": "Every name from the logbooks. Tap a card for role, quote and description.",
 
     "socials.title": "SOCIALS",
     "socials.daveHeading": "🚂 Zugfahrer_DaveTV's socials",
@@ -638,10 +653,11 @@ const translations = {
     "leaderboard.subtitle": "Who has cracked the most secret codes?",
     "leaderboard.loading": "Loading leaderboard ...",
 
-    "race.title": "WEEKLY RACE",
+    "race.title": "Weekly race",
+    "race.tableLabel": "This week",
     "race.subtitle": "New every week: progress through wheel spins and cracked codes",
     "race.loadingWinner": "Loading last week's winner ...",
-    "race.dailyBonusButton": "Claim daily bonus 🎁",
+    "race.dailyBonusButton": "Claim daily bonus",
 
     "stream.liveLabel": "🔴 LIVE COUNTDOWN",
     "stream.title": "❓ ???",
@@ -866,6 +882,16 @@ function setLanguage(lang) {
   if (typeof refreshWheelStatus === "function") refreshWheelStatus();
   if (typeof loadLeaderboard === "function" && document.getElementById("leaderboard")?.classList.contains("active-page")) {
     loadLeaderboard();
+  }
+  // Auch das Story-Archiv und die Kapitelliste setzen ihre Texte
+  // beim Rendern zusammen ("3 von 12 geoeffnet", "Gelesen"/"Gesperrt")
+  // und tragen daher keine data-i18n-Marken.
+  if (typeof loadStories === "function" && document.getElementById("story")?.classList.contains("active-page")) {
+    loadStories();
+  }
+  if (typeof loadChapters === "function" && typeof currentStory !== "undefined" && currentStory
+      && document.getElementById("story-detail")?.classList.contains("active-page")) {
+    loadChapters();
   }
   // Die Startseiten-Uebersicht baut ihre Texte beim Rendern zusammen
   // und traegt daher keine data-i18n-Marken, die applyTranslations()

@@ -469,8 +469,11 @@
     ====================================================== -->
     <section id="story" class="page">
       <div class="story-library">
-        <h1 data-i18n="story.title">STORIES</h1>
-        <p class="story-subtitle" data-i18n="story.subtitle">Wähle ein Logbuch aus dem Archiv</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="story.kicker">Archiv der Crew</p>
+          <h1 class="fh-page-title" data-i18n="story.title">Logbücher</h1>
+          <p class="fh-page-lead" data-i18n="story.subtitle">Wähle ein Logbuch aus dem Archiv - jedes Kapitel bleibt offen, sobald du es einmal gelesen hast.</p>
+        </div>
 
         <!-- Wird automatisch gefüllt -->
         <div id="story-grid" class="story-grid"></div>
@@ -500,10 +503,10 @@
              scripts/stories/stories.js. -->
         <div class="story-progress" id="story-progress"></div>
 
-        <h2 data-i18n="story.chapterHeading">Kapitel</h2>
+        <p class="fh-section-label" data-i18n="story.chapterHeading">Kapitel</p>
 
         <!-- Kapitel werden automatisch erzeugt -->
-        <div id="chapter-list" class="chapter-list"></div>
+        <div id="chapter-list" class="chapter-list fh-rows"></div>
       </div>
     </section>
 
@@ -528,7 +531,11 @@
     ===================== -->
     <section id="characters" class="page">
       <div class="page-content">
-        <h1 data-i18n="characters.title">CHARACTERS</h1>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="characters.kicker">An Bord</p>
+          <h1 class="fh-page-title" data-i18n="characters.title">Die Crew</h1>
+          <p class="fh-page-lead" data-i18n="characters.lead">Alle Namen aus den Logbüchern. Tipp auf eine Karte, um Rolle, Zitat und Beschreibung zu sehen.</p>
+        </div>
 
         <div class="character-container" id="character-container"></div>
       </div>
@@ -798,20 +805,43 @@
       <div class="race-fx" id="race-fx"></div>
 
       <div class="race-fullpage">
-        <h1 data-i18n="race.title">WOCHENRENNEN</h1>
-        <p class="story-subtitle" data-i18n="race.subtitle">Jede Woche neu: Fortschritt durch Schatzrad-Drehen und Codes-Knacken</p>
+        <!-- Kopf im Entwurfs-Stil (2c): links Einordnung und Titel,
+             rechts die Handlung (Tagesbonus) und die verbleibende
+             Zeit. Vorher stand alles untereinander in der Mitte.
+             Alle IDs bleiben unveraendert - race.js schreibt weiter
+             in dieselben Elemente. -->
+        <div class="race-head">
+          <div class="fh-page-head race-head-text">
+            <p id="race-track-theme" class="fh-page-kicker race-track-theme"></p>
+            <h1 class="fh-page-title" data-i18n="race.title">Wochenrennen</h1>
+            <p class="fh-page-lead" data-i18n="race.subtitle">Jede Woche neu: Fortschritt durch Schatzrad-Drehen und Codes-Knacken</p>
+          </div>
 
-        <p id="race-last-winner" class="wheel-status" data-i18n="race.loadingWinner">Lade Sieger der letzten Woche ...</p>
-        <p id="race-countdown" class="wheel-countdown" style="display:block;"></p>
-        <p id="race-own-progress" class="wheel-status"></p>
-
-        <div class="race-daily-box">
-          <button id="race-daily-button" class="code-button" onclick="claimDailyRaceBonus()" data-i18n="race.dailyBonusButton">Tagesbonus abholen 🎁</button>
-          <p id="race-daily-status" class="wheel-status"></p>
+          <div class="race-head-actions">
+            <button id="race-daily-button" class="fh-cta" onclick="claimDailyRaceBonus()">
+              <i class="ph ph-gift" aria-hidden="true"></i><span data-i18n="race.dailyBonusButton">Tagesbonus abholen</span>
+            </button>
+            <p id="race-countdown" class="race-pill" style="display:block;"></p>
+          </div>
         </div>
 
-        <p id="race-track-theme" class="race-track-theme"></p>
+        <div class="race-status-line">
+          <p id="race-own-progress" class="wheel-status"></p>
+          <p id="race-daily-status" class="wheel-status"></p>
+          <p id="race-last-winner" class="wheel-status" data-i18n="race.loadingWinner">Lade Sieger der letzten Woche ...</p>
+        </div>
 
+        <!-- Podest ueber der Strecke: es zeigt dieselben drei Namen
+             wie die ersten Zeilen der Liste und braucht die volle
+             Breite. Der Entwurf (2c) kennt es nicht, es bleibt aber
+             erhalten - nur nicht mehr zwischen Strecke und Liste. -->
+        <div id="race-leaderboard-podium" class="fh-podium"></div>
+
+        <!-- Strecke und Platzierungen nebeneinander (Entwurf 2c).
+             Vorher standen sie untereinander, wodurch die Liste bei
+             1440px erst nach ueber einer Bildschirmhoehe Scrollen
+             sichtbar wurde. -->
+        <div class="race-main">
         <div id="race-track-wrap" class="race-track-wrap">
           <svg id="race-track-svg" class="race-track-svg" viewBox="0 0 600 300">
             <defs>
@@ -868,8 +898,11 @@
           <p id="race-track-empty" class="wheel-status race-track-empty"></p>
         </div>
 
-        <div id="race-leaderboard-podium" class="fh-podium"></div>
-        <div id="race-results-list" class="race-results-list"></div>
+        <div class="race-side">
+          <p class="fh-section-label" data-i18n="race.tableLabel">Diese Woche</p>
+          <div id="race-results-list" class="race-results-list fh-rows"></div>
+        </div>
+        </div>
       </div>
     </section>
 

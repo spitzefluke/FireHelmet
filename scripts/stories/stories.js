@@ -31,6 +31,8 @@ function loadStories() {
 
   container.innerHTML = "";
 
+  const read = getReadChapterIds();
+
   stories.forEach((story) => {
     const card = document.createElement("div");
     // "fh-reveal" blendet die Karte sanft ein, sobald sie beim Scrollen
@@ -40,10 +42,30 @@ function loadStories() {
     card.className = "story-card fh-reveal";
     card.onclick = () => openStory(story.id);
 
+    /* Lesestand pro Logbuch - im Entwurf steht auf jeder Archiv-
+       Karte, wie weit man ist. Gesperrte Kapitel zaehlen nicht mit,
+       sonst waere "12 von 12" nie erreichbar. Dieselbe Quelle wie
+       die Startseiten-Karte und die Kapitelliste. */
+    const kapitel = (story.chapters || []).filter(
+      (k) => !isChapterLocked(k.id)
+    );
+    const fertig = kapitel.filter((k) => read.includes(k.id)).length;
+    const prozent = kapitel.length ? Math.round((fertig / kapitel.length) * 100) : 0;
+
+    const fortschrittLabel = typeof tFormat === "function"
+      ? tFormat("story.cardProgress", { done: fertig, total: kapitel.length })
+      : `${fertig} von ${kapitel.length} geöffnet`;
+
     card.innerHTML = `
       <img src="${story.cover}" alt="${story.title}" loading="lazy" decoding="async">
-      <h2>${story.title}</h2>
-      <p>${story.description}</p>
+      <div class="story-card-body">
+        <h2>${story.title}</h2>
+        <p>${story.description}</p>
+        <div class="fh-bar">
+          <div class="fh-bar-fill" style="width:${prozent}%;background:linear-gradient(90deg,var(--fh-gold),var(--fh-gold-bright))"></div>
+        </div>
+        <p class="story-card-progress">${fortschrittLabel}</p>
+      </div>
     `;
 
     container.appendChild(card);
@@ -249,28 +271,41 @@ function loadChapters() {
 
   const read = getReadChapterIds();
 
-  currentStory.chapters.forEach((chapter) => {
+  /* Kompakte Zeilen statt Karten (Entwurf 2a): 24 Kapitel als je
+     150px hohe Karte waren ueber 3000px Scrollweg fuer je eine
+     Zeile Text. Anklickbar, gesperrt und gelesen bleiben dieselben
+     Zustaende wie vorher - nur die Form ist anders. */
+  currentStory.chapters.forEach((chapter, i) => {
     const locked = isChapterLocked(chapter.id);
+    const gelesen = read.includes(chapter.id);
+
     const card = document.createElement("div");
-    card.className = `chapter-card${locked ? " chapter-card-locked" : ""}`;
+    card.className = `chapter-row fh-row fh-row-clickable${locked ? " chapter-row-locked" : ""}`;
     card.onclick = () => openChapter(chapter.id);
 
     const badge = getLanguageBadge(chapter.language);
-    const statusBadge = locked
-      ? `<span class="chapter-status chapter-status-locked">🔒</span>`
-      : read.includes(chapter.id)
-      ? `<span class="chapter-status chapter-status-read">✓</span>`
+
+    /* Bewusst NICHTS fuer noch ungelesene Kapitel: das ist der
+       Normalfall. Stuende an jeder der 24 Zeilen "Offen", waere die
+       Spalte nur noch Rauschen und die zwei Zustaende, auf die es
+       ankommt, gingen darin unter. */
+    const zustand = locked
+      ? `<span class="fh-row-state fh-row-state-muted"><i class="ph ph-lock-simple" aria-hidden="true"></i>${t("story.stateLocked", "Gesperrt")}</span>`
+      : gelesen
+      ? `<span class="fh-row-state"><i class="ph ph-check" aria-hidden="true"></i>${t("story.stateRead", "Gelesen")}</span>`
       : "";
 
     card.innerHTML = `
-      <h3>${statusBadge}${chapter.title}</h3>
-      <span class="language ${badge.className}">${badge.emoji} ${chapter.language}</span>
+      <span class="fh-row-nr">${i + 1}</span>
+      <span class="fh-row-main">${chapter.title}</span>
+      <span class="language ${badge.className} chapter-row-lang">${badge.emoji} ${chapter.language}</span>
+      ${zustand}
     `;
 
     container.appendChild(card);
   });
 
-  staggerReveal(container, ".chapter-card");
+  staggerReveal(container, ".chapter-row");
 }
 
 /* ------------------------------------------------------
