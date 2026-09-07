@@ -56,18 +56,21 @@ const translations = {
     "menu.rating": "Bewertung",
     "menu.daveAwards": "Dave Awards",
 
-    "support.title": "SUPPORT",
+    "support.kicker": "Hilfe an Bord",
+    "support.title": "Support",
     "support.subtitle": "Melde ein Problem oder ein Anliegen",
     "support.reportTitle": "🐞 Fehler melden / Anliegen",
     "support.reportPlaceholder": "Beschreibe kurz, was los ist ...",
     "support.reportSend": "Absenden",
 
-    "rating.title": "⭐ BEWERTUNG",
+    "rating.kicker": "Deine Meinung",
+    "rating.title": "Bewertung",
     "rating.subtitle": "Wie gefällt dir die Seite? Deine Meinung hilft uns weiter!",
     "rating.commentPlaceholder": "Was gefällt dir, was können wir besser machen? (optional)",
     "rating.submitButton": "Bewertung abschicken",
 
-    "shop.title": "🛒 SCHWARZMARKT DER FLITZPIEPEN",
+    "shop.kicker": "Schwarzmarkt der Flitzpiepen",
+    "shop.title": "Shop",
     "shop.subtitle": "Jede Stunde neue Ware - gib deine Dublonen für Rahmen und Extras aus",
     "shop.currencyLabel": "Dublonen",
     "shop.earnHint": "Dublonen bekommst du durchs Einlösen bestimmter Codes, gute Platzierungen beim Wochenrennen und viel Schaden gegen den Community-Boss.",
@@ -78,7 +81,8 @@ const translations = {
     "shop.rotationToast": "⚓ Der Schwarzmarkt hat neue Ware erhalten!",
     "shop.raritiesHeading": "Seltenheiten",
 
-    "spielothek.title": "🎰 ÄNDIIS SPIELOTHEK",
+    "spielothek.kicker": "Ändiis Ecke",
+    "spielothek.title": "Spielothek",
     "spielothek.subtitle": "Jeden Monat ein anderes Spiel - rein spielerisch, nur mit Dublonen.",
     "spielothek.playButton": "SPIELEN",
     "spielothek.rulesHeading": "Spielregeln",
@@ -155,6 +159,38 @@ const translations = {
 
     "home.title": "COUNTDOWN",
     "home.subtitle": "Die neue Story startet in ...",
+    "home.kicker": "Logbuch der Crew",
+
+    /* Startseiten-Uebersicht (scripts/home/dashboard.js) */
+    "dash.heading": "Dein Stand",
+    "dash.readKicker": "Weiterlesen",
+    "dash.readChapters": "Kapitel gelesen",
+    "dash.readOpen": "Kapitel öffnen",
+    "dash.readAgain": "Logbuch öffnen",
+    "dash.readDone": "Alles gelesen",
+    "dash.wheelKicker": "Schatzrad",
+    "dash.wheelReady": "Dreh frei",
+    "dash.wheelDone": "Heute schon gedreht",
+    "dash.wheelNoName": "Erst anmelden",
+    "dash.wheelNoNameNote": "Mit einem Namen darfst du täglich einmal drehen.",
+    "dash.wheelStreak": "Tage in Folge",
+    "dash.wheelComeBack": "Morgen geht es weiter.",
+    "dash.wheelFirst": "Deine erste Drehung wartet.",
+    "dash.wheelCta": "Zum Schatzrad",
+    "dash.wheelCtaLogin": "Namen wählen",
+    "dash.raceKicker": "Wochenrennen",
+    "dash.raceOf": "von",
+    "dash.raceTrack": "Strecke",
+    "dash.racePerSpin": "pro Drehung",
+    "dash.racePerCode": "pro Code",
+    "dash.raceCta": "Zum Rennen",
+    "dash.codeKicker": "Geheimcode",
+    "dash.codeOf": "von",
+    "dash.codeOpen": "noch nicht geknackt",
+    "dash.codeCta": "Code eingeben",
+    "dash.boardKicker": "Rangliste",
+    "dash.boardLoading": "Lade Rangliste ...",
+    "dash.boardCta": "Ganze Rangliste",
 
     "home.cinematicEyebrow": "Eine Reise beginnt",
     "home.cinematicTitle": "FIREHELMET",
@@ -170,8 +206,13 @@ const translations = {
     "home.metaMissionValue": "Entdecken",
     "home.scrollCue": "Scrollen",
 
-    "story.title": "STORIES",
-    "story.subtitle": "Wähle ein Logbuch aus dem Archiv",
+    "story.kicker": "Archiv der Crew",
+    "story.title": "Logbücher",
+    "story.subtitle": "Wähle ein Logbuch aus dem Archiv - jedes Kapitel bleibt offen, sobald du es einmal gelesen hast.",
+    "story.cardProgress": "{done} von {total} geöffnet",
+    "story.stateRead": "Gelesen",
+    "story.stateNew": "Offen",
+    "story.stateLocked": "Gesperrt",
     "story.chapterHeading": "Kapitel",
     "story.expeditionProgress": "EXPEDITION-FORTSCHRITT",
     "story.chapterLockedMessage": "Dieses Kapitel ist noch nicht freigeschaltet.",
@@ -183,19 +224,25 @@ const translations = {
     "progression.crewJoinWelcome": "Willkommen in der Crew!",
     "progression.close": "Schließen",
 
-    "characters.title": "CHARACTERS",
+    "characters.kicker": "An Bord",
+    "characters.title": "Die Crew",
+    "characters.lead": "Alle Namen aus den Logbüchern. Tipp auf eine Karte, um Rolle, Zitat und Beschreibung zu sehen.",
 
-    "socials.title": "SOCIALS",
+    "socials.kicker": "Folge der Crew",
+    "socials.title": "Socials",
+    "socials.lead": "Alle Kanäle der Crew an einer Stelle.",
     "socials.daveHeading": "🚂 Socials von Zugfahrer_DaveTV",
 
-    "login.title": "ANMELDUNG",
+    "login.kicker": "Zugang",
+    "login.title": "Anmeldung",
     "login.subtitle": "Melde dich an, um in Rangliste und Wochenrennen zu erscheinen",
     "login.twitchButton": "Mit Twitch anmelden",
     "login.discordButton": "Mit Discord anmelden",
     "login.divider": "— oder —",
     "login.namePlaceholder": "Namen manuell eintragen",
 
-    "code.title": "CODE",
+    "code.kicker": "Geheimnisse der Crew",
+    "code.title": "Code",
     "code.subtitle": "Gib deinen geheimen Code ein",
     "code.placeholder": "Code eingeben ...",
     "code.confirm": "Bestätigen",
@@ -205,7 +252,8 @@ const translations = {
     "code.invalid": "Dieser Code ist ungültig.",
     "code.history.heading": "📜 Zuletzt eingelöst (letzte 7 Tage)",
 
-    "wheel.title": "SCHATZRAD",
+    "wheel.kicker": "Einmal am Tag",
+    "wheel.title": "Schatzrad",
     "wheel.subtitle": "Einmal am Tag drehen und dein Glück bei der Schatzsuche versuchen",
     "wheel.loginHintPrefix": "Noch nicht angemeldet? ",
     "wheel.loginHintLink": "Hier geht's zur Anmeldung",
@@ -216,21 +264,25 @@ const translations = {
     "wheel.status.readyToSpin": "Heute noch nicht gedreht – viel Glück!",
     "wheel.countdownLabel": "⏳ Nächste Drehung in {time}",
 
-    "leaderboard.title": "RANGLISTE",
+    "leaderboard.kicker": "Bestenliste",
+    "leaderboard.title": "Rangliste",
     "leaderboard.subtitle": "Wer hat die meisten Geheimcodes geknackt?",
     "leaderboard.loading": "Lade Rangliste ...",
 
-    "race.title": "WOCHENRENNEN",
+    "race.title": "Wochenrennen",
+    "race.tableLabel": "Diese Woche",
     "race.subtitle": "Jede Woche neu: Fortschritt durch Schatzrad-Drehen und Codes-Knacken",
     "race.loadingWinner": "Lade Sieger der letzten Woche ...",
-    "race.dailyBonusButton": "Tagesbonus abholen 🎁",
+    "race.dailyBonusButton": "Tagesbonus abholen",
 
     "stream.liveLabel": "🔴 LIVE COUNTDOWN",
     "stream.title": "❓ ???",
     "stream.subtitle": "Etwas Großes braut sich zusammen ...",
     "stream.teaser": "🌫️ Niemand weiß, was hier erscheinen wird ...",
 
-    "ship.title": "⚓ SCHIFF REPARIEREN",
+    "ship.kicker": "Werft der Crew",
+    "ship.title": "Schiff reparieren",
+    "streamraetsel.kicker": "Noch verschlossen",
     "ship.subtitle": "Repariere dein eigenes Schiff, Etappe für Etappe - dein Fortschritt gehört nur dir.",
     "ship.completeEyebrow": "⚓ SCHIFF VOLLSTÄNDIG REPARIERT!",
     "ship.completeHint": "Deine Flitzpiepen ist wieder seetüchtig und bereit für die nächste Reise.",
@@ -245,7 +297,8 @@ const translations = {
     "menu.tournament": "THE CHALLENGE",
     "menu.detectiveCase": "Der Fall",
 
-    "detectiveCase.title": "🕵️ DER FALL DER VERSCHWUNDENEN DUBLONEN",
+    "detectiveCase.kicker": "Die verschwundenen Dublonen",
+    "detectiveCase.title": "Der Fall",
     "detectiveCase.subtitle": "„Auf der FireHelmet herrscht Unruhe. 400 Dublonen sind aus der Schatzkammer verschwunden. Jemand aus der Crew muss sie genommen haben.“",
     "detectiveCase.story": "In der Nacht wurde die Schatzkammer zuletzt um 23:10 Uhr geöffnet - danach war das Gold weg. Vier Crewmitglieder waren zur Tatzeit an Bord. Einer von ihnen lügt. Untersuche die Hinweise, vergleiche die Aussagen - und finde heraus, wer wirklich hinter dem Diebstahl steckt.",
     "detectiveCase.suspectsHeading": "🧑‍🤝‍🧑 Verdächtige",
@@ -293,7 +346,8 @@ const translations = {
     "detectiveCase.clue.redCoat.title": "📕 Logbuch des Ausgucks lesen",
     "detectiveCase.clue.redCoat.text": "Um 23:13 Uhr wurde laut Finns eigenem Logbuch eine Person mit einem roten Mantel nahe der Schatzkammer gesehen. Käpt'n Flitz trägt bekanntlich immer seinen roten Kapitänsmantel.",
 
-    "boss.title": "COMMUNITY-BOSS",
+    "boss.kicker": "Alle gegen einen",
+    "boss.title": "Community-Boss",
     "boss.subtitle": "Gemeinsam besiegen, bevor der Monat endet!",
     "boss.statDamage": "Schaden",
     "boss.statAttackers": "Angreifer",
@@ -323,7 +377,8 @@ const translations = {
     "tournament.reaction.resultStatus": "Deine Zeit:",
     "tournament.reaction.resultButton": "Ergebnis wird übermittelt...",
 
-    "tournament.page.title": "THE CHALLENGE",
+    "tournament.page.kicker": "Turnier der Crew",
+    "tournament.page.title": "The Challenge",
     "tournament.page.tagline": "Gewinne das Turnier. Gewinne die limitierte Cap.",
     "tournament.page.noSupabase": "⚠️ Verbindung nicht verfügbar - versuch es später erneut.",
     "tournament.page.loadError": "Turnier konnte nicht geladen werden.",
@@ -410,18 +465,21 @@ const translations = {
     "menu.rating": "Rating",
     "menu.daveAwards": "Dave Awards",
 
-    "support.title": "SUPPORT",
+    "support.kicker": "Help on board",
+    "support.title": "Support",
     "support.subtitle": "Report a problem or an issue",
     "support.reportTitle": "🐞 Report a bug / issue",
     "support.reportPlaceholder": "Briefly describe what's going on ...",
     "support.reportSend": "Submit",
 
-    "rating.title": "⭐ RATING",
+    "rating.kicker": "Your take",
+    "rating.title": "Rating",
     "rating.subtitle": "How do you like the site? Your feedback helps us improve!",
     "rating.commentPlaceholder": "What do you like, what could be better? (optional)",
     "rating.submitButton": "Submit rating",
 
-    "shop.title": "🛒 THE FLITZPIEPEN BLACK MARKET",
+    "shop.kicker": "The Flitzpiepen black market",
+    "shop.title": "Shop",
     "shop.subtitle": "New stock every hour - spend your doubloons on frames and extras",
     "shop.currencyLabel": "Doubloons",
     "shop.earnHint": "You earn doubloons by redeeming certain codes, placing well in the weekly race, and dealing lots of damage to the community boss.",
@@ -432,7 +490,8 @@ const translations = {
     "shop.rotationToast": "⚓ The black market just got fresh stock!",
     "shop.raritiesHeading": "Rarities",
 
-    "spielothek.title": "🎰 ÄNDII'S ARCADE",
+    "spielothek.kicker": "Ändii's corner",
+    "spielothek.title": "Arcade",
     "spielothek.subtitle": "A different game every month - purely for fun, virtual currency only.",
     "spielothek.playButton": "PLAY",
     "spielothek.rulesHeading": "Game rules",
@@ -509,6 +568,38 @@ const translations = {
 
     "home.title": "COUNTDOWN",
     "home.subtitle": "The new Story starts in ...",
+    "home.kicker": "The crew's logbook",
+
+    /* Home dashboard (scripts/home/dashboard.js) */
+    "dash.heading": "Your progress",
+    "dash.readKicker": "Keep reading",
+    "dash.readChapters": "chapters read",
+    "dash.readOpen": "Open chapter",
+    "dash.readAgain": "Open logbook",
+    "dash.readDone": "All read",
+    "dash.wheelKicker": "Treasure Wheel",
+    "dash.wheelReady": "Spin ready",
+    "dash.wheelDone": "Already spun today",
+    "dash.wheelNoName": "Sign in first",
+    "dash.wheelNoNameNote": "Pick a name and you get one spin a day.",
+    "dash.wheelStreak": "days in a row",
+    "dash.wheelComeBack": "Back again tomorrow.",
+    "dash.wheelFirst": "Your first spin is waiting.",
+    "dash.wheelCta": "To the wheel",
+    "dash.wheelCtaLogin": "Pick a name",
+    "dash.raceKicker": "Weekly race",
+    "dash.raceOf": "of",
+    "dash.raceTrack": "Track",
+    "dash.racePerSpin": "per spin",
+    "dash.racePerCode": "per code",
+    "dash.raceCta": "To the race",
+    "dash.codeKicker": "Secret code",
+    "dash.codeOf": "of",
+    "dash.codeOpen": "still unsolved",
+    "dash.codeCta": "Enter a code",
+    "dash.boardKicker": "Leaderboard",
+    "dash.boardLoading": "Loading leaderboard ...",
+    "dash.boardCta": "Full leaderboard",
 
     "home.cinematicEyebrow": "A journey begins",
     "home.cinematicTitle": "FIREHELMET",
@@ -524,8 +615,13 @@ const translations = {
     "home.metaMissionValue": "Discover",
     "home.scrollCue": "Scroll",
 
-    "story.title": "STORIES",
-    "story.subtitle": "Choose a logbook from the archive",
+    "story.kicker": "The crew's archive",
+    "story.title": "Logbooks",
+    "story.subtitle": "Choose a logbook from the archive - every chapter stays open once you have read it.",
+    "story.cardProgress": "{done} of {total} opened",
+    "story.stateRead": "Read",
+    "story.stateNew": "Open",
+    "story.stateLocked": "Locked",
     "story.chapterHeading": "Chapters",
     "story.expeditionProgress": "EXPEDITION PROGRESS",
     "story.chapterLockedMessage": "This chapter hasn't been unlocked yet.",
@@ -537,19 +633,25 @@ const translations = {
     "progression.crewJoinWelcome": "Welcome to the crew!",
     "progression.close": "Close",
 
-    "characters.title": "CHARACTERS",
+    "characters.kicker": "On board",
+    "characters.title": "The crew",
+    "characters.lead": "Every name from the logbooks. Tap a card for role, quote and description.",
 
-    "socials.title": "SOCIALS",
+    "socials.kicker": "Follow the crew",
+    "socials.title": "Socials",
+    "socials.lead": "Every channel of the crew in one place.",
     "socials.daveHeading": "🚂 Zugfahrer_DaveTV's socials",
 
-    "login.title": "LOGIN",
+    "login.kicker": "Access",
+    "login.title": "Sign in",
     "login.subtitle": "Log in to appear on the leaderboard and in the weekly race",
     "login.twitchButton": "Log in with Twitch",
     "login.discordButton": "Log in with Discord",
     "login.divider": "— or —",
     "login.namePlaceholder": "Enter a name manually",
 
-    "code.title": "CODE",
+    "code.kicker": "The crew's secrets",
+    "code.title": "Code",
     "code.subtitle": "Enter your secret code",
     "code.placeholder": "Enter code ...",
     "code.confirm": "Confirm",
@@ -559,7 +661,8 @@ const translations = {
     "code.invalid": "This code is invalid.",
     "code.history.heading": "📜 Recently redeemed (last 7 days)",
 
-    "wheel.title": "TREASURE WHEEL",
+    "wheel.kicker": "Once a day",
+    "wheel.title": "Treasure Wheel",
     "wheel.subtitle": "Spin once a day and try your luck at the treasure hunt",
     "wheel.loginHintPrefix": "Not logged in yet? ",
     "wheel.loginHintLink": "Go to login",
@@ -570,21 +673,25 @@ const translations = {
     "wheel.status.readyToSpin": "Haven't spun today yet – good luck!",
     "wheel.countdownLabel": "⏳ Next spin in {time}",
 
-    "leaderboard.title": "LEADERBOARD",
+    "leaderboard.kicker": "Standings",
+    "leaderboard.title": "Leaderboard",
     "leaderboard.subtitle": "Who has cracked the most secret codes?",
     "leaderboard.loading": "Loading leaderboard ...",
 
-    "race.title": "WEEKLY RACE",
+    "race.title": "Weekly race",
+    "race.tableLabel": "This week",
     "race.subtitle": "New every week: progress through wheel spins and cracked codes",
     "race.loadingWinner": "Loading last week's winner ...",
-    "race.dailyBonusButton": "Claim daily bonus 🎁",
+    "race.dailyBonusButton": "Claim daily bonus",
 
     "stream.liveLabel": "🔴 LIVE COUNTDOWN",
     "stream.title": "❓ ???",
     "stream.subtitle": "Something big is brewing ...",
     "stream.teaser": "🌫️ Nobody knows what will appear here ...",
 
-    "ship.title": "⚓ REPAIR THE SHIP",
+    "ship.kicker": "The crew's shipyard",
+    "ship.title": "Repair the ship",
+    "streamraetsel.kicker": "Still locked",
     "ship.subtitle": "Repair your own ship, stage by stage - your progress belongs to you alone.",
     "ship.completeEyebrow": "⚓ SHIP FULLY REPAIRED!",
     "ship.completeHint": "Your Flitzpiepen is seaworthy again and ready for the next voyage.",
@@ -599,7 +706,8 @@ const translations = {
     "menu.tournament": "THE CHALLENGE",
     "menu.detectiveCase": "The Case",
 
-    "detectiveCase.title": "🕵️ THE CASE OF THE MISSING DOUBLOONS",
+    "detectiveCase.kicker": "The missing doubloons",
+    "detectiveCase.title": "The case",
     "detectiveCase.subtitle": "\"There's unrest aboard the FireHelmet. 400 doubloons have vanished from the treasure chamber. Someone from the crew must have taken them.\"",
     "detectiveCase.story": "During the night, the treasure chamber was last opened at 23:10 - after that, the gold was gone. Four crew members were aboard at the time of the crime. One of them is lying. Examine the clues, compare the statements - and find out who's really behind the theft.",
     "detectiveCase.suspectsHeading": "🧑‍🤝‍🧑 Suspects",
@@ -647,7 +755,8 @@ const translations = {
     "detectiveCase.clue.redCoat.title": "📕 Read the lookout's logbook",
     "detectiveCase.clue.redCoat.text": "According to Finn's own logbook, a person in a red coat was seen near the treasure chamber at 23:13. Cap'n Flitz is known for always wearing his red captain's coat.",
 
-    "boss.title": "COMMUNITY BOSS",
+    "boss.kicker": "All against one",
+    "boss.title": "Community boss",
     "boss.subtitle": "Defeat it together before the month ends!",
     "boss.statDamage": "Damage",
     "boss.statAttackers": "Attackers",
@@ -677,7 +786,8 @@ const translations = {
     "tournament.reaction.resultStatus": "Your time:",
     "tournament.reaction.resultButton": "Submitting result...",
 
-    "tournament.page.title": "THE CHALLENGE",
+    "tournament.page.kicker": "The crew's tournament",
+    "tournament.page.title": "The Challenge",
     "tournament.page.tagline": "Win the tournament. Win the limited cap.",
     "tournament.page.noSupabase": "⚠️ Connection unavailable - try again later.",
     "tournament.page.loadError": "Couldn't load the tournament.",
@@ -803,6 +913,20 @@ function setLanguage(lang) {
   if (typeof loadLeaderboard === "function" && document.getElementById("leaderboard")?.classList.contains("active-page")) {
     loadLeaderboard();
   }
+  // Auch das Story-Archiv und die Kapitelliste setzen ihre Texte
+  // beim Rendern zusammen ("3 von 12 geoeffnet", "Gelesen"/"Gesperrt")
+  // und tragen daher keine data-i18n-Marken.
+  if (typeof loadStories === "function" && document.getElementById("story")?.classList.contains("active-page")) {
+    loadStories();
+  }
+  if (typeof loadChapters === "function" && typeof currentStory !== "undefined" && currentStory
+      && document.getElementById("story-detail")?.classList.contains("active-page")) {
+    loadChapters();
+  }
+  // Die Startseiten-Uebersicht baut ihre Texte beim Rendern zusammen
+  // und traegt daher keine data-i18n-Marken, die applyTranslations()
+  // nachziehen koennte - sie muss neu aufgebaut werden.
+  if (typeof fhRenderHomeDashboard === "function") fhRenderHomeDashboard();
   if (typeof renderRarityLegend === "function") renderRarityLegend();
   if (typeof renderShopGrid === "function" && document.getElementById("shop")?.classList.contains("active-page")) {
     renderShopGrid({ quiet: true });

@@ -166,6 +166,13 @@ body.loaded {
   --fh-glow-fire: 0 0 30px rgba(255,106,42,.35);
   --fh-ease: cubic-bezier(.22,.9,.32,1);
 
+  /* ---- Rahmenmasse (Entwurf 1c): schmale Icon-Leiste statt der
+     bisherigen 248px breiten Sidebar mit Beschriftungen. Als Token,
+     damit der Inhaltsbereich (main) und die Ausrichtung der Topbar
+     nicht getrennt nachgezogen werden muessen. ---- */
+  --fh-rail-w: 76px;
+  --fh-topbar-h: 60px;
+
   /* 'Arial Narrow'/'Liberation Sans Narrow' als Zwischenschritt:
      Oswald ist schmallaufend. Faellt sie aus (Google Fonts nicht
      erreichbar, Offline), landeten Ueberschriften und lange
@@ -676,8 +683,8 @@ main {
 
 @media (min-width: 1024px) {
   main {
-    margin-left: 248px;
-    width: calc(100% - 248px);
+    margin-left: var(--fh-rail-w);
+    width: calc(100% - var(--fh-rail-w));
   }
 }
 
@@ -1418,100 +1425,144 @@ main {
    8. STORY ARCHIV (GRID)
 ========================= */
 .story-library {
-  width: 90%;
-  max-width: 1400px;
+  width: 92%;
+  max-width: 1180px;
   margin: auto;
-  text-align: center;
+  /* Linksbuendig wie im Entwurf. Mittig gesetzt musste das Auge bei
+     jeder Karte und jeder Kapitelzeile neu ansetzen. */
+  text-align: left;
   overflow: auto;
   max-height: 90%;
-  padding: 50px 20px;
+  padding: 40px 20px;
 }
 
-.story-library h1 {
-  font-family: var(--fh-font-display);
-  font-size: clamp(1.6rem, 6vw, 4.6rem);
-  letter-spacing: clamp(1px, 0.8vw, 8px);
-  margin-bottom: 15px;
-  text-shadow: 0 0 50px rgba(240,201,106,.35);
-}
+/* .story-subtitle ist mit Runde 4 entfallen: alle Seiten, die sie
+   als Unterzeile benutzten, tragen jetzt .fh-page-lead. */
 
-.story-subtitle {
-  font-size: clamp(.95rem, 2vw, 1.25rem);
-  color: var(--fh-text-muted, #bdbdbd);
-  margin-bottom: 60px;
-  padding: 0 1rem;
-}
-
+/* Der Entwurf setzt zwei Logbuecher nebeneinander. minmax statt
+   fester Spalten, damit ein drittes Logbuch spaeter von selbst
+   umbricht statt zu quetschen. */
 .story-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
 }
 
+/* Kartenrahmen aus der gemeinsamen 1c-Sprache (vgl. .fh-card).
+   Das grosse Cover bleibt: der Entwurf zeigt an dieser Stelle nur
+   ein 104px schmales Platzhalterbild, weil ihm die echten Cover
+   nicht vorlagen - die sind hier das Beste an der Seite. */
 .story-card {
-  background: linear-gradient(160deg, var(--fh-surface-light, #1a1a1a), var(--fh-bg-secondary, #171717));
-  border-radius: var(--fh-radius, 18px);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, var(--fh-surface-light), #0b111a);
+  border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform .35s var(--fh-ease), box-shadow .35s var(--fh-ease), border-color .35s ease;
-  border: 1px solid var(--fh-border, rgba(255,255,255,.08));
+  transition: transform .35s var(--fh-ease), box-shadow .35s var(--fh-ease), border-color .2s ease;
+  border: 1px solid var(--fh-border);
 }
 
 .story-card:hover {
-  transform: translateY(-8px);
-  border-color: var(--fh-gold, rgba(255,255,255,.08));
-  box-shadow: var(--fh-shadow), var(--fh-glow-gold);
+  transform: translateY(-6px);
+  border-color: rgba(214,168,79,.5);
+  box-shadow: var(--fh-shadow);
 }
 
 .story-card img {
   width: 100%;
-  height: 320px;
+  height: 300px;
   object-fit: cover;
   display: block;
 }
 
+.story-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+}
+
 .story-card h2 {
-  margin: 20px 15px 8px;
-  font-size: 24px;
+  margin: 0;
+  font-family: var(--fh-font-display);
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  color: var(--fh-fg);
 }
 
 .story-card p {
-  color: var(--fh-muted-fg, #a9a9a9);
-  margin: 0 15px 25px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fh-muted-fg);
+  text-wrap: pretty;
+}
+
+.story-card-progress {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* =========================
    9. STORY DETAIL
 ========================= */
 .story-detail-container {
-  width: 90%;
-  max-width: 1200px;
+  width: 92%;
+  max-width: 1180px;
   max-height: 90%;
   overflow: auto;
   margin: auto;
+  text-align: left;
 }
 
 .story-header {
   display: flex;
-  gap: 40px;
+  gap: 34px;
   align-items: center;
-  margin-bottom: 50px;
+  margin-bottom: 30px;
 }
 
 .detail-cover {
-  width: 230px;
-  border-radius: 15px;
+  flex: 0 0 auto;
+  width: 200px;
+  border-radius: 12px;
+  border: 1px solid var(--fh-border-strong);
   box-shadow: 0 20px 45px rgba(0,0,0,.45);
 }
 
+/* Titel und Beschreibung in der Kopfsprache des Entwurfs. Der
+   Titel stand vorher in der Grotesk der Seite, waehrend jede
+   andere Ueberschrift Oswald benutzt. */
 #detail-title {
-  font-size: 56px;
-  margin-bottom: 15px;
+  margin: 0 0 14px;
+  font-family: var(--fh-font-display);
+  font-size: clamp(2rem, 5.2vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: .03em;
+  color: var(--fh-fg);
 }
 
 #detail-description {
-  font-size: 20px;
-  color: #b7b7b7;
+  max-width: 54ch;
+  font-size: 16px;
+  line-height: 1.55;
+  color: #a6b6c9;
+  text-wrap: pretty;
+}
+
+@media (max-width: 700px) {
+  .story-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .detail-cover {
+    width: 150px;
+  }
 }
 
 .chapter-list {
@@ -1520,48 +1571,53 @@ main {
   gap: 20px;
 }
 
-.chapter-card {
-  background: #1b1b1b;
-  border-radius: 15px;
-  padding: 25px 30px;
-  cursor: pointer;
-  transition: .3s;
-  border: 1px solid rgba(255,255,255,.08);
-}
-
-.chapter-card:hover {
-  background: #232323;
-  transform: translateX(10px);
-}
-
-.chapter-card h3 {
-  font-size: 28px;
-  margin-bottom: 12px;
-}
-
-.chapter-card-locked {
-  cursor: pointer;
+/* Kapitel als kompakte Zeilen (Entwurf 2a). Form und Abstaende
+   kommen aus .fh-row - hier steht nur, was fuer Kapitel eigen ist.
+   Die frueheren .chapter-card-Regeln (25px/30px Innenabstand,
+   28px-Ueberschrift) sind entfallen: jede Zeile Text stand in einer
+   150px hohen Karte, 24 Kapitel ergaben ueber 3000px Scrollweg. */
+.chapter-row-locked {
   opacity: .55;
 }
 
-.chapter-card-locked:hover {
-  transform: none;
-  background: #1b1b1b;
+.chapter-row-locked:hover {
+  border-color: var(--fh-border);
+  background: rgba(17, 26, 38, .6);
 }
 
-.chapter-status {
-  display: inline-block;
-  margin-right: 10px;
-  font-size: 22px;
-  vertical-align: middle;
+/* Sprachfahne als ruhiger Umriss statt gefuellter Flaeche: in der
+   alten Karte stand sie allein unter der Ueberschrift, in der Zeile
+   sass ein blauer Block direkt neben dem Kapiteltitel und zog mehr
+   Blick auf sich als dieser. Die Farbe bleibt erhalten - nur als
+   Rand und Schrift statt als Hintergrund. */
+/* Zwei Klassen im Selektor, weil .language-de/.language-en weiter
+   unten in dieser Datei stehen und sonst ihren gefuellten
+   Hintergrund zurueckholen wuerden. */
+.chapter-row .chapter-row-lang {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  background: none;
+  border: 1px solid currentColor;
+  opacity: .75;
 }
 
-.chapter-status-read {
-  color: var(--fh-success, #55c878);
+.chapter-row .chapter-row-lang.language-de { color: #6f92ff; }
+.chapter-row .chapter-row-lang.language-en { color: #ff9f6b; }
+
+/* Etwas Luft zwischen Expeditionsleiste und Kapitelliste - die
+   Meilenstein-Symbole ragen unter ihren Balken hinaus. */
+#story-detail .fh-section-label {
+  margin-top: 34px;
 }
 
-.chapter-status-locked {
-  filter: grayscale(.2);
+@media (max-width: 640px) {
+  /* Auf dem Handy hat die Zeile nur Platz fuer Titel und Zustand. */
+  .chapter-row-lang {
+    display: none;
+  }
 }
 
 .story-progress {
@@ -1672,11 +1728,19 @@ main {
 /* =========================
    11. CHARACTERS
 ========================= */
+/* Gemeinsame Spalte aller Unterseiten. Bis Runde 4 war sie 90%
+   breit ohne Obergrenze und mittig gesetzt: der Seitenkopf begann
+   dadurch ganz links am Bildschirmrand, waehrend der Inhalt
+   darunter in der Mitte stand. Jetzt dieselbe Spaltenbreite wie
+   Startseite, Stories und Rennen (1180px), damit Kopf und Inhalt
+   an derselben Kante beginnen. */
 .page-content {
-  width: 90%;
+  width: 92%;
+  max-width: 1180px;
+  margin-inline: auto;
   max-height: 90%;
   overflow: auto;
-  text-align: center;
+  text-align: left;
 }
 
 .page-content h1 {
@@ -2366,17 +2430,13 @@ main {
     width: 24px;
   }
 
+  /* Linksbuendig wie auf dem Desktop (Entwurf 2a). Mittig gesetzt
+     sass der Titel ueber einer linksbuendigen Kapitelliste, die
+     Zeilen begannen also an zwei verschiedenen Stellen. Breite und
+     Umbruch regelt jetzt die Regel bei 700px weiter oben. */
   .story-header {
     flex-direction: column;
-    text-align: center;
-  }
-
-  .detail-cover {
-    width: 180px;
-  }
-
-  #detail-title {
-    font-size: 36px;
+    text-align: left;
   }
 
   .book {
@@ -5734,11 +5794,13 @@ img, svg, video, canvas {
     position: fixed;
     top: 0;
     left: 0;
-    width: 248px;
+    align-items: center;
+    width: var(--fh-rail-w);
     height: 100dvh;
+    padding: 14px 0 10px;
     z-index: var(--fh-z-sidebar);
-    background: rgba(13, 21, 32, .85);
-    backdrop-filter: blur(14px);
+    background: rgba(11, 18, 28, .86);
+    backdrop-filter: blur(16px);
     border-right: 1px solid var(--fh-border);
   }
 }
@@ -6203,13 +6265,6 @@ img, svg, video, canvas {
     */
     padding-bottom: calc(var(--fh-mobile-stack-height, 78px) + 16px);
   }
-}
-
-/* Sprach-Switch in der festen Desktop-Sidebar zentriert einpassen */
-.fh-sidebar-lang-switch {
-  position: relative;
-  z-index: 1;
-  margin: 0 auto 18px;
 }
 
 /* =====================================================
@@ -11317,24 +11372,12 @@ button.detective-clue-card:hover {
    ruhiger.
 ====================================================== */
 
-.tournament-hero {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
+/* Der Turnierkopf traegt jetzt .fh-page-head; hier bleibt nur,
+   was ihn von den uebrigen Seiten unterscheidet: der Titel steht
+   in Gold statt in Weiss - "The Challenge" ist der Name des
+   Turniers, nicht nur eine Seitenueberschrift. */
 .tournament-hero-title {
-  font-family: var(--fh-font-display);
-  font-size: clamp(28px, 6vw, 44px);
-  letter-spacing: 1px;
   color: var(--fh-gold-bright);
-  margin: 0 0 6px;
-}
-
-.tournament-hero-tagline {
-  font-family: var(--fh-font-sans);
-  color: var(--fh-muted-fg);
-  font-size: 15px;
-  margin: 0;
 }
 
 .tournament-prize-banner {
@@ -12061,70 +12104,6 @@ body:has(#story-detail.active-page)::after {
 }
 
 /* =====================================================
-   TEILEN-KNOPF (siehe scripts/core/share.js)
-   ---------------------------------------------------
-   Sitzt links neben dem Musik-Schalter und teilt dieselbe
-   Formensprache. Sichtbar nur auf der Startseite - dort
-   landet, wer die Seite gerade jemandem zeigen will.
-   Die Sichtbarkeit haengt per :has() an der aktiven Seite,
-   ohne dass changePage() etwas davon wissen muss.
-===================================================== */
-.fh-share-button {
-  position: fixed;
-  top: 30px;
-  /* Musik-Schalter: right 30px, 60px breit -> 14px Abstand daneben. */
-  right: 104px;
-  width: 60px;
-  height: 60px;
-  padding: 0;
-  border: none;
-  border-radius: 20px;
-  background: rgba(255,255,255,.08);
-  backdrop-filter: blur(20px);
-  color: var(--fh-fg);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  line-height: 1;
-  cursor: pointer;
-  z-index: var(--fh-z-menu-button);
-  transition: background .3s, transform .3s, color .3s;
-}
-
-body:has(#home.active-page) .fh-share-button { display: flex; }
-
-.fh-share-button svg { display: block; }
-
-.fh-share-button:hover {
-  background: rgba(240,201,106,.16);
-  color: var(--fh-gold-bright);
-  transform: translateY(-2px);
-}
-
-.fh-share-button:active { transform: translateY(0); }
-
-.fh-share-button:focus-visible {
-  outline: 2px solid var(--fh-gold-bright);
-  outline-offset: 3px;
-}
-
-@media (max-width: 768px) {
-  .fh-share-button {
-    width: 50px;
-    height: 50px;
-    top: max(20px, env(safe-area-inset-top));
-    /* Musik-Schalter dort: right 20px, 50px breit. */
-    right: 82px;
-  }
-
-  .fh-share-button svg { width: 19px; height: 19px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fh-share-button { transition: none; }
-}
-
-/* =====================================================
    NUR FUER SCREENREADER
    ---------------------------------------------------
    Vier Eingabefelder (Nickname, Code, Support-Text,
@@ -12291,4 +12270,1219 @@ body:has(#home.active-page) .fh-share-button { display: flex; }
     flex-basis: 100%;
     max-width: 320px;
   }
+}
+
+/* =====================================================
+   ENTWURF 1c - RAHMEN: ICON-LEISTE + TOPBAR
+   ---------------------------------------------------
+   Uebertraegt die Bildsprache aus dem Entwurf "1c" auf den festen
+   Seitenrahmen. Zwei Dinge aendern sich:
+
+   1. Die Desktop-Sidebar wird von 248px auf eine 76px schmale
+      Icon-Leiste eingedampft. Die Beschriftungen bleiben im Markup
+      stehen und werden nur optisch ausgeblendet - sie werden an
+      zwei Stellen weiterverwendet:
+        - scripts/core/nav-sync.js klont die Punkte samt Label in
+          die Schublade (dort weiterhin mit Text),
+        - scripts/core/quick-search.js liest die Labels als
+          Suchbegriffe.
+      Statt eines Labels erscheint beim Hover eine Sprechblase
+      neben der Leiste (scripts/core/rail-flyout.js).
+
+   2. Alles, was vorher frei in der Ecke schwebte (Musik, Teilen)
+      oder in der Sidebar sass (Suche, Sprache), sammelt sich in
+      einer Topbar. Die Leiste selbst nimmt bewusst KEINE Klicks an
+      (pointer-events: none) und verschiebt kein Layout - nur die
+      Bedienelemente darin sind anklickbar. Der Seiteninhalt liegt
+      also unveraendert an derselben Stelle wie vorher.
+
+   Alle Regeln hier sind auf .fh-sidebar-nav bzw. .fh-topbar
+   eingegrenzt; die Schublade (.sidebar a) und die mobile
+   Tableiste bleiben unberuehrt.
+===================================================== */
+
+/* ---- Logo-Kachel ---- */
+@media (min-width: 1024px) {
+  .fh-sidebar-logo {
+    justify-content: center;
+    gap: 0;
+    padding: 0 0 4px;
+  }
+
+  /* Der Schriftzug hat in 76px keinen Platz. Er bleibt im Markup
+     (Seitentitel/Vorlesen), verschwindet aber optisch. */
+  .fh-sidebar-brand {
+    display: none;
+  }
+
+  .fh-sidebar-flame {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 20px;
+    box-shadow: 0 0 22px -6px rgba(255,106,42,.85);
+  }
+}
+
+/* ---- Navigationsliste ---- */
+@media (min-width: 1024px) {
+  .fh-sidebar-nav {
+    align-items: center;
+    width: 100%;
+    margin-top: 14px;
+    gap: 6px;
+    padding: 2px 0;
+    /* Die 19 Punkte passen bei niedrigen Fenstern nicht am Stueck
+       hinein. Die Leiste scrollt daher - ohne sichtbaren Balken,
+       der auf 76px die halbe Breite fraesse. */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    /* Statt des Balkens verlaufen die Punkte an beiden Enden ins
+       Nichts. Das ist der einzige Hinweis darauf, dass es weiter
+       geht - ohne ihn braeche die Liste einfach hart ab. */
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  }
+
+  .fh-sidebar-nav::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .fh-sidebar-nav .fh-nav-item {
+    flex: 0 0 auto;
+    justify-content: center;
+    gap: 0;
+    width: 44px;
+    height: 40px;
+    padding: 0;
+    border-radius: 10px;
+    font-size: 20px;
+    /* Sichtbar statt hidden: der goldene Aktiv-Balken sitzt links
+       ausserhalb des Feldes und wurde vorher weggeschnitten. */
+    overflow: visible;
+  }
+
+  .fh-sidebar-nav .fh-nav-icon {
+    flex: 0 0 auto;
+    font-size: 20px;
+  }
+
+  /* Beschriftung bleibt im Dokument (nav-sync/quick-search lesen
+     sie), ist aber unsichtbar. Kein display:none - das haette sie
+     auch fuer Screenreader entfernt. */
+  .fh-sidebar-nav .fh-nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Fluessigkeits-Effekt und Glanzstreifen waren auf einen breiten
+     Balken zugeschnitten. Auf 44px Quadraten wirken sie unruhig -
+     der Entwurf setzt hier auf eine schlichte Goldflaeche. */
+  .fh-sidebar-nav .fh-nav-item::after {
+    display: none;
+  }
+
+  .fh-sidebar-nav .fh-nav-item:not(.fh-nav-active)::before {
+    display: none;
+  }
+
+  .fh-sidebar-nav .fh-nav-item:hover {
+    transform: none;
+    color: var(--fh-gold-bright);
+    background: rgba(214,168,79,.12);
+  }
+
+  /* Beim Antabben derselbe Zustand wie beim Zeigen - dazu kommt der
+     Rahmen, damit sichtbar ist, wo man gerade steht. Die Blase
+     daneben nennt den Punkt beim Namen (rail-flyout.js). */
+  .fh-sidebar-nav .fh-nav-item:focus-visible {
+    color: var(--fh-gold-bright);
+    background: rgba(214,168,79,.12);
+    outline: 2px solid var(--fh-gold-bright);
+    outline-offset: 2px;
+  }
+
+  .fh-sidebar-nav .fh-nav-item.fh-nav-active {
+    color: var(--fh-gold-bright);
+    background: rgba(214,168,79,.14);
+    border: 0;
+    /* Ohne den Puls aus der breiten Fassung: der Schein lag dort um
+       einen langen Balken, um ein kleines Quadrat flackert er. */
+    animation: fhNavItemIn .5s cubic-bezier(0.22, 0.9, 0.32, 1.2) backwards;
+  }
+
+  /* Goldener Streifen an der linken Kante der Leiste.
+     -16px = (76px Leiste - 44px Feld) / 2, also buendig mit dem Rand. */
+  .fh-sidebar-nav .fh-nav-item.fh-nav-active::before {
+    left: -16px;
+  }
+
+  /* Gruppenueberschriften werden zu Trennstrichen. Der Text bleibt
+     im Markup, damit nav-sync ihn mit in die Schublade nimmt, wo er
+     weiterhin als Ueberschrift erscheint. */
+  .fh-sidebar-nav .fh-nav-section-label {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 1px;
+    margin: 10px 0 8px;
+    padding: 0;
+    font-size: 0;
+    overflow: hidden;
+    opacity: 1;
+    background: linear-gradient(90deg, transparent, var(--fh-border-strong), transparent);
+  }
+
+  .fh-sidebar-nav .fh-nav-section-label:first-of-type {
+    margin-top: 4px;
+  }
+}
+
+/* ---- Fuss der Leiste: Spielerbild + Gateway ---- */
+@media (min-width: 1024px) {
+  .fh-sidebar-footer-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0 0;
+  }
+
+  .fh-sidebar-footer {
+    min-height: 0;
+  }
+
+  /* Die Spielerkarte schrumpft auf ihr Bild zusammen. Der Knopf
+     bleibt derselbe und oeffnet weiterhin den Levelpfad. */
+  .fh-sidebar-footer .fh-player-card {
+    width: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    gap: 0;
+  }
+
+  .fh-sidebar-footer .fh-player-card-info {
+    display: none;
+  }
+
+  .fh-sidebar-footer .fh-player-card-avatar {
+    width: 34px;
+    height: 34px;
+    border: 2px solid var(--fh-border-strong);
+    font-size: 16px;
+    transition: border-color .2s;
+  }
+
+  .fh-sidebar-footer .fh-player-card:hover .fh-player-card-avatar,
+  .fh-sidebar-footer .fh-player-card:focus-visible .fh-player-card-avatar {
+    border-color: rgba(240,201,106,.6);
+  }
+
+  /* Solange niemand angemeldet ist, steht dort statt der Karte eine
+     Statuszeile. In 76px bleibt davon der Punkt uebrig. */
+  .fh-sidebar-footer .fh-sidebar-footer-status {
+    justify-content: center;
+    padding: 8px;
+    font-size: 0;
+    border: 0;
+    background: none;
+  }
+}
+
+/* =====================================================
+   SPRECHBLASE NEBEN DER ICON-LEISTE
+   ---------------------------------------------------
+   Bewusst ein einzelnes Element am <body> statt eines ::after am
+   Menuepunkt: die Navigationsliste scrollt, und ein Kind eines
+   scrollenden Bereichs wird an dessen Rand abgeschnitten. Die
+   Position setzt scripts/core/rail-flyout.js.
+===================================================== */
+.fh-rail-flyout {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--fh-z-sidebar);
+  transform: translateY(-50%);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--fh-border-strong);
+  background: rgba(13, 21, 32, .96);
+  box-shadow: var(--fh-shadow-sm);
+  font-family: var(--fh-font-display);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--fh-fg);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .16s var(--fh-ease), visibility .16s;
+}
+
+.fh-rail-flyout.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-rail-flyout { transition: none; }
+}
+
+/* =====================================================
+   TOPBAR
+===================================================== */
+.fh-topbar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .fh-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: fixed;
+    top: 0;
+    left: var(--fh-rail-w);
+    right: 0;
+    height: var(--fh-topbar-h);
+    padding: 0 22px;
+    z-index: var(--fh-z-sidebar);
+    /* Weicher Schleier statt harter Leiste: der Seiteninhalt liegt
+       unveraendert an seiner Stelle und wird nicht abgeschnitten. */
+    background: linear-gradient(180deg, rgba(5,7,11,.78), rgba(5,7,11,0));
+    /* Die Flaeche selbst faengt keine Klicks ab - sonst waere der
+       obere Rand jeder Seite tot. Nur die Bedienelemente sind aktiv. */
+    pointer-events: none;
+  }
+
+  .fh-topbar > * {
+    pointer-events: auto;
+  }
+}
+
+.fh-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Der Sucheinstieg sass vorher in der Sidebar und war dort so breit
+   wie diese. In der Topbar bekommt er eine feste, ruhige Breite. */
+@media (min-width: 1024px) {
+  .fh-topbar .fh-qs-trigger {
+    width: auto;
+    min-width: 240px;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(13, 21, 32, .8);
+  }
+
+  .fh-topbar .fh-qs-trigger .ph {
+    font-size: 16px;
+  }
+}
+
+/* Dublonenstand - dieselbe Zahl wie im Shop, gespeist von
+   refreshShopCurrencyDisplay() in scripts/shop/shop.js. */
+.fh-topbar-coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(214,168,79,.35);
+  background: rgba(214,168,79,.08);
+  color: var(--fh-gold-bright);
+  font-family: var(--fh-font-display);
+  font-size: 14px;
+  letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fh-topbar-coins[hidden] {
+  display: none;
+}
+
+.fh-topbar-coins .ph {
+  font-size: 16px;
+}
+
+/* Sprachknopf: in der Topbar ohne Schieberegler-Knubbel, nur die
+   Kurzform der aktiven Sprache. Der Umschalter selbst
+   (toggleLanguage) bleibt derselbe. */
+@media (min-width: 1024px) {
+  .fh-topbar-lang {
+    position: static;
+    display: inline-flex;
+    margin: 0;
+    overflow: visible;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 46px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--fh-border);
+    background: rgba(13, 21, 32, .8);
+    color: var(--fh-muted-fg);
+    font-family: var(--fh-font-display);
+    font-size: 12px;
+    letter-spacing: .12em;
+    cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+
+  .fh-topbar-lang:hover {
+    color: var(--fh-gold-bright);
+    border-color: rgba(214,168,79,.35);
+  }
+
+  .fh-topbar-lang .lang-switch-label {
+    position: static;
+    flex: none;
+    color: inherit;
+    font: inherit;
+  }
+
+  /* Gezeigt wird nur die gerade aktive Sprache. Den Zustand traegt
+     applyTranslations() als .is-en an JEDEN .lang-switch - dieselbe
+     Quelle, die auch den Schieberegler in der Schublade stellt. */
+  .fh-topbar-lang .lang-switch-label-en,
+  .fh-topbar-lang.is-en .lang-switch-label-de {
+    display: none;
+  }
+
+  .fh-topbar-lang.is-en .lang-switch-label-en {
+    display: inline;
+    color: inherit;
+  }
+}
+
+.fh-topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--fh-border);
+  background: rgba(13, 21, 32, .8);
+  color: var(--fh-muted-fg);
+  font-size: 18px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+
+.fh-topbar-btn:hover {
+  color: var(--fh-gold-bright);
+  border-color: rgba(214,168,79,.35);
+  background: rgba(214,168,79,.08);
+}
+
+.fh-topbar-btn:focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 2px;
+}
+
+/* Wie der alte Schalter erst auf der Startseite eingeblendet
+   (updateMusicForPage in scripts/music/music-player.js) - auf den
+   uebrigen Seiten laeuft keine Musik, die man stummschalten koennte. */
+.fh-topbar-music {
+  display: none;
+}
+
+/* Der alte frei schwebende Musikknopf oben rechts wird von der
+   Topbar-Fassung abgeloest - aber nur dort, wo es die Topbar gibt.
+   Unter 1024px bleibt er unveraendert die einzige Bedienung. */
+@media (min-width: 1024px) {
+  .music-toggle {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-topbar-btn,
+  .fh-topbar-lang,
+  .fh-sidebar-footer .fh-player-card-avatar {
+    transition: none;
+  }
+}
+
+/* =====================================================
+   ENTWURF 1c - KARTEN-BILDSPRACHE
+   ---------------------------------------------------
+   Die Bausteine, aus denen der Entwurf seine Karten setzt.
+   Bewusst als eigenstaendige, wiederverwendbare Klassen und NICHT
+   in .fh-dash eingebettet: die naechsten Runden bauen Stories,
+   Characters und Wochenrennen aus denselben Teilen. Bestehende
+   Karten der Seite (.shop-item, .character-card
+   usw.) bleiben unberuehrt - sie werden nicht umbenannt.
+===================================================== */
+.fh-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid var(--fh-border);
+  background: linear-gradient(160deg, var(--fh-surface-light), #0b111a);
+}
+
+.fh-card[hidden] {
+  display: none;
+}
+
+/* Hervorgehobene Karte (im Entwurf das Schatzrad): goldener Rand,
+   waermerer Verlauf. */
+.fh-card-gold {
+  border-color: rgba(214,168,79,.32);
+  background: linear-gradient(160deg, rgba(32,26,14,.9), #0b111a);
+}
+
+.fh-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fh-card-kicker {
+  margin: 0;
+  font-family: var(--fh-font-display);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+.fh-card-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.fh-card-title {
+  margin: 0;
+  font-family: var(--fh-font-display);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  color: var(--fh-fg);
+}
+
+.fh-card-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-card-note-sm {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Drueckt alles Folgende (in der Regel die Schaltflaeche) an den
+   unteren Rand, damit in einer Reihe alle Knoepfe auf einer Linie
+   sitzen - auch wenn die Karten unterschiedlich viel Text haben. */
+.fh-card-spacer {
+  flex: 1;
+  min-height: 4px;
+}
+
+.fh-card-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.fh-card-figure-value {
+  font-family: var(--fh-font-display);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--fh-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Fortschrittsbalken ---- */
+.fh-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.07);
+  overflow: hidden;
+}
+
+.fh-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width .5s var(--fh-ease);
+}
+
+/* ---- Schaltflaeche im Kartenstil ---- */
+.fh-cta {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(214,168,79,.55);
+  background: none;
+  color: var(--fh-gold-bright);
+  font-family: var(--fh-font-display);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+
+.fh-cta:hover {
+  background: rgba(214,168,79,.12);
+  border-color: var(--fh-gold-bright);
+}
+
+.fh-cta:focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 2px;
+}
+
+.fh-cta .ph {
+  font-size: 16px;
+}
+
+/* ---- Coverbild (Weiterlesen-Karte) ---- */
+.fh-card-cover {
+  flex: 0 0 auto;
+  width: 108px;
+  height: 148px;
+  border-radius: 10px;
+  border: 1px solid var(--fh-border-strong);
+  object-fit: cover;
+}
+
+/* ---- Rangliste in Kartenform ---- */
+.fh-card-ranks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fh-card-rank {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fh-card-rank-nr {
+  width: 18px;
+  font-family: var(--fh-font-display);
+  font-size: 15px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-card-rank-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--fh-border-strong);
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.fh-card-rank-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fh-card-rank-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--fh-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fh-card-rank-score {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-bar-fill,
+  .fh-cta { transition: none; }
+}
+
+/* =====================================================
+   ENTWURF 1c - STARTSEITEN-UEBERSICHT
+   ---------------------------------------------------
+   Liegt UNTER der Cinematic-Sequenz und dem Countdown, nicht
+   an deren Stelle: die Scroll-Reise ist der Auftakt der Seite
+   und bleibt vollstaendig erhalten. Die Uebersicht ist das,
+   was der Entwurf unter seinem Kopfbild zeigt - der eigene
+   Stand auf einen Blick.
+===================================================== */
+.fh-dash {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 40px 34px 64px;
+}
+
+.fh-dash-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Die Weiterlesen-Karte nimmt zwei Spalten und stellt Cover und
+   Text nebeneinander. */
+.fh-card-wide {
+  grid-column: span 2;
+  flex-direction: row;
+  gap: 16px;
+}
+
+.fh-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Unter 1024px sind zwei Spalten die ruhigere Aufteilung - drei
+   Karten nebeneinander werden dort zu schmal fuer die
+   Ueberschriften. */
+@media (max-width: 1023px) {
+  .fh-dash {
+    padding: 32px 22px 56px;
+  }
+
+  .fh-dash-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .fh-dash {
+    padding: 26px 16px 48px;
+  }
+
+  .fh-dash-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fh-card-wide {
+    grid-column: auto;
+  }
+
+  /* Auf dem Handy steht das Cover ueber dem Text - nebeneinander
+     blieben von der Ueberschrift zwei Woerter pro Zeile. */
+  .fh-card-cover {
+    width: 84px;
+    height: 116px;
+  }
+}
+
+/* =====================================================
+   ENTWURF 1c - HERO-VORZEILE
+   ---------------------------------------------------
+   Die goldene Kleinschrift ueber dem Countdown-Titel. Sie
+   ordnet den Countdown ein ("Logbuch der Crew"), bevor die
+   grosse Zeile kommt - genau wie im Entwurf.
+===================================================== */
+.fh-hero-kicker {
+  margin: 0 0 14px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .42em;
+  text-transform: uppercase;
+  color: var(--fh-gold-bright);
+}
+
+/* ---- Countdown im Entwurfs-Stil: gerahmte Ziffernkaesten ---- */
+.hero .countdown .time-box {
+  border: 1px solid var(--fh-border-strong);
+  border-radius: 8px;
+  background: rgba(17, 26, 38, .8);
+}
+
+.hero .countdown .time-box small {
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+/* =====================================================
+   ENTWURF 1c - SEITENKOPF UND LISTENZEILEN
+   ---------------------------------------------------
+   Zwei weitere Bausteine, die im Entwurf auf JEDER Unterseite
+   gleich aussehen und deshalb - wie schon .fh-card - als eigene
+   Klassen und nicht pro Seite existieren:
+
+   1. Der Seitenkopf: goldene Vorzeile, grosse Oswald-Zeile,
+      Fliesstext daneben. Linksbuendig; die Seiten waren bisher
+      mittig gesetzt, was bei langen Listen darunter jede Zeile
+      neu ausrichten liess.
+
+   2. Die Listenzeile: eine kompakte, gerahmte Reihe fuer
+      Aufzaehlungen (Kapitel, Rennplatzierungen). Ersetzt Karten,
+      die fuer eine Zeile Text 150px hoch waren.
+===================================================== */
+.fh-page-head {
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.fh-page-kicker {
+  margin: 0 0 10px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .42em;
+  text-transform: uppercase;
+  color: var(--fh-gold-bright);
+}
+
+/* h1 mit im Selektor: .page-content h1 (weiter oben in dieser
+   Datei) setzt fuer 14 Seiten eine eigene, deutlich groessere
+   Schriftgroesse mit weiter Sperrung. Ohne das zusaetzliche h1
+   waere jene Regel gewichtiger und der Seitentitel bekaeme auf
+   genau diesen Seiten nicht die Masse des Entwurfs. */
+h1.fh-page-title,
+.fh-page-title {
+  margin: 0;
+  font-family: var(--fh-font-display);
+  /* Der Entwurf setzt 56px. Nach unten mitwachsend, damit lange
+     Titel auf dem Handy nicht ueber den Rand laufen. */
+  font-size: clamp(2rem, 5.2vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: .03em;
+  color: var(--fh-fg);
+  text-shadow: 0 0 50px rgba(240,201,106,.3);
+}
+
+.fh-page-lead {
+  margin: 14px 0 0;
+  max-width: 54ch;
+  font-size: 16px;
+  line-height: 1.55;
+  color: #a6b6c9;
+  text-wrap: pretty;
+}
+
+/* Zwischenueberschrift innerhalb einer Seite ("Kapitel",
+   "Top 8 dieser Woche"). */
+.fh-section-label {
+  margin: 28px 0 12px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+/* ---- Listenzeile ---- */
+.fh-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fh-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 18px;
+  border-radius: 11px;
+  border: 1px solid var(--fh-border);
+  background: rgba(17, 26, 38, .6);
+  text-align: left;
+  transition: border-color .2s, background .2s;
+}
+
+.fh-row-clickable {
+  cursor: pointer;
+}
+
+.fh-row-clickable:hover {
+  border-color: rgba(214,168,79,.5);
+  background: rgba(20, 32, 47, .8);
+}
+
+.fh-row-nr {
+  flex: 0 0 auto;
+  min-width: 18px;
+  font-family: var(--fh-font-display);
+  font-size: 15px;
+  color: var(--fh-muted-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.fh-row-main {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  color: var(--fh-fg);
+}
+
+/* Zustand am rechten Rand ("Gelesen", "Gesperrt", Punktzahl). */
+.fh-row-state {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fh-gold-bright);
+}
+
+.fh-row-state-muted {
+  color: #64748b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-row { transition: none; }
+}
+
+@media (max-width: 640px) {
+  .fh-row {
+    gap: 10px;
+    padding: 11px 14px;
+  }
+
+  .fh-row-main {
+    font-size: 14px;
+  }
+}
+
+/* =====================================================
+   ENTWURF 1c - CHARACTERS
+   ---------------------------------------------------
+   Der Entwurf (2b) zeigt hier schlichte Karten mit einem
+   Monogramm statt eines Bildes - er hatte die echten Portraets
+   nicht vorliegen. Die 3D-Flip-Karten der Seite (Bild vorne,
+   Rolle/Zitat/Beschreibung hinten, eigenes Farb-Thema und
+   Emblem je Figur) bleiben deshalb vollstaendig erhalten; sie
+   sind das Stueck Seite, das der Entwurf nicht besser konnte.
+
+   Uebernommen wird die Kopfsprache und das Raster: die Karten
+   lagen in einer zentrierten flex-Reihe, wodurch die letzte
+   Zeile mittig unter den anderen haengenblieb. Ein Raster stellt
+   sie in Spalten.
+===================================================== */
+#characters .page-content {
+  width: 92%;
+  max-width: 1180px;
+  margin: auto;
+  text-align: left;
+}
+
+/* Drei Spalten wie im Entwurf. Bewusst eine feste Leiter statt
+   auto-fill: auto-fill ergab bei sechs Figuren fuenf Spalten und
+   damit eine Reihe aus fuenf Karten und eine einzelne darunter. */
+#characters .character-container {
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-items: center;
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  #characters .character-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  #characters .character-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Im Raster gibt die Spalte die Breite vor - die feste Kartenbreite
+   wuerde sonst mit ihr konkurrieren und Luecken lassen. */
+#characters .character-card-v2 {
+  width: 100%;
+  max-width: 300px;
+  /* Seitenverhaeltnis der bisherigen Eckwerte (260x370) beibehalten,
+     damit die Portraets nicht anders beschnitten werden. */
+  height: auto;
+  aspect-ratio: 26 / 37;
+}
+
+/* =====================================================
+   ENTWURF 1c - WOCHENRENNEN
+   ---------------------------------------------------
+   Die Seite stand komplett mittig untereinander: Titel,
+   Unterzeile, drei Statuszeilen, Knopf, Streckenname, Strecke,
+   Podest, Liste. Der Entwurf (2c) stellt links die Einordnung
+   und rechts die Handlung - der Rest bleibt darunter in der
+   Reihenfolge, die er hatte.
+
+   Alle IDs sind unveraendert; race.js schreibt weiter in
+   dieselben Elemente.
+===================================================== */
+.race-fullpage {
+  text-align: left;
+  max-width: 1180px;
+  padding: 30px 20px 40px;
+}
+
+.race-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.race-head-text {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.race-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Der Streckenname ist jetzt die Vorzeile ueber dem Titel. Die
+   frueheren 20px Fettschrift mit Leuchten sind entfallen - als
+   Vorzeile traegt er die Kopfsprache der uebrigen Seiten. */
+.race-track-theme {
+  min-height: 1.2em;
+}
+
+/* Verbleibende Zeit bis zum Wochenwechsel - im Entwurf eine
+   ruhige Pille neben dem Knopf, nicht mehr eine eigene Zeile. */
+.race-pill {
+  margin: 0;
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--fh-border);
+  background: rgba(17, 26, 38, .75);
+  font-size: 13px;
+  color: var(--fh-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Die drei Statuszeilen (eigener Stand, Tagesbonus, Sieger der
+   Vorwoche) standen gross und mittig zwischen Titel und Strecke.
+   Sie bleiben vollstaendig erhalten, aber als ruhige Zeile. */
+.race-status-line {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 22px 0 18px;
+}
+
+.race-status-line .wheel-status {
+  margin: 0;
+  font-size: 13px;
+  text-align: left;
+}
+
+.race-status-line .wheel-status:empty {
+  display: none;
+}
+
+/* Abgeholt oder ohne Namen: der Knopf bleibt sichtbar, gibt aber
+   deutlich zu erkennen, dass gerade nichts zu holen ist. */
+.fh-cta:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  border-color: var(--fh-border-strong);
+  color: var(--fh-muted-fg);
+}
+
+.fh-cta:disabled:hover {
+  background: none;
+  border-color: var(--fh-border-strong);
+}
+
+/* ---- Ergebnisliste ---- */
+.race-results-list {
+  margin-top: 0;
+  gap: 8px;
+}
+
+.race-result-row {
+  gap: 12px;
+}
+
+.race-result-rank {
+  min-width: 22px;
+  font-weight: 500;
+}
+
+.race-result-name {
+  font-weight: 500;
+  color: var(--fh-fg);
+}
+
+.race-result-points {
+  flex: 0 0 auto;
+  min-width: 34px;
+  text-align: right;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Kurzer Balken je Zeile - zeigt denselben Stand zur Ziellinie,
+   den auch die Kart-Position auf der Strecke darueber zeigt. */
+.race-result-bar {
+  flex: 0 0 auto;
+  width: 92px;
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.07);
+  overflow: hidden;
+}
+
+.race-result-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width .5s var(--fh-ease);
+}
+
+@media (max-width: 700px) {
+  /* Auf dem Handy hat die Zeile nur Platz fuer Platz, Name und
+     Punkte - der Balken waere dort kaum noch ablesbar. */
+  .race-result-bar {
+    display: none;
+  }
+
+  .race-head-actions {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .race-result-bar-fill { transition: none; }
+}
+
+/* Strecke und Platzierungen nebeneinander (Entwurf 2c). Unter
+   1024px untereinander wie bisher - zwei Spalten waeren dort
+   beide zu schmal. */
+.race-main {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .race-main {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  }
+}
+
+.race-side {
+  min-width: 0;
+}
+
+.race-side .fh-section-label {
+  margin-top: 0;
+}
+
+/* Der Rahmen der Strecke uebernimmt die Kartenmasse der uebrigen
+   Seite (14px statt 24px, ein Pixel Rand statt zwei). */
+.race-track-wrap {
+  margin-top: 0;
+  border-radius: 14px;
+  border: 1px solid var(--fh-border);
+}
+
+/* =====================================================
+   PLATZ FUER DIE TOPBAR
+   ---------------------------------------------------
+   Die Topbar (Runde 1) schwebt ueber dem Inhalt und faengt selbst
+   keine Klicks ab. Auf Seiten, deren Inhalt hoeher ist als der
+   Bildschirm, lag der obere Rand aber unter ihr - auf der
+   Characters-Seite war die Vorzeile "AN BORD" halb vom
+   Suchfeld verdeckt.
+
+   Die Seite bekommt deshalb oben die Hoehe der Topbar als
+   Innenabstand. Durch box-sizing: border-box schrumpft der
+   Inhaltsbereich entsprechend, die vorhandene Zentrierung bleibt
+   unveraendert - der Inhalt kann nur nicht mehr unter die Leiste
+   rutschen.
+
+   Home ist ausgenommen: dort ist .page der Scroll-Container der
+   Cinematic-Sequenz, deren Bild bewusst bis an den oberen Rand
+   laeuft.
+===================================================== */
+@media (min-width: 1024px) {
+  .page:not(#home) {
+    padding-top: var(--fh-topbar-h);
+  }
+}
+
+/* =====================================================
+   ENTWURF 1c - RUNDE 4: AUSRICHTUNG DER UNTERSEITEN
+   ---------------------------------------------------
+   Die gemeinsame Spalte (.page-content) ist jetzt linksbuendig.
+   Ein paar Bloecke hingen noch an margin-inline: auto und
+   standen dadurch mittig unter einem linksbuendigen Kopf - hier
+   werden genau diese an dieselbe Kante geholt.
+
+   BEWUSST NICHT angefasst: das Schatzrad (.wheel-wrapper) und
+   seine Ergebniszeile, die Boss-Buehne und die Sternebewertung.
+   Das sind in sich runde bzw. symmetrische Bauteile, bei denen
+   mittig die richtige Ausrichtung ist - der Entwurf zeigt an
+   diesen Stellen ebenfalls zentrierte Bedienteile.
+===================================================== */
+.leaderboard-list,
+.shop-earn-hint,
+.fh-audiobook-card,
+.boss-flavor,
+.fh-boss-panel {
+  margin-inline: 0;
+}
+
+/* Reihen, die ihre Elemente in der Mitte sammelten, beginnen
+   jetzt links - sie sind Inhaltslisten, keine Bedienteile. */
+.twitch-login-area,
+.shop-tabs {
+  justify-content: flex-start;
 }

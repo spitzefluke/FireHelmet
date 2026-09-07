@@ -89,7 +89,10 @@ function buildRaceTrack() {
     roadInnerEl.setAttribute("stroke", track.roadInner);
   }
   if (centerLineEl) centerLineEl.setAttribute("d", track.path);
-  if (themeEl) themeEl.textContent = `Diese Woche: ${track.emoji} ${track.name}`;
+  // Steht seit dem 1c-Umbau als Vorzeile UEBER dem Seitentitel
+  // (siehe .race-head in index.html) - dort traegt schon der Titel
+  // "Wochenrennen" die Woche, das "Diese Woche:" davor waere doppelt.
+  if (themeEl) themeEl.textContent = `${track.emoji} ${track.name}`;
 
   // Bereits gezeichnete Karts/Boote/Flugzeuge entfernen, damit sie beim
   // nächsten Positionieren mit dem NEUEN Fahrzeugtyp neu erstellt werden
@@ -501,6 +504,14 @@ function removeStaleKarts(activeUids) {
   });
 }
 
+/* Balkenfarben der Ergebnisliste - dieselbe Reihenfolge wie die
+   kart-grad-*-Verlaeufe der Strecke, damit Zeile und Fahrzeug
+   dieselbe Farbe tragen. */
+const RACE_ROW_COLORS = [
+  "#ff5252", "#4da3ff", "#ffd76b", "#8a6bff",
+  "#4ade80", "#ff9f4d", "#f472b6", "#38bdf8",
+];
+
 function renderRaceResultsList(entries) {
   const list = document.getElementById("race-results-list");
   const podiumContainer = document.getElementById("race-leaderboard-podium");
@@ -529,19 +540,30 @@ function renderRaceResultsList(entries) {
     });
   }
 
+  /* Zeilenform aus dem Entwurf (2c): Platz, Name, ein kurzer
+     Fortschrittsbalken und die Punktzahl. Der Balken zeigt den
+     Stand zur Ziellinie - dieselbe Bezugsgroesse wie die
+     Kart-Position auf der Strecke darueber. */
+  const ziel = (typeof raceConfig !== "undefined" && raceConfig.finishLine) || 150;
+
   let html = "";
   entries.forEach((entry, i) => {
-    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
-    const rewardHtml = i < 3 ? `<span class="race-result-reward">🏆 +${RACE_REWARDS_BY_RANK[i]} 💰</span>` : "";
+    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
+    const rewardHtml = i < 3 ? `<span class="race-result-reward">+${RACE_REWARDS_BY_RANK[i]} 💰</span>` : "";
     const frameRowClass = typeof rowFrameClass === "function" && typeof frameStyleFromId === "function"
       ? rowFrameClass(frameStyleFromId(entry.equippedFrame))
       : "";
+
+    const anteil = Math.max(0, Math.min(100, Math.round((entry.progress / ziel) * 100)));
+    const farbe = RACE_ROW_COLORS[i % RACE_ROW_COLORS.length];
+
     html += `
-      <div class="race-result-row ${frameRowClass}">
-        <span class="race-result-rank">${medal}</span>
-        <span class="race-result-name">${escapeHtml(entry.nickname || "Unbekannt")}</span>
-        <span class="race-result-points">${entry.progress} Pkt</span>
+      <div class="race-result-row fh-row ${frameRowClass}">
+        <span class="fh-row-nr race-result-rank">${medal}</span>
+        <span class="fh-row-main race-result-name">${escapeHtml(entry.nickname || "Unbekannt")}</span>
         ${rewardHtml}
+        <span class="race-result-bar"><span class="race-result-bar-fill" style="width:${anteil}%;background:${farbe}"></span></span>
+        <span class="race-result-points">${entry.progress}</span>
       </div>
     `;
   });

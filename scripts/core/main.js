@@ -59,6 +59,21 @@ function changePage(pageID) {
     updateShopPage(pageID);
   }
 
+  // Der Dublonenstand steht seit dem 1c-Umbau auch in der Topbar und
+  // ist damit auf JEDER Seite sichtbar - er muss also bei jedem
+  // Wechsel nachgezogen werden, nicht mehr nur beim Betreten des
+  // Shops. Die Funktion schreibt beide Anzeigen aus einer Abfrage.
+  if (typeof refreshShopCurrencyDisplay === "function") {
+    refreshShopCurrencyDisplay();
+  }
+
+  // Die Startseiten-Uebersicht zeigt Lesestand, Schatzrad, Rennen und
+  // Codes. Wer von einer dieser Seiten zurueckkommt, soll den neuen
+  // Stand sehen und nicht den vom Seitenaufruf.
+  if (pageID === "home" && typeof fhRenderHomeDashboard === "function") {
+    fhRenderHomeDashboard();
+  }
+
   if (typeof updateRatingPage === "function") {
     updateRatingPage(pageID);
   }

@@ -44,6 +44,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Phosphor-Icons fuer die Icon-Rail (Entwurf 1c). Als eigenes
+       Stylesheet VOR style.css, damit dortige Regeln gewinnen. -->
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -75,26 +79,6 @@
 
   <!-- Hintergrundmusik: läuft nur auf der Home/Countdown-Seite (Playlist über main.js) -->
   <audio id="bg-music"></audio>
-
-  <!-- Teilen: nur auf der Startseite sichtbar (per CSS), nutzt die
-       native Teilen-Auswahl des Geraets bzw. die Zwischenablage.
-       Siehe scripts/core/share.js. -->
-  <button type="button" class="fh-share-button" onclick="fhShareSite()"
-          data-i18n-aria-label="share.button" aria-label="Seite teilen"
-          data-i18n-title="share.button" title="Seite teilen">
-    <!-- Inline-SVG statt Emoji: die Emoji-Varianten fuer "teilen"
-         sehen je nach Betriebssystem voellig anders aus, und ein
-         blosser Pfeil (↪) liest sich eher als "zurueck". -->
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none"
-         stroke="currentColor" stroke-width="1.9" stroke-linecap="round"
-         stroke-linejoin="round" aria-hidden="true" focusable="false">
-      <circle cx="18" cy="5" r="3"/>
-      <circle cx="6" cy="12" r="3"/>
-      <circle cx="18" cy="19" r="3"/>
-      <line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/>
-      <line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/>
-    </svg>
-  </button>
 
   <!-- Musik Mute-Button (nur sichtbar, wenn Musik läuft/laufen könnte) -->
   <div class="music-toggle" id="music-toggle" onclick="toggleMusic()">🔊</div>
@@ -138,55 +122,40 @@
   ============================================================ -->
   <aside class="fh-sidebar" id="fh-sidebar">
     <div class="fh-sidebar-logo">
-      <div class="fh-sidebar-flame">🔥</div>
+      <div class="fh-sidebar-flame" aria-hidden="true"><i class="ph ph-fire"></i></div>
       <div class="fh-sidebar-brand">
         <p class="fh-sidebar-title">FIRE<span>HELMET</span></p>
         <p class="fh-sidebar-subtitle">Pirate Saga</p>
       </div>
     </div>
 
-    <button type="button" class="lang-switch fh-sidebar-lang-switch" onclick="toggleLanguage()" aria-label="Sprache wechseln">
-      <span class="lang-switch-label lang-switch-label-de">🇩🇪 DE</span>
-      <span class="lang-switch-label lang-switch-label-en">🇬🇧 EN</span>
-      <span class="lang-switch-knob"></span>
-    </button>
 
     <nav class="fh-sidebar-nav">
-      <!-- Sichtbarer Einstieg in die Schnellsuche - die
-           Tastenkombination allein waere auf Touch-Geraeten
-           unerreichbar. Siehe scripts/core/quick-search.js. -->
-      <button type="button" class="fh-qs-trigger"
-              onclick="fhQuickSearch.open()" aria-haspopup="dialog">
-        <span aria-hidden="true">&#8981;</span>
-        <span class="fh-qs-trigger-label" data-i18n="search.trigger">Seite suchen</span>
-        <kbd>Strg K</kbd>
-      </button>
-
-      <a class="fh-nav-item" data-page="login" onclick="changePage('login')"><span class="fh-nav-icon" aria-hidden="true">🎮</span><span class="fh-nav-label" data-i18n="menu.login">Anmelden</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="login" onclick="changePage('login')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-sign-in"></i></span><span class="fh-nav-label" data-i18n="menu.login">Anmelden</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionExplore">Erkunden</p>
-      <a class="fh-nav-item" data-page="home" onclick="changePage('home')"><span class="fh-nav-icon" aria-hidden="true">🏠</span><span class="fh-nav-label" data-i18n="menu.home">Home</span></a>
-      <a class="fh-nav-item" data-page="story" onclick="changePage('story')"><span class="fh-nav-icon" aria-hidden="true">📖</span><span class="fh-nav-label" data-i18n="menu.story">Stories</span></a>
-      <a class="fh-nav-item" data-page="characters" onclick="changePage('characters')"><span class="fh-nav-icon" aria-hidden="true">👤</span><span class="fh-nav-label" data-i18n="menu.characters">Characters</span></a>
-      <a class="fh-nav-item" data-page="socials" onclick="changePage('socials')"><span class="fh-nav-icon" aria-hidden="true">🌐</span><span class="fh-nav-label" data-i18n="menu.socials">Socials</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="home" onclick="changePage('home')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-house"></i></span><span class="fh-nav-label" data-i18n="menu.home">Home</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="story" onclick="changePage('story')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-book-open-text"></i></span><span class="fh-nav-label" data-i18n="menu.story">Stories</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="characters" onclick="changePage('characters')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-users-three"></i></span><span class="fh-nav-label" data-i18n="menu.characters">Characters</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="socials" onclick="changePage('socials')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-globe-hemisphere-west"></i></span><span class="fh-nav-label" data-i18n="menu.socials">Socials</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionGames">Spiele</p>
-      <a class="fh-nav-item" data-page="shop" onclick="changePage('shop')"><span class="fh-nav-icon" aria-hidden="true">🛒</span><span class="fh-nav-label" data-i18n="menu.shop">Shop</span></a>
-      <a class="fh-nav-item" data-page="code" onclick="changePage('code')"><span class="fh-nav-icon" aria-hidden="true">🔑</span><span class="fh-nav-label" data-i18n="menu.code">Code</span></a>
-      <a class="fh-nav-item" data-page="wheel" onclick="changePage('wheel')"><span class="fh-nav-icon" aria-hidden="true">🧭</span><span class="fh-nav-label" data-i18n="menu.wheel">Schatzrad</span></a>
-      <a class="fh-nav-item" data-page="spielothek" onclick="changePage('spielothek')"><span class="fh-nav-icon" aria-hidden="true">🎰</span><span class="fh-nav-label" data-i18n="menu.spielothekShort">Spielothek</span></a>
-      <a class="fh-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')"><span class="fh-nav-icon" aria-hidden="true">🏆</span><span class="fh-nav-label" data-i18n="menu.leaderboard">Rangliste</span></a>
-      <a class="fh-nav-item" data-page="tournament" onclick="changePage('tournament')"><span class="fh-nav-icon" aria-hidden="true"><img class="fh-nav-cap-icon" src="assets/piratenpass/cap.webp" alt="" aria-hidden="true"></span><span class="fh-nav-label" data-i18n="menu.tournament">THE CHALLENGE</span></a>
-      <a class="fh-nav-item" data-page="race" onclick="changePage('race')"><span class="fh-nav-icon" aria-hidden="true">🏎️</span><span class="fh-nav-label" data-i18n="menu.race">Wochenrennen</span></a>
-      <a class="fh-nav-item" data-page="community-boss" onclick="changePage('community-boss')"><span class="fh-nav-icon" aria-hidden="true">🐙</span><span class="fh-nav-label" data-i18n="menu.communityBoss">Community-Boss</span></a>
-      <a class="fh-nav-item" data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true">❓</span><span class="fh-nav-label" data-i18n="menu.streamraetselShort">???</span></a>
-      <a class="fh-nav-item" data-page="ship-repair" onclick="changePage('ship-repair')"><span class="fh-nav-icon" aria-hidden="true">⚒</span><span class="fh-nav-label" data-i18n="menu.shipRepair">Repariere das Schiff</span></a>
-      <a class="fh-nav-item" data-page="detective-case" onclick="changePage('detective-case')"><span class="fh-nav-icon" aria-hidden="true">🕵️</span><span class="fh-nav-label" data-i18n="menu.detectiveCase">Der Fall</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="shop" onclick="changePage('shop')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-shopping-cart-simple"></i></span><span class="fh-nav-label" data-i18n="menu.shop">Shop</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="code" onclick="changePage('code')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-key"></i></span><span class="fh-nav-label" data-i18n="menu.code">Code</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="wheel" onclick="changePage('wheel')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-compass"></i></span><span class="fh-nav-label" data-i18n="menu.wheel">Schatzrad</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="spielothek" onclick="changePage('spielothek')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-dice-five"></i></span><span class="fh-nav-label" data-i18n="menu.spielothekShort">Spielothek</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="leaderboard" onclick="changePage('leaderboard')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-trophy"></i></span><span class="fh-nav-label" data-i18n="menu.leaderboard">Rangliste</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="tournament" onclick="changePage('tournament')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-crown-simple"></i></span><span class="fh-nav-label" data-i18n="menu.tournament">THE CHALLENGE</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="race" onclick="changePage('race')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-flag-checkered"></i></span><span class="fh-nav-label" data-i18n="menu.race">Wochenrennen</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="community-boss" onclick="changePage('community-boss')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-skull"></i></span><span class="fh-nav-label" data-i18n="menu.communityBoss">Community-Boss</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-question"></i></span><span class="fh-nav-label" data-i18n="menu.streamraetselShort">???</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="ship-repair" onclick="changePage('ship-repair')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-wrench"></i></span><span class="fh-nav-label" data-i18n="menu.shipRepair">Repariere das Schiff</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="detective-case" onclick="changePage('detective-case')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-fingerprint"></i></span><span class="fh-nav-label" data-i18n="menu.detectiveCase">Der Fall</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionMore">Mehr</p>
-      <a class="fh-nav-item" data-page="support" onclick="changePage('support')"><span class="fh-nav-icon" aria-hidden="true">🆘</span><span class="fh-nav-label" data-i18n="menu.support">Support</span></a>
-      <a class="fh-nav-item" data-page="rating" onclick="changePage('rating')"><span class="fh-nav-icon" aria-hidden="true">⭐</span><span class="fh-nav-label" data-i18n="menu.rating">Bewertung</span></a>
-      <a class="fh-nav-item" href="https://spitzefluke.github.io/daveawards/" target="_blank" rel="noopener noreferrer"><span class="fh-nav-icon" aria-hidden="true">🏅</span><span class="fh-nav-label">Dave Awards</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="support" onclick="changePage('support')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-lifebuoy"></i></span><span class="fh-nav-label" data-i18n="menu.support">Support</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="rating" onclick="changePage('rating')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-star"></i></span><span class="fh-nav-label" data-i18n="menu.rating">Bewertung</span></a>
+      <a class="fh-nav-item" href="https://spitzefluke.github.io/daveawards/" target="_blank" rel="noopener noreferrer"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-medal"></i></span><span class="fh-nav-label">Dave Awards</span></a>
     </nav>
 
     <div class="fh-sidebar-footer-wrap">
@@ -197,6 +166,50 @@
       <a class="fh-gateway-link fh-sidebar-gateway-link" onclick="changePage('gateway')" title="Admin-Gateway">⚙</a>
     </div>
   </aside>
+
+  <!-- ============================================================
+       TOPBAR (Entwurf 1c)
+       ---------------------------------------------------
+       Sammelt, was vorher verstreut war: der Sucheinstieg sass in der
+       Sidebar, Sprachumschalter ebenfalls, Musik- und Teilen-Knopf
+       schwebten frei in der rechten oberen Ecke. Jetzt eine Leiste,
+       wie im Entwurf.
+
+       Nur ab 1024px sichtbar - darunter tragen die Kopfzeile des
+       Schubladen-Menues und die Bottom-Nav dieselben Funktionen.
+  ============================================================ -->
+  <div class="fh-topbar" id="fh-topbar">
+    <button type="button" class="fh-qs-trigger" onclick="fhQuickSearch.open()" aria-haspopup="dialog">
+      <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+      <span class="fh-qs-trigger-label" data-i18n="search.trigger">Seite suchen</span>
+      <kbd>Strg K</kbd>
+    </button>
+
+    <div class="fh-topbar-right">
+      <!-- Dublonenstand, gespeist aus derselben Quelle wie die Anzeige
+           im Shop (refreshShopCurrencyDisplay in shop.js). -->
+      <span class="fh-topbar-coins" id="fh-topbar-coins" hidden>
+        <i class="ph ph-coins" aria-hidden="true"></i>
+        <span class="shop-currency-amount" data-fh-currency>0</span>
+      </span>
+
+      <button type="button" class="lang-switch fh-topbar-lang" onclick="toggleLanguage()" aria-label="Sprache wechseln">
+        <span class="lang-switch-label lang-switch-label-de">DE</span>
+        <span class="lang-switch-label lang-switch-label-en">EN</span>
+      </button>
+
+      <button type="button" class="fh-topbar-btn" onclick="fhShareSite()"
+              data-i18n-aria-label="share.button" aria-label="Seite teilen"
+              data-i18n-title="share.button" title="Seite teilen">
+        <i class="ph ph-share-network" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="fh-topbar-btn fh-topbar-music" id="fh-topbar-music"
+              onclick="toggleMusic()" aria-label="Musik an/aus">
+        <i class="ph ph-speaker-high" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
 
   <!-- ============================================================
        MOBILE UNTERER BEREICH (unter 1024px): Spielerkarte + Tableiste
@@ -398,6 +411,7 @@
                Endphase desselben Ablaufs (siehe Kommentar oben), also
                eine Unterueberschrift. Optisch aendert sich nichts, die
                CSS-Regeln greifen weiterhin ueber .hero. -->
+          <p class="fh-hero-kicker" data-i18n="home.kicker">Logbuch der Crew</p>
           <h2 data-i18n="home.title">COUNTDOWN</h2>
           <p class="subtitle" data-i18n="home.subtitle">The new Story starts in ...</p>
 
@@ -422,6 +436,32 @@
         </div>
       </div>
 
+      <!-- ============================================================
+           FH DASHBOARD (Entwurf 1c)
+           Karten-Uebersicht unter der Cinematic-Sequenz: der Besucher
+           sieht auf einen Blick, wo er ueberall stehengeblieben ist,
+           statt sich das aus fuenf Unterseiten zusammensuchen zu
+           muessen.
+
+           Die Karten sind LEER im Markup und werden von
+           scripts/home/dashboard.js aus dem echten Stand befuellt
+           (gelesene Kapitel, Schatzrad-Status, Rennfortschritt,
+           geknackte Codes, Rangliste). Faellt das Skript aus, bleibt
+           der Abschnitt schlicht leer - der Rest der Startseite
+           laeuft unveraendert weiter.
+      ============================================================ -->
+      <section class="fh-dash" id="fh-dash" aria-labelledby="fh-dash-heading">
+        <h2 class="fh-visually-hidden" id="fh-dash-heading" data-i18n="dash.heading">Dein Stand</h2>
+
+        <div class="fh-dash-grid">
+          <article class="fh-card fh-card-wide" id="fh-dash-read"></article>
+          <article class="fh-card fh-card-gold" id="fh-dash-wheel"></article>
+          <article class="fh-card" id="fh-dash-race"></article>
+          <article class="fh-card" id="fh-dash-code"></article>
+          <article class="fh-card" id="fh-dash-board"></article>
+        </div>
+      </section>
+
     </section>
 
     <!-- ======================================================
@@ -429,8 +469,11 @@
     ====================================================== -->
     <section id="story" class="page">
       <div class="story-library">
-        <h1 data-i18n="story.title">STORIES</h1>
-        <p class="story-subtitle" data-i18n="story.subtitle">Wähle ein Logbuch aus dem Archiv</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="story.kicker">Archiv der Crew</p>
+          <h1 class="fh-page-title" data-i18n="story.title">Logbücher</h1>
+          <p class="fh-page-lead" data-i18n="story.subtitle">Wähle ein Logbuch aus dem Archiv - jedes Kapitel bleibt offen, sobald du es einmal gelesen hast.</p>
+        </div>
 
         <!-- Wird automatisch gefüllt -->
         <div id="story-grid" class="story-grid"></div>
@@ -460,10 +503,10 @@
              scripts/stories/stories.js. -->
         <div class="story-progress" id="story-progress"></div>
 
-        <h2 data-i18n="story.chapterHeading">Kapitel</h2>
+        <p class="fh-section-label" data-i18n="story.chapterHeading">Kapitel</p>
 
         <!-- Kapitel werden automatisch erzeugt -->
-        <div id="chapter-list" class="chapter-list"></div>
+        <div id="chapter-list" class="chapter-list fh-rows"></div>
       </div>
     </section>
 
@@ -488,7 +531,11 @@
     ===================== -->
     <section id="characters" class="page">
       <div class="page-content">
-        <h1 data-i18n="characters.title">CHARACTERS</h1>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="characters.kicker">An Bord</p>
+          <h1 class="fh-page-title" data-i18n="characters.title">Die Crew</h1>
+          <p class="fh-page-lead" data-i18n="characters.lead">Alle Namen aus den Logbüchern. Tipp auf eine Karte, um Rolle, Zitat und Beschreibung zu sehen.</p>
+        </div>
 
         <div class="character-container" id="character-container"></div>
       </div>
@@ -499,7 +546,11 @@
     ===================== -->
     <section id="socials" class="page">
       <div class="page-content">
-        <h1 data-i18n="socials.title">SOCIALS</h1>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="socials.kicker">Folge der Crew</p>
+          <h1 class="fh-page-title" data-i18n="socials.title">Socials</h1>
+          <p class="fh-page-lead" data-i18n="socials.lead">Alle Kanäle der Crew an einer Stelle.</p>
+        </div>
 
         <div class="social-container">
           <a href="https://youtube.com" target="_blank" class="social-btn social-youtube">
@@ -558,8 +609,11 @@
     ===================== -->
     <section id="login" class="page">
       <div class="page-content">
-        <h1 data-i18n="login.title">ANMELDUNG</h1>
-        <p class="story-subtitle" data-i18n="login.subtitle">Melde dich an, um in Rangliste und Wochenrennen zu erscheinen</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="login.kicker">Zugang</p>
+          <h1 class="fh-page-title" data-i18n="login.title">Anmeldung</h1>
+          <p class="fh-page-lead" data-i18n="login.subtitle">Melde dich an, um in Rangliste und Wochenrennen zu erscheinen</p>
+        </div>
 
         <div class="twitch-login-area">
           <button id="twitch-login-btn" class="twitch-login-btn" onclick="loginWithTwitch()">
@@ -621,8 +675,11 @@
       </div>
 
       <div class="page-content shop-content">
-        <h1 data-i18n="shop.title">🛒 SCHWARZMARKT DER FLITZPIEPEN</h1>
-        <p class="story-subtitle" data-i18n="shop.subtitle">Jede Stunde neue Ware - gib deine Dublonen für Rahmen und Extras aus</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="shop.kicker">Schwarzmarkt der Flitzpiepen</p>
+          <h1 class="fh-page-title" data-i18n="shop.title">Shop</h1>
+          <p class="fh-page-lead" data-i18n="shop.subtitle">Jede Stunde neue Ware - gib deine Dublonen für Rahmen und Extras aus</p>
+        </div>
 
         <div class="shop-currency-bar">
           <span class="shop-currency-icon">💰</span>
@@ -662,8 +719,11 @@
     <section id="code" class="page">
       <div class="code-ambient-fx" id="code-ambient-fx"></div>
       <div class="page-content code-content">
-        <h1 data-i18n="code.title">CODE</h1>
-        <p class="story-subtitle" data-i18n="code.subtitle">Gib deinen geheimen Code ein</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="code.kicker">Geheimnisse der Crew</p>
+          <h1 class="fh-page-title" data-i18n="code.title">Code</h1>
+          <p class="fh-page-lead" data-i18n="code.subtitle">Gib deinen geheimen Code ein</p>
+        </div>
 
         <audio id="code-audio-player"></audio>
 
@@ -696,8 +756,11 @@
     ===================== -->
     <section id="wheel" class="page">
       <div class="page-content wheel-content">
-        <h1 data-i18n="wheel.title">SCHATZRAD</h1>
-        <p class="story-subtitle" data-i18n="wheel.subtitle">Einmal am Tag drehen und dein Glück bei der Schatzsuche versuchen</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="wheel.kicker">Einmal am Tag</p>
+          <h1 class="fh-page-title" data-i18n="wheel.title">Schatzrad</h1>
+          <p class="fh-page-lead" data-i18n="wheel.subtitle">Einmal am Tag drehen und dein Glück bei der Schatzsuche versuchen</p>
+        </div>
 
         <p id="wheel-login-hint" class="wheel-status wheel-login-hint">
           <span data-i18n="wheel.loginHintPrefix">Noch nicht angemeldet? </span><a onclick="changePage('login')" data-i18n="wheel.loginHintLink">Hier geht's zur Anmeldung</a>
@@ -729,8 +792,11 @@
     ===================== -->
     <section id="spielothek" class="page">
       <div class="page-content spielothek-page-content">
-        <h1 data-i18n="spielothek.title">🎰 ÄNDIIS SPIELOTHEK</h1>
-        <p class="story-subtitle" data-i18n="spielothek.subtitle">Jeden Monat ein anderes Spiel - rein spielerisch, nur mit Dublonen.</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="spielothek.kicker">Ändiis Ecke</p>
+          <h1 class="fh-page-title" data-i18n="spielothek.title">Spielothek</h1>
+          <p class="fh-page-lead" data-i18n="spielothek.subtitle">Jeden Monat ein anderes Spiel - rein spielerisch, nur mit Dublonen.</p>
+        </div>
         <div id="spielothek-content" class="spielothek-content"></div>
       </div>
     </section>
@@ -740,8 +806,11 @@
     ===================== -->
     <section id="leaderboard" class="page">
       <div class="page-content">
-        <h1 data-i18n="leaderboard.title">RANGLISTE</h1>
-        <p class="story-subtitle" data-i18n="leaderboard.subtitle">Wer hat die meisten Geheimcodes geknackt?</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="leaderboard.kicker">Bestenliste</p>
+          <h1 class="fh-page-title" data-i18n="leaderboard.title">Rangliste</h1>
+          <p class="fh-page-lead" data-i18n="leaderboard.subtitle">Wer hat die meisten Geheimcodes geknackt?</p>
+        </div>
 
         <div id="leaderboard-podium" class="fh-podium"></div>
 
@@ -758,20 +827,43 @@
       <div class="race-fx" id="race-fx"></div>
 
       <div class="race-fullpage">
-        <h1 data-i18n="race.title">WOCHENRENNEN</h1>
-        <p class="story-subtitle" data-i18n="race.subtitle">Jede Woche neu: Fortschritt durch Schatzrad-Drehen und Codes-Knacken</p>
+        <!-- Kopf im Entwurfs-Stil (2c): links Einordnung und Titel,
+             rechts die Handlung (Tagesbonus) und die verbleibende
+             Zeit. Vorher stand alles untereinander in der Mitte.
+             Alle IDs bleiben unveraendert - race.js schreibt weiter
+             in dieselben Elemente. -->
+        <div class="race-head">
+          <div class="fh-page-head race-head-text">
+            <p id="race-track-theme" class="fh-page-kicker race-track-theme"></p>
+            <h1 class="fh-page-title" data-i18n="race.title">Wochenrennen</h1>
+            <p class="fh-page-lead" data-i18n="race.subtitle">Jede Woche neu: Fortschritt durch Schatzrad-Drehen und Codes-Knacken</p>
+          </div>
 
-        <p id="race-last-winner" class="wheel-status" data-i18n="race.loadingWinner">Lade Sieger der letzten Woche ...</p>
-        <p id="race-countdown" class="wheel-countdown" style="display:block;"></p>
-        <p id="race-own-progress" class="wheel-status"></p>
-
-        <div class="race-daily-box">
-          <button id="race-daily-button" class="code-button" onclick="claimDailyRaceBonus()" data-i18n="race.dailyBonusButton">Tagesbonus abholen 🎁</button>
-          <p id="race-daily-status" class="wheel-status"></p>
+          <div class="race-head-actions">
+            <button id="race-daily-button" class="fh-cta" onclick="claimDailyRaceBonus()">
+              <i class="ph ph-gift" aria-hidden="true"></i><span data-i18n="race.dailyBonusButton">Tagesbonus abholen</span>
+            </button>
+            <p id="race-countdown" class="race-pill" style="display:block;"></p>
+          </div>
         </div>
 
-        <p id="race-track-theme" class="race-track-theme"></p>
+        <div class="race-status-line">
+          <p id="race-own-progress" class="wheel-status"></p>
+          <p id="race-daily-status" class="wheel-status"></p>
+          <p id="race-last-winner" class="wheel-status" data-i18n="race.loadingWinner">Lade Sieger der letzten Woche ...</p>
+        </div>
 
+        <!-- Podest ueber der Strecke: es zeigt dieselben drei Namen
+             wie die ersten Zeilen der Liste und braucht die volle
+             Breite. Der Entwurf (2c) kennt es nicht, es bleibt aber
+             erhalten - nur nicht mehr zwischen Strecke und Liste. -->
+        <div id="race-leaderboard-podium" class="fh-podium"></div>
+
+        <!-- Strecke und Platzierungen nebeneinander (Entwurf 2c).
+             Vorher standen sie untereinander, wodurch die Liste bei
+             1440px erst nach ueber einer Bildschirmhoehe Scrollen
+             sichtbar wurde. -->
+        <div class="race-main">
         <div id="race-track-wrap" class="race-track-wrap">
           <svg id="race-track-svg" class="race-track-svg" viewBox="0 0 600 300">
             <defs>
@@ -828,8 +920,11 @@
           <p id="race-track-empty" class="wheel-status race-track-empty"></p>
         </div>
 
-        <div id="race-leaderboard-podium" class="fh-podium"></div>
-        <div id="race-results-list" class="race-results-list"></div>
+        <div class="race-side">
+          <p class="fh-section-label" data-i18n="race.tableLabel">Diese Woche</p>
+          <div id="race-results-list" class="race-results-list fh-rows"></div>
+        </div>
+        </div>
       </div>
     </section>
 
@@ -941,8 +1036,11 @@
     ===================== -->
     <section id="detective-case" class="page">
       <div class="page-content detective-page-content">
-        <h1 data-i18n="detectiveCase.title">🕵️ DER FALL DER VERSCHWUNDENEN DUBLONEN</h1>
-        <p class="story-subtitle" data-i18n="detectiveCase.subtitle">Auf der FireHelmet herrscht Unruhe. 400 Dublonen sind aus der Schatzkammer verschwunden. Jemand aus der Crew muss sie genommen haben.</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="detectiveCase.kicker">Die verschwundenen Dublonen</p>
+          <h1 class="fh-page-title" data-i18n="detectiveCase.title">Der Fall</h1>
+          <p class="fh-page-lead" data-i18n="detectiveCase.subtitle">Auf der FireHelmet herrscht Unruhe. 400 Dublonen sind aus der Schatzkammer verschwunden. Jemand aus der Crew muss sie genommen haben.</p>
+        </div>
         <div id="detective-case-content"></div>
       </div>
     </section>
@@ -982,8 +1080,11 @@
       </div>
 
       <div class="page-content boss-content" id="boss-content-panel">
-        <h1 data-i18n="boss.title">COMMUNITY-BOSS</h1>
-        <p class="story-subtitle" data-i18n="boss.subtitle">Gemeinsam besiegen, bevor der Monat endet!</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="boss.kicker">Alle gegen einen</p>
+          <h1 class="fh-page-title" data-i18n="boss.title">Community-Boss</h1>
+          <p class="fh-page-lead" data-i18n="boss.subtitle">Gemeinsam besiegen, bevor der Monat endet!</p>
+        </div>
 
         <p id="boss-reset-countdown" class="boss-reset-countdown"></p>
 
@@ -1037,8 +1138,11 @@
     ===================== -->
     <section id="support" class="page">
       <div class="page-content support-content">
-        <h1 data-i18n="support.title">SUPPORT</h1>
-        <p class="story-subtitle" data-i18n="support.subtitle">Melde ein Problem oder ein Anliegen</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="support.kicker">Hilfe an Bord</p>
+          <h1 class="fh-page-title" data-i18n="support.title">Support</h1>
+          <p class="fh-page-lead" data-i18n="support.subtitle">Melde ein Problem oder ein Anliegen</p>
+        </div>
 
         <div id="support-report-box" class="support-report-box">
           <h2 data-i18n="support.reportTitle">🐞 Fehler melden / Anliegen</h2>
@@ -1060,8 +1164,11 @@
     ===================== -->
     <section id="rating" class="page">
       <div class="page-content rating-content">
-        <h1 data-i18n="rating.title">⭐ BEWERTUNG</h1>
-        <p class="story-subtitle" data-i18n="rating.subtitle">Wie gefällt dir die Seite? Deine Meinung hilft uns weiter!</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="rating.kicker">Deine Meinung</p>
+          <h1 class="fh-page-title" data-i18n="rating.title">Bewertung</h1>
+          <p class="fh-page-lead" data-i18n="rating.subtitle">Wie gefällt dir die Seite? Deine Meinung hilft uns weiter!</p>
+        </div>
 
         <div class="rating-average" id="rating-average" style="display:none;">
           <span id="rating-average-stars" class="rating-average-stars"></span>
@@ -1098,8 +1205,11 @@
     ====================================================== -->
     <section id="gateway" class="page">
       <div class="page-content gateway-page-content">
-        <h1>⚙ ADMIN-GATEWAY</h1>
-        <p class="story-subtitle">Countdown, Story-Kapitel und Status verwalten.</p>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker">Verwaltung</p>
+          <h1 class="fh-page-title">Admin-Gateway</h1>
+          <p class="fh-page-lead">Countdown, Story-Kapitel und Status verwalten.</p>
+        </div>
         <div id="gateway-content" class="gateway-content"></div>
       </div>
     </section>
@@ -1180,6 +1290,8 @@
   <script src="scripts/core/skeleton.js" defer></script>
   <script src="scripts/core/field-counter.js" defer></script>
   <script src="scripts/core/nav-sync.js" defer></script>
+  <script src="scripts/core/rail-flyout.js" defer></script>
+  <script src="scripts/core/nav-keys.js" defer></script>
   <script src="scripts/core/path-draw.js" defer></script>
   <script src="scripts/core/quick-search.js" defer></script>
   <script src="scripts/core/share.js" defer></script>
@@ -1252,6 +1364,11 @@
   <script src="scripts/codes/code-button-effect.js" defer></script>
   <script src="scripts/codes/code-ambient-fx.js" defer></script>
   <script src="scripts/codes/code-history.js" defer></script>
+
+  <!-- Ganz zum Schluss: die Startseiten-Uebersicht liest aus stories.js,
+       wheel.js, race.js und codes-data.js und muss daher nach allen
+       vieren stehen. -->
+  <script src="scripts/home/dashboard.js" defer></script>
 
 </body>
 </html>

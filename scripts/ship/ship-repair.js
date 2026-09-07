@@ -647,7 +647,7 @@ async function renderShipRepairPage() {
   if (!contentEl) return;
 
   if (!supabaseClient) {
-    contentEl.innerHTML = `<h1 data-i18n="ship.title">⚓ SCHIFF REPARIEREN</h1><p class="wheel-status">⚠️ Verbindung nicht verfügbar - versuch's später nochmal.</p>`;
+    contentEl.innerHTML = `<div class="fh-page-head"><p class="fh-page-kicker" data-i18n="ship.kicker">Werft der Crew</p><h1 class="fh-page-title" data-i18n="ship.title">Schiff reparieren</h1></div><p class="wheel-status">⚠️ Verbindung nicht verfügbar - versuch's später nochmal.</p>`;
     if (typeof applyTranslations === "function") applyTranslations();
     return;
   }
@@ -656,7 +656,7 @@ async function renderShipRepairPage() {
   const uid = typeof wheelAuthReady !== "undefined" ? await wheelAuthReady : null;
 
   if (!uid) {
-    contentEl.innerHTML = `<h1 data-i18n="ship.title">⚓ SCHIFF REPARIEREN</h1><p class="wheel-status" data-i18n="ship.needLogin">Melde dich zuerst an, um mitzureparieren!</p>`;
+    contentEl.innerHTML = `<div class="fh-page-head"><p class="fh-page-kicker" data-i18n="ship.kicker">Werft der Crew</p><h1 class="fh-page-title" data-i18n="ship.title">Schiff reparieren</h1></div><p class="wheel-status" data-i18n="ship.needLogin">Melde dich zuerst an, um mitzureparieren!</p>`;
     if (typeof applyTranslations === "function") applyTranslations();
     return;
   }
@@ -753,8 +753,11 @@ async function renderShipRepairPage() {
   }
 
   contentEl.innerHTML = `
-    <h1 data-i18n="ship.title">⚓ SCHIFF REPARIEREN</h1>
-    <p class="story-subtitle" data-i18n="ship.subtitle">Gemeinsam bringt die Crew die Flitzpiepen zurück aufs Wasser.</p>
+    <div class="fh-page-head">
+      <p class="fh-page-kicker" data-i18n="ship.kicker">Werft der Crew</p>
+      <h1 class="fh-page-title" data-i18n="ship.title">Schiff reparieren</h1>
+      <p class="fh-page-lead" data-i18n="ship.subtitle">Gemeinsam bringt die Crew die Flitzpiepen zurück aufs Wasser.</p>
+    </div>
     ${isShipPreviewActive() ? renderShipDevPanel() : ""}
 
     <div class="fh-ship-repair-stage ${stageClasses}" id="fh-ship-repair-stage">
