@@ -809,6 +809,16 @@ const RACE_FAHRZEUGE = {
            { id: "drachen",    symbol: "🪁", name: { de: "Flugdrachen",  en: "Kite" },        markup: () => drachenMarkup } ],
 };
 
+/* Die eigene Spieler-Kennung. Gebraucht, um NUR das eigene Fahrzeug
+   auszutauschen - siehe createKartElement(). wheelAuthReady loest sie
+   auf, sobald die Anmeldung steht; bis dahin bleibt sie null und alle
+   fahren das Standardfahrzeug. */
+let raceEigeneUid = null;
+if (typeof wheelAuthReady !== "undefined" && wheelAuthReady && wheelAuthReady.then) {
+  wheelAuthReady.then(function (uid) { raceEigeneUid = uid || null; })
+                .catch(function () { /* nicht angemeldet - bleibt null */ });
+}
+
 function raceGelaende() {
   const t = getWeeklyTrack();
   const g = t ? t.vehicle : "car";
@@ -831,11 +841,14 @@ function raceFahrzeugSetzen(id) {
   if (!RACE_FAHRZEUGE[g].some((f) => f.id === id)) return;
   try { localStorage.setItem("raceFahrzeug_" + g, id); } catch (err) { /* egal */ }
 
-  // Alle bereits gezeichneten Fahrzeuge wegwerfen: sie werden beim
-  // naechsten Positionieren mit dem neuen Markup neu gebaut.
-  const layer = document.getElementById("race-karts-layer");
-  if (layer) layer.innerHTML = "";
-  raceKartElements = {};
+  /* Nur das EIGENE Fahrzeug wegwerfen - es wird beim naechsten
+     Positionieren mit dem neuen Markup neu gebaut. Alle anderen
+     bleiben stehen: sie sind von der Wahl gar nicht betroffen, und
+     sie neu zu bauen liesse das ganze Feld einmal aufblitzen. */
+  if (raceEigeneUid && raceKartElements[raceEigeneUid]) {
+    raceKartElements[raceEigeneUid].remove();
+    delete raceKartElements[raceEigeneUid];
+  }
   renderRaceFahrzeugwahl();
   loadRaceLeaderboard();
 }
@@ -871,9 +884,23 @@ function createKartElement(uid) {
   const kart = document.createElementNS(svgNS, "g");
   kart.setAttribute("class", "race-kart");
 
-  // Welches der drei Fahrzeuge dieses Gelaendes gefahren wird, hat der
-  // Mitfahrer selbst gewaehlt (raceFahrzeugWahl).
-  const bodyMarkup = raceFahrzeugWahl().markup();
+  /* NUR DAS EIGENE FAHRZEUG richtet sich nach der eigenen Wahl.
+
+     Das war zuerst falsch: raceFahrzeugWahl() wurde fuer JEDEN
+     Mitfahrer aufgerufen, und sie liest die Wahl aus dem eigenen
+     localStorage. Wer sich einen Buggy aussuchte, sah damit das ganze
+     Feld im Buggy fahren.
+
+     Die Wahl der anderen kennt der Browser nicht - sie steht bewusst
+     nur lokal, weil sie rein optisch ist und nichts am Fortschritt
+     aendert. Alle anderen fahren deshalb das Standardfahrzeug des
+     Gelaendes (den ersten Eintrag der Liste), genau wie vor dieser
+     Runde. */
+  const eigenes = raceEigeneUid && uid === raceEigeneUid;
+  const fahrzeug = eigenes
+    ? raceFahrzeugWahl()
+    : RACE_FAHRZEUGE[raceGelaende()][0];
+  const bodyMarkup = fahrzeug.markup();
 
   /* Krone ist Teil von .kart-inner, damit sie WIRKLICH fest am Fahrzeug
      "verschweißt" ist - sie bewegt, dreht und bobt exakt mit dem Auto mit,

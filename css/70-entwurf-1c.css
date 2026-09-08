@@ -1892,10 +1892,33 @@ h1.fh-page-title,
   align-items: start;
 }
 
+/* Die Strecke bekommt deutlich mehr Platz als die Liste daneben.
+   Mit 1,35 zu 1 lag sie bei rund 57 Prozent der Breite - sie ist aber
+   das, wofuer man die Seite oeffnet, und seit der Schraegsicht steckt
+   dort auch mehr drin (Himmel, Horizont, Landschaft). Die Liste
+   braucht nur so viel Platz, dass Name und Punktzahl nebeneinander
+   passen.
+
+   Ab 1400px wird sie noch etwas breiter: dort ist Platz genug, dass
+   die Liste trotzdem nicht gedraengt wirkt. */
 @media (min-width: 1024px) {
   .race-main {
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
   }
+}
+
+@media (min-width: 1400px) {
+  .race-main {
+    grid-template-columns: minmax(0, 2.6fr) minmax(0, 1fr);
+  }
+}
+
+/* Die linke Spalte: Bahn und darunter die Fahrzeugwahl. min-width: 0
+   ist noetig, damit das breite SVG die Spalte nicht aufblaeht - ohne
+   das waere die Mindestbreite eines Rasterkindes seine
+   Inhaltsbreite. */
+.race-bahn-spalte {
+  min-width: 0;
 }
 
 .race-side {
