@@ -20,13 +20,30 @@ const raceConfig = {
    Besucher gleich). Füge gerne weitere hinzu -
    die Reihenfolge wiederholt sich einfach.
 
-   "vehicle" bestimmt, welches Fahrzeug gezeichnet
-   wird: "car" (Kart), "boat" (Segelboot) oder
-   "plane" (Flugzeug).
+   "vehicle" bestimmt das GELAENDE: "car" (Land),
+   "boat" (Wasser) oder "plane" (Luft). Welches der
+   drei Fahrzeuge dieses Gelaendes gefahren wird,
+   waehlt jeder Mitfahrer selbst (siehe
+   raceFahrzeugWahl() in race.js).
+
+   "landschaft" bestimmt, was NEBEN der Bahn steht -
+   Duenen, Palmen, Felsen, Wolken. Die Standorte
+   werden nicht von Hand gesetzt, sondern aus dem
+   Streckennamen erwuerfelt und dabei von der Bahn
+   ferngehalten (raceDekoAufbauen() in race.js). Eine
+   neue Strecke bekommt ihre Umgebung damit geschenkt.
+
+   "stil" bestimmt, wie sich der SEITENHINTERGRUND
+   bewegt (scripts/core/seiten-fx-szenen.js, Eintrag
+   "race"): flimmernde Hitze, ziehende Lichtstreifen,
+   Blitze. Farbe kam schon bisher aus grass/accent -
+   die Bewegung kommt jetzt dazu.
 ====================================== */
 const raceTracks = [
   {
     name: "Ozean-Oval",
+    landschaft: "kueste",
+    stil: "wasser",
     emoji: "🏎️",
     vehicle: "car",
     grass: "#173a1e",
@@ -38,6 +55,8 @@ const raceTracks = [
   },
   {
     name: "Wüsten-Circuit",
+    landschaft: "wueste",
+    stil: "hitze",
     emoji: "🏎️",
     vehicle: "car",
     grass: "#5a4426",
@@ -49,6 +68,8 @@ const raceTracks = [
   },
   {
     name: "Dschungel-Loop",
+    landschaft: "dschungel",
+    stil: "gruen",
     emoji: "🏎️",
     vehicle: "car",
     grass: "#0f2e1a",
@@ -60,6 +81,8 @@ const raceTracks = [
   },
   {
     name: "Nacht-Neon",
+    landschaft: "neon",
+    stil: "neon",
     emoji: "🏎️",
     vehicle: "car",
     grass: "#0a0a1a",
@@ -74,6 +97,8 @@ const raceTracks = [
     // "Hochsee"-Thema (weites offenes Wasser) und ist bewusst eine
     // andere Form als der Ozean-Oval (Punkt 36: nicht nur Farbe ändern).
     name: "Hochsee-Regatta",
+    landschaft: "ozean",
+    stil: "wasser",
     emoji: "⛵",
     vehicle: "boat",
     grass: "#0a2740",
@@ -85,6 +110,8 @@ const raceTracks = [
   },
   {
     name: "Wolken-Rennen",
+    landschaft: "himmel",
+    stil: "wolken",
     emoji: "✈️",
     vehicle: "plane",
     grass: "#a8d4f0",
@@ -98,6 +125,8 @@ const raceTracks = [
     // Enge Schlangenlinie durchs Riff - Boot muss um die Felsen herum
     // weichen (Punkt 33: "enge Schlangenlinie")
     name: "Riff-Zickzack",
+    landschaft: "riff",
+    stil: "riff",
     emoji: "🪨",
     vehicle: "boat",
     grass: "#2a1a0f",
@@ -110,6 +139,8 @@ const raceTracks = [
   {
     // Wellige Doppel-S-Form durch dichten Nebel (Punkt 33: "große S-Kurve")
     name: "Nebelschlange",
+    landschaft: "nebel",
+    stil: "nebel",
     emoji: "🌫️",
     vehicle: "boat",
     grass: "#1a2530",
@@ -123,6 +154,8 @@ const raceTracks = [
     // Vielecke Wendungen für eine "komplexe technische Strecke"
     // (Punkt 33) - als Flug-Route durch ein Gewitter inszeniert.
     name: "Sturmkurs",
+    landschaft: "sturm",
+    stil: "sturm",
     emoji: "⛈️",
     vehicle: "plane",
     grass: "#14141f",

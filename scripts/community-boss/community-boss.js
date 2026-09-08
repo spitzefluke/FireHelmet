@@ -56,6 +56,181 @@ let bossRecoilUntil = 0; // Kreatur wird kurz zurückgestoßen (echtes Recoil, n
 let bossRecoilDir = 1;
 let bossSmoke = []; // dunkle Rauchwolken, die bei jedem Treffer aufsteigen (Punkt 22)
 
+/* Phasenwechsel: einmaliger, harter Moment beim Ueberschreiten von
+   66 % und 33 % - siehe bossPhasenwechsel(). */
+let bossPhasenBlitzBis = 0;
+let bossPhasenBlitzFarbe = "#ffffff";
+let bossLetztePhase = null;
+
+/* ------------------------------------------------------
+   ZWISCHENPUFFER FUER SILHOUETTE, KONTUR UND GEGENLICHT
+   ---------------------------------------------------
+   Die vier Kreaturen sind reich gezeichnet, gingen auf dem Bild
+   aber unter: dunkle Fuellung auf dunklem Arenahintergrund, ohne
+   Kontur. Aus zwei Metern Abstand blieb ein Klumpen mit Gesicht.
+
+   Statt in jeder der vier Zeichenfunktionen eine Kontur nachzuziehen
+   (vier Stellen, die auseinanderlaufen, und bei jedem neuen Boss
+   eine fuenfte), wird die Kreatur EINMAL in einen Zwischenpuffer
+   gezeichnet. Aus diesem Bild lassen sich Kontur und Gegenlicht
+   rein durch Ueberlagerung gewinnen - unabhaengig davon, WAS
+   darin steht. Ein fuenfter Boss bekommt beides geschenkt.
+
+   Zwei Puffer: einer traegt die fertige Figur, der andere dieselbe
+   Form einfarbig (ueber "source-in" eingefaerbt) fuer Saum und
+   Schein.
+------------------------------------------------------ */
+const BOSS_PUFFER_B = 440;   // breit genug fuer die breiteste Kreatur
+const BOSS_PUFFER_H = 500;
+const BOSS_PUFFER_X = 220;   // wo der Nullpunkt der Kreatur im Puffer liegt
+const BOSS_PUFFER_Y = 250;
+
+let bossFigur = null, bossFigurCtx = null;
+let bossForm = null, bossFormCtx = null;
+let bossWeichzeichner = null;   // null = noch nicht geprueft
+
+function bossPufferBereit() {
+  if (bossFigurCtx && bossFormCtx) return true;
+  if (typeof document === "undefined") return false;
+  try {
+    bossFigur = document.createElement("canvas");
+    bossFigur.width = BOSS_PUFFER_B;
+    bossFigur.height = BOSS_PUFFER_H;
+    bossFigurCtx = bossFigur.getContext("2d");
+
+    bossForm = document.createElement("canvas");
+    bossForm.width = BOSS_PUFFER_B;
+    bossForm.height = BOSS_PUFFER_H;
+    bossFormCtx = bossForm.getContext("2d");
+  } catch (err) {
+    bossFigurCtx = bossFormCtx = null;
+  }
+  if (bossWeichzeichner === null && bossFigurCtx) {
+    // ctx.filter kennt nicht jeder Browser. Ohne ihn faellt nur der
+    // weiche Schein weg, Kontur und Figur bleiben.
+    bossWeichzeichner = typeof bossFigurCtx.filter === "string";
+  }
+  return !!(bossFigurCtx && bossFormCtx);
+}
+
+/* Die vier Zeichenfunktionen greifen auf das modulweite bossCtx zu.
+   Es wird hier kurz umgehaengt, statt vier Signaturen zu aendern -
+   und im finally garantiert zurueckgesetzt, auch wenn eine
+   Zeichenfunktion wirft. */
+function bossKreaturZeichnen(time, boss) {
+  if (boss.type === "storm") drawStormDemon(time, boss);
+  else if (boss.type === "ghost-captain") drawGhostCaptain(time, boss);
+  else if (boss.type === "serpent") drawSeaSerpent(time, boss);
+  else drawKraken(time, boss);
+}
+
+function bossFigurFuellen(time, boss) {
+  const echt = bossCtx;
+  bossFigurCtx.clearRect(0, 0, BOSS_PUFFER_B, BOSS_PUFFER_H);
+  bossFigurCtx.save();
+  bossFigurCtx.translate(BOSS_PUFFER_X, BOSS_PUFFER_Y);
+  bossCtx = bossFigurCtx;
+  try {
+    bossKreaturZeichnen(time, boss);
+  } finally {
+    bossCtx = echt;
+    bossFigurCtx.restore();
+  }
+}
+
+/* Dieselbe Form, aber einfarbig: erst die Figur hineinkopieren, dann
+   mit "source-in" durchfaerben - alles Durchsichtige bleibt
+   durchsichtig, der Rest wird zur reinen Silhouette. */
+function bossFormFaerben(farbe) {
+  bossFormCtx.globalCompositeOperation = "source-over";
+  bossFormCtx.clearRect(0, 0, BOSS_PUFFER_B, BOSS_PUFFER_H);
+  bossFormCtx.drawImage(bossFigur, 0, 0);
+  bossFormCtx.globalCompositeOperation = "source-in";
+  bossFormCtx.fillStyle = farbe;
+  bossFormCtx.fillRect(0, 0, BOSS_PUFFER_B, BOSS_PUFFER_H);
+  bossFormCtx.globalCompositeOperation = "source-over";
+}
+
+/* Acht Richtungen um je zwei Bildpunkte versetzt ergeben einen
+   geschlossenen Saum. Vier wuerden an den Schraegen ausfransen. */
+const BOSS_SAUM = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
+
+function bossFigurAusgeben(ctx, rageColor, schein) {
+  const x = -BOSS_PUFFER_X;
+  const y = -BOSS_PUFFER_Y;
+
+  /* 1. GEGENLICHT: die Form etwas groesser, weich und warm hinter
+        der Figur. Sie hebt die Silhouette vom Arenagrund ab, ohne
+        die Zeichnung selbst aufzuhellen. */
+  if (schein > 0.01) {
+    bossFormFaerben(hexToRgba(mixHexColors(rageColor, "#ffd7a0", 0.55), 1));
+    ctx.save();
+    ctx.globalAlpha = Math.min(0.75, schein);
+    if (bossWeichzeichner) ctx.filter = "blur(18px)";
+    ctx.drawImage(bossForm, x - 9, y - 13, BOSS_PUFFER_B + 18, BOSS_PUFFER_H + 26);
+    ctx.restore();
+  }
+
+  /* 2. ABSETZUNG: eine schwache Kontur rundum. Sie soll die Figur
+        nur vom Arenagrund trennen, nicht leuchten - ein gleichmaessig
+        heller Ring rundum saehe aus wie ein ausgeschnittener
+        Aufkleber. */
+  bossFormFaerben("rgba(255,238,208,.9)");
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  for (let i = 0; i < BOSS_SAUM.length; i++) {
+    ctx.drawImage(bossForm, x + BOSS_SAUM[i][0] * 2, y + BOSS_SAUM[i][1] * 2,
+                  BOSS_PUFFER_B, BOSS_PUFFER_H);
+  }
+
+  /* 3. GEGENLICHT-KANTE: dieselbe Form nach OBEN versetzt. Sichtbar
+        bleibt danach nur die obere Kante - und genau von dort kommen
+        auch die Lichtschaechte der Arena (.fh-boss-layer-rays). Ein
+        Saum, der von der falschen Seite leuchtet, faellt sofort auf;
+        einer, der zur Beleuchtung passt, sieht man gar nicht mehr
+        bewusst. */
+  ctx.globalAlpha = 0.55;
+  ctx.drawImage(bossForm, x - 1, y - 4, BOSS_PUFFER_B, BOSS_PUFFER_H);
+  ctx.globalAlpha = 0.3;
+  ctx.drawImage(bossForm, x - 3, y - 2, BOSS_PUFFER_B, BOSS_PUFFER_H);
+  ctx.restore();
+
+  /* 4. Die Figur selbst, scharf und unveraendert - sie deckt alles
+        ab bis auf die Raender der drei Schichten darunter. */
+  ctx.drawImage(bossFigur, x, y, BOSS_PUFFER_B, BOSS_PUFFER_H);
+}
+
+/* ------------------------------------------------------
+   AUSHOLEN
+   ---------------------------------------------------
+   Der Boss atmete und schwebte - mehr nicht. Das liest sich wie ein
+   Bildschirmschoner, nicht wie ein Gegner. Jetzt laeuft ein Zyklus:
+   lange Ruhe, kurzes Anspannen nach hinten, harter Ausfall nach
+   vorn, weiche Erholung.
+
+   Der Wert liegt zwischen -1 (zurueckgenommen) und +1 (vorgeschnellt)
+   und wird in drawBossCreature auf Ort, Neigung und Streckung
+   gelegt. Je weniger Leben, desto haeufiger holt er aus.
+------------------------------------------------------ */
+const AUSHOLEN_ZYKLUS = 6300;   // ms bei vollem Leben
+
+function ausholenWert(time, rage) {
+  const zyklus = AUSHOLEN_ZYKLUS * (1 - Math.min(1, rage) * 0.38);
+  const t = (time % zyklus) / zyklus;
+
+  if (t < 0.665) return 0;                       // Ruhe
+  if (t < 0.815) {                               // Anspannen
+    const k = (t - 0.665) / 0.15;
+    return -(k * k);                             // quadratisch: zieht spuerbar an
+  }
+  if (t < 0.870) {                               // Ausfall
+    const k = (t - 0.815) / 0.055;
+    return -1 + k * 2;                           // von -1 hart nach +1
+  }
+  const k = (t - 0.870) / 0.130;                 // Erholung
+  return (1 - k) * (1 - k);
+}
+
 function setupBossCanvas() {
   const stage = document.getElementById("boss-stage");
   if (!stage) return false;
@@ -121,6 +296,7 @@ function drawBossFrame(time) {
   drawBossCreature(time, w, h, boss);
   drawBossSmoke();
   drawBossEffects(time, w, h);
+  drawBossPhasenBlitz(time, w, h);
 
   if (time < bossHitFlashUntil) {
     const flashAlpha = (bossHitFlashUntil - time) / 220;
@@ -283,15 +459,29 @@ function drawBossCreature(time, w, h, boss) {
   const recoilY = recoilEase * 9;
   const recoilTilt = recoilEase * 0.05 * bossRecoilDir;
 
-  bossCtx.save();
-  bossCtx.translate(cx + recoilX, cy + bob + recoilY);
-  bossCtx.rotate(recoilTilt);
-  bossCtx.scale(breathe, breathe);
+  /* Ausholen (siehe ausholenWert): -1 zurueckgenommen, +1
+     vorgeschnellt. Ort, Neigung und Streckung zusammen - eine reine
+     Verschiebung saehe aus wie ein Ruck, eine reine Streckung wie
+     Gummi. */
+  const holen = ausholenWert(time, bossRageLevel);
 
-  if (boss.type === "storm") drawStormDemon(time, boss);
-  else if (boss.type === "ghost-captain") drawGhostCaptain(time, boss);
-  else if (boss.type === "serpent") drawSeaSerpent(time, boss);
-  else drawKraken(time, boss);
+  bossCtx.save();
+  bossCtx.translate(cx + recoilX + holen * 15, cy + bob + recoilY - holen * 7);
+  bossCtx.rotate(recoilTilt + holen * 0.03);
+  bossCtx.scale(breathe * (1 + holen * 0.07), breathe * (1 - holen * 0.045));
+
+  /* Kontur und Gegenlicht laufen ueber den Zwischenpuffer - die
+     Kreatur wird dafuer einmal hineingezeichnet und danach dreifach
+     ausgegeben (Schein, Saum, Figur). Steht kein Puffer zur
+     Verfuegung, wird direkt gezeichnet: dann fehlt die Kontur, aber
+     der Boss ist da. */
+  if (bossPufferBereit()) {
+    bossFigurFuellen(time, boss);
+    bossFigurAusgeben(bossCtx, rageColor,
+      0.14 + bossRageLevel * 0.30 + counterBoost * 0.45 + Math.max(0, holen) * 0.25);
+  } else {
+    bossKreaturZeichnen(time, boss);
+  }
 
   drawBossDamageCracks(time, rageColor);
 
@@ -408,38 +598,48 @@ function drawScarLine(ctx, x1, y1, x2, y2, color, width) {
   ctx.stroke();
 }
 
+/* Ein einzelner Arm. Ausgelagert, weil er jetzt aus zwei Ebenen
+   heraus aufgerufen wird - einmal hinter dem Mantel, einmal davor. */
+function krakenArm(ctx, i, time, hinten, farbe) {
+  const angle = (Math.PI / 5) * (i - 2.5);
+  /* Die hinteren Arme haben eine LAENGERE Periode und einen
+     kleineren Ausschlag. Liefen beide Ebenen im selben Takt, saehe
+     es aus wie ein Scherenschnitt - erst der Unterschied macht
+     Tiefe. */
+  const wave = Math.sin((hinten ? time / 820 : time / 500) + i) * (hinten ? 13 : 18);
+  const endX = Math.sin(angle) * 60 + wave * 1.6;
+  const endY = 175 + Math.abs(wave) * 0.3;
+  const midX = Math.sin(angle) * 90 + wave;
+  const midY = 110;
+  const startX = Math.sin(angle) * 30;
+
+  ctx.strokeStyle = farbe;
+  ctx.lineWidth = (hinten ? 11 : 13) - i * 0.6;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(startX, 40);
+  ctx.quadraticCurveTo(midX, midY, endX, endY);
+  ctx.stroke();
+
+  // Saugnaepfe nur vorne - hinten waeren sie in der Abdunklung
+  // ohnehin nicht zu sehen und nur Rechenarbeit.
+  if (hinten) return;
+  for (let s = 0.3; s < 0.95; s += 0.16) {
+    const sx = startX + (midX - startX) * s + (endX - midX) * Math.max(0, s - 0.5);
+    const sy = 40 + (midY - 40) * s + (endY - midY) * Math.max(0, s - 0.5);
+    drawDot(ctx, sx, sy, 2.2 - s, "rgba(20,8,3,.55)");
+  }
+}
+
 function drawKraken(time, boss) {
   const ctx = bossCtx;
 
-  // Tentakel, jeder mit eigener Wellenbewegung - jetzt mit
-  // Saugnapf-Reihen auf der Unterseite fuer mehr organische Detailtiefe
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 5) * (i - 2.5);
-    const wave = Math.sin(time / 500 + i) * 18;
-    const endX = Math.sin(angle) * 60 + wave * 1.6;
-    const endY = 175 + Math.abs(wave) * 0.3;
-    const midX = Math.sin(angle) * 90 + wave;
-    const midY = 110;
-    const startX = Math.sin(angle) * 30;
-
-    ctx.strokeStyle = boss.color;
-    ctx.lineWidth = 13 - i * 0.6;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(startX, 40);
-    ctx.quadraticCurveTo(midX, midY, endX, endY);
-    ctx.stroke();
-
-    // Saugnaepfe entlang der Tentakel-Mitte (nur bei den 4 vorderen,
-    // hinterste 2 bleiben glatt im Hintergrund - vermeidet Ueberladung)
-    if (i >= 1 && i <= 4) {
-      for (let s = 0.3; s < 0.95; s += 0.16) {
-        const sx = startX + (midX - startX) * s + (endX - midX) * Math.max(0, s - 0.5);
-        const sy = 40 + (midY - 40) * s + (endY - midY) * Math.max(0, s - 0.5);
-        drawDot(ctx, sx, sy, 2.2 - s, "rgba(20,8,3,.55)");
-      }
-    }
-  }
+  /* HINTERE EBENE: die beiden aeusseren Arme, deutlich abgedunkelt.
+     Sie werden vor dem Mantel gezeichnet und verschwinden damit
+     hinter ihm. */
+  const dunkel = mixHexColors(boss.color, "#0d0603", 0.58);
+  krakenArm(ctx, 0, time, true, dunkel);
+  krakenArm(ctx, 5, time, true, dunkel);
 
   // Kopf/Mantel - mit Rand-Rimlight fuer mehr Tiefe statt flachem Verlauf
   const grad = ctx.createRadialGradient(-20, -30, 10, 0, 0, 100);
@@ -502,6 +702,12 @@ function drawKraken(time, boss) {
   // Alte Narbe quer ueber den Mantel - individuelles Wiedererkennungsmerkmal
   drawScarLine(ctx, -50, -20, -20, 10, "rgba(15,6,2,.5)", 3);
   drawScarLine(ctx, -38, -6, -30, 16, "rgba(15,6,2,.5)", 2.5);
+
+  /* VORDERE EBENE: die vier inneren Arme in voller Farbe, NACH dem
+     Mantel. Sie laufen jetzt ueber ihn hinweg, statt an seinem Rand
+     zu enden - das ist der Unterschied zwischen einer Zeichnung und
+     einem Koerper. */
+  for (let i = 1; i <= 4; i++) krakenArm(ctx, i, time, false, boss.color);
 }
 
 function drawStormDemon(time, boss) {
@@ -511,6 +717,19 @@ function drawStormDemon(time, boss) {
   // HINTER dem Wirbel, damit eine humanoide Gestalt im Sturm erkennbar
   // wird statt nur loser Ringe (Punkt "geheimnisvolle Elemente")
   const cloakSway = Math.sin(time / 900) * 8;
+
+  /* HINTERE EBENE: zwei Wirbelringe HINTER der Robe, dunkler und mit
+     laengerer Periode. Vorher lagen alle fuenf Ringe vor ihr - der
+     Sturm klebte damit auf dem Umhang, statt ihn zu umgeben. */
+  for (let i = 0; i < 2; i++) {
+    const t = time / 950 + i * 0.7;
+    ctx.beginPath();
+    ctx.ellipse(Math.sin(t) * 14, -60 + i * 30, 110 - i * 12, 25,
+                Math.sin(t) * 0.15, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(10, 30, 58, ${0.5 - i * 0.09})`;
+    ctx.fill();
+  }
+
   ctx.fillStyle = "rgba(4, 9, 18, .8)";
   ctx.beginPath();
   ctx.moveTo(-58, -70);
@@ -521,8 +740,9 @@ function drawStormDemon(time, boss) {
   ctx.closePath();
   ctx.fill();
 
-  // Wirbelnder Sturm-Koerper (mehrere rotierende, versetzte Ellipsen)
-  for (let i = 0; i < 5; i++) {
+  /* VORDERE EBENE: die drei unteren Ringe vor der Robe, im
+     schnelleren Takt. */
+  for (let i = 2; i < 5; i++) {
     const t = time / 600 + i * 0.7;
     const ringY = -60 + i * 30;
     const ringW = 100 - i * 12;
@@ -613,6 +833,23 @@ function drawStormDemon(time, boss) {
 function drawGhostCaptain(time, boss) {
   const ctx = bossCtx;
   const flicker = 0.85 + Math.sin(time / 250) * 0.15;
+
+  /* HINTERE EBENE: die Rueckseite des Mantels. Dieselbe Form, aber
+     breiter, dunkler, seitlich versetzt und mit laengerer Periode -
+     als wehe der Stoff hinter ihm nach. Vorher war der Kapitaen
+     eine einzige flache Silhouette. */
+  const rueckSway = Math.sin(time / 640) * 10;
+  ctx.fillStyle = `rgba(24, 14, 7, ${flicker * 0.85})`;
+  ctx.beginPath();
+  ctx.moveTo(-84 + rueckSway * 0.3, -14);
+  for (let i = 0; i <= 6; i++) {
+    const x = -84 + i * (168 / 6) + rueckSway * 0.3;
+    ctx.lineTo(x, 96 + Math.sin(time / 640 + i * 0.9) * 15);
+  }
+  ctx.lineTo(84 + rueckSway * 0.3, -14);
+  ctx.quadraticCurveTo(0, -70, -84 + rueckSway * 0.3, -14);
+  ctx.closePath();
+  ctx.fill();
 
   // Saebel an der Seite (Waffe/Ausruestungsdetail) - hinter dem Mantel,
   // damit er wie am Guertel getragen wirkt
@@ -792,6 +1029,23 @@ function drawGhostCaptain(time, boss) {
 function drawSeaSerpent(time, boss) {
   const ctx = bossCtx;
 
+  /* HINTERE EBENE: eine zweite Windung desselben Leibes, dunkler,
+     duenner und phasenversetzt - der Koerper schlingt sich damit
+     sichtbar hinter sich selbst durch, statt eine einzelne Wurst
+     zu bleiben. */
+  ctx.strokeStyle = mixHexColors(boss.color, "#03140f", 0.6);
+  ctx.lineWidth = 26;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  for (let i = 0; i <= 60; i++) {
+    const t = i / 60;
+    const x = -104 + t * 210;
+    const y = Math.sin(t * Math.PI * 2.4 + time / 860 + 1.9) * 52 + 8;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
   // Geschwungener Koerper aus Segmenten
   ctx.strokeStyle = boss.color;
   ctx.lineWidth = 34;
@@ -898,9 +1152,19 @@ function drawSeaSerpent(time, boss) {
    ANGRIFFS-EFFEKTE: KANONENSCHUSS ODER SÄBEL-HIEB
    Wechselt bei jedem Angriff zufällig zwischen beiden.
 ------------------------------------------------------ */
-function spawnBossAttackEffect(kind, w, h) {
+function spawnBossAttackEffect(kind, w, h, einzel) {
   const cx = w / 2;
   const cy = h / 2 + 10;
+
+  /* Spezialangriffe bringen ihre eigene Zeichenroutine mit
+     (boss-spezial-fx.js). Kennt sie den Namen nicht, faellt es
+     stillschweigend auf die vier alten Effekte zurueck - ein neuer
+     Angriff ohne eigene Animation sieht dann eben aus wie bisher,
+     statt gar nicht zu erscheinen. */
+  if (window.fhBossSpezial && window.fhBossSpezial.kennt(kind)) {
+    bossEffects.push(window.fhBossSpezial.erzeugen(kind, w, h, einzel));
+    return;
+  }
 
   if (kind === "shot") {
     bossEffects.push({
@@ -956,6 +1220,8 @@ function drawBossEffects(time, w, h) {
 
   bossEffects.forEach((fx) => {
     const t = Math.min(1, (now - fx.startTime) / fx.duration);
+
+    if (window.fhBossSpezial && window.fhBossSpezial.zeichnen(bossCtx, fx, t)) return;
 
     if (fx.kind === "shot") {
       const x = fx.fromX + (fx.toX - fx.fromX) * t;
@@ -1175,6 +1441,18 @@ async function renderCommunityBossPage() {
   } else if (state.data.defeated) {
     if (attackBtn) attackBtn.disabled = true;
     if (statusEl) statusEl.textContent = "";
+  } else if (await bossWegPruefen()) {
+    /* Neuer Weg: die Sperre steht auf dem Server, nicht im Browser -
+       ein geleerter localStorage schaltet sie nicht mehr ab. */
+    const st = bossStatus || (await bossStatusLaden());
+    const gesperrt = !!(st && st.heuteSchonAngegriffen && !(st.zusatzAngriff > 0));
+    const ruhe = !!(st && st.ruheBis && new Date(st.ruheBis) > new Date());
+    if (attackBtn) attackBtn.disabled = gesperrt || ruhe;
+    if (statusEl) {
+      statusEl.textContent = ruhe
+        ? "💤 Du erholst dich noch vom letzten Schlag."
+        : (gesperrt ? "⏳ Du hast heute schon angegriffen - komm morgen wieder!" : "");
+    }
   } else if (hasAttackedToday()) {
     if (attackBtn) attackBtn.disabled = true;
     if (statusEl) statusEl.textContent = "⏳ Du hast heute schon angegriffen - komm morgen wieder!";
@@ -1182,7 +1460,117 @@ async function renderCommunityBossPage() {
     if (attackBtn) attackBtn.disabled = false;
     if (statusEl) statusEl.textContent = "";
   }
+
+  renderBossAngriffswahl();
 }
+
+/* ------------------------------------------------------
+   DIE ANGRIFFSWAHL
+   ---------------------------------------------------
+   Drei Grundangriffe stehen immer da, die Spezialangriffe kommen
+   dazu, sobald sie freigeschaltet sind. Nicht freigeschaltete
+   werden bewusst NICHT versteckt: man soll sehen, dass es sie gibt.
+   Sie stehen verschlossen daneben, ohne zu verraten, wie der Code
+   lautet.
+
+   Die ganze Leiste verschwindet, solange die Migration nicht
+   eingespielt ist - dann gibt es nur den einen Knopf wie bisher.
+------------------------------------------------------ */
+function renderBossAngriffswahl() {
+  const box = document.getElementById("boss-angriffswahl");
+  if (!box) return;
+
+  if (!bossNeuerWeg || typeof BOSS_GRUNDANGRIFFE === "undefined") {
+    box.hidden = true;
+    box.innerHTML = "";
+    return;
+  }
+  box.hidden = false;
+
+  const en = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  const st = bossStatus || {};
+  const frei = Array.isArray(st.frei) ? st.frei : [];
+  const zuletzt = st.spezialZuletzt || {};
+  const jetzt = Date.now();
+
+  function karte(a, spezial) {
+    const offen = !spezial || frei.indexOf(a.schluessel) >= 0;
+    // Wochensperre: der genaue Zeitpunkt steht im Katalog auf dem
+    // Server; hier reicht "noch gesperrt" oder "bereit".
+    const zul = zuletzt[a.schluessel] ? new Date(zuletzt[a.schluessel]).getTime() : 0;
+    const wartet = spezial && offen && zul && (jetzt - zul) < 1000 * 60 * 60 * 24 * 7;
+    const gewaehlt = bossGewaehlt === a.schluessel;
+
+    return `<button type="button"
+        class="fh-boss-angriff${gewaehlt ? " ist-gewaehlt" : ""}${offen ? "" : " ist-zu"}${wartet ? " ist-gesperrt" : ""}"
+        data-angriff="${a.schluessel}"
+        ${offen && !wartet ? "" : "disabled"}
+        aria-pressed="${gewaehlt ? "true" : "false"}">
+      <span class="fh-boss-angriff-symbol">${offen ? a.symbol : "🔒"}</span>
+      <span class="fh-boss-angriff-name">${offen ? escapeHtmlBoss(bossAngriffName(a)) : (en ? "Locked" : "Verschlossen")}</span>
+      <span class="fh-boss-angriff-text">${offen ? escapeHtmlBoss(bossAngriffText(a)) : (en ? "Find the secret code." : "Finde den Geheimcode.")}</span>
+      ${wartet ? `<span class="fh-boss-angriff-marke">${en ? "recharging" : "lädt nach"}</span>` : ""}
+    </button>`;
+  }
+
+  box.innerHTML = `
+    <p class="fh-boss-wahl-titel">${en ? "Choose your attack" : "Wähle deinen Angriff"}</p>
+    <div class="fh-boss-angriff-reihe">
+      ${BOSS_GRUNDANGRIFFE.map((a) => karte(a, false)).join("")}
+    </div>
+    <p class="fh-boss-wahl-titel">${en ? "Special attacks" : "Spezialangriffe"}</p>
+    <div class="fh-boss-angriff-reihe fh-boss-angriff-reihe-spezial">
+      ${BOSS_SPEZIALANGRIFFE.map((a) => karte(a, true)).join("")}
+    </div>
+    <form class="fh-boss-code" id="boss-code-form" autocomplete="off">
+      <label class="fh-boss-code-label" for="boss-code-input">
+        ${en ? "Unlock a special attack with a secret code"
+             : "Spezialangriff mit einem Geheimcode freischalten"}
+      </label>
+      <div class="fh-boss-code-reihe">
+        <input id="boss-code-input" class="fh-boss-code-input" type="text"
+               maxlength="40" spellcheck="false"
+               placeholder="${en ? "Secret code" : "Geheimcode"}">
+        <button type="submit" class="code-button fh-boss-code-btn">${en ? "Unlock" : "Einlösen"}</button>
+      </div>
+      <p class="fh-boss-code-status" id="boss-code-status" role="status"></p>
+    </form>`;
+
+  box.querySelectorAll(".fh-boss-angriff[data-angriff]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      bossGewaehlt = btn.getAttribute("data-angriff");
+      renderBossAngriffswahl();
+    });
+  });
+
+  const form = box.querySelector("#boss-code-form");
+  if (form) form.addEventListener("submit", bossCodeEinloesen);
+}
+
+async function bossCodeEinloesen(e) {
+  e.preventDefault();
+  const feld = document.getElementById("boss-code-input");
+  const statusEl = document.getElementById("boss-code-status");
+  const en = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  const code = (feld && feld.value || "").trim();
+  if (!code) return;
+
+  if (statusEl) statusEl.textContent = en ? "Checking ..." : "Wird geprüft ...";
+  const treffer = await bossSpezialFreischalten(code);
+
+  if (!treffer) {
+    if (statusEl) statusEl.textContent = en ? "❌ That code does not fit." : "❌ Dieser Code passt nicht.";
+    return;
+  }
+  const a = bossAngriffFinden(treffer);
+  if (statusEl) {
+    statusEl.textContent = (en ? "✅ Unlocked: " : "✅ Freigeschaltet: ") + bossAngriffName(a);
+  }
+  if (feld) feld.value = "";
+  bossGewaehlt = treffer;
+  renderBossAngriffswahl();
+}
+
 
 /* Rein visuelle Phasen anhand der vorhandenen HP-Prozentzahl
    (kein neues Backend-Feld nötig - siehe Punkt 7: "wenn das
@@ -1229,6 +1617,70 @@ function applyBossPhaseVisuals(phaseKey) {
     );
     el.classList.add(`fh-boss-phase-${phaseKey}`);
   });
+}
+
+/* ------------------------------------------------------
+   PHASENWECHSEL ALS EREIGNIS
+   ---------------------------------------------------
+   Bisher wechselte mit der Phase nur eine CSS-Klasse und eine
+   Nebelfarbe im Seitenhintergrund - beides so leise, dass der
+   Moment unterging. 66 % und 33 % sind aber die einzigen
+   Wegmarken eines Kampfes, der einen Monat dauert.
+
+   Jetzt gibt es einen einmaligen harten Moment: Farbschwall ueber
+   die Arena, aufreissender Ring, Ruettler, aufflammende Aura.
+
+   ZWEI ABSICHERUNGEN, die wichtiger sind als der Effekt selbst:
+   - Beim ERSTEN Zeichnen darf nichts ausgeloest werden. Wer die
+     Seite bei 40 % oeffnet, hat keinen Phasenwechsel erlebt.
+   - Nur wenn die Phase STEIGT. Zum Monatswechsel steht wieder ein
+     frischer Boss da; das ist ein Rueckschritt auf der Skala und
+     kein Ereignis.
+------------------------------------------------------ */
+function bossPhasenwechsel(phase) {
+  const vorher = bossLetztePhase;
+  bossLetztePhase = phase.index;
+
+  if (vorher === null) return;        // erstes Zeichnen
+  if (phase.index <= vorher) return;  // Rueckschritt (neuer Monat)
+
+  const jetzt = (typeof performance !== "undefined" && performance.now)
+    ? performance.now() : Date.now();
+
+  bossPhasenBlitzFarbe = BOSS_PHASEN_FARBEN[phase.key] || "#ffffff";
+  bossPhasenBlitzBis = jetzt + 1100;
+  // Ruettler und Aura laufen ueber die vorhandene Mechanik mit.
+  bossShakeUntil = jetzt + 420;
+  bossCounterAuraUntil = jetzt + 900;
+}
+
+/* Der Schwall selbst. Zwei Teile: eine Farbflaeche, die schnell
+   abklingt, und ein Ring, der die ganze Zeit ueber nach aussen
+   laeuft - der Ring traegt die Bewegung, die Flaeche die Wucht. */
+function drawBossPhasenBlitz(time, w, h) {
+  if (time >= bossPhasenBlitzBis) return;
+
+  const rest = (bossPhasenBlitzBis - time) / 1100;   // 1 -> 0
+  const ctx = bossCtx;
+  const cx = w / 2;
+  const cy = h / 2 + 10;
+
+  ctx.save();
+  /* Flaeche: klingt quadratisch ab, sitzt also nur im ersten Drittel.
+     Etwas ueber den Rand hinaus, weil zu diesem Zeitpunkt der
+     Ruettler laeuft - sonst bliebe an einer Kante ein Streifen
+     ungefaerbt stehen. */
+  ctx.fillStyle = hexToRgba(bossPhasenBlitzFarbe, rest * rest * 0.42);
+  ctx.fillRect(-14, -14, w + 28, h + 28);
+
+  // Ring: laeuft von innen nach aussen und wird dabei duenner.
+  const r = (1 - rest) * Math.max(w, h) * 0.62;
+  ctx.strokeStyle = hexToRgba(bossPhasenBlitzFarbe, rest * 0.85);
+  ctx.lineWidth = 2 + rest * 9;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 }
 
 /* ------------------------------------------------------
@@ -1297,6 +1749,7 @@ function applyBossHpDisplay(data, hpTextEl, hpFillEl, boss, defeatedBanner, atta
   if (phaseBadgeEl) phaseBadgeEl.textContent = phase.label;
   phaseBadgeEl?.setAttribute("data-phase", phase.key);
   applyBossPhaseVisuals(phase.key);
+  bossPhasenwechsel(phase);
 
   /* Der Nebel im Seitenhintergrund traegt die Farbe der aktuellen
      Phase (siehe Eintrag "community-boss" in
@@ -1336,12 +1789,87 @@ function updateBossResetCountdown(resetEl) {
 /* ------------------------------------------------------
    ANGREIFEN
 ------------------------------------------------------ */
-async function attackCommunityBoss() {
+/* ------------------------------------------------------
+   ZWEI WEGE ZUM ANGRIFF
+   ---------------------------------------------------
+   NEU: public.boss_attack(monat, angriff). Der Server entscheidet
+   ueber Berechtigung, Sperren und Schaden - der Client sagt nur,
+   WELCHEN Angriff er fuehrt.
+
+   ALT: attack_community_boss(monat, schaden). Der Client wuerfelt und
+   schickt den Schaden, der Server deckelt bei 45, die Tagessperre
+   steht im localStorage.
+
+   Warum beides: die Migration 10-boss-attacks.sql muss von Hand
+   eingespielt werden. Bis dahin gibt es die neuen Funktionen auf dem
+   Server schlicht nicht, und ein Angriff wuerde mit 404 scheitern.
+   Statt die Seite so lange kaputt zu lassen, wird EINMAL geprueft,
+   ob es sie gibt - danach steht der Weg fest.
+
+   bossNeuerWeg: null = noch nicht geprueft, true/false = steht fest.
+------------------------------------------------------ */
+let bossNeuerWeg = null;
+let bossStatus = null;      // Antwort von boss_attack_status()
+let bossGewaehlt = "saebel";
+
+async function bossWegPruefen() {
+  if (bossNeuerWeg !== null) return bossNeuerWeg;
+  if (!supabaseClient) return false;
+  try {
+    const { data, error } = await supabaseClient.rpc("boss_attack_status",
+      { p_month_id: getCurrentMonthId() });
+    if (error) throw error;
+    bossStatus = data || null;
+    bossNeuerWeg = true;
+  } catch (err) {
+    // PGRST202 "Could not find the function" - die Migration ist noch
+    // nicht eingespielt. Das ist kein Fehler, sondern der erwartete
+    // Zustand bis dahin.
+    bossNeuerWeg = false;
+    bossStatus = null;
+  }
+  return bossNeuerWeg;
+}
+
+async function bossStatusLaden() {
+  if (!(await bossWegPruefen())) return null;
+  try {
+    const { data, error } = await supabaseClient.rpc("boss_attack_status",
+      { p_month_id: getCurrentMonthId() });
+    if (error) throw error;
+    bossStatus = data || null;
+  } catch (err) { /* Anzeige bleibt beim letzten Stand */ }
+  return bossStatus;
+}
+
+/* Einen Geheimcode einloesen. Der Klartext geht an den Server, wird
+   dort gehasht und verglichen - im Browser liegt kein einziger Hash,
+   aus dem sich etwas erraten liesse. */
+async function bossSpezialFreischalten(code) {
+  if (!(await bossWegPruefen())) return null;
+  try {
+    const { data, error } = await supabaseClient.rpc("boss_unlock_special", { p_code: code });
+    if (error) throw error;
+    if (data) await bossStatusLaden();
+    return data || null;
+  } catch (err) {
+    console.warn("Code konnte nicht geprueft werden:", err);
+    return null;
+  }
+}
+
+async function attackCommunityBoss(art) {
   const attackBtn = document.getElementById("boss-attack-btn");
   const statusEl = document.getElementById("boss-status");
   const nickname = localStorage.getItem("wheelNickname") || "";
 
-  if (!nickname || !supabaseClient || hasAttackedToday()) return;
+  if (!nickname || !supabaseClient) return;
+
+  const neu = await bossWegPruefen();
+  if (neu) return attackCommunityBossNeu(art || bossGewaehlt, attackBtn, statusEl, nickname);
+
+  // ---- ab hier der alte Weg, unveraendert ----
+  if (hasAttackedToday()) return;
   if (attackBtn) attackBtn.disabled = true;
 
   const cfg = typeof communityBossConfig !== "undefined" ? communityBossConfig : { minDamagePerAttack: 15, maxDamagePerAttack: 45 };
@@ -1408,6 +1936,129 @@ async function attackCommunityBoss() {
     if (statusEl) statusEl.textContent = "⚠️ Angriff ist fehlgeschlagen, versuch's nochmal.";
     if (attackBtn) attackBtn.disabled = false;
   }
+}
+
+/* Die Fehler kommen als Postgres-Ausnahmen mit kurzen Schluesseln
+   herein ("heute-schon-angegriffen", "ruhepause-bis-2026-09-09..."),
+   weil sie dort zugleich der Abbruchgrund sind. Hier werden sie zu
+   Saetzen, die jemand lesen kann. */
+function bossFehlerText(meldung) {
+  const en = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  const m = String(meldung || "");
+  if (m.indexOf("heute-schon-angegriffen") >= 0)
+    return en ? "⏳ You already attacked today. Come back tomorrow."
+              : "⏳ Du hast heute schon angegriffen. Komm morgen wieder.";
+  if (m.indexOf("nicht-freigeschaltet") >= 0)
+    return en ? "🔒 You have not unlocked that attack yet."
+              : "🔒 Diesen Angriff hast du noch nicht freigeschaltet.";
+  if (m.indexOf("ruhepause-bis") >= 0)
+    return en ? "💤 Still recovering from the last blast."
+              : "💤 Du erholst dich noch vom letzten Schlag.";
+  if (m.indexOf("spezial-gesperrt-bis") >= 0)
+    return en ? "⌛ That special attack is still on cooldown."
+              : "⌛ Dieser Spezialangriff ist noch gesperrt.";
+  if (m.indexOf("nicht-angemeldet") >= 0)
+    return en ? "🔑 Sign in first." : "🔑 Melde dich zuerst an.";
+  return en ? "⚠️ The attack failed, try again."
+            : "⚠️ Angriff ist fehlgeschlagen, versuch's nochmal.";
+}
+
+/* Der neue Weg. Auffallend kurz im Vergleich zum alten - weil hier
+   nichts mehr entschieden wird. Kein Wuerfeln, kein Deckel, keine
+   Tagessperre im localStorage, und auch kein zweiter Schreibvorgang
+   fuer die Schadenssumme: all das macht public.boss_attack(). */
+async function attackCommunityBossNeu(art, attackBtn, statusEl, nickname) {
+  if (attackBtn) attackBtn.disabled = true;
+  const monthId = getCurrentMonthId();
+
+  try {
+    if (typeof wheelAuthReady !== "undefined") await wheelAuthReady;
+
+    const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.rpc("boss_attack", {
+        p_month_id: monthId, p_attack: art, p_nickname: nickname,
+      })
+    );
+    if (error) throw error;
+    if (!data) throw new Error("attack-failed");
+
+    const schaden = Number(data.schaden) || 0;
+    const einzel = data.einzel || {};
+
+    // Rein zusaetzliches Protokoll, wie bisher - ein Fehlschlag hier
+    // kann den bereits verbuchten Angriff nicht mehr beeinflussen.
+    if (typeof logBossAttackToSupabase === "function") {
+      logBossAttackToSupabase(nickname, monthId, schaden);
+    }
+
+    spawnBossHitEffect(schaden, art, einzel);
+    if (typeof awardActionXp === "function") awardActionXp("bossAttack");
+
+    if (data.besiegt && typeof window.fhCelebrationBurst === "function") {
+      const stage = document.getElementById("boss-stage");
+      if (stage) {
+        window.fhCelebrationBurst(stage, {
+          colors: [0xf0c96a, 0xff6b3d, 0x4da3ff, 0xffffff],
+          count: 130, duration: 2000, size: 12,
+        });
+      }
+    }
+
+    if (statusEl) statusEl.textContent = bossAngriffsMeldung(art, schaden, einzel, data);
+
+    await bossStatusLaden();
+    setTimeout(renderCommunityBossPage, 600);
+    setTimeout(() => renderBossLeaderboard(monthId), 700);
+  } catch (err) {
+    console.warn("Angriff abgelehnt:", err);
+    if (statusEl) statusEl.textContent = bossFehlerText(err && (err.message || err.hint || err.details));
+    if (attackBtn) attackBtn.disabled = false;
+    await bossStatusLaden();
+    setTimeout(renderCommunityBossPage, 300);
+  }
+}
+
+/* Was nach dem Angriff dasteht. Die Angriffe ohne eigenen Schaden
+   (Schlachtruf, Seemannslied) brauchen eine eigene Meldung - "0
+   Schaden" waere richtig und trotzdem irrefuehrend. */
+function bossAngriffsMeldung(art, schaden, einzel, data) {
+  const en = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  const a = typeof bossAngriffFinden === "function" ? bossAngriffFinden(art) : null;
+  const name = a ? bossAngriffName(a) : art;
+
+  if (art === "schlachtruf") {
+    return en ? `📣 War cry! For 24 hours everyone hits ${einzel.faktor || 1.5}x harder.`
+              : `📣 Schlachtruf! 24 Stunden lang treffen alle ${einzel.faktor || 1.5}-mal so hart.`;
+  }
+  if (art === "seemannslied") {
+    return en ? "🎶 The boss dozes off - everyone's next attack hits twice as hard."
+              : "🎶 Der Boss döst weg - der nächste Angriff von jedem trifft doppelt.";
+  }
+  if (art === "rechnung" && schaden === 0) {
+    return en ? "🧾 Nothing lost in the arcade today - the bill stays empty."
+              : "🧾 Heute nichts in der Spielothek verloren - die Rechnung bleibt leer.";
+  }
+  if (art === "slot" && schaden === 0) {
+    return en ? "🎰 A blank. Ändii shrugs." : "🎰 Niete. Ändii zuckt mit den Schultern.";
+  }
+
+  let text = en ? `⚔️ ${name}: ${schaden} damage!` : `⚔️ ${name}: ${schaden} Schaden!`;
+  if (einzel.verstaerkt) {
+    text += en ? ` (${einzel.verstaerkt}x from the war cry)`
+               : ` (${einzel.verstaerkt}-fach durch den Schlachtruf)`;
+  }
+  if (einzel.zusatzAngriff) {
+    text += en ? " You get another attack today!" : " Du bekommst heute noch einen Angriff!";
+  }
+  if (einzel.brandTage) {
+    text += en ? ` It burns for ${einzel.brandTage} more days.`
+               : ` Es brennt noch ${einzel.brandTage} Tage weiter.`;
+  }
+  if (data && Number(data.brandNachgetragen) > 0) {
+    text += en ? ` (+${data.brandNachgetragen} from the fire)`
+               : ` (+${data.brandNachgetragen} aus dem Brand)`;
+  }
+  return text;
 }
 
 /* ------------------------------------------------------
@@ -1555,20 +2206,28 @@ async function checkBossSlayerReward(monthId) {
   }
 }
 
-function spawnBossHitEffect(damage) {
+function spawnBossHitEffect(damage, art, einzel) {
   const stage = document.getElementById("boss-stage");
   if (!stage || !bossCanvas) return;
 
   const now = performance.now();
-  const kind = BOSS_ATTACK_KINDS[Math.floor(Math.random() * BOSS_ATTACK_KINDS.length)];
 
-  spawnBossAttackEffect(kind, bossCanvas.width, bossCanvas.height);
+  /* Ohne benannten Angriff (alter Weg, solange die Migration nicht
+     eingespielt ist) bleibt es bei der bisherigen Zufallsauswahl. */
+  const spezial = !!(art && window.fhBossSpezial && window.fhBossSpezial.kennt(art));
+  const kind = spezial
+    ? art
+    : BOSS_ATTACK_KINDS[Math.floor(Math.random() * BOSS_ATTACK_KINDS.length)];
+
+  spawnBossAttackEffect(kind, bossCanvas.width, bossCanvas.height, einzel);
 
   // Bildschirm-Wackler + kurzer Weißblitz, zeitlich an den jeweiligen
   // Effekt angepasst (jeder Angriffstyp braucht unterschiedlich lang,
   // bis er "einschlägt")
   const impactDelayByKind = { shot: 230, saber: 130, harpoon: 290, curse: 380 };
-  const impactDelay = impactDelayByKind[kind] || 200;
+  const impactDelay = spezial
+    ? window.fhBossSpezial.einschlagNach(art)
+    : (impactDelayByKind[kind] || 200);
   bossShakeUntil = now + impactDelay + 220;
   setTimeout(() => {
     const impactTime = performance.now();

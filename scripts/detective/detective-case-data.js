@@ -47,13 +47,62 @@ const DETECTIVE_CASE_SUSPECTS = [
   },
 ];
 
+/* "betrifft" verbindet einen Hinweis mit den Verdaechtigen, um die
+   es dabei geht. Daraus zieht die Ermittlungstafel ihre roten
+   Faeden: waehlt man jemanden aus, leuchten genau die Zettel auf,
+   die etwas ueber ihn sagen.
+
+   "art" unterscheidet dabei, WAS der Hinweis sagt:
+     entlastet    - spricht fuer den Verdaechtigen
+     belastet     - spricht gegen ihn
+     widerspruch  - steht im Widerspruch zu seiner eigenen Aussage
+   Das ist der eigentliche Kern des Falls: nicht wer keine Zeugen
+   hat, sondern wer sich selbst widerspricht. */
 const DETECTIVE_CASE_CLUES = [
-  { id: "logbook", icon: "📖", key: "logbook" },
-  { id: "lookout-statement", icon: "🔭", key: "lookoutStatement" },
-  { id: "footprints", icon: "👣", key: "footprints" },
-  { id: "kitchen-log", icon: "🍲", key: "kitchenLog" },
-  { id: "bell", icon: "🔔", key: "bell" },
-  { id: "red-coat", icon: "📕", key: "redCoat" },
+  { id: "logbook",           icon: "📖", key: "logbook",          betrifft: [],                art: null },
+  { id: "lookout-statement", icon: "🔭", key: "lookoutStatement",  betrifft: ["finn"],          art: "entlastet" },
+  { id: "footprints",        icon: "👣", key: "footprints",        betrifft: ["flitz"],         art: "widerspruch" },
+  { id: "kitchen-log",       icon: "🍲", key: "kitchenLog",        betrifft: ["bruno"],         art: "entlastet" },
+  { id: "bell",              icon: "🔔", key: "bell",              betrifft: [],                art: null },
+  { id: "red-coat",          icon: "📕", key: "redCoat",           betrifft: ["flitz", "finn"], art: "widerspruch" },
+];
+
+/* ======================================================
+   DER ZEITSTRAHL DER TATNACHT
+   ---------------------------------------------------
+   Der Widerspruch im Fall liegt in den UHRZEITEN - er stand aber
+   nur in vier Textabsaetzen verteilt, die man im Kopf
+   uebereinanderlegen musste. Nebeneinander auf einer Zeitachse
+   sieht man ihn.
+
+   Alle Zeiten in Minuten nach 22:00 Uhr. Die Achse laeuft von
+   22:00 bis 00:00, also 0 bis 120.
+
+   WICHTIG: jeder Eintrag haengt an einem Hinweis ("aus"). Er
+   erscheint erst, wenn dieser Hinweis untersucht wurde. Der
+   Zeitstrahl fuellt sich also mit der Ermittlung, statt die Loesung
+   von Anfang an hinzulegen. Eintraege mit aus: "immer" stehen von
+   Beginn an da - sie sind der Rahmen, nicht die Erkenntnis.
+====================================== */
+const DETECTIVE_ZEITSTRAHL_VON = 0;    // 22:00
+const DETECTIVE_ZEITSTRAHL_BIS = 120;  // 00:00
+
+const DETECTIVE_ZEITSTRAHL = [
+  /* --- Balken: wo jemand nach eigener oder fremder Aussage war --- */
+  { art: "balken", wer: "flitz", von: 0,  bis: 120, aus: "immer",
+    key: "flitzKajuete", bestaetigt: false },
+  { art: "balken", wer: "andii", von: 0,  bis: 120, aus: "immer",
+    key: "andiiSpielothek", bestaetigt: true },
+  { art: "balken", wer: "bruno", von: 0,  bis: 75,  aus: "kitchen-log",
+    key: "brunoKombuese", bestaetigt: true },
+  { art: "balken", wer: "finn",  von: 60, bis: 80,  aus: "lookout-statement",
+    key: "finnAusguck", bestaetigt: false },
+
+  /* --- Ereignisse: was zu einer bestimmten Minute geschah --- */
+  { art: "punkt", zeit: 70, aus: "logbook",   key: "kammerOffen",  gewicht: "schwer" },
+  { art: "punkt", zeit: 72, aus: "bell",      key: "gloeckchen",   gewicht: "leicht" },
+  { art: "punkt", zeit: 73, aus: "red-coat",  key: "roterMantel",  gewicht: "schwer" },
+  { art: "punkt", zeit: 70, aus: "footprints", key: "stiefel",     gewicht: "schwer" },
 ];
 
 // SHA-256("flitz") - siehe Sicherheitshinweis oben.

@@ -1,5 +1,5 @@
 /* ======================================================
-   PIRATENPASS-ENDBELOHNUNG: LIMITIERTE "FLITZPIEPEN"-CAP (9 STUECK)
+   PIRATENPASS-ENDBELOHNUNG: LIMITIERTE "FLITZPIEPEN"-CAP (4 STUECK)
    ---------------------------------------------------
    Baut auf 01-players-ship-progression.sql auf (app.firebase_uid()
    muss bereits existieren). Gleiches Architekturprinzip wie beim
@@ -12,7 +12,7 @@
    Die Vergabe der Cap laeuft deshalb ausschliesslich ueber
    app.claim_pass_cap() unten (SECURITY DEFINER).
 
-   Sobald alle 9 Caps vergeben sind, bekommt jede weitere Person, die
+   Sobald alle 4 Caps vergeben sind, bekommt jede weitere Person, die
    Stufe 50 erreicht, stattdessen PASS_CAP_FALLBACK_CURRENCY Dublonen
    (500 - siehe Konstante unten UND PASS_CAP_FALLBACK_CURRENCY in
    scripts/core/progression-data.js, dort nur fuer Anzeigetexte, hier
@@ -23,9 +23,9 @@
    TABELLE: pass_cap_state
    ---------------------------------------------------
    Genau EINE Zeile ('cap'), "granted" zaehlt die bereits vergebenen
-   Caps hoch. Die Grenze von 9 ist NICHT allein die CHECK-Constraint
+   Caps hoch. Die Grenze von 4 ist NICHT allein die CHECK-Constraint
    (die verhindert nur einen ungueltigen Endzustand), sondern das
-   atomare "UPDATE ... WHERE granted < 9 ... RETURNING" in
+   atomare "UPDATE ... WHERE granted < 4 ... RETURNING" in
    app.claim_pass_cap() weiter unten - Postgres serialisiert
    konkurrierende UPDATEs auf dieselbe Zeile automatisch (Row-Lock),
    zwei gleichzeitige Anfragen koennen strukturell nie beide dieselbe,
@@ -36,7 +36,7 @@ create table public.pass_cap_state (
   granted integer not null default 0,
 
   constraint pass_cap_state_id_fixed check (id = 'cap'),
-  constraint pass_cap_state_granted_range check (granted >= 0 and granted <= 9)
+  constraint pass_cap_state_granted_range check (granted >= 0 and granted <= 4)
 );
 
 insert into public.pass_cap_state (id, granted) values ('cap', 0);
@@ -54,7 +54,7 @@ create policy "pass_cap_state_select_public" on public.pass_cap_state
 /* ------------------------------------------------------
    TABELLE: pass_cap_grants
    ---------------------------------------------------
-   Oeffentlich lesbare Liste der (hoechstens 9) tatsaechlichen Cap-
+   Oeffentlich lesbare Liste der (hoechstens 4) tatsaechlichen Cap-
    Gewinner:innen - EINZIGE Quelle fuer das Cap-Abzeichen auf dem
    Avatar (Rangliste, Spielerkarte, Boss-Rangliste, siehe
    fetchPassCapWinnerUids() in wheel.js). Bewusst eine eigene Tabelle
@@ -160,7 +160,7 @@ begin
 
   update public.pass_cap_state
     set granted = granted + 1
-    where id = 'cap' and granted < 9
+    where id = 'cap' and granted < 4
     returning granted into new_granted;
 
   if found then

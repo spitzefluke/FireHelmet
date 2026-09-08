@@ -9,7 +9,7 @@
 // Admin-Gateway ein eigener Termin in Firestore hinterlegt
 // (siteConfig.mainCountdownTarget, siehe scripts/core/site-config.js),
 // wird DER stattdessen verwendet - siehe getTargetDate() unten.
-const fallbackTargetDate = new Date("2026-10-10T20:00:00");
+const fallbackTargetDate = new Date("2026-12-29T20:00:00");
 
 function getTargetDate() {
   const override = typeof siteConfig !== "undefined" ? siteConfig.mainCountdownTarget : null;

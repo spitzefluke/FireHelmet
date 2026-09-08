@@ -425,33 +425,71 @@ void main() {
 `;
 
   /* =========================================================
-     DER FALL - SUCHSCHEINWERFER
-     Ein schmaler Strahl dreht sich langsam ueber dunklem Grund.
-     Dazu ein Hauch Filmkorn - das ist der Noir-Anteil.
+     DER FALL - KAPITAENSKAJUETE BEI LAMPENLICHT
+     ---------------------------------------------------
+     Vorher drehte sich hier ein Suchscheinwerfer. Der gehoert an
+     eine Gefaengnismauer, nicht auf ein Schiff - und er passte
+     schon gar nicht zu einer Ermittlungstafel, die an einer Wand
+     haengt. Jetzt ist es ein Raum: dunkles Holz, eine schwankende
+     Oellampe als einzige Lichtquelle, und Schatten, die mit ihr
+     mitwandern.
+
+     Der Seegang steuert alles aus EINER Zahl (schwung). Liefen
+     Lampe, Lichtkegel und Schatten getrennt, waeren es drei Dinge,
+     die zufaellig gleichzeitig wackeln - mit einer gemeinsamen
+     Quelle ist es ein Schiff, das sich bewegt.
   ========================================================= */
   const FALL = `
 void main() {
   vec2 uv = bild();
-  vec2 p  = gleich() - vec2(uRes.x / uRes.y * 0.5, 0.45);
+  float seite = uRes.x / uRes.y;
+  vec2 p = gleich();
 
-  float winkel = atan(p.y, p.x);
-  float dreh = uTime * 0.16;
+  /* Der Seegang. Zwei ungleiche Perioden, damit es nicht metronomisch
+     wird - ein Schiff schaukelt nicht im Takt. */
+  float schwung = sin(uTime * 0.42) * 0.6 + sin(uTime * 0.23 + 1.3) * 0.4;
 
-  /* Zwei Strahlen gegenueber - sonst ist die Flaeche zu lange dunkel. */
-  float s1 = abs(sin((winkel - dreh) * 0.5));
-  float strahl = pow(1.0 - s1, 13.0);
+  /* Die Lampe haengt oben und pendelt mit. */
+  vec2 lampe = vec2(seite * 0.5 + schwung * 0.075, 0.14);
 
-  float weite = smoothstep(1.4, 0.05, length(p));
-  vec3 farbe = vec3(0.86, 0.82, 0.68) * strahl * weite * 0.80;
+  /* Ihr Licht: nah hell, nach aussen schnell abfallend. Der Flackerwert
+     ist bewusst schwach - eine Lampe, die sichtbar blinkt, sieht nach
+     Wackelkontakt aus, nicht nach Docht. */
+  float flackern = 0.94 + 0.06 * sin(uTime * 7.3) * sin(uTime * 3.1);
+  vec2 d = p - lampe;
+  float licht = exp(-dot(d, d) * 3.4) * flackern;
 
-  /* Filmkorn: unruhig, aber sehr schwach. */
-  float korn = hash21(gl_FragCoord.xy + floor(uTime * 24.0));
-  farbe += vec3(korn) * 0.020;
+  vec3 farbe = vec3(1.00, 0.72, 0.38) * licht * 0.85;
 
-  /* Randabdunklung - der Blick soll in der Mitte bleiben. */
-  farbe *= smoothstep(1.25, 0.25, length(uv - 0.5));
+  /* Der Docht selbst - ein kleiner, harter Kern im Zentrum. */
+  farbe += vec3(1.0, 0.92, 0.72) * exp(-dot(d, d) * 90.0) * 0.55;
 
-  ausgeben(farbe, max(max(farbe.r, farbe.g), farbe.b) * 1.7);
+  /* Die Holzwand dahinter. Waagerechte Planken mit unruhiger
+     Maserung; sie wird nur dort sichtbar, wo Licht hinfaellt. */
+  float planke = fract(p.y * 5.2);
+  float fuge = smoothstep(0.045, 0.0, min(planke, 1.0 - planke));
+  float maser = fbm(vec2(p.x * 2.2, p.y * 24.0)) * 0.5 + 0.5;
+
+  vec3 holz = mix(vec3(0.26, 0.15, 0.08), vec3(0.38, 0.23, 0.12), maser);
+  holz = mix(holz, vec3(0.12, 0.07, 0.04), fuge);
+  farbe += holz * licht * 1.15;
+
+  /* Schatten, die mit der Lampe wandern: zwei senkrechte Streifen,
+     die sich gegenlaeufig zum Pendel verschieben - so, wie ein
+     Balken vor der Lampe seinen Schatten wirft. */
+  float b1 = smoothstep(0.055, 0.0, abs(p.x - (seite * 0.20 - schwung * 0.13)));
+  float b2 = smoothstep(0.045, 0.0, abs(p.x - (seite * 0.80 - schwung * 0.17)));
+  farbe *= 1.0 - (b1 + b2) * 0.55;
+
+  /* Aussen wird es dunkel - die Lampe reicht nicht bis in die Ecken.
+     Genau das macht die Kajuete zum Raum statt zur Flaeche. */
+  farbe *= smoothstep(1.35, 0.20, length(uv - vec2(0.5, 0.38)));
+
+  /* Ein Hauch Staub im Lichtkegel. */
+  float korn = hash21(gl_FragCoord.xy + floor(uTime * 12.0));
+  farbe += vec3(korn) * licht * 0.045;
+
+  ausgeben(farbe, max(max(farbe.r, farbe.g), farbe.b) * 1.6);
 }
 `;
 
@@ -501,28 +539,82 @@ void main() {
      Strecke dazu, passt der Hintergrund von selbst.
   ========================================================= */
   const RENNEN = `
-uniform vec3 uGrund;
-uniform vec3 uAkzent;
+uniform vec3  uGrund;
+uniform vec3  uAkzent;
+uniform float uStil;   // 0 neutral, 1 Hitze, 2 Neon, 3 Sturm, 4 Wasser, 5 Wolken
+
+/* Ob ein Stil gemeint ist. Ganzzahlvergleich in float - der Wert
+   kommt aus einer festen Tabelle, es gibt also keine krummen
+   Zwischenwerte, gegen die man sich absichern muesste. */
+float ist(float wert) { return step(wert - 0.5, uStil) * step(uStil, wert + 0.5); }
 
 void main() {
   vec2 uv = bild();
   vec2 p  = gleich();
 
+  /* HITZE: der ganze Blick flimmert, wie ueber heissem Sand. Die
+     Verzerrung sitzt VOR allem anderen, damit auch die Streifen
+     mitwabern - ein flimmernder Untergrund unter starren Streifen
+     saehe aus wie ein Fehler. */
+  float hitze = ist(1.0);
+  p.x += hitze * sin(p.y * 22.0 + uTime * 3.4) * 0.010;
+  p.y += hitze * sin(p.x * 17.0 + uTime * 2.6) * 0.006;
+  uv.x += hitze * sin(uv.y * 30.0 + uTime * 3.1) * 0.006;
+
   /* Ziehende Schwaden in der Grundfarbe der Strecke - Staub,
-     Wasser oder Wolken, je nachdem. */
-  float dunst = fbm(vec2(p.x * 1.6 - uTime * 0.10, p.y * 2.6 + uTime * 0.03));
+     Wasser oder Wolken, je nachdem. Wasser zieht langsamer und
+     breiter, Wolken noch langsamer. */
+  float tempoDunst = 0.10 + ist(4.0) * (-0.055) + ist(5.0) * (-0.07);
+  float dunst = fbm(vec2(p.x * 1.6 - uTime * tempoDunst, p.y * 2.6 + uTime * 0.03));
   vec3 farbe = uGrund * smoothstep(0.30, 0.85, dunst) * 0.55;
 
-  /* Waagerechte Tempo-Streifen in der Akzentfarbe. */
+  /* Tempo-Streifen. Beim Neon-Stil sind sie schmaler, schneller und
+     kraeftiger - dort SIND sie das Motiv, nicht nur Beiwerk. */
+  float neon = ist(2.0);
+  float schaerfe = mix(0.006, 0.0025, neon);
+  float staerke  = mix(0.55, 1.15, neon);
+  float zahl     = mix(1.0, 1.7, neon);
+
   for (int k = 0; k < 5; k++) {
     float f = float(k);
     float y = hash11(f * 5.7);
-    float tempo = 0.35 + hash11(f * 3.3) * 0.55;
+    float tempo = (0.35 + hash11(f * 3.3) * 0.55) * zahl;
     float x = fract(uTime * tempo + hash11(f * 8.1));
 
-    float band = smoothstep(0.006, 0.0, abs(uv.y - y));
+    float band = smoothstep(schaerfe, 0.0, abs(uv.y - y));
     float kopf = smoothstep(0.22, 0.0, abs(uv.x - x));
-    farbe += uAkzent * band * kopf * 0.55;
+    farbe += uAkzent * band * kopf * staerke;
+  }
+
+  /* WASSER: lange, flache Wellenkaemme, die von unten heraufziehen. */
+  float wasser = ist(4.0);
+  if (wasser > 0.5) {
+    float w = sin(uv.y * 26.0 - uTime * 0.9 + sin(uv.x * 3.0 + uTime * 0.4) * 1.4);
+    farbe += uAkzent * smoothstep(0.86, 1.0, w) * 0.30 * smoothstep(0.0, 0.7, uv.y);
+  }
+
+  /* WOLKEN: breite, weiche Baender, die waagerecht durchziehen. */
+  float wolken = ist(5.0);
+  if (wolken > 0.5) {
+    float b = fbm(vec2(p.x * 0.9 - uTime * 0.045, p.y * 1.8));
+    farbe += uAkzent * smoothstep(0.55, 0.95, b) * 0.28;
+  }
+
+  /* STURM: unregelmaessige Blitze. Ein Blitz braucht einen harten
+     Einsatz und ein weiches Nachglimmen - deshalb der steile
+     smoothstep auf den Bruchteil der Sekunde, nicht ein Sinus. */
+  float sturm = ist(3.0);
+  if (sturm > 0.5) {
+    float takt = floor(uTime * 0.7);
+    float rest = fract(uTime * 0.7);
+    float wann = hash11(takt * 7.3);
+    if (wann > 0.62) {
+      float schlag = smoothstep(0.10, 0.0, rest) + smoothstep(0.30, 0.16, rest) * 0.35;
+      float wo = hash11(takt * 3.1);
+      float naehe = smoothstep(0.35, 0.0, abs(uv.x - wo));
+      farbe += uAkzent * schlag * naehe * 0.9;
+      farbe += vec3(0.9) * schlag * 0.10;
+    }
   }
 
   /* Horizont: unten heller, wie aufgewirbelter Untergrund. */
@@ -808,14 +900,22 @@ void main() {
     race: function (THREE) {
       const ersatzGrund  = new THREE.Vector3(0.35, 0.27, 0.15);
       const ersatzAkzent = new THREE.Vector3(1.00, 0.84, 0.42);
+      /* Die Bewegungsart je Strecke. Die Farben ziehen weich nach
+         (lerp), der Stil springt - ein halb geflimmerter, halb
+         gewellter Zwischenzustand ergaebe kein Bild. Bei einem
+         unbekannten Namen bleibt es beim neutralen Lauf, eine neue
+         Strecke ohne "stil" faellt also nicht aus. */
+      const STILE = { hitze: 1, neon: 2, sturm: 3, wasser: 4, wolken: 5 };
       return flaeche(THREE, RENNEN,
         { uGrund:  { value: ersatzGrund.clone() },
-          uAkzent: { value: ersatzAkzent.clone() } },
+          uAkzent: { value: ersatzAkzent.clone() },
+          uStil:   { value: 0 } },
         function (u) {
           const t = window.fhRennThema;
           if (!t) return;
           u.uGrund.value.lerp(tonAus(THREE, t.grass, ersatzGrund), 0.03);
           u.uAkzent.value.lerp(tonAus(THREE, t.accent, ersatzAkzent), 0.03);
+          u.uStil.value = STILE[t.stil] || 0;
         });
     },
   };
