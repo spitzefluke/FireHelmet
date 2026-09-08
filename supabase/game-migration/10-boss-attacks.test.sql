@@ -274,5 +274,36 @@ select pruef(
   'TEST12 boss_attack_status liefert Freischaltungen und Sperren') from s;
 reset role;
 
+-- ============================================================
+-- TEST 13: Die persoenliche Schadenssumme waechst MIT
+--          Frueher schrieb der Browser sie in einem zweiten Aufruf -
+--          und scheiterte dabei am 45er-Deckel der Policy, sobald ein
+--          Spezialangriff mehr machte. Der Boss verlor HP, die
+--          Rangliste sah es nicht.
+-- ============================================================
+set role postgres;
+delete from public.boss_attack_state;
+delete from public.boss_community_buff;
+delete from public.community_boss_damage;
+update public.community_boss set hp = 5000, defeated = false where month_id = '2026-09';
+insert into public.boss_attack_state (firebase_uid, frei)
+  values ('a0000000-0000-0000-0000-000000000001', array['fass']);
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims','{"sub":"a0000000-0000-0000-0000-000000000001"}',false);
+with r as (select public.boss_attack('2026-09','fass','Anna') as j)
+select pruef((r.j ->> 'schaden')::int = 400, 'TEST13a das Fass macht 400') from r;
+reset role;
+
+select pruef(
+  (select total_damage from public.community_boss_damage
+    where month_id='2026-09' and firebase_uid='a0000000-0000-0000-0000-000000000001') = 400,
+  'TEST13b die Schadenssumme steht auf 400, nicht auf 45');
+select pruef(
+  (select nickname from public.community_boss_damage
+    where month_id='2026-09' and firebase_uid='a0000000-0000-0000-0000-000000000001') = 'Anna',
+  'TEST13c der Anzeigename ist mitgekommen');
+
 drop function if exists pruef(boolean, text);
 drop function if exists pruef_wirft(text, text);

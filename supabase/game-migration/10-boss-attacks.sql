@@ -452,7 +452,7 @@ as $$ select app.boss_attack_status(p_month_id) $$;
    Anfragen desselben Spielers (Doppelklick, zwei Reiter) laufen damit
    nacheinander, und die zweite sieht die Tagessperre der ersten.
 ====================================================== */
-create or replace function app.boss_attack(p_month_id text, p_attack text)
+create or replace function app.boss_attack(p_month_id text, p_attack text, p_nickname text default null)
 returns jsonb
 language plpgsql security definer set search_path = public, app, extensions
 as $$
@@ -642,6 +642,24 @@ begin
     raise exception 'kein-boss-fuer-%', p_month_id;
   end if;
 
+  /* Die persoenliche Schadenssumme gehoert MIT hier hinein, nicht in
+     einen zweiten Aufruf vom Browser aus: die Policy laesst dort nur
+     45 auf einmal zu, und die hoehere Grenze gilt ausschliesslich
+     innerhalb dieser Transaktion (Sitzungsmarke oben). Ein
+     Spezialangriff mit 400 Schaden waere sonst zwar beim Boss
+     angekommen, in der Rangliste aber nicht.
+
+     Der Anzeigename kommt vom Client - er steht nirgends sonst
+     zuverlaessig. Fehlt er, bleibt der bisherige stehen. */
+  if schaden > 0 then
+    insert into public.community_boss_damage (month_id, firebase_uid, nickname, total_damage)
+         values (p_month_id, uid, coalesce(nullif(btrim(p_nickname), ''), 'Pirat'), schaden)
+    on conflict (month_id, firebase_uid) do update
+       set total_damage = public.community_boss_damage.total_damage + schaden,
+           nickname = coalesce(nullif(btrim(p_nickname), ''), public.community_boss_damage.nickname),
+           updated_at = now();
+  end if;
+
   /* ---------- Zustand fortschreiben ---------- */
   update public.boss_attack_state
      set letzter_angriff = case when d.art = 'grund' then now() else letzter_angriff end,
@@ -665,10 +683,10 @@ begin
 end;
 $$;
 
-create or replace function public.boss_attack(p_month_id text, p_attack text)
+create or replace function public.boss_attack(p_month_id text, p_attack text, p_nickname text default null)
 returns jsonb
 language sql security definer set search_path = public, app, extensions
-as $$ select app.boss_attack(p_month_id, p_attack) $$;
+as $$ select app.boss_attack(p_month_id, p_attack, p_nickname) $$;
 
 
 /* ======================================================
@@ -679,8 +697,8 @@ as $$ select app.boss_attack(p_month_id, p_attack) $$;
    Wrapper reicht nur durch, die aufrufende Rolle braucht das Recht
    auf beide Funktionen.
 ====================================================== */
-grant execute on function app.boss_attack(text, text)          to authenticated;
-grant execute on function public.boss_attack(text, text)       to authenticated;
+grant execute on function app.boss_attack(text, text, text)    to authenticated;
+grant execute on function public.boss_attack(text, text, text) to authenticated;
 grant execute on function app.boss_unlock_special(text)        to authenticated;
 grant execute on function public.boss_unlock_special(text)     to authenticated;
 grant execute on function app.boss_attack_status(text)         to authenticated;

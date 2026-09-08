@@ -1152,9 +1152,19 @@ function drawSeaSerpent(time, boss) {
    ANGRIFFS-EFFEKTE: KANONENSCHUSS ODER SÄBEL-HIEB
    Wechselt bei jedem Angriff zufällig zwischen beiden.
 ------------------------------------------------------ */
-function spawnBossAttackEffect(kind, w, h) {
+function spawnBossAttackEffect(kind, w, h, einzel) {
   const cx = w / 2;
   const cy = h / 2 + 10;
+
+  /* Spezialangriffe bringen ihre eigene Zeichenroutine mit
+     (boss-spezial-fx.js). Kennt sie den Namen nicht, faellt es
+     stillschweigend auf die vier alten Effekte zurueck - ein neuer
+     Angriff ohne eigene Animation sieht dann eben aus wie bisher,
+     statt gar nicht zu erscheinen. */
+  if (window.fhBossSpezial && window.fhBossSpezial.kennt(kind)) {
+    bossEffects.push(window.fhBossSpezial.erzeugen(kind, w, h, einzel));
+    return;
+  }
 
   if (kind === "shot") {
     bossEffects.push({
@@ -1210,6 +1220,8 @@ function drawBossEffects(time, w, h) {
 
   bossEffects.forEach((fx) => {
     const t = Math.min(1, (now - fx.startTime) / fx.duration);
+
+    if (window.fhBossSpezial && window.fhBossSpezial.zeichnen(bossCtx, fx, t)) return;
 
     if (fx.kind === "shot") {
       const x = fx.fromX + (fx.toX - fx.fromX) * t;
@@ -1429,6 +1441,18 @@ async function renderCommunityBossPage() {
   } else if (state.data.defeated) {
     if (attackBtn) attackBtn.disabled = true;
     if (statusEl) statusEl.textContent = "";
+  } else if (await bossWegPruefen()) {
+    /* Neuer Weg: die Sperre steht auf dem Server, nicht im Browser -
+       ein geleerter localStorage schaltet sie nicht mehr ab. */
+    const st = bossStatus || (await bossStatusLaden());
+    const gesperrt = !!(st && st.heuteSchonAngegriffen && !(st.zusatzAngriff > 0));
+    const ruhe = !!(st && st.ruheBis && new Date(st.ruheBis) > new Date());
+    if (attackBtn) attackBtn.disabled = gesperrt || ruhe;
+    if (statusEl) {
+      statusEl.textContent = ruhe
+        ? "💤 Du erholst dich noch vom letzten Schlag."
+        : (gesperrt ? "⏳ Du hast heute schon angegriffen - komm morgen wieder!" : "");
+    }
   } else if (hasAttackedToday()) {
     if (attackBtn) attackBtn.disabled = true;
     if (statusEl) statusEl.textContent = "⏳ Du hast heute schon angegriffen - komm morgen wieder!";
@@ -1436,7 +1460,117 @@ async function renderCommunityBossPage() {
     if (attackBtn) attackBtn.disabled = false;
     if (statusEl) statusEl.textContent = "";
   }
+
+  renderBossAngriffswahl();
 }
+
+/* ------------------------------------------------------
+   DIE ANGRIFFSWAHL
+   ---------------------------------------------------
+   Drei Grundangriffe stehen immer da, die Spezialangriffe kommen
+   dazu, sobald sie freigeschaltet sind. Nicht freigeschaltete
+   werden bewusst NICHT versteckt: man soll sehen, dass es sie gibt.
+   Sie stehen verschlossen daneben, ohne zu verraten, wie der Code
+   lautet.
+
+   Die ganze Leiste verschwindet, solange die Migration nicht
+   eingespielt ist - dann gibt es nur den einen Knopf wie bisher.
+------------------------------------------------------ */
+function renderBossAngriffswahl() {
+  const box = document.getElementById("boss-angriffswahl");
+  if (!box) return;
+
+  if (!bossNeuerWeg || typeof BOSS_GRUNDANGRIFFE === "undefined") {
+    box.hidden = true;
+    box.innerHTML = "";
+    return;
+  }
+  box.hidden = false;
+
+  const en = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  const st = bossStatus || {};
+  const frei = Array.isArray(st.frei) ? st.frei : [];
+  const zuletzt = st.spezialZuletzt || {};
+  const jetzt = Date.now();
+
+  function karte(a, spezial) {
+    const offen = !spezial || frei.indexOf(a.schluessel) >= 0;
+    // Wochensperre: der genaue Zeitpunkt steht im Katalog auf dem
+    // Server; hier reicht "noch gesperrt" oder "bereit".
+    const zul = zuletzt[a.schluessel] ? new Date(zuletzt[a.schluessel]).getTime() : 0;
+    const wartet = spezial && offen && zul && (jetzt - zul) < 1000 * 60 * 60 * 24 * 7;
+    const gewaehlt = bossGewaehlt === a.schluessel;
+
+    return `<button type="button"
+        class="fh-boss-angriff${gewaehlt ? " ist-gewaehlt" : ""}${offen ? "" : " ist-zu"}${wartet ? " ist-gesperrt" : ""}"
+        data-angriff="${a.schluessel}"
+        ${offen && !wartet ? "" : "disabled"}
+        aria-pressed="${gewaehlt ? "true" : "false"}">
+      <span class="fh-boss-angriff-symbol">${offen ? a.symbol : "🔒"}</span>
+      <span class="fh-boss-angriff-name">${offen ? escapeHtmlBoss(bossAngriffName(a)) : (en ? "Locked" : "Verschlossen")}</span>
+      <span class="fh-boss-angriff-text">${offen ? escapeHtmlBoss(bossAngriffText(a)) : (en ? "Find the secret code." : "Finde den Geheimcode.")}</span>
+      ${wartet ? `<span class="fh-boss-angriff-marke">${en ? "recharging" : "lädt nach"}</span>` : ""}
+    </button>`;
+  }
+
+  box.innerHTML = `
+    <p class="fh-boss-wahl-titel">${en ? "Choose your attack" : "Wähle deinen Angriff"}</p>
+    <div class="fh-boss-angriff-reihe">
+      ${BOSS_GRUNDANGRIFFE.map((a) => karte(a, false)).join("")}
+    </div>
+    <p class="fh-boss-wahl-titel">${en ? "Special attacks" : "Spezialangriffe"}</p>
+    <div class="fh-boss-angriff-reihe fh-boss-angriff-reihe-spezial">
+      ${BOSS_SPEZIALANGRIFFE.map((a) => karte(a, true)).join("")}
+    </div>
+    <form class="fh-boss-code" id="boss-code-form" autocomplete="off">
+      <label class="fh-boss-code-label" for="boss-code-input">
+        ${en ? "Unlock a special attack with a secret code"
+             : "Spezialangriff mit einem Geheimcode freischalten"}
+      </label>
+      <div class="fh-boss-code-reihe">
+        <input id="boss-code-input" class="fh-boss-code-input" type="text"
+               maxlength="40" spellcheck="false"
+               placeholder="${en ? "Secret code" : "Geheimcode"}">
+        <button type="submit" class="code-button fh-boss-code-btn">${en ? "Unlock" : "Einlösen"}</button>
+      </div>
+      <p class="fh-boss-code-status" id="boss-code-status" role="status"></p>
+    </form>`;
+
+  box.querySelectorAll(".fh-boss-angriff[data-angriff]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      bossGewaehlt = btn.getAttribute("data-angriff");
+      renderBossAngriffswahl();
+    });
+  });
+
+  const form = box.querySelector("#boss-code-form");
+  if (form) form.addEventListener("submit", bossCodeEinloesen);
+}
+
+async function bossCodeEinloesen(e) {
+  e.preventDefault();
+  const feld = document.getElementById("boss-code-input");
+  const statusEl = document.getElementById("boss-code-status");
+  const en = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  const code = (feld && feld.value || "").trim();
+  if (!code) return;
+
+  if (statusEl) statusEl.textContent = en ? "Checking ..." : "Wird geprüft ...";
+  const treffer = await bossSpezialFreischalten(code);
+
+  if (!treffer) {
+    if (statusEl) statusEl.textContent = en ? "❌ That code does not fit." : "❌ Dieser Code passt nicht.";
+    return;
+  }
+  const a = bossAngriffFinden(treffer);
+  if (statusEl) {
+    statusEl.textContent = (en ? "✅ Unlocked: " : "✅ Freigeschaltet: ") + bossAngriffName(a);
+  }
+  if (feld) feld.value = "";
+  bossGewaehlt = treffer;
+  renderBossAngriffswahl();
+}
+
 
 /* Rein visuelle Phasen anhand der vorhandenen HP-Prozentzahl
    (kein neues Backend-Feld nötig - siehe Punkt 7: "wenn das
@@ -1655,12 +1789,87 @@ function updateBossResetCountdown(resetEl) {
 /* ------------------------------------------------------
    ANGREIFEN
 ------------------------------------------------------ */
-async function attackCommunityBoss() {
+/* ------------------------------------------------------
+   ZWEI WEGE ZUM ANGRIFF
+   ---------------------------------------------------
+   NEU: public.boss_attack(monat, angriff). Der Server entscheidet
+   ueber Berechtigung, Sperren und Schaden - der Client sagt nur,
+   WELCHEN Angriff er fuehrt.
+
+   ALT: attack_community_boss(monat, schaden). Der Client wuerfelt und
+   schickt den Schaden, der Server deckelt bei 45, die Tagessperre
+   steht im localStorage.
+
+   Warum beides: die Migration 10-boss-attacks.sql muss von Hand
+   eingespielt werden. Bis dahin gibt es die neuen Funktionen auf dem
+   Server schlicht nicht, und ein Angriff wuerde mit 404 scheitern.
+   Statt die Seite so lange kaputt zu lassen, wird EINMAL geprueft,
+   ob es sie gibt - danach steht der Weg fest.
+
+   bossNeuerWeg: null = noch nicht geprueft, true/false = steht fest.
+------------------------------------------------------ */
+let bossNeuerWeg = null;
+let bossStatus = null;      // Antwort von boss_attack_status()
+let bossGewaehlt = "saebel";
+
+async function bossWegPruefen() {
+  if (bossNeuerWeg !== null) return bossNeuerWeg;
+  if (!supabaseClient) return false;
+  try {
+    const { data, error } = await supabaseClient.rpc("boss_attack_status",
+      { p_month_id: getCurrentMonthId() });
+    if (error) throw error;
+    bossStatus = data || null;
+    bossNeuerWeg = true;
+  } catch (err) {
+    // PGRST202 "Could not find the function" - die Migration ist noch
+    // nicht eingespielt. Das ist kein Fehler, sondern der erwartete
+    // Zustand bis dahin.
+    bossNeuerWeg = false;
+    bossStatus = null;
+  }
+  return bossNeuerWeg;
+}
+
+async function bossStatusLaden() {
+  if (!(await bossWegPruefen())) return null;
+  try {
+    const { data, error } = await supabaseClient.rpc("boss_attack_status",
+      { p_month_id: getCurrentMonthId() });
+    if (error) throw error;
+    bossStatus = data || null;
+  } catch (err) { /* Anzeige bleibt beim letzten Stand */ }
+  return bossStatus;
+}
+
+/* Einen Geheimcode einloesen. Der Klartext geht an den Server, wird
+   dort gehasht und verglichen - im Browser liegt kein einziger Hash,
+   aus dem sich etwas erraten liesse. */
+async function bossSpezialFreischalten(code) {
+  if (!(await bossWegPruefen())) return null;
+  try {
+    const { data, error } = await supabaseClient.rpc("boss_unlock_special", { p_code: code });
+    if (error) throw error;
+    if (data) await bossStatusLaden();
+    return data || null;
+  } catch (err) {
+    console.warn("Code konnte nicht geprueft werden:", err);
+    return null;
+  }
+}
+
+async function attackCommunityBoss(art) {
   const attackBtn = document.getElementById("boss-attack-btn");
   const statusEl = document.getElementById("boss-status");
   const nickname = localStorage.getItem("wheelNickname") || "";
 
-  if (!nickname || !supabaseClient || hasAttackedToday()) return;
+  if (!nickname || !supabaseClient) return;
+
+  const neu = await bossWegPruefen();
+  if (neu) return attackCommunityBossNeu(art || bossGewaehlt, attackBtn, statusEl, nickname);
+
+  // ---- ab hier der alte Weg, unveraendert ----
+  if (hasAttackedToday()) return;
   if (attackBtn) attackBtn.disabled = true;
 
   const cfg = typeof communityBossConfig !== "undefined" ? communityBossConfig : { minDamagePerAttack: 15, maxDamagePerAttack: 45 };
@@ -1727,6 +1936,129 @@ async function attackCommunityBoss() {
     if (statusEl) statusEl.textContent = "⚠️ Angriff ist fehlgeschlagen, versuch's nochmal.";
     if (attackBtn) attackBtn.disabled = false;
   }
+}
+
+/* Die Fehler kommen als Postgres-Ausnahmen mit kurzen Schluesseln
+   herein ("heute-schon-angegriffen", "ruhepause-bis-2026-09-09..."),
+   weil sie dort zugleich der Abbruchgrund sind. Hier werden sie zu
+   Saetzen, die jemand lesen kann. */
+function bossFehlerText(meldung) {
+  const en = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  const m = String(meldung || "");
+  if (m.indexOf("heute-schon-angegriffen") >= 0)
+    return en ? "⏳ You already attacked today. Come back tomorrow."
+              : "⏳ Du hast heute schon angegriffen. Komm morgen wieder.";
+  if (m.indexOf("nicht-freigeschaltet") >= 0)
+    return en ? "🔒 You have not unlocked that attack yet."
+              : "🔒 Diesen Angriff hast du noch nicht freigeschaltet.";
+  if (m.indexOf("ruhepause-bis") >= 0)
+    return en ? "💤 Still recovering from the last blast."
+              : "💤 Du erholst dich noch vom letzten Schlag.";
+  if (m.indexOf("spezial-gesperrt-bis") >= 0)
+    return en ? "⌛ That special attack is still on cooldown."
+              : "⌛ Dieser Spezialangriff ist noch gesperrt.";
+  if (m.indexOf("nicht-angemeldet") >= 0)
+    return en ? "🔑 Sign in first." : "🔑 Melde dich zuerst an.";
+  return en ? "⚠️ The attack failed, try again."
+            : "⚠️ Angriff ist fehlgeschlagen, versuch's nochmal.";
+}
+
+/* Der neue Weg. Auffallend kurz im Vergleich zum alten - weil hier
+   nichts mehr entschieden wird. Kein Wuerfeln, kein Deckel, keine
+   Tagessperre im localStorage, und auch kein zweiter Schreibvorgang
+   fuer die Schadenssumme: all das macht public.boss_attack(). */
+async function attackCommunityBossNeu(art, attackBtn, statusEl, nickname) {
+  if (attackBtn) attackBtn.disabled = true;
+  const monthId = getCurrentMonthId();
+
+  try {
+    if (typeof wheelAuthReady !== "undefined") await wheelAuthReady;
+
+    const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.rpc("boss_attack", {
+        p_month_id: monthId, p_attack: art, p_nickname: nickname,
+      })
+    );
+    if (error) throw error;
+    if (!data) throw new Error("attack-failed");
+
+    const schaden = Number(data.schaden) || 0;
+    const einzel = data.einzel || {};
+
+    // Rein zusaetzliches Protokoll, wie bisher - ein Fehlschlag hier
+    // kann den bereits verbuchten Angriff nicht mehr beeinflussen.
+    if (typeof logBossAttackToSupabase === "function") {
+      logBossAttackToSupabase(nickname, monthId, schaden);
+    }
+
+    spawnBossHitEffect(schaden, art, einzel);
+    if (typeof awardActionXp === "function") awardActionXp("bossAttack");
+
+    if (data.besiegt && typeof window.fhCelebrationBurst === "function") {
+      const stage = document.getElementById("boss-stage");
+      if (stage) {
+        window.fhCelebrationBurst(stage, {
+          colors: [0xf0c96a, 0xff6b3d, 0x4da3ff, 0xffffff],
+          count: 130, duration: 2000, size: 12,
+        });
+      }
+    }
+
+    if (statusEl) statusEl.textContent = bossAngriffsMeldung(art, schaden, einzel, data);
+
+    await bossStatusLaden();
+    setTimeout(renderCommunityBossPage, 600);
+    setTimeout(() => renderBossLeaderboard(monthId), 700);
+  } catch (err) {
+    console.warn("Angriff abgelehnt:", err);
+    if (statusEl) statusEl.textContent = bossFehlerText(err && (err.message || err.hint || err.details));
+    if (attackBtn) attackBtn.disabled = false;
+    await bossStatusLaden();
+    setTimeout(renderCommunityBossPage, 300);
+  }
+}
+
+/* Was nach dem Angriff dasteht. Die Angriffe ohne eigenen Schaden
+   (Schlachtruf, Seemannslied) brauchen eine eigene Meldung - "0
+   Schaden" waere richtig und trotzdem irrefuehrend. */
+function bossAngriffsMeldung(art, schaden, einzel, data) {
+  const en = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  const a = typeof bossAngriffFinden === "function" ? bossAngriffFinden(art) : null;
+  const name = a ? bossAngriffName(a) : art;
+
+  if (art === "schlachtruf") {
+    return en ? `📣 War cry! For 24 hours everyone hits ${einzel.faktor || 1.5}x harder.`
+              : `📣 Schlachtruf! 24 Stunden lang treffen alle ${einzel.faktor || 1.5}-mal so hart.`;
+  }
+  if (art === "seemannslied") {
+    return en ? "🎶 The boss dozes off - everyone's next attack hits twice as hard."
+              : "🎶 Der Boss döst weg - der nächste Angriff von jedem trifft doppelt.";
+  }
+  if (art === "rechnung" && schaden === 0) {
+    return en ? "🧾 Nothing lost in the arcade today - the bill stays empty."
+              : "🧾 Heute nichts in der Spielothek verloren - die Rechnung bleibt leer.";
+  }
+  if (art === "slot" && schaden === 0) {
+    return en ? "🎰 A blank. Ändii shrugs." : "🎰 Niete. Ändii zuckt mit den Schultern.";
+  }
+
+  let text = en ? `⚔️ ${name}: ${schaden} damage!` : `⚔️ ${name}: ${schaden} Schaden!`;
+  if (einzel.verstaerkt) {
+    text += en ? ` (${einzel.verstaerkt}x from the war cry)`
+               : ` (${einzel.verstaerkt}-fach durch den Schlachtruf)`;
+  }
+  if (einzel.zusatzAngriff) {
+    text += en ? " You get another attack today!" : " Du bekommst heute noch einen Angriff!";
+  }
+  if (einzel.brandTage) {
+    text += en ? ` It burns for ${einzel.brandTage} more days.`
+               : ` Es brennt noch ${einzel.brandTage} Tage weiter.`;
+  }
+  if (data && Number(data.brandNachgetragen) > 0) {
+    text += en ? ` (+${data.brandNachgetragen} from the fire)`
+               : ` (+${data.brandNachgetragen} aus dem Brand)`;
+  }
+  return text;
 }
 
 /* ------------------------------------------------------
@@ -1874,20 +2206,28 @@ async function checkBossSlayerReward(monthId) {
   }
 }
 
-function spawnBossHitEffect(damage) {
+function spawnBossHitEffect(damage, art, einzel) {
   const stage = document.getElementById("boss-stage");
   if (!stage || !bossCanvas) return;
 
   const now = performance.now();
-  const kind = BOSS_ATTACK_KINDS[Math.floor(Math.random() * BOSS_ATTACK_KINDS.length)];
 
-  spawnBossAttackEffect(kind, bossCanvas.width, bossCanvas.height);
+  /* Ohne benannten Angriff (alter Weg, solange die Migration nicht
+     eingespielt ist) bleibt es bei der bisherigen Zufallsauswahl. */
+  const spezial = !!(art && window.fhBossSpezial && window.fhBossSpezial.kennt(art));
+  const kind = spezial
+    ? art
+    : BOSS_ATTACK_KINDS[Math.floor(Math.random() * BOSS_ATTACK_KINDS.length)];
+
+  spawnBossAttackEffect(kind, bossCanvas.width, bossCanvas.height, einzel);
 
   // Bildschirm-Wackler + kurzer Weißblitz, zeitlich an den jeweiligen
   // Effekt angepasst (jeder Angriffstyp braucht unterschiedlich lang,
   // bis er "einschlägt")
   const impactDelayByKind = { shot: 230, saber: 130, harpoon: 290, curse: 380 };
-  const impactDelay = impactDelayByKind[kind] || 200;
+  const impactDelay = spezial
+    ? window.fhBossSpezial.einschlagNach(art)
+    : (impactDelayByKind[kind] || 200);
   bossShakeUntil = now + impactDelay + 220;
   setTimeout(() => {
     const impactTime = performance.now();

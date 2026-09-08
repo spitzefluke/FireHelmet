@@ -1134,6 +1134,13 @@
 
           <p id="boss-defeated-banner" class="boss-defeated-banner" style="display:none;"></p>
 
+          <!-- Angriffswahl und Geheimcode-Feld. Bleibt leer und
+               ausgeblendet, solange die Migration 10-boss-attacks.sql
+               nicht eingespielt ist - dann gibt es nur den einen
+               Knopf darunter, genau wie vorher. Gefuellt von
+               renderBossAngriffswahl() in community-boss.js. -->
+          <div id="boss-angriffswahl" class="fh-boss-angriffswahl" hidden></div>
+
           <button id="boss-attack-btn" class="code-button boss-attack-btn" onclick="attackCommunityBoss()">⚔️ Angreifen</button>
           <p id="boss-status" class="wheel-status"></p>
 
@@ -1345,6 +1352,8 @@
   <script src="scripts/wheel/nickname-filter.js" defer></script>
   <script src="scripts/race/race-data.js" defer></script>
   <script src="scripts/community-boss/community-boss-data.js" defer></script>
+  <script src="scripts/community-boss/boss-attacks-data.js" defer></script>
+  <script src="scripts/community-boss/boss-spezial-fx.js" defer></script>
   <script src="scripts/streamraetsel/streamraetsel-data.js" defer></script>
   <script src="scripts/auth/twitch-config.js" defer></script>
   <script src="scripts/auth/twitch-auth.js" defer></script>

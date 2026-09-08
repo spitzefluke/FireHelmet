@@ -2129,3 +2129,147 @@ img, svg, video, canvas {
   position: relative;
   z-index: 1;
 }
+
+/* ======================================================
+   BOSS: ANGRIFFSWAHL UND GEHEIMCODES
+   ---------------------------------------------------
+   Drei Grundangriffe, darunter die elf Spezialangriffe. Nicht
+   freigeschaltete werden absichtlich NICHT versteckt - man soll
+   sehen, dass es sie gibt, ohne zu erfahren, wie der Code lautet.
+
+   Die ganze Leiste ist ausgeblendet, solange die Migration
+   10-boss-attacks.sql nicht eingespielt ist (das hidden-Attribut
+   setzt renderBossAngriffswahl()).
+====================================================== */
+.fh-boss-angriffswahl {
+  margin: 18px 0 14px;
+  text-align: left;
+}
+
+.fh-boss-wahl-titel {
+  margin: 0 0 8px;
+  font-family: var(--fh-font-display, inherit);
+  font-size: 13px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fh-muted, #9aa4b2);
+}
+
+.fh-boss-wahl-titel + .fh-boss-angriff-reihe { margin-bottom: 18px; }
+
+.fh-boss-angriff-reihe {
+  display: grid;
+  /* auto-fit statt fester Spaltenzahl: drei Grundangriffe stehen
+     nebeneinander, elf Spezialangriffe umbrechen von selbst. */
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 10px;
+}
+
+.fh-boss-angriff {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 13px;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: var(--fh-radius, 12px);
+  background: rgba(12, 16, 26, .58);
+  color: inherit;
+  cursor: pointer;
+  transition-duration: var(--fh-dauer, 200ms);
+  transition-timing-function: var(--fh-ease-aus, ease-out);
+  transition-property: border-color, background-color, transform, opacity;
+}
+
+.fh-boss-angriff:hover:not(:disabled) {
+  border-color: rgba(240, 201, 106, .45);
+  background: rgba(20, 26, 40, .75);
+}
+
+.fh-boss-angriff:active:not(:disabled) { transform: scale(.97); }
+
+.fh-boss-angriff.ist-gewaehlt {
+  border-color: var(--fh-gold, #f0c96a);
+  background: rgba(240, 201, 106, .10);
+}
+
+/* Verschlossen und noch-nicht-bereit sehen unterschiedlich aus:
+   das eine hat man nie gehabt, das andere gerade erst benutzt. */
+.fh-boss-angriff.ist-zu { opacity: .45; cursor: default; }
+.fh-boss-angriff.ist-gesperrt { opacity: .6; cursor: default; }
+
+.fh-boss-angriff-symbol { font-size: 22px; line-height: 1; }
+
+.fh-boss-angriff-name {
+  font-family: var(--fh-font-display, inherit);
+  font-size: 15px;
+  letter-spacing: .02em;
+}
+
+.fh-boss-angriff-text {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--fh-muted, #9aa4b2);
+}
+
+.fh-boss-angriff-marke {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 2px 7px;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  color: var(--fh-muted, #9aa4b2);
+}
+
+/* ---- Geheimcode ---- */
+.fh-boss-code { margin-top: 16px; }
+
+.fh-boss-code-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--fh-muted, #9aa4b2);
+}
+
+.fh-boss-code-reihe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fh-boss-code-input {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 10px 13px;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--fh-radius, 12px);
+  background: rgba(8, 11, 18, .7);
+}
+
+.fh-boss-code-input:focus-visible {
+  outline: 2px solid var(--fh-gold, #f0c96a);
+  outline-offset: 2px;
+}
+
+.fh-boss-code-btn { flex: 0 0 auto; }
+
+.fh-boss-code-status {
+  margin: 8px 0 0;
+  min-height: 1.2em;
+  font-size: 13px;
+  color: var(--fh-muted, #9aa4b2);
+}
+
+@media (max-width: 700px) {
+  .fh-boss-angriff-reihe { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .fh-boss-angriff { padding: 10px 11px; }
+  .fh-boss-angriff-text { font-size: 11.5px; }
+}
