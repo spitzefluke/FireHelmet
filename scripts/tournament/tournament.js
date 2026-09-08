@@ -127,6 +127,16 @@ async function renderTournamentPage() {
   // ueberschreiben.
   const myGeneration = ++tournamentRenderGeneration;
 
+  /* Platzhalter waehrend der vier Abfragen unten - aber nur, wenn
+     noch nichts dasteht. Die Seite laedt sich alle 12 Sekunden
+     selbst neu; ohne diese Bedingung wuerde die fertige Tafel bei
+     jedem Durchlauf kurz durch graue Balken ersetzt. */
+  if (!container.children.length && typeof fhSkeletonKasten === "function") {
+    container.innerHTML = fhSkeletonKasten(4, {
+      label: tt("tournament.page.loading", "Turnier wird geladen ..."),
+    });
+  }
+
   try {
     const uid = await wheelAuthReady;
 

@@ -249,7 +249,13 @@ function loadGiveawayView() {
 
     if (winnerEl) {
       winnerEl.style.display = "block";
-      winnerEl.textContent = "Lade Ergebnis ...";
+      // Derselbe Platzhalter wie ueberall sonst statt einer
+      // Textzeile - siehe scripts/core/skeleton.js.
+      if (typeof fhSkeletonKasten === "function") {
+        winnerEl.innerHTML = fhSkeletonKasten(2, { label: "Lade Ergebnis ..." });
+      } else {
+        winnerEl.textContent = "Lade Ergebnis ...";
+      }
     }
   }
 

@@ -15,6 +15,20 @@
    Verwendung:
      el.innerHTML = fhSkeletonList(6);
      el.innerHTML = fhSkeletonList(3, { label: "Lade Rennen ..." });
+     el.innerHTML = fhSkeletonKasten(3, { label: "Lade Turnier ..." });
+
+   NACHTRAG: der Platzhalter wurde anfangs nur an zwei Stellen
+   benutzt (Rangliste und Startseiten-Uebersicht). Ueberall sonst
+   sah das Laden anders aus - mal eine Textzeile ("Lade Ergebnis
+   ..."), mal eine leere Flaeche, in die der Inhalt spaeter
+   hineinsprang. Jetzt liegt derselbe Platzhalter auch unter
+   Wochenrennen, Turnier und Verlosung.
+
+   Dafuer kam fhSkeletonKasten dazu: nicht jeder Bereich ist eine
+   Liste mit Rang, Bild und Wert. Fuer Tafeln und einzelne Werte
+   sind es einfach ein paar Balken in einem Kasten - dieselben
+   Bausteine (.fh-skeleton-cell), dieselbe Bewegung, nur ohne
+   Zeilenform.
 ====================================================== */
 
 (function () {
@@ -51,5 +65,35 @@
       </div>`;
   }
 
+  /* Platzhalter fuer Bereiche, die KEINE Liste sind: eine Tafel,
+     ein Ergebnisfeld, eine Turnieruebersicht. Balken unterschiedlicher
+     Laenge in einem Kasten.
+
+     Auch hier feste statt zufaelliger Breiten, damit der Platzhalter
+     bei jedem Aufruf gleich aussieht und nicht bei jedem Neuladen
+     anders flackert. */
+  function fhSkeletonKasten(count, opts) {
+    const n = Math.max(1, Math.min(8, parseInt(count, 10) || 3));
+    const label = (opts && opts.label) || "Wird geladen ...";
+    const BREITEN = [72, 46, 88, 38, 64, 52, 80, 44];
+
+    let zeilen = "";
+    for (let i = 0; i < n; i++) {
+      // Die erste Zeile etwas kraeftiger: sie steht fuer die
+      // Ueberschrift, die dort spaeter erscheint.
+      const hoehe = i === 0 ? 16 : 12;
+      zeilen += `
+        <span class="fh-skeleton-cell"
+              style="width:${BREITEN[i % BREITEN.length]}%;height:${hoehe}px;--fh-skeleton-delay:${(i * 0.08).toFixed(2)}s"></span>`;
+    }
+
+    return `
+      <div class="fh-skeleton fh-skeleton-kasten" role="status" aria-busy="true">
+        <span class="fh-skeleton-label">${label}</span>
+        ${zeilen}
+      </div>`;
+  }
+
   window.fhSkeletonList = fhSkeletonList;
+  window.fhSkeletonKasten = fhSkeletonKasten;
 })();

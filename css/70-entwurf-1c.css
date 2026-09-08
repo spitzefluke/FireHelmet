@@ -2012,3 +2012,15 @@ h1.fh-page-title,
   }
 }
 
+
+/* Platzhalter fuer Bereiche, die keine Liste sind (Turniertafel,
+   Ergebnisfeld der Verlosung). Dieselben Balken wie oben, nur
+   untereinander in einem Kasten statt in Zeilen.
+   Siehe fhSkeletonKasten() in scripts/core/skeleton.js. */
+.fh-skeleton-kasten {
+  gap: 12px;
+  padding: 20px 18px;
+  border-radius: var(--fh-radius-sm);
+  border: 1px solid var(--fh-border);
+  background: var(--fh-surface);
+}
