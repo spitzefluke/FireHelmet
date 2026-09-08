@@ -762,9 +762,19 @@ main {
   animation: pageShow .35s var(--fh-ease, ease);
 }
 
+/* Der Anlaufpunkt kommt aus zwei Variablen, damit der Seitenwechsel
+   die Richtung anzeigen kann: scripts/core/seitenwechsel.js setzt
+   --fh-seite-x auf +/-26px und --fh-seite-y auf 0, wenn es in der
+   Navigationsleiste vorwaerts bzw. rueckwaerts geht. Ohne gesetzte
+   Variablen bleibt es beim bisherigen Weg von unten - das gilt fuer
+   die Startseite, fuer Seiten ausserhalb der Leiste (Kapitel- und
+   Leseansicht, Gateway) und fuer den ersten Aufruf. */
 @keyframes pageShow {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translate(var(--fh-seite-x, 0px), var(--fh-seite-y, 24px));
+  }
+  to   { opacity: 1; transform: translate(0, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
