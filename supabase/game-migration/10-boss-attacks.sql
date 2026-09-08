@@ -100,6 +100,7 @@ alter table public.boss_attack_defs force row level security;
 
 -- Der Katalog ist keine Geheimnis: wer die Seite oeffnet, soll sehen,
 -- was es gibt - auch was er noch nicht hat.
+drop policy if exists "boss_attack_defs_lesen" on public.boss_attack_defs;
 create policy "boss_attack_defs_lesen" on public.boss_attack_defs
   for select to anon, authenticated using (true);
 -- Kein insert/update/delete fuer Spieler.
@@ -132,6 +133,7 @@ alter table public.boss_attack_state enable row level security;
 alter table public.boss_attack_state force row level security;
 
 -- Nur der eigene Stand, und nur lesend.
+drop policy if exists "boss_attack_state_eigener" on public.boss_attack_state;
 create policy "boss_attack_state_eigener" on public.boss_attack_state
   for select to authenticated
   using (firebase_uid = app.firebase_uid());
@@ -167,6 +169,7 @@ alter table public.boss_community_buff force row level security;
 
 -- Oeffentlich lesbar: die Seite zeigt an, dass gerade ein Schlachtruf
 -- laeuft und von wem.
+drop policy if exists "boss_community_buff_lesen" on public.boss_community_buff;
 create policy "boss_community_buff_lesen" on public.boss_community_buff
   for select to anon, authenticated using (true);
 
