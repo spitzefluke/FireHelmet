@@ -235,6 +235,17 @@ create policy "community_boss_update" on public.community_boss
     )
   );
 
+/* ACHTUNG - KEIN UPSERT AUF DIESE TABELLE.
+   "insert ... on conflict do update" (das, was supabase-js aus
+   .upsert() macht) prueft in Postgres BEIDE Regelsaetze am neuen
+   Datensatz: die update-Regel UND die insert-Regel. Die insert-Regel
+   begrenzt hier aber den ABSOLUTEN Wert, die update-Regel nur den
+   SCHRITT. Sobald der Zaehler ueber dem Startwert steht, wird deshalb
+   jedes Upsert abgelehnt (PostgREST: 403), obwohl der Schritt selbst
+   erlaubt ist. Der Client schickt darum bewusst getrenntes
+   insert()/update(), siehe supabaseZaehlerSchreiben() in
+   scripts/supabase/supabase-client.js. */
+
 drop policy if exists "boss_damage_insert_own" on public.community_boss_damage;
 create policy "boss_damage_insert_own" on public.community_boss_damage
   for insert to authenticated

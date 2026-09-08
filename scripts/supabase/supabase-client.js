@@ -54,6 +54,52 @@ async function withSupabaseRlsColdStartRetry(queryFn) {
 }
 
 /* ------------------------------------------------------
+   ZAEHLERZEILE SCHREIBEN (anlegen ODER hochzaehlen)
+   ---------------------------------------------------
+   Fuer Tabellen, in denen ein Wert ueber die Woche/den Monat
+   hochgezaehlt wird: race_progress.progress und
+   community_boss_damage.total_damage.
+
+   WARUM HIER KEIN .upsert() MEHR STEHT: supabase-js schickt fuer ein
+   Upsert "insert ... on conflict do update". Postgres prueft auf
+   diesem Weg BEIDE Regelsaetze am neuen Datensatz - die update-Regel
+   UND die insert-Regel. Unsere Zaehlertabellen setzen dort aber
+   absichtlich verschiedene Grenzen: die insert-Regel begrenzt den
+   ABSOLUTEN Startwert (progress <= 15 bzw. total_damage <= 45), die
+   update-Regel nur den SCHRITT (alter Wert + 15 bzw. + 45). Sobald
+   der Zaehler ueber dem Startwert liegt, scheitert deshalb JEDES
+   Upsert an der insert-Regel, obwohl der Schritt selbst voellig
+   zulaessig ist - der Server antwortet mit 403. An einer echten
+   Postgres-Instanz nachgestellt: dasselbe Plus von +5 geht als
+   reines update() durch und wird als Upsert abgelehnt.
+
+   Deshalb: gibt es die Zeile schon, wird ausschliesslich update()
+   geschickt - dann greift nur die update-Regel. Nur eine wirklich
+   neue Zeile geht per insert() raus. Legt in der Zwischenzeit ein
+   zweiter Tab dieselbe Zeile an (Postgres-Code 23505, doppelter
+   Schluessel), wird auf update() umgeschwenkt.
+------------------------------------------------------ */
+async function supabaseZaehlerSchreiben(tabelle, schluessel, werte, zeileVorhanden) {
+  const aktualisieren = () => {
+    let frage = supabaseClient.from(tabelle).update(werte);
+    Object.keys(schluessel).forEach((spalte) => {
+      frage = frage.eq(spalte, schluessel[spalte]);
+    });
+    return frage;
+  };
+  const anlegen = () =>
+    supabaseClient.from(tabelle).insert(Object.assign({}, schluessel, werte));
+
+  if (zeileVorhanden) return await withSupabaseRlsColdStartRetry(aktualisieren);
+
+  const ergebnis = await withSupabaseRlsColdStartRetry(anlegen);
+  if (ergebnis && ergebnis.error && ergebnis.error.code === "23505") {
+    return await withSupabaseRlsColdStartRetry(aktualisieren);
+  }
+  return ergebnis;
+}
+
+/* ------------------------------------------------------
    CLOUDFLARE TURNSTILE - CAPTCHA-TOKEN FUER signInAnonymously()
    ---------------------------------------------------
    Siehe scripts/supabase/turnstile-config.js fuer die Einrichtung.

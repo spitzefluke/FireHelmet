@@ -2102,13 +2102,23 @@ async function recordBossDamage(monthId, nickname, damage) {
 
   const newTotal = ((current && current.total_damage) || 0) + damage;
 
-  // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
-  await withSupabaseRlsColdStartRetry(() =>
-    supabaseClient.from("community_boss_damage").upsert(
-      { month_id: monthId, firebase_uid: uid, nickname, avatar, equipped_frame: equippedFrame, total_damage: newTotal },
-      { onConflict: "month_id,firebase_uid" }
-    )
+  // Anlegen oder hochzaehlen - BEWUSST kein .upsert(): ab 46 Schaden im
+  // Monat haette die insert-Regel (total_damage <= 45) jedes Upsert mit
+  // 403 abgelehnt, obwohl der Schritt erlaubt ist. Ausfuehrliche
+  // Begruendung in supabaseZaehlerSchreiben() (supabase-client.js).
+  const { error: schreibFehler } = await supabaseZaehlerSchreiben(
+    "community_boss_damage",
+    { month_id: monthId, firebase_uid: uid },
+    { nickname, avatar, equipped_frame: equippedFrame, total_damage: newTotal },
+    !!current
   );
+  // Bewusst NICHT geworfen: der Boss hat den Schaden ueber die RPC
+  // bereits sicher abbekommen. Ein Fehlschlag hier betrifft nur den
+  // eigenen Ranglisteneintrag - wuerde er den Aufrufer abbrechen,
+  // bliebe der Tagesangriff unvermerkt und liesse sich wiederholen.
+  if (schreibFehler) {
+    console.error("Schadenseintrag konnte nicht gespeichert werden:", schreibFehler);
+  }
 }
 
 /* ------------------------------------------------------
