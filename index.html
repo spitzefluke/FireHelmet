@@ -683,6 +683,35 @@
             <span class="nickname-success-text"></span>
           </div>
         </div>
+
+        <!-- Wiederherstellungs-Kennwort: rettet Dublonen, Level, Schiff
+             und Turnier-Anmeldung ueber einen Geraetewechsel oder einen
+             geleerten Browserspeicher hinweg. Siehe
+             scripts/core/spieler-kennwort.js. -->
+        <div id="fh-kennwort-box" class="fh-kennwort-box">
+          <h3 class="fh-kennwort-titel" data-i18n="kennwort.titel">Dein Wiederherstellungs-Kennwort</h3>
+          <p class="fh-kennwort-text" data-i18n="kennwort.erklaerung">Schreib dir das auf. Damit holst du deinen Fortschritt auf ein anderes Ger&auml;t &ndash; oder zur&uuml;ck, wenn dein Browser den Speicher geleert hat.</p>
+
+          <div class="fh-kennwort-anzeige">
+            <code id="fh-kennwort-wert" class="fh-kennwort-wert">&bull;&bull;&bull;&bull;-&bull;&bull;&bull;&bull;</code>
+            <button type="button" class="code-button fh-kennwort-knopf" id="fh-kennwort-zeigen"
+                    onclick="fhKennwortZeigen()" data-i18n="kennwort.zeigen">Anzeigen</button>
+            <button type="button" class="code-button fh-kennwort-knopf" id="fh-kennwort-kopieren"
+                    onclick="fhKennwortKopieren()" hidden data-i18n="kennwort.kopieren">Kopieren</button>
+          </div>
+
+          <p class="fh-kennwort-text fh-kennwort-trenner" data-i18n="kennwort.uebernehmenHinweis">Schon ein Kennwort von einem anderen Ger&auml;t? Hier eintragen:</p>
+          <div class="fh-kennwort-eingabezeile">
+            <label class="fh-visually-hidden" for="fh-kennwort-eingabe"
+                   data-i18n="kennwort.eingabeLabel">Wiederherstellungs-Kennwort</label>
+            <input type="text" id="fh-kennwort-eingabe" class="code-input"
+                   placeholder="ABCD-2345" data-i18n-placeholder="kennwort.eingabePlatzhalter"
+                   maxlength="9" autocomplete="off" spellcheck="false">
+            <button type="button" class="code-button" id="fh-kennwort-einloesen"
+                    onclick="fhKennwortEinloesen()" data-i18n="kennwort.einloesen">Konto holen</button>
+          </div>
+          <p id="fh-kennwort-status" class="fh-kennwort-status" role="status"></p>
+        </div>
       </div>
     </section>
 
@@ -1432,6 +1461,7 @@
   <script src="scripts/supabase/supabase-config.js" defer></script>
   <script src="scripts/supabase/supabase-proxy-data.js" defer></script>
   <script src="scripts/supabase/supabase-client.js" defer></script>
+  <script src="scripts/core/spieler-kennwort.js" defer></script>
   <script src="scripts/supabase/supabase-players.js" defer></script>
   <script src="scripts/tournament/tournament-api.js" defer></script>
   <script src="scripts/tournament/tournament-data.js" defer></script>

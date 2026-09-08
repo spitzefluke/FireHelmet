@@ -133,6 +133,14 @@ alter table public.boss_attack_state enable row level security;
 alter table public.boss_attack_state force row level security;
 
 -- Nur der eigene Stand, und nur lesend.
+/* Schreiben ist hier ausschliesslich Sache von app.boss_attack() und
+   app.boss_unlock_special() (beide SECURITY DEFINER). Zusaetzlich zur
+   fehlenden Schreib-Policy auch die Rechte entziehen - sonst haengt
+   der Schutz allein an RLS, weil Supabase neuen Tabellen in public
+   automatisch Rechte fuer anon/authenticated gibt. Lesen bleibt
+   erlaubt, dafuer gibt es unten eine select-Policy. */
+revoke insert, update, delete on public.boss_attack_state from anon, authenticated;
+
 drop policy if exists "boss_attack_state_eigener" on public.boss_attack_state;
 create policy "boss_attack_state_eigener" on public.boss_attack_state
   for select to authenticated
@@ -197,6 +205,11 @@ create table if not exists public.boss_special_codes (
 
 alter table public.boss_special_codes enable row level security;
 alter table public.boss_special_codes force row level security;
+
+/* Wie bei den Kennwort-Tabellen (12-spieler-kennwort.sql): zusaetzlich
+   zur fehlenden select-Policy auch die Tabellenrechte entziehen.
+   Supabase vergibt sie sonst automatisch an anon/authenticated. */
+revoke all on public.boss_special_codes from anon, authenticated;
 -- KEINE select-Policy: niemand ausser den Funktionen unten (die als
 -- SECURITY DEFINER laufen) bekommt diese Tabelle je zu sehen.
 
