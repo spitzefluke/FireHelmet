@@ -61,6 +61,225 @@ function getWeeklyTrack() {
 
 let raceBuiltForWeek = null;
 
+/* ======================================================
+   LANDSCHAFT NEBEN DER BAHN
+   ---------------------------------------------------
+   Vorher war der Untergrund ein einfarbiges Rechteck - die Strecke
+   sah aus wie ein Gummiband in einem Kasten. Jetzt stehen Duenen,
+   Palmen, Felsen oder Wolken daneben.
+
+   NICHT VON HAND GESETZT. Die Standorte werden aus dem Streckennamen
+   erwuerfelt (immer derselbe Name, immer dasselbe Bild) und dabei von
+   der Bahn ferngehalten: der Pfad wird an 90 Stellen abgetastet, und
+   jeder Vorschlag, der einer dieser Stellen zu nahe kommt, faellt
+   weg. Eine zehnte Strecke bekommt ihre Umgebung damit geschenkt,
+   ohne dass jemand Koordinaten abtippt.
+====================================================== */
+
+/* Kleiner, reproduzierbarer Zufall aus einer Zeichenkette. Ohne
+   festen Anfangswert saehe die Strecke bei jedem Seitenwechsel anders
+   aus - das waere Unruhe ohne Gewinn. */
+function raceWuerfel(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return function () {
+    h += 0x6d2b79f5;
+    let t = h;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* Was zu welcher Landschaft gehoert. Die Zahl dahinter ist die
+   ungefaehre Anzahl - der Rest ergibt sich aus dem Platz, der neben
+   der Bahn uebrig bleibt. */
+const RACE_LANDSCHAFTEN = {
+  wueste:    { himmel: "#3a2410", horizont: "#c8934a", teile: ["duene", "kaktus", "fels"], anzahl: 16 },
+  kueste:    { himmel: "#0c2338", horizont: "#4a9fd8", teile: ["palme", "welle", "fels"],  anzahl: 14 },
+  dschungel: { himmel: "#0a1e12", horizont: "#3f9d5c", teile: ["baum", "baum", "fels"],    anzahl: 18 },
+  neon:      { himmel: "#07060f", horizont: "#a855f7", teile: ["mast", "mast", "fels"],    anzahl: 14 },
+  ozean:     { himmel: "#061a2c", horizont: "#5fb8e8", teile: ["welle", "welle", "insel"], anzahl: 16 },
+  himmel:    { himmel: "#8fc4e6", horizont: "#ffffff", teile: ["wolke", "wolke", "vogel"], anzahl: 15 },
+  riff:      { himmel: "#1d1208", horizont: "#ff9f4d", teile: ["fels", "fels", "welle"],   anzahl: 17 },
+  nebel:     { himmel: "#141b22", horizont: "#9fb8c8", teile: ["schwade", "fels"],         anzahl: 13 },
+  sturm:     { himmel: "#0b0b16", horizont: "#c084fc", teile: ["wolke", "blitz", "wolke"], anzahl: 14 },
+};
+
+/* Ein Landschaftsteil als SVG. Alles bewusst schlicht: es steht
+   klein und weit weg, feine Zeichnung waere dort nur Rauschen. */
+function raceDekoTeil(art, x, y, groesse, farbe, akzent) {
+  const g = groesse;
+  const o = (n) => n.toFixed(1);
+  switch (art) {
+    case "duene":
+      return `<path d="M${o(x-g*1.8)},${o(y)} Q${o(x)},${o(y-g)} ${o(x+g*1.8)},${o(y)} Z" fill="${farbe}" opacity=".8"/>`;
+    case "kaktus":
+      return `<g fill="${farbe}" opacity=".92">`
+           + `<rect x="${o(x-g*0.16)}" y="${o(y-g*1.5)}" width="${o(g*0.32)}" height="${o(g*1.5)}" rx="${o(g*0.16)}"/>`
+           + `<rect x="${o(x-g*0.7)}" y="${o(y-g*1.0)}" width="${o(g*0.26)}" height="${o(g*0.6)}" rx="${o(g*0.13)}"/>`
+           + `<rect x="${o(x+g*0.44)}" y="${o(y-g*1.2)}" width="${o(g*0.26)}" height="${o(g*0.75)}" rx="${o(g*0.13)}"/></g>`;
+    case "fels":
+      return `<path d="M${o(x-g)},${o(y)} L${o(x-g*0.5)},${o(y-g*0.85)} L${o(x+g*0.3)},${o(y-g*0.6)} L${o(x+g)},${o(y)} Z" fill="${farbe}" opacity=".85"/>`;
+    case "palme":
+      return `<g opacity=".95"><path d="M${o(x)},${o(y)} Q${o(x+g*0.2)},${o(y-g)} ${o(x-g*0.1)},${o(y-g*1.7)}" stroke="${farbe}" stroke-width="${o(g*0.16)}" fill="none"/>`
+           + [0,1,2,3].map(i => { const a = -2.5 + i * 0.85;
+               return `<path d="M${o(x-g*0.1)},${o(y-g*1.7)} q${o(Math.cos(a)*g*0.8)},${o(Math.sin(a)*g*0.5-g*0.2)} ${o(Math.cos(a)*g*1.3)},${o(Math.sin(a)*g*0.8)}" stroke="${akzent}" stroke-width="${o(g*0.13)}" fill="none" stroke-linecap="round"/>`;
+             }).join("") + `</g>`;
+    case "baum":
+      return `<g opacity=".92"><rect x="${o(x-g*0.12)}" y="${o(y-g*0.9)}" width="${o(g*0.24)}" height="${o(g*0.9)}" fill="${farbe}"/>`
+           + `<circle cx="${o(x)}" cy="${o(y-g*1.15)}" r="${o(g*0.62)}" fill="${akzent}"/>`
+           + `<circle cx="${o(x-g*0.4)}" cy="${o(y-g*0.85)}" r="${o(g*0.42)}" fill="${akzent}" opacity=".85"/></g>`;
+    case "welle":
+      return `<path d="M${o(x-g*1.6)},${o(y)} q${o(g*0.5)},${o(-g*0.42)} ${o(g*1.0)},0 q${o(g*0.5)},${o(g*0.42)} ${o(g*1.0)},0" stroke="${akzent}" stroke-width="${o(g*0.16)}" fill="none" opacity=".75" stroke-linecap="round"/>`;
+    case "insel":
+      return `<g opacity=".88"><path d="M${o(x-g*1.4)},${o(y)} Q${o(x)},${o(y-g*0.9)} ${o(x+g*1.4)},${o(y)} Z" fill="${farbe}"/>`
+           + `<circle cx="${o(x)}" cy="${o(y-g*0.75)}" r="${o(g*0.3)}" fill="${akzent}"/></g>`;
+    case "wolke":
+      return `<g fill="${akzent}" opacity=".72"><ellipse cx="${o(x)}" cy="${o(y)}" rx="${o(g*1.5)}" ry="${o(g*0.6)}"/>`
+           + `<circle cx="${o(x-g*0.5)}" cy="${o(y-g*0.25)}" r="${o(g*0.55)}"/>`
+           + `<circle cx="${o(x+g*0.45)}" cy="${o(y-g*0.2)}" r="${o(g*0.45)}"/></g>`;
+    case "vogel":
+      return `<path d="M${o(x-g*0.6)},${o(y)} q${o(g*0.3)},${o(-g*0.35)} ${o(g*0.6)},0 q${o(g*0.3)},${o(-g*0.35)} ${o(g*0.6)},0" stroke="${akzent}" stroke-width="${o(g*0.11)}" fill="none" opacity=".8" stroke-linecap="round"/>`;
+    case "mast":
+      return `<g opacity=".95"><rect x="${o(x-g*0.08)}" y="${o(y-g*1.9)}" width="${o(g*0.16)}" height="${o(g*1.9)}" fill="${farbe}"/>`
+           + `<rect x="${o(x-g*0.45)}" y="${o(y-g*2.05)}" width="${o(g*0.9)}" height="${o(g*0.22)}" rx="${o(g*0.11)}" fill="${akzent}"/></g>`;
+    case "schwade":
+      return `<ellipse cx="${o(x)}" cy="${o(y)}" rx="${o(g*2.2)}" ry="${o(g*0.5)}" fill="${akzent}" opacity=".38"/>`;
+    case "blitz":
+      return `<path d="M${o(x)},${o(y-g*1.8)} L${o(x-g*0.35)},${o(y-g*0.7)} L${o(x+g*0.1)},${o(y-g*0.75)} L${o(x-g*0.25)},${o(y)}" stroke="${akzent}" stroke-width="${o(g*0.13)}" fill="none" opacity=".85" stroke-linecap="round"/>`;
+    default:
+      return "";
+  }
+}
+
+/* Zwei Farben, die sich vom Untergrund abheben - eine dunklere und
+   eine hellere Fassung davon. Vorher standen hier Fahrbahn- und
+   Akzentfarbe: die Fahrbahn ist dem Untergrund oft zu aehnlich (Wueste:
+   Sand auf Sand), und der Akzent ist die Signalfarbe der Strecke, die
+   soll dem Curb gehoeren, nicht jedem Kaktus. */
+function raceTonMischen(hex, zielHex, anteil) {
+  const l = (h) => {
+    const c = String(h || "#000000").replace("#", "");
+    const v = c.length === 3 ? c.split("").map((x) => x + x).join("") : c;
+    return [parseInt(v.slice(0,2),16) || 0, parseInt(v.slice(2,4),16) || 0, parseInt(v.slice(4,6),16) || 0];
+  };
+  const a = l(hex), b = l(zielHex);
+  const m = a.map((v, i) => Math.round(v + (b[i] - v) * anteil));
+  return "#" + m.map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("");
+}
+
+function raceDekoAufbauen(track) {
+  const fern = document.getElementById("race-deko-fern");
+  const nah = document.getElementById("race-deko-nah");
+  const pfad = document.getElementById("race-track-path");
+  if (!fern || !nah || !pfad) return;
+
+  fern.innerHTML = "";
+  nah.innerHTML = "";
+
+  const l = RACE_LANDSCHAFTEN[track.landschaft];
+  if (!l) return;
+
+  // Himmel und Horizont nach Landschaft
+  const himmelEl = document.getElementById("race-himmel");
+  const horizontEl = document.getElementById("race-horizont");
+  if (himmelEl) himmelEl.setAttribute("fill", l.himmel);
+  if (horizontEl) horizontEl.setAttribute("fill", l.horizont);
+
+  // Die Bahn abtasten, um sie danach freizuhalten.
+  let laenge = 0;
+  try { laenge = pfad.getTotalLength(); } catch (err) { return; }
+  if (!laenge) return;
+  const bahn = [];
+  for (let i = 0; i < 90; i++) {
+    const pt = pfad.getPointAtLength((laenge * i) / 90);
+    bahn.push([pt.x, pt.y]);
+  }
+  // Die Fahrbahn ist 54 breit, der Curb 62 - 46 Abstand zur Mittellinie
+  // laesst also gerade eben nichts mehr auf den Asphalt ragen.
+  const ABSTAND = 46 * 46;
+
+  const dunkel = raceTonMischen(track.grass, "#000000", 0.45);
+  const hell   = raceTonMischen(track.grass, "#ffffff", 0.42);
+
+  const w = raceWuerfel(track.name || "strecke");
+  const teileFern = [];
+  const teileNah = [];
+  let versuche = 0;
+
+  while (teileFern.length + teileNah.length < l.anzahl && versuche < 400) {
+    versuche++;
+    const x = -20 + w() * 640;
+    const y = -50 + w() * 400;
+
+    let frei = true;
+    for (let i = 0; i < bahn.length; i++) {
+      const dx = bahn[i][0] - x, dy = bahn[i][1] - y;
+      if (dx * dx + dy * dy < ABSTAND) { frei = false; break; }
+    }
+    if (!frei) continue;
+
+    const art = l.teile[Math.floor(w() * l.teile.length)];
+    const groesse = 9 + w() * 13;
+    const svg = raceDekoTeil(art, x, y, groesse, dunkel, hell);
+    // Was unterhalb der ganzen Bahn liegt, steht davor - der Rest
+    // dahinter. Sonst laeuft ein Kart hinter einer Palme entlang, die
+    // eigentlich weiter weg ist.
+    (y > 268 ? teileNah : teileFern).push(svg);
+  }
+
+  fern.innerHTML = teileFern.join("");
+  nah.innerHTML = teileNah.join("");
+}
+
+/* ======================================================
+   START-/ZIELLINIE UND SEKTORENMARKEN
+   ---------------------------------------------------
+   Die Ziellinie stand bisher als festes Rechteck bei x=94,y=42 im
+   Markup - sie passte damit zu genau EINER der neun Strecken und lag
+   bei allen anderen daneben. Jetzt wird sie aus dem Pfad berechnet
+   und quer darauf gelegt, mitsamt Sektorenmarken bei einem und zwei
+   Dritteln. Erst dadurch sieht man, wo eine Runde anfaengt.
+====================================================== */
+function raceLinienAufbauen() {
+  const pfad = document.getElementById("race-track-path");
+  const ziel = document.getElementById("race-ziellinie");
+  const sekt = document.getElementById("race-sektoren");
+  if (!pfad || !ziel || !sekt) return;
+
+  ziel.innerHTML = "";
+  sekt.innerHTML = "";
+
+  let laenge = 0;
+  try { laenge = pfad.getTotalLength(); } catch (err) { return; }
+  if (!laenge) return;
+
+  function querAuf(anteil) {
+    const s = laenge * anteil;
+    const p = pfad.getPointAtLength(s);
+    const q = pfad.getPointAtLength(Math.min(laenge, s + 2));
+    const winkel = Math.atan2(q.y - p.y, q.x - p.x) * (180 / Math.PI);
+    return { x: p.x, y: p.y, winkel: winkel };
+  }
+
+  const z = querAuf(0);
+  ziel.innerHTML =
+    `<g transform="translate(${z.x.toFixed(1)},${z.y.toFixed(1)}) rotate(${z.winkel.toFixed(1)})">` +
+    `<rect x="-5" y="-27" width="10" height="54" fill="url(#race-checker)"/>` +
+    `<rect x="-6.5" y="-27" width="1.5" height="54" fill="rgba(255,255,255,.5)"/>` +
+    `<rect x="5" y="-27" width="1.5" height="54" fill="rgba(255,255,255,.5)"/></g>`;
+
+  sekt.innerHTML = [1 / 3, 2 / 3].map(function (a) {
+    const p = querAuf(a);
+    return `<g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) rotate(${p.winkel.toFixed(1)})">` +
+           `<rect x="-1" y="-27" width="2" height="54" fill="rgba(255,255,255,.28)"/></g>`;
+  }).join("");
+}
+
 function buildRaceTrack() {
   const track = getWeeklyTrack();
   if (!track) return;
@@ -80,6 +299,11 @@ function buildRaceTrack() {
     curbEl.setAttribute("d", track.path);
     curbEl.setAttribute("stroke", track.curb);
   }
+  // Zweite, um eine halbe Teilung versetzte Strichlinie in Weiss -
+  // zusammen ergibt das den abwechselnden Rand einer echten
+  // Randbegrenzung statt einer einfarbigen Strichelung.
+  const curbHellEl = document.getElementById("race-curb-hell");
+  if (curbHellEl) curbHellEl.setAttribute("d", track.path);
   if (trackPathEl) {
     trackPathEl.setAttribute("d", track.path);
     trackPathEl.setAttribute("stroke", track.roadOuter);
@@ -110,6 +334,13 @@ function buildRaceTrack() {
   // Streckenlänge neu berechnen, da sich der Pfad geändert hat
   raceTrackLength = null;
   raceBuiltForWeek = currentWeek;
+
+  // Erst NACH dem Setzen von "d": beide lesen den Pfad ab.
+  raceLinienAufbauen();
+  raceDekoAufbauen(track);
+  // Das Gelaende kann sich mit der Woche geaendert haben - dann
+  // stehen andere drei Fahrzeuge zur Wahl.
+  renderRaceFahrzeugwahl();
 }
 
 /* ------------------------------------------------------
@@ -276,6 +507,12 @@ let raceTrackLength = null;
 let raceTrailInterval = null;
 let raceLeaderUid = null;
 
+/* Die Stauchung der gekippten Ebene (matrix d in #race-neigung in
+   index.html). Steht hier, weil vier Rechnungen sie brauchen - und
+   damit sie nicht an zwei Stellen auseinanderlaufen kann. */
+const RACE_STAUCHUNG = 0.62;
+const RACE_GEGENSTAUCHUNG = +(1 / RACE_STAUCHUNG).toFixed(4);
+
 function getRaceTrackLength() {
   if (raceTrackLength) return raceTrackLength;
 
@@ -401,19 +638,263 @@ const planeMarkup = `
     </g>
   `;
 
+/* ======================================================
+   NEUN FAHRZEUGE, DREI JE GELAENDE
+   ---------------------------------------------------
+   Die Strecke bestimmt das GELAENDE (Land, Wasser, Luft), jeder
+   Mitfahrer waehlt daraus sein Fahrzeug. Rein optisch: auf den
+   Fortschritt hat die Wahl keinen Einfluss, es ist also auch nichts
+   gegen Schummeln abzusichern und nichts zu speichern ausser im
+   eigenen Browser.
+
+   Alle neun tragen dieselben Klassen (.kart-body, .kart-number,
+   .kart-shadow ...), damit Farbverlauf, Startnummer, Aura und Krone
+   ohne Sonderfaelle weiterfunktionieren.
+====================================================== */
+
+const buggyMarkup = `
+    <g class="kart-inner">
+      <ellipse class="kart-shadow" cx="0" cy="10" rx="14" ry="4"></ellipse>
+      <!-- Stollenreifen: groesser und kantiger als beim Kart -->
+      <g class="kart-wheel-group" transform="translate(-7.5,-8.5)">
+        <circle class="kart-tire" r="4.2"></circle><circle class="kart-rim" r="1.7"></circle>
+        <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".45s" repeatCount="indefinite"></animateTransform>
+      </g>
+      <g class="kart-wheel-group" transform="translate(-7.5,8.5)">
+        <circle class="kart-tire" r="4.2"></circle><circle class="kart-rim" r="1.7"></circle>
+        <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".45s" repeatCount="indefinite"></animateTransform>
+      </g>
+      <g class="kart-wheel-group" transform="translate(7,-8.5)">
+        <circle class="kart-tire" r="4.2"></circle><circle class="kart-rim" r="1.7"></circle>
+        <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".45s" repeatCount="indefinite"></animateTransform>
+      </g>
+      <g class="kart-wheel-group" transform="translate(7,8.5)">
+        <circle class="kart-tire" r="4.2"></circle><circle class="kart-rim" r="1.7"></circle>
+        <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".45s" repeatCount="indefinite"></animateTransform>
+      </g>
+      <!-- Ueberrollbuegel statt Spoiler -->
+      <path class="buggy-buegel" d="M-5,-6 Q0,-11 5,-6" fill="none" stroke="#2a2a2a" stroke-width="1.6"></path>
+      <path class="buggy-buegel" d="M-5,6 Q0,11 5,6" fill="none" stroke="#2a2a2a" stroke-width="1.6"></path>
+      <rect class="kart-body" x="-8" y="-6" width="16" height="12" rx="2.5"></rect>
+      <rect class="kart-stripe" x="-8" y="-1.8" width="16" height="3.6"></rect>
+      <circle class="kart-helmet" cx="-1" cy="0" r="3"></circle>
+      <text class="kart-number" x="-1" y="1.6" text-anchor="middle"></text>
+      <polygon class="kart-nose" points="8,-3 13,0 8,3"></polygon>
+    </g>
+  `;
+
+const rennwagenMarkup = `
+    <g class="kart-inner">
+      <ellipse class="kart-shadow" cx="0" cy="10" rx="15" ry="3.5"></ellipse>
+      <g class="kart-wheel-group" transform="translate(-8,-8)">
+        <circle class="kart-tire" r="3.2"></circle><circle class="kart-rim" r="1.4"></circle>
+        <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".3s" repeatCount="indefinite"></animateTransform>
+      </g>
+      <g class="kart-wheel-group" transform="translate(-8,8)">
+        <circle class="kart-tire" r="3.2"></circle><circle class="kart-rim" r="1.4"></circle>
+        <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".3s" repeatCount="indefinite"></animateTransform>
+      </g>
+      <g class="kart-wheel-group" transform="translate(8,-7)">
+        <circle class="kart-tire" r="2.6"></circle><circle class="kart-rim" r="1.1"></circle>
+        <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".3s" repeatCount="indefinite"></animateTransform>
+      </g>
+      <g class="kart-wheel-group" transform="translate(8,7)">
+        <circle class="kart-tire" r="2.6"></circle><circle class="kart-rim" r="1.1"></circle>
+        <animateTransform attributeName="transform" type="rotate" additive="sum" from="0 0 0" to="360 0 0" dur=".3s" repeatCount="indefinite"></animateTransform>
+      </g>
+      <!-- Langer, flacher Koerper mit grossem Heckfluegel -->
+      <rect class="kart-spoiler" x="-15" y="-6.5" width="3.4" height="13" rx="1"></rect>
+      <path class="kart-body" d="M-12,-4.5 L4,-4.5 Q10,-4 16,0 Q10,4 4,4.5 L-12,4.5 Q-13.5,0 -12,-4.5 Z"></path>
+      <path class="kart-gloss" d="M-10,-3.6 L3,-3.6 L2,-2.2 L-10,-2.2 Z"></path>
+      <rect class="kart-stripe" x="-12" y="-1.6" width="24" height="3.2"></rect>
+      <path class="kart-windshield" d="M-3,-3.4 Q0,-5 3,-3.6 L2.4,-1.2 L-2.6,-1.2 Z"></path>
+      <circle class="kart-helmet" cx="-1.5" cy="0" r="2.7"></circle>
+      <text class="kart-number" x="-1.5" y="1.5" text-anchor="middle"></text>
+      <rect class="kart-front-wing" x="12" y="3.4" width="6" height="1.3" rx=".6"></rect>
+      <polygon class="kart-nose" points="16,-1.6 19,0 16,1.6"></polygon>
+    </g>
+  `;
+
+const ruderbootMarkup = `
+    <g class="kart-inner">
+      <ellipse class="kart-shadow" cx="0" cy="8" rx="12" ry="3"></ellipse>
+      <path class="kart-body" d="M-11,1 Q0,-3 11,1 Q11,7 0,8.5 Q-11,7 -11,1 Z"></path>
+      <path class="kart-side-shade" d="M-9,4 Q0,6 9,4 Q9,6.6 0,8 Q-9,6.6 -9,4 Z"></path>
+      <path class="kart-gloss" d="M-9,1.4 Q0,-1.4 9,1.4 L7,2.6 Q0,0.4 -7,2.6 Z"></path>
+      <!-- Ruder, die im Takt schlagen -->
+      <g class="ruder-arm">
+        <line x1="-2" y1="2" x2="-9" y2="-7" stroke="#8a6a42" stroke-width="1.3"></line>
+        <ellipse cx="-9.6" cy="-8" rx="1.8" ry="1" fill="#8a6a42" transform="rotate(-40 -9.6 -8)"></ellipse>
+        <animateTransform attributeName="transform" type="rotate" values="-9 -2 2; 9 -2 2; -9 -2 2" dur=".9s" repeatCount="indefinite"></animateTransform>
+      </g>
+      <g class="ruder-arm">
+        <line x1="-2" y1="4" x2="-9" y2="13" stroke="#8a6a42" stroke-width="1.3"></line>
+        <ellipse cx="-9.6" cy="14" rx="1.8" ry="1" fill="#8a6a42" transform="rotate(40 -9.6 14)"></ellipse>
+        <animateTransform attributeName="transform" type="rotate" values="9 -2 4; -9 -2 4; 9 -2 4" dur=".9s" repeatCount="indefinite"></animateTransform>
+      </g>
+      <circle class="kart-helmet" cx="0" cy="3" r="2.6"></circle>
+      <text class="kart-number" x="0" y="4.4" text-anchor="middle"></text>
+      <polygon class="kart-nose" points="11,1.5 14.5,3.5 11,5.5"></polygon>
+    </g>
+  `;
+
+const motorbootMarkup = `
+    <g class="kart-inner">
+      <ellipse class="kart-shadow" cx="0" cy="9" rx="13" ry="3"></ellipse>
+      <!-- Heckwelle: zwei Boegen, die mitlaufen -->
+      <path class="motorboot-welle" d="M-11,2 q-4,2 -7,0" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round">
+        <animate attributeName="opacity" values=".7;.2;.7" dur=".5s" repeatCount="indefinite"></animate>
+      </path>
+      <path class="motorboot-welle" d="M-11,6 q-5,2 -9,0" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.1" stroke-linecap="round">
+        <animate attributeName="opacity" values=".2;.6;.2" dur=".5s" repeatCount="indefinite"></animate>
+      </path>
+      <path class="kart-body" d="M-11,0 L6,0 Q13,2.5 13,4 Q13,5.5 6,8 L-11,8 Q-12.5,4 -11,0 Z"></path>
+      <path class="kart-side-shade" d="M-11,5.4 L6,5.4 Q11,6.4 11,6.6 Q7,8 6,8 L-11,8 Z"></path>
+      <path class="kart-gloss" d="M-9,0.8 L5,0.8 L4,2.2 L-9,2.2 Z"></path>
+      <rect class="kart-stripe" x="-11" y="3" width="21" height="2.2"></rect>
+      <path class="kart-windshield" d="M0,0 Q3,-2.6 5,-.4 L4.4,1 L-.4,1 Z"></path>
+      <circle class="kart-helmet" cx="-2" cy="3.6" r="2.4"></circle>
+      <text class="kart-number" x="-2" y="4.9" text-anchor="middle"></text>
+      <polygon class="kart-nose" points="13,3 16,4 13,5"></polygon>
+    </g>
+  `;
+
+const ballonMarkup = `
+    <g class="kart-inner">
+      <ellipse class="kart-shadow" cx="0" cy="16" rx="8" ry="2.5" opacity=".22"></ellipse>
+      <!-- Huelle -->
+      <path class="kart-body" d="M0,-18 C9,-18 12,-10 12,-5 C12,1 6,5 0,6 C-6,5 -12,1 -12,-5 C-12,-10 -9,-18 0,-18 Z"></path>
+      <path class="kart-stripe" d="M-4.5,-17.4 C-6,-11 -6,-3 -3,5.4 L3,5.4 C6,-3 6,-11 4.5,-17.4 Z" opacity=".75"></path>
+      <path class="kart-gloss" d="M-7,-14 C-9,-10 -9.5,-6 -8.5,-2 L-5.5,-3 C-6.5,-7 -6,-11 -4.5,-14 Z" opacity=".5"></path>
+      <!-- Seile und Korb -->
+      <line x1="-6" y1="5" x2="-3" y2="11" stroke="#6b5334" stroke-width=".9"></line>
+      <line x1="6" y1="5" x2="3" y2="11" stroke="#6b5334" stroke-width=".9"></line>
+      <rect x="-4" y="11" width="8" height="6" rx="1.2" fill="#7a5c38"></rect>
+      <rect x="-4" y="12.6" width="8" height=".9" fill="#5d4529"></rect>
+      <text class="kart-number" x="0" y="16" text-anchor="middle"></text>
+      <polygon class="kart-nose" points="12,-5 15,-5 12,-3.4"></polygon>
+    </g>
+  `;
+
+const drachenMarkup = `
+    <g class="kart-inner">
+      <ellipse class="kart-shadow" cx="0" cy="14" rx="8" ry="2.5" opacity=".2"></ellipse>
+      <!-- Rautensegel -->
+      <path class="kart-body" d="M0,-13 L9,0 L0,13 L-9,0 Z"></path>
+      <path class="kart-gloss" d="M0,-13 L9,0 L0,0 Z" opacity=".45"></path>
+      <line x1="0" y1="-13" x2="0" y2="13" stroke="rgba(0,0,0,.28)" stroke-width=".8"></line>
+      <line x1="-9" y1="0" x2="9" y2="0" stroke="rgba(0,0,0,.28)" stroke-width=".8"></line>
+      <!-- Schweif mit Schleifen -->
+      <path class="drachen-schweif" d="M-9,0 q-5,2 -9,-1 q-4,-3 -8,1" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1">
+        <animate attributeName="d" dur="1.1s" repeatCount="indefinite"
+                 values="M-9,0 q-5,2 -9,-1 q-4,-3 -8,1; M-9,0 q-5,-2 -9,1 q-4,3 -8,-1; M-9,0 q-5,2 -9,-1 q-4,-3 -8,1"></animate>
+      </path>
+      <text class="kart-number" x="0" y="2.5" text-anchor="middle"></text>
+      <polygon class="kart-nose" points="9,0 12.5,0 9,1.6"></polygon>
+    </g>
+  `;
+
+/* Welches Gelaende welche drei Fahrzeuge hat. Der erste ist der
+   Standard - er ist jeweils das, was vor dieser Runde als einziges
+   gefahren wurde, damit sich fuer niemanden ungefragt etwas aendert. */
+const RACE_FAHRZEUGE = {
+  car:   [ { id: "kart",       symbol: "🏎️", name: { de: "Kart",         en: "Kart" },        markup: () => kartMarkup },
+           { id: "buggy",      symbol: "🚙", name: { de: "Buggy",        en: "Buggy" },       markup: () => buggyMarkup },
+           { id: "rennwagen",  symbol: "🏁", name: { de: "Rennwagen",    en: "Race car" },    markup: () => rennwagenMarkup } ],
+  boat:  [ { id: "segelboot",  symbol: "⛵", name: { de: "Segelboot",    en: "Sailboat" },    markup: () => boatMarkup },
+           { id: "ruderboot",  symbol: "🚣", name: { de: "Ruderboot",    en: "Rowing boat" }, markup: () => ruderbootMarkup },
+           { id: "motorboot",  symbol: "🚤", name: { de: "Motorboot",    en: "Speedboat" },   markup: () => motorbootMarkup } ],
+  plane: [ { id: "flugzeug",   symbol: "✈️", name: { de: "Doppeldecker", en: "Biplane" },     markup: () => planeMarkup },
+           { id: "ballon",     symbol: "🎈", name: { de: "Heißluftballon", en: "Hot-air balloon" }, markup: () => ballonMarkup },
+           { id: "drachen",    symbol: "🪁", name: { de: "Flugdrachen",  en: "Kite" },        markup: () => drachenMarkup } ],
+};
+
+function raceGelaende() {
+  const t = getWeeklyTrack();
+  const g = t ? t.vehicle : "car";
+  return RACE_FAHRZEUGE[g] ? g : "car";
+}
+
+/* Die Wahl steht nur im eigenen Browser - sie ist rein optisch, es
+   gibt also nichts, was der Server davon wissen muesste. */
+function raceFahrzeugWahl(gelaende) {
+  const g = gelaende || raceGelaende();
+  const liste = RACE_FAHRZEUGE[g];
+  let id = null;
+  try { id = localStorage.getItem("raceFahrzeug_" + g); } catch (err) { /* egal */ }
+  for (const f of liste) if (f.id === id) return f;
+  return liste[0];
+}
+
+function raceFahrzeugSetzen(id) {
+  const g = raceGelaende();
+  if (!RACE_FAHRZEUGE[g].some((f) => f.id === id)) return;
+  try { localStorage.setItem("raceFahrzeug_" + g, id); } catch (err) { /* egal */ }
+
+  // Alle bereits gezeichneten Fahrzeuge wegwerfen: sie werden beim
+  // naechsten Positionieren mit dem neuen Markup neu gebaut.
+  const layer = document.getElementById("race-karts-layer");
+  if (layer) layer.innerHTML = "";
+  raceKartElements = {};
+  renderRaceFahrzeugwahl();
+  loadRaceLeaderboard();
+}
+
+function renderRaceFahrzeugwahl() {
+  const box = document.getElementById("race-fahrzeugwahl");
+  if (!box) return;
+  const g = raceGelaende();
+  const en = typeof getCurrentLang === "function" && getCurrentLang() === "en";
+  const jetzt = raceFahrzeugWahl(g);
+  const gelaendeName = { car: en ? "on land" : "auf Land",
+                         boat: en ? "on water" : "auf Wasser",
+                         plane: en ? "in the air" : "in der Luft" }[g];
+
+  box.innerHTML =
+    `<p class="race-fahrzeug-titel">${en ? "Your vehicle" : "Dein Fahrzeug"} · ${gelaendeName}</p>` +
+    `<div class="race-fahrzeug-reihe">` +
+    RACE_FAHRZEUGE[g].map((f) =>
+      `<button type="button" class="race-fahrzeug${f.id === jetzt.id ? " ist-gewaehlt" : ""}"
+               data-fahrzeug="${f.id}" aria-pressed="${f.id === jetzt.id ? "true" : "false"}">
+         <span class="race-fahrzeug-symbol">${f.symbol}</span>
+         <span class="race-fahrzeug-name">${en ? f.name.en : f.name.de}</span>
+       </button>`).join("") +
+    `</div>`;
+
+  box.querySelectorAll("[data-fahrzeug]").forEach((btn) => {
+    btn.addEventListener("click", () => raceFahrzeugSetzen(btn.getAttribute("data-fahrzeug")));
+  });
+}
+
 function createKartElement(uid) {
   const svgNS = "http://www.w3.org/2000/svg";
   const kart = document.createElementNS(svgNS, "g");
   kart.setAttribute("class", "race-kart");
 
-  const track = getWeeklyTrack();
-  const vehicle = track ? track.vehicle : "car";
-  const bodyMarkup = vehicle === "boat" ? boatMarkup : vehicle === "plane" ? planeMarkup : kartMarkup;
+  // Welches der drei Fahrzeuge dieses Gelaendes gefahren wird, hat der
+  // Mitfahrer selbst gewaehlt (raceFahrzeugWahl).
+  const bodyMarkup = raceFahrzeugWahl().markup();
 
-  // Krone ist Teil von .kart-inner, damit sie WIRKLICH fest am Fahrzeug
-  // "verschweißt" ist - sie bewegt, dreht und bobt exakt mit dem Auto mit,
-  // statt separat zu schweben.
-  kart.innerHTML = `<text class="kart-label" y="-16" text-anchor="middle"></text>${bodyMarkup}`;
+  /* Krone ist Teil von .kart-inner, damit sie WIRKLICH fest am Fahrzeug
+     "verschweißt" ist - sie bewegt, dreht und bobt exakt mit dem Auto mit,
+     statt separat zu schweben.
+
+     .kart-neigung dazwischen traegt Gegenstauchung, Blickrichtung,
+     Kurvenlage und Tiefenmassstab (siehe positionKart). Eine EIGENE
+     Gruppe, weil .kart-inner bereits die Huepf-Animation im transform
+     hat - beides in einer Gruppe wuerde sich gegenseitig ueberschreiben. */
+  /* Der Name braucht seine EIGENE Gegenstauchung. Er sass sonst zu
+     tief (16 mal 0,62 sind nur noch 10 Bildpunkte Abstand, er lag
+     also halb auf dem Fahrzeug) und war dazu in der Hoehe
+     zusammengedrueckt. Die Gruppe streckt ihn um denselben Faktor,
+     um den die Ebene ihn staucht - beides hebt sich exakt auf, und
+     zwar fuer Lage UND Buchstabenform. Anders als beim Fahrzeug ohne
+     Drehung: ein Name, der sich mit der Fahrtrichtung mitdreht, waere
+     auf der Gegengeraden auf dem Kopf. */
+  kart.innerHTML =
+    `<g class="kart-label-lage" transform="scale(1,${RACE_GEGENSTAUCHUNG})">` +
+    `<text class="kart-label" y="-16" text-anchor="middle"></text></g>` +
+    `<g class="kart-neigung">${bodyMarkup}</g>`;
   const innerGroup = kart.querySelector(".kart-inner");
   if (innerGroup) {
     const crown = document.createElementNS(svgNS, "text");
@@ -442,9 +923,36 @@ function positionKart(uid, percent, nickname, colorIndex) {
   // (das wuerde ALLE nachfolgenden Karts unpositioniert lassen).
   if (!length) return;
   const clamped = Math.max(0, Math.min(1, percent));
-  const point = pathEl.getPointAtLength(clamped * length);
-  const lookAhead = pathEl.getPointAtLength(Math.min(length, clamped * length + 2));
-  const angle = Math.atan2(lookAhead.y - point.y, lookAhead.x - point.x) * (180 / Math.PI);
+  const s0 = clamped * length;
+  const point = pathEl.getPointAtLength(s0);
+  const lookAhead = pathEl.getPointAtLength(Math.min(length, s0 + 2));
+
+  /* WARUM DIE BLICKRICHTUNG NICHT EINFACH atan2(dy, dx) IST
+     Die ganze Ebene ist in der Hoehe gestaucht (matrix d=0.62 auf
+     #race-neigung). Eine Fahrtrichtung, die im Pfad 45 Grad hat, sieht
+     auf dem Bild flacher aus. Wer den ungestauchten Winkel nimmt, laesst
+     das Fahrzeug schraeg zur eigenen Spur stehen - besonders auffaellig
+     in den Kurven. Deshalb wird dy vorher mitgestaucht. */
+  const angle = Math.atan2((lookAhead.y - point.y) * RACE_STAUCHUNG,
+                           lookAhead.x - point.x) * (180 / Math.PI);
+
+  /* KURVENLAGE: der Unterschied der Blickrichtung ueber ein kurzes
+     Stueck ist die Kruemmung. Positiv heisst Rechtskurve. Als Scherung
+     aufgetragen legt sich das Fahrzeug in die Kurve, statt starr auf
+     der Linie zu kleben. */
+  const weiter = pathEl.getPointAtLength(Math.min(length, s0 + 16));
+  const winkel2 = Math.atan2((weiter.y - lookAhead.y) * RACE_STAUCHUNG,
+                             weiter.x - lookAhead.x) * (180 / Math.PI);
+  let dw = winkel2 - angle;
+  while (dw > 180) dw -= 360;
+  while (dw < -180) dw += 360;
+  const lage = Math.max(-16, Math.min(16, dw * 0.9));
+
+  /* TIEFE: was weiter unten liegt, ist naeher an der Kamera. Ein
+     kleiner Groessenunterschied reicht - die Stauchung allein sagt
+     "gekippte Ebene", erst der Massstab sagt "und ich sehe sie
+     perspektivisch". */
+  const tiefe = 0.86 + 0.28 * Math.max(0, Math.min(1, point.y / 300));
 
   let kart = raceKartElements[uid];
   if (!kart) {
@@ -455,7 +963,19 @@ function positionKart(uid, percent, nickname, colorIndex) {
   kart.querySelector(".kart-body").setAttribute("fill", `url(#${raceKartGradients[colorIndex % raceKartGradients.length]})`);
   kart.querySelector(".kart-label").textContent = nickname;
   kart.querySelector(".kart-number").textContent = colorIndex + 1;
-  kart.style.transform = `translate(${point.x}px, ${point.y}px) rotate(${angle}deg)`;
+  /* Die Drehung sitzt jetzt IN der Neigungsgruppe, nicht mehr hier:
+     nur so laesst sich die Stauchung der Ebene sauber herausrechnen
+     (scale nach aussen, rotate nach innen). Nebenbei kann .race-kart
+     dadurch eine reine Verschiebung ueberblenden - eine mitlaufende
+     Drehung wuerde beim Ueberschreiten von 180 Grad einmal
+     durchdrehen. */
+  kart.style.transform = `translate(${point.x}px, ${point.y}px)`;
+  const neigung = kart.querySelector(".kart-neigung");
+  if (neigung) {
+    neigung.setAttribute("transform",
+      `scale(${tiefe.toFixed(3)}) scale(1,${RACE_GEGENSTAUCHUNG}) ` +
+      `rotate(${angle.toFixed(1)}) skewX(${lage.toFixed(1)})`);
+  }
   kart.classList.toggle("race-kart-leader", colorIndex === 0);
   kart.classList.toggle("race-kart-rank2", colorIndex === 1);
   kart.classList.toggle("race-kart-rank3", colorIndex === 2);
@@ -477,19 +997,51 @@ function spawnRaceTrailDot() {
   const match = transform.match(/translate\(([-\d.]+)px, ?([-\d.]+)px\)/);
   if (!match) return;
 
-  const flameColors = ["#ffd76b", "#ff9f4d", "#ff5252"];
-  const color = flameColors[Math.floor(Math.random() * flameColors.length)];
-
   const svgNS = "http://www.w3.org/2000/svg";
-  const dot = document.createElementNS(svgNS, "circle");
-  dot.setAttribute("class", "race-trail-dot");
-  dot.setAttribute("cx", match[1]);
-  dot.setAttribute("cy", match[2]);
-  dot.setAttribute("r", "3");
-  dot.setAttribute("fill", color);
+  const x = parseFloat(match[1]);
+  const y = parseFloat(match[2]);
 
-  layer.insertBefore(dot, leaderKart);
-  setTimeout(() => dot.remove(), 700);
+  /* Die Spur richtet sich nach dem Gelaende: ein Kart wirbelt Staub
+     auf, ein Boot zieht Kielwasser, ein Flugzeug einen
+     Kondensstreifen. Dieselbe gelbe Flamme fuer alle drei sah beim
+     Segelboot aus wie ein Motorschaden. */
+  const g = raceGelaende();
+  let el;
+
+  if (g === "boat") {
+    // Kielwasser: ein flacher Bogen quer zur Fahrtrichtung, der
+    // auseinanderlaeuft.
+    el = document.createElementNS(svgNS, "path");
+    el.setAttribute("d", `M${(x - 7).toFixed(1)},${y.toFixed(1)} q7,-3 14,0`);
+    el.setAttribute("fill", "none");
+    el.setAttribute("stroke", "rgba(255,255,255,.75)");
+    el.setAttribute("stroke-width", "1.6");
+    el.setAttribute("stroke-linecap", "round");
+  } else if (g === "plane") {
+    // Kondensstreifen: kurzer weisser Strich, der ausduennt.
+    el = document.createElementNS(svgNS, "line");
+    el.setAttribute("x1", (x - 9).toFixed(1));
+    el.setAttribute("y1", y.toFixed(1));
+    el.setAttribute("x2", (x + 2).toFixed(1));
+    el.setAttribute("y2", y.toFixed(1));
+    el.setAttribute("stroke", "rgba(240,248,255,.8)");
+    el.setAttribute("stroke-width", "2.2");
+    el.setAttribute("stroke-linecap", "round");
+  } else {
+    // Staub: kleine Wolken in der Farbe des Untergrunds statt gelber
+    // Flammen - aufgewirbelter Sand ist sandfarben.
+    const track = getWeeklyTrack();
+    const grund = track ? track.grass : "#5a4426";
+    el = document.createElementNS(svgNS, "circle");
+    el.setAttribute("cx", (x + (Math.random() - 0.5) * 5).toFixed(1));
+    el.setAttribute("cy", (y + (Math.random() - 0.5) * 4).toFixed(1));
+    el.setAttribute("r", (2.5 + Math.random() * 2).toFixed(1));
+    el.setAttribute("fill", raceTonMischen(grund, "#ffffff", 0.35));
+  }
+
+  el.setAttribute("class", "race-trail-dot");
+  layer.insertBefore(el, leaderKart);
+  setTimeout(() => el.remove(), 700);
 }
 
 function startRaceTrail() {

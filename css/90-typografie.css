@@ -47,6 +47,17 @@
 /* Der Vorspann darf nicht ueber die ganze Breite laufen - mittig
    gesetzter Text wird ab etwa 70 Zeichen je Zeile unangenehm zu
    lesen, weil der Zeilenanfang staendig springt. */
+/* AUSNAHME WOCHENRENNEN
+   Als einzige Seite hat es eine zweispaltige Kopfzeile: links Titel,
+   rechts Tagesbonus und Countdown (siehe .race-head in index.html).
+   Zentriert stand der Titel dann mittig in seiner LINKEN SPALTE - auf
+   1280px bei 427px statt bei 678px. Das sah nicht nach Absicht aus,
+   sondern nach verrutscht. Linksbuendig ist die zweispaltige Kopfzeile
+   sofort als solche zu erkennen. */
+#race .fh-page-head,
+#race .fh-page-head .fh-page-kicker { text-align: left; }
+#race .fh-page-lead { margin-inline: 0; }
+
 .fh-page-lead {
   max-width: 62ch;
   margin-inline: auto;

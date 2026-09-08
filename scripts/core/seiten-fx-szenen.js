@@ -501,28 +501,82 @@ void main() {
      Strecke dazu, passt der Hintergrund von selbst.
   ========================================================= */
   const RENNEN = `
-uniform vec3 uGrund;
-uniform vec3 uAkzent;
+uniform vec3  uGrund;
+uniform vec3  uAkzent;
+uniform float uStil;   // 0 neutral, 1 Hitze, 2 Neon, 3 Sturm, 4 Wasser, 5 Wolken
+
+/* Ob ein Stil gemeint ist. Ganzzahlvergleich in float - der Wert
+   kommt aus einer festen Tabelle, es gibt also keine krummen
+   Zwischenwerte, gegen die man sich absichern muesste. */
+float ist(float wert) { return step(wert - 0.5, uStil) * step(uStil, wert + 0.5); }
 
 void main() {
   vec2 uv = bild();
   vec2 p  = gleich();
 
+  /* HITZE: der ganze Blick flimmert, wie ueber heissem Sand. Die
+     Verzerrung sitzt VOR allem anderen, damit auch die Streifen
+     mitwabern - ein flimmernder Untergrund unter starren Streifen
+     saehe aus wie ein Fehler. */
+  float hitze = ist(1.0);
+  p.x += hitze * sin(p.y * 22.0 + uTime * 3.4) * 0.010;
+  p.y += hitze * sin(p.x * 17.0 + uTime * 2.6) * 0.006;
+  uv.x += hitze * sin(uv.y * 30.0 + uTime * 3.1) * 0.006;
+
   /* Ziehende Schwaden in der Grundfarbe der Strecke - Staub,
-     Wasser oder Wolken, je nachdem. */
-  float dunst = fbm(vec2(p.x * 1.6 - uTime * 0.10, p.y * 2.6 + uTime * 0.03));
+     Wasser oder Wolken, je nachdem. Wasser zieht langsamer und
+     breiter, Wolken noch langsamer. */
+  float tempoDunst = 0.10 + ist(4.0) * (-0.055) + ist(5.0) * (-0.07);
+  float dunst = fbm(vec2(p.x * 1.6 - uTime * tempoDunst, p.y * 2.6 + uTime * 0.03));
   vec3 farbe = uGrund * smoothstep(0.30, 0.85, dunst) * 0.55;
 
-  /* Waagerechte Tempo-Streifen in der Akzentfarbe. */
+  /* Tempo-Streifen. Beim Neon-Stil sind sie schmaler, schneller und
+     kraeftiger - dort SIND sie das Motiv, nicht nur Beiwerk. */
+  float neon = ist(2.0);
+  float schaerfe = mix(0.006, 0.0025, neon);
+  float staerke  = mix(0.55, 1.15, neon);
+  float zahl     = mix(1.0, 1.7, neon);
+
   for (int k = 0; k < 5; k++) {
     float f = float(k);
     float y = hash11(f * 5.7);
-    float tempo = 0.35 + hash11(f * 3.3) * 0.55;
+    float tempo = (0.35 + hash11(f * 3.3) * 0.55) * zahl;
     float x = fract(uTime * tempo + hash11(f * 8.1));
 
-    float band = smoothstep(0.006, 0.0, abs(uv.y - y));
+    float band = smoothstep(schaerfe, 0.0, abs(uv.y - y));
     float kopf = smoothstep(0.22, 0.0, abs(uv.x - x));
-    farbe += uAkzent * band * kopf * 0.55;
+    farbe += uAkzent * band * kopf * staerke;
+  }
+
+  /* WASSER: lange, flache Wellenkaemme, die von unten heraufziehen. */
+  float wasser = ist(4.0);
+  if (wasser > 0.5) {
+    float w = sin(uv.y * 26.0 - uTime * 0.9 + sin(uv.x * 3.0 + uTime * 0.4) * 1.4);
+    farbe += uAkzent * smoothstep(0.86, 1.0, w) * 0.30 * smoothstep(0.0, 0.7, uv.y);
+  }
+
+  /* WOLKEN: breite, weiche Baender, die waagerecht durchziehen. */
+  float wolken = ist(5.0);
+  if (wolken > 0.5) {
+    float b = fbm(vec2(p.x * 0.9 - uTime * 0.045, p.y * 1.8));
+    farbe += uAkzent * smoothstep(0.55, 0.95, b) * 0.28;
+  }
+
+  /* STURM: unregelmaessige Blitze. Ein Blitz braucht einen harten
+     Einsatz und ein weiches Nachglimmen - deshalb der steile
+     smoothstep auf den Bruchteil der Sekunde, nicht ein Sinus. */
+  float sturm = ist(3.0);
+  if (sturm > 0.5) {
+    float takt = floor(uTime * 0.7);
+    float rest = fract(uTime * 0.7);
+    float wann = hash11(takt * 7.3);
+    if (wann > 0.62) {
+      float schlag = smoothstep(0.10, 0.0, rest) + smoothstep(0.30, 0.16, rest) * 0.35;
+      float wo = hash11(takt * 3.1);
+      float naehe = smoothstep(0.35, 0.0, abs(uv.x - wo));
+      farbe += uAkzent * schlag * naehe * 0.9;
+      farbe += vec3(0.9) * schlag * 0.10;
+    }
   }
 
   /* Horizont: unten heller, wie aufgewirbelter Untergrund. */
@@ -808,14 +862,22 @@ void main() {
     race: function (THREE) {
       const ersatzGrund  = new THREE.Vector3(0.35, 0.27, 0.15);
       const ersatzAkzent = new THREE.Vector3(1.00, 0.84, 0.42);
+      /* Die Bewegungsart je Strecke. Die Farben ziehen weich nach
+         (lerp), der Stil springt - ein halb geflimmerter, halb
+         gewellter Zwischenzustand ergaebe kein Bild. Bei einem
+         unbekannten Namen bleibt es beim neutralen Lauf, eine neue
+         Strecke ohne "stil" faellt also nicht aus. */
+      const STILE = { hitze: 1, neon: 2, sturm: 3, wasser: 4, wolken: 5 };
       return flaeche(THREE, RENNEN,
         { uGrund:  { value: ersatzGrund.clone() },
-          uAkzent: { value: ersatzAkzent.clone() } },
+          uAkzent: { value: ersatzAkzent.clone() },
+          uStil:   { value: 0 } },
         function (u) {
           const t = window.fhRennThema;
           if (!t) return;
           u.uGrund.value.lerp(tonAus(THREE, t.grass, ersatzGrund), 0.03);
           u.uAkzent.value.lerp(tonAus(THREE, t.accent, ersatzAkzent), 0.03);
+          u.uStil.value = STILE[t.stil] || 0;
         });
     },
   };
