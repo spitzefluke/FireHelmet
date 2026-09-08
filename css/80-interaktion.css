@@ -261,3 +261,82 @@ a[tabindex]:not([href]):focus-visible {
   outline: 2px solid var(--fh-gold-bright);
   outline-offset: 3px;
 }
+
+/* =========================
+   4. GOLD-SWEEP AUF DEN HAUPTAKTIONEN
+   ---------------------------------------------------
+   Ein Lichtstreifen, der bei Schwebe einmal ueber den Knopf laeuft.
+   Der Effekt gab es auf der Seite schon zweimal, jeweils von Hand
+   gebaut und leicht verschieden: .shop-item-btn::after (weiss,
+   .7s, @keyframes fhNavSweep) und #code-confirm-btn::after (gruen,
+   1s, @keyframes codeBtnSweep, dazu ein rotierender Rahmen).
+
+   Hier steht er einmal und wird auf die uebrigen Hauptaktionen
+   gelegt: Drehen, Angreifen, Anklagen, Turnier betreten und die
+   Handlungsknoepfe der Startseite. Zwei bleiben absichtlich aussen
+   vor:
+
+   - #code-confirm-btn behaelt seinen gruenen Sweep. Er gehoert zum
+     Decrypt-Bild der Codes-Seite; Gold waere dort ein Fremdkoerper.
+   - .shop-item-btn behaelt seinen weissen. Er sitzt auf einem
+     Knopf, der selbst schon golden ist - Gold auf Gold sieht man
+     nicht.
+
+   Nur bei Schwebe, nie von allein: ein Knopf, der dauerhaft
+   glitzert, zieht Aufmerksamkeit ab und kostet in jedem Bild
+   Zeichenarbeit. Auf Beruehrungsgeraeten gibt es keinen
+   Schwebezustand, dort passiert also nichts - dafuer ist der
+   Druckzustand aus Abschnitt 2 zustaendig.
+========================= */
+:is(
+  .spin-button,
+  .boss-attack-btn,
+  .detective-accuse-btn,
+  .tournament-play-button,
+  .tournament-enter-button,
+  .fh-cta
+) {
+  position: relative;
+  overflow: hidden;
+}
+
+:is(
+  .spin-button,
+  .boss-attack-btn,
+  .detective-accuse-btn,
+  .tournament-play-button,
+  .tournament-enter-button,
+  .fh-cta
+)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg,
+              transparent 30%,
+              rgba(255,236,186,.42) 47%,
+              rgba(240,201,106,.28) 53%,
+              transparent 70%);
+  background-size: 250% 100%;
+  background-position: 200% 0;
+  opacity: 0;
+  transition: opacity var(--fh-dauer) var(--fh-ease);
+}
+
+/* :not(:disabled) - ein Knopf, der gerade nicht geht, soll auch
+   nicht einladend aufleuchten. */
+:is(
+  .spin-button,
+  .boss-attack-btn,
+  .detective-accuse-btn,
+  .tournament-play-button,
+  .tournament-enter-button,
+  .fh-cta
+):hover:not(:disabled)::after {
+  opacity: 1;
+  /* fhNavSweep steht bereits in css/30-events.css und wird von
+     .shop-item-btn benutzt - dieselbe Bewegung zweimal zu
+     definieren waere genau die Doppelung, die hier aufgeraeumt
+     wird. */
+  animation: fhNavSweep .7s var(--fh-ease) forwards;
+}
