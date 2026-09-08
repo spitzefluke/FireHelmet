@@ -230,5 +230,5 @@ const PIRATE_PASS_CAP_IMAGE = "assets/piratenpass/cap.webp";
    werden darf. Aendert sich einer der beiden Werte dort, MUSS er
    auch hier nachgezogen werden, sonst zeigt die Seite falsche Texte.
 ------------------------------------------------------ */
-const PASS_CAP_TOTAL_SLOTS = 9;
+const PASS_CAP_TOTAL_SLOTS = 4;
 const PASS_CAP_FALLBACK_CURRENCY = 500;

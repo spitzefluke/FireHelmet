@@ -425,33 +425,71 @@ void main() {
 `;
 
   /* =========================================================
-     DER FALL - SUCHSCHEINWERFER
-     Ein schmaler Strahl dreht sich langsam ueber dunklem Grund.
-     Dazu ein Hauch Filmkorn - das ist der Noir-Anteil.
+     DER FALL - KAPITAENSKAJUETE BEI LAMPENLICHT
+     ---------------------------------------------------
+     Vorher drehte sich hier ein Suchscheinwerfer. Der gehoert an
+     eine Gefaengnismauer, nicht auf ein Schiff - und er passte
+     schon gar nicht zu einer Ermittlungstafel, die an einer Wand
+     haengt. Jetzt ist es ein Raum: dunkles Holz, eine schwankende
+     Oellampe als einzige Lichtquelle, und Schatten, die mit ihr
+     mitwandern.
+
+     Der Seegang steuert alles aus EINER Zahl (schwung). Liefen
+     Lampe, Lichtkegel und Schatten getrennt, waeren es drei Dinge,
+     die zufaellig gleichzeitig wackeln - mit einer gemeinsamen
+     Quelle ist es ein Schiff, das sich bewegt.
   ========================================================= */
   const FALL = `
 void main() {
   vec2 uv = bild();
-  vec2 p  = gleich() - vec2(uRes.x / uRes.y * 0.5, 0.45);
+  float seite = uRes.x / uRes.y;
+  vec2 p = gleich();
 
-  float winkel = atan(p.y, p.x);
-  float dreh = uTime * 0.16;
+  /* Der Seegang. Zwei ungleiche Perioden, damit es nicht metronomisch
+     wird - ein Schiff schaukelt nicht im Takt. */
+  float schwung = sin(uTime * 0.42) * 0.6 + sin(uTime * 0.23 + 1.3) * 0.4;
 
-  /* Zwei Strahlen gegenueber - sonst ist die Flaeche zu lange dunkel. */
-  float s1 = abs(sin((winkel - dreh) * 0.5));
-  float strahl = pow(1.0 - s1, 13.0);
+  /* Die Lampe haengt oben und pendelt mit. */
+  vec2 lampe = vec2(seite * 0.5 + schwung * 0.075, 0.14);
 
-  float weite = smoothstep(1.4, 0.05, length(p));
-  vec3 farbe = vec3(0.86, 0.82, 0.68) * strahl * weite * 0.80;
+  /* Ihr Licht: nah hell, nach aussen schnell abfallend. Der Flackerwert
+     ist bewusst schwach - eine Lampe, die sichtbar blinkt, sieht nach
+     Wackelkontakt aus, nicht nach Docht. */
+  float flackern = 0.94 + 0.06 * sin(uTime * 7.3) * sin(uTime * 3.1);
+  vec2 d = p - lampe;
+  float licht = exp(-dot(d, d) * 3.4) * flackern;
 
-  /* Filmkorn: unruhig, aber sehr schwach. */
-  float korn = hash21(gl_FragCoord.xy + floor(uTime * 24.0));
-  farbe += vec3(korn) * 0.020;
+  vec3 farbe = vec3(1.00, 0.72, 0.38) * licht * 0.85;
 
-  /* Randabdunklung - der Blick soll in der Mitte bleiben. */
-  farbe *= smoothstep(1.25, 0.25, length(uv - 0.5));
+  /* Der Docht selbst - ein kleiner, harter Kern im Zentrum. */
+  farbe += vec3(1.0, 0.92, 0.72) * exp(-dot(d, d) * 90.0) * 0.55;
 
-  ausgeben(farbe, max(max(farbe.r, farbe.g), farbe.b) * 1.7);
+  /* Die Holzwand dahinter. Waagerechte Planken mit unruhiger
+     Maserung; sie wird nur dort sichtbar, wo Licht hinfaellt. */
+  float planke = fract(p.y * 5.2);
+  float fuge = smoothstep(0.045, 0.0, min(planke, 1.0 - planke));
+  float maser = fbm(vec2(p.x * 2.2, p.y * 24.0)) * 0.5 + 0.5;
+
+  vec3 holz = mix(vec3(0.26, 0.15, 0.08), vec3(0.38, 0.23, 0.12), maser);
+  holz = mix(holz, vec3(0.12, 0.07, 0.04), fuge);
+  farbe += holz * licht * 1.15;
+
+  /* Schatten, die mit der Lampe wandern: zwei senkrechte Streifen,
+     die sich gegenlaeufig zum Pendel verschieben - so, wie ein
+     Balken vor der Lampe seinen Schatten wirft. */
+  float b1 = smoothstep(0.055, 0.0, abs(p.x - (seite * 0.20 - schwung * 0.13)));
+  float b2 = smoothstep(0.045, 0.0, abs(p.x - (seite * 0.80 - schwung * 0.17)));
+  farbe *= 1.0 - (b1 + b2) * 0.55;
+
+  /* Aussen wird es dunkel - die Lampe reicht nicht bis in die Ecken.
+     Genau das macht die Kajuete zum Raum statt zur Flaeche. */
+  farbe *= smoothstep(1.35, 0.20, length(uv - vec2(0.5, 0.38)));
+
+  /* Ein Hauch Staub im Lichtkegel. */
+  float korn = hash21(gl_FragCoord.xy + floor(uTime * 12.0));
+  farbe += vec3(korn) * licht * 0.045;
+
+  ausgeben(farbe, max(max(farbe.r, farbe.g), farbe.b) * 1.6);
 }
 `;
 
