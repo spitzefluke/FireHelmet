@@ -1435,13 +1435,27 @@ async function renderCommunityBossPage() {
 
   const nickname = localStorage.getItem("wheelNickname") || "";
 
+  /* WARUM DIESE PRUEFUNG HIER OBEN STEHT
+     Sie stand vorher NUR im dritten Zweig weiter unten - also erst,
+     wenn jemand angemeldet ist und der Boss noch lebt. Wer nicht
+     angemeldet war, kam nie dorthin: bossNeuerWeg blieb null, und die
+     Angriffswahl blieb ausgeblendet, selbst wenn der Server sie
+     laengst haette anbieten koennen.
+
+     Ergebnis war, dass die Angriffsarten fuer einen Teil der Besucher
+     schlicht nicht existierten. Jetzt wird einmal geprueft, bevor
+     ueberhaupt verzweigt wird - die Wahl erscheint dann, sobald der
+     Server sie kennt, und ist ohne Anmeldung eben nur nicht
+     bedienbar. Man soll sehen, was es gibt. */
+  const serverKennnAngriffe = await bossWegPruefen();
+
   if (!nickname) {
     if (statusEl) statusEl.textContent = "Melde dich zuerst an, um mitzukämpfen!";
     if (attackBtn) attackBtn.disabled = true;
   } else if (state.data.defeated) {
     if (attackBtn) attackBtn.disabled = true;
     if (statusEl) statusEl.textContent = "";
-  } else if (await bossWegPruefen()) {
+  } else if (serverKennnAngriffe) {
     /* Neuer Weg: die Sperre steht auf dem Server, nicht im Browser -
        ein geleerter localStorage schaltet sie nicht mehr ab. */
     const st = bossStatus || (await bossStatusLaden());

@@ -890,6 +890,13 @@
              1440px erst nach ueber einer Bildschirmhoehe Scrollen
              sichtbar wurde. -->
         <div class="race-main">
+        <!-- EINE Spalte fuer Bahn UND Fahrzeugwahl.
+             Ohne diesen Behaelter waren es drei Rasterkinder statt
+             zwei: die Fahrzeugwahl nahm sich die zweite Spalte, und
+             die Ergebnisliste rutschte in eine neue Zeile UNTER die
+             Bahn. Das Raster hat zwei Spalten - also gehoert alles,
+             was in die linke soll, in einen gemeinsamen Behaelter. -->
+        <div class="race-bahn-spalte">
         <div id="race-track-wrap" class="race-track-wrap">
           <svg id="race-track-svg" class="race-track-svg" viewBox="0 0 600 300">
             <defs>
@@ -1005,6 +1012,7 @@
              auch nichts abzusichern. Gefuellt von
              renderRaceFahrzeugwahl() in race.js. -->
         <div id="race-fahrzeugwahl" class="race-fahrzeugwahl"></div>
+        </div><!-- /.race-bahn-spalte -->
 
         <div class="race-side">
           <p class="fh-section-label" data-i18n="race.tableLabel">Diese Woche</p>
