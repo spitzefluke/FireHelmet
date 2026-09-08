@@ -156,3 +156,265 @@
     filter: drop-shadow(0 0 22px rgba(240, 201, 106, .32));
   }
 }
+
+/* ======================================================
+   DIE SCHATZKARTE
+   ---------------------------------------------------
+   Der Piratenpass im Vollbild: eine geschwungene Route ueber
+   offenes Wasser statt einer geraden Reihe zum Seitwaertsscrollen.
+   Aufbau in scripts/piratenpass/schatzkarte.js.
+
+   Die Reihe daneben bleibt bestehen - auf dem Handy und fuer den
+   schnellen Blick ist sie weiterhin der kuerzere Weg.
+====================================================== */
+
+.piratenpass-karte-btn {
+  margin-top: 14px;
+  font-size: 13px;
+  padding: 10px 18px;
+}
+
+.fh-schatzkarte {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 20px 18px;
+  background: rgba(4, 9, 15, .93);
+  backdrop-filter: blur(6px);
+  overflow: auto;
+  animation: fhKarteAuf .32s var(--fh-ease, ease);
+}
+
+@keyframes fhKarteAuf {
+  from { opacity: 0; transform: scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.fh-schatzkarte-kopf {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  text-align: center;
+}
+
+.fh-schatzkarte-kicker {
+  margin: 0 0 4px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  letter-spacing: .42em;
+  color: var(--fh-gold-bright);
+}
+
+.fh-schatzkarte-titel {
+  margin: 0;
+  font-family: var(--fh-font-display);
+  font-size: clamp(1.4rem, 3.4vw, 2.2rem);
+  letter-spacing: .08em;
+  color: var(--fh-text, #fff);
+}
+
+.fh-schatzkarte-stand {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-schatzkarte-zu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--fh-border);
+  background: var(--fh-surface);
+  color: var(--fh-text, #fff);
+  font-size: 17px;
+  cursor: pointer;
+  transition: background var(--fh-dauer) var(--fh-ease),
+              border-color var(--fh-dauer) var(--fh-ease);
+}
+
+.fh-schatzkarte-zu:hover {
+  background: var(--fh-surface-light);
+  border-color: var(--fh-gold-bright);
+}
+
+.fh-schatzkarte-zu:focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 2px;
+}
+
+.fh-schatzkarte-zu:active {
+  transform: scale(.92);
+  transition-duration: var(--fh-dauer-kurz);
+}
+
+.fh-schatzkarte-blatt {
+  width: 100%;
+  max-width: 1100px;
+  border-radius: var(--fh-radius);
+  border: 1px solid var(--fh-border);
+  overflow: hidden;
+  box-shadow: var(--fh-shadow);
+}
+
+.fh-schatzkarte-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fh-schatzkarte-fuss {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fh-muted-fg);
+  text-align: center;
+}
+
+/* ---- Karteninhalt ---- */
+.fh-karte-insel {
+  fill: rgba(214, 168, 79, .10);
+  stroke: rgba(214, 168, 79, .28);
+  stroke-width: 1;
+}
+
+.fh-karte-rose-ring  { fill: none; stroke: rgba(240,201,106,.35); stroke-width: 1; }
+.fh-karte-rose-nadel { fill: rgba(240,201,106,.55); }
+.fh-karte-rose-quer  { fill: rgba(240,201,106,.25); }
+.fh-karte-rose-n     { fill: rgba(240,201,106,.7); font-size: 13px; font-family: var(--fh-font-display); }
+
+/* Der ganze Kurs, blass - und darueber der bereits gefahrene Teil. */
+.fh-karte-kurs-grund {
+  fill: none;
+  stroke: rgba(255, 255, 255, .12);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.fh-karte-kurs-fahrt {
+  fill: none;
+  stroke: var(--fh-gold-bright, #f0c96a);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  /* Gestrichelt wie eine eingetragene Fahrtroute. Die Laenge des
+     sichtbaren Teils setzt das Skript ueber stroke-dashoffset. */
+  filter: drop-shadow(0 0 6px rgba(240, 201, 106, .45));
+}
+
+.fh-karte-station {
+  cursor: pointer;
+  animation: fhKarteStation .4s var(--fh-ease, ease) backwards;
+  animation-delay: var(--fh-karte-verzug, 0s);
+}
+
+@keyframes fhKarteStation {
+  from { opacity: 0; transform: translateY(6px) scale(.7); }
+}
+
+.fh-karte-punkt {
+  fill: #0d1520;
+  stroke: rgba(255, 255, 255, .30);
+  stroke-width: 2;
+  transition: fill var(--fh-dauer) var(--fh-ease),
+              stroke var(--fh-dauer) var(--fh-ease);
+}
+
+.fh-karte-nummer {
+  fill: rgba(255, 255, 255, .55);
+  font-size: 10px;
+  font-family: var(--fh-font-display);
+  pointer-events: none;
+}
+
+/* Erreicht, aber noch nicht abgeholt: die einzige Station, die
+   aktiv leuchtet - sie ist die, an der etwas zu tun ist. */
+.fh-karte-station-ready .fh-karte-punkt {
+  fill: rgba(240, 201, 106, .22);
+  stroke: var(--fh-gold-bright);
+}
+
+.fh-karte-station-claimed .fh-karte-punkt {
+  fill: rgba(80, 255, 140, .16);
+  stroke: rgba(80, 255, 140, .55);
+}
+
+.fh-karte-station-locked  { opacity: .45; }
+
+.fh-karte-station:hover .fh-karte-punkt,
+.fh-karte-station:focus-visible .fh-karte-punkt {
+  fill: rgba(240, 201, 106, .34);
+  stroke: var(--fh-gold-bright);
+}
+
+.fh-karte-station:focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+
+.fh-karte-hier-ring {
+  fill: none;
+  stroke: var(--fh-gold-bright);
+  stroke-width: 1.5;
+  opacity: .8;
+  animation: fhKarteHier 2.4s ease-in-out infinite;
+}
+
+@keyframes fhKarteHier {
+  0%, 100% { r: 18px; opacity: .8; }
+  50%      { r: 23px; opacity: .3; }
+}
+
+.fh-karte-hier-text {
+  fill: var(--fh-gold-bright);
+  font-size: 10px;
+  letter-spacing: .18em;
+  font-family: var(--fh-font-display);
+  pointer-events: none;
+}
+
+/* Das Ziel: ein Kreuz statt einer Nummer. */
+.fh-karte-kreuz {
+  stroke: var(--fh-fire, #ff6a2a);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.fh-karte-ziel-ring {
+  fill: none;
+  stroke: rgba(255, 106, 42, .45);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+}
+
+@media (max-width: 700px) {
+  .fh-schatzkarte {
+    padding: 14px 10px 12px;
+    justify-content: center;
+  }
+
+  .fh-schatzkarte-zu { width: 34px; height: 34px; font-size: 15px; }
+
+  /* Auf 390px Breite waere die ganze Karte 240px hoch und die
+     Stationsnummern unlesbar - 50 Stationen brauchen Platz.
+     Deshalb schrumpft sie hier NICHT auf die Bildschirmbreite,
+     sondern behaelt eine brauchbare Groesse und wird geschoben.
+     Das passt zur Sache: eine Seekarte breitet man auch aus. */
+  .fh-schatzkarte-blatt {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .fh-schatzkarte-svg {
+    width: 900px;
+    max-width: none;
+  }
+
+  .fh-karte-nummer { font-size: 13px; }
+  .fh-karte-hier-text { font-size: 12px; }
+}
