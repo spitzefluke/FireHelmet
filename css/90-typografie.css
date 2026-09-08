@@ -1,0 +1,158 @@
+/* ======================================================
+   90 - SCHRIFT: MITTIG UND LEBENDIG
+   ---------------------------------------------------
+   Zwei Dinge, die zusammengehoeren.
+
+   1. ZENTRIERUNG
+      Ueberschriften, Vorspann, Kicker und kurze Bloecke stehen
+      mittig. Listen, Kapitelzeilen, Ranglisten und Flietext
+      bleiben linksbuendig - und zwar mit Grund: bei zentrierten
+      Listen faengt jede Zeile an einer anderen Stelle an, das Auge
+      muss bei jedem Eintrag neu ansetzen. Genau das stand schon
+      als Begruendung an .story-library, als die Karten dort einmal
+      mittig standen.
+
+      Betroffen ist vor allem .fh-page-head - der Kopf, den 15 der
+      21 Seiten benutzen. Deshalb reicht dafuer eine Regel statt
+      fuenfzehn.
+
+   2. LEBEN
+      Drei Eingriffe, alle ohne bleibende Aenderung am Markup:
+
+      - Der Kicker bekommt einen Goldschimmer, der langsam
+        durchwandert. Reines CSS ueber background-clip.
+      - Der Seitentitel laeuft buchstabenweise ein, wenn man die
+        Seite betritt (scripts/core/seitenwechsel.js, GSAP
+        SplitText - und danach sofort zurueckgesetzt, wie es
+        cinematic.js schon vormacht).
+      - Der Seitentitel traegt einen Lichtpunkt, der dem Zeiger
+        folgt (scripts/core/schrift-licht.js). Nur auf Geraeten mit
+        echtem Zeiger, und nur auf dem Titel - nicht auf Fliesstext,
+        der davon nur unruhig wuerde.
+
+   Bei "Bewegung reduzieren" greift weiterhin die abschliessende
+   Regel in 70-entwurf-1c.css: sie setzt animation-duration mit
+   !important auf .01ms.
+====================================================== */
+
+/* =========================
+   1. ZENTRIERUNG
+========================= */
+
+/* Der gemeinsame Seitenkopf von 15 Seiten. */
+.fh-page-head {
+  text-align: center;
+}
+
+/* Der Vorspann darf nicht ueber die ganze Breite laufen - mittig
+   gesetzter Text wird ab etwa 70 Zeichen je Zeile unangenehm zu
+   lesen, weil der Zeilenanfang staendig springt. */
+.fh-page-lead {
+  max-width: 62ch;
+  margin-inline: auto;
+}
+
+/* Knoepfe im Kopfbereich standen linksbuendig am Blockrand. */
+.fh-page-head .fh-cta {
+  align-self: center;
+}
+
+/* Abschnittsmarken ueber Listen ("Kapitel", "Belohnungen"). */
+.fh-section-label {
+  text-align: center;
+}
+
+/* Kopf der Kapitelansicht: Titel und Beschreibung neben dem
+   Umschlagbild. */
+.story-detail-container .story-header h1,
+.story-detail-container .story-header p,
+.story-progress {
+  text-align: center;
+}
+
+/* Ueberschriften innerhalb der Inhaltsbereiche - die stehen ueber
+   ihren Bloecken und gehoeren zur Gliederung, nicht zum Fliesstext. */
+.page-content > h2,
+.page-content > h3,
+.story-library > h2 {
+  text-align: center;
+}
+
+/* ---- WAS AUSDRUECKLICH LINKSBUENDIG BLEIBT ----
+   Alles, was in Zeilen untereinander steht. Diese Regeln kommen
+   nach den obigen und gewinnen damit bei gleichem Gewicht. */
+.fh-rows,
+.fh-row,
+.chapter-list,
+.chapter-row,
+.story-grid,
+.leaderboard-list,
+.race-results-list,
+.code-history-list,
+.book,
+.book-page,
+.fh-skeleton {
+  text-align: left;
+}
+
+/* =========================
+   2. KICKER MIT GOLDSCHIMMER
+   ---------------------------------------------------
+   Der Verlauf ist dreimal so breit wie der Text und wandert
+   hindurch. background-clip: text laesst nur die Buchstaben davon
+   uebrig.
+========================= */
+.fh-page-kicker {
+  background-image: linear-gradient(
+    100deg,
+    var(--fh-gold, #d6a84f) 0%,
+    var(--fh-gold, #d6a84f) 38%,
+    #fff3d0 47%,
+    var(--fh-gold-bright, #f0c96a) 53%,
+    var(--fh-gold, #d6a84f) 62%,
+    var(--fh-gold, #d6a84f) 100%
+  );
+  background-size: 300% 100%;
+  background-position: 120% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* Die Schriftfarbe muss durchsichtig sein, damit der Verlauf
+     sichtbar wird. Faellt background-clip aus, greift die Farbe
+     aus 70-entwurf-1c.css weiterhin - dann eben ohne Schimmer. */
+  -webkit-text-fill-color: transparent;
+  animation: fhKickerSchimmer 7s var(--fh-ease, ease) infinite;
+}
+
+@keyframes fhKickerSchimmer {
+  /* Lange Pause zwischen den Durchlaeufen: ein Schimmer alle sieben
+     Sekunden ist ein Akzent, einer im Sekundentakt ist Zappeln. */
+  0%, 55%  { background-position: 120% 0; }
+  85%, 100% { background-position: -60% 0; }
+}
+
+/* =========================
+   3. LICHTPUNKT AUF DEM SEITENTITEL
+   ---------------------------------------------------
+   --fh-licht-x/-y setzt scripts/core/schrift-licht.js aus der
+   Zeigerposition. Ohne Zeiger (Handy, Tablet) bleiben die
+   Startwerte stehen und der Titel sieht aus wie zuvor.
+========================= */
+@media (hover: hover) and (pointer: fine) {
+  h1.fh-page-title {
+    background-image: radial-gradient(
+      circle at var(--fh-licht-x, 50%) var(--fh-licht-y, 50%),
+      #fffaf0 0%,
+      var(--fh-text, #fff) 38%,
+      var(--fh-text, #fff) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* text-shadow zeichnet die Glyphenform und stuende bei
+       durchsichtiger Fuellung als harte Kontur da. drop-shadow
+       arbeitet dagegen auf dem FERTIG gezeichneten Element - der
+       goldene Schein der Ueberschrift bleibt damit erhalten. */
+    text-shadow: none;
+    filter: drop-shadow(0 0 22px rgba(240, 201, 106, .32));
+  }
+}

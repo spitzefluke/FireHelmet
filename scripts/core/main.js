@@ -117,6 +117,10 @@ function changePage(pageID) {
   if (typeof fhSeitenStaffeln === "function") {
     fhSeitenStaffeln(pageID);
   }
+
+  if (typeof fhSeitenTitel === "function") {
+    fhSeitenTitel(pageID);
+  }
 }
 
 /* ------------------------------------------------------
