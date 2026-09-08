@@ -12,8 +12,19 @@ function changePage(pageID) {
   // Nutzer gerade in einem Feld getippt hat.
   const fokusVorher = document.activeElement;
 
+  // Welche Seite war offen? Wird fuer die Richtung des Wechsels
+  // gebraucht und ist nach dem Umschalten nicht mehr feststellbar.
+  const vorherigeSeite = document.querySelector(".page.active-page");
+  const vorherID = vorherigeSeite ? vorherigeSeite.id : null;
+
   const pages = document.querySelectorAll(".page");
   pages.forEach((page) => page.classList.remove("active-page"));
+
+  // MUSS vor .active-page laufen: danach hat die Einblend-Animation
+  // schon begonnen und liest den Anlaufpunkt nicht mehr.
+  if (typeof fhSeitenRichtung === "function") {
+    fhSeitenRichtung(vorherID, pageID);
+  }
 
   const target = document.getElementById(pageID);
   if (target) {
@@ -45,6 +56,14 @@ function changePage(pageID) {
 
   if (typeof updateCodeAmbientPage === "function") {
     updateCodeAmbientPage(pageID);
+  }
+
+  if (typeof updateStoryBackgroundPage === "function") {
+    updateStoryBackgroundPage(pageID);
+  }
+
+  if (typeof updateWheelParticlesPage === "function") {
+    updateWheelParticlesPage(pageID);
   }
 
   if (typeof updateCodeHistoryPage === "function") {
@@ -93,6 +112,13 @@ function changePage(pageID) {
   updateActiveNavHighlight(pageID);
   closeMenu();
   moveFocusToPage(pageID, fokusVorher);
+
+  // Ganz am Ende: bis hierher haben die update*-Funktionen oben den
+  // Inhalt der neuen Seite erzeugt. Vorher gaebe es nichts zu
+  // staffeln.
+  if (typeof fhSeitenStaffeln === "function") {
+    fhSeitenStaffeln(pageID);
+  }
 }
 
 /* ------------------------------------------------------

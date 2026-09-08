@@ -282,11 +282,19 @@ async function buyShopItem(itemId) {
 function setCurrencyDisplays(currency, angemeldet) {
   const text = currency.toLocaleString("de-DE");
 
+  /* Hochzaehlen statt springen (scripts/core/zaehler.js): bei einem
+     Kauf oder Gewinn soll man sehen, WIE VIEL sich geaendert hat.
+     Beim ersten Aufbau, bei ausgeblendeten Anzeigen und bei
+     reduzierter Bewegung schreibt der Helfer den Wert direkt. */
+  const zaehle = typeof fhZaehle === "function"
+    ? fhZaehle
+    : function (el, wert) { if (el) el.textContent = wert.toLocaleString("de-DE"); };
+
   const amountEl = document.getElementById("shop-currency-amount");
-  if (amountEl) amountEl.textContent = text;
+  if (amountEl) zaehle(amountEl, currency);
 
   document.querySelectorAll("[data-fh-currency]").forEach((el) => {
-    el.textContent = text;
+    zaehle(el, currency);
   });
 
   // Ohne Anmeldung gibt es keinen Stand - die Pille bliebe sonst mit

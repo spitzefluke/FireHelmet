@@ -635,6 +635,16 @@ function loadRaceLeaderboard() {
     return;
   }
 
+  /* Platzhalter, solange die Abfrage laeuft - aber nur beim ersten
+     Aufbau. addRaceProgress() ruft diese Funktion nach jeder
+     Rad-Drehung und jedem geknackten Code auf; waere der Platzhalter
+     dort auch zu sehen, wuerde die fertige Liste bei jedem Punkt
+     kurz durch graue Balken ersetzt. */
+  const listeEl = document.getElementById("race-results-list");
+  if (listeEl && !listeEl.children.length && typeof fhSkeletonList === "function") {
+    listeEl.innerHTML = fhSkeletonList(5, { label: "Lade Rennstand ..." });
+  }
+
   const currentWeek = getCurrentWeekId();
 
   supabaseClient

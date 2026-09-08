@@ -266,7 +266,9 @@
   font-size: 16px;
   background: rgba(255,255,255,.12);
   color: white;
-  transition: .3s;
+  /* War "transition: .3s" - also "all"; geaendert wird nur die
+     Hintergrundfarbe. */
+  transition: background var(--fh-dauer) var(--fh-ease);
 }
 
 .back-button:hover {

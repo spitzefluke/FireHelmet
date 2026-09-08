@@ -65,6 +65,10 @@
   <link rel="stylesheet" href="css/50-redesign.css">
   <link rel="stylesheet" href="css/60-fortschritt.css">
   <link rel="stylesheet" href="css/70-entwurf-1c.css">
+  <!-- 80 kommt bewusst zuletzt: die Datei vereinheitlicht Tempo,
+       Druckgefuehl und Tastaturfokus aller Bedienelemente und muss
+       dafuer die Regeln aus 00 bis 70 ueberschreiben koennen. -->
+  <link rel="stylesheet" href="css/80-interaktion.css">
 </head>
 <body>
 
@@ -83,6 +87,11 @@
   <div id="update-notice-overlay" class="update-notice-overlay"></div>
 
   <!-- Hintergrund -->
+  <!-- Eine Leinwand statt dreier animierter Vollbild-Ebenen, siehe
+       scripts/core/aurora-bg.js. Die drei <div> darunter bleiben als
+       Rueckfallebene fuer Geraete ohne WebGL - dort sieht man
+       weiterhin Sterne und Nebel, dann eben unbewegt. -->
+  <canvas class="fh-bg-canvas" id="fh-bg-canvas" aria-hidden="true"></canvas>
   <div class="stars"></div>
   <div class="stars2"></div>
   <div class="nebula"></div>
@@ -126,7 +135,7 @@
          Siehe scripts/core/nav-sync.js. -->
     <div data-fh-nav-slot hidden></div>
 
-    <a data-page="gateway" onclick="changePage('gateway')" class="fh-gateway-link">⚙ Gateway</a>
+    <a data-page="gateway" tabindex="0" onclick="changePage('gateway')" class="fh-gateway-link">⚙ Gateway</a>
   </nav>
 
   <!-- ============================================================
@@ -179,7 +188,7 @@
            befuellt (Avatar/Name/Level/XP-Balken) - ersetzt die vorher
            statische "Crew Flitzpiepen · Online"-Anzeige. -->
       <div class="fh-sidebar-footer" id="fh-sidebar-footer"></div>
-      <a class="fh-gateway-link fh-sidebar-gateway-link" onclick="changePage('gateway')" title="Admin-Gateway">⚙</a>
+      <a class="fh-gateway-link fh-sidebar-gateway-link" tabindex="0" onclick="changePage('gateway')" title="Admin-Gateway">⚙</a>
     </div>
   </aside>
 
@@ -250,19 +259,19 @@
     <!-- Bestehendes Hamburger-Menü bleibt als "Mehr"-Schublade für
          alle restlichen Seiten erhalten (openMenu()). -->
     <nav class="fh-bottom-nav" id="fh-bottom-nav">
-      <a class="fh-bottom-nav-item" data-page="home" onclick="changePage('home')">
+      <a class="fh-bottom-nav-item" tabindex="0" data-page="home" onclick="changePage('home')">
         <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-house"></i></span>
         <span class="fh-bottom-nav-label" data-i18n="menu.home">Home</span>
       </a>
-      <a class="fh-bottom-nav-item" data-page="community-boss" onclick="changePage('community-boss')">
+      <a class="fh-bottom-nav-item" tabindex="0" data-page="community-boss" onclick="changePage('community-boss')">
         <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-skull"></i></span>
         <span class="fh-bottom-nav-label" data-i18n="menu.bottomBoss">Boss</span>
       </a>
-      <a class="fh-bottom-nav-item" data-page="race" onclick="changePage('race')">
+      <a class="fh-bottom-nav-item" tabindex="0" data-page="race" onclick="changePage('race')">
         <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-flag-checkered"></i></span>
         <span class="fh-bottom-nav-label" data-i18n="menu.bottomRace">Rennen</span>
       </a>
-      <a class="fh-bottom-nav-item" data-page="leaderboard" onclick="changePage('leaderboard')">
+      <a class="fh-bottom-nav-item" tabindex="0" data-page="leaderboard" onclick="changePage('leaderboard')">
         <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-trophy"></i></span>
         <span class="fh-bottom-nav-label" data-i18n="menu.leaderboard">Rangliste</span>
       </a>
@@ -288,7 +297,7 @@
            (Countdown, #home-fx Schiff-Canvas, Riss-Effekt) - dieser
            bleibt unveraendert unten als letzte Phase erhalten. Logik in
            scripts/home/cinematic.js, faehrt ausschliesslich per
-           CSS-Variable --fh-progress (siehe style.css).
+           CSS-Variable --fh-progress (siehe css/60-fortschritt.css).
       ============================================================ -->
       <div class="fh-cinematic-home" id="fh-cinematic-home">
         <div class="fh-journey-track" id="fh-journey-track">
@@ -484,6 +493,8 @@
          STORY ARCHIV
     ====================================================== -->
     <section id="story" class="page">
+      <!-- Tauwerk-Hintergrund, siehe scripts/stories/story-threads.js -->
+      <div class="story-ambient-fx" id="story-ambient-fx" aria-hidden="true"></div>
       <div class="story-library">
         <div class="fh-page-head">
           <p class="fh-page-kicker" data-i18n="story.kicker">Archiv der Crew</p>
@@ -771,6 +782,8 @@
          GLÜCKSRAD
     ===================== -->
     <section id="wheel" class="page">
+      <!-- Schatzstaub, siehe scripts/wheel/wheel-particles.js -->
+      <div class="wheel-ambient-fx" id="wheel-ambient-fx" aria-hidden="true"></div>
       <div class="page-content wheel-content">
         <div class="fh-page-head">
           <p class="fh-page-kicker" data-i18n="wheel.kicker">Einmal am Tag</p>
@@ -779,7 +792,7 @@
         </div>
 
         <p id="wheel-login-hint" class="wheel-status wheel-login-hint">
-          <span data-i18n="wheel.loginHintPrefix">Noch nicht angemeldet? </span><a onclick="changePage('login')" data-i18n="wheel.loginHintLink">Hier geht's zur Anmeldung</a>
+          <span data-i18n="wheel.loginHintPrefix">Noch nicht angemeldet? </span><a onclick="changePage('login')" tabindex="0" data-i18n="wheel.loginHintLink">Hier geht's zur Anmeldung</a>
         </p>
 
         <p id="wheel-theme-label" class="wheel-theme-label"></p>
@@ -945,7 +958,7 @@
     </section>
 
     <!-- Aufloesungs-/Glitch-Filter fuer den "???"-Titel (siehe
-         .streamraetsel-title-mystery in style.css) - rein statische
+         .streamraetsel-title-mystery in css/30-events.css) - rein statische
          Turbulenz+Verschiebung, die Zeitsteuerung (wann sichtbar,
          wie stark) kommt komplett aus der CSS-Keyframe-Animation, die
          "filter: url(#streamGlitchDissolve) ..." nur kurz waehrend des
@@ -1084,7 +1097,7 @@
            Mehrere unabhängig langsam bewegte Ebenen (Himmel, Wolken,
            Lichtkegel, Nebel, Glut) - rein dekorativ (aria-hidden),
            rührt die bestehende Boss-Logik in community-boss.js nicht
-           an. Siehe .fh-boss-layer-* in style.css.
+           an. Siehe .fh-boss-layer-* in css/30-events.css.
       ============================================================ -->
       <div class="fh-boss-arena-bg" id="fh-boss-arena-bg" aria-hidden="true">
         <div class="fh-boss-layer fh-boss-layer-sky"></div>
@@ -1295,6 +1308,8 @@
        klassischen <script>-Tag-Build, der zu Supabase/GSAP/Motion hier
        passt (kein Bundler, kein Import-Map-Pattern im restlichen Projekt). -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
+  <script src="scripts/core/fh-webgl.js" defer></script>
+  <script src="scripts/core/aurora-bg.js" defer></script>
   <script src="scripts/core/celebration-burst-3d.js" defer></script>
   <script src="scripts/core/sidebar-ambient-3d.js" defer></script>
 
@@ -1308,6 +1323,8 @@
   <script src="scripts/core/nav-sync.js" defer></script>
   <script src="scripts/core/rail-flyout.js" defer></script>
   <script src="scripts/core/nav-keys.js" defer></script>
+  <script src="scripts/core/seitenwechsel.js" defer></script>
+  <script src="scripts/core/zaehler.js" defer></script>
   <script src="scripts/core/path-draw.js" defer></script>
   <script src="scripts/core/quick-search.js" defer></script>
   <script src="scripts/core/share.js" defer></script>
@@ -1379,6 +1396,8 @@
   <script src="scripts/core/main.js" defer></script>
   <script src="scripts/codes/code-button-effect.js" defer></script>
   <script src="scripts/codes/code-ambient-fx.js" defer></script>
+  <script src="scripts/stories/story-threads.js" defer></script>
+  <script src="scripts/wheel/wheel-particles.js" defer></script>
   <script src="scripts/codes/code-history.js" defer></script>
 
   <!-- Ganz zum Schluss: die Startseiten-Uebersicht liest aus stories.js,

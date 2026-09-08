@@ -1268,7 +1268,20 @@ function applyBossHpDisplay(data, hpTextEl, hpFillEl, boss, defeatedBanner, atta
     }, 150);
   }
 
-  if (numericEl) numericEl.textContent = `${hp.toLocaleString("de-DE")} / ${maxHp.toLocaleString("de-DE")} HP`;
+  /* Die Lebensanzeige zaehlt herunter statt zu springen - bei einem
+     Treffer sieht man dadurch die Wucht. Der Balken darunter hat
+     seine eigene Verzoegerung (Geister-Balken), beides zusammen
+     ergibt die uebliche RPG-Schadensanzeige.
+     Der Hoechstwert steht fest, deshalb wandert nur die erste Zahl. */
+  if (numericEl) {
+    if (typeof fhZaehle === "function") {
+      fhZaehle(numericEl, hp, {
+        format: (n) => `${Math.round(n).toLocaleString("de-DE")} / ${maxHp.toLocaleString("de-DE")} HP`,
+      });
+    } else {
+      numericEl.textContent = `${hp.toLocaleString("de-DE")} / ${maxHp.toLocaleString("de-DE")} HP`;
+    }
+  }
   if (phaseBadgeEl) phaseBadgeEl.textContent = phase.label;
   phaseBadgeEl?.setAttribute("data-phase", phase.key);
   applyBossPhaseVisuals(phase.key);

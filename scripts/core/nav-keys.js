@@ -19,6 +19,18 @@
    klont die Punkte einschliesslich Attribute. Hier kommt nur die
    Tastenbedienung dazu.
 
+   NACHTRAG: der Zuhoerer hing zuerst nur an der Seitenleiste und an
+   der Schublade. Gemessen blieben damit sieben weitere <a> ohne
+   href aussen vor - darunter die GESAMTE untere Leiste am Handy
+   (Home, Boss, Rennen, Rangliste), beide Gateway-Links und der
+   Anmelde-Hinweis auf der Schatzrad-Seite. Die waren per Tastatur
+   nicht erreichbar.
+
+   Deshalb haengt der Zuhoerer jetzt am Dokument. Das ist genau ein
+   Zuhoerer fuer die ganze Seite, greift auch fuer Elemente, die
+   spaeter erst erzeugt werden, und braucht keine Pflege, wenn ein
+   weiterer Punkt dazukommt.
+
    Leertaste zusaetzlich zu Enter: die Punkte verhalten sich
    funktional wie Schaltflaechen, und dort erwartet man beides.
 
@@ -32,7 +44,13 @@
   function aktiviere(e) {
     if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
 
-    const item = e.target.closest("a[tabindex]");
+    /* Am Dokument haengend kommt hier jeder Tastendruck der Seite
+       vorbei - auch die Leertaste in einem Eingabefeld. Die darf
+       nicht abgefangen werden. */
+    const t = e.target;
+    if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
+
+    const item = t && t.closest ? t.closest("a[tabindex]") : null;
     if (!item) return;
     // Echte Links (Dave Awards) macht der Browser selbst auf.
     if (item.hasAttribute("href")) return;
@@ -43,10 +61,7 @@
   }
 
   function init() {
-    [".fh-sidebar-nav", "#sidebar"].forEach((sel) => {
-      const box = document.querySelector(sel);
-      if (box) box.addEventListener("keydown", aktiviere);
-    });
+    document.addEventListener("keydown", aktiviere);
   }
 
   if (document.readyState === "loading") {

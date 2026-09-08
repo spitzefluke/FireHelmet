@@ -1615,7 +1615,10 @@
   font-weight: bold;
   cursor: pointer;
   box-shadow: var(--fh-shadow-sm, none);
-  transition: .3s;
+  /* War "transition: .3s" - also "all". */
+  transition: background var(--fh-dauer) var(--fh-ease),
+              box-shadow var(--fh-dauer) var(--fh-ease),
+              transform var(--fh-dauer) var(--fh-ease);
 }
 
 .twitch-login-btn:hover {

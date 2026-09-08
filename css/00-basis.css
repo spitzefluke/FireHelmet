@@ -76,18 +76,38 @@ body.loaded {
   z-index: -5;
 }
 
+/* Die Leinwand traegt Sterne, Nordlicht und Nebelschein in einem
+   einzigen Shader-Durchlauf (scripts/core/aurora-bg.js). */
+.fh-bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -5;
+  display: block;
+}
+
+/* ---- Rueckfallebene ohne WebGL ----
+   Dieselben drei Ebenen wie bisher, aber OHNE Dauerbewegung: die
+   Animationen waren zusammen der teuerste Posten der Seite (drei
+   Vollbild-Neuzeichnungen pro Bild, davon eine mit 90px-Weichzeichner).
+   Wer kein WebGL hat, sitzt in aller Regel auch nicht vor einem
+   schnellen Geraet - dort ist ein ruhiger Sternenhimmel die bessere
+   Wahl als ein ruckelnder.
+
+   Sobald die Leinwand laeuft, setzt aurora-bg.js die Klasse
+   .fh-bg-canvas-aktiv auf <body> und diese drei verschwinden. */
 .stars {
   background-image: radial-gradient(white 1px, transparent 1px);
   background-size: 70px 70px;
   opacity: .35;
-  animation: starsMove 120s linear infinite;
 }
 
 .stars2 {
   background-image: radial-gradient(#4da3ff 1px, transparent 2px);
   background-size: 120px 120px;
   opacity: .3;
-  animation: starsMove 80s linear infinite reverse;
 }
 
 .nebula {
@@ -97,18 +117,15 @@ body.loaded {
   left: 50%;
   transform: translate(-50%, -50%);
   background: radial-gradient(circle, rgba(0,150,255,.3), transparent 70%);
-  filter: blur(90px);
-  animation: nebulaMove 20s infinite alternate;
+  /* 60px statt 90px: derselbe Eindruck, spuerbar weniger Rechenarbeit
+     fuer den Weichzeichner. */
+  filter: blur(60px);
 }
 
-@keyframes starsMove {
-  from { background-position: 0 0; }
-  to   { background-position: 1000px 1000px; }
-}
-
-@keyframes nebulaMove {
-  from { transform: translate(-55%, -50%) scale(1); }
-  to   { transform: translate(-45%, -50%) scale(1.2); }
+.fh-bg-canvas-aktiv .stars,
+.fh-bg-canvas-aktiv .stars2,
+.fh-bg-canvas-aktiv .nebula {
+  display: none;
 }
 
 /* =========================
@@ -178,7 +195,24 @@ body.loaded {
   --fh-shadow-sm: 0 8px 20px rgba(0,0,0,.35);
   --fh-glow-gold: 0 0 30px rgba(240,201,106,.35);
   --fh-glow-fire: 0 0 30px rgba(255,106,42,.35);
+  /* ---- Bewegung ----
+     Eine Kurve und drei Dauern fuer die ganze Seite. Vorher standen
+     im Stylesheet 76 Uebergaenge ohne eigene Kurve - die laufen dann
+     auf der Browser-Voreinstellung "ease", und die faengt langsam an.
+     Bei einem Knopf unter dem Zeiger faellt genau das auf: die
+     Reaktion setzt spuerbar spaeter ein als der Zeiger ankommt.
+     --fh-ease faengt schnell an und laeuft weich aus. */
   --fh-ease: cubic-bezier(.22,.9,.32,1);
+  /* Fuer das Verlassen eines Zustands: umgekehrt gewichtet, laeuft
+     ruhig an und zieht am Ende durch. */
+  --fh-ease-aus: cubic-bezier(.4,0,.7,.2);
+
+  /* Druck und Farbwechsel muessen sofort sitzen. */
+  --fh-dauer-kurz: 120ms;
+  /* Der Regelfall: Schwebe, Fokus, Zustandswechsel. */
+  --fh-dauer: 200ms;
+  /* Groessere Wege: Seitenwechsel, Einblenden von Inhalt. */
+  --fh-dauer-lang: 340ms;
 
   /* ---- Rahmenmasse (Entwurf 1c): schmale Icon-Leiste statt der
      bisherigen 248px breiten Sidebar mit Beschriftungen. Als Token,
@@ -387,7 +421,12 @@ body.lang-en {
   font-size: 26px;
   cursor: pointer;
   z-index: var(--fh-z-menu-button);
-  transition: .3s;
+  /* War "transition: .3s" - also "all". Der Knopf aendert bei
+     Schwebe nur Groesse und Schein; "all" liess den Browser bei
+     jedem Zustandswechsel ALLE Eigenschaften vergleichen, auch
+     backdrop-filter und die Hintergrundfarbe. */
+  transition: transform var(--fh-dauer) var(--fh-ease),
+              box-shadow var(--fh-dauer) var(--fh-ease);
 }
 
 .music-toggle:hover {
@@ -723,9 +762,19 @@ main {
   animation: pageShow .35s var(--fh-ease, ease);
 }
 
+/* Der Anlaufpunkt kommt aus zwei Variablen, damit der Seitenwechsel
+   die Richtung anzeigen kann: scripts/core/seitenwechsel.js setzt
+   --fh-seite-x auf +/-26px und --fh-seite-y auf 0, wenn es in der
+   Navigationsleiste vorwaerts bzw. rueckwaerts geht. Ohne gesetzte
+   Variablen bleibt es beim bisherigen Weg von unten - das gilt fuer
+   die Startseite, fuer Seiten ausserhalb der Leiste (Kapitel- und
+   Leseansicht, Gateway) und fuer den ersten Aufruf. */
 @keyframes pageShow {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translate(var(--fh-seite-x, 0px), var(--fh-seite-y, 24px));
+  }
+  to   { opacity: 1; transform: translate(0, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1128,17 +1177,37 @@ main {
   overflow: hidden;
 }
 
+/* Der Glanz auf dem Wasser lief ueber background-position. Das ist
+   die einzige Eigenschaft, die der Browser nicht auf der Grafikkarte
+   verschieben kann - er musste die Flaeche bei JEDEM Bild neu
+   zeichnen. Gemessen war das mit 540.000 px² die mit Abstand
+   groesste solche Flaeche der Seite; die naechstgroessere kam auf
+   13.000.
+
+   Jetzt wird stattdessen das Element selbst verschoben. Dafuer ist
+   es 420px breiter als sein Rahmen und beginnt 420px weiter links -
+   am Ende der Bewegung steht wieder genau dasselbe Muster wie am
+   Anfang, der Uebergang ist also nahtlos wie zuvor. Der Elternteil
+   .fh-layer-ocean hat bereits overflow: hidden und schneidet den
+   Ueberstand ab.
+
+   Optisch identisch: 420px Verschiebung, 16s, gleichfoermig - nur
+   eben als transform, das der Compositor allein erledigt. */
 .fh-ocean-sheen {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: -420px;
+  width: calc(100% + 420px);
   background: repeating-linear-gradient(100deg, rgba(255,255,255,.05) 0 2px, transparent 2px 42px);
   opacity: .45;
   animation: fhOceanDrift 16s linear infinite;
+  will-change: transform;
 }
 
 @keyframes fhOceanDrift {
-  from { background-position: 0 0; }
-  to   { background-position: 420px 0; }
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(420px, 0, 0); }
 }
 
 .fh-layer-mid-fog {
