@@ -324,6 +324,9 @@ async function renderGatewayPage() {
     <div class="gateway-panel">
       <p class="gateway-welcome">✅ Angemeldet als ${getGoogleEmail(user)} <button type="button" class="gateway-logout-link" onclick="logoutAdmin()">Abmelden</button></p>
 
+      <h2 class="fh-ship-section-heading">Statusbrett</h2>
+      <div id="gateway-statusbrett">Lade Zahlen ...</div>
+
       <h2 class="fh-ship-section-heading">Status</h2>
       ${buildGatewayStatusHtml()}
       <div id="gateway-ship-status-sub"></div>
@@ -350,6 +353,9 @@ async function renderGatewayPage() {
       <h2 class="fh-ship-section-heading">THE CHALLENGE (Turnier)</h2>
       <div id="gateway-tournament-sub">Lade Turnierstatus...</div>
 
+      <h2 class="fh-ship-section-heading">Spieler verwalten</h2>
+      ${buildGatewaySpielerHtml()}
+
       <h2 class="fh-ship-section-heading">Spieler-Identität</h2>
       ${buildGatewayIdentitaetHtml()}
 
@@ -358,6 +364,8 @@ async function renderGatewayPage() {
       <iframe class="gateway-preview-frame" src="index.html" title="Vorschau"></iframe>
     </div>
   `;
+
+  ladeGatewayStatusbrett();
 
   buildGatewayShipStatusHtml().then((html) => {
     const sub = document.getElementById("gateway-ship-status-sub");
@@ -411,6 +419,9 @@ async function buildGatewayTournamentHtml() {
     } else {
       actions.push(`<button type="button" class="code-button" onclick="gatewaySetTournamentPaused('${tournament.id}', ${!tournament.paused})">${tournament.paused ? "Fortsetzen" : "Pausieren"}</button>`);
     }
+    // Immer verfuegbar, auch waehrend das Turnier laeuft: setzt den
+    // Fortschritt zurueck, OHNE die Anmeldungen zu loeschen.
+    actions.push(`<button type="button" class="code-button" onclick="gatewayTurnierFortschrittZuruecksetzen('${tournament.id}')">Fortschritt zurücksetzen (Anmeldungen bleiben)</button>`);
 
     return `
       ${prizeHtml}
@@ -465,6 +476,25 @@ async function gatewaySetTournamentPaused(tournamentId, paused) {
   }
 }
 
+/* Setzt ein laufendes Turnier zurueck in die Anmeldephase: alle
+   Matches weg, niemand mehr ausgeschieden, die Teilnehmerliste bleibt
+   vollstaendig. Ein erneutes "Turnier starten" lost dann neu aus.
+
+   Nicht zu verwechseln mit gatewayResetTournament(): das loescht
+   Teilnehmer UND Turnier und geht nur vor dem Start. */
+async function gatewayTurnierFortschrittZuruecksetzen(tournamentId) {
+  const statusEl = document.getElementById("gateway-tournament-status");
+  if (!window.confirm("Turnier-Fortschritt zurücksetzen?\n\nAlle Matches und Ergebnisse werden gelöscht, alle Angemeldeten bleiben eingetragen und sind wieder im Rennen. Danach kannst du neu starten.")) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_turnier_fortschritt_zuruecksetzen", { p_tournament_id: tournamentId });
+    if (error) throw error;
+    renderGatewayPage();
+  } catch (err) {
+    console.error("Turnier-Fortschritt zurücksetzen fehlgeschlagen:", err);
+    if (statusEl) statusEl.textContent = "⚠️ " + (err.message || err);
+  }
+}
+
 async function gatewayMarkTournamentPrizeFulfilled() {
   const statusEl = document.getElementById("gateway-tournament-status");
   try {
@@ -472,6 +502,203 @@ async function gatewayMarkTournamentPrizeFulfilled() {
     renderGatewayPage();
   } catch (err) {
     if (statusEl) statusEl.textContent = "⚠️ " + (err && err.message);
+  }
+}
+
+/* ------------------------------------------------------
+   STATUSBRETT
+   Eine einzige Serverabfrage (app.admin_statusbrett) statt zehn -
+   das Panel soll beim Oeffnen nicht zehn Rundreisen machen.
+------------------------------------------------------ */
+async function ladeGatewayStatusbrett() {
+  const ziel = document.getElementById("gateway-statusbrett");
+  if (!ziel || !supabaseClient) return;
+
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_statusbrett");
+    if (error) throw error;
+
+    const kachel = (zahl, text) =>
+      `<div class="gateway-kachel"><span class="gateway-kachel-zahl">${escapeHtml(String(zahl))}</span><span class="gateway-kachel-text">${escapeHtml(text)}</span></div>`;
+
+    const b = data.boss || {};
+    const r = data.rennen_woche || {};
+    const t = data.turnier || {};
+
+    ziel.innerHTML = `
+      <div class="gateway-kacheln">
+        ${kachel(data.aktiv_24h, "aktiv (24 h)")}
+        ${kachel(data.aktiv_7t, "aktiv (7 Tage)")}
+        ${kachel(data.spieler_mit_namen, "mit Namen")}
+        ${kachel(data.dublonen_gesamt, "Dublonen im Umlauf")}
+        ${kachel(data.caps_frei + " / 4", "Caps noch frei")}
+        ${kachel(b.hp != null ? b.hp + " / " + b.max_hp : "-", "Boss-HP" + (b.monat ? " (" + b.monat + ")" : ""))}
+        ${kachel(r.teilnehmer != null ? r.teilnehmer : "-", "im Rennen" + (r.woche ? " (" + r.woche + ")" : ""))}
+        ${kachel(t.teilnehmer != null ? t.teilnehmer : "-", "im Turnier" + (t.status ? " (" + t.status + ")" : ""))}
+        ${kachel(t.offene_matches != null ? t.offene_matches : "-", "offene Matches")}
+        ${kachel(data.support_offen, "Support-Meldungen")}
+        ${kachel(data.gesperrte_namen, "gesperrte Namen")}
+      </div>`;
+  } catch (err) {
+    console.error("Statusbrett konnte nicht geladen werden:", err);
+    ziel.innerHTML = `<p class="wheel-status">⚠️ Statusbrett konnte nicht geladen werden.</p>`;
+  }
+}
+
+/* ------------------------------------------------------
+   SPIELER VERWALTEN
+------------------------------------------------------ */
+function buildGatewaySpielerHtml() {
+  return `
+    <div class="gateway-form-row">
+      <label>Name oder ID suchen<br>
+        <input type="text" id="gateway-spieler-suche" class="code-input" placeholder="z.B. Seebaer" autocomplete="off">
+      </label>
+    </div>
+    <button type="button" class="code-button" onclick="gatewaySpielerSuchen()">Suchen</button>
+    <div id="gateway-spieler-treffer"></div>
+    <p id="gateway-spieler-status" class="wheel-status"></p>
+
+    <details class="gateway-details">
+      <summary>Gesperrte Namen</summary>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gatewayGesperrteNamen()">Liste laden</button>
+      <div id="gateway-namen-liste"></div>
+    </details>
+  `;
+}
+
+function gatewaySpielerStatus(text, istFehler) {
+  const el = document.getElementById("gateway-spieler-status");
+  if (!el) return;
+  el.textContent = text || "";
+  el.style.color = istFehler ? "var(--fh-warn, #ff9a76)" : "";
+}
+
+async function gatewaySpielerSuchen() {
+  const feld = document.getElementById("gateway-spieler-suche");
+  const ziel = document.getElementById("gateway-spieler-treffer");
+  if (!feld || !ziel || !supabaseClient) return;
+
+  const suche = (feld.value || "").trim();
+  if (!suche) return;
+
+  ziel.innerHTML = `<p class="wheel-status">Suche ...</p>`;
+  gatewaySpielerStatus("");
+
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_spieler_suchen", { p_suche: suche });
+    if (error) throw error;
+    if (!data || !data.length) {
+      ziel.innerHTML = `<p class="wheel-status">Kein Spieler gefunden.</p>`;
+      return;
+    }
+    ziel.innerHTML = data.map(gatewaySpielerKarte).join("");
+  } catch (err) {
+    console.error("Spielersuche fehlgeschlagen:", err);
+    ziel.innerHTML = "";
+    gatewaySpielerStatus("Suche fehlgeschlagen: " + (err.message || err), true);
+  }
+}
+
+/* Ein Kasten je Treffer. Die Felder sind mit dem aktuellen Wert
+   vorbelegt - wer nichts aendert, schickt denselben Wert wieder,
+   das ist folgenlos. */
+function gatewaySpielerKarte(sp) {
+  const id = escapeHtml(sp.firebase_uid);
+  const marken = [
+    sp.im_turnier ? "im Turnier" : "",
+    sp.hat_cap ? "hat Cap" : "",
+    sp.nickname ? "" : "kein Name",
+  ].filter(Boolean).join(" · ");
+
+  return `
+    <div class="gateway-spieler-karte" data-uid="${id}">
+      <p class="gateway-spieler-kopf">
+        <strong>${escapeHtml(sp.nickname || "(ohne Namen)")}</strong>
+        ${marken ? `<span class="gateway-spieler-marken">${escapeHtml(marken)}</span>` : ""}
+      </p>
+      <p class="gateway-status-sub"><code>${id}</code></p>
+      <p class="gateway-status-sub">${sp.games_played} Spiele, ${sp.games_won} gewonnen, ${sp.codes_cracked} Codes · zuletzt aktiv ${sp.zuletzt ? escapeHtml(String(sp.zuletzt).slice(0, 16).replace("T", " ")) : "?"}</p>
+      <div class="gateway-form-row">
+        <label>Dublonen<br><input type="number" min="0" class="code-input" id="gsp-cur-${id}" value="${sp.currency}"></label>
+        <label>Erfahrungspunkte<br><input type="number" min="0" class="code-input" id="gsp-xp-${id}" value="${sp.xp}"></label>
+        <label>Name<br><input type="text" maxlength="30" class="code-input" id="gsp-nick-${id}" value="${escapeHtml(sp.nickname || "")}"></label>
+      </div>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gatewaySpielerSpeichern('${id}')">Speichern</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gatewayNameSperren('${id}')">Namen sperren</button>
+    </div>`;
+}
+
+async function gatewaySpielerSpeichern(uid) {
+  const cur = document.getElementById("gsp-cur-" + uid);
+  const xp = document.getElementById("gsp-xp-" + uid);
+  const nick = document.getElementById("gsp-nick-" + uid);
+  if (!cur || !xp || !nick) return;
+
+  const name = (nick.value || "").trim();
+  try {
+    const { error } = await supabaseClient.rpc("admin_spieler_setzen", {
+      p_uid: uid,
+      p_currency: cur.value === "" ? null : Number(cur.value),
+      p_xp: xp.value === "" ? null : Number(xp.value),
+      // Leer lassen heisst "Name unveraendert" - zum Leeren gibt es
+      // bewusst nur "Namen sperren", sonst traegt ihn der Spieler
+      // sofort wieder ein.
+      p_nickname: name || null,
+    });
+    if (error) throw error;
+    gatewaySpielerStatus("Gespeichert. Die Person sieht es nach dem nächsten Laden.");
+  } catch (err) {
+    console.error("Speichern fehlgeschlagen:", err);
+    gatewaySpielerStatus("Fehlgeschlagen: " + (err.message || err), true);
+  }
+}
+
+async function gatewayNameSperren(uid) {
+  const grund = window.prompt("Grund für die Sperre (nur für dich, optional):", "");
+  if (grund === null) return;   // abgebrochen
+  try {
+    const { error } = await supabaseClient.rpc("admin_name_sperren", { p_uid: uid, p_grund: grund || null });
+    if (error) throw error;
+    gatewaySpielerStatus("Name geleert und gesperrt. Der Fortschritt des Kontos bleibt erhalten.");
+    gatewaySpielerSuchen();
+  } catch (err) {
+    console.error("Sperren fehlgeschlagen:", err);
+    gatewaySpielerStatus("Fehlgeschlagen: " + (err.message || err), true);
+  }
+}
+
+async function gatewayGesperrteNamen() {
+  const ziel = document.getElementById("gateway-namen-liste");
+  if (!ziel || !supabaseClient) return;
+  ziel.innerHTML = `<p class="wheel-status">Lade ...</p>`;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_gesperrte_namen");
+    if (error) throw error;
+    if (!data || !data.length) {
+      ziel.innerHTML = `<p class="wheel-status">Kein Name gesperrt.</p>`;
+      return;
+    }
+    ziel.innerHTML = data.map((n) => `
+      <p class="gateway-status-sub">
+        <code>${escapeHtml(n.name_klein)}</code>
+        ${n.grund ? " – " + escapeHtml(n.grund) : ""}
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayNameEntsperren('${escapeHtml(n.name_klein)}')">Entsperren</button>
+      </p>`).join("");
+  } catch (err) {
+    console.error("Namensliste fehlgeschlagen:", err);
+    ziel.innerHTML = `<p class="wheel-status">⚠️ Liste konnte nicht geladen werden.</p>`;
+  }
+}
+
+async function gatewayNameEntsperren(name) {
+  try {
+    const { error } = await supabaseClient.rpc("admin_name_entsperren", { p_name: name });
+    if (error) throw error;
+    gatewayGesperrteNamen();
+  } catch (err) {
+    console.error("Entsperren fehlgeschlagen:", err);
+    gatewaySpielerStatus("Entsperren fehlgeschlagen: " + (err.message || err), true);
   }
 }
 

@@ -1911,3 +1911,45 @@
   font-size: .8rem;
   user-select: all;
 }
+
+/* Statusbrett und Spielerverwaltung im Admin-Gateway */
+.gateway-kacheln {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: .6rem;
+  margin: .8rem 0 1.2rem;
+}
+
+.gateway-kachel {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  padding: .7rem .8rem;
+  border: 1px solid var(--fh-linie, rgba(255, 255, 255, .12));
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .035);
+}
+
+.gateway-kachel-zahl { font-size: 1.35rem; font-weight: 700; line-height: 1.1; }
+.gateway-kachel-text { font-size: .78rem; opacity: .72; line-height: 1.3; }
+
+.gateway-spieler-karte {
+  margin: .8rem 0;
+  padding: .9rem 1rem;
+  border: 1px solid var(--fh-linie, rgba(255, 255, 255, .12));
+  border-radius: var(--fh-radius, 14px);
+  background: rgba(255, 255, 255, .035);
+}
+
+.gateway-spieler-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: baseline;
+  margin: 0 0 .3rem;
+}
+
+.gateway-spieler-marken { font-size: .78rem; opacity: .7; }
+.gateway-spieler-karte code { user-select: all; font-size: .78rem; }
+.gateway-details { margin-top: 1.2rem; }
+.gateway-details summary { cursor: pointer; padding: .4rem 0; }
