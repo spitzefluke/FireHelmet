@@ -449,23 +449,22 @@ function addRaceProgress(amount) {
     localStorage.setItem("raceWeek", currentWeek);
     localStorage.setItem("raceProgress", String(newProgress));
 
-    // Echtes Upsert (ein Aufruf deckt sowohl "erster Eintrag diese
-    // Woche" als auch "Fortschritt aktualisieren" ab) - der
-    // zusammengesetzte Schluessel (week, firebase_uid) ist die
-    // natuerliche Entsprechung zu Firestores Dokument-ID-Trick
-    // "<week>_<uid>", siehe 03-race-boss.sql.
-    // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
-    const { error } = await withSupabaseRlsColdStartRetry(() =>
-      supabaseClient.from("race_progress").upsert(
-        {
-          week: currentWeek,
-          firebase_uid: uid,
-          nickname: nickname,
-          progress: newProgress,
-          equipped_frame: localStorage.getItem("equippedFrame") || null,
-        },
-        { onConflict: "week,firebase_uid" }
-      )
+    // Anlegen oder hochzaehlen - BEWUSST kein .upsert(): ab dem 16.
+    // Punkt der Woche haette die insert-Regel (progress <= 15) jedes
+    // Upsert mit 403 abgelehnt, obwohl der Schritt erlaubt ist.
+    // Ausfuehrliche Begruendung in supabaseZaehlerSchreiben()
+    // (supabase-client.js). Der zusammengesetzte Schluessel
+    // (week, firebase_uid) ist die natuerliche Entsprechung zu
+    // Firestores Dokument-ID-Trick "<week>_<uid>", siehe 03-race-boss.sql.
+    const { error } = await supabaseZaehlerSchreiben(
+      "race_progress",
+      { week: currentWeek, firebase_uid: uid },
+      {
+        nickname: nickname,
+        progress: newProgress,
+        equipped_frame: localStorage.getItem("equippedFrame") || null,
+      },
+      !!current
     );
     if (error) console.error("Rennfortschritt konnte nicht gespeichert werden:", error);
 

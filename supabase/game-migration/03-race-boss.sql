@@ -46,6 +46,17 @@ as $$ select * from public.race_progress where week = p_week and firebase_uid = 
 create policy "race_progress_select_public" on public.race_progress
   for select to anon, authenticated using (true);
 
+/* ACHTUNG - KEIN UPSERT AUF DIESE TABELLE.
+   "insert ... on conflict do update" (das, was supabase-js aus
+   .upsert() macht) prueft in Postgres BEIDE Regelsaetze am neuen
+   Datensatz: die update-Regel UND die insert-Regel. Die insert-Regel
+   begrenzt hier aber den ABSOLUTEN Wert, die update-Regel nur den
+   SCHRITT. Sobald der Zaehler ueber dem Startwert steht, wird deshalb
+   jedes Upsert abgelehnt (PostgREST: 403), obwohl der Schritt selbst
+   erlaubt ist. Der Client schickt darum bewusst getrenntes
+   insert()/update(), siehe supabaseZaehlerSchreiben() in
+   scripts/supabase/supabase-client.js. */
+
 create policy "race_progress_insert_own" on public.race_progress
   for insert to authenticated
   with check (firebase_uid = app.firebase_uid() and progress <= 15);
@@ -192,6 +203,17 @@ as $$ select * from public.community_boss_damage where month_id = p_month_id and
 
 create policy "boss_damage_select_public" on public.community_boss_damage
   for select to anon, authenticated using (true);
+
+/* ACHTUNG - KEIN UPSERT AUF DIESE TABELLE.
+   "insert ... on conflict do update" (das, was supabase-js aus
+   .upsert() macht) prueft in Postgres BEIDE Regelsaetze am neuen
+   Datensatz: die update-Regel UND die insert-Regel. Die insert-Regel
+   begrenzt hier aber den ABSOLUTEN Wert, die update-Regel nur den
+   SCHRITT. Sobald der Zaehler ueber dem Startwert steht, wird deshalb
+   jedes Upsert abgelehnt (PostgREST: 403), obwohl der Schritt selbst
+   erlaubt ist. Der Client schickt darum bewusst getrenntes
+   insert()/update(), siehe supabaseZaehlerSchreiben() in
+   scripts/supabase/supabase-client.js. */
 
 create policy "boss_damage_insert_own" on public.community_boss_damage
   for insert to authenticated

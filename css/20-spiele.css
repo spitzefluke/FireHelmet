@@ -1806,3 +1806,108 @@
 }
 
 .race-fahrzeug.ist-gewaehlt .race-fahrzeug-name { color: inherit; }
+
+/* ======================================================
+   WIEDERHERSTELLUNGS-KENNWORT (Anmeldeseite)
+   Siehe scripts/core/spieler-kennwort.js.
+====================================================== */
+.fh-kennwort-box {
+  margin-top: 1.75rem;
+  padding: 1.15rem 1.15rem 1.25rem;
+  border: 1px solid var(--fh-linie, rgba(255, 255, 255, .12));
+  border-radius: var(--fh-radius, 14px);
+  background: rgba(255, 255, 255, .035);
+  text-align: left;
+}
+
+.fh-kennwort-titel {
+  margin: 0 0 .4rem;
+  font-size: 1rem;
+  letter-spacing: .02em;
+}
+
+.fh-kennwort-text {
+  margin: 0 0 .8rem;
+  font-size: .88rem;
+  line-height: 1.5;
+  opacity: .8;
+}
+
+.fh-kennwort-trenner {
+  margin-top: 1.15rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--fh-linie, rgba(255, 255, 255, .12));
+}
+
+.fh-kennwort-anzeige,
+.fh-kennwort-eingabezeile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+}
+
+.fh-kennwort-wert {
+  flex: 1 1 9ch;
+  min-width: 9ch;
+  padding: .55rem .8rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .3);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.15rem;
+  letter-spacing: .16em;
+  /* Damit sich das Kennwort mit einem Doppelklick markieren laesst,
+     statt nur mit muehsamem Ziehen ueber acht Zeichen. */
+  user-select: all;
+}
+
+.fh-kennwort-knopf { flex: 0 0 auto; }
+
+.fh-kennwort-eingabezeile .code-input {
+  flex: 1 1 10ch;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.fh-kennwort-status {
+  margin: .7rem 0 0;
+  min-height: 1.2em;
+  font-size: .87rem;
+  line-height: 1.45;
+}
+
+.fh-kennwort-status.is-negative { color: var(--fh-warn, #ff9a76); }
+.fh-kennwort-status.is-positive { color: var(--fh-gut, #7bd88f); }
+
+@media (max-width: 480px) {
+  .fh-kennwort-anzeige .fh-kennwort-knopf,
+  .fh-kennwort-eingabezeile .code-button { flex: 1 1 100%; }
+}
+
+/* Kontenliste im Admin-Gateway (Spieler-Identitaet umhaengen) */
+.gateway-ident-tabelle {
+  width: 100%;
+  margin: .8rem 0;
+  border-collapse: collapse;
+  font-size: .85rem;
+  /* IDs sind 36 Zeichen - auf dem Handy muss die Tabelle scrollen
+     duerfen, statt die Seite breiter zu machen. */
+  display: block;
+  overflow-x: auto;
+}
+
+.gateway-ident-tabelle th,
+.gateway-ident-tabelle td {
+  padding: .35rem .6rem;
+  border-bottom: 1px solid var(--fh-linie, rgba(255, 255, 255, .12));
+  text-align: left;
+  white-space: nowrap;
+}
+
+.gateway-ident-tabelle code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .8rem;
+  user-select: all;
+}

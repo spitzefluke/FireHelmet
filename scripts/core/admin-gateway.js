@@ -350,6 +350,9 @@ async function renderGatewayPage() {
       <h2 class="fh-ship-section-heading">THE CHALLENGE (Turnier)</h2>
       <div id="gateway-tournament-sub">Lade Turnierstatus...</div>
 
+      <h2 class="fh-ship-section-heading">Spieler-Identität</h2>
+      ${buildGatewayIdentitaetHtml()}
+
       <h2 class="fh-ship-section-heading">Vorschau</h2>
       <p class="gateway-preview-hint">So sieht die normale Website gerade aus (aktualisiert sich live mit deinen Änderungen):</p>
       <iframe class="gateway-preview-frame" src="index.html" title="Vorschau"></iframe>
@@ -469,6 +472,139 @@ async function gatewayMarkTournamentPrizeFulfilled() {
     renderGatewayPage();
   } catch (err) {
     if (statusEl) statusEl.textContent = "⚠️ " + (err && err.message);
+  }
+}
+
+/* ------------------------------------------------------
+   SPIELER-IDENTITAET UMHAENGEN
+   ---------------------------------------------------
+   WOFUER: Die Anmeldung ist ein anonymes Supabase-Konto, das nur im
+   Browserspeicher lebt. Raeumt der Browser ihn weg (Safari/iOS nach
+   7 Tagen, privates Fenster, anderes Geraet), bekommt dieselbe
+   Person eine NEUE ID - ihre Dublonen, ihr Level und eine laufende
+   Turnier-Anmeldung haengen aber an der alten.
+
+   Normalerweise loest der Spieler das selbst mit seinem
+   Wiederherstellungs-Kennwort (scripts/core/spieler-kennwort.js).
+   Diese Werkzeuge hier sind fuer den Fall, dass auch das Kennwort
+   weg ist - dann bist DU die Identitaetspruefung (Stream, Discord),
+   nicht die Datenbank.
+
+   Die eigentliche Arbeit macht der Server (SECURITY DEFINER +
+   app.is_admin()), siehe supabase/game-migration/12-spieler-kennwort.sql.
+------------------------------------------------------ */
+function buildGatewayIdentitaetHtml() {
+  return `
+    <p class="gateway-preview-hint">Ein Spieler kommt nicht mehr an sein Konto? Erst den Namen suchen, dann die alte auf die neue ID umhängen.</p>
+
+    <div class="gateway-form-row">
+      <label>Name suchen<br>
+        <input type="text" id="gateway-ident-name" class="code-input" placeholder="z.B. 2201dn" autocomplete="off">
+      </label>
+    </div>
+    <button type="button" class="code-button" onclick="gatewayKontenSuchen()">Konten anzeigen</button>
+    <div id="gateway-ident-treffer"></div>
+
+    <div class="gateway-form-row">
+      <label>Alte ID<br>
+        <input type="text" id="gateway-ident-alt" class="code-input" placeholder="alte UUID" autocomplete="off">
+      </label>
+      <label>Neue ID<br>
+        <input type="text" id="gateway-ident-neu" class="code-input" placeholder="neue UUID" autocomplete="off">
+      </label>
+    </div>
+    <button type="button" class="code-button" onclick="gatewayTeilnehmerUmhaengen()">Nur im laufenden Turnier umhängen</button>
+    <button type="button" class="code-button" onclick="gatewayIdentitaetUmhaengen()">Ganzes Konto umhängen</button>
+    <p class="gateway-preview-hint">„Ganzes Konto“ nimmt Dublonen, Level, Schiff und Turnier mit — und <strong>ersetzt dabei das neue Konto vollständig</strong>. Alles, was auf der neuen ID schon gespielt wurde, ist danach weg.</p>
+    <p id="gateway-ident-status" class="wheel-status"></p>
+  `;
+}
+
+function gatewayIdentStatus(text, istFehler) {
+  const el = document.getElementById("gateway-ident-status");
+  if (!el) return;
+  el.textContent = text || "";
+  el.style.color = istFehler ? "var(--fh-warn, #ff9a76)" : "";
+}
+
+async function gatewayKontenSuchen() {
+  const feld = document.getElementById("gateway-ident-name");
+  const treffer = document.getElementById("gateway-ident-treffer");
+  if (!feld || !treffer || !supabaseClient) return;
+
+  const name = (feld.value || "").trim();
+  if (!name) return;
+
+  treffer.innerHTML = "<p class=\"wheel-status\">Suche ...</p>";
+  gatewayIdentStatus("");
+
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_konten_zu_name", { p_name: name });
+    if (error) throw error;
+    if (!data || !data.length) {
+      treffer.innerHTML = "<p class=\"wheel-status\">Kein Konto unter diesem Namen.</p>";
+      return;
+    }
+
+    // Neuestes zuerst - das ist in aller Regel das, in dem die Person
+    // gerade sitzt; das mit "im Turnier" ist das, an dem die Anmeldung haengt.
+    const zeilen = data.map((k, i) => `
+      <tr>
+        <td>${i === 0 ? "neuestes" : ""}</td>
+        <td><code>${escapeHtml(k.firebase_uid)}</code></td>
+        <td>${k.angelegt ? escapeHtml(String(k.angelegt).slice(0, 16).replace("T", " ")) : "?"}</td>
+        <td>${k.currency} 🪙</td>
+        <td>${k.im_turnier ? "im Turnier" : ""}</td>
+      </tr>`).join("");
+
+    treffer.innerHTML = `
+      <table class="gateway-ident-tabelle">
+        <thead><tr><th></th><th>ID</th><th>angelegt</th><th>Dublonen</th><th></th></tr></thead>
+        <tbody>${zeilen}</tbody>
+      </table>`;
+  } catch (err) {
+    console.error("Kontensuche fehlgeschlagen:", err);
+    treffer.innerHTML = "";
+    gatewayIdentStatus("Suche fehlgeschlagen: " + (err.message || err), true);
+  }
+}
+
+function gatewayIdentPaar() {
+  const alt = (document.getElementById("gateway-ident-alt") || {}).value || "";
+  const neu = (document.getElementById("gateway-ident-neu") || {}).value || "";
+  return { alt: alt.trim(), neu: neu.trim() };
+}
+
+async function gatewayTeilnehmerUmhaengen() {
+  const { alt, neu } = gatewayIdentPaar();
+  if (!alt || !neu) { gatewayIdentStatus("Beide IDs eintragen.", true); return; }
+
+  try {
+    const turnier = await getOpenTournament();
+    if (!turnier) { gatewayIdentStatus("Gerade läuft kein Turnier.", true); return; }
+    const { error } = await supabaseClient.rpc("admin_teilnehmer_umhaengen", {
+      p_tournament_id: turnier.id, p_alt: alt, p_neu: neu,
+    });
+    if (error) throw error;
+    gatewayIdentStatus("Turnier-Anmeldung umgehängt. Die Person soll die Seite neu laden.");
+  } catch (err) {
+    console.error("Umhängen fehlgeschlagen:", err);
+    gatewayIdentStatus("Fehlgeschlagen: " + (err.message || err), true);
+  }
+}
+
+async function gatewayIdentitaetUmhaengen() {
+  const { alt, neu } = gatewayIdentPaar();
+  if (!alt || !neu) { gatewayIdentStatus("Beide IDs eintragen.", true); return; }
+  if (!window.confirm("Das ganze Konto " + alt + " auf " + neu + " umhängen?\n\nAlles, was auf " + neu + " schon gespielt wurde, geht dabei verloren.")) return;
+
+  try {
+    const { error } = await supabaseClient.rpc("admin_identitaet_umhaengen", { p_alt: alt, p_neu: neu });
+    if (error) throw error;
+    gatewayIdentStatus("Konto umgehängt. Die Person soll die Seite neu laden.");
+  } catch (err) {
+    console.error("Umhängen fehlgeschlagen:", err);
+    gatewayIdentStatus("Fehlgeschlagen: " + (err.message || err), true);
   }
 }
 

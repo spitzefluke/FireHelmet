@@ -6,7 +6,12 @@ drop schema if exists auth cascade;
 create schema auth;
 
 create or replace function auth.jwt() returns jsonb as $$
-  select coalesce(current_setting('request.jwt.claims', true)::jsonb, '{}'::jsonb);
+  -- nullif(...,''): ein per set_config auf den LEEREN String gesetzter
+  -- Claim bedeutet in den Tests "nicht angemeldet". Ohne dieses nullif
+  -- scheitert die Umwandlung mit "invalid input syntax for type json",
+  -- statt schlicht NULL zu liefern - bei echtem Supabase ist der
+  -- Parameter in dem Fall gar nicht gesetzt und genau das passiert dort.
+  select coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb, '{}'::jsonb);
 $$ language sql stable;
 
 -- Bildet Supabases eigenes, natives auth.uid() nach (nicht mehr die
@@ -14,7 +19,7 @@ $$ language sql stable;
 -- einer echten Supabase-Sitzung (signInAnonymously()/signInWithOAuth())
 -- die eigene Supabase-User-UUID enthaelt.
 create or replace function auth.uid() returns uuid as $$
-  select nullif(current_setting('request.jwt.claims', true)::jsonb ->> 'sub', '')::uuid;
+  select nullif(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub', '')::uuid;
 $$ language sql stable;
 
 do $$

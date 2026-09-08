@@ -133,6 +133,14 @@ alter table public.boss_attack_state enable row level security;
 alter table public.boss_attack_state force row level security;
 
 -- Nur der eigene Stand, und nur lesend.
+/* Schreiben ist hier ausschliesslich Sache von app.boss_attack() und
+   app.boss_unlock_special() (beide SECURITY DEFINER). Zusaetzlich zur
+   fehlenden Schreib-Policy auch die Rechte entziehen - sonst haengt
+   der Schutz allein an RLS, weil Supabase neuen Tabellen in public
+   automatisch Rechte fuer anon/authenticated gibt. Lesen bleibt
+   erlaubt, dafuer gibt es unten eine select-Policy. */
+revoke insert, update, delete on public.boss_attack_state from anon, authenticated;
+
 drop policy if exists "boss_attack_state_eigener" on public.boss_attack_state;
 create policy "boss_attack_state_eigener" on public.boss_attack_state
   for select to authenticated
@@ -197,6 +205,11 @@ create table if not exists public.boss_special_codes (
 
 alter table public.boss_special_codes enable row level security;
 alter table public.boss_special_codes force row level security;
+
+/* Wie bei den Kennwort-Tabellen (12-spieler-kennwort.sql): zusaetzlich
+   zur fehlenden select-Policy auch die Tabellenrechte entziehen.
+   Supabase vergibt sie sonst automatisch an anon/authenticated. */
+revoke all on public.boss_special_codes from anon, authenticated;
 -- KEINE select-Policy: niemand ausser den Funktionen unten (die als
 -- SECURITY DEFINER laufen) bekommt diese Tabelle je zu sehen.
 
@@ -234,6 +247,17 @@ create policy "community_boss_update" on public.community_boss
           and hp >= coalesce((app.old_community_boss(month_id)).hp, 0) - 400)
     )
   );
+
+/* ACHTUNG - KEIN UPSERT AUF DIESE TABELLE.
+   "insert ... on conflict do update" (das, was supabase-js aus
+   .upsert() macht) prueft in Postgres BEIDE Regelsaetze am neuen
+   Datensatz: die update-Regel UND die insert-Regel. Die insert-Regel
+   begrenzt hier aber den ABSOLUTEN Wert, die update-Regel nur den
+   SCHRITT. Sobald der Zaehler ueber dem Startwert steht, wird deshalb
+   jedes Upsert abgelehnt (PostgREST: 403), obwohl der Schritt selbst
+   erlaubt ist. Der Client schickt darum bewusst getrenntes
+   insert()/update(), siehe supabaseZaehlerSchreiben() in
+   scripts/supabase/supabase-client.js. */
 
 drop policy if exists "boss_damage_insert_own" on public.community_boss_damage;
 create policy "boss_damage_insert_own" on public.community_boss_damage
