@@ -164,6 +164,64 @@
     );
   }
 
+  /* Der Seitentitel laeuft buchstabenweise ein.
+
+     SplitText zerlegt die Ueberschrift dafuer in <span> je Zeichen.
+     Das MUSS danach wieder zurueckgesetzt werden: die Titel tragen
+     data-i18n, und applyTranslations() schreibt beim Sprachwechsel
+     el.textContent - stehen die Spans noch, waeren sie danach weg,
+     und ein spaeterer revert() wuerde einen alten Stand
+     zurueckschreiben. Dasselbe Muster benutzt cinematic.js fuer die
+     Eroeffnung der Startseite schon.
+
+     Der letzte Lauf wird vor dem naechsten immer abgeraeumt - wer
+     schnell durchklickt, soll keine halb zerlegten Ueberschriften
+     stehen haben. */
+  let letzterSplit = null;
+
+  function splitAbraeumen() {
+    if (!letzterSplit) return;
+    try { if (letzterSplit.revert) letzterSplit.revert(); } catch (err) { /* egal */ }
+    letzterSplit = null;
+  }
+
+  function titel(seiteID) {
+    splitAbraeumen();
+
+    if (seiteID === "home") return;   // hat ihre eigene Eroeffnung
+    if (reduziert()) return;
+    if (typeof gsap === "undefined" || typeof SplitText === "undefined") return;
+
+    const seite = document.getElementById(seiteID);
+    if (!seite) return;
+    const h = seite.querySelector("h1.fh-page-title");
+    if (!h || !h.textContent.trim()) return;
+
+    let split;
+    try { split = new SplitText(h, { type: "chars" }); }
+    catch (err) { return; }
+
+    if (!split.chars || !split.chars.length) {
+      if (split.revert) split.revert();
+      return;
+    }
+    letzterSplit = split;
+
+    gsap.killTweensOf(split.chars);
+    gsap.from(split.chars, {
+      yPercent: 55,
+      opacity: 0,
+      duration: 0.5,
+      ease: "power3.out",
+      stagger: 0.028,
+      onComplete: function () {
+        // Nur abraeumen, wenn seither kein neuer Lauf begonnen hat.
+        if (letzterSplit === split) splitAbraeumen();
+      },
+    });
+  }
+
   window.fhSeitenRichtung = richtung;
   window.fhSeitenStaffeln = staffeln;
+  window.fhSeitenTitel = titel;
 })();

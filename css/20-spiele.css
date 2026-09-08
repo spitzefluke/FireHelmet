@@ -918,21 +918,17 @@
 /* =====================================================
    WOCHENRENNEN (bildschirmfüllend)
 ===================================================== */
+/* Die Huelle bleibt (das Markup verweist darauf), aber der pulsende
+   Doppelschein ist raus: den Rennhintergrund macht jetzt die
+   gemeinsame Effektflaeche, und zwar passend zur gefahrenen Strecke
+   (scripts/core/seiten-fx-szenen.js, Eintrag "race"). Zwei
+   Hintergruende uebereinander waeren nur Matsch. */
 .race-fx {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
-  background:
-    radial-gradient(circle at 20% 15%, rgba(255,159,77,.18), transparent 55%),
-    radial-gradient(circle at 80% 85%, rgba(77,163,255,.18), transparent 55%);
-  animation: raceFxPulse 6s ease-in-out infinite;
-}
-
-@keyframes raceFxPulse {
-  0%, 100% { opacity: .7; }
-  50%      { opacity: 1; }
 }
 
 .race-fullpage {
@@ -1269,19 +1265,15 @@
 /* =====================================================
    STREAMRÄTSEL (bildschirmfüllend, Stream/Rätsel-Thema)
 ===================================================== */
+/* Wie bei .race-fx: die Huelle bleibt, der pulsende rote Schein ist
+   raus. Das Stoerbild kommt jetzt aus der gemeinsamen
+   Effektflaeche. */
 .streamraetsel-fx {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
-  background: radial-gradient(circle at 50% 45%, rgba(255,45,45,.4), transparent 65%);
-  animation: streamRaetselGlow 5s ease-in-out infinite;
-}
-
-@keyframes streamRaetselGlow {
-  0%, 100% { opacity: .6; }
-  50%      { opacity: 1; }
 }
 
 /* Scanlines wie auf einem Stream-/Röhrenbildschirm */

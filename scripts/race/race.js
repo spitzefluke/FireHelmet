@@ -94,6 +94,13 @@ function buildRaceTrack() {
   // "Wochenrennen" die Woche, das "Diese Woche:" davor waere doppelt.
   if (themeEl) themeEl.textContent = `${track.emoji} ${track.name}`;
 
+  /* Der Seitenhintergrund (scripts/core/seiten-fx-szenen.js, Eintrag
+     "race") nimmt Grund- und Akzentfarbe der gefahrenen Strecke.
+     Beide stehen ohnehin schon hier - eine zehnte Strecke in
+     race-data.js bekommt damit von selbst den passenden
+     Hintergrund, ohne dass am Shader etwas zu aendern waere. */
+  window.fhRennThema = track;
+
   // Bereits gezeichnete Karts/Boote/Flugzeuge entfernen, damit sie beim
   // nächsten Positionieren mit dem NEUEN Fahrzeugtyp neu erstellt werden
   const kartsLayer = document.getElementById("race-karts-layer");

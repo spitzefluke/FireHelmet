@@ -211,6 +211,12 @@ async function renderPassPage() {
   const capRewardClaimed = claimedIds.includes(capRewardId);
   const routeHtml = buildPassRouteHtml(pass, currentTier, claimedIds, hasCap);
 
+  /* Den fertig berechneten Stand hinterlegen: die Schatzkarte
+     (scripts/piratenpass/schatzkarte.js) baut daraus ihre
+     Stationen, statt dieselben Abfragen ein zweites Mal zu
+     stellen. */
+  window.fhPassStand = { pass, currentTier, claimedIds, hasCap, passXp };
+
   container.innerHTML = `
     <div class="piratenpass-wrap">
       <div class="piratenpass-header">
@@ -227,6 +233,10 @@ async function renderPassPage() {
           <div class="piratenpass-header-progressbar-fill" style="width:${Math.round((currentTier / pass.levels) * 100)}%"></div>
         </div>
         <span class="piratenpass-header-xp">${passXp.toLocaleString(isEn ? "en-US" : "de-DE")} / ${totalTierXp.toLocaleString(isEn ? "en-US" : "de-DE")} Pass-XP</span>
+        <button type="button" class="code-button piratenpass-karte-btn"
+                onclick="if(typeof fhSchatzkarteOeffnen==='function')fhSchatzkarteOeffnen()">
+          🗺️ ${isEn ? "OPEN AS TREASURE MAP" : "ALS SCHATZKARTE ÖFFNEN"}
+        </button>
       </div>
 
       <div class="piratenpass-scroll" id="piratenpass-scroll" tabindex="0" aria-label="${isEn ? "Pirate Pass route, scroll horizontally" : "Piratenpass-Route, horizontal scrollbar"}">

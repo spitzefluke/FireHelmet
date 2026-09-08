@@ -69,6 +69,7 @@
        Druckgefuehl und Tastaturfokus aller Bedienelemente und muss
        dafuer die Regeln aus 00 bis 70 ueberschreiben koennen. -->
   <link rel="stylesheet" href="css/80-interaktion.css">
+  <link rel="stylesheet" href="css/90-typografie.css">
 </head>
 <body>
 
@@ -493,8 +494,6 @@
          STORY ARCHIV
     ====================================================== -->
     <section id="story" class="page">
-      <!-- Tauwerk-Hintergrund, siehe scripts/stories/story-threads.js -->
-      <div class="story-ambient-fx" id="story-ambient-fx" aria-hidden="true"></div>
       <div class="story-library">
         <div class="fh-page-head">
           <p class="fh-page-kicker" data-i18n="story.kicker">Archiv der Crew</p>
@@ -782,8 +781,6 @@
          GLÜCKSRAD
     ===================== -->
     <section id="wheel" class="page">
-      <!-- Schatzstaub, siehe scripts/wheel/wheel-particles.js -->
-      <div class="wheel-ambient-fx" id="wheel-ambient-fx" aria-hidden="true"></div>
       <div class="page-content wheel-content">
         <div class="fh-page-head">
           <p class="fh-page-kicker" data-i18n="wheel.kicker">Einmal am Tag</p>
@@ -1324,7 +1321,12 @@
   <script src="scripts/core/rail-flyout.js" defer></script>
   <script src="scripts/core/nav-keys.js" defer></script>
   <script src="scripts/core/seitenwechsel.js" defer></script>
+  <script src="scripts/core/schrift-licht.js" defer></script>
   <script src="scripts/core/zaehler.js" defer></script>
+  <!-- Erst die Szenen, dann die Flaeche: seiten-fx.js liest
+       window.fhSeitenSzenen beim ersten Seitenbesuch. -->
+  <script src="scripts/core/seiten-fx-szenen.js" defer></script>
+  <script src="scripts/core/seiten-fx.js" defer></script>
   <script src="scripts/core/path-draw.js" defer></script>
   <script src="scripts/core/quick-search.js" defer></script>
   <script src="scripts/core/share.js" defer></script>
@@ -1381,6 +1383,7 @@
   <script src="scripts/core/progression.js" defer></script>
   <script src="scripts/core/level-path.js" defer></script>
   <script src="scripts/piratenpass/piratenpass.js" defer></script>
+  <script src="scripts/piratenpass/schatzkarte.js" defer></script>
   <script src="scripts/spielothek/spielothek-data.js" defer></script>
   <script src="scripts/spielothek/games/slot.js" defer></script>
   <script src="scripts/spielothek/spielothek.js" defer></script>
@@ -1396,8 +1399,6 @@
   <script src="scripts/core/main.js" defer></script>
   <script src="scripts/codes/code-button-effect.js" defer></script>
   <script src="scripts/codes/code-ambient-fx.js" defer></script>
-  <script src="scripts/stories/story-threads.js" defer></script>
-  <script src="scripts/wheel/wheel-particles.js" defer></script>
   <script src="scripts/codes/code-history.js" defer></script>
 
   <!-- Ganz zum Schluss: die Startseiten-Uebersicht liest aus stories.js,

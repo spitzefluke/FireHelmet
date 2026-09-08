@@ -58,12 +58,10 @@ function changePage(pageID) {
     updateCodeAmbientPage(pageID);
   }
 
-  if (typeof updateStoryBackgroundPage === "function") {
-    updateStoryBackgroundPage(pageID);
-  }
-
-  if (typeof updateWheelParticlesPage === "function") {
-    updateWheelParticlesPage(pageID);
+  // Die gemeinsame Effektflaeche aller Seiten
+  // (scripts/core/seiten-fx.js) - schaltet die Stimmung um.
+  if (typeof fhSeitenEffekt === "function") {
+    fhSeitenEffekt(pageID);
   }
 
   if (typeof updateCodeHistoryPage === "function") {
@@ -118,6 +116,10 @@ function changePage(pageID) {
   // staffeln.
   if (typeof fhSeitenStaffeln === "function") {
     fhSeitenStaffeln(pageID);
+  }
+
+  if (typeof fhSeitenTitel === "function") {
+    fhSeitenTitel(pageID);
   }
 }
 
