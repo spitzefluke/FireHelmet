@@ -1,0 +1,263 @@
+/* ======================================================
+   80 - INTERAKTION: EINE MECHANIK FÜR ALLE BEDIENELEMENTE
+   ---------------------------------------------------
+   Diese Datei wird ZULETZT geladen. Das ist Absicht: sie soll die
+   Bewegungs- und Fokus-Regeln der Dateien 00 bis 70 ueberschreiben,
+   ohne dort ueberall einzeln nachzubessern.
+
+   Sie aendert bewusst KEIN Aussehen - keine Farbe, keine Schrift,
+   keinen Radius, keinen Abstand. Die Seite hat gewachsene und
+   gewollte Unterschiede (der Code-Knopf in Schreibmaschinenschrift,
+   die Oswald-Versalien der 1c-Knoepfe, die runden Shop-Reiter), und
+   die bleiben. Vereinheitlicht wird nur, was sich ANFUEHLT:
+
+   1. TEMPO UND KURVE
+      Im Stylesheet standen 76 Uebergaenge ohne eigene Kurve. Ohne
+      Angabe nimmt der Browser "ease" - eine Kurve, die langsam
+      anfaengt. Unter dem Zeiger faellt genau das auf: die Reaktion
+      setzt spuerbar spaeter ein, als der Zeiger ankommt. Die
+      Dauern lagen ausserdem bunt zwischen 0,15s und 0,5s.
+      Hier bekommen alle Bedienelemente --fh-dauer und --fh-ease.
+
+   2. DRUCKGEFUEHL
+      Kein einziger Knopf hatte einen :active-Zustand. Zwischen
+      "gedrueckt" und "nur ueberfahren" war optisch kein
+      Unterschied - auf dem Handy, wo es gar keinen Schwebezustand
+      gibt, fehlte damit jede Rueckmeldung auf die Beruehrung.
+
+   3. TASTATURFOKUS
+      Gemessen mit einem echten Tastaturdurchlauf ueber 15 Seiten
+      (:focus-visible greift nur bei Tastaturfokus - element.focus()
+      aus einem Skript loest es NICHT aus, danach sieht man nichts):
+
+        vorher   1 mit goldenem Ring, 12 mit blauem Standardring
+                 des Browsers, 1 ganz ohne Ring (.twitch-login-btn,
+                 outline-width 0)
+        nachher 11 mit goldenem Ring, 0 ohne Ring
+
+      Die vier verbleibenden Standardringe sitzen auf scrollenden
+      Behaeltern (.page-content, .story-library, .race-fullpage,
+      .fh-audiobook-card), die Chromium fuer die Tastaturbedienung
+      selbst fokussierbar macht. Das sind keine Bedienelemente und
+      sollen den Knopfring auch nicht bekommen.
+
+   Bei "Bewegung reduzieren" gewinnt weiterhin die abschliessende
+   Regel in 70-entwurf-1c.css: sie setzt transition-duration mit
+   !important auf .01ms und schlaegt damit alles hier.
+====================================================== */
+
+/* =========================
+   1. TEMPO UND KURVE
+   ---------------------------------------------------
+   Nur Dauer und Kurve werden gesetzt, NICHT transition-property.
+   So behaelt jede Regel genau die Eigenschaften, die sie bisher
+   bewegt hat - es aendert sich nur, wie schnell und wie.
+========================= */
+:is(
+  .code-button,
+  .back-button,
+  .close-button,
+  .menu-button,
+  .music-toggle,
+  .lang-switch,
+  .social-btn,
+  .spin-button,
+  .shop-tab,
+  .shop-item-btn,
+  .shop-item-info-btn,
+  .boss-attack-btn,
+  .twitch-login-btn,
+  .twitch-logout-btn,
+  .discord-login-btn,
+  .update-notice-button,
+  .story-milestone-banner-btn,
+  .fh-topbar-btn,
+  .fh-cta,
+  .fh-bottom-nav-item,
+  .fh-audiobook-button,
+  .fh-notice-close,
+  .fh-levelup-close,
+  .fh-levelpath-close-btn,
+  .fh-levelpath-tooltip-close-btn,
+  .fh-levelpath-tooltip-claim-btn,
+  .piratenpass-tooltip-close-btn,
+  .piratenpass-tooltip-claim-btn,
+  .tournament-reaction-button,
+  .tournament-refresh-button,
+  .tournament-play-button,
+  .tournament-enter-button,
+  .gateway-inline-btn,
+  .detective-accuse-btn,
+  .combo-check-btn,
+  .combo-audio-btn
+) {
+  transition-duration: var(--fh-dauer);
+  transition-timing-function: var(--fh-ease);
+}
+
+/* =========================
+   2. DRUCKGEFUEHL
+   ---------------------------------------------------
+   Bewusst NUR fuer knopffoermige Elemente. Grosse anklickbare
+   Flaechen (Kapitelzeilen, Verdaechtigenkarten, Logbuch-Kacheln)
+   bleiben aussen vor: eine 335px hohe Karte, die beim Antippen
+   schrumpft, wirkt wie ein Fehler, nicht wie ein Knopfdruck.
+
+   scale statt translateY, damit es unabhaengig davon funktioniert,
+   ob der jeweilige Schwebezustand schon eine Verschiebung mitbringt
+   - die wird hier ueberschrieben, und genau das ergibt das
+   "Zurueckfallen" beim Druecken.
+========================= */
+:is(
+  .code-button,
+  .back-button,
+  .close-button,
+  .social-btn,
+  .spin-button,
+  .shop-tab,
+  .shop-item-btn,
+  .boss-attack-btn,
+  .twitch-login-btn,
+  .twitch-logout-btn,
+  .discord-login-btn,
+  .update-notice-button,
+  .story-milestone-banner-btn,
+  .fh-topbar-btn,
+  .fh-cta,
+  .fh-audiobook-button,
+  .fh-levelpath-tooltip-claim-btn,
+  .piratenpass-tooltip-claim-btn,
+  .tournament-reaction-button,
+  .tournament-refresh-button,
+  .tournament-play-button,
+  .tournament-enter-button,
+  .gateway-inline-btn,
+  .detective-accuse-btn,
+  .combo-check-btn
+):active:not([disabled]):not(.disabled) {
+  transform: scale(.97);
+  /* Der Druck muss sofort sitzen - 200ms waeren hier schon
+     Gummiband. */
+  transition-duration: var(--fh-dauer-kurz);
+}
+
+/* Kleine, runde Knoepfe schrumpfen weniger stark: bei 21px waeren
+   3% nicht zu sehen, bei 8% verschwindet das Symbol darin. */
+:is(
+  .shop-item-info-btn,
+  .fh-notice-close,
+  .fh-levelup-close,
+  .fh-levelpath-close-btn,
+  .fh-levelpath-tooltip-close-btn,
+  .piratenpass-tooltip-close-btn,
+  .music-toggle,
+  .menu-button
+):active:not([disabled]) {
+  transform: scale(.92);
+  transition-duration: var(--fh-dauer-kurz);
+}
+
+/* Die untere Leiste am Handy ist der Hauptweg durch die Seite und
+   hat keinen Schwebezustand - hier ist der Druck die einzige
+   Rueckmeldung. */
+.fh-bottom-nav-item:active {
+  transform: scale(.94);
+  transition-duration: var(--fh-dauer-kurz);
+}
+
+/* =========================
+   3. TASTATURFOKUS
+   ---------------------------------------------------
+   Ein Ring fuer alles. Gold statt des blauen Standardrings, weil
+   der auf dunklem Grund und neben den blauen Akzenten der Seite
+   untergeht.
+
+   outline liegt ausserhalb des Rahmens und schiebt nichts - anders
+   als ein border-Wechsel, der bei einem Element ohne Rahmen die
+   ganze Zeile verrueckt.
+========================= */
+:is(
+  .code-button,
+  .back-button,
+  .close-button,
+  .menu-button,
+  .music-toggle,
+  .lang-switch,
+  .social-btn,
+  .spin-button,
+  .shop-tab,
+  .shop-item-btn,
+  .shop-item-info-btn,
+  .boss-attack-btn,
+  .twitch-login-btn,
+  .twitch-logout-btn,
+  .discord-login-btn,
+  .update-notice-button,
+  .story-milestone-banner-btn,
+  .fh-topbar-btn,
+  .fh-cta,
+  .fh-bottom-nav-item,
+  .fh-audiobook-button,
+  .fh-notice-close,
+  .fh-levelup-close,
+  .fh-levelpath-close-btn,
+  .fh-levelpath-tooltip-close-btn,
+  .fh-levelpath-tooltip-claim-btn,
+  .fh-levelpath-node,
+  .piratenpass-tooltip-close-btn,
+  .piratenpass-tooltip-claim-btn,
+  .piratenpass-node,
+  .tournament-reaction-button,
+  .tournament-refresh-button,
+  .tournament-play-button,
+  .tournament-enter-button,
+  .gateway-inline-btn,
+  .gateway-chapter-row,
+  .gateway-logout-link,
+  .fh-gateway-link,
+  .detective-accuse-btn,
+  .detective-suspect-card,
+  .detective-clue-card,
+  .combo-check-btn,
+  .combo-audio-btn,
+  .combo-arrow,
+  .story-card,
+  .character-card-v2,
+  .fh-row-clickable,
+  .fh-qs-item,
+  .fh-rarity-chip,
+  .avatar-option,
+  .rating-star
+):focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 3px;
+}
+
+/* Runde Elemente brauchen einen engeren Ring, sonst schwebt er
+   sichtbar neben der Form. */
+:is(
+  .shop-item-info-btn,
+  .avatar-option,
+  .piratenpass-node,
+  .fh-levelpath-node,
+  .lang-switch,
+  .shop-tab
+):focus-visible {
+  outline-offset: 2px;
+}
+
+/* Innerhalb scrollender Listen wuerde ein aussenliegender Ring am
+   Rand abgeschnitten - dort nach innen legen. */
+:is(.fh-qs-item, .fh-row-clickable, .gateway-chapter-row):focus-visible {
+  outline-offset: -2px;
+}
+
+/* Anklickbare <a> OHNE href sind fuer den Browser keine Links,
+   sondern nur fokussierbare Elemente - sie fallen sonst durch die
+   Klassenliste oben und bekaemen den blauen Standardring. Betrifft
+   den Anmelde-Hinweis auf der Schatzrad-Seite und alles, was
+   spaeter nach demselben Muster dazukommt. */
+a[tabindex]:not([href]):focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 3px;
+}

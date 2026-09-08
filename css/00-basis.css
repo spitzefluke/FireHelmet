@@ -195,7 +195,24 @@ body.loaded {
   --fh-shadow-sm: 0 8px 20px rgba(0,0,0,.35);
   --fh-glow-gold: 0 0 30px rgba(240,201,106,.35);
   --fh-glow-fire: 0 0 30px rgba(255,106,42,.35);
+  /* ---- Bewegung ----
+     Eine Kurve und drei Dauern fuer die ganze Seite. Vorher standen
+     im Stylesheet 76 Uebergaenge ohne eigene Kurve - die laufen dann
+     auf der Browser-Voreinstellung "ease", und die faengt langsam an.
+     Bei einem Knopf unter dem Zeiger faellt genau das auf: die
+     Reaktion setzt spuerbar spaeter ein als der Zeiger ankommt.
+     --fh-ease faengt schnell an und laeuft weich aus. */
   --fh-ease: cubic-bezier(.22,.9,.32,1);
+  /* Fuer das Verlassen eines Zustands: umgekehrt gewichtet, laeuft
+     ruhig an und zieht am Ende durch. */
+  --fh-ease-aus: cubic-bezier(.4,0,.7,.2);
+
+  /* Druck und Farbwechsel muessen sofort sitzen. */
+  --fh-dauer-kurz: 120ms;
+  /* Der Regelfall: Schwebe, Fokus, Zustandswechsel. */
+  --fh-dauer: 200ms;
+  /* Groessere Wege: Seitenwechsel, Einblenden von Inhalt. */
+  --fh-dauer-lang: 340ms;
 
   /* ---- Rahmenmasse (Entwurf 1c): schmale Icon-Leiste statt der
      bisherigen 248px breiten Sidebar mit Beschriftungen. Als Token,
@@ -404,7 +421,12 @@ body.lang-en {
   font-size: 26px;
   cursor: pointer;
   z-index: var(--fh-z-menu-button);
-  transition: .3s;
+  /* War "transition: .3s" - also "all". Der Knopf aendert bei
+     Schwebe nur Groesse und Schein; "all" liess den Browser bei
+     jedem Zustandswechsel ALLE Eigenschaften vergleichen, auch
+     backdrop-filter und die Hintergrundfarbe. */
+  transition: transform var(--fh-dauer) var(--fh-ease),
+              box-shadow var(--fh-dauer) var(--fh-ease);
 }
 
 .music-toggle:hover {

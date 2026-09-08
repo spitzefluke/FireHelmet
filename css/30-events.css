@@ -944,7 +944,12 @@
   font-family: 'Courier New', monospace;
   letter-spacing: 1px;
   isolation: isolate;
-  transition: color .3s, transform .2s;
+  /* Dieser Knopf hat als einziger eine eigene ID-Regel und damit mehr
+     Gewicht als die Sammelregel in css/80-interaktion.css. Das ist
+     gewollt - der Decrypt-Effekt darunter ist von Hand gebaut. Nur
+     die Kurve wird angeglichen, die Eigenschaften bleiben. */
+  transition: color var(--fh-dauer-lang) var(--fh-ease),
+              transform var(--fh-dauer) var(--fh-ease);
 }
 
 /* Rotierender Glow-Rahmen, nur beim Hover sichtbar */
