@@ -52,9 +52,36 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #02030a;
   color: white;
   position: relative;
+}
+
+/* Der Grundton gehoert auf <html> - und NUR dorthin.
+
+   Warum das wichtig ist: alle Hintergrundebenen der Seite liegen auf
+   einem negativen z-index (.fh-bg-canvas und .stars/.stars2/.nebula
+   auf -5, .fh-seiten-fx auf -4). Solche Ebenen werden im Stapel des
+   Wurzelelements direkt ueber dessen Hintergrund gezeichnet - aber
+   UNTER dem Hintergrund des <body>.
+
+   Stand hier wie frueher `html, body { background: #02030a }`, dann
+   hatte <body> einen eigenen, deckenden Kasten. (Ein <body> ohne
+   eigenen Hintergrund reicht seinen an die Zeichenflaeche durch und
+   malt selbst nichts - sobald aber <html> ebenfalls einen hat, faellt
+   diese Weitergabe weg und <body> malt.) Dieser Kasten lag ueber
+   allem mit negativem z-index: die Leinwaende liefen, zeichneten
+   jedes Bild - und waren luecklos zugedeckt. Genau daran war auf der
+   fertigen Seite kein einziger Hintergrund zu sehen.
+
+   Deshalb: Farbe auf <html>, <body> ausdruecklich durchsichtig. Wer
+   hier spaeter einen Hintergrund auf <body> setzt, schaltet damit
+   saemtliche Hintergrundebenen wieder ab. */
+html {
+  background: #02030a;
+}
+
+body {
+  background: transparent;
 }
 
 body.loaded {
