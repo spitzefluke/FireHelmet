@@ -1192,6 +1192,18 @@ async function renderCommunityBossPage() {
 /* Sechs visuelle Zustände genau an den geforderten HP-Schwellen
    100/75/50/25/10/0% (Punkt 22) - jede Schwelle markiert den
    ÜBERGANG in die jeweils nächste, sichtbar eskalierende Stufe. */
+/* Farbe des Hintergrundnebels je Boss-Phase - siehe Verwendung
+   weiter unten. Bewusst getrennt von den Phasen selbst: die
+   beschreiben den Spielzustand, das hier ist reine Optik. */
+const BOSS_PHASEN_FARBEN = {
+  normal:   "#2f6f8f",
+  wounded:  "#c9a227",
+  enraged:  "#d4761f",
+  critical: "#c0392b",
+  final:    "#ff2d2d",
+  defeated: "#2f8f6a",
+};
+
 function getBossPhase(percent) {
   const t = typeof window.t === "function" ? window.t : (k, f) => f;
   if (percent <= 0) return { label: t("boss.phaseDefeated", "BESIEGT"), index: 5, key: "defeated" };
@@ -1285,6 +1297,16 @@ function applyBossHpDisplay(data, hpTextEl, hpFillEl, boss, defeatedBanner, atta
   if (phaseBadgeEl) phaseBadgeEl.textContent = phase.label;
   phaseBadgeEl?.setAttribute("data-phase", phase.key);
   applyBossPhaseVisuals(phase.key);
+
+  /* Der Nebel im Seitenhintergrund traegt die Farbe der aktuellen
+     Phase (siehe Eintrag "community-boss" in
+     scripts/core/seiten-fx-szenen.js). Er zieht weich nach, damit
+     ein Phasenwechsel die Farbe nicht schlagartig umlegt.
+
+     getBossPhase() liefert nur label/index/key, keine Farbe - die
+     Zuordnung steht deshalb hier: je weniger Leben, desto heisser
+     der Ton, und nach dem Sieg beruhigt es sich ins Gruene. */
+  window.fhBossFarbe = BOSS_PHASEN_FARBEN[phase.key] || boss.color;
   updateBossStatsRow(getCurrentMonthId(), hp, maxHp);
 
   // Roter Rand-Glow hinter dem Boss wird intensiver, je weniger

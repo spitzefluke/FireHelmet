@@ -340,3 +340,25 @@ a[tabindex]:not([href]):focus-visible {
      wird. */
   animation: fhNavSweep .7s var(--fh-ease) forwards;
 }
+
+/* =========================
+   5. DIE GEMEINSAME SEITEN-EFFEKTFLÄCHE
+   ---------------------------------------------------
+   Eine einzige Leinwand fuer die Stimmung ALLER Seiten
+   (scripts/core/seiten-fx.js). Sie liegt ueber dem Nordlicht
+   (z-index -5) und unter dem Seiteninhalt.
+
+   Warum nur eine: Chromium haelt hoechstens 16 WebGL-Kontexte und
+   raeumt darueber hinaus die aeltesten ohne Fehlermeldung ab -
+   gemessen. Vierzehn einzelne Flaechen haetten irgendwann den
+   Hintergrund mitgerissen.
+========================= */
+.fh-seiten-fx {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -4;
+  display: block;
+}
