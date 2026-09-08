@@ -154,6 +154,20 @@
        goldene Schein der Ueberschrift bleibt damit erhalten. */
     text-shadow: none;
     filter: drop-shadow(0 0 22px rgba(240, 201, 106, .32));
+
+    /* Der Farbkasten von background-clip: text ist der Rahmen des
+       Elements - und der ist bei line-height: 1 genau das
+       Em-Quadrat. Was darunter haengt (y, g, p, j, q) faellt heraus
+       und bekommt keine Fuellung: die Unterlaenge fehlt dann
+       sichtbar, "Community-Boss" stand ohne den Schwanz am y da.
+
+       Der Kasten wird deshalb oben und unten aufgeweitet und die
+       Aufweitung mit einer gleich grossen negativen Aussenkante
+       wieder eingezogen - der Titel bekommt Farbe bis unter die
+       Grundlinie, belegt im Satz aber exakt so viel Platz wie
+       vorher. */
+    padding-block: .26em;
+    margin-block: -.26em;
   }
 }
 

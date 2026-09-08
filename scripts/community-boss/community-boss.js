@@ -56,6 +56,181 @@ let bossRecoilUntil = 0; // Kreatur wird kurz zurückgestoßen (echtes Recoil, n
 let bossRecoilDir = 1;
 let bossSmoke = []; // dunkle Rauchwolken, die bei jedem Treffer aufsteigen (Punkt 22)
 
+/* Phasenwechsel: einmaliger, harter Moment beim Ueberschreiten von
+   66 % und 33 % - siehe bossPhasenwechsel(). */
+let bossPhasenBlitzBis = 0;
+let bossPhasenBlitzFarbe = "#ffffff";
+let bossLetztePhase = null;
+
+/* ------------------------------------------------------
+   ZWISCHENPUFFER FUER SILHOUETTE, KONTUR UND GEGENLICHT
+   ---------------------------------------------------
+   Die vier Kreaturen sind reich gezeichnet, gingen auf dem Bild
+   aber unter: dunkle Fuellung auf dunklem Arenahintergrund, ohne
+   Kontur. Aus zwei Metern Abstand blieb ein Klumpen mit Gesicht.
+
+   Statt in jeder der vier Zeichenfunktionen eine Kontur nachzuziehen
+   (vier Stellen, die auseinanderlaufen, und bei jedem neuen Boss
+   eine fuenfte), wird die Kreatur EINMAL in einen Zwischenpuffer
+   gezeichnet. Aus diesem Bild lassen sich Kontur und Gegenlicht
+   rein durch Ueberlagerung gewinnen - unabhaengig davon, WAS
+   darin steht. Ein fuenfter Boss bekommt beides geschenkt.
+
+   Zwei Puffer: einer traegt die fertige Figur, der andere dieselbe
+   Form einfarbig (ueber "source-in" eingefaerbt) fuer Saum und
+   Schein.
+------------------------------------------------------ */
+const BOSS_PUFFER_B = 440;   // breit genug fuer die breiteste Kreatur
+const BOSS_PUFFER_H = 500;
+const BOSS_PUFFER_X = 220;   // wo der Nullpunkt der Kreatur im Puffer liegt
+const BOSS_PUFFER_Y = 250;
+
+let bossFigur = null, bossFigurCtx = null;
+let bossForm = null, bossFormCtx = null;
+let bossWeichzeichner = null;   // null = noch nicht geprueft
+
+function bossPufferBereit() {
+  if (bossFigurCtx && bossFormCtx) return true;
+  if (typeof document === "undefined") return false;
+  try {
+    bossFigur = document.createElement("canvas");
+    bossFigur.width = BOSS_PUFFER_B;
+    bossFigur.height = BOSS_PUFFER_H;
+    bossFigurCtx = bossFigur.getContext("2d");
+
+    bossForm = document.createElement("canvas");
+    bossForm.width = BOSS_PUFFER_B;
+    bossForm.height = BOSS_PUFFER_H;
+    bossFormCtx = bossForm.getContext("2d");
+  } catch (err) {
+    bossFigurCtx = bossFormCtx = null;
+  }
+  if (bossWeichzeichner === null && bossFigurCtx) {
+    // ctx.filter kennt nicht jeder Browser. Ohne ihn faellt nur der
+    // weiche Schein weg, Kontur und Figur bleiben.
+    bossWeichzeichner = typeof bossFigurCtx.filter === "string";
+  }
+  return !!(bossFigurCtx && bossFormCtx);
+}
+
+/* Die vier Zeichenfunktionen greifen auf das modulweite bossCtx zu.
+   Es wird hier kurz umgehaengt, statt vier Signaturen zu aendern -
+   und im finally garantiert zurueckgesetzt, auch wenn eine
+   Zeichenfunktion wirft. */
+function bossKreaturZeichnen(time, boss) {
+  if (boss.type === "storm") drawStormDemon(time, boss);
+  else if (boss.type === "ghost-captain") drawGhostCaptain(time, boss);
+  else if (boss.type === "serpent") drawSeaSerpent(time, boss);
+  else drawKraken(time, boss);
+}
+
+function bossFigurFuellen(time, boss) {
+  const echt = bossCtx;
+  bossFigurCtx.clearRect(0, 0, BOSS_PUFFER_B, BOSS_PUFFER_H);
+  bossFigurCtx.save();
+  bossFigurCtx.translate(BOSS_PUFFER_X, BOSS_PUFFER_Y);
+  bossCtx = bossFigurCtx;
+  try {
+    bossKreaturZeichnen(time, boss);
+  } finally {
+    bossCtx = echt;
+    bossFigurCtx.restore();
+  }
+}
+
+/* Dieselbe Form, aber einfarbig: erst die Figur hineinkopieren, dann
+   mit "source-in" durchfaerben - alles Durchsichtige bleibt
+   durchsichtig, der Rest wird zur reinen Silhouette. */
+function bossFormFaerben(farbe) {
+  bossFormCtx.globalCompositeOperation = "source-over";
+  bossFormCtx.clearRect(0, 0, BOSS_PUFFER_B, BOSS_PUFFER_H);
+  bossFormCtx.drawImage(bossFigur, 0, 0);
+  bossFormCtx.globalCompositeOperation = "source-in";
+  bossFormCtx.fillStyle = farbe;
+  bossFormCtx.fillRect(0, 0, BOSS_PUFFER_B, BOSS_PUFFER_H);
+  bossFormCtx.globalCompositeOperation = "source-over";
+}
+
+/* Acht Richtungen um je zwei Bildpunkte versetzt ergeben einen
+   geschlossenen Saum. Vier wuerden an den Schraegen ausfransen. */
+const BOSS_SAUM = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
+
+function bossFigurAusgeben(ctx, rageColor, schein) {
+  const x = -BOSS_PUFFER_X;
+  const y = -BOSS_PUFFER_Y;
+
+  /* 1. GEGENLICHT: die Form etwas groesser, weich und warm hinter
+        der Figur. Sie hebt die Silhouette vom Arenagrund ab, ohne
+        die Zeichnung selbst aufzuhellen. */
+  if (schein > 0.01) {
+    bossFormFaerben(hexToRgba(mixHexColors(rageColor, "#ffd7a0", 0.55), 1));
+    ctx.save();
+    ctx.globalAlpha = Math.min(0.75, schein);
+    if (bossWeichzeichner) ctx.filter = "blur(18px)";
+    ctx.drawImage(bossForm, x - 9, y - 13, BOSS_PUFFER_B + 18, BOSS_PUFFER_H + 26);
+    ctx.restore();
+  }
+
+  /* 2. ABSETZUNG: eine schwache Kontur rundum. Sie soll die Figur
+        nur vom Arenagrund trennen, nicht leuchten - ein gleichmaessig
+        heller Ring rundum saehe aus wie ein ausgeschnittener
+        Aufkleber. */
+  bossFormFaerben("rgba(255,238,208,.9)");
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  for (let i = 0; i < BOSS_SAUM.length; i++) {
+    ctx.drawImage(bossForm, x + BOSS_SAUM[i][0] * 2, y + BOSS_SAUM[i][1] * 2,
+                  BOSS_PUFFER_B, BOSS_PUFFER_H);
+  }
+
+  /* 3. GEGENLICHT-KANTE: dieselbe Form nach OBEN versetzt. Sichtbar
+        bleibt danach nur die obere Kante - und genau von dort kommen
+        auch die Lichtschaechte der Arena (.fh-boss-layer-rays). Ein
+        Saum, der von der falschen Seite leuchtet, faellt sofort auf;
+        einer, der zur Beleuchtung passt, sieht man gar nicht mehr
+        bewusst. */
+  ctx.globalAlpha = 0.55;
+  ctx.drawImage(bossForm, x - 1, y - 4, BOSS_PUFFER_B, BOSS_PUFFER_H);
+  ctx.globalAlpha = 0.3;
+  ctx.drawImage(bossForm, x - 3, y - 2, BOSS_PUFFER_B, BOSS_PUFFER_H);
+  ctx.restore();
+
+  /* 4. Die Figur selbst, scharf und unveraendert - sie deckt alles
+        ab bis auf die Raender der drei Schichten darunter. */
+  ctx.drawImage(bossFigur, x, y, BOSS_PUFFER_B, BOSS_PUFFER_H);
+}
+
+/* ------------------------------------------------------
+   AUSHOLEN
+   ---------------------------------------------------
+   Der Boss atmete und schwebte - mehr nicht. Das liest sich wie ein
+   Bildschirmschoner, nicht wie ein Gegner. Jetzt laeuft ein Zyklus:
+   lange Ruhe, kurzes Anspannen nach hinten, harter Ausfall nach
+   vorn, weiche Erholung.
+
+   Der Wert liegt zwischen -1 (zurueckgenommen) und +1 (vorgeschnellt)
+   und wird in drawBossCreature auf Ort, Neigung und Streckung
+   gelegt. Je weniger Leben, desto haeufiger holt er aus.
+------------------------------------------------------ */
+const AUSHOLEN_ZYKLUS = 6300;   // ms bei vollem Leben
+
+function ausholenWert(time, rage) {
+  const zyklus = AUSHOLEN_ZYKLUS * (1 - Math.min(1, rage) * 0.38);
+  const t = (time % zyklus) / zyklus;
+
+  if (t < 0.665) return 0;                       // Ruhe
+  if (t < 0.815) {                               // Anspannen
+    const k = (t - 0.665) / 0.15;
+    return -(k * k);                             // quadratisch: zieht spuerbar an
+  }
+  if (t < 0.870) {                               // Ausfall
+    const k = (t - 0.815) / 0.055;
+    return -1 + k * 2;                           // von -1 hart nach +1
+  }
+  const k = (t - 0.870) / 0.130;                 // Erholung
+  return (1 - k) * (1 - k);
+}
+
 function setupBossCanvas() {
   const stage = document.getElementById("boss-stage");
   if (!stage) return false;
@@ -121,6 +296,7 @@ function drawBossFrame(time) {
   drawBossCreature(time, w, h, boss);
   drawBossSmoke();
   drawBossEffects(time, w, h);
+  drawBossPhasenBlitz(time, w, h);
 
   if (time < bossHitFlashUntil) {
     const flashAlpha = (bossHitFlashUntil - time) / 220;
@@ -283,15 +459,29 @@ function drawBossCreature(time, w, h, boss) {
   const recoilY = recoilEase * 9;
   const recoilTilt = recoilEase * 0.05 * bossRecoilDir;
 
-  bossCtx.save();
-  bossCtx.translate(cx + recoilX, cy + bob + recoilY);
-  bossCtx.rotate(recoilTilt);
-  bossCtx.scale(breathe, breathe);
+  /* Ausholen (siehe ausholenWert): -1 zurueckgenommen, +1
+     vorgeschnellt. Ort, Neigung und Streckung zusammen - eine reine
+     Verschiebung saehe aus wie ein Ruck, eine reine Streckung wie
+     Gummi. */
+  const holen = ausholenWert(time, bossRageLevel);
 
-  if (boss.type === "storm") drawStormDemon(time, boss);
-  else if (boss.type === "ghost-captain") drawGhostCaptain(time, boss);
-  else if (boss.type === "serpent") drawSeaSerpent(time, boss);
-  else drawKraken(time, boss);
+  bossCtx.save();
+  bossCtx.translate(cx + recoilX + holen * 15, cy + bob + recoilY - holen * 7);
+  bossCtx.rotate(recoilTilt + holen * 0.03);
+  bossCtx.scale(breathe * (1 + holen * 0.07), breathe * (1 - holen * 0.045));
+
+  /* Kontur und Gegenlicht laufen ueber den Zwischenpuffer - die
+     Kreatur wird dafuer einmal hineingezeichnet und danach dreifach
+     ausgegeben (Schein, Saum, Figur). Steht kein Puffer zur
+     Verfuegung, wird direkt gezeichnet: dann fehlt die Kontur, aber
+     der Boss ist da. */
+  if (bossPufferBereit()) {
+    bossFigurFuellen(time, boss);
+    bossFigurAusgeben(bossCtx, rageColor,
+      0.14 + bossRageLevel * 0.30 + counterBoost * 0.45 + Math.max(0, holen) * 0.25);
+  } else {
+    bossKreaturZeichnen(time, boss);
+  }
 
   drawBossDamageCracks(time, rageColor);
 
@@ -408,38 +598,48 @@ function drawScarLine(ctx, x1, y1, x2, y2, color, width) {
   ctx.stroke();
 }
 
+/* Ein einzelner Arm. Ausgelagert, weil er jetzt aus zwei Ebenen
+   heraus aufgerufen wird - einmal hinter dem Mantel, einmal davor. */
+function krakenArm(ctx, i, time, hinten, farbe) {
+  const angle = (Math.PI / 5) * (i - 2.5);
+  /* Die hinteren Arme haben eine LAENGERE Periode und einen
+     kleineren Ausschlag. Liefen beide Ebenen im selben Takt, saehe
+     es aus wie ein Scherenschnitt - erst der Unterschied macht
+     Tiefe. */
+  const wave = Math.sin((hinten ? time / 820 : time / 500) + i) * (hinten ? 13 : 18);
+  const endX = Math.sin(angle) * 60 + wave * 1.6;
+  const endY = 175 + Math.abs(wave) * 0.3;
+  const midX = Math.sin(angle) * 90 + wave;
+  const midY = 110;
+  const startX = Math.sin(angle) * 30;
+
+  ctx.strokeStyle = farbe;
+  ctx.lineWidth = (hinten ? 11 : 13) - i * 0.6;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(startX, 40);
+  ctx.quadraticCurveTo(midX, midY, endX, endY);
+  ctx.stroke();
+
+  // Saugnaepfe nur vorne - hinten waeren sie in der Abdunklung
+  // ohnehin nicht zu sehen und nur Rechenarbeit.
+  if (hinten) return;
+  for (let s = 0.3; s < 0.95; s += 0.16) {
+    const sx = startX + (midX - startX) * s + (endX - midX) * Math.max(0, s - 0.5);
+    const sy = 40 + (midY - 40) * s + (endY - midY) * Math.max(0, s - 0.5);
+    drawDot(ctx, sx, sy, 2.2 - s, "rgba(20,8,3,.55)");
+  }
+}
+
 function drawKraken(time, boss) {
   const ctx = bossCtx;
 
-  // Tentakel, jeder mit eigener Wellenbewegung - jetzt mit
-  // Saugnapf-Reihen auf der Unterseite fuer mehr organische Detailtiefe
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 5) * (i - 2.5);
-    const wave = Math.sin(time / 500 + i) * 18;
-    const endX = Math.sin(angle) * 60 + wave * 1.6;
-    const endY = 175 + Math.abs(wave) * 0.3;
-    const midX = Math.sin(angle) * 90 + wave;
-    const midY = 110;
-    const startX = Math.sin(angle) * 30;
-
-    ctx.strokeStyle = boss.color;
-    ctx.lineWidth = 13 - i * 0.6;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(startX, 40);
-    ctx.quadraticCurveTo(midX, midY, endX, endY);
-    ctx.stroke();
-
-    // Saugnaepfe entlang der Tentakel-Mitte (nur bei den 4 vorderen,
-    // hinterste 2 bleiben glatt im Hintergrund - vermeidet Ueberladung)
-    if (i >= 1 && i <= 4) {
-      for (let s = 0.3; s < 0.95; s += 0.16) {
-        const sx = startX + (midX - startX) * s + (endX - midX) * Math.max(0, s - 0.5);
-        const sy = 40 + (midY - 40) * s + (endY - midY) * Math.max(0, s - 0.5);
-        drawDot(ctx, sx, sy, 2.2 - s, "rgba(20,8,3,.55)");
-      }
-    }
-  }
+  /* HINTERE EBENE: die beiden aeusseren Arme, deutlich abgedunkelt.
+     Sie werden vor dem Mantel gezeichnet und verschwinden damit
+     hinter ihm. */
+  const dunkel = mixHexColors(boss.color, "#0d0603", 0.58);
+  krakenArm(ctx, 0, time, true, dunkel);
+  krakenArm(ctx, 5, time, true, dunkel);
 
   // Kopf/Mantel - mit Rand-Rimlight fuer mehr Tiefe statt flachem Verlauf
   const grad = ctx.createRadialGradient(-20, -30, 10, 0, 0, 100);
@@ -502,6 +702,12 @@ function drawKraken(time, boss) {
   // Alte Narbe quer ueber den Mantel - individuelles Wiedererkennungsmerkmal
   drawScarLine(ctx, -50, -20, -20, 10, "rgba(15,6,2,.5)", 3);
   drawScarLine(ctx, -38, -6, -30, 16, "rgba(15,6,2,.5)", 2.5);
+
+  /* VORDERE EBENE: die vier inneren Arme in voller Farbe, NACH dem
+     Mantel. Sie laufen jetzt ueber ihn hinweg, statt an seinem Rand
+     zu enden - das ist der Unterschied zwischen einer Zeichnung und
+     einem Koerper. */
+  for (let i = 1; i <= 4; i++) krakenArm(ctx, i, time, false, boss.color);
 }
 
 function drawStormDemon(time, boss) {
@@ -511,6 +717,19 @@ function drawStormDemon(time, boss) {
   // HINTER dem Wirbel, damit eine humanoide Gestalt im Sturm erkennbar
   // wird statt nur loser Ringe (Punkt "geheimnisvolle Elemente")
   const cloakSway = Math.sin(time / 900) * 8;
+
+  /* HINTERE EBENE: zwei Wirbelringe HINTER der Robe, dunkler und mit
+     laengerer Periode. Vorher lagen alle fuenf Ringe vor ihr - der
+     Sturm klebte damit auf dem Umhang, statt ihn zu umgeben. */
+  for (let i = 0; i < 2; i++) {
+    const t = time / 950 + i * 0.7;
+    ctx.beginPath();
+    ctx.ellipse(Math.sin(t) * 14, -60 + i * 30, 110 - i * 12, 25,
+                Math.sin(t) * 0.15, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(10, 30, 58, ${0.5 - i * 0.09})`;
+    ctx.fill();
+  }
+
   ctx.fillStyle = "rgba(4, 9, 18, .8)";
   ctx.beginPath();
   ctx.moveTo(-58, -70);
@@ -521,8 +740,9 @@ function drawStormDemon(time, boss) {
   ctx.closePath();
   ctx.fill();
 
-  // Wirbelnder Sturm-Koerper (mehrere rotierende, versetzte Ellipsen)
-  for (let i = 0; i < 5; i++) {
+  /* VORDERE EBENE: die drei unteren Ringe vor der Robe, im
+     schnelleren Takt. */
+  for (let i = 2; i < 5; i++) {
     const t = time / 600 + i * 0.7;
     const ringY = -60 + i * 30;
     const ringW = 100 - i * 12;
@@ -613,6 +833,23 @@ function drawStormDemon(time, boss) {
 function drawGhostCaptain(time, boss) {
   const ctx = bossCtx;
   const flicker = 0.85 + Math.sin(time / 250) * 0.15;
+
+  /* HINTERE EBENE: die Rueckseite des Mantels. Dieselbe Form, aber
+     breiter, dunkler, seitlich versetzt und mit laengerer Periode -
+     als wehe der Stoff hinter ihm nach. Vorher war der Kapitaen
+     eine einzige flache Silhouette. */
+  const rueckSway = Math.sin(time / 640) * 10;
+  ctx.fillStyle = `rgba(24, 14, 7, ${flicker * 0.85})`;
+  ctx.beginPath();
+  ctx.moveTo(-84 + rueckSway * 0.3, -14);
+  for (let i = 0; i <= 6; i++) {
+    const x = -84 + i * (168 / 6) + rueckSway * 0.3;
+    ctx.lineTo(x, 96 + Math.sin(time / 640 + i * 0.9) * 15);
+  }
+  ctx.lineTo(84 + rueckSway * 0.3, -14);
+  ctx.quadraticCurveTo(0, -70, -84 + rueckSway * 0.3, -14);
+  ctx.closePath();
+  ctx.fill();
 
   // Saebel an der Seite (Waffe/Ausruestungsdetail) - hinter dem Mantel,
   // damit er wie am Guertel getragen wirkt
@@ -791,6 +1028,23 @@ function drawGhostCaptain(time, boss) {
 
 function drawSeaSerpent(time, boss) {
   const ctx = bossCtx;
+
+  /* HINTERE EBENE: eine zweite Windung desselben Leibes, dunkler,
+     duenner und phasenversetzt - der Koerper schlingt sich damit
+     sichtbar hinter sich selbst durch, statt eine einzelne Wurst
+     zu bleiben. */
+  ctx.strokeStyle = mixHexColors(boss.color, "#03140f", 0.6);
+  ctx.lineWidth = 26;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  for (let i = 0; i <= 60; i++) {
+    const t = i / 60;
+    const x = -104 + t * 210;
+    const y = Math.sin(t * Math.PI * 2.4 + time / 860 + 1.9) * 52 + 8;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
 
   // Geschwungener Koerper aus Segmenten
   ctx.strokeStyle = boss.color;
@@ -1232,6 +1486,70 @@ function applyBossPhaseVisuals(phaseKey) {
 }
 
 /* ------------------------------------------------------
+   PHASENWECHSEL ALS EREIGNIS
+   ---------------------------------------------------
+   Bisher wechselte mit der Phase nur eine CSS-Klasse und eine
+   Nebelfarbe im Seitenhintergrund - beides so leise, dass der
+   Moment unterging. 66 % und 33 % sind aber die einzigen
+   Wegmarken eines Kampfes, der einen Monat dauert.
+
+   Jetzt gibt es einen einmaligen harten Moment: Farbschwall ueber
+   die Arena, aufreissender Ring, Ruettler, aufflammende Aura.
+
+   ZWEI ABSICHERUNGEN, die wichtiger sind als der Effekt selbst:
+   - Beim ERSTEN Zeichnen darf nichts ausgeloest werden. Wer die
+     Seite bei 40 % oeffnet, hat keinen Phasenwechsel erlebt.
+   - Nur wenn die Phase STEIGT. Zum Monatswechsel steht wieder ein
+     frischer Boss da; das ist ein Rueckschritt auf der Skala und
+     kein Ereignis.
+------------------------------------------------------ */
+function bossPhasenwechsel(phase) {
+  const vorher = bossLetztePhase;
+  bossLetztePhase = phase.index;
+
+  if (vorher === null) return;        // erstes Zeichnen
+  if (phase.index <= vorher) return;  // Rueckschritt (neuer Monat)
+
+  const jetzt = (typeof performance !== "undefined" && performance.now)
+    ? performance.now() : Date.now();
+
+  bossPhasenBlitzFarbe = BOSS_PHASEN_FARBEN[phase.key] || "#ffffff";
+  bossPhasenBlitzBis = jetzt + 1100;
+  // Ruettler und Aura laufen ueber die vorhandene Mechanik mit.
+  bossShakeUntil = jetzt + 420;
+  bossCounterAuraUntil = jetzt + 900;
+}
+
+/* Der Schwall selbst. Zwei Teile: eine Farbflaeche, die schnell
+   abklingt, und ein Ring, der die ganze Zeit ueber nach aussen
+   laeuft - der Ring traegt die Bewegung, die Flaeche die Wucht. */
+function drawBossPhasenBlitz(time, w, h) {
+  if (time >= bossPhasenBlitzBis) return;
+
+  const rest = (bossPhasenBlitzBis - time) / 1100;   // 1 -> 0
+  const ctx = bossCtx;
+  const cx = w / 2;
+  const cy = h / 2 + 10;
+
+  ctx.save();
+  /* Flaeche: klingt quadratisch ab, sitzt also nur im ersten Drittel.
+     Etwas ueber den Rand hinaus, weil zu diesem Zeitpunkt der
+     Ruettler laeuft - sonst bliebe an einer Kante ein Streifen
+     ungefaerbt stehen. */
+  ctx.fillStyle = hexToRgba(bossPhasenBlitzFarbe, rest * rest * 0.42);
+  ctx.fillRect(-14, -14, w + 28, h + 28);
+
+  // Ring: laeuft von innen nach aussen und wird dabei duenner.
+  const r = (1 - rest) * Math.max(w, h) * 0.62;
+  ctx.strokeStyle = hexToRgba(bossPhasenBlitzFarbe, rest * 0.85);
+  ctx.lineWidth = 2 + rest * 9;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ------------------------------------------------------
    DAMAGE/ATTACKERS-STATISTIK
    "Damage" ergibt sich direkt aus maxHp-hp (kein Extra-Feld
    nötig). "Attackers" ist eine Supabase Aggregations-Query
@@ -1297,6 +1615,7 @@ function applyBossHpDisplay(data, hpTextEl, hpFillEl, boss, defeatedBanner, atta
   if (phaseBadgeEl) phaseBadgeEl.textContent = phase.label;
   phaseBadgeEl?.setAttribute("data-phase", phase.key);
   applyBossPhaseVisuals(phase.key);
+  bossPhasenwechsel(phase);
 
   /* Der Nebel im Seitenhintergrund traegt die Farbe der aktuellen
      Phase (siehe Eintrag "community-boss" in
