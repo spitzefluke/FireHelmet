@@ -734,3 +734,72 @@ $$;
 grant select on public.boss_attack_defs    to anon, authenticated;
 grant select on public.boss_attack_state   to authenticated;
 grant select on public.boss_community_buff to anon, authenticated;
+
+
+/* ======================================================
+   11. ANLEITUNG
+   ======================================================
+
+   EINSPIELEN
+   Im Supabase-Dashboard unter SQL Editor den Inhalt dieser Datei
+   ausfuehren. Voraussetzung ist 03-race-boss.sql (community_boss und
+   community_boss_damage muessen existieren).
+
+   Bis das geschehen ist, laeuft die Seite unveraendert weiter: der
+   Browser prueft einmal, ob public.boss_attack_status() existiert,
+   und bleibt sonst beim bisherigen Weg. Es geht also nichts kaputt,
+   wenn du damit wartest.
+
+   GEHEIMCODES ANLEGEN
+   Die Codes stehen bewusst NICHT in dieser Datei - so gibt es auch
+   im Repository nichts, was sich mit einer Wortliste durchprobieren
+   liesse. Lege sie selbst an, einen je Spezialangriff:
+
+     insert into public.boss_special_codes (code_sha256, schluessel, bemerkung)
+     values (encode(extensions.digest(upper('DEIN-CODE-HIER'),'sha256'),'hex'),
+             'salve', 'Stream vom 12.09.');
+
+   Wichtig: upper(), weil boss_unlock_special() den eingetippten Code
+   ebenfalls in Grossbuchstaben umwandelt - so ist es egal, wie der
+   Spieler ihn schreibt.
+
+   Die elf Schluessel:
+     salve, brandpfeil, enterkommando, pulverfass, schlachtruf,
+     fass, slot, moewen, katapult, seemannslied, rechnung
+
+   Einen Code wieder zurueckziehen:
+     delete from public.boss_special_codes
+      where code_sha256 = encode(extensions.digest(upper('DEIN-CODE-HIER'),'sha256'),'hex');
+   Bereits Freigeschaltete behalten ihren Angriff - das ist Absicht.
+
+   ZAHLEN AENDERN
+   Alles an einer Stelle, in boss_attack_defs. Zum Beispiel den
+   Saebel etwas staerker machen:
+
+     update public.boss_attack_defs
+        set min_schaden = 30, max_schaden = 34
+      where schluessel = 'saebel';
+
+   Der Browser liest den Katalog von hier, es ist also nichts im Code
+   nachzuziehen. Nur max_schaden darf 400 nicht ueberschreiten - das
+   ist zugleich der Deckel der Policy.
+
+   ZUM AUSGLEICH
+   Der Boss hat aktuell 5000 Lebenspunkte (communityBossConfig.maxHp
+   in scripts/community-boss/community-boss-data.js). Ein einzelnes
+   Fass nimmt davon 400, also acht Prozent. Mit mehreren
+   freigeschalteten Spielern ist ein Monatsboss damit deutlich
+   schneller unten als bisher.
+
+   Das ist bewusst NICHT mit dieser Migration geaendert: eine
+   Erhoehung mitten im laufenden Monat wuerde den bereits erreichten
+   Fortschritt entwerten. Wenn du die Spezialangriffe freigibst,
+   erhoehe maxHp zum Monatswechsel - 12000 bis 15000 waere ein
+   sinnvoller Anfang.
+
+   TESTS
+   10-boss-attacks.test.sql laeuft gegen dieselbe Datenbank und
+   meldet je Zeile PASS oder FAIL. Er veraendert dabei Daten
+   (loescht boss_attack_state, setzt HP) - also nur gegen eine
+   Testdatenbank laufen lassen, nicht gegen die Live-Datenbank.
+====================================================== */
