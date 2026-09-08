@@ -301,36 +301,118 @@
   text-align: center;
 }
 
-/* ---- Karteninhalt ---- */
-.fh-karte-insel {
-  fill: rgba(214, 168, 79, .10);
-  stroke: rgba(214, 168, 79, .28);
+/* ---- Karteninhalt ----
+   ---------------------------------------------------
+   Ab hier ist der Grund PAPIER, nicht Bildschirm. Alle Farben sind
+   deshalb umgekehrt: dunkelbraune Tinte auf warmem Ton, roter Kurs.
+   Vorher stand weisse und goldene Zeichnung auf dunklem Blau - das
+   sah aus wie eine Benutzeroberflaeche mit Seefahrtsmotiv.
+
+   Die Tinte ist bewusst NICHT schwarz: reines Schwarz auf Pergament
+   wirkt gedruckt. --fh-karte-tinte ist ein dunkles Sepia, wie eine
+   ausgeblichene Feder. */
+.fh-schatzkarte-blatt {
+  --fh-karte-tinte: #43301a;
+  --fh-karte-tinte-blass: rgba(67, 48, 26, .38);
+  --fh-karte-rot: #9c3a1a;
+  --fh-karte-gruen: #4a6b2f;
+}
+
+/* ---- Inseln ---- */
+.fh-karte-insel-flaeche {
+  fill: rgba(140, 106, 58, .22);
+  stroke: var(--fh-karte-tinte);
+  stroke-width: 1.6;
+}
+
+/* Hoehenlinien: dieselbe Form kleiner, nur als Strich. */
+.fh-karte-insel-linie {
+  fill: none;
+  stroke: var(--fh-karte-tinte-blass);
   stroke-width: 1;
 }
 
-.fh-karte-rose-ring  { fill: none; stroke: rgba(240,201,106,.35); stroke-width: 1; }
-.fh-karte-rose-nadel { fill: rgba(240,201,106,.55); }
-.fh-karte-rose-quer  { fill: rgba(240,201,106,.25); }
-.fh-karte-rose-n     { fill: rgba(240,201,106,.7); font-size: 13px; font-family: var(--fh-font-display); }
+/* ---- Meer: kurze Wellenstriche wie in alten Seekarten ---- */
+.fh-karte-welle {
+  fill: none;
+  stroke: rgba(67, 48, 26, .3);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+/* ---- Seeungeheuer und Wrack ---- */
+.fh-karte-untier,
+.fh-karte-wrack {
+  fill: none;
+  stroke: var(--fh-karte-tinte);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .72;
+}
+
+.fh-karte-untier-auge { fill: var(--fh-karte-tinte); stroke: none; }
+
+.fh-karte-spruch {
+  fill: rgba(67, 48, 26, .5);
+  font-family: var(--fh-font-display, serif);
+  font-size: 19px;
+  font-style: italic;
+  letter-spacing: .16em;
+}
+
+/* ---- Kompassrose ---- */
+.fh-karte-rose-ring  { fill: none; stroke: rgba(67,48,26,.4); stroke-width: 1.2; }
+.fh-karte-rose-nadel { fill: rgba(67,48,26,.72); }
+.fh-karte-rose-quer  { fill: rgba(67,48,26,.4); }
+.fh-karte-rose-n     { fill: rgba(67,48,26,.8); font-size: 14px; font-family: var(--fh-font-display); }
 
 /* Der ganze Kurs, blass - und darueber der bereits gefahrene Teil. */
 .fh-karte-kurs-grund {
   fill: none;
-  stroke: rgba(255, 255, 255, .12);
+  stroke: rgba(67, 48, 26, .22);
   stroke-width: 3;
   stroke-linecap: round;
+  stroke-dasharray: 2 7;
 }
 
 .fh-karte-kurs-fahrt {
   fill: none;
-  stroke: var(--fh-gold-bright, #f0c96a);
+  stroke: var(--fh-karte-rot);
   stroke-width: 3.5;
   stroke-linecap: round;
-  /* Gestrichelt wie eine eingetragene Fahrtroute. Die Laenge des
-     sichtbaren Teils setzt das Skript ueber stroke-dashoffset. */
-  filter: drop-shadow(0 0 6px rgba(240, 201, 106, .45));
+  /* Der gefahrene Teil ist durchgezogen und kraeftig - der Rest nur
+     angedeutet. Der Unterschied zwischen "schon gesegelt" und "noch
+     vor uns" soll ohne Legende lesbar sein. */
 }
 
+/* ---- Das Schiff ---- */
+.fh-karte-schiff-koerper {
+  fill: rgba(239, 224, 189, .92);
+  stroke: var(--fh-karte-tinte);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+/* Angekommen: es liegt an der aktuellen Station und schaukelt.
+
+   Das Schaukeln sitzt auf der INNEREN Gruppe, der Ort auf der
+   aeusseren. transform-box: fill-box laesst es um den eigenen Rumpf
+   kippen statt um den Nullpunkt der Karte - verschoebe aber zugleich
+   den Bezugspunkt eines transform-Attributs auf demselben Element.
+   Deshalb muessen es zwei Gruppen sein. */
+.fh-karte-schiff-koerper.ist-angekommen {
+  animation: fhKarteSchaukeln 3.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+@keyframes fhKarteSchaukeln {
+  0%, 100% { rotate: -2.5deg; }
+  50%      { rotate: 2.5deg; }
+}
+
+/* ---- Stationen ---- */
 .fh-karte-station {
   cursor: pointer;
   animation: fhKarteStation .4s var(--fh-ease, ease) backwards;
@@ -342,62 +424,73 @@
 }
 
 .fh-karte-punkt {
-  fill: #0d1520;
-  stroke: rgba(255, 255, 255, .30);
-  stroke-width: 2;
+  fill: #efe0bd;
+  stroke: var(--fh-karte-tinte);
+  stroke-width: 1.8;
   transition: fill var(--fh-dauer) var(--fh-ease),
               stroke var(--fh-dauer) var(--fh-ease);
 }
 
+/* Das Symbol der Belohnung steht AUF der Station, die Stufennummer
+   klein darunter. Man sieht damit auf einen Blick, was wartet - die
+   Nummer allein sagte nur, die wievielte es ist. */
+.fh-karte-symbol {
+  font-size: 12px;
+  pointer-events: none;
+}
+
 .fh-karte-nummer {
-  fill: rgba(255, 255, 255, .55);
-  font-size: 10px;
+  fill: rgba(67, 48, 26, .62);
+  font-size: 9.5px;
   font-family: var(--fh-font-display);
   pointer-events: none;
 }
 
 /* Erreicht, aber noch nicht abgeholt: die einzige Station, die
-   aktiv leuchtet - sie ist die, an der etwas zu tun ist. */
+   hervorsticht - sie ist die, an der etwas zu tun ist. */
 .fh-karte-station-ready .fh-karte-punkt {
-  fill: rgba(240, 201, 106, .22);
-  stroke: var(--fh-gold-bright);
+  fill: #f7e3a8;
+  stroke: var(--fh-karte-rot);
+  stroke-width: 2.4;
 }
 
 .fh-karte-station-claimed .fh-karte-punkt {
-  fill: rgba(80, 255, 140, .16);
-  stroke: rgba(80, 255, 140, .55);
+  fill: #dbe4c6;
+  stroke: var(--fh-karte-gruen);
 }
 
-.fh-karte-station-locked  { opacity: .45; }
+/* Noch nicht erreicht: blasser, als waere die Tinte dort duenner
+   aufgetragen. */
+.fh-karte-station-locked { opacity: .42; }
 
 .fh-karte-station:hover .fh-karte-punkt,
 .fh-karte-station:focus-visible .fh-karte-punkt {
-  fill: rgba(240, 201, 106, .34);
-  stroke: var(--fh-gold-bright);
+  fill: #ffeec2;
+  stroke: var(--fh-karte-rot);
 }
 
 .fh-karte-station:focus-visible {
-  outline: 2px solid var(--fh-gold-bright);
+  outline: 2px solid var(--fh-karte-rot);
   outline-offset: 3px;
   border-radius: 50%;
 }
 
 .fh-karte-hier-ring {
   fill: none;
-  stroke: var(--fh-gold-bright);
-  stroke-width: 1.5;
-  opacity: .8;
+  stroke: var(--fh-karte-rot);
+  stroke-width: 1.8;
+  opacity: .85;
   animation: fhKarteHier 2.4s ease-in-out infinite;
 }
 
 @keyframes fhKarteHier {
-  0%, 100% { r: 18px; opacity: .8; }
-  50%      { r: 23px; opacity: .3; }
+  0%, 100% { r: 21px; opacity: .85; }
+  50%      { r: 26px; opacity: .3; }
 }
 
 .fh-karte-hier-text {
-  fill: var(--fh-gold-bright);
-  font-size: 10px;
+  fill: var(--fh-karte-rot);
+  font-size: 11px;
   letter-spacing: .18em;
   font-family: var(--fh-font-display);
   pointer-events: none;
@@ -405,16 +498,54 @@
 
 /* Das Ziel: ein Kreuz statt einer Nummer. */
 .fh-karte-kreuz {
-  stroke: var(--fh-fire, #ff6a2a);
-  stroke-width: 4;
+  stroke: var(--fh-karte-rot);
+  stroke-width: 4.5;
   stroke-linecap: round;
 }
 
 .fh-karte-ziel-ring {
   fill: none;
-  stroke: rgba(255, 106, 42, .45);
+  stroke: rgba(156, 58, 26, .5);
   stroke-width: 1.5;
   stroke-dasharray: 4 5;
+}
+
+/* ---- Zoom und Schwenken ---- */
+.fh-schatzkarte-blatt { position: relative; }
+
+.fh-schatzkarte-svg { cursor: grab; touch-action: none; }
+.fh-schatzkarte-svg.ist-am-ziehen { cursor: grabbing; }
+
+.fh-karte-zoom {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.fh-karte-zoom-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(67, 48, 26, .45);
+  background: rgba(239, 224, 189, .92);
+  color: #43301a;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition-duration: var(--fh-dauer, 200ms);
+  transition-timing-function: var(--fh-ease-aus, ease-out);
+  transition-property: background-color, border-color, transform, opacity;
+}
+
+.fh-karte-zoom-btn:hover:not(:disabled) { background: #fff3d6; }
+.fh-karte-zoom-btn:active:not(:disabled) { transform: scale(.92); }
+.fh-karte-zoom-btn:disabled { opacity: .4; cursor: default; }
+
+.fh-karte-zoom-btn:focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 2px;
 }
 
 @media (max-width: 700px) {
@@ -426,20 +557,13 @@
   .fh-schatzkarte-zu { width: 34px; height: 34px; font-size: 15px; }
 
   /* Auf 390px Breite waere die ganze Karte 240px hoch und die
-     Stationsnummern unlesbar - 50 Stationen brauchen Platz.
-     Deshalb schrumpft sie hier NICHT auf die Bildschirmbreite,
-     sondern behaelt eine brauchbare Groesse und wird geschoben.
-     Das passt zur Sache: eine Seekarte breitet man auch aus. */
-  .fh-schatzkarte-blatt {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .fh-schatzkarte-svg {
-    width: 900px;
-    max-width: none;
-  }
-
-  .fh-karte-nummer { font-size: 13px; }
-  .fh-karte-hier-text { font-size: 12px; }
+     Stationen unlesbar - 50 davon brauchen Platz. Vorher wurde
+     deshalb das Blatt in voller Groesse gehalten und seitwaerts
+     geschoben. Mit Zoom und Schwenken ist das nicht mehr noetig: die
+     Karte oeffnet herangezoomt bei der aktuellen Station, und man
+     kommt jetzt auch nach oben und unten statt nur zur Seite. */
+  .fh-karte-symbol { font-size: 13px; }
+  .fh-karte-nummer { font-size: 10px; }
+  .fh-karte-hier-text { font-size: 11px; }
+  .fh-karte-zoom-btn { width: 40px; height: 40px; }
 }
