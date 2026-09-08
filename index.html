@@ -489,6 +489,8 @@
          STORY ARCHIV
     ====================================================== -->
     <section id="story" class="page">
+      <!-- Tauwerk-Hintergrund, siehe scripts/stories/story-threads.js -->
+      <div class="story-ambient-fx" id="story-ambient-fx" aria-hidden="true"></div>
       <div class="story-library">
         <div class="fh-page-head">
           <p class="fh-page-kicker" data-i18n="story.kicker">Archiv der Crew</p>
@@ -776,6 +778,8 @@
          GLÜCKSRAD
     ===================== -->
     <section id="wheel" class="page">
+      <!-- Schatzstaub, siehe scripts/wheel/wheel-particles.js -->
+      <div class="wheel-ambient-fx" id="wheel-ambient-fx" aria-hidden="true"></div>
       <div class="page-content wheel-content">
         <div class="fh-page-head">
           <p class="fh-page-kicker" data-i18n="wheel.kicker">Einmal am Tag</p>
@@ -1300,6 +1304,7 @@
        klassischen <script>-Tag-Build, der zu Supabase/GSAP/Motion hier
        passt (kein Bundler, kein Import-Map-Pattern im restlichen Projekt). -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
+  <script src="scripts/core/fh-webgl.js" defer></script>
   <script src="scripts/core/aurora-bg.js" defer></script>
   <script src="scripts/core/celebration-burst-3d.js" defer></script>
   <script src="scripts/core/sidebar-ambient-3d.js" defer></script>
@@ -1385,6 +1390,8 @@
   <script src="scripts/core/main.js" defer></script>
   <script src="scripts/codes/code-button-effect.js" defer></script>
   <script src="scripts/codes/code-ambient-fx.js" defer></script>
+  <script src="scripts/stories/story-threads.js" defer></script>
+  <script src="scripts/wheel/wheel-particles.js" defer></script>
   <script src="scripts/codes/code-history.js" defer></script>
 
   <!-- Ganz zum Schluss: die Startseiten-Uebersicht liest aus stories.js,

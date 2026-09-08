@@ -47,6 +47,14 @@ function changePage(pageID) {
     updateCodeAmbientPage(pageID);
   }
 
+  if (typeof updateStoryBackgroundPage === "function") {
+    updateStoryBackgroundPage(pageID);
+  }
+
+  if (typeof updateWheelParticlesPage === "function") {
+    updateWheelParticlesPage(pageID);
+  }
+
   if (typeof updateCodeHistoryPage === "function") {
     updateCodeHistoryPage(pageID);
   }

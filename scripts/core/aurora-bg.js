@@ -161,44 +161,15 @@ void main() {
   let rafId = 0;
   let laeuft = false;
 
-  function reduzierteBewegung() {
-    return window.matchMedia
-      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }
-
   function init() {
-    if (typeof THREE === "undefined") return;
-
     const ziel = document.getElementById("fh-bg-canvas");
-    if (!ziel) return;
+    if (!ziel || !window.fhWebGL) return;
 
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas: ziel,
-        antialias: false,      // ein Vollbild-Dreieck hat keine sichtbaren Kanten
-        alpha: false,
-        powerPreference: "low-power",
-      });
-    } catch (err) {
-      // Kein WebGL - die drei <div> bleiben als Rueckfallebene sichtbar.
-      return;
-    }
-
-    /* Ohne Grafikbeschleunigung ist ein bildschirmfuellender Shader
-       teurer als die drei CSS-Ebenen, die er ersetzt. Gemessen in
-       einer Software-Rendering-Umgebung: 60 -> 23 Bilder/s. Auf einer
-       echten Grafikkarte ist es umgekehrt. Also gar nicht erst
-       starten, wenn erkennbar in Software gerendert wird - die
-       CSS-Rueckfallebene bleibt dann stehen. */
-    const info = renderer.getContext().getExtension("WEBGL_debug_renderer_info");
-    const chip = info
-      ? String(renderer.getContext().getParameter(info.UNMASKED_RENDERER_WEBGL))
-      : "";
-    if (/swiftshader|llvmpipe|software|microsoft basic/i.test(chip)) {
-      renderer.dispose();
-      renderer = null;
-      return;
-    }
+    /* Kein WebGL oder erkennbar Software-Rasterung: die drei <div>
+       bleiben als Rueckfallebene sichtbar. Warum, steht in
+       scripts/core/fh-webgl.js. */
+    renderer = window.fhWebGL.rendererErzeugen({ canvas: ziel, alpha: false });
+    if (!renderer) return;
 
     /* Der Hintergrund ist weich und liegt hinter allem. Volle
        Pixeldichte waere dort verschwendet: bei 0.75 sind es nur noch
@@ -209,36 +180,14 @@ void main() {
     const szene = new THREE.Scene();
     const kamera = new THREE.Camera();
 
-    // Ein einzelnes bildschirmfuellendes Dreieck statt zweier
-    // Vierecks-Dreiecke: eine Rasterung weniger an der Diagonale.
-    const geometrie = new THREE.BufferGeometry();
-    geometrie.setAttribute("position", new THREE.BufferAttribute(
-      new Float32Array([-1, -1, 3, -1, -1, 3]), 2
-    ));
-
-    const material = new THREE.RawShaderMaterial({
-      glslVersion: THREE.GLSL3,
-      vertexShader: VERT,
-      fragmentShader: FRAG,
-      depthTest: false,
-      depthWrite: false,
-      uniforms: {
-        uTime: { value: 0 },
-        uAmplitude: { value: 0.9 },
-        uBlend: { value: 0.55 },
-        uResolution: { value: new THREE.Vector2(1, 1) },
-        uColorStops: { value: FARBEN.map((f) => new THREE.Vector3(f[0], f[1], f[2])) },
-      },
-    });
-
-    /* three.js leitet aus "position" sonst eine Huellkugel ab und
-       rechnet dabei mit drei Komponenten - bei unseren zweien kommt
-       NaN heraus. Das Dreieck fuellt ohnehin immer das Bild, es
-       braucht weder Huellkugel noch Sichtbarkeitspruefung. */
-    geometrie.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e9);
-
-    const netz = new THREE.Mesh(geometrie, material);
-    netz.frustumCulled = false;
+    const netz = window.fhWebGL.vollbildNetz(FRAG, {
+      uTime: { value: 0 },
+      uAmplitude: { value: 0.9 },
+      uBlend: { value: 0.55 },
+      uResolution: { value: new THREE.Vector2(1, 1) },
+      uColorStops: { value: FARBEN.map((f) => new THREE.Vector3(f[0], f[1], f[2])) },
+    }, { vertexShader: VERT, transparent: false });
+    const material = netz.material;
     szene.add(netz);
 
     function groesse() {
@@ -258,14 +207,11 @@ void main() {
     // kann noch etwas fehlschlagen, und dann soll sie stehenbleiben.
     document.body.classList.add("fh-bg-canvas-aktiv");
 
-    /* Zweite Sicherung: die Chip-Kennung sagt nicht alles (manche
-       Browser verschweigen sie, manche Treiber sind trotz Namen
-       langsam). Deshalb werden die ersten Bilder gemessen - haelt
-       die Leinwand keine vernuenftige Rate, schaltet sie sich selbst
-       ab und die CSS-Ebenen kommen zurueck. Besser ein ruhiger
-       Sternenhimmel als ein ruckelnder. */
-    let probe = [];
-    let letzte = 0;
+    /* Zweite Sicherung (siehe fh-webgl.js): haelt die Leinwand keine
+       vernuenftige Bildrate, schaltet sie sich selbst ab und die
+       CSS-Ebenen kommen zurueck. Besser ein ruhiger Sternenhimmel
+       als ein ruckelnder. */
+    const wacht = window.fhWebGL.bildwacht();
 
     function aufgeben() {
       stopp();
@@ -280,18 +226,7 @@ void main() {
       material.uniforms.uTime.value = t * 0.0004;
       renderer.render(szene, kamera);
 
-      if (probe && letzte) {
-        probe.push(t - letzte);
-        if (probe.length === 45) {
-          const sortiert = probe.slice().sort((a, b) => a - b);
-          const median = sortiert[Math.floor(sortiert.length / 2)];
-          probe = null;
-          // 24ms entspricht gut 40 Bildern/s. Darunter stoert der
-          // Hintergrund mehr, als er hermacht.
-          if (median > 24) return aufgeben();
-        }
-      }
-      letzte = t;
+      if (wacht(t)) return aufgeben();
 
       rafId = requestAnimationFrame(bild);
     }
@@ -307,7 +242,7 @@ void main() {
       cancelAnimationFrame(rafId);
     }
 
-    if (reduzierteBewegung()) {
+    if (window.fhWebGL.reduzierteBewegung()) {
       // Ein einziges Bild: das Nordlicht steht, die Sterne stehen.
       // Sichtbar bleibt alles, bewegt wird nichts.
       material.uniforms.uTime.value = 1.7;
