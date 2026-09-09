@@ -259,7 +259,13 @@ async function playSpielothekGame() {
     // unten angezeigt UND ist exakt das, was tatsächlich gutgeschrieben/
     // abgezogen wurde.
     const spin = handler.play(betCost);
-    const newCurrency = Math.max(0, currentCurrency - betCost + spin.payout);
+
+    /* Gewinn: Einsatz weg, Auszahlung dazu (wie bisher).
+       Niete:   NICHT der Einsatz, sondern ein Anteil des Guthabens -
+                siehe spielothekVerlustAbzug() weiter unten. */
+    const abzug = spin.win ? betCost : spielothekVerlustAbzug(currentCurrency, betCost);
+    const newCurrency = Math.max(0, currentCurrency - abzug + spin.payout);
+    const angewandtesDelta = newCurrency - currentCurrency;
 
     // Lebenslange Zähler, Grundlage der täglichen Reparatur-Quests
     // (siehe DAILY_QUESTS in ship-repair-data.js) - unabhängig vom
@@ -308,7 +314,7 @@ async function playSpielothekGame() {
     if (typeof logSpielothekRoundToSupabase === "function") {
       logSpielothekRoundToSupabase(game.id, betCost, result.payout, result.win);
     }
-    await renderSpielothekResult(game, handler, result, betCost);
+    await renderSpielothekResult(game, handler, result, betCost, angewandtesDelta);
     // Cooldown erst NACH der abgeschlossenen Ergebnis-Anzeige starten,
     // nicht schon waehrend die Walzen noch laufen (Auftrag: "Nach
     // einem abgeschlossenen Spin" - nicht waehrenddessen).
@@ -443,7 +449,58 @@ async function refreshSpielothekCurrencyDisplay() {
    (keine Pause, sofortige Anzeige). Async/await statt setInterval,
    also keine dauerhafte JS-Animation-Schleife.
 ------------------------------------------------------ */
-async function renderSpielothekResult(game, handler, result, betCost) {
+/* ------------------------------------------------------
+   VERLUST: PROZENT VOM GUTHABEN STATT DES EINSATZES
+   ---------------------------------------------------
+   Bei einer Niete geht nicht mehr der Einsatz verloren, sondern
+   ein Anteil des Guthabens - gestaffelt, damit Anfaenger geschont
+   und Horter gebremst werden:
+
+     unter   500 Dublonen ->  1 %
+     unter  2000 Dublonen ->  3 %
+     darueber             ->  5 %
+
+   Unter 50 Dublonen wird gar kein Prozentabzug faellig, dann
+   kostet die Niete nur den Einsatz - sonst klebt jemand mit
+   wenigen Dublonen endlos knapp ueber null fest und kann nicht
+   mehr mitspielen.
+
+   Wirkung (nachgerechnet, 3 Walzen, Einsatz 20): wer 300 Dublonen
+   hat, gewinnt im Schnitt 13 pro Drehung dazu; wer 1000 hat,
+   verliert 5. Genau die gewuenschte Bremse gegen die
+   Dublonen-Schwemme, ohne Neue abzuwuergen.
+------------------------------------------------------ */
+const SPIELOTHEK_VERLUST_STUFEN = [
+  { bis: 500,       anteil: 0.01 },
+  { bis: 2000,      anteil: 0.03 },
+  { bis: Infinity,  anteil: 0.05 },
+];
+const SPIELOTHEK_VERLUST_FREIGRENZE = 50;
+
+function spielothekVerlustAnteil(guthaben) {
+  const stufe = SPIELOTHEK_VERLUST_STUFEN.find((s) => guthaben < s.bis);
+  return stufe ? stufe.anteil : 0.05;
+}
+
+function spielothekVerlustAbzug(guthaben, einsatz) {
+  if (guthaben < SPIELOTHEK_VERLUST_FREIGRENZE) {
+    /* Zu wenig zum Rupfen - dann eben nur der Einsatz, und nie mehr
+       als ueberhaupt da ist.
+
+       Dadurch verliert jemand mit 49 Dublonen bei einem Einsatz von
+       20 tatsaechlich mehr als jemand mit 50 (der zahlt 1 %, also 1).
+       Das ist die bewusste Gegenprobe zur naheliegenden Alternative
+       "unter der Grenze kostet eine Niete gar nichts": damit koennte
+       man sich auf 49 Dublonen setzen und endlos gratis drehen -
+       Nieten waeren kostenlos, Gewinne echt. Der Einsatz bleibt
+       deshalb faellig. */
+    return Math.min(einsatz, guthaben);
+  }
+  const abzug = Math.round(guthaben * spielothekVerlustAnteil(guthaben));
+  return Math.min(abzug, guthaben);
+}
+
+async function renderSpielothekResult(game, handler, result, betCost, angewandtesDelta) {
   const resultEl = document.getElementById("spielothek-result");
   const andiEl = document.getElementById("spielothek-andi-quote");
   const stageEl = document.getElementById("spielothek-stage");
@@ -488,7 +545,15 @@ async function renderSpielothekResult(game, handler, result, betCost) {
   // nie nur die Bruttoauszahlung - sonst würde die Anzeige bei einem
   // Gewinn einen höheren Zuwachs suggerieren, als tatsächlich gutgeschrieben
   // wurde (Punkt 14: keine manipulierte/irreführende Darstellung).
-  const netDelta = result.payout - betCost;
+  /* Der TATSAECHLICH gebuchte Unterschied, nicht die Bruttoauszahlung
+     und auch nicht mehr "Auszahlung minus Einsatz": bei einer Niete
+     wird seit dem Balance-Umbau ein Anteil des Guthabens abgezogen
+     statt des Einsatzes, und die Anzeige muss genau das zeigen, was
+     auf dem Konto passiert ist. Der Rueckfall auf die alte Rechnung
+     greift nur, falls der Wert nicht durchgereicht wurde. */
+  const netDelta = typeof angewandtesDelta === "number"
+    ? angewandtesDelta
+    : result.payout - betCost;
 
   if (result.win) {
     // Gewinn-Ablauf in zwei sichtbaren Schritten (Punkt 11): zuerst wird
@@ -531,8 +596,12 @@ async function renderSpielothekResult(game, handler, result, betCost) {
       });
     }
   } else {
+    /* Der Totenkopf zittert kurz und zerspringt dann (siehe
+       @keyframes spielothekTotenkopf in css/20-spiele.css). Bei
+       reduzierter Bewegung steht er einfach still da. */
     resultEl.insertAdjacentHTML("beforeend", `
       <p class="spielothek-result-line spielothek-result-lose">
+        <span class="spielothek-verlust-icon${reduceMotion ? "" : " ist-bewegt"}" aria-hidden="true">☠️</span>
         ${isEn ? "Loss" : "Verlust"}: ${netDelta} 🪙
       </p>
     `);

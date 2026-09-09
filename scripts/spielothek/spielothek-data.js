@@ -67,7 +67,9 @@ const ANDII_IDLE_QUOTE_COUNT = 7;
 const ANDII_WIN_QUOTE_COUNT = 3;
 const ANDII_WIN_BIG_QUOTE_COUNT = 3;
 const ANDII_WIN_JACKPOT_QUOTE_COUNT = 3;
-const ANDII_LOSE_QUOTE_COUNT = 20;
+/* Von 20 auf 40 verdoppelt: bei zwei Dritteln Nieten sieht man die
+   Sprueche sonst staendig zweimal am Abend. */
+const ANDII_LOSE_QUOTE_COUNT = 40;
 const ANDII_COOLDOWN_QUOTE_COUNT = 8;
 
 /* ------------------------------------------------------
