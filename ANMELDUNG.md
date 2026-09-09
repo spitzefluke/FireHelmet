@@ -75,6 +75,9 @@ Ist bei Supabase schon aktiv. Kontrolliere nur zweierlei:
 - Unter *Authentication → URL Configuration* muss deine Seitenadresse bei
   **Redirect URLs** stehen, sonst führt der Link aus der Mail ins Leere
 
+Sobald `firehelmet.de` steht, muss die neue Adresse dort ergänzt werden —
+die vollständige Liste steht in `DOMAIN.md`, Abschnitt 7.
+
 Kein Kennwort — Supabase schickt einen Einmal-Link. Eines mehr zu
 verwalten wäre für eine Spielseite eine Zumutung, und ein schlecht
 gewähltes wäre ein Risiko.
