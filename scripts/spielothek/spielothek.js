@@ -219,6 +219,10 @@ async function playSpielothekGame() {
   const playBtn = document.getElementById("spielothek-play-btn");
   if (playBtn) playBtn.disabled = true;
 
+  /* Direkt in der Klick-Geste, nicht spaeter: der AudioContext darf
+     nur aus einer Nutzeraktion heraus entstehen. */
+  spielothekKlick();
+
   if (statusEl) statusEl.textContent = "";
 
   try {
@@ -443,6 +447,10 @@ async function refreshSpielothekCurrencyDisplay() {
       .maybeSingle();
     const currency = data ? data.currency || 0 : 0;
     el.textContent = currency.toLocaleString("de-DE");
+    /* Erst JETZT ist die Zahl echt. Vorher standen Striche da - eine
+       0 waere eine Behauptung ueber den Kontostand gewesen, die
+       niemand geprueft hat. */
+    el.classList.remove("ist-ladend");
   } catch (err) {
     // still leaves the last known value on screen instead of breaking
   }
@@ -518,7 +526,10 @@ async function renderSpielothekResult(game, handler, result, betCost, angewandte
     reelStopTimesMs.forEach((stopMs, i) => {
       const el = symbolEls[i];
       if (!el) return;
-      setTimeout(() => el.classList.add("spielothek-slot-symbol-landed"), stopMs);
+      setTimeout(() => {
+        el.classList.add("spielothek-slot-symbol-landed");
+        spielothekWalzeRastet(i);
+      }, stopMs);
     });
   }
 
@@ -707,7 +718,7 @@ async function renderSpielothekPage() {
     <div class="spielothek-anzeigen">
       <div class="spielothek-anzeige">
         <span class="spielothek-anzeige-titel" data-i18n="spielothek.anzeigeGuthaben">Guthaben</span>
-        <span class="spielothek-anzeige-wert" id="spielothek-currency-amount">0</span>
+        <span class="spielothek-anzeige-wert ist-ladend" id="spielothek-currency-amount">–––</span>
       </div>
       <div class="spielothek-anzeige">
         <span class="spielothek-anzeige-titel" data-i18n="spielothek.anzeigeEinsatz">Einsatz</span>
@@ -758,47 +769,98 @@ async function renderSpielothekPage() {
 }
 
 /* ------------------------------------------------------
-   OEFFNUNGS-SOUND (Punkt 2 des Auftrags)
+   BEDIENTOENE
    ---------------------------------------------------
-   Wird NUR hier aufgerufen - direkt und synchron innerhalb von
-   changePage('spielothek'), das ausschliesslich per onclick auf
-   einen Menuepunkt ausgeloest wird (siehe index.html), NIE beim
-   Laden der Seite selbst oder bei einem simplen Neu-Rendern (z.B.
-   das "siteConfigUpdated"-Neuzeichnen unten ruft bewusst NUR
-   renderSpielothekPage() auf, nicht diese Funktion). Dadurch
-   bleibt der Aufruf innerhalb derselben Nutzer-Geste, wie es die
-   Autoplay-Regeln der Browser verlangen. Ein neues <audio>-
-   Element pro Aufruf statt einem wiederverwendeten Element, damit
-   kein gemeinsamer Zustand/keine gemeinsame Promise mit anderen
-   Seiten (z.B. der Mystery-Musik) entstehen kann.
+   FRUEHER: ein Jingle beim Betreten der Seite (spielothek-open.wav,
+   104 KB). Ein Ton, der abgespielt wird, weil man einen Raum
+   betritt, ist etwas, das Online-Casinos tun - eine echte
+   Spielothek klingt nach den Geraeten, nicht nach einer Begruessung.
+
+   JETZT: zwei kurze Toene, die eine Bedienung quittieren - ein
+   trockener Klick beim Ausloesen und ein Einrasten je Walze.
+
+   WARUM SYNTHETISIERT STATT ALS DATEI
+   Beides sind sehr kurze Geraeusche (unter 60 ms). Als Datei waeren
+   das zwei weitere Ladevorgaenge und eine Lizenzfrage; erzeugt sind
+   sie null Bytes gross und lassen sich in der Tonhoehe staffeln, so
+   dass die Walzen von links nach rechts leicht tiefer einrasten -
+   das ist genau der Effekt, den ein echtes Walzenwerk hat.
+
+   GESTEN-REGEL: der AudioContext wird erst beim ersten Klick auf den
+   Ausloeser angelegt. Browser verweigern Ton ohne vorherige
+   Nutzergeste, und ein beim Laden erzeugter Context bliebe
+   "suspended" - danach kaeme nie wieder ein Ton.
 ------------------------------------------------------ */
-function playSpielothekOpenSound() {
+let spielothekAudioCtx = null;
+
+function spielothekTonKontext() {
+  if (spielothekAudioCtx) return spielothekAudioCtx;
   try {
-    const audio = new Audio("scripts/spielothek/audio/spielothek-open.wav");
-    audio.volume = 0.55;
-    const playPromise = audio.play();
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch((err) => {
-        // "AbortError" bedeutet nur, dass die Wiedergabe durch ein fast
-        // zeitgleiches pause()/Entfernen unterbrochen wurde (z.B. sehr
-        // schnelles mehrfaches Oeffnen) - kein echter Fehler. Blockiert
-        // der Browser die Wiedergabe grundsaetzlich (z.B. weil er die
-        // Nutzer-Geste doch nicht anerkennt), bleibt das Spiel trotzdem
-        // voll nutzbar - der Sound ist rein kosmetisch.
-        if (err.name !== "AbortError") {
-          console.warn("Spielothek-Sound konnte nicht abgespielt werden:", err);
-        }
-      });
-    }
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    spielothekAudioCtx = new Ctx();
   } catch (err) {
-    // Audio komplett nicht verfuegbar (sehr alter Browser o.ae.) - das
-    // Spiel funktioniert trotzdem normal weiter.
+    // Kein Ton verfuegbar - das Spiel laeuft trotzdem.
+    spielothekAudioCtx = null;
   }
+  return spielothekAudioCtx;
+}
+
+/* Ein einzelner kurzer Anschlag. Kein Nachhall, keine Melodie:
+   frequenz faellt waehrend der Dauer leicht ab, die Lautstaerke
+   klingt exponentiell aus - so klingt Material, das anschlaegt,
+   und nicht ein Piepser. */
+function spielothekTon(frequenz, dauerMs, lautstaerke) {
+  if (typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    /* Wer Bewegung reduziert, will meist auch keine Geraeusche -
+       dieselbe Ruecksicht wie bei den Animationen. */
+    return;
+  }
+  const ctx = spielothekTonKontext();
+  if (!ctx) return;
+
+  try {
+    if (ctx.state === "suspended") ctx.resume();
+
+    const jetzt = ctx.currentTime;
+    const dauer = dauerMs / 1000;
+
+    const osz = ctx.createOscillator();
+    const huelle = ctx.createGain();
+
+    osz.type = "triangle";
+    osz.frequency.setValueAtTime(frequenz, jetzt);
+    osz.frequency.exponentialRampToValueAtTime(frequenz * 0.55, jetzt + dauer);
+
+    huelle.gain.setValueAtTime(lautstaerke, jetzt);
+    huelle.gain.exponentialRampToValueAtTime(0.0001, jetzt + dauer);
+
+    osz.connect(huelle);
+    huelle.connect(ctx.destination);
+    osz.start(jetzt);
+    osz.stop(jetzt + dauer);
+  } catch (err) {
+    /* Ein fehlgeschlagener Ton darf nie das Spiel aufhalten. */
+  }
+}
+
+/* Der Ausloeser: ein trockener, tiefer Anschlag. */
+function spielothekKlick() {
+  spielothekTon(180, 55, 0.09);
+}
+
+/* Eine Walze rastet ein. Von links nach rechts leicht tiefer, damit
+   die Reihe als Abfolge hoerbar wird statt als sechsmal derselbe
+   Ton. */
+function spielothekWalzeRastet(index) {
+  spielothekTon(760 - index * 45, 38, 0.05);
 }
 
 function updateSpielothekPage(pageID) {
   if (pageID !== "spielothek") return;
-  playSpielothekOpenSound();
+  /* Kein Ton mehr beim Betreten - siehe Kommentar bei
+     spielothekKlick(). Die Toene haengen jetzt an der Bedienung. */
   renderSpielothekPage();
 }
 

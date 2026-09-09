@@ -2567,12 +2567,27 @@
 }
 
 .spielothek-anzeige-wert {
+  /* Oswald: die schmale Versalschrift, die die Seite fuer
+     Ueberschriften ohnehin laedt. Auf einer Geraeteanzeige liest sie
+     sich wie eine Beschriftung statt wie Fließtext - und es kommt
+     keine weitere Schriftdatei dazu. */
+  font-family: var(--fh-font-display, 'Oswald'), 'Arial Narrow', sans-serif;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
-  font-size: clamp(18px, 4.4vw, 24px);
-  font-weight: 700;
+  font-size: clamp(20px, 4.8vw, 27px);
+  font-weight: 600;
+  letter-spacing: .02em;
   color: var(--spielo-messing-hell);
   line-height: 1.1;
+}
+
+/* LADEZUSTAND: solange der Server nicht geantwortet hat, stehen hier
+   Striche und keine 0. Eine 0 waere eine Behauptung ueber den
+   Kontostand, die niemand geprueft hat - und genau die Sorte Zahl,
+   die eine Anzeige unglaubwuerdig macht. */
+.spielothek-anzeige-wert.ist-ladend {
+  color: var(--fh-muted);
+  opacity: .6;
 }
 
 /* Nur diese beiden Faelle bekommen Farbe. Ein neutrales Feld bleibt
@@ -2640,4 +2655,63 @@
   .spielothek-anzeige { padding: 8px 4px; }
   .spielothek-anzeige-titel { font-size: 10px; letter-spacing: .08em; }
   .spielothek-ausloeser { min-width: 0; width: 100%; }
+}
+
+/* ------------------------------------------------------
+   DER RAUM
+   ---------------------------------------------------
+   Vorher schien durch die Spielothek das globale Sternenfeld der
+   Seite - ein Automat, der im Weltall steht. Jetzt liegt darueber
+   eine eigene Flaeche: dunkle Holzdielen, angedeutet durch zwei
+   Verlaufsmuster in unterschiedlichem Abstand, plus ein warmes
+   Licht von oben, als haenge eine Lampe ueber dem Geraet.
+
+   Bewusst SEHR flau gehalten (Deckkraft der Fugen unter 10 %): eine
+   kraeftige Dielenzeichnung wuerde mit den Walzen um Aufmerksamkeit
+   streiten. Man soll den Raum spueren, nicht ansehen.
+
+   Nur auf dieser einen Seite - #spielothek, nicht .page -, damit
+   der Rest der Seite unberuehrt bleibt.
+------------------------------------------------------ */
+/* Ausdruecklich positioniert. Ohne das haenge der Boden am
+   naechsten positionierten Vorfahren - .page hat zwar ein transform
+   und erzeugt dadurch schon einen Bezugsrahmen, aber das ist ein
+   Nebeneffekt der Seitenwechsel-Animation, kein Versprechen. Wer die
+   Animation eines Tages aendert, haette sonst einen Boden, der ueber
+   die ganze Seite laeuft. */
+#spielothek {
+  position: relative;
+}
+
+#spielothek::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    /* Licht von oben, warm und weich */
+    radial-gradient(120% 70% at 50% -10%,
+      rgba(224,161,82,.10) 0%, rgba(224,161,82,.04) 35%, transparent 68%),
+    /* Dielenfugen quer */
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,.22) 0 2px, transparent 2px 96px),
+    /* Maserung laengs, feiner und unregelmaessiger */
+    repeating-linear-gradient(2deg,
+      rgba(255,232,196,.014) 0 1px, transparent 1px 7px,
+      rgba(0,0,0,.05) 7px 8px, transparent 8px 23px),
+    /* Grundton des Bodens */
+    linear-gradient(180deg, #140f0a 0%, #0c0906 100%);
+  opacity: 0;
+  transition: opacity .45s var(--fh-ease, ease);
+}
+
+/* Erst einblenden, wenn die Seite wirklich offen ist - sonst
+   schimmert der Boden waehrend des Seitenwechsels durch. */
+#spielothek.active-page::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #spielothek::before { transition: none; }
 }
