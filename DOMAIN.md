@@ -1,5 +1,13 @@
 # firehelmet.de einrichten
 
+> **Status: auf Eis gelegt (09.09.2026).** Die Seite bleibt vorerst unter
+> `spitzefluke.github.io/FireHelmet/`. Nichts an dieser Anleitung ist
+> aktiv — sie liegt hier bereit, falls du es später doch angehen willst.
+>
+> Es gibt nichts rückgängig zu machen: `CNAME.wartet` ist inaktiv, und
+> `canonical`, `og:image` und die Teilen-Adresse zeigen unverändert auf
+> die GitHub-Adresse.
+
 Die Seite liegt weiterhin auf GitHub Pages — nur die Adresse ändert sich.
 Kein Umzug, kein anderer Anbieter, kein Risiko für die Daten.
 
