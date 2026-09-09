@@ -1,149 +1,174 @@
 /* ============================================================
-   SPIELOTHEK - SLOT
+   SPIELOTHEK - EINARMIGER BANDIT
    ------------------------------------------------------------
-   Gemeinsame Spiellogik.
    WICHTIG:
    - Diese Datei ist NICHT die Vertrauensgrenze.
-   - Der Client BERECHNET das Ergebnis (RNG lokal im Browser) -
-     die Datenbank prueft NICHT die einzelnen Walzen-Werte nach,
-     sondern nur, dass der resultierende Kontostand-Sprung einen
-     festen Deckel nicht uebersteigt (app.valid_players_write() in
+   - Der Client BERECHNET das Ergebnis (Zufall lokal im Browser) -
+     die Datenbank prueft NICHT die einzelnen Walzen nach, sondern
+     nur, dass der resultierende Kontostand-Sprung einen festen
+     Deckel nicht uebersteigt (app.valid_players_write() in
      supabase/game-migration/01-players-ship-progression.sql).
-     Bewusste, bereits bestehende Vereinfachung (rein virtuelle
-     Waehrung, kein echtes Geld, siehe Kopfkommentar in
-     spielothek.js) - dieselbe Grenze gilt auch fuer die frei
-     waehlbaren Einsaetze unten.
+     Bewusste, bestehende Vereinfachung - rein virtuelle Waehrung,
+     kein echtes Geld (siehe Kopfkommentar in spielothek.js).
+
+   BALANCE (September 2026 neu gerechnet)
+   ------------------------------------------------------------
+   Vorher war die Auszahlung kaputt, und zwar in beide Richtungen:
+   bei zwei Walzen (kleiner Einsatz) kamen nur 36 % des Einsatzes
+   zurueck, bei sechs Walzen 363 %. Kleine Eintraege waren eine
+   Falle, grosse eine Gelddruckmaschine. Ursache war die
+   Paar-Auszahlung: sie zahlte mindestens den doppelten Einsatz,
+   trat bei sechs Walzen aber in fast vier von fuenf Drehungen ein.
+
+   Jetzt liegt der Rueckfluss bei JEDEM Einsatz bei rund 110 % -
+   exakt ausgerechnet ueber alle Kombinationen, nicht geschaetzt.
+   Die Zahlen unten sind das Ergebnis dieser Rechnung; wer sie
+   aendert, muss sie neu rechnen (scratchpad-Skript im Commit,
+   Verfahren im Kommentar bei SLOT_AUSZAHLUNG beschrieben).
+
+   Bewusst NICHT erreicht: "mehr Walzen = seltener gewinnen".
+   Bei fester Mindestgruppe steigt die Trefferquote mit jeder
+   Walze, ein Sprung in der Mindestgruppe laesst sie einbrechen -
+   eine glatt fallende Kurve braeuchte eine Regel wie "Vorsprung
+   vor den Totenkoepfen: 1 bei 3 Walzen, 2 bei 4, 1 bei 5, 3 bei
+   6". Das versteht niemand mehr. Stattdessen kommt der Reiz des
+   hohen Einsatzes aus der Auszahlungshoehe (Feuerhelm: 110-fach
+   bei drei Walzen, 980-fach bei sechs).
 ============================================================ */
 
+/* Piratenthema statt Fruechten - die alten Kirschen und Zitronen
+   waren ein Fremdkoerper in einer Piratensaga. Die Gewichte
+   bestimmen, wie haeufig ein Symbol faellt (Summe hier 1200). */
 const SLOT_SYMBOLS = [
-  { id: "cherry",  emoji: "🍒", weight: 310 },
-  { id: "lemon",   emoji: "🍋", weight: 228 },
-  { id: "bell",    emoji: "🔔", weight: 150 },
-  { id: "diamond", emoji: "💎", weight: 84 },
-  { id: "seven",   emoji: "7️⃣", weight: 45 },
-  { id: "fire",    emoji: "🔥", weight: 24 },
-  { id: "skull",   emoji: "💀", weight: 160 },
+  { id: "dublone",   emoji: "🪙",  weight: 300 },
+  { id: "papagei",   emoji: "🦜",  weight: 230 },
+  { id: "kompass",   emoji: "🧭",  weight: 160 },
+  { id: "saebel",    emoji: "⚔️",  weight: 110 },
+  { id: "edelstein", emoji: "💎",  weight: 60 },
+  { id: "truhe",     emoji: "📦",  weight: 28 },
+  { id: "helm",      emoji: "🔥",  weight: 12 },
+  { id: "totenkopf", emoji: "☠️",  weight: 300 },
 ];
 
-/* Frei waehlbarer Einsatz statt eines festen Betrags (Auftrag: "man
-   soll selbst definieren wie viel man einsetzt, je mehr desto mehr
-   gewinnt man") - alle Auszahlungen unten sind deshalb VIELFACHE des
-   Einsatzes statt fester Betraege, siehe SLOT_TRIPLE_REWARDS/
-   SLOT_QUAD_REWARDS/SLOT_FIVE_REWARDS/SLOT_SIX_REWARDS/getSlotPairMultiplier(). */
 const SLOT_MIN_BET = 10;
 const SLOT_MAX_BET = 100;
 const SLOT_BET_STEP = 10;
 const SLOT_DEFAULT_BET = 20;
 
-/* Auftrag: "je mehr man einsetzt desto mehr kaesten sollen auch
-   gedreht werden: 10 einsatz = 2 rollen, 50 = 4 rollen, max an rollen
-   sollen 6 sein" - alle 20 Dublonen mehr Einsatz gibt eine Walze
-   dazu, gedeckelt bei 6. Ergibt genau: 10/20=2, 30/40=3, 50/60=4,
-   70/80=5, 90/100=6 Walzen. */
-const SLOT_REEL_COUNT_MIN = 2;
+/* Zwei Walzen gibt es nicht mehr: dort lagen strukturell hoechstens
+   18 % Trefferquote drin (beide Walzen muessen exakt gleich sein),
+   das war der unangenehmste Teil des alten Spiels. Der kleinste
+   Einsatz startet deshalb bei drei Walzen. */
+const SLOT_REEL_COUNT_MIN = 3;
 const SLOT_REEL_COUNT_MAX = 6;
-const SLOT_REEL_COUNT_BET_STEP = 20;
 
 function getSlotReelCountForBet(bet) {
-  const steps = Math.floor((bet - SLOT_MIN_BET) / SLOT_REEL_COUNT_BET_STEP);
-  return Math.min(SLOT_REEL_COUNT_MAX, SLOT_REEL_COUNT_MIN + steps);
+  if (bet <= 30) return 3;
+  if (bet <= 50) return 4;
+  if (bet <= 80) return 5;
+  return 6;
 }
 
-/* Vielfaches des Einsatzes bei genau DREI gleichen Symbolen. */
-const SLOT_TRIPLE_REWARDS = Object.freeze({
-  cherry:  { multiplier: 2.5,  tier: "small" },
-  lemon:   { multiplier: 4.5,  tier: "small" },
-  bell:    { multiplier: 8.5,  tier: "medium" },
-  diamond: { multiplier: 22.5, tier: "big" },
-  seven:   { multiplier: 60,   tier: "veryBig" },
-  fire:    { multiplier: 150,  tier: "jackpot" },
+/* Die Gewinnregel in einem Satz: mindestens die Haelfte der Walzen
+   zeigt dasselbe Symbol, und es sind mehr als Totenkoepfe. */
+function getSlotMinGroup(reelCount) {
+  return Math.ceil(reelCount / 2);
+}
+
+/* Vielfaches des Einsatzes, nach Walzenzahl und Gruppengroesse.
+   ------------------------------------------------------------
+   Hergeleitet, nicht geraten: Grundwert (Gesamtgewicht /
+   Symbolgewicht) hoch 0,9, mal 3 je Treffer ueber dem Minimum,
+   danach je Walzenzahl so skaliert, dass der Rueckfluss bei 110 %
+   landet. Nach dem Runden auf glatte Werte bleiben 107-113 %. */
+const SLOT_AUSZAHLUNG = Object.freeze({
+  3: {
+    dublone: { 2: 2,   3: 6 },
+    papagei: { 2: 2.5, 3: 8 },
+    kompass: { 2: 3.5, 3: 11 },
+    saebel:  { 2: 5,   3: 15 },
+    edelstein: { 2: 9, 3: 26 },
+    truhe:   { 2: 17,  3: 52 },
+    helm:    { 2: 37,  3: 110 },
+  },
+  4: {
+    dublone: { 2: 1,   3: 3.5, 4: 10 },
+    papagei: { 2: 1.5, 3: 4.5, 4: 13 },
+    kompass: { 2: 2,   3: 6,   4: 18 },
+    saebel:  { 2: 3,   3: 8.5, 4: 25 },
+    edelstein: { 2: 5, 3: 14,  4: 43 },
+    truhe:   { 2: 9.5, 3: 29,  4: 86 },
+    helm:    { 2: 21,  3: 62,  4: 185 },
+  },
+  5: {
+    dublone: { 3: 4,   4: 12,  5: 35 },
+    papagei: { 3: 5,   4: 15,  5: 44 },
+    kompass: { 3: 7,   4: 20,  5: 61 },
+    saebel:  { 3: 9.5, 4: 28,  5: 85 },
+    edelstein: { 3: 16, 4: 49, 5: 145 },
+    truhe:   { 3: 32,  4: 97,  5: 290 },
+    helm:    { 3: 70,  4: 210, 5: 625 },
+  },
+  6: {
+    dublone: { 3: 2,   4: 6,   5: 18,  6: 54 },
+    papagei: { 3: 2.5, 4: 7.5, 5: 23,  6: 69 },
+    kompass: { 3: 3.5, 4: 11,  5: 32,  6: 95 },
+    saebel:  { 3: 5,   4: 15,  5: 45,  6: 135 },
+    edelstein: { 3: 8.5, 4: 26, 5: 77, 6: 230 },
+    truhe:   { 3: 17,  4: 51,  5: 155, 6: 460 },
+    helm:    { 3: 36,  4: 110, 5: 325, 6: 980 },
+  },
 });
 
-/* Vielfaches bei VIER gleichen Symbolen. */
-const SLOT_QUAD_REWARDS = Object.freeze({
-  cherry:  { multiplier: 6,   tier: "small" },
-  lemon:   { multiplier: 10,  tier: "small" },
-  bell:    { multiplier: 20,  tier: "medium" },
-  diamond: { multiplier: 50,  tier: "big" },
-  seven:   { multiplier: 130, tier: "veryBig" },
-  fire:    { multiplier: 300, tier: "jackpot" },
-});
-
-/* NEU: Vielfache bei FUENF bzw. SECHS gleichen Symbolen (nur ab
-   entsprechend hohem Einsatz ueberhaupt erreichbar, siehe
-   getSlotReelCountForBet). Nutzen bewusst dieselben Tier-Namen wie
-   oben, damit die bestehende Konfetti-/Ändii-Zitat-Logik (siehe
-   spielothek.js) ohne Aenderung weiterfunktioniert. */
-const SLOT_FIVE_REWARDS = Object.freeze({
-  cherry:  { multiplier: 9,   tier: "small" },
-  lemon:   { multiplier: 15,  tier: "small" },
-  bell:    { multiplier: 30,  tier: "medium" },
-  diamond: { multiplier: 75,  tier: "big" },
-  seven:   { multiplier: 170, tier: "veryBig" },
-  fire:    { multiplier: 375, tier: "jackpot" },
-});
-
-const SLOT_SIX_REWARDS = Object.freeze({
-  cherry:  { multiplier: 13,  tier: "small" },
-  lemon:   { multiplier: 21,  tier: "small" },
-  bell:    { multiplier: 42,  tier: "medium" },
-  diamond: { multiplier: 100, tier: "big" },
-  seven:   { multiplier: 220, tier: "veryBig" },
-  fire:    { multiplier: 480, tier: "jackpot" },
-});
-
-const SLOT_REWARD_TABLES_BY_COUNT = Object.freeze({
-  3: SLOT_TRIPLE_REWARDS,
-  4: SLOT_QUAD_REWARDS,
-  5: SLOT_FIVE_REWARDS,
-  6: SLOT_SIX_REWARDS,
-});
-
-/* Auftrag: "wenn man gewinnt soll man jeweils das doppelte oder bei
-   groesserem einsatz noch mehr erhalten" - der Basis-Gewinn (zwei
-   gleiche Symbole) zahlt jetzt mindestens den doppelten Einsatz aus,
-   und pro zusaetzlicher Walze (= hoeherer Einsatz, siehe
-   getSlotReelCountForBet) noch etwas mehr obendrauf. Die groesseren
-   Gewinnstufen (SLOT_TRIPLE/QUAD/FIVE/SIX_REWARDS) liegen ohnehin
-   schon alle ueber dem doppelten Einsatz und muessen dafuer nicht
-   angepasst werden. */
-const SLOT_PAIR_MULTIPLIER_BASE = 2;
-const SLOT_PAIR_MULTIPLIER_STEP_PER_REEL = 0.3;
-
-function getSlotPairMultiplier(reelCount) {
-  return SLOT_PAIR_MULTIPLIER_BASE +
-    SLOT_PAIR_MULTIPLIER_STEP_PER_REEL * (reelCount - SLOT_REEL_COUNT_MIN);
+/* Grobe Einstufung fuer Konfetti und Aendii-Zitate (spielothek.js
+   wertet nur diese Namen aus, die Zahlen dahinter sind egal). */
+function getSlotTier(multiplier) {
+  if (multiplier >= 200) return "jackpot";
+  if (multiplier >= 50) return "veryBig";
+  if (multiplier >= 15) return "big";
+  if (multiplier >= 5) return "medium";
+  return "small";
 }
 
 /* Sicherheits-Deckel unterhalb des serverseitig erzwungenen Limits
-   (currency/total_currency_earned duerfen pro Schreibvorgang um
-   maximal 30000 steigen, siehe app.valid_players_write() in
-   supabase/game-migration/01-players-ship-progression.sql). Bei
-   sechs gleichen 🔥 auf maximalem Einsatz (100 x 480 = 48000) wuerde
-   die Datenbank den Schreibvorgang sonst ablehnen, obwohl die
-   Walzen bereits einen Gewinn angezeigt haben - das waere genau die
-   irrefuehrende Situation, die Punkt 14/15 im Kopfkommentar von
-   spielothek.js ausschliessen soll. Mit Sicherheitsabstand statt
-   exakt am Deckel, falls die Tabellen oben spaeter nochmal angepasst
-   werden. */
+   (currency darf pro Schreibvorgang um hoechstens 30000 steigen,
+   siehe app.valid_players_write()). Sechs Feuerhelme auf vollem
+   Einsatz waeren 100 x 980 = 98000, dazu koennen Freidrehs kommen -
+   ohne Deckel wuerde die Datenbank den Schreibvorgang ablehnen,
+   obwohl die Walzen den Gewinn bereits angezeigt haben. */
 const SLOT_MAX_SAFE_PAYOUT = 25000;
 
-const SLOT_SPIN_FILLER_COUNT = 14;
+/* ------------------------------------------------------------
+   FREIDREH
+   ------------------------------------------------------------
+   Zeigen ALLE Walzen dasselbe Symbol, gibt es einen kostenlosen
+   Dreh mit vier Walzen mehr; der Gewinn kommt obendrauf. Das kann
+   sich hoechstens dreimal wiederholen.
 
+   Die Anzeige ist bei zehn Walzen gedeckelt: aus sechs Walzen
+   wuerden sonst 10, 14 und 18 - auf einem Handy nicht mehr
+   bedienbar. Ab sieben Walzen legt die Darstellung auf zwei Reihen
+   um (siehe .spielothek-slot-reels-breit).
+------------------------------------------------------------ */
+const SLOT_FREIDREH_EXTRA_WALZEN = 4;
+const SLOT_FREIDREH_MAX_KETTE = 3;
+const SLOT_FREIDREH_MAX_WALZEN = 10;
+
+function alleWalzenGleich(reels) {
+  return reels.length > 0 && reels.every((s) => s.id === reels[0].id);
+}
 
 /* ------------------------------------------------------------
-   PITY-SYSTEM (Auftrag: "wenn man 10 mal gedreht hat soll ein
-   garantierter Gewinn bei der spielo kommen damit es nicht zu
-   abzockmaessig rueberkommt")
+   PITY-SYSTEM
    ------------------------------------------------------------
-   Rein clientseitig (localStorage, wie z.B. wheelStreak/raceProgress
-   an anderer Stelle im Projekt) - unkritisch fuer die Sicherheit, da
-   das Ergebnis ohnehin komplett client-berechnet ist (siehe
-   Kopfkommentar) und nur der resultierende Kontostand-Sprung
-   serverseitig geprueft wird. Zaehlt Spins OHNE Gewinn; der 10. Spin
-   in Folge ohne Gewinn wird garantiert zu einem Gewinn (mindestens
-   ein Paar). Ein natuerlicher Gewinn auf dem Weg dahin setzt den
-   Zaehler ganz normal zurueck.
+   Rein clientseitig (localStorage), unkritisch fuer die Sicherheit,
+   da das Ergebnis ohnehin komplett client-berechnet ist. Zaehlt
+   Drehungen OHNE Gewinn; die zehnte in Folge gewinnt garantiert.
+
+   NEU: der geschenkte Gewinn ist bewusst ein KLEINER - genau die
+   Mindestgruppe mit einem haeufigen Symbol. Vorher konnte das Pity
+   auch einen Riesengewinn erzwingen, was die Rechnung oben
+   verzerrt haette.
 ------------------------------------------------------------ */
 const SLOT_PITY_SPIN_THRESHOLD = 10;
 const SLOT_PITY_STORAGE_KEY = "spielothekSlotSpinsSinceWin";
@@ -152,8 +177,7 @@ function getSlotSpinsSinceWin() {
   try {
     return parseInt(localStorage.getItem(SLOT_PITY_STORAGE_KEY) || "0", 10) || 0;
   } catch (err) {
-    // z.B. Privatmodus/Speicher voll - Pity-Zaehler startet einfach
-    // wieder bei 0, kein Blocker fuers eigentliche Spiel.
+    // z.B. Privatmodus - Zaehler startet wieder bei 0, kein Blocker.
     return 0;
   }
 }
@@ -162,42 +186,25 @@ function setSlotSpinsSinceWin(n) {
   try {
     localStorage.setItem(SLOT_PITY_STORAGE_KEY, String(n));
   } catch (err) {
-    // s.o. - rein kosmetisch, kein Fehlerfall fuers Spiel selbst.
+    /* s.o. - rein kosmetisch */
   }
 }
 
 
 /* ------------------------------------------------------------
    SPIELBERECHNUNG
-   ------------------------------------------------------------
-   Diese Funktion ist absichtlich rein und unabhängig von
-   Firestore/Supabase. Sie kann sowohl im Client als auch im Server-
-   Bundle verwendet werden.
-
-   Für die Sicherheit zählt aber ausschließlich das
-   serverseitig geprüfte Kontostand-Delta (siehe Kommentar am
-   Dateianfang).
 ------------------------------------------------------------ */
 
 function pickWeightedSlotSymbol(symbols, random = Math.random) {
-  const total = symbols.reduce(
-    (sum, symbol) => sum + symbol.weight,
-    0
-  );
-
+  const total = symbols.reduce((sum, symbol) => sum + symbol.weight, 0);
   let roll = random() * total;
 
   for (const symbol of symbols) {
-    if (roll < symbol.weight) {
-      return symbol;
-    }
-
+    if (roll < symbol.weight) return symbol;
     roll -= symbol.weight;
   }
-
   return symbols[symbols.length - 1];
 }
-
 
 function clampSlotBet(betAmount) {
   const n = Number(betAmount);
@@ -207,107 +214,129 @@ function clampSlotBet(betAmount) {
   return Math.min(SLOT_MAX_BET, Math.max(SLOT_MIN_BET, stepped));
 }
 
-
 function buildSlotReelStopTimesMs(reelCount) {
-  // Gleicher 600ms-Takt wie zuvor bei den fest verdrahteten vier
-  // Walzen (900/1500/2100/2700), jetzt nur fuer eine beliebige Anzahl
-  // Walzen fortgeschrieben.
-  return Array.from({ length: reelCount }, (_, i) => 900 + i * 600);
+  // Bei vielen Walzen wird der Takt kuerzer, sonst dauert ein
+  // Zehn-Walzen-Freidreh ueber sieben Sekunden.
+  const takt = reelCount > 6 ? 320 : 600;
+  return Array.from({ length: reelCount }, (_, i) => 900 + i * takt);
 }
-
 
 function generateRandomSlotReels(reelCount, random = Math.random) {
-  return Array.from(
-    { length: reelCount },
-    () => pickWeightedSlotSymbol(SLOT_SYMBOLS, random)
-  );
+  return Array.from({ length: reelCount },
+    () => pickWeightedSlotSymbol(SLOT_SYMBOLS, random));
 }
 
-
+/* Erzwungener KLEINER Gewinn fuers Pity: genau die Mindestgruppe,
+   und zwar mit einem der beiden haeufigsten (= billigsten)
+   Symbole. Die uebrigen Walzen bekommen nie einen Totenkopf und
+   nie dasselbe Symbol - sonst koennte daraus versehentlich ein
+   grosser Gewinn oder gar ein Freidreh werden. */
 function generateForcedWinSlotReels(reelCount, random = Math.random) {
-  const nonSkullSymbols = SLOT_SYMBOLS.filter(symbol => symbol.id !== "skull");
-  const matchSymbol = pickWeightedSlotSymbol(nonSkullSymbols, random);
+  const gruppe = getSlotMinGroup(reelCount);
+  const billig = SLOT_SYMBOLS.filter((s) => s.id === "dublone" || s.id === "papagei");
+  const treffer = pickWeightedSlotSymbol(billig, random);
+  const rest = SLOT_SYMBOLS.filter((s) => s.id !== "totenkopf" && s.id !== treffer.id);
 
-  // Zwei zufaellige Walzen-Positionen fuer das garantierte Paar -
-  // alles andere bliebe sonst zu vorhersehbar (immer Walze 1+2).
-  const pairPositions = new Set();
-  while (pairPositions.size < Math.min(2, reelCount)) {
-    pairPositions.add(Math.floor(random() * reelCount));
+  const plaetze = new Set();
+  while (plaetze.size < gruppe) {
+    plaetze.add(Math.floor(random() * reelCount));
   }
 
-  return Array.from({ length: reelCount }, (_, i) => {
-    if (pairPositions.has(i)) return matchSymbol;
-    // Uebrige Walzen: normale Gewichtung, aber OHNE Totenkopf - sonst
-    // koennte die Anzahl der Totenkoepfe die des garantierten Paares
-    // wieder einholen oder uebertreffen (Regel: bestCount > skullCount).
-    return pickWeightedSlotSymbol(nonSkullSymbols, random);
-  });
+  return Array.from({ length: reelCount }, (_, i) =>
+    plaetze.has(i) ? treffer : pickWeightedSlotSymbol(rest, random));
 }
 
-
-function scoreSlotReels(reels, bet) {
+/* Bewertet EIN Walzenbild. Gibt Vielfaches und Einstufung zurueck,
+   noch ohne Einsatz und ohne Freidreh. */
+function scoreSlotReels(reels) {
   const counts = {};
   let skullCount = 0;
-  reels.forEach(symbol => {
-    if (symbol.id === "skull") {
-      skullCount++;
-      return;
-    }
+
+  reels.forEach((symbol) => {
+    if (symbol.id === "totenkopf") { skullCount++; return; }
     counts[symbol.id] = (counts[symbol.id] || 0) + 1;
   });
 
   let bestId = null;
   let bestCount = 0;
-  Object.keys(counts).forEach(id => {
-    if (counts[id] > bestCount) {
-      bestCount = counts[id];
-      bestId = id;
-    }
+  Object.keys(counts).forEach((id) => {
+    if (counts[id] > bestCount) { bestCount = counts[id]; bestId = id; }
   });
 
-  let payout = 0;
-  let tier = null;
-
-  // Gewinn, sobald die groesste gleiche Symbolgruppe (ohne Totenkoepfe)
-  // die Anzahl der Totenkoepfe uebertrifft - statt frueher "Totenkopf
-  // irgendwo -> immer Verlust".
-  if (bestCount > skullCount) {
-    const rewardTable = SLOT_REWARD_TABLES_BY_COUNT[bestCount];
-    const reward = rewardTable ? rewardTable[bestId] : null;
-
-    if (reward) {
-      payout = Math.min(Math.round(bet * reward.multiplier), SLOT_MAX_SAFE_PAYOUT);
-      tier = reward.tier;
-    } else if (bestCount === 2) {
-      payout = Math.round(bet * getSlotPairMultiplier(reels.length));
-      tier = "pair";
-    }
+  const mindestens = getSlotMinGroup(reels.length);
+  if (bestCount < mindestens || bestCount <= skullCount) {
+    return { multiplier: 0, tier: null, bestId: null, bestCount, skullCount };
   }
 
-  return { reels, bet, win: payout > 0, payout, tier };
-}
+  // Bei einem Freidreh koennen mehr Walzen laufen, als in der
+  // Tabelle stehen - dann gilt die Zeile fuer die hoechste bekannte
+  // Walzenzahl, und eine groessere Gruppe zahlt je Treffer dreifach.
+  const tabelle = SLOT_AUSZAHLUNG[reels.length] || SLOT_AUSZAHLUNG[SLOT_REEL_COUNT_MAX];
+  const zeile = tabelle[bestId] || {};
+  const bekannt = Object.keys(zeile).map(Number);
+  const hoechste = bekannt.length ? Math.max(...bekannt) : 0;
 
+  let multiplier = zeile[bestCount];
+  if (multiplier === undefined && hoechste) {
+    multiplier = zeile[hoechste] * Math.pow(3, bestCount - hoechste);
+  }
+  if (!multiplier) {
+    return { multiplier: 0, tier: null, bestId: null, bestCount, skullCount };
+  }
+
+  return { multiplier, tier: getSlotTier(multiplier), bestId, bestCount, skullCount };
+}
 
 function calculateSlotResult(betAmount, random = Math.random, forcePity = false) {
   const bet = clampSlotBet(betAmount);
-  const reelCount = getSlotReelCountForBet(bet);
+  const startWalzen = getSlotReelCountForBet(bet);
 
-  let reels = generateRandomSlotReels(reelCount, random);
-  let result = scoreSlotReels(reels, bet);
+  let reels = generateRandomSlotReels(startWalzen, random);
+  let bewertung = scoreSlotReels(reels);
 
-  // Pity nur eingreifen lassen, wenn der normale Dreh sonst ein
-  // Verlust gewesen waere - ein natuerlicher (evtl. sogar groesserer)
-  // Gewinn wird dadurch nie "heruntergestuft".
-  if (!result.win && forcePity) {
-    reels = generateForcedWinSlotReels(reelCount, random);
-    result = scoreSlotReels(reels, bet);
+  // Pity greift nur ein, wenn der Dreh sonst eine Niete waere - ein
+  // natuerlicher (evtl. groesserer) Gewinn wird nie heruntergestuft.
+  if (bewertung.multiplier === 0 && forcePity) {
+    reels = generateForcedWinSlotReels(startWalzen, random);
+    bewertung = scoreSlotReels(reels);
   }
 
-  const reelStopTimesMs = buildSlotReelStopTimesMs(reelCount);
+  const durchgaenge = [{ reels, ...bewertung, walzen: reels.length }];
+  let payout = Math.round(bet * bewertung.multiplier);
+  let besteStufe = bewertung.tier;
+
+  // Freidrehs: alle Walzen gleich -> kostenloser Dreh mit vier
+  // Walzen mehr, Gewinn kommt obendrauf.
+  let letzte = reels;
+  let kette = 0;
+  while (kette < SLOT_FREIDREH_MAX_KETTE && alleWalzenGleich(letzte)) {
+    const naechste = Math.min(SLOT_FREIDREH_MAX_WALZEN,
+                              letzte.length + SLOT_FREIDREH_EXTRA_WALZEN);
+    if (naechste <= letzte.length) break;   // Deckel erreicht
+
+    const frei = generateRandomSlotReels(naechste, random);
+    const bew = scoreSlotReels(frei);
+    durchgaenge.push({ reels: frei, ...bew, walzen: frei.length, freidreh: true });
+    payout += Math.round(bet * bew.multiplier);
+    if (bew.tier && (!besteStufe || bew.multiplier > bewertung.multiplier)) besteStufe = bew.tier;
+    letzte = frei;
+    kette++;
+  }
+
+  payout = Math.min(payout, SLOT_MAX_SAFE_PAYOUT);
+
+  const letzterDurchgang = durchgaenge[durchgaenge.length - 1];
+  const reelStopTimesMs = buildSlotReelStopTimesMs(letzterDurchgang.reels.length);
 
   return Object.freeze({
-    ...result,
-    reelCount,
+    reels: letzterDurchgang.reels,
+    durchgaenge,
+    freidrehs: durchgaenge.length - 1,
+    bet,
+    win: payout > 0,
+    payout,
+    tier: besteStufe,
+    reelCount: letzterDurchgang.reels.length,
     reelStopTimesMs,
     resultRevealDelayMs: reelStopTimesMs[reelStopTimesMs.length - 1] + 250,
   });
@@ -317,38 +346,23 @@ function calculateSlotResult(betAmount, random = Math.random, forcePity = false)
 /* ------------------------------------------------------------
    CLIENT-API
    ------------------------------------------------------------
-   play() startet KEINE eigene Auszahlung.
-   Das tatsächliche Ergebnis kommt erst durch den serverseitig
-   geprüften Schreibvorgang zustande, siehe spielothek.js.
+   play() zahlt nichts aus. Das tatsaechliche Ergebnis entsteht
+   erst durch den serverseitig geprueften Schreibvorgang in
+   spielothek.js.
 ------------------------------------------------------------ */
 
-window.SPIELOTHEK_GAME_HANDLERS =
-  window.SPIELOTHEK_GAME_HANDLERS || {};
+window.SPIELOTHEK_GAME_HANDLERS = window.SPIELOTHEK_GAME_HANDLERS || {};
 
 window.SPIELOTHEK_GAME_HANDLERS.slot = {
-  // Frei waehlbarer Einsatz statt eines festen betCost - spielothek.js
-  // zeigt bei "variableBet: true" einen Einsatz-Regler statt des alten
-  // statischen Hinweistexts, siehe renderSpielothekPage().
   variableBet: true,
   minBet: SLOT_MIN_BET,
   maxBet: SLOT_MAX_BET,
   betStep: SLOT_BET_STEP,
   defaultBet: SLOT_DEFAULT_BET,
 
-  // Nur für Server-Code / Tests.
+  // Nur fuer Tests und Server-Code.
   calculateResult: calculateSlotResult,
 
-  /*
-   * Der Browser fordert eine Runde mit einem selbst gewaehlten
-   * Einsatz an. Keine Dublonenänderung hier - das Ergebnis wird nur
-   * BERECHNET, die eigentliche Gutschrift/Abbuchung passiert danach
-   * in spielothek.js ueber einen server-geprueften Schreibvorgang
-   * (Supabase RLS), der den Kontostand-Sprung pro Runde begrenzt -
-   * das ist die eigentliche Vertrauensgrenze, siehe Kommentar am
-   * Dateianfang.
-   *
-   * Verwaltet zusaetzlich den Pity-Zaehler (siehe Abschnitt oben).
-   */
   play: function requestSlotPlay(betAmount) {
     const spinsSinceWin = getSlotSpinsSinceWin();
     const forcePity = spinsSinceWin + 1 >= SLOT_PITY_SPIN_THRESHOLD;
@@ -361,7 +375,6 @@ window.SPIELOTHEK_GAME_HANDLERS.slot = {
   },
 
   buildResultHtml: buildSlotResultHtml,
-
   getRulesHtml: getSlotRulesHtml,
 };
 
@@ -369,130 +382,127 @@ window.SPIELOTHEK_GAME_HANDLERS.slot = {
 /* ------------------------------------------------------------
    DARSTELLUNG
 ------------------------------------------------------------ */
+const SLOT_SPIN_FILLER_COUNT = 14;
 
 function buildSlotReelStripHtml(finalSymbol) {
-  const fillers = Array.from(
-    { length: SLOT_SPIN_FILLER_COUNT },
-    () => pickWeightedSlotSymbol(SLOT_SYMBOLS)
-  );
+  const fillers = Array.from({ length: SLOT_SPIN_FILLER_COUNT },
+    () => pickWeightedSlotSymbol(SLOT_SYMBOLS));
 
-  return [
-    ...fillers,
-    finalSymbol
-  ]
-    .map(symbol => `<span>${symbol.emoji}</span>`)
+  return [...fillers, finalSymbol]
+    .map((symbol) => `<span>${symbol.emoji}</span>`)
     .join("");
 }
 
-
 function buildSlotResultHtml(result) {
-  const reels = result.reels
-    .map((symbol, index) => `
-      <span
-        class="spielothek-slot-symbol spielothek-slot-spin"
-        style="--slot-reel-duration:${result.reelStopTimesMs[index]}ms"
-      >
-        <span class="spielothek-slot-strip">
-          ${buildSlotReelStripHtml(symbol)}
-        </span>
-      </span>
-    `)
-    .join("");
+  // Jeder Durchgang bekommt eine eigene Reihe - so sieht man beim
+  // Freidreh, woher der Gewinn kam, statt nur das letzte Bild.
+  return (result.durchgaenge || [{ reels: result.reels }])
+    .map((durchgang, nr) => {
+      const stops = buildSlotReelStopTimesMs(durchgang.reels.length);
+      const reels = durchgang.reels
+        .map((symbol, index) => `
+          <span
+            class="spielothek-slot-symbol spielothek-slot-spin"
+            style="--slot-reel-duration:${stops[index]}ms"
+          >
+            <span class="spielothek-slot-strip">
+              ${buildSlotReelStripHtml(symbol)}
+            </span>
+          </span>
+        `)
+        .join("");
 
-  return `
-    <div class="spielothek-slot-reels spielothek-slot-reels-tier-${result.tier || "none"}">
-      ${reels}
-    </div>
-  `;
+      const breit = durchgang.reels.length > 6 ? " spielothek-slot-reels-breit" : "";
+      const kopf = durchgang.freidreh
+        ? `<p class="spielothek-freidreh-kopf">🎁 Freidreh ${nr} — ${durchgang.reels.length} Walzen, geschenkt</p>`
+        : "";
+
+      return `
+        ${kopf}
+        <div class="spielothek-slot-reels spielothek-slot-reels-tier-${durchgang.tier || "none"}${breit}">
+          ${reels}
+        </div>
+      `;
+    })
+    .join("");
 }
 
 
 function getSlotRulesHtml(lang) {
   const isEn = lang === "en";
 
-  const tripleRows = [
-    { symbols: "🍒🍒🍒 / 🍋🍋🍋", x: `${SLOT_TRIPLE_REWARDS.cherry.multiplier}–${SLOT_TRIPLE_REWARDS.lemon.multiplier}` },
-    { symbols: "🔔🔔🔔", x: SLOT_TRIPLE_REWARDS.bell.multiplier },
-    { symbols: "💎💎💎", x: SLOT_TRIPLE_REWARDS.diamond.multiplier },
-    { symbols: "7️⃣7️⃣7️⃣", x: SLOT_TRIPLE_REWARDS.seven.multiplier },
-    { symbols: "🔥🔥🔥", x: SLOT_TRIPLE_REWARDS.fire.multiplier, jackpot: true },
-  ];
+  const name = {
+    dublone:   isEn ? "Doubloon"    : "Dublone",
+    papagei:   isEn ? "Parrot"      : "Papagei",
+    kompass:   isEn ? "Compass"     : "Kompass",
+    saebel:    isEn ? "Sabre"       : "Säbel",
+    edelstein: isEn ? "Gem"         : "Edelstein",
+    truhe:     isEn ? "Chest"       : "Truhe",
+    helm:      isEn ? "Fire helmet" : "Feuerhelm",
+  };
+  const emoji = {};
+  SLOT_SYMBOLS.forEach((s) => { emoji[s.id] = s.emoji; });
 
-  const quadRows = [
-    { symbols: "🍒🍒🍒🍒 / 🍋🍋🍋🍋", x: `${SLOT_QUAD_REWARDS.cherry.multiplier}–${SLOT_QUAD_REWARDS.lemon.multiplier}` },
-    { symbols: "🔔🔔🔔🔔", x: SLOT_QUAD_REWARDS.bell.multiplier },
-    { symbols: "💎💎💎💎", x: SLOT_QUAD_REWARDS.diamond.multiplier },
-    { symbols: "7️⃣7️⃣7️⃣7️⃣", x: SLOT_QUAD_REWARDS.seven.multiplier },
-    { symbols: "🔥🔥🔥🔥", x: SLOT_QUAD_REWARDS.fire.multiplier, jackpot: true },
-  ];
+  /* Eine Tabelle je Walzenzahl: was zahlt welche Gruppengroesse.
+     Die Zahlen kommen direkt aus SLOT_AUSZAHLUNG - die Regeln
+     koennen damit nie von der tatsaechlichen Auszahlung abweichen. */
+  const tabelle = (n) => {
+    const spalten = [];
+    for (let k = getSlotMinGroup(n); k <= n; k++) spalten.push(k);
 
-  const fiveRows = [
-    { symbols: "🍒🍒🍒🍒🍒 / 🍋🍋🍋🍋🍋", x: `${SLOT_FIVE_REWARDS.cherry.multiplier}–${SLOT_FIVE_REWARDS.lemon.multiplier}` },
-    { symbols: "🔔🔔🔔🔔🔔", x: SLOT_FIVE_REWARDS.bell.multiplier },
-    { symbols: "💎💎💎💎💎", x: SLOT_FIVE_REWARDS.diamond.multiplier },
-    { symbols: "7️⃣7️⃣7️⃣7️⃣7️⃣", x: SLOT_FIVE_REWARDS.seven.multiplier },
-    { symbols: "🔥🔥🔥🔥🔥", x: SLOT_FIVE_REWARDS.fire.multiplier, jackpot: true },
-  ];
+    const kopf = spalten
+      .map((k) => `<th>${k}× ${isEn ? "same" : "gleich"}</th>`)
+      .join("");
 
-  const sixRows = [
-    { symbols: "🍒×6 / 🍋×6", x: `${SLOT_SIX_REWARDS.cherry.multiplier}–${SLOT_SIX_REWARDS.lemon.multiplier}` },
-    { symbols: "🔔×6", x: SLOT_SIX_REWARDS.bell.multiplier },
-    { symbols: "💎×6", x: SLOT_SIX_REWARDS.diamond.multiplier },
-    { symbols: "7️⃣×6", x: SLOT_SIX_REWARDS.seven.multiplier },
-    { symbols: "🔥×6", x: SLOT_SIX_REWARDS.fire.multiplier, jackpot: true },
-  ];
+    const zeilen = ["dublone", "papagei", "kompass", "saebel", "edelstein", "truhe", "helm"]
+      .map((id) => {
+        const zellen = spalten
+          .map((k) => `<td>${SLOT_AUSZAHLUNG[n][id][k]}×</td>`)
+          .join("");
+        return `<tr><th scope="row">${emoji[id]} ${name[id]}</th>${zellen}</tr>`;
+      })
+      .join("");
 
-  const renderRows = (rows, bigLabelDe, bigLabelEn) => rows
-    .map(row => `
-      <li>
-        <span class="spielothek-rules-symbols">${row.symbols}</span>
-        <strong>${row.jackpot ? "JACKPOT" : (isEn ? bigLabelEn : bigLabelDe)}</strong>
-        → ${row.x}× ${isEn ? "your bet" : "Einsatz"}
-      </li>
-    `)
-    .join("");
-
-  const betLine = isEn
-    ? `Choose your own bet (${SLOT_MIN_BET}–${SLOT_MAX_BET} 🪙, in steps of ${SLOT_BET_STEP}) - the higher the bet, the higher the payout AND the more reels spin (2 at ${SLOT_MIN_BET}, up to ${SLOT_REEL_COUNT_MAX} at ${SLOT_MAX_BET}).`
-    : `Du wählst deinen Einsatz selbst (${SLOT_MIN_BET}–${SLOT_MAX_BET} 🪙, in Schritten von ${SLOT_BET_STEP}) - je höher der Einsatz, desto höher der Gewinn UND desto mehr Walzen drehen sich mit (2 bei ${SLOT_MIN_BET}, bis zu ${SLOT_REEL_COUNT_MAX} bei ${SLOT_MAX_BET}).`;
-
-  const pityLine = isEn
-    ? `No win for ${SLOT_PITY_SPIN_THRESHOLD} spins in a row? Your next spin is guaranteed to win.`
-    : `${SLOT_PITY_SPIN_THRESHOLD} Spins in Folge ohne Gewinn? Dein nächster Dreh gewinnt garantiert.`;
-
-  return isEn
-    ? `
-      <p class="spielothek-rules-bet-hint">${betLine}</p>
-      <p class="spielothek-rules-bet-hint">${pityLine}</p>
-      <p><strong>6 matching symbols (rarest)</strong></p>
-      <ul class="spielothek-rules-tiers">${renderRows(sixRows, "Win", "Win")}</ul>
-      <p><strong>5 matching symbols</strong></p>
-      <ul class="spielothek-rules-tiers">${renderRows(fiveRows, "Win", "Win")}</ul>
-      <p><strong>4 matching symbols</strong></p>
-      <ul class="spielothek-rules-tiers">${renderRows(quadRows, "Win", "Win")}</ul>
-      <p><strong>3 matching symbols</strong></p>
-      <ul class="spielothek-rules-tiers">${renderRows(tripleRows, "Win", "Win")}</ul>
-      <ul>
-        <li>💀 More matching symbols than skulls → still a win, skulls just don't count toward the match</li>
-        <li>Two matching symbols → ${getSlotPairMultiplier(SLOT_REEL_COUNT_MIN)}×–${getSlotPairMultiplier(SLOT_REEL_COUNT_MAX)}× your bet (higher bet = higher multiplier)</li>
-        <li>Otherwise → loss</li>
-      </ul>
-    `
-    : `
-      <p class="spielothek-rules-bet-hint">${betLine}</p>
-      <p class="spielothek-rules-bet-hint">${pityLine}</p>
-      <p><strong>6 gleiche Symbole (am seltensten)</strong></p>
-      <ul class="spielothek-rules-tiers">${renderRows(sixRows, "Gewinn", "Gewinn")}</ul>
-      <p><strong>5 gleiche Symbole</strong></p>
-      <ul class="spielothek-rules-tiers">${renderRows(fiveRows, "Gewinn", "Gewinn")}</ul>
-      <p><strong>4 gleiche Symbole</strong></p>
-      <ul class="spielothek-rules-tiers">${renderRows(quadRows, "Gewinn", "Gewinn")}</ul>
-      <p><strong>3 gleiche Symbole</strong></p>
-      <ul class="spielothek-rules-tiers">${renderRows(tripleRows, "Gewinn", "Gewinn")}</ul>
-      <ul>
-        <li>💀 Mehr gleiche Symbole als Totenköpfe → trotzdem Gewinn, Totenköpfe zählen einfach nicht zum Match</li>
-        <li>Zwei gleiche Symbole → ${getSlotPairMultiplier(SLOT_REEL_COUNT_MIN)}×–${getSlotPairMultiplier(SLOT_REEL_COUNT_MAX)}× Einsatz (höherer Einsatz = höherer Multiplikator)</li>
-        <li>Sonst → Verlust</li>
-      </ul>
+    return `
+      <table class="spielothek-regeln-tabelle">
+        <caption>${n} ${isEn ? "reels" : "Walzen"} — ${isEn ? "bet" : "Einsatz"} ${
+          n === 3 ? "10–30" : n === 4 ? "40–50" : n === 5 ? "60–80" : "90–100"
+        } 🪙</caption>
+        <thead><tr><th>${isEn ? "Symbol" : "Symbol"}</th>${kopf}</tr></thead>
+        <tbody>${zeilen}</tbody>
+      </table>
     `;
+  };
+
+  const regel = isEn
+    ? `You win when <strong>at least half the reels</strong> show the same symbol — and there are more of them than skulls ${emoji.totenkopf}.`
+    : `Du gewinnst, wenn <strong>mindestens die Hälfte der Walzen</strong> dasselbe Symbol zeigt — und es mehr sind als Totenköpfe ${emoji.totenkopf}.`;
+
+  const einsatz = isEn
+    ? `Your bet (${SLOT_MIN_BET}–${SLOT_MAX_BET} 🪙, steps of ${SLOT_BET_STEP}) decides how many reels spin: 3 up to 30, 4 up to 50, 5 up to 80, 6 above that. Every bet pays back about the same on average — a bigger bet buys bigger prizes, not better odds.`
+    : `Dein Einsatz (${SLOT_MIN_BET}–${SLOT_MAX_BET} 🪙, in Schritten von ${SLOT_BET_STEP}) bestimmt die Zahl der Walzen: 3 bis 30, 4 bis 50, 5 bis 80, 6 darüber. Im Schnitt zahlt jeder Einsatz gleich gut zurück — ein höherer Einsatz kauft größere Preise, keine besseren Chancen.`;
+
+  const verlust = isEn
+    ? `<strong>On a loss</strong> you don't lose your bet — instead a share of your balance goes overboard: 1 % below 500 doubloons, 3 % below 2000, 5 % above. Below 50 doubloons nothing is taken beyond the bet.`
+    : `<strong>Bei einer Niete</strong> verlierst du nicht den Einsatz — stattdessen geht ein Teil deines Guthabens über Bord: 1 % unter 500 Dublonen, 3 % unter 2000, 5 % darüber. Unter 50 Dublonen wird nichts über den Einsatz hinaus genommen.`;
+
+  const freidreh = isEn
+    ? `<strong>All reels the same?</strong> You get a free spin with ${SLOT_FREIDREH_EXTRA_WALZEN} extra reels on top — winnings add up, up to ${SLOT_FREIDREH_MAX_KETTE} in a row.`
+    : `<strong>Alle Walzen gleich?</strong> Dann gibt es einen Freidreh mit ${SLOT_FREIDREH_EXTRA_WALZEN} Walzen mehr obendrauf — die Gewinne addieren sich, höchstens ${SLOT_FREIDREH_MAX_KETTE} am Stück.`;
+
+  const pity = isEn
+    ? `No win for ${SLOT_PITY_SPIN_THRESHOLD} spins in a row? The next one wins for sure — a small one.`
+    : `${SLOT_PITY_SPIN_THRESHOLD} Drehungen in Folge ohne Gewinn? Die nächste gewinnt garantiert — klein, aber sicher.`;
+
+  return `
+    <p class="spielothek-rules-bet-hint">${regel}</p>
+    <p class="spielothek-rules-bet-hint">${einsatz}</p>
+    <p class="spielothek-rules-bet-hint">${verlust}</p>
+    <p class="spielothek-rules-bet-hint">${freidreh}</p>
+    <p class="spielothek-rules-bet-hint">${pity}</p>
+    ${tabelle(3)}
+    ${tabelle(4)}
+    ${tabelle(5)}
+    ${tabelle(6)}
+  `;
 }
