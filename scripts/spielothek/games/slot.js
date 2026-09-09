@@ -20,7 +20,7 @@
    Paar-Auszahlung: sie zahlte mindestens den doppelten Einsatz,
    trat bei sechs Walzen aber in fast vier von fuenf Drehungen ein.
 
-   Jetzt liegt der Rueckfluss bei JEDEM Einsatz bei rund 110 % -
+   Jetzt liegt der Rueckfluss bei JEDEM Einsatz bei rund 132 % -
    exakt ausgerechnet ueber alle Kombinationen, nicht geschaetzt.
    Die Zahlen unten sind das Ergebnis dieser Rechnung; wer sie
    aendert, muss sie neu rechnen (scratchpad-Skript im Commit,
@@ -32,8 +32,8 @@
    eine glatt fallende Kurve braeuchte eine Regel wie "Vorsprung
    vor den Totenkoepfen: 1 bei 3 Walzen, 2 bei 4, 1 bei 5, 3 bei
    6". Das versteht niemand mehr. Stattdessen kommt der Reiz des
-   hohen Einsatzes aus der Auszahlungshoehe (Feuerhelm: 110-fach
-   bei drei Walzen, 980-fach bei sechs).
+   hohen Einsatzes aus der Auszahlungshoehe (Feuerhelm: 135-fach
+   bei drei Walzen, 1175-fach bei sechs).
 ============================================================ */
 
 /* Piratenthema statt Fruechten - die alten Kirschen und Zitronen
@@ -79,54 +79,62 @@ function getSlotMinGroup(reelCount) {
    ------------------------------------------------------------
    Hergeleitet, nicht geraten: Grundwert (Gesamtgewicht /
    Symbolgewicht) hoch 0,9, mal 3 je Treffer ueber dem Minimum,
-   danach je Walzenzahl so skaliert, dass der Rueckfluss bei 110 %
-   landet. Nach dem Runden auf glatte Werte bleiben 107-113 %. */
+   danach je Walzenzahl so skaliert, dass der Rueckfluss bei 132 %
+   landet. Nach dem Runden auf glatte Werte bleiben 131-132 %.
+
+   Von urspruenglich 110 % auf 132 % angehoben (Auftrag: "erhoehe den
+   gewinn", rund 20 % mehr). Zusammen mit dem Prozentabzug bei Nieten
+   ergibt das je nach Guthaben immer noch ein Minus fuer grosse
+   Konten - siehe spielothekVerlustAbzug() in spielothek.js. */
 const SLOT_AUSZAHLUNG = Object.freeze({
   3: {
-    dublone: { 2: 2,   3: 6 },
-    papagei: { 2: 2.5, 3: 8 },
-    kompass: { 2: 3.5, 3: 11 },
-    saebel:  { 2: 5,   3: 15 },
-    edelstein: { 2: 9, 3: 26 },
-    truhe:   { 2: 17,  3: 52 },
-    helm:    { 2: 37,  3: 110 },
+    dublone: { 2: 2.5, 3: 7.5 },
+    papagei: { 2: 3,   3: 9.5 },
+    kompass: { 2: 4.5, 3: 13 },
+    saebel:  { 2: 6,   3: 18 },
+    edelstein: { 2: 11, 3: 32 },
+    truhe:   { 2: 21,  3: 63 },
+    helm:    { 2: 45,  3: 135 },
   },
   4: {
-    dublone: { 2: 1,   3: 3.5, 4: 10 },
-    papagei: { 2: 1.5, 3: 4.5, 4: 13 },
-    kompass: { 2: 2,   3: 6,   4: 18 },
-    saebel:  { 2: 3,   3: 8.5, 4: 25 },
-    edelstein: { 2: 5, 3: 14,  4: 43 },
-    truhe:   { 2: 9.5, 3: 29,  4: 86 },
-    helm:    { 2: 21,  3: 62,  4: 185 },
+    dublone: { 2: 1.5, 3: 4,  4: 12 },
+    papagei: { 2: 1.5, 3: 5,  4: 16 },
+    kompass: { 2: 2.5, 3: 7,  4: 22 },
+    saebel:  { 2: 3.5, 3: 10, 4: 30 },
+    edelstein: { 2: 6, 3: 17, 4: 52 },
+    truhe:   { 2: 11,  3: 34, 4: 105 },
+    helm:    { 2: 25,  3: 74, 4: 220 },
   },
   5: {
-    dublone: { 3: 4,   4: 12,  5: 35 },
-    papagei: { 3: 5,   4: 15,  5: 44 },
-    kompass: { 3: 7,   4: 20,  5: 61 },
-    saebel:  { 3: 9.5, 4: 28,  5: 85 },
-    edelstein: { 3: 16, 4: 49, 5: 145 },
-    truhe:   { 3: 32,  4: 97,  5: 290 },
-    helm:    { 3: 70,  4: 210, 5: 625 },
+    dublone: { 3: 4.5, 4: 14,  5: 41 },
+    papagei: { 3: 6,   4: 18,  5: 53 },
+    kompass: { 3: 8,   4: 24,  5: 73 },
+    saebel:  { 3: 11,  4: 34,  5: 100 },
+    edelstein: { 3: 20, 4: 59, 5: 175 },
+    truhe:   { 3: 39,  4: 115, 5: 350 },
+    helm:    { 3: 83,  4: 250, 5: 750 },
   },
   6: {
-    dublone: { 3: 2,   4: 6,   5: 18,  6: 54 },
-    papagei: { 3: 2.5, 4: 7.5, 5: 23,  6: 69 },
-    kompass: { 3: 3.5, 4: 11,  5: 32,  6: 95 },
-    saebel:  { 3: 5,   4: 15,  5: 45,  6: 135 },
-    edelstein: { 3: 8.5, 4: 26, 5: 77, 6: 230 },
-    truhe:   { 3: 17,  4: 51,  5: 155, 6: 460 },
-    helm:    { 3: 36,  4: 110, 5: 325, 6: 980 },
+    dublone: { 3: 2.5, 4: 7,   5: 22,  6: 65 },
+    papagei: { 3: 3,   4: 9,   5: 28,  6: 83 },
+    kompass: { 3: 4,   4: 13,  5: 38,  6: 115 },
+    saebel:  { 3: 6,   4: 18,  5: 53,  6: 160 },
+    edelstein: { 3: 10, 4: 31, 5: 92,  6: 275 },
+    truhe:   { 3: 20,  4: 61,  5: 185, 6: 550 },
+    helm:    { 3: 44,  4: 130, 5: 390, 6: 1175 },
   },
 });
 
 /* Grobe Einstufung fuer Konfetti und Aendii-Zitate (spielothek.js
    wertet nur diese Namen aus, die Zahlen dahinter sind egal). */
 function getSlotTier(multiplier) {
-  if (multiplier >= 200) return "jackpot";
-  if (multiplier >= 50) return "veryBig";
-  if (multiplier >= 15) return "big";
-  if (multiplier >= 5) return "medium";
+  // Grenzen um denselben Faktor mitgezogen wie die Tabelle selbst,
+  // damit dieselben Ergebnisse weiterhin dieselbe Stufe (und damit
+  // dasselbe Konfetti) ausloesen wie vorher.
+  if (multiplier >= 240) return "jackpot";
+  if (multiplier >= 60) return "veryBig";
+  if (multiplier >= 18) return "big";
+  if (multiplier >= 6) return "medium";
   return "small";
 }
 
@@ -265,8 +273,14 @@ function scoreSlotReels(reels) {
 
   const mindestens = getSlotMinGroup(reels.length);
   if (bestCount < mindestens || bestCount <= skullCount) {
-    return { multiplier: 0, tier: null, bestId: null, bestCount, skullCount };
+    return { multiplier: 0, tier: null, bestId: null, bestCount, skullCount, trefferIndex: [] };
   }
+
+  /* Welche Walzen den Treffer gebracht haben - die Anzeige hebt genau
+     diese hervor, statt dass jeder selbst suchen muss, warum das ein
+     Gewinn war. */
+  const trefferIndex = [];
+  reels.forEach((symbol, i) => { if (symbol.id === bestId) trefferIndex.push(i); });
 
   // Bei einem Freidreh koennen mehr Walzen laufen, als in der
   // Tabelle stehen - dann gilt die Zeile fuer die hoechste bekannte
@@ -281,10 +295,10 @@ function scoreSlotReels(reels) {
     multiplier = zeile[hoechste] * Math.pow(3, bestCount - hoechste);
   }
   if (!multiplier) {
-    return { multiplier: 0, tier: null, bestId: null, bestCount, skullCount };
+    return { multiplier: 0, tier: null, bestId: null, bestCount, skullCount, trefferIndex: [] };
   }
 
-  return { multiplier, tier: getSlotTier(multiplier), bestId, bestCount, skullCount };
+  return { multiplier, tier: getSlotTier(multiplier), bestId, bestCount, skullCount, trefferIndex };
 }
 
 function calculateSlotResult(betAmount, random = Math.random, forcePity = false) {
@@ -399,27 +413,38 @@ function buildSlotResultHtml(result) {
   return (result.durchgaenge || [{ reels: result.reels }])
     .map((durchgang, nr) => {
       const stops = buildSlotReelStopTimesMs(durchgang.reels.length);
+      const treffer = durchgang.trefferIndex || [];
       const reels = durchgang.reels
-        .map((symbol, index) => `
+        .map((symbol, index) => {
+          /* Zwei Markierungen fuer die Darstellung: die Walzen, die den
+             Treffer gebracht haben (leuchten nach dem Landen auf), und
+             die Totenkoepfe (lachen bei einer Niete). */
+          const marken = [
+            treffer.includes(index) ? " ist-treffer" : "",
+            symbol.id === "totenkopf" ? " ist-totenkopf" : "",
+          ].join("");
+          return `
           <span
-            class="spielothek-slot-symbol spielothek-slot-spin"
+            class="spielothek-slot-symbol spielothek-slot-spin${marken}"
             style="--slot-reel-duration:${stops[index]}ms"
           >
             <span class="spielothek-slot-strip">
               ${buildSlotReelStripHtml(symbol)}
             </span>
           </span>
-        `)
+        `;
+        })
         .join("");
 
       const breit = durchgang.reels.length > 6 ? " spielothek-slot-reels-breit" : "";
+      const gewonnen = durchgang.multiplier > 0 ? " hat-treffer" : "";
       const kopf = durchgang.freidreh
         ? `<p class="spielothek-freidreh-kopf">🎁 Freidreh ${nr} — ${durchgang.reels.length} Walzen, geschenkt</p>`
         : "";
 
       return `
         ${kopf}
-        <div class="spielothek-slot-reels spielothek-slot-reels-tier-${durchgang.tier || "none"}${breit}">
+        <div class="spielothek-slot-reels spielothek-slot-reels-tier-${durchgang.tier || "none"}${breit}${gewonnen}">
           ${reels}
         </div>
       `;
@@ -482,9 +507,13 @@ function getSlotRulesHtml(lang) {
     ? `Your bet (${SLOT_MIN_BET}–${SLOT_MAX_BET} 🪙, steps of ${SLOT_BET_STEP}) decides how many reels spin: 3 up to 30, 4 up to 50, 5 up to 80, 6 above that. Every bet pays back about the same on average — a bigger bet buys bigger prizes, not better odds.`
     : `Dein Einsatz (${SLOT_MIN_BET}–${SLOT_MAX_BET} 🪙, in Schritten von ${SLOT_BET_STEP}) bestimmt die Zahl der Walzen: 3 bis 30, 4 bis 50, 5 bis 80, 6 darüber. Im Schnitt zahlt jeder Einsatz gleich gut zurück — ein höherer Einsatz kauft größere Preise, keine besseren Chancen.`;
 
+  /* Die Staffelung steht in spielothek.js (SPIELOTHEK_VERLUST_STUFEN).
+     Hier bewusst als Text und nicht aus der Konstante gebaut: die
+     Regeln sollen die Stufen in Worten erklaeren, nicht nur Zahlen
+     auflisten. Wer dort etwas aendert, muss diesen Satz mitziehen. */
   const verlust = isEn
-    ? `<strong>On a loss</strong> you don't lose your bet — instead a share of your balance goes overboard: 1 % below 500 doubloons, 3 % below 2000, 5 % above. Below 50 doubloons nothing is taken beyond the bet.`
-    : `<strong>Bei einer Niete</strong> verlierst du nicht den Einsatz — stattdessen geht ein Teil deines Guthabens über Bord: 1 % unter 500 Dublonen, 3 % unter 2000, 5 % darüber. Unter 50 Dublonen wird nichts über den Einsatz hinaus genommen.`;
+    ? `<strong>On a loss</strong> you don't lose your bet — instead a share of your balance goes overboard: 1 % below 500 doubloons, 3 % below 2000, 5 % below 10 000, 8 % below 25 000, 12 % above. Below 200 doubloons nothing is taken beyond the bet.`
+    : `<strong>Bei einer Niete</strong> verlierst du nicht den Einsatz — stattdessen geht ein Teil deines Guthabens über Bord: 1 % unter 500 Dublonen, 3 % unter 2000, 5 % unter 10 000, 8 % unter 25 000, 12 % darüber. Unter 200 Dublonen wird nichts über den Einsatz hinaus genommen.`;
 
   const freidreh = isEn
     ? `<strong>All reels the same?</strong> You get a free spin with ${SLOT_FREIDREH_EXTRA_WALZEN} extra reels on top — winnings add up, up to ${SLOT_FREIDREH_MAX_KETTE} in a row.`

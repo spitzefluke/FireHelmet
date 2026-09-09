@@ -212,6 +212,14 @@ async function playSpielothekGame() {
   spielothekBusy = true;
   const playBtn = document.getElementById("spielothek-play-btn");
   if (playBtn) playBtn.disabled = true;
+
+  // Hebel sichtbar herunterziehen und wieder hochschnellen lassen.
+  const hebelEl = document.getElementById("spielothek-hebel");
+  if (hebelEl) {
+    hebelEl.classList.remove("ist-gezogen");
+    void hebelEl.offsetWidth;   // Neustart der Animation erzwingen
+    hebelEl.classList.add("ist-gezogen");
+  }
   if (statusEl) statusEl.textContent = "";
 
   try {
@@ -456,26 +464,34 @@ async function refreshSpielothekCurrencyDisplay() {
    ein Anteil des Guthabens - gestaffelt, damit Anfaenger geschont
    und Horter gebremst werden:
 
-     unter   500 Dublonen ->  1 %
-     unter  2000 Dublonen ->  3 %
-     darueber             ->  5 %
+     unter    500 Dublonen ->   1 %
+     unter   2000 Dublonen ->   3 %
+     unter  10000 Dublonen ->   5 %
+     unter  25000 Dublonen ->   8 %
+     darueber              ->  12 %
 
-   Unter 50 Dublonen wird gar kein Prozentabzug faellig, dann
+   Unter 200 Dublonen wird gar kein Prozentabzug faellig, dann
    kostet die Niete nur den Einsatz - sonst klebt jemand mit
    wenigen Dublonen endlos knapp ueber null fest und kann nicht
    mehr mitspielen.
 
-   Wirkung (nachgerechnet, 3 Walzen, Einsatz 20): wer 300 Dublonen
-   hat, gewinnt im Schnitt 13 pro Drehung dazu; wer 1000 hat,
-   verliert 5. Genau die gewuenschte Bremse gegen die
-   Dublonen-Schwemme, ohne Neue abzuwuergen.
+   WARUM DIE OBEREN STUFEN: am 09.09.2026 sah die echte Verteilung
+   so aus - 31 Spieler, 105.223 Dublonen im Umlauf, davon 61.320
+   und 37.021 auf ZWEI Konten (zusammen 93 %). Neunzehn Spieler
+   lagen unter 50. Eine Staffel, die bei 2000 endet, haette diese
+   beiden Konten also mit demselben Satz gebremst wie jemanden mit
+   2001 Dublonen - viel zu schwach, um die Konzentration je wieder
+   aufzuloesen. Bestehende Guthaben werden bewusst NICHT angetastet;
+   die Bremse wirkt nur beim Weiterspielen.
 ------------------------------------------------------ */
 const SPIELOTHEK_VERLUST_STUFEN = [
   { bis: 500,       anteil: 0.01 },
   { bis: 2000,      anteil: 0.03 },
-  { bis: Infinity,  anteil: 0.05 },
+  { bis: 10000,     anteil: 0.05 },
+  { bis: 25000,     anteil: 0.08 },
+  { bis: Infinity,  anteil: 0.12 },
 ];
-const SPIELOTHEK_VERLUST_FREIGRENZE = 50;
+const SPIELOTHEK_VERLUST_FREIGRENZE = 200;
 
 function spielothekVerlustAnteil(guthaben) {
   const stufe = SPIELOTHEK_VERLUST_STUFEN.find((s) => guthaben < s.bis);
@@ -627,6 +643,51 @@ async function renderSpielothekResult(game, handler, result, betCost, angewandte
     void stageEl.offsetWidth;
     stageEl.classList.add(result.win ? "spielothek-stage-win" : "spielothek-stage-lose");
   }
+
+  /* Verlust-Auftritt in drei Teilen (siehe css/20-spiele.css):
+     die Totenkoepfe in den Walzen fangen an zu lachen, kurz darauf
+     sacken alle Walzen grau nach unten weg, und an der Dublonen-
+     Anzeige rieseln Muenzen davon. Alles nur bei echter Bewegung -
+     bei prefers-reduced-motion bleibt es beim Text. */
+  if (!result.win && !reduceMotion) {
+    resultEl.querySelectorAll(".spielothek-slot-reels").forEach((reihe) => {
+      reihe.classList.add("ist-verloren");
+    });
+    spielothekMuenzenRieseln();
+  }
+}
+
+/* ------------------------------------------------------
+   MUENZEN RIESELN BEI VERLUST
+   ---------------------------------------------------
+   Ein paar kurzlebige Zeichen, die an der Dublonen-Anzeige losfallen
+   und sich dabei ausblenden - rein per CSS-Keyframe, danach raeumen
+   sie sich selbst weg. Kein Dauer-Timer, keine Schleife.
+
+   Die Zahl der Muenzen haengt bewusst NICHT vom verlorenen Betrag ab:
+   das waere bei 7358 Dublonen ein Muenzregen, der die Seite lahmlegt.
+------------------------------------------------------ */
+function spielothekMuenzenRieseln(anzahl = 7) {
+  const anker = document.querySelector(".spielothek-currency-bar");
+  if (!anker) return;
+
+  const huelle = document.createElement("span");
+  huelle.className = "spielothek-muenzregen";
+  huelle.setAttribute("aria-hidden", "true");
+
+  for (let i = 0; i < anzahl; i++) {
+    const m = document.createElement("span");
+    m.className = "spielothek-muenze";
+    m.textContent = "🪙";
+    // Streuung, damit die Muenzen nicht im Gleichschritt fallen
+    m.style.setProperty("--x", (Math.random() * 80 - 40).toFixed(1) + "px");
+    m.style.setProperty("--dreh", (Math.random() * 540 - 270).toFixed(0) + "deg");
+    m.style.setProperty("--start", (i * 55).toFixed(0) + "ms");
+    huelle.appendChild(m);
+  }
+
+  anker.appendChild(huelle);
+  setTimeout(() => huelle.remove(), 1600);
 }
 
 /* ------------------------------------------------------
@@ -742,7 +803,20 @@ async function renderSpielothekPage() {
 
       <div class="spielothek-game-area">
         <div id="spielothek-result" class="spielothek-result"></div>
-        <button type="button" class="code-button" id="spielothek-play-btn" onclick="playSpielothekGame()" data-i18n="spielothek.playButton" disabled>SPIELEN</button>
+        <div class="spielothek-bedienung">
+          <!-- Der Hebel ist ein zusaetzlicher, rein optischer Weg zum
+               selben Spiel. Er ist bewusst aria-hidden und nicht per
+               Tastatur erreichbar: der Knopf daneben bleibt die
+               vollwertige Bedienung, der Hebel waere sonst ein
+               zweiter, verwirrender Tabstopp mit gleicher Wirkung. -->
+          <button type="button" class="spielothek-hebel" id="spielothek-hebel"
+                  onclick="playSpielothekGame()" aria-hidden="true" tabindex="-1">
+            <span class="spielothek-hebel-schiene"></span>
+            <span class="spielothek-hebel-stange"></span>
+            <span class="spielothek-hebel-knauf"></span>
+          </button>
+          <button type="button" class="code-button" id="spielothek-play-btn" onclick="playSpielothekGame()" data-i18n="spielothek.playButton" disabled>SPIELEN</button>
+        </div>
         <p id="spielothek-status" class="wheel-status"></p>
       </div>
     </div>
