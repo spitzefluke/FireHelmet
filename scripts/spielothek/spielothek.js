@@ -704,7 +704,7 @@ async function renderSpielothekPage() {
 
   container.innerHTML = `
     <div class="spielothek-game-heading">
-      <span class="spielothek-game-emoji">${game.emoji}</span>
+      <span class="spielothek-game-zeichen">${spielothekIconSvg(game.icon)}</span>
       <span class="spielothek-game-name">${game.name[lang] || game.name.de}</span>
     </div>
 
@@ -732,6 +732,11 @@ async function renderSpielothekPage() {
     ${buildSpielothekBetHtml(handler)}
 
     <div class="spielothek-stage" id="spielothek-stage">
+      <!-- Der Schriftzug des Logos, als Schild oben auf dem Gehaeuse.
+           An einem echten Geraet steht der Name genau dort - und weil
+           das Zeichen schon ueber der Seite steht, doppelt sich hier
+           nichts. -->
+      <p class="spielothek-schild">Ändiis Spielothek</p>
       <div class="spielothek-andi" id="spielothek-andi">
         ${buildSpielothekAndiHtml()}
         <p class="spielothek-andi-quote" id="spielothek-andi-quote">${getRandomAndiIdleQuote()}</p>

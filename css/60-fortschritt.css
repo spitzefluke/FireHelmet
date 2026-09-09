@@ -126,9 +126,17 @@
   gap: 12px;
 }
 
-.spielothek-game-emoji {
-  font-size: 34px;
-  filter: drop-shadow(0 0 14px rgba(240,201,106,.4));
+/* Frueher ein 34px-Emoji mit 14px Schein. Jetzt die gezeichnete
+   Marke in Messing - dieselbe Strichfuehrung wie die Walzensymbole. */
+.spielothek-game-zeichen {
+  display: inline-flex;
+  color: var(--spielo-messing, #be9654);
+}
+
+.spielothek-game-zeichen .spielothek-spiel-icon {
+  width: 34px;
+  height: 26px;
+  display: block;
 }
 
 .spielothek-game-name {
@@ -136,7 +144,8 @@
   font-size: clamp(1.2rem, 3.4vw, 1.7rem);
   letter-spacing: 2px;
   color: var(--fh-gold-bright);
-  text-shadow: 0 0 24px rgba(240,201,106,.35);
+  /* Schein von 24px auf 8px: der Name soll lesbar sein, nicht leuchten. */
+  text-shadow: 0 0 8px rgba(240,201,106,.25);
 }
 
 .spielothek-bet-hint {
@@ -2714,4 +2723,43 @@
 
 @media (prefers-reduced-motion: reduce) {
   #spielothek::before { transition: none; }
+}
+
+/* ------------------------------------------------------
+   LOGO UND SCHILD
+   ---------------------------------------------------
+   Das Zeichen steht allein ueber der Seite, der Schriftzug allein
+   auf dem Geraet. Zusammen sind sie das Logo; getrennt platziert,
+   weil beides an derselben Stelle das Wort dreimal untereinander
+   ergeben haette (Logo, Kicker, Ueberschrift).
+------------------------------------------------------ */
+.spielothek-logo {
+  display: block;
+  width: clamp(52px, 11vw, 68px);
+  height: auto;
+  margin: 0 auto 14px;
+  color: var(--spielo-messing-hell, #e2c48a);
+  /* Ein sehr flacher Schein, damit das Zeichen nicht flach auf dem
+     Boden klebt - deutlich unter dem, was hier frueher ueblich war. */
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.55));
+}
+
+/* Das Messingschild auf dem Gehaeuse. Gravur statt Aufdruck: eine
+   dunkle Kante nach oben und eine helle nach unten lassen die
+   Buchstaben eingelassen wirken. */
+.spielothek-schild {
+  flex-basis: 100%;
+  margin: -6px 0 4px;
+  text-align: center;
+  font-family: var(--fh-font-display, 'Oswald'), 'Arial Narrow', sans-serif;
+  font-size: clamp(11px, 2.4vw, 13px);
+  font-weight: 600;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--spielo-messing, #be9654);
+  text-shadow: 0 -1px 0 rgba(0,0,0,.6), 0 1px 0 rgba(255,226,170,.12);
+}
+
+@media (max-width: 420px) {
+  .spielothek-schild { letter-spacing: .18em; }
 }
