@@ -22,6 +22,14 @@
 (function () {
   "use strict";
 
+  /* Die Adresse, die beim Teilen kopiert wird.
+     ---------------------------------------------------
+     Steht hier als EINZIGE Stelle im JavaScript - bei einem Umzug
+     auf eine eigene Domain ist das der einzige Wert, der sich hier
+     aendert (die Meta-Angaben in index.html muessen separat
+     nachgezogen werden, weil Suchmaschinen und Vorschaudienste
+     kein JavaScript ausfuehren). Die vollstaendige Umzugsliste
+     steht in DOMAIN.md. */
   const SHARE_URL = "https://spitzefluke.github.io/FireHelmet/";
 
   function shareText() {

@@ -152,7 +152,16 @@ function getSlotMinGroup(reelCount) {
    Die Tabelle beginnt neu bei "2 gleiche", auch bei fuenf und sechs
    Walzen. Ein Zweier zahlt dort wenig (teils nur den Einsatz
    zurueck), erspart einem aber den Prozentabzug fuer die Niete -
-   das ist der eigentliche Wert eines kleinen Treffers. */
+   das ist der eigentliche Wert eines kleinen Treffers.
+
+   WICHTIG: die 132 % beziehen sich nur auf DIESE Tabelle, also auf
+   den Teil des Gewinns, der am Einsatz haengt. Seit dem
+   Guthaben-Anteil (siehe SLOT_GUTHABEN_ANTEIL weiter unten) kommt
+   ein zweiter Teil dazu, der am Konto haengt. Der tatsaechliche
+   Rueckfluss ist deshalb nicht mehr eine einzelne Zahl, sondern
+   haengt vom Guthaben ab - gemessen: bei 405 Dublonen praktisch
+   unveraendert, bei 61.320 steigt der Schnitt je Treffer von 83
+   auf 466 Dublonen. */
 const SLOT_AUSZAHLUNG = Object.freeze({
   3: {
     dublone:    { 2: 2.5, 3: 7 },
@@ -204,6 +213,69 @@ function getSlotTier(multiplier) {
   if (multiplier >= 18) return "big";
   if (multiplier >= 6) return "medium";
   return "small";
+}
+
+/* ------------------------------------------------------------
+   GUTHABEN-ANTEIL: DER GEWINN WAECHST MIT DEM KONTO
+   ------------------------------------------------------------
+   Bis hierher war das Spiel schief gebaut, und zwar genau
+   andersherum als es sich anfuehlte:
+
+     Verlust  = Prozentsatz des GUTHABENS
+     Gewinn   = Vielfaches des EINSATZES
+
+   Fuer ein Konto mit 61.320 Dublonen hiess das: eine Niete kostet
+   dreistellig, ein Treffer bringt bei Einsatz 20 vielleicht 50
+   zurueck. Kein Vielfaches der Welt gleicht das aus, solange die
+   eine Seite am Guthaben haengt und die andere am Einsatz.
+
+   Deshalb bekommt der Gewinn jetzt denselben Bezug: auf den
+   Grundgewinn (Einsatz x Vielfaches) kommt ein Anteil des
+   Guthabens obendrauf. Der Anteil steigt mit der Seltenheit des
+   Symbols und mit der Groesse der Gruppe - "je Symbol erhoeht sich
+   der Wert", wie gewuenscht.
+
+   Die Prozentsaetze sind bewusst klein gehalten. Bei einem Drittel
+   Trefferquote wuerde schon 1 % je Treffer ein grosses Konto
+   spuerbar aufblaehen; die Werte unten liegen fuer die haeufigen
+   Symbole darunter und erreichen nur beim Feuerhelm zweistellige
+   Bereiche - der faellt mit einem Gewicht von 12 gegen 1200 aber
+   so selten, dass er die Rechnung nicht traegt.
+
+   Kleine Konten merken davon fast nichts (1 % von 400 ist 4) - fuer
+   sie bleibt der Einsatz die Hauptquelle. Genau so soll es sein:
+   der Anteil ist die Antwort auf ein grosses Konto, nicht auf ein
+   kleines.
+------------------------------------------------------------ */
+const SLOT_GUTHABEN_ANTEIL = Object.freeze({
+  dublone:   0.004,
+  papagei:   0.005,
+  kompass:   0.007,
+  saebel:    0.010,
+  edelstein: 0.016,
+  truhe:     0.028,
+  helm:      0.055,
+});
+
+/* Je Walze ueber der Mindestgruppe verdoppelt sich der Anteil -
+   dieselbe Idee wie in der Auszahlungstabelle, nur flacher (dort
+   ist es das Dreifache). Ein Sechser Feuerhelm kaeme sonst auf
+   ueber die Haelfte des Guthabens. */
+const SLOT_GUTHABEN_STUFE = 2;
+
+/* Deckel: der Guthaben-Anteil darf einen Dreh nie zu einem
+   Selbstlaeufer machen. 12 % des Guthabens ist die Grenze, ueber
+   die auch die beste Kombination nicht kommt. */
+const SLOT_GUTHABEN_MAX_ANTEIL = 0.12;
+
+function berechneGuthabenBonus(bestId, bestCount, walzen, guthaben) {
+  if (!bestId || !guthaben || guthaben <= 0) return 0;
+  const grund = SLOT_GUTHABEN_ANTEIL[bestId];
+  if (!grund) return 0;
+  const ueber = Math.max(0, bestCount - getSlotMinGroup(walzen));
+  const anteil = Math.min(SLOT_GUTHABEN_MAX_ANTEIL,
+                          grund * Math.pow(SLOT_GUTHABEN_STUFE, ueber));
+  return Math.round(guthaben * anteil);
 }
 
 /* Sicherheits-Deckel unterhalb des serverseitig erzwungenen Limits
@@ -371,7 +443,7 @@ function scoreSlotReels(reels) {
   return { multiplier, tier: getSlotTier(multiplier), bestId, bestCount, skullCount, trefferIndex };
 }
 
-function calculateSlotResult(betAmount, random = Math.random, forcePity = false) {
+function calculateSlotResult(betAmount, random = Math.random, forcePity = false, guthaben = 0) {
   const bet = clampSlotBet(betAmount);
   const startWalzen = getSlotReelCountForBet(bet);
 
@@ -385,8 +457,14 @@ function calculateSlotResult(betAmount, random = Math.random, forcePity = false)
     bewertung = scoreSlotReels(reels);
   }
 
-  const durchgaenge = [{ reels, ...bewertung, walzen: reels.length }];
-  let payout = Math.round(bet * bewertung.multiplier);
+  /* Grundgewinn plus Guthaben-Anteil, je Durchgang getrennt
+     gerechnet: ein Freidreh mit anderem Symbol bringt seinen
+     eigenen Anteil mit. */
+  const bonus0 = bewertung.multiplier > 0
+    ? berechneGuthabenBonus(bewertung.bestId, bewertung.bestCount, reels.length, guthaben)
+    : 0;
+  const durchgaenge = [{ reels, ...bewertung, walzen: reels.length, guthabenBonus: bonus0 }];
+  let payout = Math.round(bet * bewertung.multiplier) + bonus0;
   let besteStufe = bewertung.tier;
 
   // Freidrehs: alle Walzen gleich -> kostenloser Dreh mit vier
@@ -400,8 +478,11 @@ function calculateSlotResult(betAmount, random = Math.random, forcePity = false)
 
     const frei = generateRandomSlotReels(naechste, random);
     const bew = scoreSlotReels(frei);
-    durchgaenge.push({ reels: frei, ...bew, walzen: frei.length, freidreh: true });
-    payout += Math.round(bet * bew.multiplier);
+    const bonus = bew.multiplier > 0
+      ? berechneGuthabenBonus(bew.bestId, bew.bestCount, frei.length, guthaben)
+      : 0;
+    durchgaenge.push({ reels: frei, ...bew, walzen: frei.length, freidreh: true, guthabenBonus: bonus });
+    payout += Math.round(bet * bew.multiplier) + bonus;
     if (bew.tier && (!besteStufe || bew.multiplier > bewertung.multiplier)) besteStufe = bew.tier;
     letzte = frei;
     kette++;
@@ -447,11 +528,11 @@ window.SPIELOTHEK_GAME_HANDLERS.slot = {
   // Nur fuer Tests und Server-Code.
   calculateResult: calculateSlotResult,
 
-  play: function requestSlotPlay(betAmount) {
+  play: function requestSlotPlay(betAmount, guthaben) {
     const spinsSinceWin = getSlotSpinsSinceWin();
     const forcePity = spinsSinceWin + 1 >= SLOT_PITY_SPIN_THRESHOLD;
 
-    const result = calculateSlotResult(betAmount, Math.random, forcePity);
+    const result = calculateSlotResult(betAmount, Math.random, forcePity, guthaben || 0);
 
     setSlotSpinsSinceWin(result.win ? 0 : spinsSinceWin + 1);
 
@@ -509,6 +590,19 @@ function buildSlotResultHtml(result) {
 
       const breit = durchgang.reels.length > 6 ? " spielothek-slot-reels-breit" : "";
       const gewonnen = durchgang.multiplier > 0 ? " hat-treffer" : "";
+
+      /* Woher der Gewinn kommt, aufgeschluesselt. Ohne diese Zeile
+         steht am Ende nur eine Zahl da, und der Guthaben-Anteil
+         waere unsichtbar - man wuerde nicht verstehen, warum
+         derselbe Treffer bei einem groesseren Konto mehr bringt. */
+      const bonus = durchgang.guthabenBonus || 0;
+      const aufschluesselung = bonus > 0
+        ? `<p class="spielothek-gewinn-teile">
+             <span>${durchgang.multiplier}\u00d7 Einsatz</span>
+             <span class="spielothek-gewinn-plus">+</span>
+             <span class="spielothek-gewinn-guthaben">${bonus.toLocaleString("de-DE")} aus deinem Guthaben</span>
+           </p>`
+        : "";
       const kopf = durchgang.freidreh
         ? `<p class="spielothek-freidreh-kopf">🎁 Freidreh ${nr} — ${durchgang.reels.length} Walzen, geschenkt</p>`
         : "";
@@ -518,6 +612,7 @@ function buildSlotResultHtml(result) {
         <div class="spielothek-slot-reels spielothek-slot-reels-tier-${durchgang.tier || "none"}${breit}${gewonnen}">
           ${reels}
         </div>
+        ${aufschluesselung}
       `;
     })
     .join("");
@@ -595,6 +690,10 @@ function getSlotRulesHtml(lang) {
     ? `<strong>On a loss</strong> a share of your balance goes overboard: 1 % below 500 doubloons, 2 % below 2000, 2.5 % below 5000, 3 % below 10 000, 4 % below 25 000, 5 % below 50 000, 6 % above. Never less than your bet, and <strong>never more than ${SPIELOTHEK_VERLUST_DECKEL}× your bet</strong> — so a big balance is slowed down, not wiped out. Below 200 doubloons nothing is taken beyond the bet.`
     : `<strong>Bei einer Niete</strong> geht ein Teil deines Guthabens über Bord: 1 % unter 500 Dublonen, 2 % unter 2000, 2,5 % unter 5000, 3 % unter 10 000, 4 % unter 25 000, 5 % unter 50 000, 6 % darüber. Nie weniger als dein Einsatz, und <strong>nie mehr als das ${SPIELOTHEK_VERLUST_DECKEL}-Fache deines Einsatzes</strong> — ein großes Guthaben wird so gebremst, nicht abgeräumt. Unter 200 Dublonen wird nichts über den Einsatz hinaus genommen.`;
 
+  const guthaben = isEn
+    ? `<strong>Your balance counts too.</strong> On top of the base win (bet × multiplier) comes a share of your balance — bigger for rarer symbols and larger groups, from about 0.4 % for a pair of doubloons up to ${(SLOT_GUTHABEN_MAX_ANTEIL * 100).toFixed(0)} % at most. Losses have always been a share of your balance; now wins are too.`
+    : `<strong>Dein Guthaben zählt mit.</strong> Auf den Grundgewinn (Einsatz × Vielfaches) kommt ein Anteil deines Guthabens obendrauf — je seltener das Symbol und je größer die Gruppe, desto mehr: von rund 0,4 % bei zwei Dublonen bis höchstens ${(SLOT_GUTHABEN_MAX_ANTEIL * 100).toFixed(0)} %. Der Verlust hing schon immer am Guthaben, jetzt tut es der Gewinn auch.`;
+
   const freidreh = isEn
     ? `<strong>All reels the same?</strong> You get a free spin with ${SLOT_FREIDREH_EXTRA_WALZEN} extra reels on top — winnings add up, up to ${SLOT_FREIDREH_MAX_KETTE} in a row.`
     : `<strong>Alle Walzen gleich?</strong> Dann gibt es einen Freidreh mit ${SLOT_FREIDREH_EXTRA_WALZEN} Walzen mehr obendrauf — die Gewinne addieren sich, höchstens ${SLOT_FREIDREH_MAX_KETTE} am Stück.`;
@@ -606,6 +705,7 @@ function getSlotRulesHtml(lang) {
   return `
     <p class="spielothek-rules-bet-hint">${regel}</p>
     <p class="spielothek-rules-bet-hint">${einsatz}</p>
+    <p class="spielothek-rules-bet-hint">${guthaben}</p>
     <p class="spielothek-rules-bet-hint">${verlust}</p>
     <p class="spielothek-rules-bet-hint">${freidreh}</p>
     <p class="spielothek-rules-bet-hint">${pity}</p>
