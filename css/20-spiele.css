@@ -1953,3 +1953,25 @@
 .gateway-spieler-karte code { user-select: all; font-size: .78rem; }
 .gateway-details { margin-top: 1.2rem; }
 .gateway-details summary { cursor: pointer; padding: .4rem 0; }
+
+/* Runde 2 der Admin-Werkzeuge */
+.gateway-untertitel {
+  margin: 1.1rem 0 .4rem;
+  font-size: .95rem;
+  letter-spacing: .02em;
+  opacity: .85;
+}
+
+.gateway-rennen-zeile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+}
+
+.gateway-mini-input {
+  width: 7ch;
+  min-width: 7ch;
+  padding: .3rem .5rem;
+  text-align: center;
+}

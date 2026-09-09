@@ -66,7 +66,8 @@ $$;
 -- ============================================================
 set role anon;
 select set_config('request.jwt.claims', '', false);
-select case when count(*) = 4 then 'PASS' else 'FAIL' end || ' - TEST1 anon liest players oeffentlich' as result from public.players;
+-- Sieben Spieler legt die Vorbereitung oben an (Anna bis Greta).
+select case when count(*) = 7 then 'PASS' else 'FAIL' end || ' - TEST1 anon liest players oeffentlich' as result from public.players;
 reset role;
 
 set role authenticated;
