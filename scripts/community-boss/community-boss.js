@@ -2255,11 +2255,45 @@ async function renderBossLeaderboard(monthId) {
     const ownUid = typeof wheelAuthReady !== "undefined" ? await wheelAuthReady : null;
     const capWinnerUids = typeof fetchPassCapWinnerUids === "function" ? await fetchPassCapWinnerUids() : new Set();
 
-    let html = "";
-    data.forEach((p, i) => {
-      const rank = i + 1;
+    /* WER NICHT UNTER DEN ERSTEN ZEHN STEHT, SAH SICH GAR NICHT
+       ---------------------------------------------------
+       Die Liste endete bei Platz zehn. Wer auf Platz vierzehn stand,
+       bekam also keine Rueckmeldung darueber, dass er ueberhaupt
+       mitspielt - und schon gar nicht, wie weit ihm fehlt. Steht man
+       nicht in den ersten zehn, wird die eigene Zeile deshalb
+       nachgeladen und unten angehaengt.
+
+       Der Rang wird als "wie viele haben mehr Schaden" gezaehlt.
+       count mit head:true holt nur die Zahl, nicht die Zeilen. */
+    let eigene = null;
+    let eigenerRang = 0;
+    if (ownUid && !data.some((p) => p.firebase_uid === ownUid)) {
+      try {
+        const { data: meins } = await supabaseClient
+          .from("community_boss_damage")
+          .select("firebase_uid, nickname, avatar, equipped_frame, total_damage")
+          .eq("month_id", monthId)
+          .eq("firebase_uid", ownUid)
+          .maybeSingle();
+        if (meins && meins.total_damage > 0) {
+          const { count } = await supabaseClient
+            .from("community_boss_damage")
+            .select("firebase_uid", { count: "exact", head: true })
+            .eq("month_id", monthId)
+            .gt("total_damage", meins.total_damage);
+          eigene = meins;
+          eigenerRang = (count || 0) + 1;
+        }
+      } catch (e) { /* Rangliste steht auch ohne die eigene Zeile */ }
+    }
+
+    // Bezugsgroesse fuer die Balken: der Beste. Anteile am
+    // Gesamtschaden waeren ehrlicher, aber dafuer muesste die ganze
+    // Tabelle summiert werden - fuer eine Anzeigehilfe zu teuer.
+    const spitze = Math.max(1, data[0].total_damage || 1);
+
+    function zeile(p, rank, isOwn) {
       const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
-      const isOwn = p.firebase_uid === ownUid;
       const frameStyle = typeof frameStyleFromId === "function" ? frameStyleFromId(p.equipped_frame) : "";
       const frameRowClass = typeof rowFrameClass === "function" ? rowFrameClass(frameStyle) : "";
       let avatarHtml =
@@ -2276,15 +2310,27 @@ async function renderBossLeaderboard(monthId) {
         avatarHtml = wrapAvatarWithCapBadge(avatarHtml, capWinnerUids.has(p.firebase_uid));
       }
 
-      html += `
+      const schaden = p.total_damage || 0;
+      const anteil = Math.max(2, Math.round((schaden / spitze) * 100));
+
+      return `
         <div class="boss-leaderboard-row ${frameRowClass}${rank <= 3 ? " boss-leaderboard-top" : ""}${isOwn ? " boss-leaderboard-own" : ""}">
           <span class="boss-leaderboard-rank">${medal}</span>
           <span class="boss-leaderboard-name">${avatarHtml}${escapeHtmlBoss(p.nickname || "Unbekannt")}${isOwn ? " (Du)" : ""}</span>
-          <span class="boss-leaderboard-damage">${(p.total_damage || 0).toLocaleString("de-DE")} Schaden</span>
+          <span class="boss-leaderboard-damage">${schaden.toLocaleString("de-DE")} Schaden</span>
           ${rank <= 3 ? `<span class="boss-leaderboard-reward">🏆 +${BOSS_REWARDS_BY_RANK[rank - 1]} 💰</span>` : ""}
+          <span class="boss-leaderboard-balken" aria-hidden="true">
+            <span class="boss-leaderboard-balken-fuellung" style="width:${anteil}%"></span>
+          </span>
         </div>
       `;
-    });
+    }
+
+    let html = data.map((p, i) => zeile(p, i + 1, p.firebase_uid === ownUid)).join("");
+
+    if (eigene) {
+      html += `<p class="boss-leaderboard-trenner">…</p>` + zeile(eigene, eigenerRang, true);
+    }
 
     container.innerHTML = html;
   } catch (err) {

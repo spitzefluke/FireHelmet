@@ -466,10 +466,16 @@
   position: absolute;
   top: 50%;
   left: 50%;
+  /* 150px sind der Radius der Scheibe - mehr geht nicht, sonst
+     laeuft die Beschriftung ueber den Rand hinaus und wird
+     abgeschnitten (mit 200px stand dort "Kraken-Rah"). Der Platz
+     fuer die sechzehn Faecher kommt stattdessen aus der Hoehe:
+     Symbol und Wort stehen uebereinander statt nebeneinander,
+     siehe .wheel-label-text. */
   width: 150px;
   margin-top: -1px;
   transform-origin: 0 0;
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 700;
   color: #fdf1d6;
   text-align: right;
@@ -479,7 +485,40 @@
 }
 
 .wheel-label-text {
-  display: inline-block;
+  /* Symbol ueber dem Wort statt nur Text: bei sechzehn Faechern
+     liest im Vorbeidrehen niemand mehr sechzehn Woerter, ein
+     Symbol erkennt man trotzdem. */
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.1;
+}
+
+.wheel-label-icon {
+  font-size: 1.35em;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5));
+}
+
+.wheel-label-wort {
+  font-size: .74em;
+  white-space: nowrap;
+  letter-spacing: -.01em;
+}
+
+/* Die seltenen Faecher tragen zusaetzlich Gewicht in der Schrift.
+   Die Farbe macht die Aufhellung im Kuchendiagramm schon (siehe
+   AUFHELLUNG in buildWheel) - hier kommt nur noch dazu, dass man
+   den Namen auch auf dem helleren Grund gut liest. */
+.wheel-label-epic .wheel-label-wort,
+.wheel-label-legendary .wheel-label-wort {
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+}
+
+.wheel-label-legendary .wheel-label-icon {
+  filter: drop-shadow(0 0 6px rgba(255, 226, 150, .9)) drop-shadow(0 1px 2px rgba(0, 0, 0, .5));
 }
 
 /* Kompass-Nadel statt einfachem Zeiger */

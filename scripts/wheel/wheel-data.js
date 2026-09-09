@@ -30,43 +30,73 @@
    ist nur zur Orientierung/Dokumentation, welche Grössenordnung
    pro Seltenheit gedacht ist. */
 const WHEEL_RARITY_INFO = {
-  common: { label: "Gewöhnlich", targetShare: 0.55 },
-  rare: { label: "Selten", targetShare: 0.28 },
-  epic: { label: "Episch", targetShare: 0.13 },
-  legendary: { label: "Legendär", targetShare: 0.04 },
+  common: { label: "Gewöhnlich", targetShare: 0.45 },
+  rare: { label: "Selten", targetShare: 0.32 },
+  epic: { label: "Episch", targetShare: 0.17 },
+  legendary: { label: "Legendär", targetShare: 0.06 },
 };
 
+/* ======================================
+   SELTENHEITEN NEU GESTAFFELT (09.09.2026)
+   ---------------------------------------------------
+   Vorher 55 / 28 / 13 / 4. Das Rad fuehlte sich neben der
+   Spielothek belanglos an, wo ein einzelner Dreh inzwischen bis
+   25.000 Dublonen zahlt - hier sind es hoechstens 500 bei EINEM
+   Dreh am Tag.
+
+   Die Dublonen-Betraege bleiben trotzdem, wie sie waren: mehr Geld
+   in Umlauf zu geben war ausdruecklich nicht gewuenscht. Gehoben
+   wird stattdessen, wie oft die guten Faecher kommen - und es gibt
+   mehr davon, die gar kein Geld sind (Rahmen, Werkzeugkiste). Ein
+   Dreh lohnt sich damit oefter, ohne dass ein einzelner Treffer
+   groesser wird.
+====================================== */
+
 const wheelPrizes = [
-  // --- GEWÖHNLICH (hohe Wahrscheinlichkeit) ---
-  { id: "coins-50", rarity: "common", weight: 14, type: "currency", amount: 50,
+  // --- GEWÖHNLICH ---
+  { id: "coins-50", rarity: "common", weight: 11, type: "currency", amount: 50,
     icon: "🪙", label: "50 Dublonen", message: "🪙 +50 Dublonen für dich!" },
-  { id: "coins-75", rarity: "common", weight: 14, type: "currency", amount: 75,
+  { id: "coins-75", rarity: "common", weight: 11, type: "currency", amount: 75,
     icon: "🪙", label: "75 Dublonen", message: "🪙 +75 Dublonen für dich!" },
-  { id: "coins-100", rarity: "common", weight: 14, type: "currency", amount: 100,
+  { id: "coins-100", rarity: "common", weight: 12, type: "currency", amount: 100,
     icon: "🪙", label: "100 Dublonen", message: "🪙 +100 Dublonen für dich!" },
-  { id: "tool-find", rarity: "common", weight: 13, type: "tool",
+  { id: "tool-find", rarity: "common", weight: 11, type: "tool", count: 1,
     icon: "🔧", label: "Werkzeug-Fund", message: "🔧 Ein Werkzeug für die Schiffsreparatur wandert in deine Kiste!" },
 
-  // --- SELTEN (mittlere Wahrscheinlichkeit) ---
-  { id: "coins-150", rarity: "rare", weight: 10, type: "currency", amount: 150,
+  // --- SELTEN ---
+  { id: "coins-150", rarity: "rare", weight: 9, type: "currency", amount: 150,
     icon: "🪙", label: "150 Dublonen", message: "🪙 +150 Dublonen für dich!" },
-  { id: "coins-200", rarity: "rare", weight: 9, type: "currency", amount: 200,
+  { id: "coins-200", rarity: "rare", weight: 8, type: "currency", amount: 200,
     icon: "🪙", label: "200 Dublonen", message: "🪙 +200 Dublonen für dich!" },
-  { id: "shop-bonus", rarity: "rare", weight: 9, type: "currency", amount: 120,
+  { id: "shop-bonus", rarity: "rare", weight: 7, type: "currency", amount: 120,
     icon: "🛍️", label: "Shop-Bonus", message: "🛍️ Shop-Bonus: +120 Dublonen extra für deinen nächsten Einkauf!" },
+  /* Werkzeugkiste: DREIMAL DASSELBE Werkzeug, nicht drei
+     verschiedene. Der Grund steht auf dem Server:
+     app.valid_ship_tools() laesst je Schreibvorgang genau EINEN
+     Schluessel sich aendern (changed_count > 1 -> false). Drei
+     verschiedene Werkzeuge waeren also abgelehnt worden - drei
+     Stueck eines Werkzeugs sind ein Schluessel und gehen durch. */
+  { id: "tool-crate", rarity: "rare", weight: 8, type: "tool", count: 3,
+    icon: "🧰", label: "Werkzeugkiste", message: "🧰 Eine ganze Kiste! Drei Werkzeuge wandern in deine Sammlung." },
+  { id: "cosmetic-frame-silver", rarity: "rare", weight: 6, type: "frame", frameId: "frame-silver",
+    icon: "🥈", label: "Silber-Rahmen", message: "🥈 Ein silberner Rahmen für dein Profilbild gehört jetzt dir!" },
 
-  // --- EPISCH (niedrige Wahrscheinlichkeit) ---
+  // --- EPISCH ---
   { id: "coins-300", rarity: "epic", weight: 5, type: "currency", amount: 300,
     icon: "💰", label: "300 Dublonen", message: "💰 +300 Dublonen für dich!" },
   { id: "temp-avatar-aendii", rarity: "epic", weight: 4, type: "tempAvatar",
     avatarId: "Ändii", avatar: "scripts/avatare/ändii.webp", durationDays: 3,
     icon: "🎭", label: "3-Tage-Ändii", message: "🎭 Seltener Fund! Du darfst Ändii 3 Tage lang als Avatar tragen." },
   { id: "cosmetic-frame-bronze", rarity: "epic", weight: 4, type: "frame", frameId: "frame-bronze",
-    icon: "🖼️", label: "Bronze-Rahmen", message: "🖼️ Ein kosmetischer Bronze-Rahmen für dein Profilbild ist jetzt deiner!" },
+    icon: "🥉", label: "Bronze-Rahmen", message: "🖼️ Ein kosmetischer Bronze-Rahmen für dein Profilbild ist jetzt deiner!" },
+  { id: "cosmetic-frame-fire", rarity: "epic", weight: 4, type: "frame", frameId: "frame-fire",
+    icon: "🔥", label: "Feuer-Rahmen", message: "🔥 Der Feuer-Rahmen lodert jetzt um dein Profilbild!" },
 
-  // --- LEGENDÄR (sehr niedrige Wahrscheinlichkeit) ---
+  // --- LEGENDÄR ---
   { id: "coins-500", rarity: "legendary", weight: 2, type: "currency", amount: 500,
     icon: "👑", label: "500 Dublonen", message: "👑 Riesenfund! +500 Dublonen für dich!" },
+  { id: "cosmetic-frame-kraken", rarity: "legendary", weight: 2, type: "frame", frameId: "frame-kraken",
+    icon: "🐙", label: "Kraken-Rahmen", message: "🐙 Aus der Tiefe: der Kraken-Rahmen gehört jetzt dir!" },
   { id: "cosmetic-frame-legend", rarity: "legendary", weight: 2, type: "frame", frameId: "frame-legend",
     icon: "🏆", label: "Legend-Rahmen", message: "🏆 Legendär! Der seltene Legend-Rahmen gehört jetzt dir!" },
 ];
