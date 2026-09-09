@@ -593,7 +593,13 @@ async function renderSpielothekResult(game, handler, result, betCost, angewandte
        reduzierter Bewegung steht er einfach still da. */
     resultEl.insertAdjacentHTML("beforeend", `
       <p class="spielothek-result-line spielothek-result-lose">
-        <span class="spielothek-verlust-icon${reduceMotion ? "" : " ist-bewegt"}" aria-hidden="true">☠️</span>
+        <span class="spielothek-verlust-icon${reduceMotion ? "" : " ist-bewegt"}" aria-hidden="true">${
+          /* Der gezeichnete Totenkopf statt des Emoji - im Browser
+             war das der letzte sichtbare Rest der alten Optik. Der
+             Rueckfall greift nur, falls ein Spiel ohne slot.js
+             laeuft; dann steht dort nichts statt eines Fremdkoerpers. */
+          typeof slotSymbolSvg === "function" ? slotSymbolSvg("totenkopf") : ""
+        }</span>
         ${isEn ? "Loss" : "Verlust"}: ${netDelta} 🪙
       </p>
     `);

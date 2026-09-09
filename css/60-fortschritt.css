@@ -394,12 +394,29 @@
   animation: spielothekReelLand .5s cubic-bezier(.34, 1.5, .64, 1);
 }
 
+/* FEHLER, im Browser entdeckt: hier fehlte "opacity: 0".
+   ---------------------------------------------------
+   Die Keyframe spielothekReelGlow laeuft 0 -> 1 -> 0 und ist als
+   halbe Sekunde Lichtimpuls beim Landen gedacht. Ohne animation-
+   fill-mode faellt das Element danach aber auf seinen GRUNDZUSTAND
+   zurueck - und der war, mangels eigener Angabe, opacity 1.
+
+   Der Impuls blieb also dauerhaft in voller Staerke stehen. Auf dem
+   Bildschirm sah man drei hell leuchtende Kacheln, in denen die
+   Symbole kaum noch zu erkennen waren; man wusste, DASS man
+   getroffen hatte, aber nicht WOMIT. Der Fehler bestand schon vor
+   dem Umbau - er faellt jetzt nur staerker auf, weil Strich-
+   zeichnungen weniger Eigenkontrast haben als Emoji.
+
+   Mit opacity: 0 im Grundzustand erlischt der Impuls wie gedacht.
+   Zusaetzlich von .75 auf .5 heruntergenommen. */
 .spielothek-slot-symbol-landed::after {
   content: "";
   position: absolute;
   inset: -6px;
   border-radius: 12px;
-  background: radial-gradient(circle, rgba(255,230,170,.75), transparent 70%);
+  background: radial-gradient(circle, rgba(255,230,170,.5), transparent 70%);
+  opacity: 0;
   animation: spielothekReelGlow .5s ease-out;
   pointer-events: none;
 }
@@ -416,15 +433,19 @@
   100% { opacity: 0; }
 }
 
-/* ---- Tier-abhaengige Verstaerkung beim Landen (Auftrag Punkt 5:
-   "staerkerer Effekt bei seltenen Gewinnen") ---- */
+/* ---- Verstaerkung bei selteneren Gewinnen ----
+   Das kalte Blau (125,211,252) fiel hier heraus: es kommt in der
+   ganzen Spielothek sonst nicht vor und wirkte auf Holz und Messing
+   wie ein fremdes Licht. Beide Stufen bleiben jetzt im warmen
+   Bereich und unterscheiden sich ueber die Staerke, nicht ueber die
+   Farbe - dieselbe Idee wie bei den Symbolfarben. */
 .spielothek-slot-reels-tier-big .spielothek-slot-symbol-landed::after,
 .spielothek-slot-reels-tier-veryBig .spielothek-slot-symbol-landed::after {
-  background: radial-gradient(circle, rgba(125,211,252,.85), transparent 70%);
+  background: radial-gradient(circle, rgba(255,214,140,.6), transparent 70%);
 }
 
 .spielothek-slot-reels-tier-jackpot .spielothek-slot-symbol-landed::after {
-  background: radial-gradient(circle, rgba(255,106,42,.9), transparent 70%);
+  background: radial-gradient(circle, rgba(255,150,70,.7), transparent 70%);
 }
 
 .spielothek-slot-reels-tier-jackpot .spielothek-slot-symbol-landed {
@@ -2595,8 +2616,13 @@
    Kontostand, die niemand geprueft hat - und genau die Sorte Zahl,
    die eine Anzeige unglaubwuerdig macht. */
 .spielothek-anzeige-wert.ist-ladend {
+  /* Im Browser gemessen: mit opacity .6 auf --fh-muted waren die
+     Striche auf dem dunklen Feld praktisch unsichtbar - man sah ein
+     leeres Kaestchen und hielt es fuer kaputt. Ein Ladezustand muss
+     als Zustand erkennbar sein, nicht als Fehler. */
   color: var(--fh-muted);
-  opacity: .6;
+  opacity: .85;
+  letter-spacing: .12em;
 }
 
 /* Nur diese beiden Faelle bekommen Farbe. Ein neutrales Feld bleibt
@@ -2646,6 +2672,21 @@
   padding: 14px 28px;
   font-size: 15px;
   letter-spacing: .1em;
+
+  /* .code-button bringt ein kraeftiges Blau mit. Auf einem Geraet
+     aus Holz und Messing war das der einzige kalte Fleck im Bild -
+     im Browser sofort als Fremdkoerper zu sehen. Hier wird nur
+     dieser eine Knopf umgefaerbt, .code-button bleibt ueberall
+     sonst unangetastet. */
+  background: linear-gradient(180deg, #4a3520, #2c1f12);
+  border: 1px solid rgba(190,150,84,.6);
+  color: var(--spielo-messing-hell, #e2c48a);
+  box-shadow: inset 0 1px 0 rgba(255,226,170,.18), 0 3px 10px rgba(0,0,0,.45);
+}
+
+.spielothek-ausloeser:hover:not(:disabled) {
+  background: linear-gradient(180deg, #5a4128, #362617);
+  border-color: rgba(226,196,138,.75);
 }
 
 .spielothek-ausloeser:active:not(:disabled) {
@@ -2662,8 +2703,19 @@
 @media (max-width: 420px) {
   .spielothek-anzeigen { gap: 6px; }
   .spielothek-anzeige { padding: 8px 4px; }
-  .spielothek-anzeige-titel { font-size: 10px; letter-spacing: .08em; }
   .spielothek-ausloeser { min-width: 0; width: 100%; }
+
+  /* Im Browser bei 320px gemessen: "Letzte Runde" brauchte 86px in
+     einem 81px breiten Feld und wurde von nowrap abgeschnitten -
+     auf dem Bild stand "ETZTE RUND". Hier darf die Beschriftung
+     umbrechen; zwei kurze Zeilen sind besser als ein halbes Wort. */
+  .spielothek-anzeige-titel {
+    font-size: 9px;
+    letter-spacing: .06em;
+    white-space: normal;
+    line-height: 1.25;
+    text-align: center;
+  }
 }
 
 /* ------------------------------------------------------
@@ -2762,4 +2814,44 @@
 
 @media (max-width: 420px) {
   .spielothek-schild { letter-spacing: .18em; }
+}
+
+/* ------------------------------------------------------
+   BUEHNE AUF SCHMALEN GERAETEN
+   ---------------------------------------------------
+   Im Browser bei 320 px gemessen: Aendii belegt feste 200 px,
+   die Spielflaeche hat flex-basis 260 px - zusammen 460 px in
+   einem Innenraum von 206 px. Umbrechen tat der Kasten trotzdem
+   nicht, weil die Spielflaeche schrumpfen DARF (flex-shrink 1):
+   sie wurde auf 133 px gequetscht, und der SPIELEN-Knopf lag bei
+   320 px vollstaendig ausserhalb des sichtbaren Bereichs. Ein
+   Spielknopf, den man nicht sieht, ist der schlimmste Fehler, den
+   diese Seite haben kann.
+
+   Unterhalb von 560 px stehen beide deshalb untereinander und
+   nehmen die volle Breite. Zusaetzlich faellt die Mindesthoehe der
+   leeren Ergebnisflaeche weg - vor der ersten Drehung ist dort
+   nichts, und 100 px Leere schoben den Knopf zusaetzlich nach
+   unten.
+------------------------------------------------------ */
+@media (max-width: 560px) {
+  .spielothek-stage {
+    flex-direction: column;
+    align-items: center;
+    padding: 22px 14px;
+    gap: 16px;
+  }
+
+  .spielothek-andi,
+  .spielothek-game-area {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  /* Nur solange nichts drinsteht: sobald die Walzen da sind, hat
+     das Element wieder eigenen Inhalt und braucht die Reserve
+     nicht. :empty trifft genau diesen Fall. */
+  .spielothek-result:empty {
+    min-height: 0;
+  }
 }

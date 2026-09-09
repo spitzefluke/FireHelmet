@@ -2277,9 +2277,19 @@
    Ergebnis, danach bleibt das Zeichen blass stehen.
 ====================================================== */
 .spielothek-verlust-icon {
-  display: inline-block;
+  /* Traegt jetzt ein SVG statt eines Emoji - inline-flex, damit es
+     auf der Textlinie sitzt, und die Farbe kommt vom Totenkopf der
+     Walzen, damit "schlecht" ueberall gleich aussieht. */
+  display: inline-flex;
+  align-items: center;
   margin-right: .35rem;
   transform-origin: 50% 60%;
+  color: #a8564a;
+}
+
+.spielothek-verlust-icon .spielothek-slot-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .spielothek-verlust-icon.ist-bewegt {
@@ -2327,7 +2337,12 @@
   gap: .4rem;
   margin: .5rem 0 0;
   font-size: .82rem;
-  color: var(--fh-muted, #9aa4b2);
+  /* Stand vorher in --fh-muted und war auf dem dunklen Holz kaum zu
+     lesen - im Browser sah man an der Stelle nichts. Die Rechnung
+     ist aber genau der Teil, der die Auszahlung nachvollziehbar
+     macht; sie muss lesbar sein. */
+  color: #c9a04a;
+  letter-spacing: .04em;
 }
 
 .spielothek-regeln-tabelle {
@@ -2527,10 +2542,16 @@
 /* Die Walzen, die den Treffer gebracht haben, bekommen einen Ring -
    sichtbar erst, wenn diese Walze auch tatsaechlich gelandet ist. */
 .spielothek-slot-symbol.ist-treffer.spielothek-slot-symbol-landed {
+  /* Im Browser gesehen: mit 18px Schein und einem fast weissen Ring
+     verschwanden die Strichzeichnungen im Licht - man sah drei
+     leuchtende Kacheln, aber nicht mehr, WELCHE Symbole getroffen
+     hatten. Ein Treffer, den man nicht lesen kann, ist keine
+     Rueckmeldung. Jetzt markiert nur noch ein ruhiger Messingring,
+     der Schein ist auf ein Drittel herunter. */
   box-shadow:
-    inset 0 0 12px rgba(0, 0, 0, .6),
-    0 0 0 2px rgba(255, 214, 130, .95),
-    0 0 18px rgba(255, 190, 90, .55);
+    inset 0 0 10px rgba(0, 0, 0, .5),
+    0 0 0 2px rgba(226, 196, 138, .8),
+    0 0 6px rgba(190, 150, 84, .35);
 }
 
 /* ======================================================
