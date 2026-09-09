@@ -535,8 +535,13 @@ function formatTempAvatarRemaining(expiresAt) {
 }
 
 function renderAvatarPicker() {
-  const picker = document.getElementById("wheel-avatar-picker");
-  if (!picker || typeof wheelAvatarOptions === "undefined") return;
+  /* Es gibt inzwischen ZWEI Stellen mit derselben Auswahl: die
+     Anmeldeseite und das Fenster, das sich beim Klick auf das eigene
+     Bild oeffnet (scripts/core/avatar-wahl.js). Beide bekommen
+     dieselbe Ausgabe, damit sie nie auseinanderlaufen - deshalb hier
+     alle Ziele mit der Klasse statt eines einzelnen Elements. */
+  const ziele = document.querySelectorAll(".js-avatar-picker");
+  if (!ziele.length || typeof wheelAvatarOptions === "undefined") return;
 
   const unlockedIds = getUnlockedAvatarIds();
   const specials = typeof wheelSpecialAvatars !== "undefined" ? wheelSpecialAvatars : [];
@@ -607,7 +612,7 @@ function renderAvatarPicker() {
     })
     .join("");
 
-  picker.innerHTML = html;
+  ziele.forEach((el) => { el.innerHTML = html; });
 }
 
 /* ------------------------------------------------------

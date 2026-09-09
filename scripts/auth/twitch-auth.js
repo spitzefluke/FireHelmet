@@ -196,8 +196,59 @@ function updateLoginPage(pageID) {
   }
 
   refreshTwitchLoginUI();
+  zeichneAnmeldeStatus();
 
   if (typeof syncTempAvatarFromServer === "function") {
     syncTempAvatarFromServer();
   }
+}
+
+/* ------------------------------------------------------
+   "WER BIN ICH GERADE" AUF DER ANMELDESEITE
+   ---------------------------------------------------
+   Der Kasten ganz oben beantwortet die Frage, die vorher niemand
+   beantwortet hat: bin ich ueberhaupt schon jemand, und wenn ja,
+   ueber welchen Weg? Ohne Namen bleibt er weg - dann sind die beiden
+   Karten darunter die Antwort.
+------------------------------------------------------ */
+function zeichneAnmeldeStatus() {
+  const kasten = document.getElementById("fh-anmelde-status");
+  if (!kasten) return;
+
+  const name = localStorage.getItem("wheelNickname") || "";
+  if (!name) {
+    kasten.hidden = true;
+    kasten.innerHTML = "";
+    return;
+  }
+
+  const anbieter = localStorage.getItem("loginProvider") || "anonymous";
+  const wege = { twitch: "Twitch", discord: "Discord" };
+  const weg = wege[anbieter] || (typeof tt === "function"
+    ? tt("login.alsGast", "als Gast in diesem Browser")
+    : "als Gast in diesem Browser");
+
+  const bild = anbieter === "twitch" ? localStorage.getItem("twitchAvatar")
+             : anbieter === "discord" ? localStorage.getItem("discordAvatar")
+             : localStorage.getItem("wheelAvatar");
+
+  const bildHtml = typeof buildAvatarPickerHtml === "function"
+    ? buildAvatarPickerHtml(bild || "🏴‍☠️")
+    : "🏴‍☠️";
+
+  const sicher = typeof escapeHtml === "function" ? escapeHtml(name) : name;
+  const wechselbar = anbieter !== "twitch" && anbieter !== "discord";
+
+  kasten.hidden = false;
+  kasten.innerHTML = `
+    <span class="fh-anmelde-status-bild">${bildHtml}</span>
+    <span class="fh-anmelde-status-text">
+      <strong>${sicher}</strong>
+      <small>${escapeHtml(weg)}</small>
+    </span>
+    ${wechselbar
+      ? `<button type="button" class="code-button fh-anmelde-status-knopf" onclick="fhAvatarWahlOeffnen()">${
+           typeof tt === "function" ? tt("avatar.aendern", "Avatar ändern") : "Avatar ändern"}</button>`
+      : ""}
+  `;
 }
