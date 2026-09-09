@@ -634,63 +634,84 @@
          ANMELDEN
     ===================== -->
     <section id="login" class="page">
-      <div class="page-content">
+      <div class="page-content fh-anmelde-seite">
         <div class="fh-page-head">
           <p class="fh-page-kicker" data-i18n="login.kicker">Zugang</p>
           <h1 class="fh-page-title" data-i18n="login.title">Anmeldung</h1>
           <p class="fh-page-lead" data-i18n="login.subtitle">Melde dich an, um in Rangliste und Wochenrennen zu erscheinen</p>
         </div>
 
-        <div class="twitch-login-area">
-          <button id="twitch-login-btn" class="twitch-login-btn" onclick="loginWithTwitch()">
-            <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M4.3 2 3 5.4v14.2h4.9V22h2.8l2.6-2.4h4L21 15.4V2H4.3zm14.9 12.4-3 2.9h-4l-2.6 2.4v-2.4H6.1V3.9h13.1v10.5z"/><path d="M15.5 7.1h1.9v5.2h-1.9zM10.4 7.1h1.9v5.2h-1.9z"/></svg>
-            <span data-i18n="login.twitchButton">Mit Twitch anmelden</span>
-          </button>
+        <!-- Wer bin ich gerade? Wird von updateLoginPage() (wheel.js)
+             und twitch-auth.js gefuellt; ohne Anmeldung bleibt der
+             Kasten leer und faellt damit weg. -->
+        <div id="fh-anmelde-status" class="fh-anmelde-status" hidden></div>
 
-          <button id="discord-login-btn" class="twitch-login-btn discord-login-btn" onclick="loginWithDiscord()">
-            <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M20.3 4.4c-1.5-.7-3.1-1.2-4.7-1.4-.2.4-.4.9-.6 1.3-1.7-.3-3.5-.3-5.2 0-.2-.4-.4-.9-.6-1.3-1.6.3-3.2.7-4.7 1.4C1.5 8.4.8 12.4 1.1 16.3c1.8 1.3 3.5 2.1 5.2 2.7.4-.6.8-1.2 1.1-1.9-.6-.2-1.2-.5-1.7-.8.1-.1.3-.2.4-.3 3.3 1.5 6.9 1.5 10.2 0 .1.1.3.2.4.3-.6.3-1.1.6-1.7.8.3.7.7 1.3 1.1 1.9 1.7-.5 3.4-1.4 5.2-2.7.4-4.5-.8-8.4-2.9-11.9zM8.7 13.9c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9zm6.6 0c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9z"/></svg>
-            <span data-i18n="login.discordButton">Mit Discord anmelden</span>
-          </button>
+        <div class="fh-anmelde-spalten">
 
-          <div id="twitch-logged-in" class="twitch-logged-in">
-            <img id="twitch-avatar" class="twitch-avatar" alt="">
-            <span>
-              <span id="twitch-logged-in-name"></span>
-              <small id="login-provider-label" class="login-provider-label"></small>
-            </span>
-            <button class="twitch-logout-btn" onclick="logoutTwitch()" data-i18n="common.logout">Abmelden</button>
-          </div>
+          <!-- SPALTE 1: Konto verknuepfen -->
+          <section class="fh-anmelde-karte">
+            <p class="fh-anmelde-nummer">1</p>
+            <h2 class="fh-anmelde-titel" data-i18n="login.karteKonto">Mit Konto anmelden</h2>
+            <p class="fh-anmelde-text" data-i18n="login.karteKontoText">Name und Bild kommen dann von dort &ndash; und bleiben auf jedem Ger&auml;t gleich.</p>
+
+            <div class="twitch-login-area">
+              <button id="twitch-login-btn" class="twitch-login-btn" onclick="loginWithTwitch()">
+                <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M4.3 2 3 5.4v14.2h4.9V22h2.8l2.6-2.4h4L21 15.4V2H4.3zm14.9 12.4-3 2.9h-4l-2.6 2.4v-2.4H6.1V3.9h13.1v10.5z"/><path d="M15.5 7.1h1.9v5.2h-1.9zM10.4 7.1h1.9v5.2h-1.9z"/></svg>
+                <span data-i18n="login.twitchButton">Mit Twitch anmelden</span>
+              </button>
+
+              <button id="discord-login-btn" class="twitch-login-btn discord-login-btn" onclick="loginWithDiscord()">
+                <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M20.3 4.4c-1.5-.7-3.1-1.2-4.7-1.4-.2.4-.4.9-.6 1.3-1.7-.3-3.5-.3-5.2 0-.2-.4-.4-.9-.6-1.3-1.6.3-3.2.7-4.7 1.4C1.5 8.4.8 12.4 1.1 16.3c1.8 1.3 3.5 2.1 5.2 2.7.4-.6.8-1.2 1.1-1.9-.6-.2-1.2-.5-1.7-.8.1-.1.3-.2.4-.3 3.3 1.5 6.9 1.5 10.2 0 .1.1.3.2.4.3-.6.3-1.1.6-1.7.8.3.7.7 1.3 1.1 1.9 1.7-.5 3.4-1.4 5.2-2.7.4-4.5-.8-8.4-2.9-11.9zM8.7 13.9c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9zm6.6 0c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9z"/></svg>
+                <span data-i18n="login.discordButton">Mit Discord anmelden</span>
+              </button>
+
+              <div id="twitch-logged-in" class="twitch-logged-in">
+                <img id="twitch-avatar" class="twitch-avatar" alt="">
+                <span>
+                  <span id="twitch-logged-in-name"></span>
+                  <small id="login-provider-label" class="login-provider-label"></small>
+                </span>
+                <button class="twitch-logout-btn" onclick="logoutTwitch()" data-i18n="common.logout">Abmelden</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- SPALTE 2: Als Gast, nur mit Namen -->
+          <section class="fh-anmelde-karte">
+            <p class="fh-anmelde-nummer">2</p>
+            <h2 class="fh-anmelde-titel" data-i18n="login.karteGast">Oder einfach einen Namen w&auml;hlen</h2>
+            <p class="fh-anmelde-text" data-i18n="login.karteGastText">Ohne Konto, sofort dabei. Dein Fortschritt h&auml;ngt dann an diesem Browser &ndash; sichere ihn unten mit dem Kennwort.</p>
+
+            <div id="wheel-nickname-box" class="wheel-nickname-box">
+              <div id="wheel-avatar-picker" class="wheel-avatar-picker js-avatar-picker"></div>
+              <label class="fh-visually-hidden" for="wheel-nickname-input"
+                     data-i18n="login.nameLabel">Dein Name in der Crew</label>
+              <input
+                type="text"
+                id="wheel-nickname-input"
+                class="code-input"
+                placeholder="Namen manuell eintragen" data-i18n-placeholder="login.namePlaceholder"
+                maxlength="18"
+                data-fh-counter
+                autocomplete="off">
+              <button class="code-button" onclick="saveNickname()" data-i18n="common.save">Speichern</button>
+              <p id="nickname-error" class="nickname-error"></p>
+              <div id="nickname-success" class="nickname-success">
+                <span class="nickname-success-check">&check;</span>
+                <span class="nickname-success-text"></span>
+              </div>
+            </div>
+          </section>
         </div>
 
-        <p class="login-divider" data-i18n="login.divider">— oder —</p>
-
-        <div id="wheel-nickname-box" class="wheel-nickname-box">
-          <div id="wheel-avatar-picker" class="wheel-avatar-picker"></div>
-          <label class="fh-visually-hidden" for="wheel-nickname-input"
-                 data-i18n="login.nameLabel">Dein Name in der Crew</label>
-          <input
-            type="text"
-            id="wheel-nickname-input"
-            class="code-input"
-            placeholder="Namen manuell eintragen" data-i18n-placeholder="login.namePlaceholder"
-            maxlength="18"
-            data-fh-counter
-            autocomplete="off">
-          <button class="code-button" onclick="saveNickname()" data-i18n="common.save">Speichern</button>
-          <p id="nickname-error" class="nickname-error"></p>
-          <div id="nickname-success" class="nickname-success">
-            <span class="nickname-success-check">✓</span>
-            <span class="nickname-success-text"></span>
-          </div>
-        </div>
-
-        <!-- Wiederherstellungs-Kennwort: rettet Dublonen, Level, Schiff
-             und Turnier-Anmeldung ueber einen Geraetewechsel oder einen
-             geleerten Browserspeicher hinweg. Siehe
-             scripts/core/spieler-kennwort.js. -->
-        <div id="fh-kennwort-box" class="fh-kennwort-box">
-          <h3 class="fh-kennwort-titel" data-i18n="kennwort.titel">Dein Wiederherstellungs-Kennwort</h3>
-          <p class="fh-kennwort-text" data-i18n="kennwort.erklaerung">Schreib dir das auf. Damit holst du deinen Fortschritt auf ein anderes Ger&auml;t &ndash; oder zur&uuml;ck, wenn dein Browser den Speicher geleert hat.</p>
+        <!-- SCHRITT 3: Wiederherstellungs-Kennwort. Rettet Dublonen,
+             Level, Schiff und Turnier-Anmeldung ueber einen
+             Geraetewechsel oder einen geleerten Browserspeicher
+             hinweg. Siehe scripts/core/spieler-kennwort.js. -->
+        <section class="fh-anmelde-karte fh-anmelde-karte-breit" id="fh-kennwort-box">
+          <p class="fh-anmelde-nummer">3</p>
+          <h2 class="fh-anmelde-titel fh-kennwort-titel" data-i18n="kennwort.titel">Dein Wiederherstellungs-Kennwort</h2>
+          <p class="fh-anmelde-text fh-kennwort-text" data-i18n="kennwort.erklaerung">Schreib dir das auf. Damit holst du deinen Fortschritt auf ein anderes Ger&auml;t &ndash; oder zur&uuml;ck, wenn dein Browser den Speicher geleert hat.</p>
 
           <div class="fh-kennwort-anzeige">
             <code id="fh-kennwort-wert" class="fh-kennwort-wert">&bull;&bull;&bull;&bull;-&bull;&bull;&bull;&bull;</code>
@@ -711,7 +732,7 @@
                     onclick="fhKennwortEinloesen()" data-i18n="kennwort.einloesen">Konto holen</button>
           </div>
           <p id="fh-kennwort-status" class="fh-kennwort-status" role="status"></p>
-        </div>
+        </section>
       </div>
     </section>
 
@@ -1463,6 +1484,7 @@
   <script src="scripts/supabase/supabase-client.js" defer></script>
   <script src="scripts/core/spieler-kennwort.js" defer></script>
   <script src="scripts/core/hinweisband.js" defer></script>
+  <script src="scripts/core/avatar-wahl.js" defer></script>
   <script src="scripts/supabase/supabase-players.js" defer></script>
   <script src="scripts/tournament/tournament-api.js" defer></script>
   <script src="scripts/tournament/tournament-data.js" defer></script>

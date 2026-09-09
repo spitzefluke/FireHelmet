@@ -469,19 +469,29 @@ function renderPlayerCardHtml(data) {
   // niemals ungefiltert in innerHTML einsetzen, siehe escapeHtml()
   // in wheel.js (dieselbe Funktion, die auch Rangliste/Boss nutzen).
   const safeNickname = typeof escapeHtml === "function" ? escapeHtml(nickname) : nickname;
+  /* Die Karte ist bewusst KEIN Knopf mehr, sondern ein Kasten mit
+     zwei Knoepfen darin: das Bild oeffnet die Avatarwahl, der Rest
+     wie bisher den Levelpfad. Ein Knopf im Knopf ist in HTML nicht
+     erlaubt, deshalb der Umbau. */
+  const avatarTitel = typeof t === "function" ? t("avatar.aendern", "Avatar ändern") : "Avatar ändern";
 
   return `
-    <button type="button" class="fh-player-card" onclick="openLevelPath()" aria-label="${levelLabel} ${progress.level}">
-      <span class="fh-player-card-avatar">${avatarHtml}</span>
-      <span class="fh-player-card-info">
+    <div class="fh-player-card">
+      <button type="button" class="fh-player-card-avatar fh-player-card-avatarknopf"
+              onclick="fhAvatarWahlOeffnen()"
+              title="${avatarTitel}" aria-label="${avatarTitel}">
+        ${avatarHtml}
+        <span class="fh-player-card-stift" aria-hidden="true">✎</span>
+      </button>
+      <button type="button" class="fh-player-card-info" onclick="openLevelPath()" aria-label="${levelLabel} ${progress.level}">
         <span class="fh-player-card-name">${safeNickname}</span>
         <span class="fh-player-card-level">${levelLabel} ${progress.level}</span>
         <span class="fh-player-card-xpbar" role="progressbar" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpText}">
           <span class="fh-player-card-xpfill" style="width:${percent}%"></span>
         </span>
         <span class="fh-player-card-xptext">${xpText}</span>
-      </span>
-    </button>
+      </button>
+    </div>
   `;
 }
 
