@@ -59,10 +59,37 @@ as $$ select app.firebase_uid() is not null $$;
 -- kommt direkt von Supabases eigenem, verifiziertem Google-Provider
 -- (kein Firebase/Third-Party-Umweg mehr). Muss exakt FIRE_HELMET_CONFIG.
 -- ownerEmail entsprechen (scripts/core/fire-helmet-config.js).
+/* ACHTUNG - DIESE FUNKTION DARF NIE NULL LIEFERN
+   ---------------------------------------------------
+   Sie stand hier urspruenglich ohne coalesce:
+
+     select app.is_signed_in() and (auth.jwt() ->> 'email') = '...'
+
+   Steht im Token kein email-Anspruch, ist der Vergleich NULL, und
+   damit war das Ergebnis der ganzen Funktion NULL statt false.
+   Genau das ist bei JEDER anonymen Anmeldung der Fall, also bei
+   fast jedem Besucher der Seite.
+
+   Alle Adminfunktionen sichern sich mit
+
+     if not app.is_admin() then raise exception 'not-admin'; end if;
+
+   und "not NULL" ist in SQL wieder NULL. Ein IF auf NULL greift
+   nicht - die Ausnahme wurde also nicht geworfen, und die Funktion
+   lief weiter, als waere der Aufrufer Administrator. Betroffen
+   waren alle neununddreissig app.admin_*-Funktionen, darunter
+   admin_spieler_setzen (fremdes Guthaben setzen), admin_codes
+   (Codeliste lesen) und admin_support_liste.
+
+   coalesce macht daraus ein hartes false. Der Vergleich steht
+   bewusst gegen die leere Zeichenkette und nicht gegen NULL, damit
+   ein Token ohne email einen definierten, nicht passenden Wert
+   hat. Nachgewiesen und behoben am 09.09.2026. */
 create or replace function app.is_admin() returns boolean
 language sql stable
 as $$
-  select app.is_signed_in() and (auth.jwt() ->> 'email') = 'y.n.trott@gmail.com'
+  select coalesce(app.is_signed_in(), false)
+     and coalesce(auth.jwt() ->> 'email', '') = 'y.n.trott@gmail.com'
 $$;
 
 /* ======================================================

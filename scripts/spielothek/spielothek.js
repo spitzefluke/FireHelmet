@@ -266,7 +266,13 @@ async function playSpielothekGame() {
     // Ergebnis wird HIER ermittelt - dasselbe Ergebnis wird gleich
     // unten angezeigt UND ist exakt das, was tatsächlich gutgeschrieben/
     // abgezogen wurde.
-    const spin = handler.play(betCost);
+    /* Das Guthaben geht mit in die Rechnung: der Gewinn haengt
+       jetzt nicht mehr nur am Einsatz, sondern bekommt einen
+       Anteil des Kontos obendrauf (siehe SLOT_GUTHABEN_ANTEIL in
+       games/slot.js). Vorher hing nur der VERLUST am Guthaben -
+       diese Schieflage war der Grund, warum sich Treffer bei
+       grossen Konten nach nichts anfuehlten. */
+    const spin = handler.play(betCost, currentCurrency);
 
     /* Gewinn: Einsatz weg, Auszahlung dazu (wie bisher).
        Niete:   NICHT der Einsatz, sondern ein Anteil des Guthabens -

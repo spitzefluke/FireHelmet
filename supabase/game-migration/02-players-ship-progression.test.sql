@@ -390,3 +390,49 @@ reset role;
 
 drop function test_expect_blocked(text, text);
 drop function test_expect_ok(text, text);
+
+
+-- ============================================================
+-- TEST: app.is_admin() darf NIEMALS null liefern
+-- ------------------------------------------------------------
+-- Am 09.09.2026 lieferte sie null, sobald im Token kein
+-- email-Anspruch stand - bei jeder anonymen Anmeldung also. Weil
+-- alle Adminfunktionen mit "if not app.is_admin()" absichern und
+-- "not null" wieder null ist, griff das IF nicht: die Funktionen
+-- liefen durch, als waere der Aufrufer Administrator.
+--
+-- Der Test prueft deshalb NICHT nur "ist nicht admin", sondern
+-- ausdruecklich "ist genau false". Ein Test auf "is not true"
+-- waere durchgegangen, obwohl die Luecke offenstand.
+-- ============================================================
+select set_config('request.jwt.claims',
+  '{"sub":"eeeeeeee-0000-0000-0000-00000000ff01","role":"authenticated"}', false);
+
+select case when app.is_admin() = false
+            then 'PASS' else 'FAIL' end
+       || ' - TESTADMIN1 is_admin() ist false (nicht null) ohne email im Token' as result;
+
+select case when (not app.is_admin()) = true
+            then 'PASS' else 'FAIL' end
+       || ' - TESTADMIN2 not is_admin() ist true, das IF der Adminfunktionen greift' as result;
+
+-- Eine echte Adminfunktion muss jetzt abweisen
+do $$
+begin
+  perform app.admin_statusbrett();
+  raise notice 'FAIL - TESTADMIN3 Adminfunktion lief ohne Adminrecht';
+exception when others then
+  if sqlerrm like '%not-admin%' then
+    raise notice 'PASS - TESTADMIN3 Adminfunktion weist ohne Adminrecht ab';
+  else
+    raise notice 'FAIL - TESTADMIN3 falsche Ausnahme: %', sqlerrm;
+  end if;
+end $$;
+
+-- Mit der richtigen Adresse muss sie weiterhin durchgehen
+select set_config('request.jwt.claims',
+  '{"sub":"eeeeeeee-0000-0000-0000-000000000009","role":"authenticated","email":"y.n.trott@gmail.com"}', false);
+
+select case when app.is_admin() = true
+            then 'PASS' else 'FAIL' end
+       || ' - TESTADMIN4 echter Admin wird weiterhin erkannt' as result;

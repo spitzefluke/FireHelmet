@@ -2316,6 +2316,27 @@
 }
 
 /* Auszahlungstabellen in den Regeln */
+/* Aufschluesselung unter den Walzen: Grundgewinn und
+   Guthaben-Anteil getrennt. Ohne sie waere nicht erkennbar, warum
+   derselbe Treffer bei einem groesseren Konto mehr einbringt. */
+.spielothek-gewinn-teile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: .4rem;
+  margin: .5rem 0 0;
+  font-size: .82rem;
+  color: var(--fh-muted, #9aa4b2);
+}
+
+.spielothek-gewinn-plus { opacity: .6; }
+
+.spielothek-gewinn-guthaben {
+  font-weight: 700;
+  color: var(--fh-gold, #f0c96a);
+}
+
 .spielothek-regeln-tabelle {
   width: 100%;
   margin: .9rem 0 1.2rem;
