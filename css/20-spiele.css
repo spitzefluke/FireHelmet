@@ -2289,10 +2289,29 @@
 }
 
 .spielothek-regeln-tabelle caption {
+  /* Flex statt Textfluss: sonst haengt das Quoten-Schild mal in der
+     Zeile und rutscht mal darunter, je nachdem wie breit die
+     Ueberschrift gerade ausfaellt. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .1rem .45rem;
   padding-bottom: .35rem;
   font-weight: 700;
   text-align: left;
   opacity: .9;
+}
+
+/* Auf schmalen Schirmen wird rechts abgeschnitten. Ein Verlauf am
+   rechten Rand sagt, dass da noch etwas kommt - sonst haelt man die
+   angeschnittene Spalte fuer das Ende der Tabelle.
+   mask statt einer aufgesetzten Ebene, damit nichts ueber der
+   scrollenden Tabelle liegt und Zeigereingaben abfaengt. */
+@media (max-width: 700px) {
+  .spielothek-regeln-tabelle {
+    -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+  }
 }
 
 .spielothek-regeln-tabelle th,
@@ -2303,9 +2322,51 @@
   white-space: nowrap;
 }
 
+/* Die Symbolspalte bleibt beim Querscrollen stehen. Bei sechs
+   Walzen hat die Tabelle sieben Spalten - ohne das scrollt man auf
+   dem Handy nach rechts und weiss nicht mehr, in welcher Zeile man
+   ist. Der Hintergrund muss deckend sein, sonst scheinen die
+   wegscrollenden Zahlen durch. */
 .spielothek-regeln-tabelle thead th:first-child,
-.spielothek-regeln-tabelle tbody th { text-align: left; font-weight: 600; }
+.spielothek-regeln-tabelle tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+  font-weight: 600;
+  background: var(--fh-flaeche-2, #16202b);
+}
 .spielothek-regeln-tabelle tbody tr:last-child { font-weight: 700; }
+
+/* Der Normalfall: fast jeder Treffer ist die kleinste Gruppe.
+   Diese Spalte bekommt deshalb das Gewicht, nicht die Traumzahlen
+   ganz rechts. */
+.spielothek-regeln-tabelle .ist-normalfall {
+  color: var(--fh-gold, #e8b64c);
+  font-weight: 700;
+  background: color-mix(in srgb, var(--fh-gold, #e8b64c) 8%, transparent);
+}
+.spielothek-regeln-tabelle thead th.ist-normalfall::after {
+  content: "";
+  display: block;
+  height: 2px;
+  margin-top: .2rem;
+  border-radius: 2px;
+  background: var(--fh-gold, #e8b64c);
+}
+
+/* Trefferquote in der Beschriftung - die Zahl ist die Aussage,
+   deshalb steht sie ruhig und nicht als Signalfarbe da. */
+.spielothek-regeln-quote {
+  margin-left: .4rem;
+  padding: .05rem .4rem;
+  border: 1px solid var(--fh-linie, rgba(255, 255, 255, .14));
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: .78em;
+  opacity: .85;
+  white-space: nowrap;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .spielothek-verlust-icon.ist-bewegt { animation: none; }

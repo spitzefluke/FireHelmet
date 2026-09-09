@@ -460,22 +460,22 @@ async function refreshSpielothekCurrencyDisplay() {
 /* ------------------------------------------------------
    VERLUST: PROZENT VOM GUTHABEN STATT DES EINSATZES
    ---------------------------------------------------
-   Bei einer Niete geht nicht mehr der Einsatz verloren, sondern
-   ein Anteil des Guthabens - gestaffelt, damit Anfaenger geschont
-   und Horter gebremst werden:
+   Bei einer Niete geht nicht der Einsatz verloren, sondern ein
+   Anteil des Guthabens - gestaffelt, damit Anfaenger geschont und
+   Horter gebremst werden:
 
-     unter    500 Dublonen ->   1 %
-     unter   2000 Dublonen ->   3 %
-     unter  10000 Dublonen ->   4 %
-     unter  25000 Dublonen ->   6 %
-     unter  50000 Dublonen ->   8 %
-     darueber              ->  10 %
+     unter    500 Dublonen ->  1,0 %
+     unter   2000 Dublonen ->  2,0 %
+     unter   5000 Dublonen ->  2,5 %
+     unter  10000 Dublonen ->  3,0 %
+     unter  25000 Dublonen ->  4,0 %
+     unter  50000 Dublonen ->  5,0 %
+     darueber              ->  6,0 %
 
-   Die oberen Saetze sind gegenueber dem ersten Entwurf (5/8/12 %)
-   abgesenkt und um eine Stufe erweitert worden: 12 % je Niete waren
-   bei zwei Dritteln Nieten so hart, dass ein grosses Konto in unter
-   zwanzig Drehungen die Haelfte verloren haette. Die Bremse soll
-   bremsen, nicht enteignen.
+   Dritte Absenkung: erst 5/8/12 %, dann 4/6/8/10 %, jetzt sieben
+   Stufen mit hoechstens 6 %. Warum es dreimal nicht gereicht hat,
+   steht bei SPIELOTHEK_VERLUST_DECKEL - kurz: an den Saetzen zu
+   drehen war nie die Loesung, die Rechnung selbst war das Problem.
 
    Unter 200 Dublonen wird gar kein Prozentabzug faellig, dann
    kostet die Niete nur den Einsatz - sonst klebt jemand mit
@@ -492,18 +492,44 @@ async function refreshSpielothekCurrencyDisplay() {
    die Bremse wirkt nur beim Weiterspielen.
 ------------------------------------------------------ */
 const SPIELOTHEK_VERLUST_STUFEN = [
-  { bis: 500,       anteil: 0.01 },
-  { bis: 2000,      anteil: 0.03 },
-  { bis: 10000,     anteil: 0.04 },
-  { bis: 25000,     anteil: 0.06 },
-  { bis: 50000,     anteil: 0.08 },
-  { bis: Infinity,  anteil: 0.10 },
+  { bis: 500,       anteil: 0.010 },
+  { bis: 2000,      anteil: 0.020 },
+  { bis: 5000,      anteil: 0.025 },
+  { bis: 10000,     anteil: 0.030 },
+  { bis: 25000,     anteil: 0.040 },
+  { bis: 50000,     anteil: 0.050 },
+  { bis: Infinity,  anteil: 0.060 },
 ];
 const SPIELOTHEK_VERLUST_FREIGRENZE = 200;
 
+/* Obergrenze fuer den Abzug, als Vielfaches des EINSATZES.
+   ------------------------------------------------------
+   Ohne diesen Deckel ist ein Prozentsatz vom Guthaben rechnerisch
+   ruinoes, egal wie klein man ihn waehlt. Zwei Drittel der Drehungen
+   sind Nieten, jede zieht denselben Anteil ab - das Guthaben faellt
+   also geometrisch. Bis zur Haelfte sind es ln(0,5)/ln(1 - 0,67*Satz)
+   Drehungen: bei 6 % nur 17, bei 3 % 34, selbst bei 1 % erst 103.
+   Die Saetze zu senken verschiebt das, loest es aber nie.
+
+   Dazu kommt der Groessenunterschied: 6 % von 61 320 sind 3 679,
+   der hoechste Einsatz sind 100. Kein Gewinn der Tabelle kann eine
+   solche Niete je aufwiegen - das Spiel waere fuer grosse Konten
+   nicht schwer, sondern sinnlos.
+
+   Der Deckel bindet den Abzug deshalb an den Einsatz. Bei 15 gilt
+   der Prozentsatz weiterhin ueberall dort, wo tatsaechlich Konten
+   liegen (bis rund 8000 Dublonen bei Einsatz 20); darueber greift
+   der Deckel. Fuer das groesste Konto sind es damit 171 statt 20
+   Drehungen bis zur Haelfte - gebremst, nicht enteignet. Und weil
+   der Deckel am Einsatz haengt, hat man ihn selbst in der Hand:
+   wer gross setzt, wird auch schneller gebremst. */
+const SPIELOTHEK_VERLUST_DECKEL = 15;
+
 function spielothekVerlustAnteil(guthaben) {
   const stufe = SPIELOTHEK_VERLUST_STUFEN.find((s) => guthaben < s.bis);
-  return stufe ? stufe.anteil : 0.05;
+  // Rueckfall auf die oberste Stufe, nicht auf einen eigenen Wert -
+  // sonst waere ein Guthaben ueber allen Grenzen milder gestellt.
+  return stufe ? stufe.anteil : SPIELOTHEK_VERLUST_STUFEN[SPIELOTHEK_VERLUST_STUFEN.length - 1].anteil;
 }
 
 function spielothekVerlustAbzug(guthaben, einsatz) {
@@ -520,8 +546,10 @@ function spielothekVerlustAbzug(guthaben, einsatz) {
        deshalb faellig. */
     return Math.min(einsatz, guthaben);
   }
-  const abzug = Math.round(guthaben * spielothekVerlustAnteil(guthaben));
-  return Math.min(abzug, guthaben);
+  const prozent = Math.round(guthaben * spielothekVerlustAnteil(guthaben));
+  // Nie weniger als der Einsatz (sonst waere Verlieren billiger als
+  // Gewinnen), nie mehr als der Deckel, nie mehr als vorhanden.
+  return Math.min(Math.max(einsatz, prozent), einsatz * SPIELOTHEK_VERLUST_DECKEL, guthaben);
 }
 
 async function renderSpielothekResult(game, handler, result, betCost, angewandtesDelta) {
