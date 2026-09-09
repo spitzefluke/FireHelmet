@@ -5,6 +5,18 @@
 drop schema if exists auth cascade;
 create schema auth;
 
+-- Minimale Nachbildung von auth.users. Bei echtem Supabase legt der
+-- Dienst diese Tabelle selbst an; die Admin-Funktionen in 12 und 13
+-- lesen daraus nur created_at ("wann wurde dieses Konto angelegt"),
+-- damit sich bei mehreren Konten desselben Namens das neueste
+-- erkennen laesst.
+create table auth.users (
+  id uuid primary key,
+  email text,
+  created_at timestamptz not null default now(),
+  last_sign_in_at timestamptz
+);
+
 create or replace function auth.jwt() returns jsonb as $$
   -- nullif(...,''): ein per set_config auf den LEEREN String gesetzter
   -- Claim bedeutet in den Tests "nicht angemeldet". Ohne dieses nullif
