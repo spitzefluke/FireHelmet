@@ -47,6 +47,16 @@ let siteConfig = {
   // scripts/ship/ship-repair.js). Leeres Array = keine automatische
   // Freischaltung konfiguriert.
   shipRepairUnlockChapterIds: [],
+
+  // Hinweisband ueber der Seite (siehe scripts/core/hinweisband.js).
+  // Leerer Text = kein Band.
+  ankuendigung: "",
+  // Wartungshinweis. Sperrt die Seite NICHT aus - das waere bei einer
+  // rein statischen Seite ohnehin nur Fassade -, sondern zeigt ein
+  // deutliches Band, damit niemand ueber halb umgebaute Stellen
+  // stolpert, ohne zu wissen warum.
+  wartung: false,
+  wartungText: "",
 };
 
 let siteConfigReady = false;
@@ -74,6 +84,9 @@ function applySiteConfigSnapshot(data) {
     lockedChapterIds: Array.isArray(data.lockedChapterIds) ? data.lockedChapterIds : [],
     disabledGameIds: Array.isArray(data.disabledGameIds) ? data.disabledGameIds : [],
     shipRepairUnlockChapterIds: Array.isArray(data.shipRepairUnlockChapterIds) ? data.shipRepairUnlockChapterIds : [],
+    ankuendigung: typeof data.ankuendigung === "string" ? data.ankuendigung : "",
+    wartung: data.wartung === true,
+    wartungText: typeof data.wartungText === "string" ? data.wartungText : "",
   };
   markSiteConfigReady();
   window.dispatchEvent(new CustomEvent("siteConfigUpdated", { detail: siteConfig }));

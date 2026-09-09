@@ -356,6 +356,18 @@ async function renderGatewayPage() {
       <h2 class="fh-ship-section-heading">Spieler verwalten</h2>
       ${buildGatewaySpielerHtml()}
 
+      <h2 class="fh-ship-section-heading">Ankündigung &amp; Wartung</h2>
+      ${buildGatewayBandHtml()}
+
+      <h2 class="fh-ship-section-heading">Cap-Zusagen</h2>
+      <div id="gateway-caps">Lade Caps ...</div>
+
+      <h2 class="fh-ship-section-heading">Support-Meldungen</h2>
+      <div id="gateway-support">Lade Meldungen ...</div>
+
+      <h2 class="fh-ship-section-heading">Verlosung</h2>
+      <div id="gateway-verlosung">Lade Verlosung ...</div>
+
       <h2 class="fh-ship-section-heading">Community-Boss</h2>
       <div id="gateway-boss">Lade Boss ...</div>
 
@@ -376,6 +388,9 @@ async function renderGatewayPage() {
 
   ladeGatewayStatusbrett();
   ladeGatewayBoss();
+  ladeGatewayCaps();
+  ladeGatewaySupport();
+  ladeGatewayVerlosung();
 
   buildGatewayShipStatusHtml().then((html) => {
     const sub = document.getElementById("gateway-ship-status-sub");
@@ -801,6 +816,285 @@ async function gatewayNameEntsperren(name) {
   } catch (err) {
     console.error("Entsperren fehlgeschlagen:", err);
     gatewaySpielerStatus("Entsperren fehlgeschlagen: " + (err.message || err), true);
+  }
+}
+
+/* ------------------------------------------------------
+   ANKUENDIGUNG UND WARTUNGSHINWEIS
+   Beides sind nur Felder im site_config-Blob; das Band oben auf der
+   Seite zeichnet sich bei jeder Aenderung selbst neu (siehe
+   scripts/core/hinweisband.js).
+------------------------------------------------------ */
+function buildGatewayBandHtml() {
+  const a = (typeof siteConfig !== "undefined" && siteConfig.ankuendigung) || "";
+  const wt = (typeof siteConfig !== "undefined" && siteConfig.wartungText) || "";
+  const w = typeof siteConfig !== "undefined" && siteConfig.wartung === true;
+
+  return `
+    <div class="gateway-form-row">
+      <label>Ankündigung (leer = kein Band)<br>
+        <input type="text" id="gateway-ankuendigung" class="code-input" maxlength="160"
+               value="${escapeHtml(a)}" placeholder="z.B. Turnier startet um 20 Uhr">
+      </label>
+      <label>Wartungstext<br>
+        <input type="text" id="gateway-wartung-text" class="code-input" maxlength="160"
+               value="${escapeHtml(wt)}" placeholder="Wir bauen gerade um">
+      </label>
+    </div>
+    <label class="gateway-checkbox">
+      <input type="checkbox" id="gateway-wartung" ${w ? "checked" : ""}> Wartungshinweis anzeigen
+    </label>
+    <button type="button" class="code-button gateway-inline-btn" onclick="gatewayBandSpeichern()">Speichern</button>
+    <p class="gateway-preview-hint">Wartung geht der Ankündigung vor. Das Band sperrt niemanden aus — bei einer Seite, deren Code komplett im Browser läuft, wäre eine Sperre ohnehin nur Fassade. Es sagt ehrlich Bescheid, damit niemand eine halb umgebaute Stelle für kaputt hält.</p>
+    <p id="gateway-band-status" class="wheel-status"></p>
+  `;
+}
+
+async function gatewayBandSpeichern() {
+  const el = document.getElementById("gateway-band-status");
+  try {
+    await patchSupabaseSiteConfig({
+      ankuendigung: ((document.getElementById("gateway-ankuendigung") || {}).value || "").trim(),
+      wartungText: ((document.getElementById("gateway-wartung-text") || {}).value || "").trim(),
+      wartung: !!(document.getElementById("gateway-wartung") || {}).checked,
+    });
+    if (el) el.textContent = "Gespeichert. Das Band oben ändert sich sofort, auch bei geöffneten Browsern.";
+  } catch (err) {
+    console.error("Band speichern fehlgeschlagen:", err);
+    if (el) el.textContent = "⚠️ " + (err.message || err);
+  }
+}
+
+/* ------------------------------------------------------
+   CAP-ZUSAGEN
+   Zusage und Zaehler bewegen sich nur gemeinsam, deshalb laeuft beides
+   ueber Serverfunktionen und nie ueber die Tabellen direkt.
+------------------------------------------------------ */
+async function ladeGatewayCaps() {
+  const ziel = document.getElementById("gateway-caps");
+  if (!ziel || !supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_caps");
+    if (error) throw error;
+
+    const zusagen = data.zusagen || [];
+    const liste = zusagen.length
+      ? zusagen.map((z) => `
+          <p class="gateway-status-sub">
+            <strong>${escapeHtml(z.name || "?")}</strong>
+            <code>${escapeHtml(z.uid)}</code>
+            ${z.wann ? escapeHtml(String(z.wann).slice(0, 10)) : ""}
+            <button type="button" class="code-button gateway-inline-btn" onclick="gatewayCapZurueck('${escapeHtml(z.uid)}')">Zurücknehmen</button>
+          </p>`).join("")
+      : `<p class="gateway-status-sub">Noch keine Cap zugesagt.</p>`;
+
+    ziel.innerHTML = `
+      <p class="gateway-status-sub"><strong>${data.vergeben} von ${data.grenze}</strong> Caps vergeben.</p>
+      ${liste}
+      <div class="gateway-form-row">
+        <label>Spieler-ID<br><input type="text" id="gateway-cap-uid" class="code-input" placeholder="UUID" autocomplete="off"></label>
+        <label>Name<br><input type="text" id="gateway-cap-name" class="code-input" maxlength="30" autocomplete="off"></label>
+      </div>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gatewayCapVergeben()">Cap zusagen</button>
+      <p id="gateway-cap-status" class="wheel-status"></p>
+    `;
+  } catch (err) {
+    console.error("Caps konnten nicht geladen werden:", err);
+    ziel.innerHTML = `<p class="wheel-status">⚠️ Cap-Zusagen konnten nicht geladen werden.</p>`;
+  }
+}
+
+async function gatewayCapVergeben() {
+  const el = document.getElementById("gateway-cap-status");
+  const uid = ((document.getElementById("gateway-cap-uid") || {}).value || "").trim();
+  const name = ((document.getElementById("gateway-cap-name") || {}).value || "").trim();
+  if (!uid || !name) { if (el) el.textContent = "ID und Name eintragen."; return; }
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_cap_vergeben", {
+      p_uid: uid, p_nickname: name, p_pass_id: "admin",
+    });
+    if (error) throw error;
+    ladeGatewayCaps();
+    ladeGatewayStatusbrett();
+    if (el) el.textContent = "Zugesagt. Jetzt " + data + " von 4.";
+  } catch (err) {
+    console.error("Cap vergeben fehlgeschlagen:", err);
+    if (el) el.textContent = "⚠️ " + (err.message || err);
+  }
+}
+
+async function gatewayCapZurueck(uid) {
+  const grund = window.prompt("Eine Zusage zurückzunehmen ist ein Wortbruch gegenüber der Person — gedacht nur für Fehleinträge.\n\nGrund (kommt ins Protokoll):", "");
+  if (grund === null) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_cap_zuruecknehmen", { p_uid: uid, p_grund: grund || null });
+    if (error) throw error;
+    ladeGatewayCaps();
+    ladeGatewayStatusbrett();
+  } catch (err) {
+    console.error("Cap zurücknehmen fehlgeschlagen:", err);
+    const el = document.getElementById("gateway-cap-status");
+    if (el) el.textContent = "⚠️ " + (err.message || err);
+  }
+}
+
+/* ------------------------------------------------------
+   SUPPORT-MELDUNGEN
+   Die Tabelle hat bewusst keine Lese-Policy - was jemand meldet, geht
+   andere Besucher nichts an. Bisher kam man nur ueber das
+   Supabase-Dashboard heran.
+------------------------------------------------------ */
+let gatewaySupportNurOffene = true;
+
+async function ladeGatewaySupport() {
+  const ziel = document.getElementById("gateway-support");
+  if (!ziel || !supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_support_liste", { p_nur_offene: gatewaySupportNurOffene });
+    if (error) throw error;
+
+    const umschalter = `<button type="button" class="code-button gateway-inline-btn" onclick="gatewaySupportUmschalten()">${gatewaySupportNurOffene ? "Auch erledigte zeigen" : "Nur offene zeigen"}</button>`;
+
+    if (!data || !data.length) {
+      ziel.innerHTML = `<p class="gateway-status-sub">Keine ${gatewaySupportNurOffene ? "offenen " : ""}Meldungen.</p>${umschalter}`;
+      return;
+    }
+
+    ziel.innerHTML = umschalter + data.map((m) => `
+      <div class="gateway-meldung${m.erledigt ? " ist-erledigt" : ""}">
+        <p class="gateway-status-sub">
+          <strong>${escapeHtml(m.nickname || "ohne Namen")}</strong>
+          ${m.seite ? " · " + escapeHtml(m.seite) : ""}
+          · ${escapeHtml(String(m.wann).slice(0, 16).replace("T", " "))}
+        </p>
+        <p class="gateway-meldung-text">${escapeHtml(m.nachricht)}</p>
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewaySupportErledigt(${m.id}, ${!m.erledigt})">${m.erledigt ? "Wieder öffnen" : "Erledigt"}</button>
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewaySupportLoeschen(${m.id})">Löschen</button>
+      </div>`).join("");
+  } catch (err) {
+    console.error("Support-Meldungen konnten nicht geladen werden:", err);
+    ziel.innerHTML = `<p class="wheel-status">⚠️ Meldungen konnten nicht geladen werden.</p>`;
+  }
+}
+
+function gatewaySupportUmschalten() {
+  gatewaySupportNurOffene = !gatewaySupportNurOffene;
+  ladeGatewaySupport();
+}
+
+async function gatewaySupportErledigt(id, erledigt) {
+  try {
+    const { error } = await supabaseClient.rpc("admin_support_erledigt", { p_id: id, p_erledigt: erledigt });
+    if (error) throw error;
+    ladeGatewaySupport();
+    ladeGatewayStatusbrett();
+  } catch (err) {
+    console.error("Meldung abhaken fehlgeschlagen:", err);
+  }
+}
+
+async function gatewaySupportLoeschen(id) {
+  if (!window.confirm("Diese Meldung endgültig löschen?")) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_support_loeschen", { p_id: id });
+    if (error) throw error;
+    ladeGatewaySupport();
+    ladeGatewayStatusbrett();
+  } catch (err) {
+    console.error("Meldung löschen fehlgeschlagen:", err);
+  }
+}
+
+/* ------------------------------------------------------
+   VERLOSUNG
+   Gezogen wird normalerweise im Browser des ersten Besuchers nach
+   Ablauf - mit festem Startwert aus der Runden-ID, damit bei allen
+   dasselbe herauskommt. Der Knopf hier zieht stattdessen wirklich
+   zufaellig und ueberschreibt ein vorhandenes Ergebnis.
+------------------------------------------------------ */
+async function ladeGatewayVerlosung() {
+  const ziel = document.getElementById("gateway-verlosung");
+  if (!ziel || !supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_verlosung_uebersicht");
+    if (error) throw error;
+
+    const runden = data.runden || [];
+    const liste = runden.length
+      ? runden.map((r) => {
+          const g = Array.isArray(r.gezogen) ? r.gezogen : null;
+          return `
+            <p class="gateway-status-sub">
+              <strong>${escapeHtml(r.runde)}</strong> — ${r.lose} Lose
+              ${g ? " · gezogen: " + g.map((x) => escapeHtml(x.nickname || x.uid || "?")).join(", ") : " · noch nicht gezogen"}
+              <button type="button" class="code-button gateway-inline-btn" onclick="gatewayVerlosungLose('${escapeHtml(r.runde)}')">Lose zeigen</button>
+            </p>`;
+        }).join("")
+      : `<p class="gateway-status-sub">Noch keine Lose abgegeben.</p>`;
+
+    ziel.innerHTML = `
+      ${liste}
+      <div class="gateway-form-row">
+        <label>Runde<br><input type="text" id="gateway-los-runde" class="code-input" placeholder="Runden-ID" autocomplete="off"></label>
+        <label>Gewinner<br><input type="number" min="1" max="10" id="gateway-los-anzahl" class="code-input" value="1"></label>
+      </div>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gatewayVerlosungZiehen()">Neu ziehen</button>
+      <div id="gateway-los-liste"></div>
+      <p id="gateway-los-status" class="wheel-status"></p>
+    `;
+  } catch (err) {
+    console.error("Verlosung konnte nicht geladen werden:", err);
+    ziel.innerHTML = `<p class="wheel-status">⚠️ Verlosung konnte nicht geladen werden.</p>`;
+  }
+}
+
+async function gatewayVerlosungLose(runde) {
+  const ziel = document.getElementById("gateway-los-liste");
+  const feld = document.getElementById("gateway-los-runde");
+  if (feld) feld.value = runde;
+  if (!ziel) return;
+  ziel.innerHTML = `<p class="wheel-status">Lade ...</p>`;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_verlosung_lose", { p_round_id: runde });
+    if (error) throw error;
+    ziel.innerHTML = (data || []).map((l) => `
+      <p class="gateway-status-sub">
+        ${escapeHtml(l.nickname || "?")} <code>${escapeHtml(l.firebase_uid)}</code>
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayLosEntfernen('${escapeHtml(runde)}', '${escapeHtml(l.firebase_uid)}')">Los entfernen</button>
+      </p>`).join("") || `<p class="gateway-status-sub">Keine Lose.</p>`;
+  } catch (err) {
+    console.error("Lose konnten nicht geladen werden:", err);
+    ziel.innerHTML = `<p class="wheel-status">⚠️ Lose konnten nicht geladen werden.</p>`;
+  }
+}
+
+async function gatewayVerlosungZiehen() {
+  const el = document.getElementById("gateway-los-status");
+  const runde = ((document.getElementById("gateway-los-runde") || {}).value || "").trim();
+  const anzahl = (document.getElementById("gateway-los-anzahl") || {}).value;
+  if (!runde) { if (el) el.textContent = "Runde eintragen."; return; }
+  if (!window.confirm("Für " + runde + " neu ziehen?\n\nEin bereits gezogenes Ergebnis wird dabei überschrieben.")) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_verlosung_ziehen", {
+      p_round_id: runde, p_anzahl: Number(anzahl),
+    });
+    if (error) throw error;
+    if (el) el.textContent = "Gezogen: " + (data || []).map((x) => x.nickname).join(", ");
+    ladeGatewayVerlosung();
+  } catch (err) {
+    console.error("Ziehen fehlgeschlagen:", err);
+    if (el) el.textContent = "⚠️ " + (err.message || err);
+  }
+}
+
+async function gatewayLosEntfernen(runde, uid) {
+  if (!window.confirm("Dieses Los aus der Verlosung nehmen?")) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_verlosung_los_entfernen", { p_round_id: runde, p_uid: uid });
+    if (error) throw error;
+    gatewayVerlosungLose(runde);
+  } catch (err) {
+    console.error("Los entfernen fehlgeschlagen:", err);
   }
 }
 
