@@ -2198,7 +2198,51 @@ img, svg, video, canvas {
 .fh-boss-angriff.ist-zu { opacity: .45; cursor: default; }
 .fh-boss-angriff.ist-gesperrt { opacity: .6; cursor: default; }
 
+/* Ruhepause ist etwas anderes als eine Sperre: der Angriff selbst
+   waere bereit, aber man darf ueberhaupt nicht angreifen. Deshalb
+   ein eigener, kuehler Ton statt derselben Graustufe. */
+.fh-boss-angriff.ist-ruhe {
+  opacity: .55;
+  cursor: default;
+  border-color: rgba(120, 170, 255, .25);
+}
+
+/* Kopfzeile: Symbol links, Schadensspanne rechts. Die Spanne kommt
+   aus boss_attack_defs auf dem Server - sie steht bewusst neben dem
+   Symbol und nicht im Text, damit man die vierzehn Karten an dieser
+   einen Stelle vergleichen kann, ohne zu lesen. */
+.fh-boss-angriff-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .fh-boss-angriff-symbol { font-size: 22px; line-height: 1; }
+
+.fh-boss-angriff-spanne {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  color: var(--fh-gold, #f0c96a);
+  background: color-mix(in srgb, var(--fh-gold, #f0c96a) 12%, transparent);
+}
+
+/* Zaehler neben "Spezialangriffe": wie viele der elf man hat.
+   Das Raster zeigt die verschlossenen ja weiterhin mit an - ohne
+   Zaehler muesste man sie abzaehlen. */
+.fh-boss-wahl-zaehler {
+  margin-left: .5em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: .06em;
+  color: var(--fh-gold, #f0c96a);
+  background: color-mix(in srgb, var(--fh-gold, #f0c96a) 12%, transparent);
+}
 
 .fh-boss-angriff-name {
   font-family: var(--fh-font-display, inherit);
@@ -2214,15 +2258,29 @@ img, svg, video, canvas {
 
 .fh-boss-angriff-marke {
   align-self: flex-start;
-  margin-top: 2px;
+  margin-top: auto;      /* immer an den Fussrand, egal wie lang der
+                            Beschreibungstext der Karte ausfaellt */
   padding: 2px 7px;
   font-size: 10px;
-  letter-spacing: .1em;
+  letter-spacing: .08em;
   text-transform: uppercase;
   border-radius: 999px;
   background: rgba(255, 255, 255, .08);
   color: var(--fh-muted, #9aa4b2);
 }
+
+.fh-boss-angriff.ist-gesperrt .fh-boss-angriff-marke {
+  color: #f0b46a;
+  background: rgba(240, 180, 106, .14);
+}
+
+.fh-boss-angriff.ist-ruhe .fh-boss-angriff-marke {
+  color: #8ab4ff;
+  background: rgba(138, 180, 255, .14);
+}
+
+/* Gleich hohe Karten, damit die Marken auf einer Linie sitzen. */
+.fh-boss-angriff-reihe { align-items: stretch; }
 
 /* ---- Geheimcode ---- */
 .fh-boss-code { margin-top: 16px; }
