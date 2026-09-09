@@ -173,8 +173,54 @@ async function fhKennwortEinloesen() {
   }
 }
 
+/* ------------------------------------------------------
+   KENNWORT IM STILLEN ANLEGEN
+   ---------------------------------------------------
+   WARUM DAS NOETIG IST
+   app.mein_kennwort() legt das Kennwort beim ERSTEN Aufruf an - und
+   aufgerufen wurde es bisher nur, wenn jemand auf "Anzeigen" drueckt.
+   Damit hatte am 09.09.2026 genau 2 von 31 Spielern ein Kennwort.
+   Die anderen 29 waren gegen genau den Fall ungeschuetzt, fuer den
+   das Ganze gebaut wurde: Browserspeicher weg, Konto weg.
+
+   Ein Rettungsanker, den man vorher selbst auswerfen muss, rettet
+   niemanden. Also wird er jetzt automatisch angelegt, einmal je
+   Browser, kurz nachdem die Anmeldung steht.
+
+   ANGEZEIGT wird er weiterhin erst auf Klick - der Grund dafuer
+   (Stream, weitergereichtes Handy) gilt unveraendert.
+------------------------------------------------------ */
+const FH_KENNWORT_ANGELEGT = "fhKennwortAngelegt";
+
+async function fhKennwortSicherstellen() {
+  if (!supabaseClient) return;
+  try {
+    if (localStorage.getItem(FH_KENNWORT_ANGELEGT)) return;
+  } catch (err) { return; }   // kein Speicher -> lieber nichts tun
+
+  try {
+    const uid = await wheelAuthReady;
+    if (!uid) return;
+
+    const { error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.rpc("mein_kennwort")
+    );
+    if (error) throw error;
+
+    // Erst NACH der bestaetigten Antwort merken. Andersherum wuerde
+    // ein fehlgeschlagener Versuch dauerhaft als "erledigt" gelten.
+    try { localStorage.setItem(FH_KENNWORT_ANGELEGT, "1"); } catch (err) {}
+  } catch (err) {
+    // Stiller Fehlschlag ist hier richtig: der naechste Seitenaufruf
+    // versucht es erneut, und der Spieler soll davon nichts merken.
+    console.warn("Kennwort konnte nicht vorab angelegt werden:", err);
+  }
+}
+
 /* Enter im Eingabefeld loest dasselbe aus wie der Knopf. */
 document.addEventListener("DOMContentLoaded", function () {
+  fhKennwortSicherstellen();
+
   const eingabe = document.getElementById("fh-kennwort-eingabe");
   if (!eingabe) return;
   eingabe.addEventListener("keydown", function (e) {

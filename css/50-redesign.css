@@ -2092,17 +2092,7 @@ button.detective-clue-card:hover {
   font-size: 14px;
 }
 
-.gateway-preview-frame {
-  margin-top: 12px;
-  width: 100%;
-  height: 480px;
-  border: 1px solid var(--fh-border-strong);
-  border-radius: var(--fh-radius);
-  background: var(--fh-bg);
-}
-
 @media (max-width: 600px) {
   .gateway-form-row { flex-direction: column; }
-  .gateway-preview-frame { height: 340px; }
 }
 

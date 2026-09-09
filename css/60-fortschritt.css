@@ -126,9 +126,17 @@
   gap: 12px;
 }
 
-.spielothek-game-emoji {
-  font-size: 34px;
-  filter: drop-shadow(0 0 14px rgba(240,201,106,.4));
+/* Frueher ein 34px-Emoji mit 14px Schein. Jetzt die gezeichnete
+   Marke in Messing - dieselbe Strichfuehrung wie die Walzensymbole. */
+.spielothek-game-zeichen {
+  display: inline-flex;
+  color: var(--spielo-messing, #be9654);
+}
+
+.spielothek-game-zeichen .spielothek-spiel-icon {
+  width: 34px;
+  height: 26px;
+  display: block;
 }
 
 .spielothek-game-name {
@@ -136,7 +144,8 @@
   font-size: clamp(1.2rem, 3.4vw, 1.7rem);
   letter-spacing: 2px;
   color: var(--fh-gold-bright);
-  text-shadow: 0 0 24px rgba(240,201,106,.35);
+  /* Schein von 24px auf 8px: der Name soll lesbar sein, nicht leuchten. */
+  text-shadow: 0 0 8px rgba(240,201,106,.25);
 }
 
 .spielothek-bet-hint {
@@ -181,11 +190,26 @@
   justify-content: center;
   padding: 28px 24px;
   border-radius: var(--fh-radius-lg);
+  /* GEHAEUSE: dunkles Holz mit Messingrahmen.
+     Die Maserung sind zwei sehr flache Farbverlaeufe in
+     unterschiedlichem Abstand - zusammen ergibt das eine
+     unregelmaessige Zeichnung, ohne dass eine Bilddatei geladen
+     werden muss. Frueher lag hier ein gleichmaessiges Streifenmuster
+     alle 22 Pixel; das las sich wie ein Gitter, nicht wie Holz. */
   background:
-    linear-gradient(160deg, rgba(58,44,28,.55), rgba(15,10,6,.9)),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, transparent 2px 22px);
-  border: 1px solid rgba(214,168,79,.35);
-  box-shadow: 0 30px 70px rgba(0,0,0,.55), inset 0 0 50px rgba(0,0,0,.35);
+    linear-gradient(168deg, rgba(64,46,29,.92), rgba(28,20,13,.96)),
+    repeating-linear-gradient(92deg,
+      rgba(0,0,0,.10) 0 1px, transparent 1px 9px,
+      rgba(255,235,200,.022) 9px 10px, transparent 10px 31px),
+    repeating-linear-gradient(88deg,
+      rgba(0,0,0,.06) 0 2px, transparent 2px 17px);
+  /* Messingrahmen: aussen eine feine helle Kante, innen ein Schatten -
+     das laesst den Rahmen erhaben wirken statt aufgemalt. */
+  border: 1px solid rgba(190,150,84,.55);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(255,226,170,.16),
+    inset 0 0 40px rgba(0,0,0,.42);
   transition: box-shadow .4s ease;
 }
 
@@ -197,15 +221,18 @@
   animation: spielothekStageLoseFlash .6s ease-out;
 }
 
+/* Frueher 60px Schein in kraeftigem Gold. Jetzt ein kurzes Aufhellen
+   des Messingrahmens - man sieht, dass etwas passiert ist, ohne dass
+   das halbe Bild leuchtet. */
 @keyframes spielothekStageWinFlash {
-  0%   { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
-  30%  { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 60px rgba(240,201,106,.55); }
-  100% { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
+  0%   { box-shadow: 0 18px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,226,170,.16), 0 0 0 rgba(224,161,82,0); }
+  30%  { box-shadow: 0 18px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,226,170,.4),  0 0 12px rgba(224,161,82,.35); }
+  100% { box-shadow: 0 18px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,226,170,.16), 0 0 0 rgba(224,161,82,0); }
 }
 
 @keyframes spielothekStageLoseFlash {
-  0%   { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(220,50,50,0); }
-  35%  { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 40px rgba(220,50,50,.45); }
+  0%   { box-shadow: 0 18px 40px rgba(0,0,0,.5), 0 0 0 rgba(168,86,74,0); }
+  35%  { box-shadow: 0 18px 40px rgba(0,0,0,.5), 0 0 10px rgba(168,86,74,.3); }
   100% { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(220,50,50,0); }
 }
 
@@ -367,12 +394,29 @@
   animation: spielothekReelLand .5s cubic-bezier(.34, 1.5, .64, 1);
 }
 
+/* FEHLER, im Browser entdeckt: hier fehlte "opacity: 0".
+   ---------------------------------------------------
+   Die Keyframe spielothekReelGlow laeuft 0 -> 1 -> 0 und ist als
+   halbe Sekunde Lichtimpuls beim Landen gedacht. Ohne animation-
+   fill-mode faellt das Element danach aber auf seinen GRUNDZUSTAND
+   zurueck - und der war, mangels eigener Angabe, opacity 1.
+
+   Der Impuls blieb also dauerhaft in voller Staerke stehen. Auf dem
+   Bildschirm sah man drei hell leuchtende Kacheln, in denen die
+   Symbole kaum noch zu erkennen waren; man wusste, DASS man
+   getroffen hatte, aber nicht WOMIT. Der Fehler bestand schon vor
+   dem Umbau - er faellt jetzt nur staerker auf, weil Strich-
+   zeichnungen weniger Eigenkontrast haben als Emoji.
+
+   Mit opacity: 0 im Grundzustand erlischt der Impuls wie gedacht.
+   Zusaetzlich von .75 auf .5 heruntergenommen. */
 .spielothek-slot-symbol-landed::after {
   content: "";
   position: absolute;
   inset: -6px;
   border-radius: 12px;
-  background: radial-gradient(circle, rgba(255,230,170,.75), transparent 70%);
+  background: radial-gradient(circle, rgba(255,230,170,.5), transparent 70%);
+  opacity: 0;
   animation: spielothekReelGlow .5s ease-out;
   pointer-events: none;
 }
@@ -389,15 +433,19 @@
   100% { opacity: 0; }
 }
 
-/* ---- Tier-abhaengige Verstaerkung beim Landen (Auftrag Punkt 5:
-   "staerkerer Effekt bei seltenen Gewinnen") ---- */
+/* ---- Verstaerkung bei selteneren Gewinnen ----
+   Das kalte Blau (125,211,252) fiel hier heraus: es kommt in der
+   ganzen Spielothek sonst nicht vor und wirkte auf Holz und Messing
+   wie ein fremdes Licht. Beide Stufen bleiben jetzt im warmen
+   Bereich und unterscheiden sich ueber die Staerke, nicht ueber die
+   Farbe - dieselbe Idee wie bei den Symbolfarben. */
 .spielothek-slot-reels-tier-big .spielothek-slot-symbol-landed::after,
 .spielothek-slot-reels-tier-veryBig .spielothek-slot-symbol-landed::after {
-  background: radial-gradient(circle, rgba(125,211,252,.85), transparent 70%);
+  background: radial-gradient(circle, rgba(255,214,140,.6), transparent 70%);
 }
 
 .spielothek-slot-reels-tier-jackpot .spielothek-slot-symbol-landed::after {
-  background: radial-gradient(circle, rgba(255,106,42,.9), transparent 70%);
+  background: radial-gradient(circle, rgba(255,150,70,.7), transparent 70%);
 }
 
 .spielothek-slot-reels-tier-jackpot .spielothek-slot-symbol-landed {
@@ -484,10 +532,10 @@
   color: var(--fh-danger);
 }
 
-/* --- Gewinn-Ablauf in zwei Schritten (Punkt 11): "Gewinn!" wird zuerst
-   aufgedeckt, dann poppt der Betrag mit demselben Effekt nach, waehrend
-   triggerSpielothekConfetti() (spielothek.js) ein paar Konfetti-Punkte
-   auseinanderfliegen laesst. --- */
+/* --- Gewinn-Ablauf in zwei Schritten: "Gewinn!" wird zuerst
+   aufgedeckt, dann erscheint der Betrag mit demselben Effekt. Das
+   Konfetti, das frueher dazu flog, ist entfernt - der Betrag traegt
+   den Moment allein. --- */
 .spielothek-result-reveal {
   animation: spielothekResultPop .35s cubic-bezier(.34, 1.5, .64, 1) backwards;
 }
@@ -502,56 +550,17 @@
   100% { opacity: 1; transform: scale(1); }
 }
 
-.spielothek-confetti-burst {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.spielothek-confetti-piece {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  border-radius: 2px;
-  background: var(--fh-confetti-color, #f0c96a);
-  animation: spielothekConfettiPop .75s ease-out both;
-  animation-delay: var(--fh-confetti-delay, 0ms);
-}
-
-@keyframes spielothekConfettiPop {
-  0%   { opacity: 1; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(0) scale(1); }
-  100% { opacity: 0; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(-48px) scale(.4); }
-}
-
-/* Jackpot: deutlich weiterer, laengerer Konfetti-Wurf UND groessere
-   Partikel (Auftrag Punkt 5: "staerkerer Effekt bei seltenen
-   Gewinnen") - eigene Keyframe statt nur mehr Teilchen derselben
-   Groesse/Reichweite. */
-.spielothek-confetti-burst-jackpot .spielothek-confetti-piece {
-  width: 8px;
-  height: 8px;
-  animation-name: spielothekConfettiPopJackpot;
-  animation-duration: 1.4s;
-}
-
-@keyframes spielothekConfettiPopJackpot {
-  0%   { opacity: 1; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(0) scale(1); }
-  100% { opacity: 0; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(-92px) scale(.3); }
-}
-
-/* Grosse Gewinne heben sich zusaetzlich farblich/optisch ab */
+/* Grosse Gewinne heben sich farblich ab - frueher zusaetzlich mit
+   einem Schein von 18px, jetzt mit 6px. Der Betrag soll auffallen,
+   nicht leuchten. */
 .spielothek-result-win-big {
   color: var(--menu-hex3);
-  text-shadow: 0 0 18px rgba(255,215,107,.7);
+  text-shadow: 0 0 6px rgba(255,215,107,.45);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .spielothek-result-reveal,
-  .spielothek-amount-pop,
-  .spielothek-confetti-piece {
+  .spielothek-amount-pop {
     animation: none;
   }
 }
@@ -876,11 +885,6 @@
     radial-gradient(circle at 70% 80%, rgba(240,201,106,.4) 0 3px, transparent 4px),
     radial-gradient(circle at 50% 50%, rgba(255,215,107,.35) 0 3px, transparent 4px);
   animation: fhConfettiDrift 2.4s ease-in-out infinite alternate;
-}
-
-@keyframes fhConfettiDrift {
-  from { transform: translateY(-4px); opacity: .9; }
-  to { transform: translateY(4px); opacity: .5; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2539,3 +2543,315 @@
   border: 1px solid var(--fh-border-strong);
 }
 
+
+/* ======================================================
+   SPIELOTHEK - GERAETE-ANMUTUNG (September 2026)
+   ---------------------------------------------------
+   Drei getrennte Anzeigen, Strichzeichnungen als Symbole und ein
+   Ausloeser mit ehrlichen Zustaenden. Alles auf den bestehenden
+   --fh-Tokens; die drei Holz-/Messingtoene stehen hier lokal, weil
+   sie ausserhalb der Spielothek nirgends vorkommen und im globalen
+   Token-Satz nur Ballast waeren.
+====================================================== */
+.spielothek-page-content {
+  --spielo-holz:     #3a2a1a;
+  --spielo-holz-tief:#1c130c;
+  --spielo-messing:  #be9654;
+  --spielo-messing-hell: #e2c48a;
+  --spielo-fenster:  #14100c;
+}
+
+/* ------------------------------------------------------
+   DIE DREI ANZEIGEN
+   Nebeneinander, gleich breit, fest in der Hoehe. Der Wert steht in
+   Tabellenziffern (tabular-nums): sonst wandert beim Hochzaehlen von
+   999 auf 1.000 die ganze Zeile, weil die Eins schmaler ist als die
+   Null - eine Anzeige, die beim Zaehlen zappelt, wirkt billig.
+------------------------------------------------------ */
+.spielothek-anzeigen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 520px;
+  margin: 22px auto 0;
+}
+
+.spielothek-anzeige {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(10,8,5,.92), rgba(20,16,11,.92));
+  border: 1px solid rgba(190,150,84,.32);
+  box-shadow: inset 0 1px 0 rgba(255,226,170,.08), inset 0 -6px 14px rgba(0,0,0,.4);
+}
+
+.spielothek-anzeige-titel {
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fh-muted);
+  white-space: nowrap;
+}
+
+.spielothek-anzeige-wert {
+  /* Oswald: die schmale Versalschrift, die die Seite fuer
+     Ueberschriften ohnehin laedt. Auf einer Geraeteanzeige liest sie
+     sich wie eine Beschriftung statt wie Fließtext - und es kommt
+     keine weitere Schriftdatei dazu. */
+  font-family: var(--fh-font-display, 'Oswald'), 'Arial Narrow', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-size: clamp(20px, 4.8vw, 27px);
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--spielo-messing-hell);
+  line-height: 1.1;
+}
+
+/* LADEZUSTAND: solange der Server nicht geantwortet hat, stehen hier
+   Striche und keine 0. Eine 0 waere eine Behauptung ueber den
+   Kontostand, die niemand geprueft hat - und genau die Sorte Zahl,
+   die eine Anzeige unglaubwuerdig macht. */
+.spielothek-anzeige-wert.ist-ladend {
+  /* Im Browser gemessen: mit opacity .6 auf --fh-muted waren die
+     Striche auf dem dunklen Feld praktisch unsichtbar - man sah ein
+     leeres Kaestchen und hielt es fuer kaputt. Ein Ladezustand muss
+     als Zustand erkennbar sein, nicht als Fehler. */
+  color: var(--fh-muted);
+  opacity: .85;
+  letter-spacing: .12em;
+}
+
+/* Nur diese beiden Faelle bekommen Farbe. Ein neutrales Feld bleibt
+   messingfarben - Gruen/Rot ueberall waere Ampeloptik. */
+.spielothek-anzeige-wert.ist-gewinn  { color: #7fbf7a; }
+.spielothek-anzeige-wert.ist-verlust { color: #c07a6e; }
+
+/* ------------------------------------------------------
+   SYMBOLE ALS STRICHZEICHNUNG
+------------------------------------------------------ */
+.spielothek-slot-symbol-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.spielothek-slot-icon {
+  width: clamp(24px, 6vw, 34px);
+  height: clamp(24px, 6vw, 34px);
+  display: block;
+}
+
+/* In der Regel-Tabelle kleiner, damit die Zeile nicht auseinander
+   geht. */
+.spielothek-regeln-tabelle .spielothek-slot-icon {
+  width: 18px;
+  height: 18px;
+  vertical-align: -3px;
+}
+
+.spielothek-regeln-tabelle .spielothek-slot-symbol-inner {
+  display: inline-flex;
+  width: auto;
+  margin-right: 6px;
+}
+
+/* ------------------------------------------------------
+   DER AUSLOESER
+   Zustaende, die man sieht: bereit, gedrueckt, gesperrt. Ein
+   gesperrter Knopf muss auch gesperrt AUSSEHEN - vorher unterschied
+   er sich nur durch den Cursor.
+------------------------------------------------------ */
+.spielothek-ausloeser {
+  min-width: 200px;
+  padding: 14px 28px;
+  font-size: 15px;
+  letter-spacing: .1em;
+
+  /* .code-button bringt ein kraeftiges Blau mit. Auf einem Geraet
+     aus Holz und Messing war das der einzige kalte Fleck im Bild -
+     im Browser sofort als Fremdkoerper zu sehen. Hier wird nur
+     dieser eine Knopf umgefaerbt, .code-button bleibt ueberall
+     sonst unangetastet. */
+  background: linear-gradient(180deg, #4a3520, #2c1f12);
+  border: 1px solid rgba(190,150,84,.6);
+  color: var(--spielo-messing-hell, #e2c48a);
+  box-shadow: inset 0 1px 0 rgba(255,226,170,.18), 0 3px 10px rgba(0,0,0,.45);
+}
+
+.spielothek-ausloeser:hover:not(:disabled) {
+  background: linear-gradient(180deg, #5a4128, #362617);
+  border-color: rgba(226,196,138,.75);
+}
+
+.spielothek-ausloeser:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.spielothek-ausloeser:disabled {
+  opacity: .45;
+  filter: saturate(.35);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (max-width: 420px) {
+  .spielothek-anzeigen { gap: 6px; }
+  .spielothek-anzeige { padding: 8px 4px; }
+  .spielothek-ausloeser { min-width: 0; width: 100%; }
+
+  /* Im Browser bei 320px gemessen: "Letzte Runde" brauchte 86px in
+     einem 81px breiten Feld und wurde von nowrap abgeschnitten -
+     auf dem Bild stand "ETZTE RUND". Hier darf die Beschriftung
+     umbrechen; zwei kurze Zeilen sind besser als ein halbes Wort. */
+  .spielothek-anzeige-titel {
+    font-size: 9px;
+    letter-spacing: .06em;
+    white-space: normal;
+    line-height: 1.25;
+    text-align: center;
+  }
+}
+
+/* ------------------------------------------------------
+   DER RAUM
+   ---------------------------------------------------
+   Vorher schien durch die Spielothek das globale Sternenfeld der
+   Seite - ein Automat, der im Weltall steht. Jetzt liegt darueber
+   eine eigene Flaeche: dunkle Holzdielen, angedeutet durch zwei
+   Verlaufsmuster in unterschiedlichem Abstand, plus ein warmes
+   Licht von oben, als haenge eine Lampe ueber dem Geraet.
+
+   Bewusst SEHR flau gehalten (Deckkraft der Fugen unter 10 %): eine
+   kraeftige Dielenzeichnung wuerde mit den Walzen um Aufmerksamkeit
+   streiten. Man soll den Raum spueren, nicht ansehen.
+
+   Nur auf dieser einen Seite - #spielothek, nicht .page -, damit
+   der Rest der Seite unberuehrt bleibt.
+------------------------------------------------------ */
+/* Ausdruecklich positioniert. Ohne das haenge der Boden am
+   naechsten positionierten Vorfahren - .page hat zwar ein transform
+   und erzeugt dadurch schon einen Bezugsrahmen, aber das ist ein
+   Nebeneffekt der Seitenwechsel-Animation, kein Versprechen. Wer die
+   Animation eines Tages aendert, haette sonst einen Boden, der ueber
+   die ganze Seite laeuft. */
+#spielothek {
+  position: relative;
+}
+
+#spielothek::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    /* Licht von oben, warm und weich */
+    radial-gradient(120% 70% at 50% -10%,
+      rgba(224,161,82,.10) 0%, rgba(224,161,82,.04) 35%, transparent 68%),
+    /* Dielenfugen quer */
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,.22) 0 2px, transparent 2px 96px),
+    /* Maserung laengs, feiner und unregelmaessiger */
+    repeating-linear-gradient(2deg,
+      rgba(255,232,196,.014) 0 1px, transparent 1px 7px,
+      rgba(0,0,0,.05) 7px 8px, transparent 8px 23px),
+    /* Grundton des Bodens */
+    linear-gradient(180deg, #140f0a 0%, #0c0906 100%);
+  opacity: 0;
+  transition: opacity .45s var(--fh-ease, ease);
+}
+
+/* Erst einblenden, wenn die Seite wirklich offen ist - sonst
+   schimmert der Boden waehrend des Seitenwechsels durch. */
+#spielothek.active-page::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #spielothek::before { transition: none; }
+}
+
+/* ------------------------------------------------------
+   LOGO UND SCHILD
+   ---------------------------------------------------
+   Das Zeichen steht allein ueber der Seite, der Schriftzug allein
+   auf dem Geraet. Zusammen sind sie das Logo; getrennt platziert,
+   weil beides an derselben Stelle das Wort dreimal untereinander
+   ergeben haette (Logo, Kicker, Ueberschrift).
+------------------------------------------------------ */
+.spielothek-logo {
+  display: block;
+  width: clamp(52px, 11vw, 68px);
+  height: auto;
+  margin: 0 auto 14px;
+  color: var(--spielo-messing-hell, #e2c48a);
+  /* Ein sehr flacher Schein, damit das Zeichen nicht flach auf dem
+     Boden klebt - deutlich unter dem, was hier frueher ueblich war. */
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.55));
+}
+
+/* Das Messingschild auf dem Gehaeuse. Gravur statt Aufdruck: eine
+   dunkle Kante nach oben und eine helle nach unten lassen die
+   Buchstaben eingelassen wirken. */
+.spielothek-schild {
+  flex-basis: 100%;
+  margin: -6px 0 4px;
+  text-align: center;
+  font-family: var(--fh-font-display, 'Oswald'), 'Arial Narrow', sans-serif;
+  font-size: clamp(11px, 2.4vw, 13px);
+  font-weight: 600;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--spielo-messing, #be9654);
+  text-shadow: 0 -1px 0 rgba(0,0,0,.6), 0 1px 0 rgba(255,226,170,.12);
+}
+
+@media (max-width: 420px) {
+  .spielothek-schild { letter-spacing: .18em; }
+}
+
+/* ------------------------------------------------------
+   BUEHNE AUF SCHMALEN GERAETEN
+   ---------------------------------------------------
+   Im Browser bei 320 px gemessen: Aendii belegt feste 200 px,
+   die Spielflaeche hat flex-basis 260 px - zusammen 460 px in
+   einem Innenraum von 206 px. Umbrechen tat der Kasten trotzdem
+   nicht, weil die Spielflaeche schrumpfen DARF (flex-shrink 1):
+   sie wurde auf 133 px gequetscht, und der SPIELEN-Knopf lag bei
+   320 px vollstaendig ausserhalb des sichtbaren Bereichs. Ein
+   Spielknopf, den man nicht sieht, ist der schlimmste Fehler, den
+   diese Seite haben kann.
+
+   Unterhalb von 560 px stehen beide deshalb untereinander und
+   nehmen die volle Breite. Zusaetzlich faellt die Mindesthoehe der
+   leeren Ergebnisflaeche weg - vor der ersten Drehung ist dort
+   nichts, und 100 px Leere schoben den Knopf zusaetzlich nach
+   unten.
+------------------------------------------------------ */
+@media (max-width: 560px) {
+  .spielothek-stage {
+    flex-direction: column;
+    align-items: center;
+    padding: 22px 14px;
+    gap: 16px;
+  }
+
+  .spielothek-andi,
+  .spielothek-game-area {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  /* Nur solange nichts drinsteht: sobald die Walzen da sind, hat
+     das Element wieder eigenen Inhalt und braucht die Reserve
+     nicht. :empty trifft genau diesen Fall. */
+  .spielothek-result:empty {
+    min-height: 0;
+  }
+}

@@ -6,7 +6,7 @@
    Spielothek, besiegter Community-Boss, ...) - EINE gemeinsame
    Implementierung statt paralleler Logik pro Feature (siehe bereits
    bestehende, bewusst einfachere 2D-Effekte wie
-   triggerSpielothekConfetti() in spielothek.js oder spawnWheelSparks()
+   spawnWheelSparks()
    in wheel.js, die für die HÄUFIGEN, kleineren Gewinne unveraendert
    bleiben - dieser hier ist zusaetzlich nur fuer die seltenen,
    besonders grossen Momente gedacht, damit er nicht durch staendige

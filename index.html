@@ -748,7 +748,7 @@
                    data-i18n="kennwort.eingabeLabel">Wiederherstellungs-Kennwort</label>
             <input type="text" id="fh-kennwort-eingabe" class="code-input"
                    placeholder="ABCD-2345" data-i18n-placeholder="kennwort.eingabePlatzhalter"
-                   maxlength="9" autocomplete="off" spellcheck="false">
+                   maxlength="14" autocomplete="off" spellcheck="false">
             <button type="button" class="code-button" id="fh-kennwort-einloesen"
                     onclick="fhKennwortEinloesen()" data-i18n="kennwort.einloesen">Konto holen</button>
           </div>
@@ -889,6 +889,22 @@
     ===================== -->
     <section id="spielothek" class="page">
       <div class="page-content spielothek-page-content">
+        <!-- Das Zeichen der Spielothek: ein Automatenfenster mit drei
+             gleichen Symbolen auf der Mittellinie. Bewusst OHNE
+             Schriftzug - der steht als Messingschild auf dem Gehaeuse
+             weiter unten. Stuende er auch hier, saehe man das Wort
+             dreimal untereinander (Logo, Kicker, Ueberschrift).
+             Fest im HTML und nicht per JavaScript eingesetzt, damit
+             es auch dann da ist, wenn ein Skript nicht laedt. -->
+        <svg class="spielothek-logo" viewBox="0 0 48 32" fill="none"
+             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+             stroke-linejoin="round" role="img" aria-label="Ändiis Spielothek">
+          <rect x="3" y="4" width="42" height="24" rx="3.5"/>
+          <path d="M17 4.8v22.4M31 4.8v22.4"/>
+          <circle cx="10" cy="16" r="2.6"/>
+          <circle cx="24" cy="16" r="2.6"/>
+          <circle cx="38" cy="16" r="2.6"/>
+        </svg>
         <div class="fh-page-head">
           <p class="fh-page-kicker" data-i18n="spielothek.kicker">Ändiis Ecke</p>
           <h1 class="fh-page-title" data-i18n="spielothek.title">Spielothek</h1>

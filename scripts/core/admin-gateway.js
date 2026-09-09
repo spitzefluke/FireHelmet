@@ -110,9 +110,11 @@ async function saveGatewayCountdowns() {
     await patchSupabaseSiteConfig(update);
     // Kurz verzögert setzen: das eigene Speichern löst über
     // applySiteConfigSnapshot() (siehe site-config.js) sofort ein
-    // Neuzeichnen des gesamten Panels aus (für die Live-Vorschau) -
-    // das würde die Meldung hier sonst augenblicklich wieder
-    // überschreiben, bevor sie sichtbar wird.
+    // Neuzeichnen des gesamten Panels aus - das würde die Meldung
+    // hier sonst augenblicklich wieder überschreiben, bevor sie
+    // sichtbar wird. (Früher stand hier "für die Live-Vorschau";
+    // die ist entfernt, das Neuzeichnen bleibt aber, weil das Panel
+    // seine Felder aus dem Schnappschuss füllt.)
     setTimeout(() => {
       const el = document.getElementById("gateway-save-status");
       if (el) el.textContent = "✅ Gespeichert.";
@@ -380,9 +382,6 @@ async function renderGatewayPage() {
       <h2 class="fh-ship-section-heading">Spieler-Identität</h2>
       ${buildGatewayIdentitaetHtml()}
 
-      <h2 class="fh-ship-section-heading">Vorschau</h2>
-      <p class="gateway-preview-hint">So sieht die normale Website gerade aus (aktualisiert sich live mit deinen Änderungen):</p>
-      <iframe class="gateway-preview-frame" src="index.html" title="Vorschau"></iframe>
     </div>
   `;
 

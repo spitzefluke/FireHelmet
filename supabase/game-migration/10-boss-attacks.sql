@@ -780,15 +780,31 @@ grant select on public.boss_community_buff to anon, authenticated;
    GEHEIMCODES ANLEGEN
    Die Codes stehen bewusst NICHT in dieser Datei - so gibt es auch
    im Repository nichts, was sich mit einer Wortliste durchprobieren
-   liesse. Lege sie selbst an, einen je Spezialangriff:
+   liesse.
 
-     insert into public.boss_special_codes (code_sha256, schluessel, bemerkung)
-     values (encode(extensions.digest(upper('DEIN-CODE-HIER'),'sha256'),'hex'),
-             'salve', 'Stream vom 12.09.');
+   NIMM DAS ADMIN-PANEL, nicht SQL. Bereich "Codes", Feld
+   "Boss-Code" plus Spezialangriff, absenden. Das laeuft durch
+   app.admin_boss_code_setzen(), und die Funktion lehnt seit
+   17-boss-code-schutz.sql einen stehen gebliebenen Platzhalter
+   ausdruecklich ab.
 
-   Wichtig: upper(), weil boss_unlock_special() den eingetippten Code
-   ebenfalls in Grossbuchstaben umwandelt - so ist es egal, wie der
-   Spieler ihn schreibt.
+   WARUM DIESER HINWEIS SO DEUTLICH DASTEHT
+   Am 08.09.2026 wurden alle elf Codes per SQL angelegt - mit den
+   Beispieltexten aus dieser Anleitung als Code ('DEIN-CODE-SALVE'
+   und so weiter). Ein INSERT mit Platzhaltern laeuft fehlerfrei
+   durch und meldet Erfolg. Danach standen elf Codes in der
+   Tabelle, die niemand kannte, und jede Eingabe im Spiel wurde
+   zu Recht abgelehnt. Gesucht wurde der Fehler anschliessend in
+   der Datenbank und im Browser - beide waren in Ordnung.
+
+   Eine Beispielanweisung, die sich ohne Nachdenken ausfuehren
+   laesst, ist eine Falle. Deshalb steht hier bewusst KEINE
+   fertige mehr; die abgesicherte Fassung mit Abbruch bei
+   Platzhaltern steht in 17-boss-code-schutz.sql, Abschnitt 4.
+
+   Falls du doch von Hand schreibst: upper(btrim(...)) benutzen,
+   genau wie boss_unlock_special() es tut - sonst passt der Hash
+   nie zu dem, was der Spieler eintippt.
 
    Die elf Schluessel:
      salve, brandpfeil, enterkommando, pulverfass, schlachtruf,
@@ -796,8 +812,46 @@ grant select on public.boss_community_buff to anon, authenticated;
 
    Einen Code wieder zurueckziehen:
      delete from public.boss_special_codes
-      where code_sha256 = encode(extensions.digest(upper('DEIN-CODE-HIER'),'sha256'),'hex');
+      where code_sha256 = encode(extensions.digest(upper('DEIN-CODE-BITTE-ERSETZEN'),'sha256'),'hex');
+   (Ein Loeschen mit stehen gebliebenem Platzhalter trifft nichts
+   und ist harmlos - anders als ein INSERT, siehe oben.)
    Bereits Freigeschaltete behalten ihren Angriff - das ist Absicht.
+
+   WENN EIN CODE NICHT ANGENOMMEN WIRD
+   Der Server vergleicht upper(btrim(eingabe)) - Gross- und
+   Kleinschreibung sowie Leerzeichen VORNE und HINTEN sind also egal.
+   Ein Leerzeichen MITTENDRIN und jedes andere Zeichen zaehlen mit.
+
+   Die haeufigste Ursache ist ein Zeichen, das beim Anlegen mit in
+   den Hash gewandert ist: ein Leerzeichen aus der Zwischenablage,
+   ein Zeilenumbruch, ein typografischer Bindestrich (-) statt eines
+   geraden (-). Der Code sieht dann richtig aus, passt aber nie.
+
+   So pruefst du einen Code, ohne ihn jemandem zu zeigen:
+
+     select b.schluessel
+       from public.boss_special_codes b
+      where b.code_sha256 = encode(extensions.digest(
+              upper(btrim('HIER DEN CODE EINTIPPEN')), 'sha256'), 'hex');
+
+   Kommt eine Zeile zurueck, ist der Code in Ordnung und der Fehler
+   liegt woanders. Kommt nichts, stimmt der gespeicherte Hash nicht
+   mit dem ueberein, was du eintippst - dann den Code mit genau
+   diesem btrim()-Ausdruck neu anlegen:
+
+     -- ACHTUNG: Diese Anweisung laeuft auch dann fehlerfrei durch,
+     -- wenn der Platzhalter stehen bleibt - und legt einen Code an,
+     -- den niemand kennt. Genau so ist es am 08.09.2026 passiert.
+     -- Nimm das Admin-Panel, oder die abgesicherte Fassung mit
+     -- Abbruch bei Platzhaltern in 17-boss-code-schutz.sql.
+     insert into public.boss_special_codes (code_sha256, schluessel, bemerkung)
+     values (encode(extensions.digest(upper(btrim('DEIN-CODE-BITTE-ERSETZEN')),'sha256'),'hex'),
+             'salve', 'Stream vom 12.09.')
+     on conflict (code_sha256) do update
+        set schluessel = excluded.schluessel, bemerkung = excluded.bemerkung;
+
+   Alte, nicht mehr passende Zeilen vorher wegraeumen:
+     delete from public.boss_special_codes where schluessel = 'salve';
 
    ZAHLEN AENDERN
    Alles an einer Stelle, in boss_attack_defs. Zum Beispiel den

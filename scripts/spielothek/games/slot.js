@@ -57,18 +57,87 @@ function getSlotReelCountForBet(bet) {
 
 /* Piratenthema statt Fruechten - die alten Kirschen und Zitronen
    waren ein Fremdkoerper in einer Piratensaga. Die Gewichte
-   bestimmen, wie haeufig ein Symbol faellt. */
+   bestimmen, wie haeufig ein Symbol faellt.
+
+   FARBE STATT EMOJI (September 2026)
+   Vorher standen hier Emoji. Die sehen auf jedem Geraet anders aus -
+   auf Windows flach, auf Apple plastisch, auf Android wieder anders -
+   und waren damit der Punkt, der am ehesten billig wirkte. Jetzt sind
+   es Strichzeichnungen (siehe SLOT_ICONS), ueberall gleich.
+
+   Emoji trugen allerdings ihre Farbe mit: die goldene Muenze, der
+   blaue Edelstein. Einfarbige Striche verlieren diese Staffelung,
+   und auf einer laufenden Walze waeren Muenze, Stein und Kiste kaum
+   auseinanderzuhalten. Deshalb bekommt jedes Symbol eine feste Farbe,
+   die mit der Seltenheit waermer wird - vom stumpfen Zinn der
+   haeufigen Dublone bis zum hellen Messing des Feuerhelms. Man sieht
+   am Farbton, wie gut ein Treffer ist, ohne die Tabelle zu lesen. */
 const SLOT_BASIS_SYMBOLS = [
-  { id: "dublone",   emoji: "🪙",  weight: 300 },
-  { id: "papagei",   emoji: "🦜",  weight: 230 },
-  { id: "kompass",   emoji: "🧭",  weight: 160 },
-  { id: "saebel",    emoji: "⚔️",  weight: 110 },
-  { id: "edelstein", emoji: "💎",  weight: 60 },
-  { id: "truhe",     emoji: "📦",  weight: 28 },
-  { id: "helm",      emoji: "🔥",  weight: 12 },
+  { id: "dublone",   weight: 300, farbe: "#9aa3a8" },   // Zinn - das haeufigste Symbol, bewusst das stumpfste
+  { id: "papagei",   weight: 230, farbe: "#8f9f88" },   // gedaempftes Gruen
+  { id: "kompass",   weight: 160, farbe: "#8b9cb4" },   // Messingblau
+  { id: "saebel",    weight: 110, farbe: "#b8a888" },   // helles Holz
+  { id: "edelstein", weight:  60, farbe: "#79a8b8" },   // Tuerkis
+  { id: "truhe",     weight:  28, farbe: "#c9a04a" },   // Messing
+  { id: "helm",      weight:  12, farbe: "#e0a152" },   // warmes Messing - das seltenste, das hellste
 ];
 
-const SLOT_TOTENKOPF_EMOJI = "☠️";
+/* Der Totenkopf ist kein Basissymbol - er kommt mit eigenem Gewicht
+   je Walzenzahl dazu (siehe getSlotSymbols). */
+const SLOT_TOTENKOPF_FARBE = "#a8564a";
+
+/* ------------------------------------------------------------
+   DIE SYMBOLE ALS STRICHZEICHNUNG
+   ------------------------------------------------------------
+   Aus lucide (https://lucide.dev), ISC-Lizenz, Fassung 1.43.0.
+   Uebernommen wurden die Pfade von coins, bird, compass, swords,
+   gem, package, flame und skull - zusammen rund 1,6 KB.
+
+   BEWUSST EINGEBETTET STATT PER CDN: die Laufzeit-Bibliothek von
+   lucide ersetzt <i data-lucide>-Elemente nachtraeglich im DOM. Eine
+   Walze zeichnet bei jeder Drehung fuenfzehn Symbole neu, mal sechs
+   Walzen - das waeren neunzig Ersetzungen je Dreh, sichtbar als
+   Flackern. Bei 1,6 KB Pfaddaten ist die externe Abhaengigkeit den
+   Preis ohnehin nicht wert, samt ihres Ausfallrisikos.
+------------------------------------------------------------ */
+const SLOT_ICONS = Object.freeze({
+  dublone: '<path d="M13.744 17.736a6 6 0 1 1-7.48-7.48" /> <path d="M15 6h1v4" /> <path d="m6.134 14.768.866-.5 2 3.464" /> <circle cx="16" cy="8" r="6" />',
+  // lucide/coins
+  papagei: '<path d="M16 7h.01" /> <path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20" /> <path d="m20 7 2 .5-2 .5" /> <path d="M10 18v3" /> <path d="M14 17.75V21" /> <path d="M7 18a6 6 0 0 0 3.84-10.61" />',
+  // lucide/bird
+  kompass: '<circle cx="12" cy="12" r="10" /> <path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" />',
+  // lucide/compass
+  saebel: '<path d="m13 19 6-6" /> <path d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5" /> <path d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586" /> <path d="m16 16 4 4" /> <path d="m19 21 2-2" /> <path d="m5 14 4 4" /> <path d="m5 21-2-2" /> <path d="M7.5 16.5 4 20" />',
+  // lucide/swords
+  edelstein: '<path d="M10.5 3 8 9l4 13 4-13-2.5-6" /> <path d="M17 3a2 2 0 0 1 1.6.8l3 4a2 2 0 0 1 .013 2.382l-7.99 10.986a2 2 0 0 1-3.247 0l-7.99-10.986A2 2 0 0 1 2.4 7.8l2.998-3.997A2 2 0 0 1 7 3z" /> <path d="M2 9h20" />',
+  // lucide/gem
+  truhe: '<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path d="M12 22V12" /> <polyline points="3.29 7 12 12 20.71 7" /> <path d="m7.5 4.27 9 5.15" />',
+  // lucide/package
+  helm: '<path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4" />',
+  // lucide/flame
+  totenkopf: '<path d="m12.5 17-.5-1-.5 1h1z" /> <path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z" /> <circle cx="15" cy="12" r="1" /> <circle cx="9" cy="12" r="1" />',
+  // lucide/skull
+});
+
+/* Ein Symbol als fertiges SVG. currentColor greift die Farbe vom
+   umgebenden Element ab, die weiter unten je Symbol gesetzt wird. */
+function slotSymbolSvg(symbolId) {
+  const pfad = SLOT_ICONS[symbolId];
+  if (!pfad) return "";
+  return '<svg class="spielothek-slot-icon" viewBox="0 0 24 24" fill="none" '
+       + 'stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+       + 'stroke-linejoin="round" aria-hidden="true">' + pfad + '</svg>';
+}
+
+function slotSymbolFarbe(symbol) {
+  return symbol.id === "totenkopf" ? SLOT_TOTENKOPF_FARBE : symbol.farbe;
+}
+
+/* Ein Symbol samt Farbe, wie es auf der Walze steht. */
+function slotSymbolHtml(symbol) {
+  return '<span class="spielothek-slot-symbol-inner" style="color:'
+       + slotSymbolFarbe(symbol) + '">' + slotSymbolSvg(symbol.id) + '</span>';
+}
 
 /* Der Totenkopf faellt je nach Walzenzahl unterschiedlich haeufig -
    und genau das macht das Spiel ueber alle Einsaetze hinweg fair.
@@ -104,7 +173,7 @@ function getSlotTotenkopfGewicht(reelCount) {
 /* Der Satz Symbole fuer eine bestimmte Walzenzahl. */
 function getSlotSymbols(reelCount) {
   return SLOT_BASIS_SYMBOLS.concat([
-    { id: "totenkopf", emoji: SLOT_TOTENKOPF_EMOJI, weight: getSlotTotenkopfGewicht(reelCount) },
+    { id: "totenkopf", weight: getSlotTotenkopfGewicht(reelCount), farbe: SLOT_TOTENKOPF_FARBE },
   ]);
 }
 
@@ -127,77 +196,87 @@ function getSlotMinGroup(reelCount) {
 
 /* Vielfaches des Einsatzes, nach Walzenzahl und Gruppengroesse.
    ------------------------------------------------------------
-   Hergeleitet, nicht geraten: Grundwert (Gesamtgewicht /
-   Symbolgewicht) hoch 0,9, mal 3 je Treffer ueber dem Minimum.
-   Danach je Walzenzahl so skaliert, dass der Rueckfluss ueberall
-   bei rund 132 % landet - Freidrehs eingerechnet, denn die zahlen
-   obendrauf und zwar ungleich: "alle Walzen gleich" ist bei drei
-   Walzen viel haeufiger als bei sechs (+7,2 gegen +1,3 Punkte).
+   AUSZAHLUNGSQUOTE RUND 94 % (September 2026)
+   Das ist der Bereich, in dem ein echtes Geldspielgeraet arbeiten
+   muss: gesetzlich zwischen 90 und 96 %. Vorher lag die Tabelle bei
+   rund 132 %, dazu kam ein Anteil des Guthabens - der Automat war
+   damit eine Gelddruckmaschine, und der tatsaechliche Rueckfluss
+   war nicht mehr eine Zahl, sondern haing vom Kontostand ab.
 
-   Nachgerechnet wurde exakt, nicht simuliert - ueber alle
-   Aufteilungen der Walzen auf die acht Symbole. Eine Stichprobe
-   streut hier um mehrere Punkte, weil die seltenen Riesengewinne
-   den Schnitt tragen; wer danach nachregelt, jagt nur das Rauschen.
+   Jetzt gilt fuer alle dasselbe: Einsatz mal Vielfaches, sonst
+   nichts. Kein Guthaben-Anteil, keine Garantie nach einer
+   Pechstraehne, keine Prozentstaffel beim Verlust.
 
-   Erreicht: 134,8 % bei drei Walzen, 131,8 / 132,3 / 131,0 % bei
-   vier, fuenf und sechs. Die drei Walzen liegen etwas hoeher, weil
-   ihre Tabelle nur zwei Spalten hat und eine Stufe im Raster dort
-   rund vier Punkte ausmacht - der Rest waere Scheingenauigkeit.
+   WIE DIE ZAHLEN ENTSTANDEN SIND
+   Exakt ausgezaehlt, nicht simuliert - ueber alle Aufteilungen der
+   Walzen auf die acht Symbole (Multinomial ueber Anzahlvektoren,
+   nicht ueber Positionen: das macht aus 8^10 Moeglichkeiten 19.448).
+   Freidrehs sind eingerechnet, denn die zahlen obendrauf, und zwar
+   ungleich - "alle Walzen gleich" ist bei drei Walzen viel
+   haeufiger als bei sechs.
 
-   Vorher standen hier 131-137 %, und die Trefferquote schwankte
-   zwischen 18 und 50 % je nach Einsatz. Ein Spiel, dessen Chancen
-   vom Einsatz abhaengen, ohne dass es irgendwo steht, ist genau
-   die Sorte Unfairness, die niemand sieht und alle spueren.
+   Eine Stichprobe taugt hier NICHT: die seltenen Riesengewinne
+   tragen den Schnitt, 200.000 Drehungen streuen um mehrere Punkte.
+   Wer danach nachregelt, jagt Rauschen. (Genau das ist bei der
+   vorigen Fassung passiert, bevor auf Aufzaehlung umgestellt wurde.)
 
-   Die Tabelle beginnt neu bei "2 gleiche", auch bei fuenf und sechs
-   Walzen. Ein Zweier zahlt dort wenig (teils nur den Einsatz
-   zurueck), erspart einem aber den Prozentabzug fuer die Niete -
-   das ist der eigentliche Wert eines kleinen Treffers.
+   ERREICHT: 95,4 % bei drei Walzen, 94,1 / 94,5 / 93,9 % bei vier,
+   fuenf und sechs. Die drei Walzen liegen 1,4 Punkte hoeher, weil
+   ihre Tabelle nur zwei Spalten hat - eine Stufe im Rundungsraster
+   ist dort rund anderthalb Punkte wert. Man koennte es mit Werten
+   wie 4,7 genauer treffen; dann staende in den Regeln eine Tabelle,
+   die niemand liest. Lesbare Zahlen sind hier mehr wert als die
+   zweite Nachkommastelle, und die tatsaechlichen Quoten stehen
+   ehrlich in SLOT_TREFFERQUOTE.
 
-   WICHTIG: die 132 % beziehen sich nur auf DIESE Tabelle, also auf
-   den Teil des Gewinns, der am Einsatz haengt. Seit dem
-   Guthaben-Anteil (siehe SLOT_GUTHABEN_ANTEIL weiter unten) kommt
-   ein zweiter Teil dazu, der am Konto haengt. Der tatsaechliche
-   Rueckfluss ist deshalb nicht mehr eine einzelne Zahl, sondern
-   haengt vom Guthaben ab - gemessen: bei 405 Dublonen praktisch
-   unveraendert, bei 61.320 steigt der Schnitt je Treffer von 83
-   auf 466 Dublonen. */
+   Die Trefferquote ist unveraendert: rund jede dritte Drehung
+   gewinnt, bei jedem Einsatz. Geaendert hat sich nur die HOEHE der
+   Gewinne, nicht ihre Haeufigkeit.
+
+   WER HIER ETWAS AENDERT, muss neu rechnen. Das Verfahren steht
+   oben; ohne Nachrechnen stimmt die in den Regeln angezeigte Quote
+   nicht mehr, und ein Spiel, das seine eigenen Chancen falsch
+   angibt, ist schlimmer als eines, das sie verschweigt.
+
+   Die Tabelle beginnt bei "2 gleiche", auch bei fuenf und sechs
+   Walzen. Ein Zweier zahlt dort wenig - bei sechs Walzen teils nur
+   den Einsatz zurueck -, aber er rettet die Runde. */
 const SLOT_AUSZAHLUNG = Object.freeze({
   3: {
-    dublone:    { 2: 2.5, 3: 7 },
-    papagei:    { 2: 3, 3: 9 },
-    kompass:    { 2: 4, 3: 12 },
-    saebel:     { 2: 6, 3: 17 },
-    edelstein:  { 2: 10, 3: 29 },
-    truhe:      { 2: 19, 3: 60 },
-    helm:       { 2: 40, 3: 125 },
+    dublone:   { 2: 2, 3: 5 },
+    papagei:   { 2: 2, 3: 6 },
+    kompass:   { 2: 3, 3: 8 },
+    saebel:    { 2: 4, 3: 12 },
+    edelstein: { 2: 7, 3: 20 },
+    truhe:     { 2: 13, 3: 40 },
+    helm:      { 2: 30, 3: 90 },
   },
   4: {
-    dublone:    { 2: 2, 3: 6, 4: 19 },
-    papagei:    { 2: 2.5, 3: 8, 4: 24 },
-    kompass:    { 2: 4, 3: 11, 4: 34 },
-    saebel:     { 2: 5, 3: 16, 4: 45 },
-    edelstein:  { 2: 9, 3: 27, 4: 80 },
-    truhe:      { 2: 18, 3: 55, 4: 165 },
-    helm:       { 2: 39, 3: 115, 4: 350 },
+    dublone:   { 2: 1.5, 3: 4, 4: 14 },
+    papagei:   { 2: 2, 3: 6, 4: 17 },
+    kompass:   { 2: 3, 3: 8, 4: 25 },
+    saebel:    { 2: 4, 3: 11, 4: 30 },
+    edelstein: { 2: 6, 3: 19, 4: 55 },
+    truhe:     { 2: 13, 3: 40, 4: 120 },
+    helm:      { 2: 30, 3: 80, 4: 250 },
   },
   5: {
-    dublone:    { 2: 1.5, 3: 5, 4: 15, 5: 45 },
-    papagei:    { 2: 2, 3: 6, 4: 18, 5: 55 },
-    kompass:    { 2: 3, 3: 9, 4: 26, 5: 75 },
-    saebel:     { 2: 4, 3: 12, 4: 36, 5: 110 },
-    edelstein:  { 2: 7, 3: 21, 4: 60, 5: 185 },
-    truhe:      { 2: 14, 3: 40, 4: 125, 5: 370 },
-    helm:       { 2: 29, 3: 90, 4: 260, 5: 790 },
+    dublone:   { 2: 1, 3: 4, 4: 11, 5: 35 },
+    papagei:   { 2: 1.5, 3: 4, 4: 13, 5: 40 },
+    kompass:   { 2: 2, 3: 7, 4: 19, 5: 55 },
+    saebel:    { 2: 3, 3: 9, 4: 25, 5: 80 },
+    edelstein: { 2: 5, 3: 15, 4: 45, 5: 130 },
+    truhe:     { 2: 10, 3: 30, 4: 90, 5: 270 },
+    helm:      { 2: 20, 3: 65, 4: 190, 5: 575 },
   },
   6: {
-    dublone:    { 2: 1, 3: 3.5, 4: 10, 5: 31, 6: 95 },
-    papagei:    { 2: 1.5, 3: 4.5, 4: 13, 5: 40, 6: 120 },
-    kompass:    { 2: 2, 3: 6, 4: 18, 5: 55, 6: 165 },
-    saebel:     { 2: 3, 3: 9, 4: 26, 5: 75, 6: 230 },
-    edelstein:  { 2: 5, 3: 15, 4: 45, 5: 135, 6: 400 },
-    truhe:      { 2: 10, 3: 29, 4: 90, 5: 270, 6: 800 },
-    helm:       { 2: 21, 3: 65, 4: 190, 5: 570, 6: 1700 },
+    dublone:   { 2: 1, 3: 2.5, 4: 7, 5: 25, 6: 70 },
+    papagei:   { 2: 1, 3: 3, 4: 9, 5: 30, 6: 90 },
+    kompass:   { 2: 1.5, 3: 4, 4: 13, 5: 40, 6: 120 },
+    saebel:    { 2: 2, 3: 7, 4: 19, 5: 55, 6: 170 },
+    edelstein: { 2: 4, 3: 11, 4: 35, 5: 100, 6: 290 },
+    truhe:     { 2: 7, 3: 20, 4: 65, 5: 200, 6: 575 },
+    helm:      { 2: 15, 3: 45, 4: 140, 5: 420, 6: 1250 },
   },
 });
 
@@ -216,67 +295,19 @@ function getSlotTier(multiplier) {
 }
 
 /* ------------------------------------------------------------
-   GUTHABEN-ANTEIL: DER GEWINN WAECHST MIT DEM KONTO
+   FRUEHER STAND HIER: GUTHABEN-ANTEIL
    ------------------------------------------------------------
-   Bis hierher war das Spiel schief gebaut, und zwar genau
-   andersherum als es sich anfuehlte:
+   Auf den Grundgewinn kam ein Anteil des Kontostands obendrauf,
+   0,4 bis 12 Prozent je nach Symbol. Das war die Antwort auf eine
+   damalige Schieflage: der Verlust hing am Guthaben, der Gewinn nur
+   am Einsatz - bei einem grossen Konto fuehlte sich kein Treffer
+   mehr nach etwas an.
 
-     Verlust  = Prozentsatz des GUTHABENS
-     Gewinn   = Vielfaches des EINSATZES
-
-   Fuer ein Konto mit 61.320 Dublonen hiess das: eine Niete kostet
-   dreistellig, ein Treffer bringt bei Einsatz 20 vielleicht 50
-   zurueck. Kein Vielfaches der Welt gleicht das aus, solange die
-   eine Seite am Guthaben haengt und die andere am Einsatz.
-
-   Deshalb bekommt der Gewinn jetzt denselben Bezug: auf den
-   Grundgewinn (Einsatz x Vielfaches) kommt ein Anteil des
-   Guthabens obendrauf. Der Anteil steigt mit der Seltenheit des
-   Symbols und mit der Groesse der Gruppe - "je Symbol erhoeht sich
-   der Wert", wie gewuenscht.
-
-   Die Prozentsaetze sind bewusst klein gehalten. Bei einem Drittel
-   Trefferquote wuerde schon 1 % je Treffer ein grosses Konto
-   spuerbar aufblaehen; die Werte unten liegen fuer die haeufigen
-   Symbole darunter und erreichen nur beim Feuerhelm zweistellige
-   Bereiche - der faellt mit einem Gewicht von 12 gegen 1200 aber
-   so selten, dass er die Rechnung nicht traegt.
-
-   Kleine Konten merken davon fast nichts (1 % von 400 ist 4) - fuer
-   sie bleibt der Einsatz die Hauptquelle. Genau so soll es sein:
-   der Anteil ist die Antwort auf ein grosses Konto, nicht auf ein
-   kleines.
+   Beides ist jetzt weg. Der Verlust ist wieder schlicht der Einsatz
+   (siehe spielothek.js), damit braucht auch der Gewinn keinen
+   Ausgleich mehr. Was zaehlt, ist allein die Tabelle oben - und die
+   gilt fuer jeden gleich, unabhaengig davon, wie viel er hat.
 ------------------------------------------------------------ */
-const SLOT_GUTHABEN_ANTEIL = Object.freeze({
-  dublone:   0.004,
-  papagei:   0.005,
-  kompass:   0.007,
-  saebel:    0.010,
-  edelstein: 0.016,
-  truhe:     0.028,
-  helm:      0.055,
-});
-
-/* Je Walze ueber der Mindestgruppe verdoppelt sich der Anteil -
-   dieselbe Idee wie in der Auszahlungstabelle, nur flacher (dort
-   ist es das Dreifache). Ein Sechser Feuerhelm kaeme sonst auf
-   ueber die Haelfte des Guthabens. */
-const SLOT_GUTHABEN_STUFE = 2;
-
-/* Deckel: der Guthaben-Anteil darf einen Dreh nie zu einem
-   Selbstlaeufer machen. 12 % des Guthabens ist die Grenze, ueber
-   die auch die beste Kombination nicht kommt. */
-const SLOT_GUTHABEN_MAX_ANTEIL = 0.12;
-
-function berechneGuthabenBonus(bestId, bestCount, walzen, guthaben) {
-  if (!bestId || !guthaben || guthaben <= 0) return 0;
-  const grund = SLOT_GUTHABEN_ANTEIL[bestId];
-  if (!grund) return 0;
-  const ueber = Math.max(0, bestCount - getSlotMinGroup(walzen));
-  const anteil = Math.min(SLOT_GUTHABEN_MAX_ANTEIL,
-                          grund * Math.pow(SLOT_GUTHABEN_STUFE, ueber));
-  return Math.round(guthaben * anteil);
-}
 
 /* Sicherheits-Deckel unterhalb des serverseitig erzwungenen Limits
    (currency darf pro Schreibvorgang um hoechstens 30000 steigen,
@@ -307,36 +338,14 @@ function alleWalzenGleich(reels) {
 }
 
 /* ------------------------------------------------------------
-   PITY-SYSTEM
+   FRUEHER STAND HIER: PITY-SYSTEM
    ------------------------------------------------------------
-   Rein clientseitig (localStorage), unkritisch fuer die Sicherheit,
-   da das Ergebnis ohnehin komplett client-berechnet ist. Zaehlt
-   Drehungen OHNE Gewinn; die zehnte in Folge gewinnt garantiert.
-
-   NEU: der geschenkte Gewinn ist bewusst ein KLEINER - genau die
-   Mindestgruppe mit einem haeufigen Symbol. Vorher konnte das Pity
-   auch einen Riesengewinn erzwingen, was die Rechnung oben
-   verzerrt haette.
+   Nach zehn Nieten in Folge gewann die naechste Drehung garantiert.
+   Gut gemeint, aber es machte die Wahrscheinlichkeit abhaengig von
+   der eigenen Vorgeschichte - ein echtes Geldspielgeraet tut das
+   nicht, und genau darum ging es beim Umbau. Jede Drehung ist jetzt
+   von jeder anderen unabhaengig.
 ------------------------------------------------------------ */
-const SLOT_PITY_SPIN_THRESHOLD = 10;
-const SLOT_PITY_STORAGE_KEY = "spielothekSlotSpinsSinceWin";
-
-function getSlotSpinsSinceWin() {
-  try {
-    return parseInt(localStorage.getItem(SLOT_PITY_STORAGE_KEY) || "0", 10) || 0;
-  } catch (err) {
-    // z.B. Privatmodus - Zaehler startet wieder bei 0, kein Blocker.
-    return 0;
-  }
-}
-
-function setSlotSpinsSinceWin(n) {
-  try {
-    localStorage.setItem(SLOT_PITY_STORAGE_KEY, String(n));
-  } catch (err) {
-    /* s.o. - rein kosmetisch */
-  }
-}
 
 
 /* ------------------------------------------------------------
@@ -373,27 +382,6 @@ function generateRandomSlotReels(reelCount, random = Math.random) {
   const symbole = getSlotSymbols(reelCount);
   return Array.from({ length: reelCount },
     () => pickWeightedSlotSymbol(symbole, random));
-}
-
-/* Erzwungener KLEINER Gewinn fuers Pity: genau die Mindestgruppe,
-   und zwar mit einem der beiden haeufigsten (= billigsten)
-   Symbole. Die uebrigen Walzen bekommen nie einen Totenkopf und
-   nie dasselbe Symbol - sonst koennte daraus versehentlich ein
-   grosser Gewinn oder gar ein Freidreh werden. */
-function generateForcedWinSlotReels(reelCount, random = Math.random) {
-  const gruppe = getSlotMinGroup(reelCount);
-  const symbole = getSlotSymbols(reelCount);
-  const billig = symbole.filter((s) => s.id === "dublone" || s.id === "papagei");
-  const treffer = pickWeightedSlotSymbol(billig, random);
-  const rest = symbole.filter((s) => s.id !== "totenkopf" && s.id !== treffer.id);
-
-  const plaetze = new Set();
-  while (plaetze.size < gruppe) {
-    plaetze.add(Math.floor(random() * reelCount));
-  }
-
-  return Array.from({ length: reelCount }, (_, i) =>
-    plaetze.has(i) ? treffer : pickWeightedSlotSymbol(rest, random));
 }
 
 /* Bewertet EIN Walzenbild. Gibt Vielfaches und Einstufung zurueck,
@@ -443,28 +431,15 @@ function scoreSlotReels(reels) {
   return { multiplier, tier: getSlotTier(multiplier), bestId, bestCount, skullCount, trefferIndex };
 }
 
-function calculateSlotResult(betAmount, random = Math.random, forcePity = false, guthaben = 0) {
+function calculateSlotResult(betAmount, random = Math.random) {
   const bet = clampSlotBet(betAmount);
   const startWalzen = getSlotReelCountForBet(bet);
 
-  let reels = generateRandomSlotReels(startWalzen, random);
-  let bewertung = scoreSlotReels(reels);
+  const reels = generateRandomSlotReels(startWalzen, random);
+  const bewertung = scoreSlotReels(reels);
 
-  // Pity greift nur ein, wenn der Dreh sonst eine Niete waere - ein
-  // natuerlicher (evtl. groesserer) Gewinn wird nie heruntergestuft.
-  if (bewertung.multiplier === 0 && forcePity) {
-    reels = generateForcedWinSlotReels(startWalzen, random);
-    bewertung = scoreSlotReels(reels);
-  }
-
-  /* Grundgewinn plus Guthaben-Anteil, je Durchgang getrennt
-     gerechnet: ein Freidreh mit anderem Symbol bringt seinen
-     eigenen Anteil mit. */
-  const bonus0 = bewertung.multiplier > 0
-    ? berechneGuthabenBonus(bewertung.bestId, bewertung.bestCount, reels.length, guthaben)
-    : 0;
-  const durchgaenge = [{ reels, ...bewertung, walzen: reels.length, guthabenBonus: bonus0 }];
-  let payout = Math.round(bet * bewertung.multiplier) + bonus0;
+  const durchgaenge = [{ reels, ...bewertung, walzen: reels.length }];
+  let payout = Math.round(bet * bewertung.multiplier);
   let besteStufe = bewertung.tier;
 
   // Freidrehs: alle Walzen gleich -> kostenloser Dreh mit vier
@@ -478,11 +453,8 @@ function calculateSlotResult(betAmount, random = Math.random, forcePity = false,
 
     const frei = generateRandomSlotReels(naechste, random);
     const bew = scoreSlotReels(frei);
-    const bonus = bew.multiplier > 0
-      ? berechneGuthabenBonus(bew.bestId, bew.bestCount, frei.length, guthaben)
-      : 0;
-    durchgaenge.push({ reels: frei, ...bew, walzen: frei.length, freidreh: true, guthabenBonus: bonus });
-    payout += Math.round(bet * bew.multiplier) + bonus;
+    durchgaenge.push({ reels: frei, ...bew, walzen: frei.length, freidreh: true });
+    payout += Math.round(bet * bew.multiplier);
     if (bew.tier && (!besteStufe || bew.multiplier > bewertung.multiplier)) besteStufe = bew.tier;
     letzte = frei;
     kette++;
@@ -528,15 +500,11 @@ window.SPIELOTHEK_GAME_HANDLERS.slot = {
   // Nur fuer Tests und Server-Code.
   calculateResult: calculateSlotResult,
 
-  play: function requestSlotPlay(betAmount, guthaben) {
-    const spinsSinceWin = getSlotSpinsSinceWin();
-    const forcePity = spinsSinceWin + 1 >= SLOT_PITY_SPIN_THRESHOLD;
-
-    const result = calculateSlotResult(betAmount, Math.random, forcePity, guthaben || 0);
-
-    setSlotSpinsSinceWin(result.win ? 0 : spinsSinceWin + 1);
-
-    return result;
+  /* Der zweite Parameter (Guthaben) wird nicht mehr gebraucht - er
+     floss frueher in den Guthaben-Anteil. spielothek.js uebergibt
+     ihn weiterhin, das schadet nicht. */
+  play: function requestSlotPlay(betAmount) {
+    return calculateSlotResult(betAmount, Math.random);
   },
 
   buildResultHtml: buildSlotResultHtml,
@@ -555,7 +523,7 @@ function buildSlotReelStripHtml(finalSymbol, reelCount) {
     () => pickWeightedSlotSymbol(symbole));
 
   return [...fillers, finalSymbol]
-    .map((symbol) => `<span>${symbol.emoji}</span>`)
+    .map((symbol) => `<span>${slotSymbolHtml(symbol)}</span>`)
     .join("");
 }
 
@@ -591,20 +559,16 @@ function buildSlotResultHtml(result) {
       const breit = durchgang.reels.length > 6 ? " spielothek-slot-reels-breit" : "";
       const gewonnen = durchgang.multiplier > 0 ? " hat-treffer" : "";
 
-      /* Woher der Gewinn kommt, aufgeschluesselt. Ohne diese Zeile
-         steht am Ende nur eine Zahl da, und der Guthaben-Anteil
-         waere unsichtbar - man wuerde nicht verstehen, warum
-         derselbe Treffer bei einem groesseren Konto mehr bringt. */
-      const bonus = durchgang.guthabenBonus || 0;
-      const aufschluesselung = bonus > 0
+      /* Wie der Gewinn zustande kam, in Worten. Seit dem Wegfall
+         des Guthaben-Anteils ist das eine einzige Rechnung, und
+         die soll dastehen statt nur des Ergebnisses. */
+      const aufschluesselung = durchgang.multiplier > 0
         ? `<p class="spielothek-gewinn-teile">
              <span>${durchgang.multiplier}\u00d7 Einsatz</span>
-             <span class="spielothek-gewinn-plus">+</span>
-             <span class="spielothek-gewinn-guthaben">${bonus.toLocaleString("de-DE")} aus deinem Guthaben</span>
            </p>`
         : "";
       const kopf = durchgang.freidreh
-        ? `<p class="spielothek-freidreh-kopf">🎁 Freidreh ${nr} — ${durchgang.reels.length} Walzen, geschenkt</p>`
+        ? `<p class="spielothek-freidreh-kopf">Freidreh ${nr} — ${durchgang.reels.length} Walzen, geschenkt</p>`
         : "";
 
       return `
@@ -631,8 +595,11 @@ function getSlotRulesHtml(lang) {
     truhe:     isEn ? "Chest"       : "Truhe",
     helm:      isEn ? "Fire helmet" : "Feuerhelm",
   };
-  const emoji = {};
-  SLOT_SYMBOLS.forEach((s) => { emoji[s.id] = s.emoji; });
+  /* Symbol-Nachschlag fuer die Tabelle. Frueher waren das Emoji,
+     jetzt dieselben Strichzeichnungen wie auf den Walzen - sonst
+     muesste man beim Lesen der Tabelle uebersetzen. */
+  const zeichen = {};
+  SLOT_SYMBOLS.forEach((sym) => { zeichen[sym.id] = slotSymbolHtml(sym); });
 
   /* Eine Tabelle je Walzenzahl: was zahlt welche Gruppengroesse.
      Die Zahlen kommen direkt aus SLOT_AUSZAHLUNG - die Regeln
@@ -654,7 +621,7 @@ function getSlotRulesHtml(lang) {
         const zellen = spalten
           .map((k, i) => `<td${i === 0 ? ' class="ist-normalfall"' : ""}>${SLOT_AUSZAHLUNG[n][id][k]}×</td>`)
           .join("");
-        return `<tr><th scope="row">${emoji[id]} ${name[id]}</th>${zellen}</tr>`;
+        return `<tr><th scope="row">${zeichen[id]} ${name[id]}</th>${zellen}</tr>`;
       })
       .join("");
 
@@ -672,43 +639,39 @@ function getSlotRulesHtml(lang) {
   };
 
   const regel = isEn
-    ? `You win when <strong>at least two reels</strong> show the same symbol — and there are more of them than skulls ${emoji.totenkopf}. Same rule at every bet.`
-    : `Du gewinnst, wenn <strong>mindestens zwei Walzen</strong> dasselbe Symbol zeigen — und es mehr sind als Totenköpfe ${emoji.totenkopf}. Dieselbe Regel bei jedem Einsatz.`;
+    ? `You win when <strong>at least two reels</strong> show the same symbol — and there are more of them than skulls ${zeichen.totenkopf}. Same rule at every bet.`
+    : `Du gewinnst, wenn <strong>mindestens zwei Walzen</strong> dasselbe Symbol zeigen — und es mehr sind als Totenköpfe ${zeichen.totenkopf}. Dieselbe Regel bei jedem Einsatz.`;
 
   const einsatz = isEn
     ? `Your bet (${SLOT_MIN_BET}–${SLOT_MAX_BET} 🪙, steps of ${SLOT_BET_STEP}) decides how many reels spin: 3 up to 30, 4 up to 50, 5 up to 80, 6 above that. <strong>Roughly one spin in three wins at every bet</strong>, and every bet pays back about the same — a bigger bet buys bigger prizes, not better odds. More reels means more skulls, which is what keeps the odds level.`
     : `Dein Einsatz (${SLOT_MIN_BET}–${SLOT_MAX_BET} 🪙, in Schritten von ${SLOT_BET_STEP}) bestimmt die Zahl der Walzen: 3 bis 30, 4 bis 50, 5 bis 80, 6 darüber. <strong>Bei jedem Einsatz gewinnt etwa jede dritte Drehung</strong>, und im Schnitt zahlt jeder Einsatz gleich gut zurück — ein höherer Einsatz kauft größere Preise, keine besseren Chancen. Mehr Walzen bringen mehr Totenköpfe mit, genau das hält die Chancen gleich.`;
 
-  /* Staffelung und Deckel stehen in spielothek.js
-     (SPIELOTHEK_VERLUST_STUFEN, SPIELOTHEK_VERLUST_DECKEL). Die
-     Prozentsaetze hier bewusst als Text und nicht aus der Konstante
-     gebaut: die Regeln sollen die Stufen in Worten erklaeren, nicht
-     nur Zahlen auflisten. Wer dort etwas aendert, muss diesen Satz
-     mitziehen. Der Deckel kommt dagegen direkt aus der Konstante -
-     eine falsche Zahl waere dort besonders aergerlich. */
+  /* Der Verlust ist wieder schlicht der Einsatz. Frueher stand hier
+     eine siebenstufige Prozentstaffel auf das Guthaben - sie ist mit
+     dem Umbau auf 94 % entfallen, zusammen mit dem Guthaben-Anteil
+     beim Gewinn. Beide haengten am Kontostand; ein Geraet, das je
+     nach Spieler anders rechnet, war genau das, was weg sollte. */
   const verlust = isEn
-    ? `<strong>On a loss</strong> a share of your balance goes overboard: 1 % below 500 doubloons, 2 % below 2000, 2.5 % below 5000, 3 % below 10 000, 4 % below 25 000, 5 % below 50 000, 6 % above. Never less than your bet, and <strong>never more than ${SPIELOTHEK_VERLUST_DECKEL}× your bet</strong> — so a big balance is slowed down, not wiped out. Below 200 doubloons nothing is taken beyond the bet.`
-    : `<strong>Bei einer Niete</strong> geht ein Teil deines Guthabens über Bord: 1 % unter 500 Dublonen, 2 % unter 2000, 2,5 % unter 5000, 3 % unter 10 000, 4 % unter 25 000, 5 % unter 50 000, 6 % darüber. Nie weniger als dein Einsatz, und <strong>nie mehr als das ${SPIELOTHEK_VERLUST_DECKEL}-Fache deines Einsatzes</strong> — ein großes Guthaben wird so gebremst, nicht abgeräumt. Unter 200 Dublonen wird nichts über den Einsatz hinaus genommen.`;
+    ? `<strong>On a loss</strong> you lose your bet — nothing more. No share of your balance, no matter how much you have.`
+    : `<strong>Bei einer Niete</strong> verlierst du deinen Einsatz — mehr nicht. Kein Anteil deines Guthabens, egal wie viel du hast.`;
 
-  const guthaben = isEn
-    ? `<strong>Your balance counts too.</strong> On top of the base win (bet × multiplier) comes a share of your balance — bigger for rarer symbols and larger groups, from about 0.4 % for a pair of doubloons up to ${(SLOT_GUTHABEN_MAX_ANTEIL * 100).toFixed(0)} % at most. Losses have always been a share of your balance; now wins are too.`
-    : `<strong>Dein Guthaben zählt mit.</strong> Auf den Grundgewinn (Einsatz × Vielfaches) kommt ein Anteil deines Guthabens obendrauf — je seltener das Symbol und je größer die Gruppe, desto mehr: von rund 0,4 % bei zwei Dublonen bis höchstens ${(SLOT_GUTHABEN_MAX_ANTEIL * 100).toFixed(0)} %. Der Verlust hing schon immer am Guthaben, jetzt tut es der Gewinn auch.`;
+  /* Die Auszahlungsquote gehoert sichtbar auf die Seite. Sie ist die
+     eine Zahl, die sagt, was das Geraet auf Dauer tut - wer sie
+     verschweigt, laesst die Leute raten. */
+  const quote = isEn
+    ? `<strong>Payout rate about 94 %.</strong> Over many spins the machine pays back roughly 94 doubloons per 100 staked — like a real arcade machine, which is required to sit between 90 and 96 %. Every spin is independent: no streak counter, no guaranteed win after a run of losses, and your balance never changes the odds or the payout.`
+    : `<strong>Auszahlungsquote rund 94 %.</strong> Über viele Drehungen zahlt der Automat etwa 94 von 100 eingesetzten Dublonen zurück — wie ein echtes Geldspielgerät, das zwischen 90 und 96 % liegen muss. Jede Drehung steht für sich: kein Zähler im Hintergrund, kein garantierter Gewinn nach einer Pechsträhne, und dein Guthaben ändert weder die Chancen noch die Auszahlung.`;
 
   const freidreh = isEn
     ? `<strong>All reels the same?</strong> You get a free spin with ${SLOT_FREIDREH_EXTRA_WALZEN} extra reels on top — winnings add up, up to ${SLOT_FREIDREH_MAX_KETTE} in a row.`
     : `<strong>Alle Walzen gleich?</strong> Dann gibt es einen Freidreh mit ${SLOT_FREIDREH_EXTRA_WALZEN} Walzen mehr obendrauf — die Gewinne addieren sich, höchstens ${SLOT_FREIDREH_MAX_KETTE} am Stück.`;
 
-  const pity = isEn
-    ? `No win for ${SLOT_PITY_SPIN_THRESHOLD} spins in a row? The next one wins for sure — a small one.`
-    : `${SLOT_PITY_SPIN_THRESHOLD} Drehungen in Folge ohne Gewinn? Die nächste gewinnt garantiert — klein, aber sicher.`;
-
   return `
     <p class="spielothek-rules-bet-hint">${regel}</p>
     <p class="spielothek-rules-bet-hint">${einsatz}</p>
-    <p class="spielothek-rules-bet-hint">${guthaben}</p>
     <p class="spielothek-rules-bet-hint">${verlust}</p>
+    <p class="spielothek-rules-bet-hint">${quote}</p>
     <p class="spielothek-rules-bet-hint">${freidreh}</p>
-    <p class="spielothek-rules-bet-hint">${pity}</p>
     ${tabelle(3)}
     ${tabelle(4)}
     ${tabelle(5)}
