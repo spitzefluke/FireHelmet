@@ -390,6 +390,7 @@ async function renderGatewayPage() {
   ladeGatewayCaps();
   ladeGatewaySupport();
   ladeGatewayVerlosung();
+  ladeGatewayAngriffMarker();
 
   buildGatewayShipStatusHtml().then((html) => {
     const sub = document.getElementById("gateway-ship-status-sub");
@@ -1222,7 +1223,7 @@ function buildGatewayCodesHtml() {
 
     <div class="gateway-form-row">
       <label>Boss-Geheimcode<br><input type="text" id="gateway-bosscode-neu" class="code-input" placeholder="z.B. KRAKEN99" autocomplete="off"></label>
-      <label>Spezialangriff<br><input type="text" id="gateway-bosscode-key" class="code-input" placeholder="z.B. fass" autocomplete="off"></label>
+      <label>Spezialangriff<br>${buildGatewayAngriffAuswahlHtml()}</label>
     </div>
     <button type="button" class="code-button gateway-inline-btn" onclick="gatewayBossCodeSetzen()">Boss-Code anlegen</button>
     <button type="button" class="code-button gateway-inline-btn" onclick="gatewayCodesLaden()">Liste laden</button>
@@ -1272,17 +1273,88 @@ async function gatewayCodeLoeschen() {
   }
 }
 
+/* ------------------------------------------------------
+   AUSWAHLLISTE DER SPEZIALANGRIFFE
+   ---------------------------------------------------
+   Vorher stand hier ein Freitextfeld mit dem Platzhalter "z.B.
+   fass". Der Schluessel musste also zeichengenau von Hand getippt
+   werden - und ein Tippfehler faellt nicht auf: die Datenbank lehnt
+   ihn zwar ab ("kein-spezialangriff"), aber man muss erst raten,
+   wie der Angriff intern heisst. "Das Fass, das niemand oeffnen
+   sollte" heisst intern "fass", "Kraken-Katapult" heisst
+   "katapult". Das kann niemand wissen, der es nicht nachschlaegt.
+
+   Die Liste kommt aus BOSS_SPEZIALANGRIFFE (boss-attacks-data.js) -
+   derselben Quelle, aus der auch die Spielseite ihre Namen nimmt.
+   Kommt dort ein Angriff dazu, steht er hier automatisch mit drin.
+------------------------------------------------------ */
+function buildGatewayAngriffAuswahlHtml() {
+  if (typeof BOSS_SPEZIALANGRIFFE === "undefined" || !BOSS_SPEZIALANGRIFFE.length) {
+    /* Rueckfall auf das alte Freitextfeld, falls die Angriffsdatei
+       nicht geladen ist - lieber tippen als gar nichts. */
+    return `<input type="text" id="gateway-bosscode-key" class="code-input"
+                   placeholder="z.B. fass" autocomplete="off">`;
+  }
+
+  const zeilen = BOSS_SPEZIALANGRIFFE.map((a) => {
+    const name = (a.name && (a.name.de || a.name.en)) || a.schluessel;
+    return `<option value="${escapeHtml(a.schluessel)}">${escapeHtml(name)}</option>`;
+  }).join("");
+
+  return `<select id="gateway-bosscode-key" class="code-input">
+            <option value="">— Angriff wählen —</option>
+            ${zeilen}
+          </select>`;
+}
+
+/* Hinter jeden Angriff schreiben, ob er schon einen Code hat.
+   Braucht app.admin_boss_codes_fehlen() aus 17-boss-code-schutz.sql;
+   fehlt die Migration noch, bleibt die Liste einfach ohne Marker. */
+async function ladeGatewayAngriffMarker() {
+  const feld = document.getElementById("gateway-bosscode-key");
+  if (!feld || feld.tagName !== "SELECT" || !supabaseClient) return;
+
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_boss_codes_fehlen");
+    if (error) throw error;
+
+    const hatCode = {};
+    (data || []).forEach((z) => { hatCode[z.schluessel] = z.hat_code; });
+
+    Array.from(feld.options).forEach((opt) => {
+      if (!opt.value) return;
+      const roh = opt.getAttribute("data-name") || opt.textContent;
+      opt.setAttribute("data-name", roh.replace(/\s*[·✓].*$/, "").trim());
+      const basis = opt.getAttribute("data-name");
+      opt.textContent = hatCode[opt.value] === true  ? `${basis} · ✓ hat Code`
+                      : hatCode[opt.value] === false ? `${basis} · noch ohne Code`
+                      : basis;
+    });
+  } catch (err) {
+    /* Migration 17 noch nicht eingespielt oder kein Netz - die
+       Auswahl funktioniert auch ohne Marker. */
+  }
+}
+
 async function gatewayBossCodeSetzen() {
   const code = ((document.getElementById("gateway-bosscode-neu") || {}).value || "").trim();
   const key = ((document.getElementById("gateway-bosscode-key") || {}).value || "").trim();
-  if (!code || !key) { gatewayCodesStatus("Code und Spezialangriff eintragen.", true); return; }
+  if (!code || !key) { gatewayCodesStatus("Code eintragen und Spezialangriff auswählen.", true); return; }
   try {
     const { error } = await supabaseClient.rpc("admin_boss_code_setzen", {
       p_code: code, p_schluessel: key, p_bemerkung: null,
     });
     if (error) throw error;
-    gatewayCodesStatus(`Boss-Code „${code}“ schaltet jetzt „${key}“ frei.`);
+
+    /* Den lesbaren Namen melden, nicht den internen Schluessel -
+       "fass" sagt niemandem etwas. */
+    const gewaehlt = typeof BOSS_SPEZIALANGRIFFE !== "undefined"
+      ? BOSS_SPEZIALANGRIFFE.find((a) => a.schluessel === key) : null;
+    const name = gewaehlt && gewaehlt.name ? (gewaehlt.name.de || gewaehlt.name.en) : key;
+
+    gatewayCodesStatus(`Boss-Code „${code}“ schaltet jetzt „${name}“ frei.`);
     gatewayCodesLaden();
+    ladeGatewayAngriffMarker();
   } catch (err) {
     console.error("Boss-Code anlegen fehlgeschlagen:", err);
     gatewayCodesStatus("Fehlgeschlagen: " + (err.message || err), true);
