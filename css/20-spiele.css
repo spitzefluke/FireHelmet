@@ -2330,13 +2330,6 @@
   color: var(--fh-muted, #9aa4b2);
 }
 
-.spielothek-gewinn-plus { opacity: .6; }
-
-.spielothek-gewinn-guthaben {
-  font-weight: 700;
-  color: var(--fh-gold, #f0c96a);
-}
-
 .spielothek-regeln-tabelle {
   width: 100%;
   margin: .9rem 0 1.2rem;
@@ -2586,29 +2579,6 @@
 /* 3. Muenzen rieseln an der Dublonen-Anzeige davon */
 .spielothek-currency-bar { position: relative; }
 
-.spielothek-muenzregen {
-  position: absolute;
-  left: 50%;
-  top: 60%;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-}
-
-.spielothek-muenze {
-  position: absolute;
-  font-size: 15px;
-  line-height: 1;
-  opacity: 0;
-  animation: spielothekMuenzeFaellt 1.1s ease-in var(--start, 0ms) forwards;
-}
-
-@keyframes spielothekMuenzeFaellt {
-  0%   { transform: translate(0, 0) rotate(0); opacity: 0; }
-  12%  { opacity: 1; }
-  100% { transform: translate(var(--x, 0), 78px) rotate(var(--dreh, 180deg)); opacity: 0; }
-}
-
 /* ======================================================
    SPIELOTHEK: HEBEL
 ====================================================== */
@@ -2620,93 +2590,12 @@
   flex-wrap: wrap;
 }
 
-.spielothek-hebel {
-  position: relative;
-  width: 26px;
-  height: 92px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  flex: 0 0 auto;
-}
-
-.spielothek-hebel-schiene {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 12px;
-  height: 62px;
-  transform: translateX(-50%);
-  border-radius: 6px;
-  background: linear-gradient(90deg, #171009, #3a2a1a 45%, #171009);
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, .8);
-}
-
-.spielothek-hebel-stange {
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  width: 6px;
-  height: 56px;
-  transform: translateX(-50%);
-  transform-origin: 50% 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, #8a6a34, #e0be7c 45%, #8a6a34);
-  transition: height var(--fh-dauer, .28s) var(--fh-ease, ease);
-}
-
-.spielothek-hebel-knauf {
-  position: absolute;
-  left: 50%;
-  bottom: 60px;
-  width: 22px;
-  height: 22px;
-  transform: translateX(-50%);
-  border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, #ff9a76, #b3341a 65%, #6d1d0d);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .6), inset 0 -2px 4px rgba(0, 0, 0, .5);
-  transition: bottom var(--fh-dauer, .28s) var(--fh-ease, ease);
-}
-
-.spielothek-hebel:hover .spielothek-hebel-knauf { filter: brightness(1.12); }
-
-.spielothek-hebel:focus-visible {
-  outline: 2px solid var(--fh-gold, #f0c96a);
-  outline-offset: 3px;
-  border-radius: 8px;
-}
-
-/* Ziehen: Knauf faehrt herunter, Stange wird kuerzer, dann zurueck */
-.spielothek-hebel.ist-gezogen .spielothek-hebel-stange {
-  animation: spielothekHebelStange .55s cubic-bezier(.3, 1.4, .5, 1);
-}
-
-.spielothek-hebel.ist-gezogen .spielothek-hebel-knauf {
-  animation: spielothekHebelKnauf .55s cubic-bezier(.3, 1.4, .5, 1);
-}
-
-@keyframes spielothekHebelStange {
-  0%   { height: 56px; }
-  32%  { height: 16px; }
-  100% { height: 56px; }
-}
-
-@keyframes spielothekHebelKnauf {
-  0%   { bottom: 60px; }
-  32%  { bottom: 20px; }
-  100% { bottom: 60px; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .spielothek-slot-symbol-landed,
   .spielothek-slot-reels.hat-treffer::before,
   .spielothek-slot-reels.ist-verloren,
   .spielothek-slot-reels.ist-verloren .spielothek-slot-symbol,
-  .spielothek-slot-reels.ist-verloren .ist-totenkopf .spielothek-slot-strip,
-  .spielothek-hebel.ist-gezogen .spielothek-hebel-stange,
-  .spielothek-hebel.ist-gezogen .spielothek-hebel-knauf,
-  .spielothek-muenze {
+  .spielothek-slot-reels.ist-verloren .ist-totenkopf .spielothek-slot-strip {
     animation: none;
   }
   /* Die Gewinnlinie soll trotzdem zu sehen sein, nur ohne Aufbau. */

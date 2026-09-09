@@ -175,6 +175,12 @@ function clampSpielothekBet(handler, rawValue) {
 function updateSpielothekBetDisplay(value) {
   const label = document.getElementById("spielothek-bet-value");
   if (label) label.textContent = `${value} 🪙`;
+
+  /* Das Einsatz-Feld oben zeigt denselben Wert. Ohne diese Zeile
+     stuende am Regler eine Zahl und im Feld eine andere - genau die
+     Sorte Widerspruch, die eine Oberflaeche unglaubwuerdig macht. */
+  const feld = document.getElementById("spielothek-anzeige-einsatz");
+  if (feld) feld.textContent = String(value);
 }
 
 function onSpielothekBetInput(rawValue) {
@@ -213,13 +219,6 @@ async function playSpielothekGame() {
   const playBtn = document.getElementById("spielothek-play-btn");
   if (playBtn) playBtn.disabled = true;
 
-  // Hebel sichtbar herunterziehen und wieder hochschnellen lassen.
-  const hebelEl = document.getElementById("spielothek-hebel");
-  if (hebelEl) {
-    hebelEl.classList.remove("ist-gezogen");
-    void hebelEl.offsetWidth;   // Neustart der Animation erzwingen
-    hebelEl.classList.add("ist-gezogen");
-  }
   if (statusEl) statusEl.textContent = "";
 
   try {
@@ -266,17 +265,16 @@ async function playSpielothekGame() {
     // Ergebnis wird HIER ermittelt - dasselbe Ergebnis wird gleich
     // unten angezeigt UND ist exakt das, was tatsächlich gutgeschrieben/
     // abgezogen wurde.
-    /* Das Guthaben geht mit in die Rechnung: der Gewinn haengt
-       jetzt nicht mehr nur am Einsatz, sondern bekommt einen
-       Anteil des Kontos obendrauf (siehe SLOT_GUTHABEN_ANTEIL in
-       games/slot.js). Vorher hing nur der VERLUST am Guthaben -
-       diese Schieflage war der Grund, warum sich Treffer bei
-       grossen Konten nach nichts anfuehlten. */
+    /* Das Guthaben wird weiterhin uebergeben, aber nicht mehr
+       benutzt: der Guthaben-Anteil beim Gewinn ist entfallen. Der
+       Parameter bleibt in der Schnittstelle, damit ein spaeteres
+       Spiel ihn nutzen koennte, ohne dass alle Aufrufstellen
+       angefasst werden muessen. */
     const spin = handler.play(betCost, currentCurrency);
 
-    /* Gewinn: Einsatz weg, Auszahlung dazu (wie bisher).
-       Niete:   NICHT der Einsatz, sondern ein Anteil des Guthabens -
-                siehe spielothekVerlustAbzug() weiter unten. */
+    /* Gewinn: Einsatz weg, Auszahlung dazu.
+       Niete:   der Einsatz, mehr nicht - siehe
+                spielothekVerlustAbzug() weiter unten. */
     const abzug = spin.win ? betCost : spielothekVerlustAbzug(currentCurrency, betCost);
     const newCurrency = Math.max(0, currentCurrency - abzug + spin.payout);
     const angewandtesDelta = newCurrency - currentCurrency;
@@ -464,98 +462,29 @@ async function refreshSpielothekCurrencyDisplay() {
    also keine dauerhafte JS-Animation-Schleife.
 ------------------------------------------------------ */
 /* ------------------------------------------------------
-   VERLUST: PROZENT VOM GUTHABEN STATT DES EINSATZES
+   VERLUST: DER EINSATZ, MEHR NICHT
    ---------------------------------------------------
-   Bei einer Niete geht nicht der Einsatz verloren, sondern ein
-   Anteil des Guthabens - gestaffelt, damit Anfaenger geschont und
-   Horter gebremst werden:
+   FRUEHER STAND HIER EINE PROZENTSTAFFEL AUF DAS GUTHABEN
+   Eine Niete kostete 1 bis 6 Prozent des Kontostands, gedeckelt auf
+   das Fuenfzehnfache des Einsatzes. Gedacht war das als Bremse gegen
+   die Anhaeufung auf wenigen Konten, und in Zahlen wirkte sie auch.
 
-     unter    500 Dublonen ->  1,0 %
-     unter   2000 Dublonen ->  2,0 %
-     unter   5000 Dublonen ->  2,5 %
-     unter  10000 Dublonen ->  3,0 %
-     unter  25000 Dublonen ->  4,0 %
-     unter  50000 Dublonen ->  5,0 %
-     darueber              ->  6,0 %
+   Sie hatte nur einen Fehler, den keine Feinjustierung behebt: sie
+   rechnete fuer jeden Spieler anders. Zwei Leute an derselben
+   Maschine, gleicher Einsatz, gleiches Walzenbild - und der eine
+   verlor 20, der andere 300. Ein Geraet, dessen Preis vom Kontostand
+   abhaengt, ist nicht durchschaubar, auch wenn die Staffel in den
+   Regeln steht.
 
-   Dritte Absenkung: erst 5/8/12 %, dann 4/6/8/10 %, jetzt sieben
-   Stufen mit hoechstens 6 %. Warum es dreimal nicht gereicht hat,
-   steht bei SPIELOTHEK_VERLUST_DECKEL - kurz: an den Saetzen zu
-   drehen war nie die Loesung, die Rechnung selbst war das Problem.
-
-   Unter 200 Dublonen wird gar kein Prozentabzug faellig, dann
-   kostet die Niete nur den Einsatz - sonst klebt jemand mit
-   wenigen Dublonen endlos knapp ueber null fest und kann nicht
-   mehr mitspielen.
-
-   WARUM DIE OBEREN STUFEN: am 09.09.2026 sah die echte Verteilung
-   so aus - 31 Spieler, 105.223 Dublonen im Umlauf, davon 61.320
-   und 37.021 auf ZWEI Konten (zusammen 93 %). Neunzehn Spieler
-   lagen unter 50. Eine Staffel, die bei 2000 endet, haette diese
-   beiden Konten also mit demselben Satz gebremst wie jemanden mit
-   2001 Dublonen - viel zu schwach, um die Konzentration je wieder
-   aufzuloesen. Bestehende Guthaben werden bewusst NICHT angetastet;
-   die Bremse wirkt nur beim Weiterspielen.
+   Jetzt kostet eine Niete den Einsatz. Punkt. Die Bremse gegen
+   grosse Konten leistet stattdessen die Auszahlungsquote von rund
+   94 Prozent (siehe SLOT_AUSZAHLUNG in games/slot.js): wer viel
+   spielt, verliert im Schnitt langsam - unabhaengig davon, wie viel
+   er hat, und fuer alle nach derselben Rechnung.
 ------------------------------------------------------ */
-const SPIELOTHEK_VERLUST_STUFEN = [
-  { bis: 500,       anteil: 0.010 },
-  { bis: 2000,      anteil: 0.020 },
-  { bis: 5000,      anteil: 0.025 },
-  { bis: 10000,     anteil: 0.030 },
-  { bis: 25000,     anteil: 0.040 },
-  { bis: 50000,     anteil: 0.050 },
-  { bis: Infinity,  anteil: 0.060 },
-];
-const SPIELOTHEK_VERLUST_FREIGRENZE = 200;
-
-/* Obergrenze fuer den Abzug, als Vielfaches des EINSATZES.
-   ------------------------------------------------------
-   Ohne diesen Deckel ist ein Prozentsatz vom Guthaben rechnerisch
-   ruinoes, egal wie klein man ihn waehlt. Zwei Drittel der Drehungen
-   sind Nieten, jede zieht denselben Anteil ab - das Guthaben faellt
-   also geometrisch. Bis zur Haelfte sind es ln(0,5)/ln(1 - 0,67*Satz)
-   Drehungen: bei 6 % nur 17, bei 3 % 34, selbst bei 1 % erst 103.
-   Die Saetze zu senken verschiebt das, loest es aber nie.
-
-   Dazu kommt der Groessenunterschied: 6 % von 61 320 sind 3 679,
-   der hoechste Einsatz sind 100. Kein Gewinn der Tabelle kann eine
-   solche Niete je aufwiegen - das Spiel waere fuer grosse Konten
-   nicht schwer, sondern sinnlos.
-
-   Der Deckel bindet den Abzug deshalb an den Einsatz. Bei 15 gilt
-   der Prozentsatz weiterhin ueberall dort, wo tatsaechlich Konten
-   liegen (bis rund 8000 Dublonen bei Einsatz 20); darueber greift
-   der Deckel. Fuer das groesste Konto sind es damit 171 statt 20
-   Drehungen bis zur Haelfte - gebremst, nicht enteignet. Und weil
-   der Deckel am Einsatz haengt, hat man ihn selbst in der Hand:
-   wer gross setzt, wird auch schneller gebremst. */
-const SPIELOTHEK_VERLUST_DECKEL = 15;
-
-function spielothekVerlustAnteil(guthaben) {
-  const stufe = SPIELOTHEK_VERLUST_STUFEN.find((s) => guthaben < s.bis);
-  // Rueckfall auf die oberste Stufe, nicht auf einen eigenen Wert -
-  // sonst waere ein Guthaben ueber allen Grenzen milder gestellt.
-  return stufe ? stufe.anteil : SPIELOTHEK_VERLUST_STUFEN[SPIELOTHEK_VERLUST_STUFEN.length - 1].anteil;
-}
-
 function spielothekVerlustAbzug(guthaben, einsatz) {
-  if (guthaben < SPIELOTHEK_VERLUST_FREIGRENZE) {
-    /* Zu wenig zum Rupfen - dann eben nur der Einsatz, und nie mehr
-       als ueberhaupt da ist.
-
-       Dadurch verliert jemand mit 49 Dublonen bei einem Einsatz von
-       20 tatsaechlich mehr als jemand mit 50 (der zahlt 1 %, also 1).
-       Das ist die bewusste Gegenprobe zur naheliegenden Alternative
-       "unter der Grenze kostet eine Niete gar nichts": damit koennte
-       man sich auf 49 Dublonen setzen und endlos gratis drehen -
-       Nieten waeren kostenlos, Gewinne echt. Der Einsatz bleibt
-       deshalb faellig. */
-    return Math.min(einsatz, guthaben);
-  }
-  const prozent = Math.round(guthaben * spielothekVerlustAnteil(guthaben));
-  // Nie weniger als der Einsatz (sonst waere Verlieren billiger als
-  // Gewinnen), nie mehr als der Deckel, nie mehr als vorhanden.
-  return Math.min(Math.max(einsatz, prozent), einsatz * SPIELOTHEK_VERLUST_DECKEL, guthaben);
+  // Nie mehr, als ueberhaupt da ist.
+  return Math.min(einsatz, guthaben);
 }
 
 async function renderSpielothekResult(game, handler, result, betCost, angewandtesDelta) {
@@ -603,15 +532,24 @@ async function renderSpielothekResult(game, handler, result, betCost, angewandte
   // nie nur die Bruttoauszahlung - sonst würde die Anzeige bei einem
   // Gewinn einen höheren Zuwachs suggerieren, als tatsächlich gutgeschrieben
   // wurde (Punkt 14: keine manipulierte/irreführende Darstellung).
-  /* Der TATSAECHLICH gebuchte Unterschied, nicht die Bruttoauszahlung
-     und auch nicht mehr "Auszahlung minus Einsatz": bei einer Niete
-     wird seit dem Balance-Umbau ein Anteil des Guthabens abgezogen
-     statt des Einsatzes, und die Anzeige muss genau das zeigen, was
-     auf dem Konto passiert ist. Der Rueckfall auf die alte Rechnung
-     greift nur, falls der Wert nicht durchgereicht wurde. */
+  /* Der TATSAECHLICH gebuchte Unterschied, nicht die Bruttoauszahlung.
+     Seit dem Wegfall der Verlust-Staffel ist das bei einer Niete
+     wieder genau der Einsatz - der Wert wird trotzdem durchgereicht
+     statt hier neu gerechnet: angezeigt werden soll, was auf dem
+     Konto passiert ist, nicht, was passiert sein sollte. */
   const netDelta = typeof angewandtesDelta === "number"
     ? angewandtesDelta
     : result.payout - betCost;
+
+  /* Feld "Letzte Runde": das Ergebnis mit Vorzeichen, damit man es
+     auch dann noch sieht, wenn der Ergebnistext unten schon vom
+     naechsten Dreh ueberschrieben wurde. */
+  const letzteEl = document.getElementById("spielothek-anzeige-letzte");
+  if (letzteEl) {
+    letzteEl.textContent = (netDelta > 0 ? "+" : "") + netDelta.toLocaleString("de-DE");
+    letzteEl.classList.toggle("ist-gewinn", netDelta > 0);
+    letzteEl.classList.toggle("ist-verlust", netDelta < 0);
+  }
 
   if (result.win) {
     // Gewinn-Ablauf in zwei sichtbaren Schritten (Punkt 11): zuerst wird
@@ -637,22 +575,7 @@ async function renderSpielothekResult(game, handler, result, betCost, angewandte
       if (result.tier === "jackpot" || result.tier === "veryBig") revealEl.classList.add("spielothek-result-win-big");
       if (!reduceMotion) revealEl.classList.add("spielothek-amount-pop");
     }
-    // Staerkerer Effekt bei selteneren Gewinnen (Auftrag Punkt 5): mehr
-    // Konfetti-Teile, laenger sichtbar, je hoeher die Gewinnstufe.
-    if (!reduceMotion) triggerSpielothekConfetti(resultEl, result.tier);
 
-    // Zusaetzlicher 3D-Funkenausbruch (three.js) NUR beim Jackpot -
-    // haeufigere, kleinere Gewinne behalten bewusst ausschliesslich das
-    // 2D-Konfetti oben, damit der 3D-Effekt fuer den seltensten Moment
-    // etwas Besonderes bleibt statt bei jedem Gewinn zu wiederholen.
-    if (!reduceMotion && result.tier === "jackpot" && typeof window.fhCelebrationBurst === "function") {
-      window.fhCelebrationBurst(stageEl || resultEl, {
-        colors: [0xf0c96a, 0xff6b3d, 0xffffff],
-        count: 110,
-        duration: 1800,
-        size: 11,
-      });
-    }
   } else {
     /* Der Totenkopf zittert kurz und zerspringt dann (siehe
        @keyframes spielothekTotenkopf in css/20-spiele.css). Bei
@@ -686,89 +609,33 @@ async function renderSpielothekResult(game, handler, result, betCost, angewandte
     stageEl.classList.add(result.win ? "spielothek-stage-win" : "spielothek-stage-lose");
   }
 
-  /* Verlust-Auftritt in drei Teilen (siehe css/20-spiele.css):
-     die Totenkoepfe in den Walzen fangen an zu lachen, kurz darauf
-     sacken alle Walzen grau nach unten weg, und an der Dublonen-
-     Anzeige rieseln Muenzen davon. Alles nur bei echter Bewegung -
-     bei prefers-reduced-motion bleibt es beim Text. */
+  /* Bei einer Niete sacken die Walzen einmal ruhig grau nach unten
+     weg - das genuegt, um "vorbei" zu sagen. Frueher fingen dazu die
+     Totenkoepfe an zu lachen und an der Guthaben-Anzeige rieselten
+     Muenzen davon. */
   if (!result.win && !reduceMotion) {
     resultEl.querySelectorAll(".spielothek-slot-reels").forEach((reihe) => {
       reihe.classList.add("ist-verloren");
     });
-    spielothekMuenzenRieseln();
   }
 }
 
 /* ------------------------------------------------------
-   MUENZEN RIESELN BEI VERLUST
+   HIER STANDEN MUENZREGEN UND KONFETTI
    ---------------------------------------------------
-   Ein paar kurzlebige Zeichen, die an der Dublonen-Anzeige losfallen
-   und sich dabei ausblenden - rein per CSS-Keyframe, danach raeumen
-   sie sich selbst weg. Kein Dauer-Timer, keine Schleife.
+   Bei einer Niete rieselten Muenzen an der Guthaben-Anzeige davon,
+   bei einem Gewinn flogen zwischen 10 und 28 Konfetti-Teile
+   auseinander, gestaffelt nach Gewinnstufe, beim Jackpot zusaetzlich
+   ein Funkenausbruch in 3D.
 
-   Die Zahl der Muenzen haengt bewusst NICHT vom verlorenen Betrag ab:
-   das waere bei 7358 Dublonen ein Muenzregen, der die Seite lahmlegt.
+   Alles entfernt. Es waren rund 120 kurzlebige DOM-Elemente je Runde
+   fuer eine Aussage, die die Zahl daneben schon macht - und es war
+   der Teil, der die Seite nach Online-Casino aussehen liess statt
+   nach einem gepflegten Geraet. Geblieben sind die drei Bewegungen
+   mit Zweck: der Walzenlauf, das Aufleuchten der Gewinnreihe und das
+   Hochzaehlen des Guthabens.
 ------------------------------------------------------ */
-function spielothekMuenzenRieseln(anzahl = 7) {
-  const anker = document.querySelector(".spielothek-currency-bar");
-  if (!anker) return;
 
-  const huelle = document.createElement("span");
-  huelle.className = "spielothek-muenzregen";
-  huelle.setAttribute("aria-hidden", "true");
-
-  for (let i = 0; i < anzahl; i++) {
-    const m = document.createElement("span");
-    m.className = "spielothek-muenze";
-    m.textContent = "🪙";
-    // Streuung, damit die Muenzen nicht im Gleichschritt fallen
-    m.style.setProperty("--x", (Math.random() * 80 - 40).toFixed(1) + "px");
-    m.style.setProperty("--dreh", (Math.random() * 540 - 270).toFixed(0) + "deg");
-    m.style.setProperty("--start", (i * 55).toFixed(0) + "ms");
-    huelle.appendChild(m);
-  }
-
-  anker.appendChild(huelle);
-  setTimeout(() => huelle.remove(), 1600);
-}
-
-/* ------------------------------------------------------
-   KONFETTI-EFFEKT BEI GEWINN (Punkt 11)
-   ---------------------------------------------------
-   Ein paar kurzlebige <span>-Elemente, die rein per CSS-Keyframe
-   auseinanderfliegen und sich dabei ausblenden (siehe
-   @keyframes spielothekConfettiPop in style.css) - läuft genau
-   EINMAL pro Gewinn ab und entfernt sich danach selbst per
-   setTimeout, KEINE dauerhafte requestAnimationFrame/Intervall-
-   Schleife (Punkt 12: Performance).
------------------------------------------------------- */
-const SPIELOTHEK_CONFETTI_TIERS = {
-  jackpot: { pieceCount: 28, colors: ["#ff6a2a", "#f0c96a", "#ffe9b3", "#ff9f4d"], lifespanMs: 1500 },
-  veryBig: { pieceCount: 20, colors: ["#7dd3fc", "#f0c96a", "#ffe9b3"], lifespanMs: 1200 },
-  big: { pieceCount: 16, colors: ["#7dd3fc", "#e8a33d", "#ffe9b3"], lifespanMs: 1000 },
-};
-const SPIELOTHEK_CONFETTI_DEFAULT = { pieceCount: 10, colors: ["#f0c96a", "#e8a33d", "#ffe9b3", "#d6a84f"], lifespanMs: 900 };
-
-function triggerSpielothekConfetti(containerEl, tier) {
-  if (!containerEl) return;
-
-  const { pieceCount, colors, lifespanMs } = SPIELOTHEK_CONFETTI_TIERS[tier] || SPIELOTHEK_CONFETTI_DEFAULT;
-  const burst = document.createElement("div");
-  burst.className = `spielothek-confetti-burst${tier === "jackpot" ? " spielothek-confetti-burst-jackpot" : ""}`;
-  burst.setAttribute("aria-hidden", "true");
-
-  for (let i = 0; i < pieceCount; i++) {
-    const piece = document.createElement("span");
-    piece.className = "spielothek-confetti-piece";
-    piece.style.setProperty("--fh-confetti-angle", `${(360 / pieceCount) * i}deg`);
-    piece.style.setProperty("--fh-confetti-color", colors[i % colors.length]);
-    piece.style.setProperty("--fh-confetti-delay", `${i * 12}ms`);
-    burst.appendChild(piece);
-  }
-
-  containerEl.appendChild(burst);
-  setTimeout(() => burst.remove(), lifespanMs);
-}
 
 function buildSpielothekAndiHtml() {
   const image = typeof CHARACTER_DATABASE !== "undefined" && CHARACTER_DATABASE.andi ? CHARACTER_DATABASE.andi.image : "";
@@ -830,10 +697,26 @@ async function renderSpielothekPage() {
       <span class="spielothek-game-name">${game.name[lang] || game.name.de}</span>
     </div>
 
-    <div class="shop-currency-bar spielothek-currency-bar">
-      <span class="shop-currency-icon">💰</span>
-      <span id="spielothek-currency-amount">0</span>
-      <span data-i18n="shop.currencyLabel">Dublonen</span>
+    <!-- Drei Felder wie an einem echten Geraet: was ich habe, was
+         ich setze, was die letzte Runde gebracht hat. Vorher stand
+         nur das Guthaben in einer schmalen Leiste, der Einsatz
+         irgendwo darunter und das Ergebnis nur als Fliesstext - man
+         musste drei Stellen absuchen, um zu wissen, wo man steht.
+         Feste Breite (tabular-nums im CSS), damit beim Hochzaehlen
+         nichts springt. -->
+    <div class="spielothek-anzeigen">
+      <div class="spielothek-anzeige">
+        <span class="spielothek-anzeige-titel" data-i18n="spielothek.anzeigeGuthaben">Guthaben</span>
+        <span class="spielothek-anzeige-wert" id="spielothek-currency-amount">0</span>
+      </div>
+      <div class="spielothek-anzeige">
+        <span class="spielothek-anzeige-titel" data-i18n="spielothek.anzeigeEinsatz">Einsatz</span>
+        <span class="spielothek-anzeige-wert" id="spielothek-anzeige-einsatz">${handler.variableBet ? handler.defaultBet : handler.betCost}</span>
+      </div>
+      <div class="spielothek-anzeige">
+        <span class="spielothek-anzeige-titel" data-i18n="spielothek.anzeigeLetzte">Letzte Runde</span>
+        <span class="spielothek-anzeige-wert" id="spielothek-anzeige-letzte">—</span>
+      </div>
     </div>
     ${buildSpielothekBetHtml(handler)}
 
@@ -846,18 +729,15 @@ async function renderSpielothekPage() {
       <div class="spielothek-game-area">
         <div id="spielothek-result" class="spielothek-result"></div>
         <div class="spielothek-bedienung">
-          <!-- Der Hebel ist ein zusaetzlicher, rein optischer Weg zum
-               selben Spiel. Er ist bewusst aria-hidden und nicht per
-               Tastatur erreichbar: der Knopf daneben bleibt die
-               vollwertige Bedienung, der Hebel waere sonst ein
-               zweiter, verwirrender Tabstopp mit gleicher Wirkung. -->
-          <button type="button" class="spielothek-hebel" id="spielothek-hebel"
-                  onclick="playSpielothekGame()" aria-hidden="true" tabindex="-1">
-            <span class="spielothek-hebel-schiene"></span>
-            <span class="spielothek-hebel-stange"></span>
-            <span class="spielothek-hebel-knauf"></span>
-          </button>
-          <button type="button" class="code-button" id="spielothek-play-btn" onclick="playSpielothekGame()" data-i18n="spielothek.playButton" disabled>SPIELEN</button>
+          <!-- Frueher stand hier zusaetzlich ein Ziehhebel aus drei
+               <span>-Elementen. Er war aria-hidden und tat genau
+               dasselbe wie der Knopf daneben - ein zweites Bedienteil
+               ohne eigene Funktion, also genau das, was ein
+               glaubwuerdiges Geraet nicht hat. Geblieben ist der
+               eine, breite Ausloeser mit ehrlichen Zustaenden. -->
+          <button type="button" class="code-button spielothek-ausloeser"
+                  id="spielothek-play-btn" onclick="playSpielothekGame()"
+                  data-i18n="spielothek.playButton" disabled>SPIELEN</button>
         </div>
         <p id="spielothek-status" class="wheel-status"></p>
       </div>

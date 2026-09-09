@@ -181,11 +181,26 @@
   justify-content: center;
   padding: 28px 24px;
   border-radius: var(--fh-radius-lg);
+  /* GEHAEUSE: dunkles Holz mit Messingrahmen.
+     Die Maserung sind zwei sehr flache Farbverlaeufe in
+     unterschiedlichem Abstand - zusammen ergibt das eine
+     unregelmaessige Zeichnung, ohne dass eine Bilddatei geladen
+     werden muss. Frueher lag hier ein gleichmaessiges Streifenmuster
+     alle 22 Pixel; das las sich wie ein Gitter, nicht wie Holz. */
   background:
-    linear-gradient(160deg, rgba(58,44,28,.55), rgba(15,10,6,.9)),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, transparent 2px 22px);
-  border: 1px solid rgba(214,168,79,.35);
-  box-shadow: 0 30px 70px rgba(0,0,0,.55), inset 0 0 50px rgba(0,0,0,.35);
+    linear-gradient(168deg, rgba(64,46,29,.92), rgba(28,20,13,.96)),
+    repeating-linear-gradient(92deg,
+      rgba(0,0,0,.10) 0 1px, transparent 1px 9px,
+      rgba(255,235,200,.022) 9px 10px, transparent 10px 31px),
+    repeating-linear-gradient(88deg,
+      rgba(0,0,0,.06) 0 2px, transparent 2px 17px);
+  /* Messingrahmen: aussen eine feine helle Kante, innen ein Schatten -
+     das laesst den Rahmen erhaben wirken statt aufgemalt. */
+  border: 1px solid rgba(190,150,84,.55);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(255,226,170,.16),
+    inset 0 0 40px rgba(0,0,0,.42);
   transition: box-shadow .4s ease;
 }
 
@@ -197,15 +212,18 @@
   animation: spielothekStageLoseFlash .6s ease-out;
 }
 
+/* Frueher 60px Schein in kraeftigem Gold. Jetzt ein kurzes Aufhellen
+   des Messingrahmens - man sieht, dass etwas passiert ist, ohne dass
+   das halbe Bild leuchtet. */
 @keyframes spielothekStageWinFlash {
-  0%   { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
-  30%  { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 60px rgba(240,201,106,.55); }
-  100% { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(240,201,106,0); }
+  0%   { box-shadow: 0 18px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,226,170,.16), 0 0 0 rgba(224,161,82,0); }
+  30%  { box-shadow: 0 18px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,226,170,.4),  0 0 12px rgba(224,161,82,.35); }
+  100% { box-shadow: 0 18px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,226,170,.16), 0 0 0 rgba(224,161,82,0); }
 }
 
 @keyframes spielothekStageLoseFlash {
-  0%   { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(220,50,50,0); }
-  35%  { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 40px rgba(220,50,50,.45); }
+  0%   { box-shadow: 0 18px 40px rgba(0,0,0,.5), 0 0 0 rgba(168,86,74,0); }
+  35%  { box-shadow: 0 18px 40px rgba(0,0,0,.5), 0 0 10px rgba(168,86,74,.3); }
   100% { box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 rgba(220,50,50,0); }
 }
 
@@ -484,10 +502,10 @@
   color: var(--fh-danger);
 }
 
-/* --- Gewinn-Ablauf in zwei Schritten (Punkt 11): "Gewinn!" wird zuerst
-   aufgedeckt, dann poppt der Betrag mit demselben Effekt nach, waehrend
-   triggerSpielothekConfetti() (spielothek.js) ein paar Konfetti-Punkte
-   auseinanderfliegen laesst. --- */
+/* --- Gewinn-Ablauf in zwei Schritten: "Gewinn!" wird zuerst
+   aufgedeckt, dann erscheint der Betrag mit demselben Effekt. Das
+   Konfetti, das frueher dazu flog, ist entfernt - der Betrag traegt
+   den Moment allein. --- */
 .spielothek-result-reveal {
   animation: spielothekResultPop .35s cubic-bezier(.34, 1.5, .64, 1) backwards;
 }
@@ -502,56 +520,17 @@
   100% { opacity: 1; transform: scale(1); }
 }
 
-.spielothek-confetti-burst {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.spielothek-confetti-piece {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  border-radius: 2px;
-  background: var(--fh-confetti-color, #f0c96a);
-  animation: spielothekConfettiPop .75s ease-out both;
-  animation-delay: var(--fh-confetti-delay, 0ms);
-}
-
-@keyframes spielothekConfettiPop {
-  0%   { opacity: 1; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(0) scale(1); }
-  100% { opacity: 0; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(-48px) scale(.4); }
-}
-
-/* Jackpot: deutlich weiterer, laengerer Konfetti-Wurf UND groessere
-   Partikel (Auftrag Punkt 5: "staerkerer Effekt bei seltenen
-   Gewinnen") - eigene Keyframe statt nur mehr Teilchen derselben
-   Groesse/Reichweite. */
-.spielothek-confetti-burst-jackpot .spielothek-confetti-piece {
-  width: 8px;
-  height: 8px;
-  animation-name: spielothekConfettiPopJackpot;
-  animation-duration: 1.4s;
-}
-
-@keyframes spielothekConfettiPopJackpot {
-  0%   { opacity: 1; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(0) scale(1); }
-  100% { opacity: 0; transform: rotate(var(--fh-confetti-angle, 0deg)) translateY(-92px) scale(.3); }
-}
-
-/* Grosse Gewinne heben sich zusaetzlich farblich/optisch ab */
+/* Grosse Gewinne heben sich farblich ab - frueher zusaetzlich mit
+   einem Schein von 18px, jetzt mit 6px. Der Betrag soll auffallen,
+   nicht leuchten. */
 .spielothek-result-win-big {
   color: var(--menu-hex3);
-  text-shadow: 0 0 18px rgba(255,215,107,.7);
+  text-shadow: 0 0 6px rgba(255,215,107,.45);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .spielothek-result-reveal,
-  .spielothek-amount-pop,
-  .spielothek-confetti-piece {
+  .spielothek-amount-pop {
     animation: none;
   }
 }
@@ -876,11 +855,6 @@
     radial-gradient(circle at 70% 80%, rgba(240,201,106,.4) 0 3px, transparent 4px),
     radial-gradient(circle at 50% 50%, rgba(255,215,107,.35) 0 3px, transparent 4px);
   animation: fhConfettiDrift 2.4s ease-in-out infinite alternate;
-}
-
-@keyframes fhConfettiDrift {
-  from { transform: translateY(-4px); opacity: .9; }
-  to { transform: translateY(4px); opacity: .5; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2539,3 +2513,131 @@
   border: 1px solid var(--fh-border-strong);
 }
 
+
+/* ======================================================
+   SPIELOTHEK - GERAETE-ANMUTUNG (September 2026)
+   ---------------------------------------------------
+   Drei getrennte Anzeigen, Strichzeichnungen als Symbole und ein
+   Ausloeser mit ehrlichen Zustaenden. Alles auf den bestehenden
+   --fh-Tokens; die drei Holz-/Messingtoene stehen hier lokal, weil
+   sie ausserhalb der Spielothek nirgends vorkommen und im globalen
+   Token-Satz nur Ballast waeren.
+====================================================== */
+.spielothek-page-content {
+  --spielo-holz:     #3a2a1a;
+  --spielo-holz-tief:#1c130c;
+  --spielo-messing:  #be9654;
+  --spielo-messing-hell: #e2c48a;
+  --spielo-fenster:  #14100c;
+}
+
+/* ------------------------------------------------------
+   DIE DREI ANZEIGEN
+   Nebeneinander, gleich breit, fest in der Hoehe. Der Wert steht in
+   Tabellenziffern (tabular-nums): sonst wandert beim Hochzaehlen von
+   999 auf 1.000 die ganze Zeile, weil die Eins schmaler ist als die
+   Null - eine Anzeige, die beim Zaehlen zappelt, wirkt billig.
+------------------------------------------------------ */
+.spielothek-anzeigen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 520px;
+  margin: 22px auto 0;
+}
+
+.spielothek-anzeige {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(10,8,5,.92), rgba(20,16,11,.92));
+  border: 1px solid rgba(190,150,84,.32);
+  box-shadow: inset 0 1px 0 rgba(255,226,170,.08), inset 0 -6px 14px rgba(0,0,0,.4);
+}
+
+.spielothek-anzeige-titel {
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fh-muted);
+  white-space: nowrap;
+}
+
+.spielothek-anzeige-wert {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-size: clamp(18px, 4.4vw, 24px);
+  font-weight: 700;
+  color: var(--spielo-messing-hell);
+  line-height: 1.1;
+}
+
+/* Nur diese beiden Faelle bekommen Farbe. Ein neutrales Feld bleibt
+   messingfarben - Gruen/Rot ueberall waere Ampeloptik. */
+.spielothek-anzeige-wert.ist-gewinn  { color: #7fbf7a; }
+.spielothek-anzeige-wert.ist-verlust { color: #c07a6e; }
+
+/* ------------------------------------------------------
+   SYMBOLE ALS STRICHZEICHNUNG
+------------------------------------------------------ */
+.spielothek-slot-symbol-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.spielothek-slot-icon {
+  width: clamp(24px, 6vw, 34px);
+  height: clamp(24px, 6vw, 34px);
+  display: block;
+}
+
+/* In der Regel-Tabelle kleiner, damit die Zeile nicht auseinander
+   geht. */
+.spielothek-regeln-tabelle .spielothek-slot-icon {
+  width: 18px;
+  height: 18px;
+  vertical-align: -3px;
+}
+
+.spielothek-regeln-tabelle .spielothek-slot-symbol-inner {
+  display: inline-flex;
+  width: auto;
+  margin-right: 6px;
+}
+
+/* ------------------------------------------------------
+   DER AUSLOESER
+   Zustaende, die man sieht: bereit, gedrueckt, gesperrt. Ein
+   gesperrter Knopf muss auch gesperrt AUSSEHEN - vorher unterschied
+   er sich nur durch den Cursor.
+------------------------------------------------------ */
+.spielothek-ausloeser {
+  min-width: 200px;
+  padding: 14px 28px;
+  font-size: 15px;
+  letter-spacing: .1em;
+}
+
+.spielothek-ausloeser:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.spielothek-ausloeser:disabled {
+  opacity: .45;
+  filter: saturate(.35);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (max-width: 420px) {
+  .spielothek-anzeigen { gap: 6px; }
+  .spielothek-anzeige { padding: 8px 4px; }
+  .spielothek-anzeige-titel { font-size: 10px; letter-spacing: .08em; }
+  .spielothek-ausloeser { min-width: 0; width: 100%; }
+}
