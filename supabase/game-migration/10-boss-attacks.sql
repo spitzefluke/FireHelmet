@@ -799,6 +799,37 @@ grant select on public.boss_community_buff to anon, authenticated;
       where code_sha256 = encode(extensions.digest(upper('DEIN-CODE-HIER'),'sha256'),'hex');
    Bereits Freigeschaltete behalten ihren Angriff - das ist Absicht.
 
+   WENN EIN CODE NICHT ANGENOMMEN WIRD
+   Der Server vergleicht upper(btrim(eingabe)) - Gross- und
+   Kleinschreibung sowie Leerzeichen VORNE und HINTEN sind also egal.
+   Ein Leerzeichen MITTENDRIN und jedes andere Zeichen zaehlen mit.
+
+   Die haeufigste Ursache ist ein Zeichen, das beim Anlegen mit in
+   den Hash gewandert ist: ein Leerzeichen aus der Zwischenablage,
+   ein Zeilenumbruch, ein typografischer Bindestrich (-) statt eines
+   geraden (-). Der Code sieht dann richtig aus, passt aber nie.
+
+   So pruefst du einen Code, ohne ihn jemandem zu zeigen:
+
+     select b.schluessel
+       from public.boss_special_codes b
+      where b.code_sha256 = encode(extensions.digest(
+              upper(btrim('HIER DEN CODE EINTIPPEN')), 'sha256'), 'hex');
+
+   Kommt eine Zeile zurueck, ist der Code in Ordnung und der Fehler
+   liegt woanders. Kommt nichts, stimmt der gespeicherte Hash nicht
+   mit dem ueberein, was du eintippst - dann den Code mit genau
+   diesem btrim()-Ausdruck neu anlegen:
+
+     insert into public.boss_special_codes (code_sha256, schluessel, bemerkung)
+     values (encode(extensions.digest(upper(btrim('DEIN-CODE')),'sha256'),'hex'),
+             'salve', 'Stream vom 12.09.')
+     on conflict (code_sha256) do update
+        set schluessel = excluded.schluessel, bemerkung = excluded.bemerkung;
+
+   Alte, nicht mehr passende Zeilen vorher wegraeumen:
+     delete from public.boss_special_codes where schluessel = 'salve';
+
    ZAHLEN AENDERN
    Alles an einer Stelle, in boss_attack_defs. Zum Beispiel den
    Saebel etwas staerker machen:

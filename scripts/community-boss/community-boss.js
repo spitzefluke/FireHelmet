@@ -1632,10 +1632,24 @@ async function bossCodeEinloesen(e) {
   if (!code) return;
 
   if (statusEl) statusEl.textContent = en ? "Checking ..." : "Wird geprüft ...";
-  const treffer = await bossSpezialFreischalten(code);
+  const antwort = await bossSpezialFreischalten(code);
+  const treffer = antwort && antwort.treffer;
 
   if (!treffer) {
-    if (statusEl) statusEl.textContent = en ? "❌ That code does not fit." : "❌ Dieser Code passt nicht.";
+    /* Jeder Grund bekommt seinen eigenen Satz. "Passt nicht" darf nur
+       dastehen, wenn der Server den Code wirklich geprueft und
+       abgelehnt hat - sonst schickt man Leute auf die Suche nach
+       einem Tippfehler, den es gar nicht gibt. */
+    const grund = (antwort && antwort.grund) || "code-falsch";
+    const texte = {
+      "code-falsch":     en ? "❌ That code does not fit."
+                            : "❌ Dieser Code passt nicht.",
+      "nicht-angemeldet":en ? "❌ You are not signed in yet - reload the page."
+                            : "❌ Du bist noch nicht angemeldet - lade die Seite neu.",
+      "kein-server":     en ? "❌ Could not reach the server. Try again in a moment."
+                            : "❌ Der Server war nicht erreichbar. Versuch es gleich noch einmal.",
+    };
+    if (statusEl) statusEl.textContent = texte[grund] || texte["code-falsch"];
     return;
   }
   const a = bossAngriffFinden(treffer);
@@ -1934,21 +1948,45 @@ async function bossKatalogLaden() {
   return bossKatalog;
 }
 
+/* Nur DIESER eine Fehlercode heisst "die Migration fehlt". PostgREST
+   liefert ihn, wenn die Funktion nicht existiert. Alles andere -
+   Zeitueberschreitung, Netz weg, Supabase noch am Aufwachen - ist
+   voruebergehend und darf nicht als "gibt es nicht" gemerkt werden. */
+function bossFunktionFehlt(err) {
+  return !!err && (err.code === "PGRST202" || err.code === "42883");
+}
+
 async function bossWegPruefen() {
   if (bossNeuerWeg !== null) return bossNeuerWeg;
   if (!supabaseClient) return false;
   try {
-    const { data, error } = await supabaseClient.rpc("boss_attack_status",
-      { p_month_id: getCurrentMonthId() });
+    // withSupabaseRlsColdStartRetry(): dieselbe Absicherung wie an
+    // allen anderen Aufrufstellen - siehe supabase-client.js. Hier
+    // fehlte sie als einzige.
+    const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.rpc("boss_attack_status", { p_month_id: getCurrentMonthId() })
+    );
     if (error) throw error;
     bossStatus = data || null;
     bossNeuerWeg = true;
   } catch (err) {
-    // PGRST202 "Could not find the function" - die Migration ist noch
-    // nicht eingespielt. Das ist kein Fehler, sondern der erwartete
-    // Zustand bis dahin.
-    bossNeuerWeg = false;
+    /* WARUM HIER NICHT MEHR PAUSCHAL false GEMERKT WIRD
+       Vorher landete JEDER Fehler in diesem Zweig und setzte
+       bossNeuerWeg dauerhaft auf false. Ein einziger Aussetzer beim
+       Laden der Seite - Supabase im Kaltstart, kurz kein Netz -
+       schaltete damit die Geheimcodes fuer die gesamte Sitzung ab:
+       bossSpezialFreischalten() fragt den Server dann gar nicht erst
+       und meldet "Dieser Code passt nicht", obwohl der Code stimmt.
+       Nur ein Neuladen half, und niemand konnte ahnen, warum.
+
+       Jetzt wird ein voruebergehender Fehler NICHT gemerkt - der
+       naechste Aufruf versucht es erneut. */
     bossStatus = null;
+    if (bossFunktionFehlt(err)) {
+      bossNeuerWeg = false;   // die Migration fehlt wirklich
+    } else {
+      return false;           // diesmal nein, aber nicht fuer immer
+    }
   }
   return bossNeuerWeg;
 }
@@ -1969,16 +2007,36 @@ async function bossStatusLaden() {
 /* Einen Geheimcode einloesen. Der Klartext geht an den Server, wird
    dort gehasht und verglichen - im Browser liegt kein einziger Hash,
    aus dem sich etwas erraten liesse. */
+/* Liefert { treffer } bei Erfolg, sonst { grund } - und zwar den
+   ECHTEN Grund. Vorher gab die Funktion in allen Faellen null zurueck,
+   und die Oberflaeche machte daraus stur "Dieser Code passt nicht".
+   Ein nicht erreichbarer Server, eine fehlende Anmeldung und ein
+   falscher Code sahen fuer den Spieler identisch aus - man suchte den
+   Fehler beim Code, obwohl er woanders lag. */
 async function bossSpezialFreischalten(code) {
-  if (!(await bossWegPruefen())) return null;
+  if (!supabaseClient) return { grund: "kein-server" };
+
+  // Ohne Sitzung wirft der Server "nicht-angemeldet". Lieber vorher
+  // darauf warten - beim ersten Seitenaufruf ist sie oft noch unterwegs.
   try {
-    const { data, error } = await supabaseClient.rpc("boss_unlock_special", { p_code: code });
+    if (typeof wheelAuthReady !== "undefined") await wheelAuthReady;
+  } catch (err) { /* unten faellt es ohnehin auf */ }
+
+  if (!(await bossWegPruefen())) return { grund: "kein-server" };
+
+  try {
+    const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.rpc("boss_unlock_special", { p_code: code })
+    );
     if (error) throw error;
-    if (data) await bossStatusLaden();
-    return data || null;
+    if (!data) return { grund: "code-falsch" };
+    await bossStatusLaden();
+    return { treffer: data };
   } catch (err) {
     console.warn("Code konnte nicht geprueft werden:", err);
-    return null;
+    const txt = String((err && (err.message || err.hint)) || "");
+    if (txt.indexOf("nicht-angemeldet") !== -1) return { grund: "nicht-angemeldet" };
+    return { grund: "kein-server" };
   }
 }
 
@@ -2579,6 +2637,15 @@ function startBossAbklingTimer() {
     const box = document.getElementById("boss-angriffswahl");
     if (!box || box.hidden) return;
     if (!box.querySelector(".ist-gesperrt, .ist-ruhe")) return;
+
+    /* Neuzeichnen ersetzt das Formular samt Eingabefeld. Wer gerade
+       einen Geheimcode eintippt, saehe sein Feld mitten im Tippen
+       leer werden - und haette keine Ahnung, warum. Also: warten,
+       bis er fertig ist. Die Abklingzeiten laufen ohnehin in Stunden,
+       eine Minute spaeter ist voellig gleichgueltig. */
+    const feld = document.getElementById("boss-code-input");
+    if (feld && (document.activeElement === feld || feld.value)) return;
+
     renderBossAngriffswahl();
   }, BOSS_ABKLING_TAKT);
 }
