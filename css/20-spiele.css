@@ -2715,3 +2715,59 @@
     opacity: .55;
   }
 }
+
+/* ======================================================
+   ANMELDUNG: GOOGLE UND E-MAIL
+   ---------------------------------------------------
+   Die Knoepfe teilen sich .twitch-login-btn (Form, Groesse,
+   Fokusring) - hier kommt nur die Farbe des jeweiligen Anbieters
+   dazu. Google traegt bewusst Weiss auf Dunkel: das ist die von
+   Google vorgegebene Darstellung, und ein lila Google-Knopf sieht
+   nach Fehler aus.
+====================================================== */
+.google-login-btn {
+  background: #ffffff;
+  color: #1f1f1f;
+}
+
+.google-login-btn:hover:not(:disabled) { background: #f1f3f4; }
+.google-login-btn .twitch-icon { fill: currentColor; }
+
+.fh-email-anmeldung { margin-top: 14px; }
+
+.fh-email-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  color: var(--fh-muted, #9aa4b2);
+}
+
+.fh-email-reihe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fh-email-feld {
+  flex: 1 1 200px;
+  min-width: 0;          /* sonst sprengt das Feld die Reihe auf
+                            schmalen Schirmen */
+  padding: 10px 12px;
+  border-radius: var(--fh-radius, 12px);
+  border: 1px solid var(--fh-linie, rgba(255, 255, 255, .16));
+  background: rgba(12, 16, 26, .6);
+  color: inherit;
+  font: inherit;
+}
+
+.fh-email-feld:focus-visible {
+  outline: 2px solid var(--fh-gold, #f0c96a);
+  outline-offset: 2px;
+}
+
+.fh-email-btn { flex: 0 0 auto; }
+
+/* Statuszeile der Anmeldung. Fehler bekommen Farbe, alles andere
+   bleibt ruhig - eine rote Zeile fuer "Link verschickt" waere
+   irrefuehrend. */
+.fh-anmelde-status.ist-fehler { color: var(--fh-danger, #ff6b6b); }
