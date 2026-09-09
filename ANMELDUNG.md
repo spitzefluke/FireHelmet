@@ -26,6 +26,24 @@ selbst als verifiziert eintragen kann. Ginge das, wären N1 und N2 wertlos
 
 ---
 
+## Dann: den Schalter, ohne den nichts geht
+
+**Authentication → Sign In / Providers**, ganz nach unten scrollen, unter
+den Anbietern:
+
+- **Allow manual linking** → **einschalten**
+- **Allow anonymous sign-ins** → bleibt an (ist es schon, sonst käme
+  niemand auf die Seite)
+
+Ohne den ersten Schalter antwortet Supabase auf jeden Anmeldeversuch mit
+*„Manual linking is disabled for this project“*. Der Grund: die Seite
+benutzt `linkIdentity()`, um die Twitch-Identität an das **bestehende**
+anonyme Konto zu hängen — genau das ist „manual linking“. Ohne den
+Schalter bliebe nur `signInWithOAuth()`, und das legt ein neues Konto mit
+neuer UID an: der Fortschritt wäre aus Sicht des Spielers weg.
+
+---
+
 ## Dann: die vier Anbieter
 
 Alle unter **Authentication → Sign In / Providers**.
@@ -121,6 +139,9 @@ verändern kann, im Gegensatz zu `user_metadata`.
 
 **„Unsupported provider"** — der Anbieter ist in Supabase nicht
 eingeschaltet.
+
+**„Manual linking is disabled for this project"** — der Schalter *Allow
+manual linking* fehlt, siehe oben.
 
 **Nach dem Anmelden landet man auf `localhost:3000`** — unter
 *Authentication → URL Configuration* ist die *Site URL* falsch. Das ist
