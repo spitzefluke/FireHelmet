@@ -259,8 +259,21 @@ end;
 $$;
 
 /* Verwaltung. Der Code wird als Klartext uebergeben und hier
-   gehasht - dieselbe Rechnung wie im Browser (SHA-256 ueber den
-   Code in Grossbuchstaben, ohne Rand-Leerzeichen). */
+   gehasht - dieselbe Rechnung wie im Browser. Der Browser rechnet
+   KLEIN geschrieben: main.js nimmt input.value.trim().toLowerCase()
+   und schickt nur den Hash, und die Hashes in codes-data.js sind
+   ebenso ueber die Kleinschreibung gebildet. Mit upper() waere jeder
+   hier angelegte Code tot - er wuerde nie auf den Hash treffen, den
+   der Browser sendet. Nicht mit boss_unlock_special() verwechseln:
+   dort geht der Klartext an die Datenbank, dort ist upper() richtig.
+
+   Was diese Funktion kann und was nicht: sie bestimmt den BETRAG zu
+   einem Code. Ob der Browser den eingetippten Code ueberhaupt als
+   Code erkennt, entscheidet die statische Liste in
+   scripts/codes/codes-data.js - dort steht der Hash samt Meldung.
+   Ein voellig neuer Code braucht also beides: einen Eintrag in
+   codes-data.js (Erkennung und Text) und einen Aufruf hier (Betrag).
+   Fuer die acht bestehenden Codes genuegt dieser Aufruf allein. */
 create or replace function app.admin_code_setzen(p_code text, p_betrag integer, p_bemerkung text default null)
 returns text
 language plpgsql security definer set search_path = public, app, extensions, pg_temp
@@ -277,7 +290,7 @@ begin
     raise exception 'betrag-ungueltig';
   end if;
 
-  hash := encode(extensions.digest(upper(btrim(p_code)), 'sha256'), 'hex');
+  hash := encode(extensions.digest(lower(btrim(p_code)), 'sha256'), 'hex');
   insert into public.currency_codes (code_sha256, betrag, bemerkung)
        values (hash, p_betrag, p_bemerkung)
   on conflict (code_sha256) do update set betrag = excluded.betrag, bemerkung = excluded.bemerkung;
@@ -300,7 +313,7 @@ begin
   if not app.is_admin() then
     raise exception 'not-admin';
   end if;
-  hash := encode(extensions.digest(upper(btrim(p_code)), 'sha256'), 'hex');
+  hash := encode(extensions.digest(lower(btrim(p_code)), 'sha256'), 'hex');
   delete from public.currency_codes where code_sha256 = hash;
   get diagnostics weg = row_count;
   perform app.admin_notiz('dublonen-code-geloescht', hash, null);

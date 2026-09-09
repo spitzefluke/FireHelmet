@@ -466,10 +466,16 @@
   position: absolute;
   top: 50%;
   left: 50%;
+  /* 150px sind der Radius der Scheibe - mehr geht nicht, sonst
+     laeuft die Beschriftung ueber den Rand hinaus und wird
+     abgeschnitten (mit 200px stand dort "Kraken-Rah"). Der Platz
+     fuer die sechzehn Faecher kommt stattdessen aus der Hoehe:
+     Symbol und Wort stehen uebereinander statt nebeneinander,
+     siehe .wheel-label-text. */
   width: 150px;
   margin-top: -1px;
   transform-origin: 0 0;
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 700;
   color: #fdf1d6;
   text-align: right;
@@ -479,7 +485,40 @@
 }
 
 .wheel-label-text {
-  display: inline-block;
+  /* Symbol ueber dem Wort statt nur Text: bei sechzehn Faechern
+     liest im Vorbeidrehen niemand mehr sechzehn Woerter, ein
+     Symbol erkennt man trotzdem. */
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.1;
+}
+
+.wheel-label-icon {
+  font-size: 1.35em;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5));
+}
+
+.wheel-label-wort {
+  font-size: .74em;
+  white-space: nowrap;
+  letter-spacing: -.01em;
+}
+
+/* Die seltenen Faecher tragen zusaetzlich Gewicht in der Schrift.
+   Die Farbe macht die Aufhellung im Kuchendiagramm schon (siehe
+   AUFHELLUNG in buildWheel) - hier kommt nur noch dazu, dass man
+   den Namen auch auf dem helleren Grund gut liest. */
+.wheel-label-epic .wheel-label-wort,
+.wheel-label-legendary .wheel-label-wort {
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+}
+
+.wheel-label-legendary .wheel-label-icon {
+  filter: drop-shadow(0 0 6px rgba(255, 226, 150, .9)) drop-shadow(0 1px 2px rgba(0, 0, 0, .5));
 }
 
 /* Kompass-Nadel statt einfachem Zeiger */
@@ -2289,10 +2328,29 @@
 }
 
 .spielothek-regeln-tabelle caption {
+  /* Flex statt Textfluss: sonst haengt das Quoten-Schild mal in der
+     Zeile und rutscht mal darunter, je nachdem wie breit die
+     Ueberschrift gerade ausfaellt. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .1rem .45rem;
   padding-bottom: .35rem;
   font-weight: 700;
   text-align: left;
   opacity: .9;
+}
+
+/* Auf schmalen Schirmen wird rechts abgeschnitten. Ein Verlauf am
+   rechten Rand sagt, dass da noch etwas kommt - sonst haelt man die
+   angeschnittene Spalte fuer das Ende der Tabelle.
+   mask statt einer aufgesetzten Ebene, damit nichts ueber der
+   scrollenden Tabelle liegt und Zeigereingaben abfaengt. */
+@media (max-width: 700px) {
+  .spielothek-regeln-tabelle {
+    -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+  }
 }
 
 .spielothek-regeln-tabelle th,
@@ -2303,9 +2361,51 @@
   white-space: nowrap;
 }
 
+/* Die Symbolspalte bleibt beim Querscrollen stehen. Bei sechs
+   Walzen hat die Tabelle sieben Spalten - ohne das scrollt man auf
+   dem Handy nach rechts und weiss nicht mehr, in welcher Zeile man
+   ist. Der Hintergrund muss deckend sein, sonst scheinen die
+   wegscrollenden Zahlen durch. */
 .spielothek-regeln-tabelle thead th:first-child,
-.spielothek-regeln-tabelle tbody th { text-align: left; font-weight: 600; }
+.spielothek-regeln-tabelle tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+  font-weight: 600;
+  background: var(--fh-flaeche-2, #16202b);
+}
 .spielothek-regeln-tabelle tbody tr:last-child { font-weight: 700; }
+
+/* Der Normalfall: fast jeder Treffer ist die kleinste Gruppe.
+   Diese Spalte bekommt deshalb das Gewicht, nicht die Traumzahlen
+   ganz rechts. */
+.spielothek-regeln-tabelle .ist-normalfall {
+  color: var(--fh-gold, #e8b64c);
+  font-weight: 700;
+  background: color-mix(in srgb, var(--fh-gold, #e8b64c) 8%, transparent);
+}
+.spielothek-regeln-tabelle thead th.ist-normalfall::after {
+  content: "";
+  display: block;
+  height: 2px;
+  margin-top: .2rem;
+  border-radius: 2px;
+  background: var(--fh-gold, #e8b64c);
+}
+
+/* Trefferquote in der Beschriftung - die Zahl ist die Aussage,
+   deshalb steht sie ruhig und nicht als Signalfarbe da. */
+.spielothek-regeln-quote {
+  margin-left: .4rem;
+  padding: .05rem .4rem;
+  border: 1px solid var(--fh-linie, rgba(255, 255, 255, .14));
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: .78em;
+  opacity: .85;
+  white-space: nowrap;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .spielothek-verlust-icon.ist-bewegt { animation: none; }

@@ -901,7 +901,10 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 /* ---------- BOSS-PHASEN (Punkt 7) - rein visuell anhand HP% ---------- */
 .fh-boss-panel {
   position: relative;
-  max-width: 480px;
+  /* Volle Inhaltsbreite statt 480px. Seit die Angriffswahl ein
+     Raster aus vierzehn Karten ist, war das Feld zu eng: die Karten
+     brachen auf eine Spalte um, obwohl daneben Platz frei blieb. */
+  max-width: 100%;
   margin: 26px auto 0;
   padding: 24px 22px 20px;
   border-radius: var(--fh-radius-lg, 24px);

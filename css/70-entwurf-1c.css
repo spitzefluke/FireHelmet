@@ -1980,9 +1980,23 @@ h1.fh-page-title,
 .shop-earn-hint,
 .fh-audiobook-card,
 .boss-flavor,
+/* Das Boss-Feld bleibt mittig. Es kam aus einem Durchgang, der
+   alle Bloecke linksbuendig gesetzt hat - richtig fuer Inhalts-
+   listen, falsch hier: das Feld ist ein Bedienteil unter einer
+   mittigen Buehne, und linksbuendig stand es sichtbar schief
+   darunter. auto statt 0, damit die Regel aus 50-redesign.css
+   (margin: 26px auto 0) wieder greift. */
 .fh-boss-panel {
-  margin-inline: 0;
+  margin-inline: auto;
 }
+
+/* Innerhalb des Feldes gilt dasselbe: Angriffsknopf, Statuszeile
+   und Zahlenreihe gehoeren unter die mittige Lebensleiste, nicht
+   an den linken Rand. Bewusst nur hier und nicht allgemein - der
+   Rest der Seite bleibt linksbuendig, so wie er gedacht war. */
+.fh-boss-panel .boss-attack-btn { display: block; margin-inline: auto; }
+.fh-boss-panel #boss-status { text-align: center; }
+.fh-boss-panel .fh-boss-stats-row { justify-content: center; }
 
 /* Reihen, die ihre Elemente in der Mitte sammelten, beginnen
    jetzt links - sie sind Inhaltslisten, keine Bedienteile. */

@@ -162,10 +162,25 @@ function buildWheel() {
 
   const segmentAngle = 360 / wheelPrizes.length;
 
+  /* Seltenheit sichtbar machen, ohne das Wochenthema aufzugeben.
+     ---------------------------------------------------
+     Die Themenfarben laufen der Reihe nach durch (Modulo), sie
+     sagen also nichts darueber, wo die guten Faecher liegen. Bei
+     sechzehn Faechern ist das Rad damit eine gleichfoermige
+     Scheibe. Statt eigene Farben je Seltenheit zu erfinden - die
+     wuerden mit jedem der vier Themen streiten - wird die
+     Themenfarbe nur AUFGEHELLT, je seltener das Fach ist. Das
+     Thema bleibt erhalten, die Verteilung wird trotzdem lesbar. */
+  const AUFHELLUNG = { common: 0, rare: 8, epic: 18, legendary: 30 };
+
   const gradientParts = wheelPrizes
     .map((p, i) => {
       const color = theme ? theme.colors[i % theme.colors.length] : p.color;
-      return `${color} ${i * segmentAngle}deg ${(i + 1) * segmentAngle}deg`;
+      const hell = AUFHELLUNG[p.rarity] || 0;
+      const farbe = hell
+        ? `color-mix(in srgb, ${color}, white ${hell}%)`
+        : color;
+      return `${farbe} ${i * segmentAngle}deg ${(i + 1) * segmentAngle}deg`;
     })
     .join(", ");
 
@@ -185,8 +200,23 @@ function buildWheel() {
     // Bedarf um 180 Grad zurückgedreht wird, haelt die Radial-Position
     // der Box unveraendert und macht nur die Glyphen wieder lesbar.
     const text = document.createElement("span");
-    text.className = "wheel-label-text";
-    text.textContent = prize.label;
+    text.className = "wheel-label-text wheel-label-" + (prize.rarity || "common");
+    /* Das Symbol stand bisher nur im Ergebnisfenster - auf dem Rad
+       selbst gab es allein den Text. Bei sechzehn Faechern liest
+       niemand mehr sechzehn Woerter im Vorbeidrehen; ein Symbol
+       erkennt man auch dann. Text bleibt darunter, damit klar ist,
+       was gemeint ist. */
+    if (prize.icon) {
+      const sym = document.createElement("span");
+      sym.className = "wheel-label-icon";
+      sym.textContent = prize.icon;
+      text.appendChild(sym);
+    }
+    const wort = document.createElement("span");
+    wort.className = "wheel-label-wort";
+    wort.textContent = prize.label;
+    text.appendChild(wort);
+
     if (mid > 90 && mid < 270) {
       text.style.transform = "rotate(180deg)";
     }
@@ -1316,8 +1346,20 @@ async function redeemWheelPrize(prize) {
     if (toolIds.length) {
       const toolId = toolIds[Math.floor(Math.random() * toolIds.length)];
       const oldTools = data.ship_tools || {};
-      fields.ship_tools = { ...oldTools, [toolId]: (oldTools[toolId] || 0) + 1 };
-      prize.grantedToolId = toolId; // für die Ergebnis-Anzeige (optional)
+      /* prize.count Stueck von EINEM Werkzeug, nicht je eines von
+         mehreren. Das ist keine Bequemlichkeit, sondern eine
+         Vorgabe des Servers: app.valid_ship_tools() laesst je
+         Schreibvorgang genau einen Schluessel sich aendern
+         (changed_count > 1 -> false). Drei verschiedene Werkzeuge
+         waeren abgelehnt worden, drei Stueck eines gehen durch.
+         Der Deckel von 40 je Werkzeug steht ebenfalls dort. */
+      const anzahl = Math.max(1, Math.min(5, prize.count || 1));
+      fields.ship_tools = {
+        ...oldTools,
+        [toolId]: Math.min(40, (oldTools[toolId] || 0) + anzahl),
+      };
+      prize.grantedToolId = toolId;    // für die Ergebnis-Anzeige
+      prize.grantedToolCount = anzahl;
     }
   } else if (prize.type === "frame") {
     const owned = data.owned_shop_items || [];

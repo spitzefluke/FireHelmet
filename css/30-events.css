@@ -31,11 +31,16 @@
 /* Bühne mit dem Boss-Emoji, inkl. Glow und Wackel-Effekt bei Treffern */
 .boss-stage {
   position: relative;
-  width: 320px;
-  height: 320px;
-  margin: 35px auto 20px;
+  /* Waechst mit der Seite, bleibt aber quadratisch (das Canvas
+     zeichnet in ein Quadrat). Vorher fest 320px - auf breiten
+     Schirmen stand der Boss dadurch klein in viel leerem Raum. */
+  width: min(420px, 78vw);
+  height: min(420px, 78vw);
+  margin: 18px auto 20px;
   perspective: 1000px;
 }
+
+.boss-content { max-width: 720px; }
 
 /* Statischer, weich pulsierender Glow hinter der Bühne (nur
    opacity/filter, rührt nie an "transform" - das Zittern beim
@@ -1543,11 +1548,47 @@ img, svg, video, canvas {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  /* unten Platz fuer den Anteilsbalken, der als letztes Kind
+     absolut am Fuss der Zeile sitzt */
+  padding: 10px 16px 13px;
+  position: relative;
+  overflow: hidden;
   border-radius: 12px;
   background: rgba(255,255,255,.05);
   border: 1px solid rgba(255,255,255,.08);
   animation: leaderboardRowIn .4s cubic-bezier(0.22, 0.9, 0.32, 1.2) backwards;
+}
+
+/* Anteilsbalken: Schaden im Verhaeltnis zum Besten. Aus einer
+   Spalte Zahlen wird damit auf einen Blick eine Verteilung - man
+   sieht, ob die Spitze davonzieht oder ob es eng ist.
+   aria-hidden im HTML: die Zahl steht ohnehin daneben, der Balken
+   traegt fuer Screenreader nichts bei. */
+.boss-leaderboard-balken {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.boss-leaderboard-balken-fuellung {
+  display: block;
+  height: 100%;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(90deg, rgba(212,175,55,.5), var(--fh-gold, #f0c96a));
+  transition: width var(--fh-dauer-lang, 600ms) var(--fh-ease-aus, ease-out);
+}
+
+/* Auslassung zwischen den ersten zehn und der eigenen Zeile,
+   wenn man weiter hinten steht. */
+.boss-leaderboard-trenner {
+  margin: 6px 0 2px;
+  text-align: center;
+  letter-spacing: .4em;
+  color: var(--fh-muted, #9aa4b2);
+  opacity: .6;
 }
 
 .boss-leaderboard-row:nth-child(1) { animation-delay: .02s; }
@@ -2198,7 +2239,51 @@ img, svg, video, canvas {
 .fh-boss-angriff.ist-zu { opacity: .45; cursor: default; }
 .fh-boss-angriff.ist-gesperrt { opacity: .6; cursor: default; }
 
+/* Ruhepause ist etwas anderes als eine Sperre: der Angriff selbst
+   waere bereit, aber man darf ueberhaupt nicht angreifen. Deshalb
+   ein eigener, kuehler Ton statt derselben Graustufe. */
+.fh-boss-angriff.ist-ruhe {
+  opacity: .55;
+  cursor: default;
+  border-color: rgba(120, 170, 255, .25);
+}
+
+/* Kopfzeile: Symbol links, Schadensspanne rechts. Die Spanne kommt
+   aus boss_attack_defs auf dem Server - sie steht bewusst neben dem
+   Symbol und nicht im Text, damit man die vierzehn Karten an dieser
+   einen Stelle vergleichen kann, ohne zu lesen. */
+.fh-boss-angriff-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .fh-boss-angriff-symbol { font-size: 22px; line-height: 1; }
+
+.fh-boss-angriff-spanne {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  color: var(--fh-gold, #f0c96a);
+  background: color-mix(in srgb, var(--fh-gold, #f0c96a) 12%, transparent);
+}
+
+/* Zaehler neben "Spezialangriffe": wie viele der elf man hat.
+   Das Raster zeigt die verschlossenen ja weiterhin mit an - ohne
+   Zaehler muesste man sie abzaehlen. */
+.fh-boss-wahl-zaehler {
+  margin-left: .5em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: .06em;
+  color: var(--fh-gold, #f0c96a);
+  background: color-mix(in srgb, var(--fh-gold, #f0c96a) 12%, transparent);
+}
 
 .fh-boss-angriff-name {
   font-family: var(--fh-font-display, inherit);
@@ -2214,15 +2299,29 @@ img, svg, video, canvas {
 
 .fh-boss-angriff-marke {
   align-self: flex-start;
-  margin-top: 2px;
+  margin-top: auto;      /* immer an den Fussrand, egal wie lang der
+                            Beschreibungstext der Karte ausfaellt */
   padding: 2px 7px;
   font-size: 10px;
-  letter-spacing: .1em;
+  letter-spacing: .08em;
   text-transform: uppercase;
   border-radius: 999px;
   background: rgba(255, 255, 255, .08);
   color: var(--fh-muted, #9aa4b2);
 }
+
+.fh-boss-angriff.ist-gesperrt .fh-boss-angriff-marke {
+  color: #f0b46a;
+  background: rgba(240, 180, 106, .14);
+}
+
+.fh-boss-angriff.ist-ruhe .fh-boss-angriff-marke {
+  color: #8ab4ff;
+  background: rgba(138, 180, 255, .14);
+}
+
+/* Gleich hohe Karten, damit die Marken auf einer Linie sitzen. */
+.fh-boss-angriff-reihe { align-items: stretch; }
 
 /* ---- Geheimcode ---- */
 .fh-boss-code { margin-top: 16px; }

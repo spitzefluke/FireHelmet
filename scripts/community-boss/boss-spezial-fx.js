@@ -1,9 +1,17 @@
 /* ======================================================
-   DIE ELF SPEZIALANGRIFFE - WIE SIE AUSSEHEN
+   ALLE VIERZEHN ANGRIFFE - WIE SIE AUSSEHEN
    ---------------------------------------------------
-   Ein eigenes Modul, weil community-boss.js mit rund 1900 Zeilen
-   schon gross genug ist und diese elf Zeichenroutinen mit der
+   Ein eigenes Modul, weil community-boss.js mit rund 2400 Zeilen
+   schon gross genug ist und diese Zeichenroutinen mit der
    Kampflogik nichts zu tun haben.
+
+   Frueher standen hier nur die elf Spezialangriffe. Die drei
+   Grundangriffe (Saebel, Kanone, Enterhaken) bekamen stattdessen
+   einen ZUFAELLIGEN von vier allgemeinen Effekten zugewiesen - ein
+   Saebelhieb konnte als Harpune erscheinen. Jetzt hat jeder der
+   vierzehn seine eigene Darstellung, und die Zufallsauswahl in
+   community-boss.js greift nur noch, solange die Migration nicht
+   eingespielt ist und der Angriff gar keinen Namen hat.
 
    ANBINDUNG
    community-boss.js fragt bei jedem Angriff zuerst hier nach:
@@ -31,11 +39,15 @@
      Der Einschlagszeitpunkt steuert Ruettler, Rauch und Rueckstoss
      in community-boss.js - er soll auf dem Bild sitzen, nicht davor. */
   const DAUER = {
+    // Grundangriffe - kurz, sie kommen taeglich
+    saebel: 700, kanone: 950, enterhaken: 1100,
+    // Spezialangriffe
     salve: 1100, brandpfeil: 900, enterkommando: 1300, pulverfass: 1000,
     schlachtruf: 1400, fass: 2200, slot: 2400, moewen: 1800,
     katapult: 1200, seemannslied: 1600, rechnung: 1100,
   };
   const EINSCHLAG = {
+    saebel: 260, kanone: 420, enterhaken: 430,
     salve: 380, brandpfeil: 420, enterkommando: 800, pulverfass: 560,
     schlachtruf: 300, fass: 900, slot: 1900, moewen: 700,
     katapult: 620, seemannslied: 400, rechnung: 560,
@@ -82,6 +94,25 @@
       for (let i = 0; i < n; i++) {
         fx.leute.push({ x: zufall(0.12, 0.88) * w, verzug: Math.random() * 0.4, tempo: zufall(0.8, 1.3) });
       }
+    } else if (art === "saebel") {
+      // Der Hieb kommt mal von links oben, mal von rechts oben -
+      // sonst sieht der taegliche Angriff nach zwei Wochen aus wie
+      // eine Schleife. Die Richtung steht hier fest, nicht in der
+      // Zeichenroutine: sonst kippt der Schnitt mitten im Bild.
+      fx.vonLinks = Math.random() < 0.5;
+      fx.neigung = zufall(-0.22, 0.22);
+    } else if (art === "kanone") {
+      // Die Kanone ist das Gluecksspiel unter den dreien (10-50
+      // Schaden). Wie stark der Einschlag ausfaellt, entscheidet der
+      // Server; hier wird nur gestreut, wohin die Truemmer fliegen.
+      fx.truemmer = [];
+      for (let i = 0; i < 14; i++) {
+        fx.truemmer.push({ winkel: Math.random() * Math.PI * 2, weite: zufall(0.5, 1),
+                           groesse: zufall(2, 5) });
+      }
+      fx.abweichung = zufall(-30, 30);
+    } else if (art === "enterhaken") {
+      fx.hoehe = zufall(-25, 15);
     } else if (art === "seemannslied") {
       fx.noten = [];
       for (let i = 0; i < 14; i++) {
@@ -120,6 +151,215 @@
 
     /* Drei Einschlaege kurz nacheinander, jeder mit Muendungsfeuer
        am Rand, Flugbahn und Aufschlagsring. */
+    /* ============================================================
+       DIE DREI GRUNDANGRIFFE
+       ---------------------------------------------------
+       Sie hatten bisher keine eigene Darstellung: community-boss.js
+       zog fuer sie einen ZUFAELLIGEN Effekt aus vier allgemeinen
+       (shot/saber/harpoon/curse). Ein Saebelhieb konnte also als
+       Harpune erscheinen und ein Enterhaken als Fluch - die Anzeige
+       hatte mit der Wahl des Spielers nichts zu tun.
+
+       Sie sind bewusst kuerzer und ruhiger gehalten als die elf
+       Spezialangriffe: man sieht sie jeden Tag. Was selten ist, darf
+       laut sein; was taeglich kommt, muss man aushalten koennen.
+    ============================================================ */
+
+    /* Saebelhieb: ein Bogen zieht durch, der Schnitt leuchtet kurz
+       nach. Verlaesslich, ohne Schnickschnack - genau wie der
+       Angriff selbst (28-32 Schaden, kaum Streuung). */
+    saebel: function (ctx, fx, t) {
+      const richtung = fx.vonLinks ? 1 : -1;
+      const spanne = fx.w * 0.42;
+      const mx = fx.cx, my = fx.cy;
+
+      // Phase 1: die Klinge faehrt durch
+      const zug = Math.min(1, t / 0.42);
+      if (zug < 1) {
+        const p = zug * zug * (3 - 2 * zug);      // weich an, weich aus
+        ctx.save();
+        ctx.translate(mx, my);
+        ctx.rotate(fx.neigung);
+        const x = -richtung * spanne + richtung * spanne * 2 * p;
+
+        // Die Klinge hat Koerper: breiter Ruecken, schmale Schneide,
+        // dazu ein Griff. Eine blosse Linie sah aus wie ein Kratzer.
+        ctx.save();
+        ctx.translate(x, 0);
+        ctx.rotate(Math.atan2(92, richtung * 26) - Math.PI / 2);
+        const kl = ctx.createLinearGradient(-4, 0, 4, 0);
+        kl.addColorStop(0, "#8fa4bd");
+        kl.addColorStop(0.45, "#ffffff");
+        kl.addColorStop(1, "#c3d2e6");
+        ctx.fillStyle = kl;
+        ctx.beginPath();
+        ctx.moveTo(0, -52);            // Spitze
+        ctx.lineTo(4, -30);
+        ctx.lineTo(4, 34);
+        ctx.lineTo(-4, 34);
+        ctx.lineTo(-4, -30);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#6b4a2a";     // Griff
+        ctx.fillRect(-3, 34, 6, 16);
+        ctx.fillStyle = "#d8b25a";     // Parierstange
+        ctx.fillRect(-10, 31, 20, 4);
+        ctx.restore();
+        // Schliere hinter der Klinge
+        const grad = ctx.createLinearGradient(x - richtung * 110, 0, x, 0);
+        grad.addColorStop(0, "rgba(200,225,255,0)");
+        grad.addColorStop(1, "rgba(220,238,255,.55)");
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 22;
+        ctx.beginPath();
+        ctx.moveTo(x - richtung * 110, 6);
+        ctx.lineTo(x, 6);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Phase 2: der Schnitt bleibt kurz stehen und verglueht
+      if (t > 0.34) {
+        const nt = Math.min(1, (t - 0.34) / 0.66);
+        ctx.save();
+        ctx.translate(mx, my);
+        ctx.rotate(fx.neigung);
+        ctx.globalAlpha = 1 - nt;
+        ctx.strokeStyle = "#fff2d0";
+        ctx.lineWidth = 3 * (1 - nt) + 1;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-spanne, -18);
+        ctx.lineTo(spanne, 18);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.restore();
+        if (nt < 0.5) funken(ctx, mx, my, nt * 2, 7, "#ffe6b0", 55);
+      }
+    },
+
+    /* Kanonenschuss: Kugel von links, Rauchfahne, harter Einschlag
+       mit Druckring und Truemmern. Das Gluecksspiel der drei - der
+       Einschlag darf entsprechend wuchtig ausfallen. */
+    kanone: function (ctx, fx, t) {
+      const flug = Math.min(1, t / 0.44);
+      const zielX = fx.cx + fx.abweichung, zielY = fx.cy;
+
+      if (flug < 1) {
+        const vonX = -30, vonY = fx.h * 0.72;
+        const x = vonX + (zielX - vonX) * flug;
+        // leichter Bogen, sonst wirkt es wie ein Laser
+        const y = vonY + (zielY - vonY) * flug - Math.sin(flug * Math.PI) * 42;
+
+        // Rauchfahne: aeltere Wolken sind groesser und blasser
+        for (let i = 1; i <= 7; i++) {
+          const f = Math.max(0, flug - i * 0.045);
+          if (f <= 0) continue;
+          const rx = vonX + (zielX - vonX) * f;
+          const ry = vonY + (zielY - vonY) * f - Math.sin(f * Math.PI) * 42;
+          ctx.fillStyle = "rgba(190,190,195," + (0.20 * (1 - i / 8)) + ")";
+          ctx.beginPath();
+          ctx.arc(rx, ry, 5 + i * 2.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Muendungsfeuer im ersten Moment
+        if (flug < 0.16) {
+          ctx.fillStyle = "rgba(255,214,140," + (1 - flug * 6) + ")";
+          ctx.beginPath();
+          ctx.arc(vonX, vonY, 34 * (1 - flug * 5), 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.fillStyle = "#20242c";
+        ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "rgba(255,190,120,.5)";
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2); ctx.stroke();
+      } else {
+        const nt = Math.min(1, (t - 0.44) / 0.56);
+        // Blitz, Druckring, Truemmer
+        if (nt < 0.22) {
+          ctx.fillStyle = "rgba(255,236,190," + (1 - nt * 4.5) + ")";
+          ctx.beginPath(); ctx.arc(zielX, zielY, 52 * (1 - nt * 2), 0, Math.PI * 2); ctx.fill();
+        }
+        ring(ctx, zielX, zielY, 14 + nt * 96, 6 * (1 - nt), "rgba(255,176,96," + (1 - nt) + ")");
+        ring(ctx, zielX, zielY, 14 + nt * 58, 3 * (1 - nt), "rgba(255,232,190," + (1 - nt) + ")");
+        ctx.globalAlpha = 1 - nt;
+        fx.truemmer.forEach(function (b) {
+          const d = nt * 120 * b.weite;
+          ctx.fillStyle = "#3a3d46";
+          ctx.beginPath();
+          ctx.arc(zielX + Math.cos(b.winkel) * d,
+                  zielY + Math.sin(b.winkel) * d + nt * nt * 55,
+                  b.groesse * (1 - nt * 0.5), 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+      }
+    },
+
+    /* Enterhaken: Haken an der Leine fliegt raus, beisst sich fest,
+       die Leine strafft sich und reisst. Hat der Server einen
+       Zusatzangriff gutgeschrieben (jeder dritte Wurf), blitzt am
+       Ende ein zweiter Haken auf - man SIEHT den Bonus, statt ihn
+       nur im Meldungstext zu lesen. */
+    enterhaken: function (ctx, fx, t) {
+      const vonX = -20, vonY = fx.h * 0.78;
+      const zielX = fx.cx - 10, zielY = fx.cy + fx.hoehe;
+      const wurf = Math.min(1, t / 0.4);
+      const x = vonX + (zielX - vonX) * wurf;
+      const y = vonY + (zielY - vonY) * wurf - Math.sin(wurf * Math.PI) * 60;
+
+      // Die Leine - im Flug durchhaengend, nach dem Treffer straff
+      ctx.strokeStyle = "rgba(196,176,140,.85)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(vonX, vonY);
+      if (wurf < 1) {
+        ctx.quadraticCurveTo((vonX + x) / 2, Math.max(y, vonY) + 30, x, y);
+      } else {
+        // Zug: die Leine zittert kurz nach
+        const zug = Math.min(1, (t - 0.4) / 0.6);
+        const zittern = Math.sin(zug * 26) * 6 * (1 - zug);
+        ctx.quadraticCurveTo((vonX + zielX) / 2, (vonY + zielY) / 2 + zittern, zielX, zielY);
+      }
+      ctx.stroke();
+
+      // Der Haken selbst
+      ctx.save();
+      ctx.translate(wurf < 1 ? x : zielX, wurf < 1 ? y : zielY);
+      ctx.rotate(wurf < 1 ? wurf * 7 : 0.4);
+      ctx.strokeStyle = "#cbd3de";
+      ctx.lineWidth = 3.5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-9, -9);
+      ctx.lineTo(0, 4);
+      ctx.arc(0, 4, 7, -Math.PI * 0.5, Math.PI * 0.85);
+      ctx.stroke();
+      ctx.restore();
+
+      if (wurf >= 1) {
+        const nt = Math.min(1, (t - 0.4) / 0.6);
+        ring(ctx, zielX, zielY, nt * 54, 4 * (1 - nt), "rgba(210,225,245," + (1 - nt) + ")");
+        if (nt < 0.45) funken(ctx, zielX, zielY, nt / 0.45, 6, "#dfe8f5", 42);
+
+        // Jeder dritte Wurf schenkt einen Angriff - das kommt vom
+        // Server als einzel.zusatzAngriff, hier wird es nur gezeigt.
+        if (fx.einzel.zusatzAngriff && nt > 0.3) {
+          const bt = Math.min(1, (nt - 0.3) / 0.7);
+          ctx.save();
+          ctx.globalAlpha = bt < 0.75 ? 1 : (1 - bt) * 4;
+          ctx.font = "bold 20px system-ui, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#f0c96a";
+          ctx.fillText("+1", zielX + 34, zielY - 26 - bt * 26);
+          ctx.restore();
+        }
+      }
+    },
+
     salve: function (ctx, fx, t) {
       fx.schuesse.forEach(function (s, i) {
         const lokal = (t - s.verzug) / (1 - s.verzug * 2);

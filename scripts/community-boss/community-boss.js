@@ -1432,6 +1432,7 @@ async function renderCommunityBossPage() {
     checkBossSlayerReward(monthId);
   }
   startBossCounterattackTimer();
+  startBossAbklingTimer();
 
   const nickname = localStorage.getItem("wheelNickname") || "";
 
@@ -1507,32 +1508,93 @@ function renderBossAngriffswahl() {
   const zuletzt = st.spezialZuletzt || {};
   const jetzt = Date.now();
 
+  /* Restzeit in Worten. Bewusst grob: auf die Sekunde genau waere
+     hier Scheingenauigkeit, und die Karte muesste im Sekundentakt
+     neu gezeichnet werden. */
+  function restzeit(ms) {
+    if (ms <= 0) return "";
+    const min = Math.ceil(ms / 60000);
+    if (min < 60) return min + (en ? " min" : " Min.");
+    const std = Math.round(min / 60);
+    if (std < 48) return std + (en ? " h" : " Std.");
+    return Math.round(std / 24) + (en ? " d" : " Tage");
+  }
+
+  /* Ruhepause: nach Pulverfass und Fass darf man eine Weile GAR
+     nicht angreifen. Das gilt fuer alle Karten gleichzeitig, ist
+     also kein Zustand der einzelnen Karte. */
+  const ruheBis = st.ruheBis ? new Date(st.ruheBis).getTime() : 0;
+  const ruhePause = ruheBis > jetzt;
+
   function karte(a, spezial) {
+    const kat = (bossKatalog && bossKatalog[a.schluessel]) || null;
     const offen = !spezial || frei.indexOf(a.schluessel) >= 0;
-    // Wochensperre: der genaue Zeitpunkt steht im Katalog auf dem
-    // Server; hier reicht "noch gesperrt" oder "bereit".
+
+    /* Die Sperre kommt aus dem Katalog auf dem Server. Fruehere
+       Fassungen rechneten hier mit fest verdrahteten sieben Tagen -
+       das stimmte fuer zehn der elf Spezialangriffe, nicht aber
+       fuer "Das Fass" mit seinen 720 Stunden. Kennen wir den
+       Katalog nicht, zeigen wir lieber gar keine Sperre an, als
+       eine falsche. */
     const zul = zuletzt[a.schluessel] ? new Date(zuletzt[a.schluessel]).getTime() : 0;
-    const wartet = spezial && offen && zul && (jetzt - zul) < 1000 * 60 * 60 * 24 * 7;
+    const sperreMs = kat ? kat.sperreH * 3600000 : 0;
+    const bereitAb = zul && sperreMs ? zul + sperreMs : 0;
+    const wartet = offen && bereitAb > jetzt;
+
     const gewaehlt = bossGewaehlt === a.schluessel;
+    const nutzbar = offen && !wartet && !ruhePause;
+
+    // Schadensspanne in Zahlen - erst jetzt moeglich, wo der
+    // Katalog gelesen wird. "0-0" heisst: macht selbst keinen
+    // Schaden (Schlachtruf, Seemannslied), das waere irrefuehrend.
+    let spanne = "";
+    if (kat && offen && kat.max > 0) {
+      spanne = kat.min === kat.max
+        ? kat.min + (en ? " dmg" : " Schaden")
+        : kat.min + "\u2013" + kat.max + (en ? " dmg" : " Schaden");
+    } else if (kat && offen && kat.max === 0) {
+      spanne = en ? "support" : "Unterstützung";
+    }
+
+    let marke = "";
+    if (!offen)          marke = en ? "locked" : "verschlossen";
+    else if (wartet)     marke = (en ? "ready in " : "bereit in ") + restzeit(bereitAb - jetzt);
+    else if (ruhePause)  marke = (en ? "resting " : "Ruhepause ") + restzeit(ruheBis - jetzt);
+
+    const klassen = [
+      "fh-boss-angriff",
+      gewaehlt ? "ist-gewaehlt" : "",
+      offen ? "" : "ist-zu",
+      wartet ? "ist-gesperrt" : "",
+      ruhePause && offen && !wartet ? "ist-ruhe" : "",
+    ].filter(Boolean).join(" ");
 
     return `<button type="button"
-        class="fh-boss-angriff${gewaehlt ? " ist-gewaehlt" : ""}${offen ? "" : " ist-zu"}${wartet ? " ist-gesperrt" : ""}"
+        class="${klassen}"
         data-angriff="${a.schluessel}"
-        ${offen && !wartet ? "" : "disabled"}
+        ${nutzbar ? "" : "disabled"}
         aria-pressed="${gewaehlt ? "true" : "false"}">
-      <span class="fh-boss-angriff-symbol">${offen ? a.symbol : "🔒"}</span>
+      <span class="fh-boss-angriff-kopf">
+        <span class="fh-boss-angriff-symbol">${offen ? a.symbol : "\ud83d\udd12"}</span>
+        ${spanne ? `<span class="fh-boss-angriff-spanne">${escapeHtmlBoss(spanne)}</span>` : ""}
+      </span>
       <span class="fh-boss-angriff-name">${offen ? escapeHtmlBoss(bossAngriffName(a)) : (en ? "Locked" : "Verschlossen")}</span>
       <span class="fh-boss-angriff-text">${offen ? escapeHtmlBoss(bossAngriffText(a)) : (en ? "Find the secret code." : "Finde den Geheimcode.")}</span>
-      ${wartet ? `<span class="fh-boss-angriff-marke">${en ? "recharging" : "lädt nach"}</span>` : ""}
+      ${marke ? `<span class="fh-boss-angriff-marke">${escapeHtmlBoss(marke)}</span>` : ""}
     </button>`;
   }
+
+  const bereitZahl = BOSS_SPEZIALANGRIFFE.filter((a) => frei.indexOf(a.schluessel) >= 0).length;
 
   box.innerHTML = `
     <p class="fh-boss-wahl-titel">${en ? "Choose your attack" : "Wähle deinen Angriff"}</p>
     <div class="fh-boss-angriff-reihe">
       ${BOSS_GRUNDANGRIFFE.map((a) => karte(a, false)).join("")}
     </div>
-    <p class="fh-boss-wahl-titel">${en ? "Special attacks" : "Spezialangriffe"}</p>
+    <p class="fh-boss-wahl-titel">
+      ${en ? "Special attacks" : "Spezialangriffe"}
+      <span class="fh-boss-wahl-zaehler">${bereitZahl}/${BOSS_SPEZIALANGRIFFE.length}</span>
+    </p>
     <div class="fh-boss-angriff-reihe fh-boss-angriff-reihe-spezial">
       ${BOSS_SPEZIALANGRIFFE.map((a) => karte(a, true)).join("")}
     </div>
@@ -1826,6 +1888,52 @@ let bossNeuerWeg = null;
 let bossStatus = null;      // Antwort von boss_attack_status()
 let bossGewaehlt = "saebel";
 
+/* ------------------------------------------------------
+   DER KATALOG - ZAHLEN NUR VOM SERVER
+   ---------------------------------------------------
+   boss_attack_defs ist fuer anon und authenticated lesbar (siehe
+   Policy "boss_attack_defs_lesen" in 10-boss-attacks.sql). Genau so
+   war es gedacht: die Zahlen stehen einmal auf dem Server, der
+   Browser fragt nach, statt eine zweite Liste zu pflegen.
+
+   WARUM DAS NOETIG WURDE
+   Die Angriffswahl rechnete die Sperre mit fest verdrahteten sieben
+   Tagen. Fuer zehn der elf Spezialangriffe stimmte das (168 h), fuer
+   "Das Fass" aber nicht: dort sind es 720 h. Die Karte meldete also
+   drei Wochen lang "bereit", und der Server wies den Angriff ab.
+
+   Faellt das Laden aus, bleibt bossKatalog leer und die Anzeige
+   verhaelt sich wie bisher - eine leere Karte ist besser als eine
+   falsche Zahl.
+------------------------------------------------------ */
+let bossKatalog = null;     // { schluessel: {sperre_h, ruhe_h, min, max} }
+
+async function bossKatalogLaden() {
+  if (bossKatalog) return bossKatalog;
+  if (!supabaseClient) return null;
+  try {
+    const { data, error } = await supabaseClient
+      .from("boss_attack_defs")
+      .select("schluessel, art, min_schaden, max_schaden, sperre_h, ruhe_h");
+    if (error) throw error;
+    bossKatalog = {};
+    (data || []).forEach((d) => {
+      bossKatalog[d.schluessel] = {
+        art: d.art,
+        min: d.min_schaden,
+        max: d.max_schaden,
+        sperreH: d.sperre_h,
+        ruheH: d.ruhe_h,
+      };
+    });
+  } catch (err) {
+    // Migration noch nicht eingespielt oder kein Netz - die Karten
+    // zeigen dann keine Zahlen, funktionieren aber weiter.
+    bossKatalog = null;
+  }
+  return bossKatalog;
+}
+
 async function bossWegPruefen() {
   if (bossNeuerWeg !== null) return bossNeuerWeg;
   if (!supabaseClient) return false;
@@ -1847,6 +1955,8 @@ async function bossWegPruefen() {
 
 async function bossStatusLaden() {
   if (!(await bossWegPruefen())) return null;
+  bossKatalogLaden();   // absichtlich ohne await: die Karten sollen
+                        // nicht auf den Katalog warten muessen
   try {
     const { data, error } = await supabaseClient.rpc("boss_attack_status",
       { p_month_id: getCurrentMonthId() });
@@ -2145,11 +2255,45 @@ async function renderBossLeaderboard(monthId) {
     const ownUid = typeof wheelAuthReady !== "undefined" ? await wheelAuthReady : null;
     const capWinnerUids = typeof fetchPassCapWinnerUids === "function" ? await fetchPassCapWinnerUids() : new Set();
 
-    let html = "";
-    data.forEach((p, i) => {
-      const rank = i + 1;
+    /* WER NICHT UNTER DEN ERSTEN ZEHN STEHT, SAH SICH GAR NICHT
+       ---------------------------------------------------
+       Die Liste endete bei Platz zehn. Wer auf Platz vierzehn stand,
+       bekam also keine Rueckmeldung darueber, dass er ueberhaupt
+       mitspielt - und schon gar nicht, wie weit ihm fehlt. Steht man
+       nicht in den ersten zehn, wird die eigene Zeile deshalb
+       nachgeladen und unten angehaengt.
+
+       Der Rang wird als "wie viele haben mehr Schaden" gezaehlt.
+       count mit head:true holt nur die Zahl, nicht die Zeilen. */
+    let eigene = null;
+    let eigenerRang = 0;
+    if (ownUid && !data.some((p) => p.firebase_uid === ownUid)) {
+      try {
+        const { data: meins } = await supabaseClient
+          .from("community_boss_damage")
+          .select("firebase_uid, nickname, avatar, equipped_frame, total_damage")
+          .eq("month_id", monthId)
+          .eq("firebase_uid", ownUid)
+          .maybeSingle();
+        if (meins && meins.total_damage > 0) {
+          const { count } = await supabaseClient
+            .from("community_boss_damage")
+            .select("firebase_uid", { count: "exact", head: true })
+            .eq("month_id", monthId)
+            .gt("total_damage", meins.total_damage);
+          eigene = meins;
+          eigenerRang = (count || 0) + 1;
+        }
+      } catch (e) { /* Rangliste steht auch ohne die eigene Zeile */ }
+    }
+
+    // Bezugsgroesse fuer die Balken: der Beste. Anteile am
+    // Gesamtschaden waeren ehrlicher, aber dafuer muesste die ganze
+    // Tabelle summiert werden - fuer eine Anzeigehilfe zu teuer.
+    const spitze = Math.max(1, data[0].total_damage || 1);
+
+    function zeile(p, rank, isOwn) {
       const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
-      const isOwn = p.firebase_uid === ownUid;
       const frameStyle = typeof frameStyleFromId === "function" ? frameStyleFromId(p.equipped_frame) : "";
       const frameRowClass = typeof rowFrameClass === "function" ? rowFrameClass(frameStyle) : "";
       let avatarHtml =
@@ -2166,15 +2310,27 @@ async function renderBossLeaderboard(monthId) {
         avatarHtml = wrapAvatarWithCapBadge(avatarHtml, capWinnerUids.has(p.firebase_uid));
       }
 
-      html += `
+      const schaden = p.total_damage || 0;
+      const anteil = Math.max(2, Math.round((schaden / spitze) * 100));
+
+      return `
         <div class="boss-leaderboard-row ${frameRowClass}${rank <= 3 ? " boss-leaderboard-top" : ""}${isOwn ? " boss-leaderboard-own" : ""}">
           <span class="boss-leaderboard-rank">${medal}</span>
           <span class="boss-leaderboard-name">${avatarHtml}${escapeHtmlBoss(p.nickname || "Unbekannt")}${isOwn ? " (Du)" : ""}</span>
-          <span class="boss-leaderboard-damage">${(p.total_damage || 0).toLocaleString("de-DE")} Schaden</span>
+          <span class="boss-leaderboard-damage">${schaden.toLocaleString("de-DE")} Schaden</span>
           ${rank <= 3 ? `<span class="boss-leaderboard-reward">🏆 +${BOSS_REWARDS_BY_RANK[rank - 1]} 💰</span>` : ""}
+          <span class="boss-leaderboard-balken" aria-hidden="true">
+            <span class="boss-leaderboard-balken-fuellung" style="width:${anteil}%"></span>
+          </span>
         </div>
       `;
-    });
+    }
+
+    let html = data.map((p, i) => zeile(p, i + 1, p.firebase_uid === ownUid)).join("");
+
+    if (eigene) {
+      html += `<p class="boss-leaderboard-trenner">…</p>` + zeile(eigene, eigenerRang, true);
+    }
 
     container.innerHTML = html;
   } catch (err) {
@@ -2365,6 +2521,7 @@ function updateCommunityBossPage(pageID) {
   if (pageID !== "community-boss") {
     stopBossRender();
     stopBossCounterattackTimer();
+    stopBossAbklingTimer();
     bossEntranceShown = false;
     return;
   }
@@ -2396,6 +2553,39 @@ function startBossCounterattackTimer() {
 function stopBossCounterattackTimer() {
   clearInterval(bossCounterattackTimer);
   bossCounterattackTimer = null;
+}
+
+/* ------------------------------------------------------
+   ABKLINGZEITEN MITLAUFEN LASSEN
+   ---------------------------------------------------
+   Die Karten zeigen "bereit in 3 Tage" oder "bereit in 12 Min.".
+   Ohne diesen Takt bliebe die letzte Zahl stehen, bis man die
+   Seite wechselt - und der Knopf bliebe gesperrt, obwohl der
+   Angriff laengst wieder frei waere.
+
+   Eine Minute reicht: feiner als "Min." wird die Anzeige nie, und
+   ein Neuzeichnen je Sekunde waere fuer eine Zahl, die sich
+   sechzigmal seltener aendert, reine Verschwendung. Laeuft nur,
+   solange man auf der Boss-Seite ist.
+------------------------------------------------------ */
+const BOSS_ABKLING_TAKT = 60 * 1000;
+let bossAbklingTimer = null;
+
+function startBossAbklingTimer() {
+  if (bossAbklingTimer) return;
+  bossAbklingTimer = setInterval(function () {
+    // Nur neu zeichnen, wenn ueberhaupt etwas laeuft - sonst
+    // reisst das Neuzeichnen den Tastaturfokus aus der Karte.
+    const box = document.getElementById("boss-angriffswahl");
+    if (!box || box.hidden) return;
+    if (!box.querySelector(".ist-gesperrt, .ist-ruhe")) return;
+    renderBossAngriffswahl();
+  }, BOSS_ABKLING_TAKT);
+}
+
+function stopBossAbklingTimer() {
+  clearInterval(bossAbklingTimer);
+  bossAbklingTimer = null;
 }
 
 function triggerBossCounterattack() {
