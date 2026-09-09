@@ -466,9 +466,16 @@ async function refreshSpielothekCurrencyDisplay() {
 
      unter    500 Dublonen ->   1 %
      unter   2000 Dublonen ->   3 %
-     unter  10000 Dublonen ->   5 %
-     unter  25000 Dublonen ->   8 %
-     darueber              ->  12 %
+     unter  10000 Dublonen ->   4 %
+     unter  25000 Dublonen ->   6 %
+     unter  50000 Dublonen ->   8 %
+     darueber              ->  10 %
+
+   Die oberen Saetze sind gegenueber dem ersten Entwurf (5/8/12 %)
+   abgesenkt und um eine Stufe erweitert worden: 12 % je Niete waren
+   bei zwei Dritteln Nieten so hart, dass ein grosses Konto in unter
+   zwanzig Drehungen die Haelfte verloren haette. Die Bremse soll
+   bremsen, nicht enteignen.
 
    Unter 200 Dublonen wird gar kein Prozentabzug faellig, dann
    kostet die Niete nur den Einsatz - sonst klebt jemand mit
@@ -487,9 +494,10 @@ async function refreshSpielothekCurrencyDisplay() {
 const SPIELOTHEK_VERLUST_STUFEN = [
   { bis: 500,       anteil: 0.01 },
   { bis: 2000,      anteil: 0.03 },
-  { bis: 10000,     anteil: 0.05 },
-  { bis: 25000,     anteil: 0.08 },
-  { bis: Infinity,  anteil: 0.12 },
+  { bis: 10000,     anteil: 0.04 },
+  { bis: 25000,     anteil: 0.06 },
+  { bis: 50000,     anteil: 0.08 },
+  { bis: Infinity,  anteil: 0.10 },
 ];
 const SPIELOTHEK_VERLUST_FREIGRENZE = 200;
 

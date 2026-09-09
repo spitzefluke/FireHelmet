@@ -512,8 +512,8 @@ function getSlotRulesHtml(lang) {
      Regeln sollen die Stufen in Worten erklaeren, nicht nur Zahlen
      auflisten. Wer dort etwas aendert, muss diesen Satz mitziehen. */
   const verlust = isEn
-    ? `<strong>On a loss</strong> you don't lose your bet — instead a share of your balance goes overboard: 1 % below 500 doubloons, 3 % below 2000, 5 % below 10 000, 8 % below 25 000, 12 % above. Below 200 doubloons nothing is taken beyond the bet.`
-    : `<strong>Bei einer Niete</strong> verlierst du nicht den Einsatz — stattdessen geht ein Teil deines Guthabens über Bord: 1 % unter 500 Dublonen, 3 % unter 2000, 5 % unter 10 000, 8 % unter 25 000, 12 % darüber. Unter 200 Dublonen wird nichts über den Einsatz hinaus genommen.`;
+    ? `<strong>On a loss</strong> you don't lose your bet — instead a share of your balance goes overboard: 1 % below 500 doubloons, 3 % below 2000, 4 % below 10 000, 6 % below 25 000, 8 % below 50 000, 10 % above. Below 200 doubloons nothing is taken beyond the bet.`
+    : `<strong>Bei einer Niete</strong> verlierst du nicht den Einsatz — stattdessen geht ein Teil deines Guthabens über Bord: 1 % unter 500 Dublonen, 3 % unter 2000, 4 % unter 10 000, 6 % unter 25 000, 8 % unter 50 000, 10 % darüber. Unter 200 Dublonen wird nichts über den Einsatz hinaus genommen.`;
 
   const freidreh = isEn
     ? `<strong>All reels the same?</strong> You get a free spin with ${SLOT_FREIDREH_EXTRA_WALZEN} extra reels on top — winnings add up, up to ${SLOT_FREIDREH_MAX_KETTE} in a row.`
