@@ -123,16 +123,23 @@ reset role;
 -- TEST 17-18: Neuen Code anlegen und wieder loeschen
 -- ============================================================
 select set_config('request.jwt.claims', '{"sub":"eeeeeeee-0000-0000-0000-000000000009","role":"authenticated","email":"y.n.trott@gmail.com"}', false);
-select app.admin_code_setzen('TESTCODE2099', 250, 'Testreihe');
-select case when app.code_betrag(encode(extensions.digest('TESTCODE2099','sha256'),'hex')) = 250
-            then 'PASS' else 'FAIL' end || ' - TEST17 neuer Code gilt sofort' as result;
+-- Bewusst gemischt geschrieben, und bewusst gegen den KLEIN
+-- geschriebenen Hash geprueft: genau den schickt der Browser.
+-- main.js rechnet input.value.trim().toLowerCase(), die Hashes in
+-- codes-data.js sind ebenso gebildet. Ein Test, der den Code selbst
+-- gross schreibt und auch gross hasht, geht mit upper() wie mit
+-- lower() durch und faengt eine Verwechslung nie - deshalb steht
+-- hier lower() auf der Pruefseite fest.
+select app.admin_code_setzen('TestCode2099', 250, 'Testreihe');
+select case when app.code_betrag(encode(extensions.digest(lower('TestCode2099'),'sha256'),'hex')) = 250
+            then 'PASS' else 'FAIL' end || ' - TEST17 neuer Code trifft den Browser-Hash' as result;
 -- Zwei getrennte Anweisungen, und das mit Absicht: stuende der
 -- Loeschaufruf mit der Nachpruefung in EINER Anweisung, laese die
 -- stabile Funktion app.code_betrag() noch den Schnappschuss von vor
 -- dem Loeschen - der Test wuerde grundlos scheitern.
-select app.admin_code_loeschen('testcode2099') as geloescht;
-select case when app.code_betrag(encode(extensions.digest('TESTCODE2099','sha256'),'hex')) is null
-            then 'PASS' else 'FAIL' end || ' - TEST18 Loeschen wirkt, Kleinschreibung egal' as result;
+select app.admin_code_loeschen('TESTCODE2099') as geloescht;
+select case when app.code_betrag(encode(extensions.digest(lower('TestCode2099'),'sha256'),'hex')) is null
+            then 'PASS' else 'FAIL' end || ' - TEST18 Loeschen wirkt, Schreibweise egal' as result;
 
 -- ============================================================
 -- TEST 19-22: Boss
