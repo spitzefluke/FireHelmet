@@ -1,7 +1,11 @@
 # Avatar-Rahmen
 
-Zehn gezeichnete Rahmen, die im Shop und überall dort erscheinen, wo ein
-Avatar mit Rahmen gezeigt wird (Rangliste, Podest, Avatarwahl).
+Sechzehn gezeichnete Rahmen. Sichtbar in der Shop-Vorschau und beim
+Ausrüsten. In der Rangliste erscheinen sie derzeit **nicht**:
+`wrapAvatarWithFrame()` in `scripts/wheel/wheel.js` gibt den Avatar
+unverändert zurück, weil die früheren, unterschiedlich schnell
+rotierenden Ringe bei 32-px-Avataren zu unruhig waren. Dort steht
+stattdessen der Zeilen-Glow `.row-frame-*`.
 
 ## Wie sie eingebunden sind
 
@@ -29,10 +33,11 @@ genau drei Dinge: die SVG hier, eine Zeile CSS und einen Eintrag in
 
 ## Warum sie sich nicht drehen
 
-Die sechs älteren Rahmen (`bronze` … `legend`) sind reine CSS-Farbverläufe
-und rotieren. Diese zehn stehen still: in der Rangliste liegen zwanzig
-Avatare nebeneinander, und zwanzig rotierende Ringe sind dort keine
-Zierde mehr, sondern Unruhe.
+Anfangs waren `bronze` … `legend` rotierende CSS-Farbverläufe, jeder mit
+eigenem Tempo. Genau diese Unruhe hat den Ring aus der Rangliste
+geworfen. Alle sechzehn stehen deshalb still. Den Unterschied zwischen
+den Stufen macht die Zeichnung selbst — und im Shop zusätzlich der
+Seltenheitspuls der Karte (`css/50-redesign.css`).
 
 ## Prüfen
 

@@ -119,6 +119,37 @@ nichts an. Solange kein eigener Versand eingerichtet ist, funktioniert
 Einrichten unter *Authentication → Emails → **SMTP Settings***
 (direkt: `https://supabase.com/dashboard/project/_/auth/smtp`).
 
+### Du brauchst dafür eine eigene Domain — aber KEINEN Umzug
+
+Häufiges Missverständnis: die Seite liegt auf
+`spitzefluke.github.io/FireHelmet/`, und GitHub Pages kann keine Mails
+verschicken und gibt dir auch keine Absenderadresse. Absender und
+Hosting sind zwei getrennte Dinge.
+
+Ein Versanddienst muss beweisen dürfen, dass er in deinem Namen
+schicken darf. Dafür setzt er DNS-Einträge in einer Domain, die dir
+gehört. Ohne Domain geht das nicht — mit einer @gmail.com-Adresse als
+Absender landet die Mail bei den meisten Empfängern im Spam, weil
+Google für gmail.com festlegt, wer in seinem Namen senden darf, und ein
+fremder Dienst da nicht dazugehört.
+
+**Das Gute:** du musst die Seite dafür nicht umziehen. Es reicht, die
+Domain zu *besitzen* und dort die drei Mail-Einträge zu setzen. Die
+Seite bleibt auf der GitHub-Adresse, `CNAME.wartet` bleibt inaktiv, an
+`DOMAIN.md` ändert sich nichts. Eine `.de` kostet bei INWX oder Netcup
+etwa 5–8 € im Jahr (siehe `DOMAIN.md`, Abschnitt 1).
+
+**Solange du keine Domain hast:** „Passwort vergessen" bleibt aus, und
+die Seite sagt das ehrlich an. Wer sein Passwort vergisst, kommt über
+das **Wiederherstellungs-Kennwort** auf der Anmeldeseite wieder rein —
+das läuft ohne Mail und ist schon eingebaut. Registrieren, Anmelden und
+die drei Plattformen funktionieren ebenfalls ohne SMTP.
+
+**Was du jetzt schon eintragen musst**, unabhängig vom Versand:
+unter *Authentication → URL Configuration → Redirect URLs* gehört
+`https://spitzefluke.github.io/FireHelmet/` hinein — sonst führen die
+Rückwege von Twitch, Discord und Google ins Leere.
+
 Schritt für Schritt mit Resend (kostenlos bis 3.000 Mails im Monat):
 
 1. Auf `resend.com` anmelden.

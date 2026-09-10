@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Kraken-Rahmen">
+<title>Kraken-Rahmen</title>
+<circle cx="50" cy="50" r="46.4" fill="none" stroke="#07322a" stroke-width="8"/>
+<circle cx="50" cy="50" r="46.4" fill="none" stroke="#0e7c66" stroke-width="5.6"/>
+<circle cx="50" cy="50" r="48.4" fill="none" stroke="#14a184" stroke-width="1.4" opacity=".7"/>
+<g transform="translate(50.0,5.8) rotate(0.0)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(60.58,7.08) rotate(13.8)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(70.54,10.86) rotate(27.7)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(79.31,16.92) rotate(41.5)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(86.38,24.89) rotate(55.4)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(91.33,34.33) rotate(69.2)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(93.88,44.67) rotate(83.1)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(93.88,55.33) rotate(96.9)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(91.33,65.67) rotate(110.8)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(86.38,75.11) rotate(124.6)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(79.31,83.08) rotate(138.5)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(70.54,89.14) rotate(152.3)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(60.58,92.92) rotate(166.2)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(50.0,94.2) rotate(180.0)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(39.42,92.92) rotate(193.8)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(29.46,89.14) rotate(207.7)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(20.69,83.08) rotate(221.5)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(13.62,75.11) rotate(235.4)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(8.67,65.67) rotate(249.2)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(6.12,55.33) rotate(263.1)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(6.12,44.67) rotate(276.9)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(8.67,34.33) rotate(290.8)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(13.62,24.89) rotate(304.6)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(20.69,16.92) rotate(318.5)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(29.46,10.86) rotate(332.3)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(39.42,7.08) rotate(346.2)"><circle r="1.7" fill="#0a4a3d" stroke="#4ade80" stroke-width=".7"/></g>
+<g transform="translate(53.24,96.29) rotate(176)"><path d="M0 0 Q7 1 7.4 -4 Q7.6 -8 3.6 -7.8 Q1 -7.6 1.4 -5" fill="none" stroke="#0e7c66" stroke-width="4.2" stroke-linecap="round"/><path d="M0 0 Q7 1 7.4 -4" fill="none" stroke="#14a184" stroke-width="1.2" opacity=".8"/></g>
+</svg>

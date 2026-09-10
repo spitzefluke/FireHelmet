@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Legendärer Rahmen">
+<title>Legendärer Rahmen</title>
+<circle cx="50" cy="50" r="46" fill="none" stroke="#5c4208" stroke-width="8"/>
+<circle cx="50" cy="50" r="46" fill="none" stroke="#f0c96a" stroke-width="5"/>
+<circle cx="50" cy="50" r="42.6" fill="none" stroke="#3d2b05" stroke-width="1.4"/>
+<circle cx="50" cy="50" r="49.4" fill="none" stroke="#3d2b05" stroke-width="1.4"/>
+<g transform="translate(67.6,7.5) rotate(22.5)"><path d="M0 -3.4 L2.9 0 L0 3.4 L-2.9 0 Z" fill="#4da3ff" stroke="#fff3c4" stroke-width=".8"/><path d="M0 -3.4 L0 3.4" stroke="#ffffff" stroke-width=".6" opacity=".6"/></g>
+<g transform="translate(92.5,32.4) rotate(67.5)"><path d="M0 -3.4 L2.9 0 L0 3.4 L-2.9 0 Z" fill="#4ade80" stroke="#fff3c4" stroke-width=".8"/><path d="M0 -3.4 L0 3.4" stroke="#ffffff" stroke-width=".6" opacity=".6"/></g>
+<g transform="translate(92.5,67.6) rotate(112.5)"><path d="M0 -3.4 L2.9 0 L0 3.4 L-2.9 0 Z" fill="#a463ff" stroke="#fff3c4" stroke-width=".8"/><path d="M0 -3.4 L0 3.4" stroke="#ffffff" stroke-width=".6" opacity=".6"/></g>
+<g transform="translate(67.6,92.5) rotate(157.5)"><path d="M0 -3.4 L2.9 0 L0 3.4 L-2.9 0 Z" fill="#ff5555" stroke="#fff3c4" stroke-width=".8"/><path d="M0 -3.4 L0 3.4" stroke="#ffffff" stroke-width=".6" opacity=".6"/></g>
+<g transform="translate(32.4,92.5) rotate(202.5)"><path d="M0 -3.4 L2.9 0 L0 3.4 L-2.9 0 Z" fill="#4da3ff" stroke="#fff3c4" stroke-width=".8"/><path d="M0 -3.4 L0 3.4" stroke="#ffffff" stroke-width=".6" opacity=".6"/></g>
+<g transform="translate(7.5,67.6) rotate(247.5)"><path d="M0 -3.4 L2.9 0 L0 3.4 L-2.9 0 Z" fill="#4ade80" stroke="#fff3c4" stroke-width=".8"/><path d="M0 -3.4 L0 3.4" stroke="#ffffff" stroke-width=".6" opacity=".6"/></g>
+<g transform="translate(7.5,32.4) rotate(292.5)"><path d="M0 -3.4 L2.9 0 L0 3.4 L-2.9 0 Z" fill="#a463ff" stroke="#fff3c4" stroke-width=".8"/><path d="M0 -3.4 L0 3.4" stroke="#ffffff" stroke-width=".6" opacity=".6"/></g>
+<g transform="translate(32.4,7.5) rotate(337.5)"><path d="M0 -3.4 L2.9 0 L0 3.4 L-2.9 0 Z" fill="#ff5555" stroke="#fff3c4" stroke-width=".8"/><path d="M0 -3.4 L0 3.4" stroke="#ffffff" stroke-width=".6" opacity=".6"/></g>
+<g transform="translate(50.0,4.0) rotate(0)"><path d="M-2.6 2.2 L-2.6 -2.2 M0 2.6 L0 -2.6 M2.6 2.2 L2.6 -2.2" stroke="#8a6511" stroke-width="1" stroke-linecap="round" opacity=".8"/></g>
+<g transform="translate(82.53,17.47) rotate(45)"><path d="M-2.6 2.2 L-2.6 -2.2 M0 2.6 L0 -2.6 M2.6 2.2 L2.6 -2.2" stroke="#8a6511" stroke-width="1" stroke-linecap="round" opacity=".8"/></g>
+<g transform="translate(96.0,50.0) rotate(90)"><path d="M-2.6 2.2 L-2.6 -2.2 M0 2.6 L0 -2.6 M2.6 2.2 L2.6 -2.2" stroke="#8a6511" stroke-width="1" stroke-linecap="round" opacity=".8"/></g>
+<g transform="translate(82.53,82.53) rotate(135)"><path d="M-2.6 2.2 L-2.6 -2.2 M0 2.6 L0 -2.6 M2.6 2.2 L2.6 -2.2" stroke="#8a6511" stroke-width="1" stroke-linecap="round" opacity=".8"/></g>
+<g transform="translate(50.0,96.0) rotate(180)"><path d="M-2.6 2.2 L-2.6 -2.2 M0 2.6 L0 -2.6 M2.6 2.2 L2.6 -2.2" stroke="#8a6511" stroke-width="1" stroke-linecap="round" opacity=".8"/></g>
+<g transform="translate(17.47,82.53) rotate(225)"><path d="M-2.6 2.2 L-2.6 -2.2 M0 2.6 L0 -2.6 M2.6 2.2 L2.6 -2.2" stroke="#8a6511" stroke-width="1" stroke-linecap="round" opacity=".8"/></g>
+<g transform="translate(4.0,50.0) rotate(270)"><path d="M-2.6 2.2 L-2.6 -2.2 M0 2.6 L0 -2.6 M2.6 2.2 L2.6 -2.2" stroke="#8a6511" stroke-width="1" stroke-linecap="round" opacity=".8"/></g>
+<g transform="translate(17.47,17.47) rotate(315)"><path d="M-2.6 2.2 L-2.6 -2.2 M0 2.6 L0 -2.6 M2.6 2.2 L2.6 -2.2" stroke="#8a6511" stroke-width="1" stroke-linecap="round" opacity=".8"/></g>
+<g transform="translate(50.0,1.6)"><path d="M-7 3 L-7 -2.6 L-4.2 .2 L-1.4 -4.4 L0 -1 L1.4 -4.4 L4.2 .2 L7 -2.6 L7 3 Z" fill="#f0c96a" stroke="#5c4208" stroke-width="1.1" stroke-linejoin="round"/><circle cx="0" cy="-5.6" r="1.5" fill="#ff5555" stroke="#5c4208" stroke-width=".7"/></g>
+</svg>

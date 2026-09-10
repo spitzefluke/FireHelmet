@@ -11,10 +11,9 @@
    - price: Preis in Dublonen
    - type: "frame" (Avatar-Rahmen) oder "avatar" (kaufbarer Avatar)
    - style: bestimmt das Aussehen des Rahmens. Zu jedem style
-     gehört eine Klasse .avatar-frame-STYLE in css/40-shop.css.
-     Die sechs ältesten Rahmen sind dort reine CSS-Farbverläufe
-     und drehen sich; die zehn neueren zeigen eine Zeichnung aus
-     assets/rahmen/STYLE.svg und stehen still.
+     gehört eine Klasse .avatar-frame-STYLE in css/40-shop.css,
+     die assets/rahmen/STYLE.svg zeigt. Alle sechzehn Rahmen
+     stehen still.
    - familie: das Motiv ("Seefahrt", "Ungeheuer", ...). Rein für
      die Anzeige im Info-Feld - der Shop gruppiert nach "type",
      nicht danach.
@@ -97,12 +96,9 @@ const shopItems = [
   },
 
   /* ------------------------------------------------------
-     ZEHN GEZEICHNETE RAHMEN
-     Anders als die sechs oben sind das keine Farbverläufe,
-     sondern echte Zeichnungen (assets/rahmen/*.svg). Sie
-     drehen sich bewusst NICHT: in der Rangliste stehen
-     zwanzig Avatare nebeneinander, und zwanzig rotierende
-     Ringe sind dort keine Zierde mehr, sondern Unruhe.
+     Ab hier die zehn Rahmen aus dem zweiten Durchgang. Alle
+     sechzehn sind inzwischen Zeichnungen im selben Stil -
+     die sechs oben waren anfangs CSS-Farbverläufe.
   ------------------------------------------------------ */
   {
     id: "frame-tau",

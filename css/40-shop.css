@@ -355,11 +355,12 @@
 
 /* =====================================================
    AVATAR-RAHMEN
-   Werden überall dort verwendet, wo ein Spieler-Avatar mit
-   Rahmen gezeigt wird (Shop-Vorschau, Rangliste, Podest, Picker).
-   Jeder Rahmen ist ein rotierender Farbverlauf-Ring (nicht nur
-   ein statischer Rand) - je höherwertiger der Rahmen, desto
-   kräftiger Glow/Funken/Tempo.
+   Alle sechzehn sind Zeichnungen aus assets/rahmen/ - je
+   höherwertiger der Rahmen, desto reicher die Zeichnung.
+   Sichtbar sind sie derzeit in der Shop-Vorschau und beim
+   Ausrüsten; in der Rangliste gibt wrapAvatarWithFrame()
+   (scripts/wheel/wheel.js) den Avatar unverändert zurück, dort
+   steht stattdessen der Zeilen-Glow .row-frame-*.
 ===================================================== */
 .avatar-frame-wrap {
   position: relative;
@@ -373,95 +374,31 @@
   position: relative;
 }
 
-.avatar-frame-bronze::before,
-.avatar-frame-silver::before,
-.avatar-frame-gold::before,
-.avatar-frame-fire::before,
-.avatar-frame-kraken::before,
-.avatar-frame-legend::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  z-index: 3;
-  pointer-events: none;
-  box-sizing: border-box;
-  padding: 3px;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-
-.avatar-frame-bronze::before {
-  background: conic-gradient(from 0deg, #cd7f32, #f0b57a, #8a5423, #cd7f32);
-  animation: avatarFrameSpin 7s linear infinite;
-  filter: drop-shadow(0 0 8px rgba(205,127,50,.6));
-}
-
-.avatar-frame-silver::before {
-  background: conic-gradient(from 0deg, #c8c8dc, #ffffff, #8f8fa8, #c8c8dc);
-  animation: avatarFrameSpin 5.5s linear infinite;
-  filter: drop-shadow(0 0 10px rgba(200,200,220,.7));
-}
-
-.avatar-frame-gold::before {
-  background: conic-gradient(from 0deg, var(--menu-hex3), #fff3c4, #b8860b, var(--menu-hex3));
-  animation: avatarFrameSpin 4.2s linear infinite, avatarFrameGoldPulse 2s ease-in-out infinite;
-  filter: drop-shadow(0 0 12px rgba(255,215,107,.8));
-}
-
-@keyframes avatarFrameGoldPulse {
-  0%, 100% { filter: drop-shadow(0 0 10px rgba(255,215,107,.6)); }
-  50%      { filter: drop-shadow(0 0 20px rgba(255,215,107,1)); }
-}
-
-.avatar-frame-fire::before {
-  background: conic-gradient(from 0deg, var(--menu-hex2), #ffcf6b, var(--fh-fire-deep), var(--menu-hex2), #ffb020, var(--menu-hex2));
-  animation: avatarFrameSpin 2.4s linear infinite, avatarFrameFireFlicker 1s ease-in-out infinite;
-}
-
-@keyframes avatarFrameFireFlicker {
-  0%, 100% { filter: drop-shadow(0 0 10px rgba(255,106,42,.7)) drop-shadow(0 0 20px rgba(255,180,60,.4)); }
-  50%      { filter: drop-shadow(0 0 16px rgba(255,140,50,1)) drop-shadow(0 0 28px rgba(255,200,80,.6)); }
-}
-
-.avatar-frame-kraken::before {
-  background: conic-gradient(from 0deg, #0e7c66, #4ade80, #0a3d33, #0e7c66, #1f5c3a, #0e7c66);
-  animation: avatarFrameSpin 6s linear infinite reverse, avatarFrameKrakenPulse 2.6s ease-in-out infinite;
-}
-
-@keyframes avatarFrameKrakenPulse {
-  0%, 100% { filter: drop-shadow(0 0 10px rgba(14,124,102,.6)); }
-  50%      { filter: drop-shadow(0 0 18px rgba(74,222,128,.7)); }
-}
-
-.avatar-frame-legend::before {
-  background: conic-gradient(from 0deg, var(--menu-hex3), var(--menu-hex2), #9146ff, #4da3ff, #4ade80, var(--menu-hex3));
-  animation: avatarFrameSpin 3s linear infinite, avatarFrameLegendPulse 1.8s ease-in-out infinite;
-}
-
-@keyframes avatarFrameLegendPulse {
-  0%, 100% { filter: drop-shadow(0 0 12px rgba(255,215,107,.7)) saturate(1); }
-  50%      { filter: drop-shadow(0 0 22px rgba(145,70,255,.8)) saturate(1.4); }
-}
-
 @keyframes avatarFrameSpin {
   to { transform: rotate(360deg); }
 }
 
 /* =====================================================
    GEZEICHNETE RAHMEN (assets/rahmen/*.svg)
-   Die sechs Rahmen oben sind rotierende Farbverläufe. Diese
-   zehn sind Zeichnungen und stehen bewusst STILL: in der
-   Rangliste liegen zwanzig Avatare nebeneinander, und zwanzig
-   sich drehende Ringe wären dort keine Zierde mehr.
+   Alle sechzehn Rahmen stehen STILL. Vorher waren die sechs
+   ältesten rotierende Farbverläufe, die je nach Stufe
+   unterschiedlich schnell liefen - genau das war der Grund,
+   warum der Ring aus der Rangliste geworfen wurde (siehe
+   wrapAvatarWithFrame()). Wer im Shop steht, sieht die höheren
+   Stufen trotzdem leuchten: dafür sorgt der Seltenheitspuls in
+   css/50-redesign.css, nicht der Rahmen selbst.
 
-   Sie benutzen NICHT die Maske der Farbverlaufs-Rahmen (die
-   schneidet ein Loch in eine Fläche) - die SVG bringt ihre
-   Durchsichtigkeit selbst mit und darf deshalb auch über den
-   Rand des Bildes hinausragen, was Tentakel und Speichen
-   überhaupt erst möglich macht.
+   Sie brauchen keine Maske: die SVG bringt ihre Durchsichtigkeit
+   selbst mit und darf deshalb über den Rand des Bildes
+   hinausragen, was Speichen, Flammen und Tentakel überhaupt
+   erst möglich macht.
 ===================================================== */
+.avatar-frame-bronze::before,
+.avatar-frame-silver::before,
+.avatar-frame-gold::before,
+.avatar-frame-fire::before,
+.avatar-frame-kraken::before,
+.avatar-frame-legend::before,
 .avatar-frame-tau::before,
 .avatar-frame-steuerrad::before,
 .avatar-frame-kraken-arm::before,
@@ -485,6 +422,12 @@
   background-size: 100% 100%;
 }
 
+.avatar-frame-bronze::before { background-image: url("../assets/rahmen/bronze.svg"); }
+.avatar-frame-silver::before { background-image: url("../assets/rahmen/silver.svg"); }
+.avatar-frame-gold::before { background-image: url("../assets/rahmen/gold.svg"); }
+.avatar-frame-fire::before { background-image: url("../assets/rahmen/fire.svg"); }
+.avatar-frame-kraken::before { background-image: url("../assets/rahmen/kraken.svg"); }
+.avatar-frame-legend::before { background-image: url("../assets/rahmen/legend.svg"); }
 .avatar-frame-tau::before { background-image: url("../assets/rahmen/tau.svg"); }
 .avatar-frame-steuerrad::before { background-image: url("../assets/rahmen/steuerrad.svg"); }
 .avatar-frame-kraken-arm::before { background-image: url("../assets/rahmen/kraken-arm.svg"); }

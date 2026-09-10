@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Silber-Rahmen">
+<title>Silber-Rahmen</title>
+<circle cx="50" cy="50" r="46" fill="none" stroke="#6c7183" stroke-width="7"/>
+<circle cx="50" cy="50" r="46" fill="none" stroke="#cfd4e2" stroke-width="4.2"/>
+<circle cx="50" cy="50" r="43.2" fill="none" stroke="#4a4f5e" stroke-width="1.2"/>
+<circle cx="50" cy="50" r="48.8" fill="none" stroke="#4a4f5e" stroke-width="1.2"/>
+<line x1="50.0" y1="5.8" x2="52.5" y2="2.27" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="59.19" y1="6.77" x2="62.37" y2="3.83" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="67.98" y1="9.62" x2="71.7" y2="7.41" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="75.98" y1="14.24" x2="80.08" y2="12.85" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="82.85" y1="20.42" x2="87.15" y2="19.92" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="88.28" y1="27.9" x2="92.59" y2="28.3" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="92.04" y1="36.34" x2="96.17" y2="37.63" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="93.96" y1="45.38" x2="97.73" y2="47.5" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="93.96" y1="54.62" x2="97.21" y2="57.48" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="92.04" y1="63.66" x2="94.63" y2="67.13" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="88.28" y1="72.1" x2="90.09" y2="76.03" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="82.85" y1="79.58" x2="83.8" y2="83.8" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="75.98" y1="85.76" x2="76.03" y2="90.09" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="67.98" y1="90.38" x2="67.13" y2="94.63" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="59.19" y1="93.23" x2="57.48" y2="97.21" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="50.0" y1="94.2" x2="47.5" y2="97.73" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="40.81" y1="93.23" x2="37.63" y2="96.17" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="32.02" y1="90.38" x2="28.3" y2="92.59" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="24.02" y1="85.76" x2="19.92" y2="87.15" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="17.15" y1="79.58" x2="12.85" y2="80.08" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="11.72" y1="72.1" x2="7.41" y2="71.7" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="7.96" y1="63.66" x2="3.83" y2="62.37" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="6.04" y1="54.62" x2="2.27" y2="52.5" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="6.04" y1="45.38" x2="2.79" y2="42.52" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="7.96" y1="36.34" x2="5.37" y2="32.87" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="11.72" y1="27.9" x2="9.91" y2="23.97" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="17.15" y1="20.42" x2="16.2" y2="16.2" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="24.02" y1="14.24" x2="23.97" y2="9.91" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="32.02" y1="9.62" x2="32.87" y2="5.37" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<line x1="40.81" y1="6.77" x2="42.52" y2="2.79" stroke="#8f95a8" stroke-width=".8" opacity=".65"/>
+<path d="M6.25 35.79 Q12.95 12.95 35.79 6.25" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" opacity=".8"/>
+</svg>
