@@ -107,6 +107,10 @@ function changePage(pageID) {
     updateDetectiveCasePage(pageID);
   }
 
+  if (typeof updateStandPage === "function") {
+    updateStandPage(pageID);
+  }
+
   updateActiveNavHighlight(pageID);
   closeMenu();
   moveFocusToPage(pageID, fokusVorher);

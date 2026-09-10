@@ -162,6 +162,7 @@
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionExplore">Erkunden</p>
       <a class="fh-nav-item" tabindex="0" data-page="home" onclick="changePage('home')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-house"></i></span><span class="fh-nav-label" data-i18n="menu.home">Home</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="stand" onclick="changePage('stand')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-chart-line-up"></i></span><span class="fh-nav-label" data-i18n="menu.stand">Dein Stand</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="story" onclick="changePage('story')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-book-open-text"></i></span><span class="fh-nav-label" data-i18n="menu.story">Stories</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="characters" onclick="changePage('characters')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-users-three"></i></span><span class="fh-nav-label" data-i18n="menu.characters">Characters</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="socials" onclick="changePage('socials')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-globe-hemisphere-west"></i></span><span class="fh-nav-label" data-i18n="menu.socials">Socials</span></a>
@@ -326,7 +327,17 @@
             <div class="fh-start-horizont"></div>
           </div>
 
-          <!-- Das einzige, was zu sehen ist. -->
+          <!-- Erscheint erst nach drei Sekunden ohne Scrollen und
+               verschwindet beim ersten Scrollen fuer immer. Ohne ihn
+               steht man vor einem Countdown und ahnt nicht, dass
+               dahinter eine Reise liegt. -->
+          <button type="button" class="fh-start-wink" id="fh-start-wink" hidden
+                  onclick="fhStartWinkFolgen()">
+            <span class="fh-start-wink-text" data-i18n="home.scrollCue">Scroll</span>
+            <span class="fh-start-wink-pfeil" aria-hidden="true"></span>
+          </button>
+
+          <!-- Das einzige, was sonst zu sehen ist. -->
           <div class="fh-start-countdown">
             <div class="countdown">
               <div class="time-box">
@@ -488,6 +499,31 @@
             <svg viewBox="0 0 24 24" class="social-icon"><path d="M23.5 6.2c-.3-1.1-1.1-1.9-2.2-2.2C19.3 3.5 12 3.5 12 3.5s-7.3 0-9.3.5c-1.1.3-1.9 1.1-2.2 2.2C0 8.2 0 12 0 12s0 3.8.5 5.8c.3 1.1 1.1 1.9 2.2 2.2 2 .5 9.3.5 9.3.5s7.3 0 9.3-.5c1.1-.3 1.9-1.1 2.2-2.2.5-2 .5-5.8.5-5.8s0-3.8-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
             <span>YouTube</span>
           </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         DEIN STAND
+         Die fuenf Karten standen bis zum Umbau der Startseite
+         unter der Eroeffnungssequenz. Inhalt unveraendert, nur
+         jetzt mit eigener Seite - befuellt von
+         scripts/stand/stand.js aus den echten Quellen.
+    ===================== -->
+    <section id="stand" class="page">
+      <div class="page-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="stand.kicker">Logbuch</p>
+          <h1 class="fh-page-title" data-i18n="stand.title">Dein Stand</h1>
+          <p class="fh-page-lead" data-i18n="stand.subtitle">Wo du \u00fcberall stehengeblieben bist \u2013 auf einen Blick.</p>
+        </div>
+
+        <div class="fh-dash-grid">
+          <article class="fh-card fh-card-wide" id="fh-dash-read"></article>
+          <article class="fh-card fh-card-gold" id="fh-dash-wheel"></article>
+          <article class="fh-card" id="fh-dash-race"></article>
+          <article class="fh-card" id="fh-dash-code"></article>
+          <article class="fh-card" id="fh-dash-board"></article>
         </div>
       </div>
     </section>
@@ -1510,6 +1546,7 @@
   <script src="scripts/core/countdown.js" defer></script>
   <script src="scripts/core/reveal.js" defer></script>
   <script src="scripts/home/startseite.js" defer></script>
+  <script src="scripts/stand/stand.js" defer></script>
   <script src="scripts/stories/stories-data.js" defer></script>
   <script src="scripts/characters/characters-data.js" defer></script>
   <script src="scripts/stories/stories.js" defer></script>

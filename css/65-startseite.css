@@ -220,6 +220,69 @@
 }
 
 /* ======================================================
+   DER SCROLL-WINK
+   Kein Dauerlaeufer: er taucht einmal auf, wenn drei Sekunden
+   lang nichts passiert ist, und ist nach dem ersten Scrollen weg.
+====================================================== */
+.fh-start-wink {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(28px, 7vh, 64px);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  transform: translateX(-50%);
+  border: 0;
+  background: none;
+  color: var(--fh-muted-fg, #8296ad);
+  font: inherit;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  animation: fhWinkRein 600ms var(--fh-ease, ease) both;
+}
+
+/* Zum zweiten Mal in diesem Projekt: [hidden] bringt vom Browser nur
+   display:none mit, und jede eigene display-Angabe gewinnt dagegen.
+   .fh-start-wink ist display:flex - ohne diese Regel stand der Wink
+   sofort da statt nach drei Sekunden. Gemessen, nicht vermutet. */
+.fh-start-wink[hidden] { display: none; }
+
+.fh-start-wink:hover { color: var(--fh-gold, #d6a84f); }
+
+.fh-start-wink:focus-visible {
+  outline: 2px solid var(--fh-gold, #d6a84f);
+  outline-offset: 4px;
+  border-radius: var(--fh-radius, 12px);
+}
+
+.fh-start-wink-pfeil {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  animation: fhWinkTippt 1.8s var(--fh-ease, ease-in-out) infinite;
+}
+
+@keyframes fhWinkRein {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Die einzige Schleife auf dieser Seite - und sie lebt nur, solange
+   der Wink zu sehen ist, also hoechstens bis zum ersten Scrollen. */
+@keyframes fhWinkTippt {
+  0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: .55; }
+  50%      { transform: rotate(45deg) translate(3px, 3px); opacity: 1; }
+}
+
+/* ======================================================
    DER COUNTDOWN
    Er steht die ganze Strecke ueber still in der Mitte und
    wandelt nur seine Erscheinung: in der Tiefe matt, klein und
@@ -301,6 +364,8 @@
 ====================================================== */
 @media (prefers-reduced-motion: reduce) {
   .fh-start-countdown { transition: none; }
+  .fh-start-wink { animation: none; }
+  .fh-start-wink-pfeil { animation: none; }
   .fh-start-blitz.zuckt { animation: none; }
   #home .time-box.tick { animation: none; }
 }

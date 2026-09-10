@@ -18,15 +18,51 @@
 (function () {
   "use strict";
 
-  /* Die Laenge der Bahn. An EINER Stelle, damit sie sich ohne
-     Suchen aendern laesst. */
-  const FH_START_WEG = 4000;
+  /* Die Laenge der Bahn in Pixeln. An EINER Stelle, damit sie sich
+     ohne Suchen aendern laesst. Bei 8000 bekommt jeder der sechs
+     Abschnitte gut 1300px - genug, damit er wirkt, statt
+     vorbeizuhuschen. */
+  const FH_START_WEG = 8000;
 
   const ruhig = window.matchMedia
     ? window.matchMedia("(prefers-reduced-motion: reduce)")
     : { matches: false };
 
   let letzterBlitz = 0;
+  let winkUhr = null;
+
+  /* ------------------------------------------------------
+     DER SCROLL-WINK
+     Erscheint nach drei Sekunden ohne Scrollen und ist nach dem
+     ERSTEN Scrollen endgueltig weg - nicht nach jeder Pause
+     wieder. Wer einmal verstanden hat, dass es weitergeht, muss
+     nicht erneut angetippt werden.
+  ------------------------------------------------------ */
+  function winkAufbauen(heim) {
+    const wink = document.getElementById("fh-start-wink");
+    if (!wink || ruhig.matches) return;
+
+    function wegDamit() {
+      clearTimeout(winkUhr);
+      wink.hidden = true;
+      heim.removeEventListener("scroll", wegDamit);
+    }
+
+    winkUhr = setTimeout(function () {
+      // Nur zeigen, wenn wirklich noch nichts gescrollt wurde.
+      if (heim.scrollTop > 4) return;
+      wink.hidden = false;
+    }, 3000);
+
+    heim.addEventListener("scroll", wegDamit, { passive: true, once: true });
+
+    /* Klick auf den Wink scrollt ein Stueck weiter - wer ihn
+       antippt, will offensichtlich los. */
+    window.fhStartWinkFolgen = function () {
+      wegDamit();
+      heim.scrollTo({ top: heim.clientHeight * 1.2, behavior: "smooth" });
+    };
+  }
 
   function bahnHoeheSetzen(heim, bahn) {
     /* Die Bahn ist so lang wie der gewuenschte Weg PLUS ein
@@ -69,11 +105,15 @@
 
     if (ruhig.matches) {
       /* Ans Ende der Reise setzen: goldener Countdown, klarer
-         Himmel. Kein Scroll-Tracking, keine Bewegung - die Seite
-         bleibt trotzdem vollstaendig lesbar. */
+         Himmel. Die lange Bahn faellt dabei weg - 8000px zu
+         scrollen, ohne dass sich etwas aendert, waere eine
+         Zumutung und kein Entgegenkommen. */
       heim.style.setProperty("--fh-weg", "1");
+      bahn.style.height = "auto";
       return;
     }
+
+    winkAufbauen(heim);
 
     if (typeof gsap === "undefined" || typeof ScrollTrigger === "undefined") {
       fhStartFallback(heim, bahn, buehne, blitz);
