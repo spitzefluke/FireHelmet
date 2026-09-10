@@ -37,9 +37,10 @@
       verwenden. GSAP ist ohnehin geladen (scripts/core/gsap-init.js)
       und wurde bisher nur an rund zehn Stellen benutzt.
 
-   AUSNAHME STARTSEITE: die hat mit dem Kino-Scroll (cinematic.js,
-   ScrollTrigger) eine eigene, laengere Eroeffnung. Eine zweite
-   Staffelung daneben waere Bewegung ueber Bewegung.
+   AUSNAHME STARTSEITE: die hat mit ihrem 4000px langen Scrollweg
+   (scripts/home/startseite.js, ScrollTrigger) eine eigene,
+   laengere Eroeffnung. Eine zweite Staffelung daneben waere
+   Bewegung ueber Bewegung.
 
    Bei "Bewegung reduzieren" passiert von beidem nichts: die
    Richtung wird nicht gesetzt (die vorhandene Regel in
@@ -171,7 +172,7 @@
      data-i18n, und applyTranslations() schreibt beim Sprachwechsel
      el.textContent - stehen die Spans noch, waeren sie danach weg,
      und ein spaeterer revert() wuerde einen alten Stand
-     zurueckschreiben. Dasselbe Muster benutzt cinematic.js fuer die
+     zurueckschreiben. Dasselbe Muster benutzt startseite.js fuer die
      Eroeffnung der Startseite schon.
 
      Der letzte Lauf wird vor dem naechsten immer abgeraeumt - wer

@@ -2521,7 +2521,7 @@ function triggerBossArenaImpact() {
 /* ------------------------------------------------------
    ARENA-GLUT-PARTIKEL
    Wiederverwendet die bereits vorhandene .fh-ember-Klasse/
-   Keyframe-Animation (siehe scripts/home/cinematic.js /
+   Keyframe-Animation (siehe scripts/core/reveal.js /
    style.css) - spawnt sie einmalig in den Arena-Hintergrund.
 ------------------------------------------------------ */
 let bossEmbersSpawned = false;

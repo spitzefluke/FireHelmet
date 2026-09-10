@@ -3,7 +3,7 @@
    ---------------------------------------------------
    Muss NACH allen GSAP-<script>-Tags in index.html geladen werden
    und VOR jedem Script, das gsap.to()/ScrollTrigger.create()/etc.
-   benutzt. Scripts, die GSAP nutzen (z.B. cinematic.js), pruefen
+   benutzt. Scripts, die GSAP nutzen (z.B. startseite.js), pruefen
    selbst auf "typeof gsap" und haben einen Fallback.
 
    Frueher stand hier ein einziger registerPlugin()-Aufruf mit

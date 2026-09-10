@@ -24,7 +24,7 @@
       - Der Seitentitel laeuft buchstabenweise ein, wenn man die
         Seite betritt (scripts/core/seitenwechsel.js, GSAP
         SplitText - und danach sofort zurueckgesetzt, wie es
-        cinematic.js schon vormacht).
+        die Startseite schon vormacht).
       - Der Seitentitel traegt einen Lichtpunkt, der dem Zeiger
         folgt (scripts/core/schrift-licht.js). Nur auf Geraeten mit
         echtem Zeiger, und nur auf dem Titel - nicht auf Fliesstext,

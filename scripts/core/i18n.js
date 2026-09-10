@@ -215,7 +215,9 @@ const translations = {
     "home.subtitle": "Die neue Story startet in ...",
     "home.kicker": "Logbuch der Crew",
 
-    /* Startseiten-Uebersicht (scripts/home/dashboard.js) */
+    /* Startseiten-Uebersicht - die Karten sind mit dem Umbau der
+       Startseite entfallen, die Schluessel bleiben fuer eine
+       spaetere eigene Uebersichtsseite stehen */
     "dash.heading": "Dein Stand",
     "dash.readKicker": "Weiterlesen",
     "dash.readChapters": "Kapitel gelesen",
@@ -720,7 +722,7 @@ const translations = {
     "home.subtitle": "The new Story starts in ...",
     "home.kicker": "The crew's logbook",
 
-    /* Home dashboard (scripts/home/dashboard.js) */
+    /* Home dashboard - see the German block above */
     "dash.heading": "Your progress",
     "dash.readKicker": "Keep reading",
     "dash.readChapters": "chapters read",

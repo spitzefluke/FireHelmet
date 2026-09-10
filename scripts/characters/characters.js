@@ -15,7 +15,7 @@
 let charactersBuilt = false;
 
 /* Nur echte Maeuse mit Hover (nicht Touch) bekommen den Tilt-Effekt -
-   dieselbe Konvention wie fhInitCursorParallax() in cinematic.js. */
+   dieselbe Konvention wie ueberall sonst im Projekt. */
 const CHARACTER_CARD_CAN_TILT = window.matchMedia
   && window.matchMedia("(hover: hover) and (pointer: fine)").matches
   && !(window.matchMedia("(prefers-reduced-motion: reduce)").matches);

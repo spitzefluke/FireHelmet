@@ -64,6 +64,7 @@
   <link rel="stylesheet" href="css/40-shop.css">
   <link rel="stylesheet" href="css/50-redesign.css">
   <link rel="stylesheet" href="css/60-fortschritt.css">
+  <link rel="stylesheet" href="css/65-startseite.css">
   <link rel="stylesheet" href="css/70-entwurf-1c.css">
   <!-- 80 kommt bewusst zuletzt: die Datei vereinheitlicht Tempo,
        Druckgefuehl und Tastaturfokus aller Bedienelemente und muss
@@ -288,206 +289,67 @@
     <!-- =====================
          HOME
     ===================== -->
+    <!-- ============================================================
+         STARTSEITE
+         ---------------------------------------------------
+         Eine einzige lange Bahn (FH_START_WEG in
+         scripts/home/startseite.js, standardmaessig 4000px) und
+         GENAU EIN sichtbares Element: der Countdown. Er steht
+         waehrend der ganzen Strecke fest in der Mitte, waehrend sich
+         hinter ihm sechs Abschnitte abloesen - Tiefe, Aufstieg,
+         Durchbruch, Sturm, Sternenhimmel, Morgengrauen.
+
+         Alle Ebenen haengen an EINER Variablen --fh-weg (0 bis 1),
+         die GSAP ScrollTrigger schreibt; gerechnet wird in CSS mit
+         clamp(). Der Countdown selbst wandelt sich mit: von matt und
+         klein in der Tiefe bis voll und golden am Ende.
+    ============================================================ -->
     <section id="home" class="page active-page">
+      <h1 class="fh-visually-hidden" data-i18n="home.title">COUNTDOWN</h1>
 
-      <!-- ============================================================
-           FH CINEMATIC HOME EXPERIENCE
-           Scroll-gebundene Eroeffnungssequenz: Schiff, das man beim
-           Scrollen ueber Nebel und Meer hinweg verfolgt, bis das Ziel
-           enthuellt wird. Rein additiv vor dem bestehenden Hero
-           (Countdown, #home-fx Schiff-Canvas, Riss-Effekt) - dieser
-           bleibt unveraendert unten als letzte Phase erhalten. Logik in
-           scripts/home/cinematic.js, faehrt ausschliesslich per
-           CSS-Variable --fh-progress (siehe css/60-fortschritt.css).
-      ============================================================ -->
-      <div class="fh-cinematic-home" id="fh-cinematic-home">
-        <div class="fh-journey-track" id="fh-journey-track">
-          <div class="fh-journey-scene" id="fh-journey-scene" aria-hidden="true">
-            <div class="fh-layer fh-layer-sky"></div>
-            <div class="fh-layer fh-layer-stars">
-              <span class="fh-shooting-star" id="fh-shooting-star" aria-hidden="true"></span>
-            </div>
-            <div class="fh-layer fh-layer-moon"></div>
-            <div class="fh-layer fh-layer-far-fog"></div>
+      <div class="fh-start" id="fh-start">
+        <!-- Die Buehne klebt und fuellt den Schirm; gescrollt wird
+             die Bahn darum herum. -->
+        <div class="fh-start-buehne" id="fh-start-buehne">
 
-            <div class="fh-layer fh-layer-ocean">
-              <div class="fh-ocean-sheen"></div>
-            </div>
+          <!-- Hintergrund. Rein dekorativ, deshalb aria-hidden. -->
+          <div class="fh-start-kulisse" aria-hidden="true">
+            <div class="fh-start-tiefe"></div>
+            <div class="fh-start-partikel"></div>
+            <div class="fh-start-schacht"></div>
+            <div class="fh-start-oberflaeche"></div>
+            <div class="fh-start-wolken"></div>
+            <div class="fh-start-regen"></div>
+            <div class="fh-start-blitz" id="fh-start-blitz"></div>
+            <div class="fh-start-sterne"></div>
+            <div class="fh-start-morgen"></div>
+            <div class="fh-start-horizont"></div>
+          </div>
 
-            <div class="fh-layer fh-layer-mid-fog"></div>
-
-            <video class="fh-layer fh-cinematic-video" id="fh-cinematic-video" muted playsinline preload="none" aria-hidden="true">
-              <source src="assets/home/ship-cinematic.webm" type="video/webm">
-              <source src="assets/home/ship-cinematic.mp4" type="video/mp4">
-            </video>
-
-            <div class="fh-layer fh-layer-fg-fog"></div>
-            <div class="fh-layer fh-layer-particles" id="fh-particle-layer"></div>
-            <div class="fh-layer fh-layer-cursor-light" aria-hidden="true"></div>
-
-            <div class="fh-destination" id="fh-destination">
-              <div class="fh-destination-glow"></div>
-              <svg viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet">
-                <defs>
-                  <linearGradient id="fh-island-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#233448"/>
-                    <stop offset="100%" stop-color="#0a1018"/>
-                  </linearGradient>
-                  <linearGradient id="fh-lighthouse-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#f0c96a"/>
-                    <stop offset="100%" stop-color="#d6a84f"/>
-                  </linearGradient>
-                  <radialGradient id="fh-lighthouse-beam" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#ffe9b0" stop-opacity=".9"/>
-                    <stop offset="100%" stop-color="#ffe9b0" stop-opacity="0"/>
-                  </radialGradient>
-                  <linearGradient id="fh-lighthouse-sweep-grad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stop-color="#ffe9b0" stop-opacity=".55"/>
-                    <stop offset="100%" stop-color="#ffe9b0" stop-opacity="0"/>
-                  </linearGradient>
-                </defs>
-
-                <ellipse cx="150" cy="188" rx="140" ry="8" fill="#4da3ff" opacity=".1"/>
-                <path d="M20,180 Q60,110 120,130 Q160,90 210,120 Q260,100 280,170 Q260,190 40,190 Z" fill="url(#fh-island-grad)"/>
-                <circle cx="215" cy="95" r="55" fill="url(#fh-lighthouse-beam)"/>
-
-                <!-- Schwenkender Lichtkegel, dreht sich per CSS um die
-                     Laterne (215,52) - rein dekorativ, unabhaengig vom
-                     statischen Glow-Kreis darueber. -->
-                <path id="fh-lighthouse-sweep" d="M215,52 L40,20 L40,86 Z" fill="url(#fh-lighthouse-sweep-grad)"/>
-
-                <rect x="205" y="60" width="20" height="70" fill="url(#fh-lighthouse-grad)"/>
-                <path d="M200,60 L230,60 L223,46 L207,46 Z" fill="#e8edf4"/>
-                <rect x="211" y="48" width="8" height="8" fill="#ffe9b0"/>
-                <path d="M214,42 L219,30 L209,30 Z" fill="#c8392a"/>
-              </svg>
-            </div>
-
-            <div class="fh-cinematic-copy fh-copy-opening" id="fh-copy-opening">
-              <p class="fh-cinematic-eyebrow" data-i18n="home.cinematicEyebrow">Eine Reise beginnt</p>
-              <h1 class="fh-cinematic-title" data-i18n="home.cinematicTitle">FIREHELMET</h1>
-              <p class="fh-cinematic-lead" data-i18n="home.cinematicLead">Irgendwo da draussen, jenseits von Nebel und Sternenhimmel, wartet die naechste Geschichte der Crew.</p>
-            </div>
-
-            <div class="fh-cinematic-copy fh-copy-destination" id="fh-copy-destination">
-              <p class="fh-cinematic-eyebrow" data-i18n="home.destinationEyebrow">Das Ziel</p>
-              <h2 class="fh-cinematic-title" data-i18n="home.destinationTitle">DAS ZIEL</h2>
-              <p class="fh-cinematic-lead" data-i18n="home.destinationLead">Was erwartet die Crew hinter dem Horizont? Der Nebel lichtet sich - und ein Licht zeigt den Weg.</p>
-
-              <div class="fh-cinematic-meta">
-                <div class="fh-cinematic-meta-item">
-                  <span class="fh-cinematic-meta-label" data-i18n="home.metaLocationLabel">Location</span>
-                  <span class="fh-cinematic-meta-value" data-i18n="home.metaLocationValue">Unknown</span>
-                </div>
-                <div class="fh-cinematic-meta-item">
-                  <span class="fh-cinematic-meta-label" data-i18n="home.metaStatusLabel">Status</span>
-                  <span class="fh-cinematic-meta-value" data-i18n="home.metaStatusValue">Active</span>
-                </div>
-                <div class="fh-cinematic-meta-item">
-                  <span class="fh-cinematic-meta-label" data-i18n="home.metaMissionLabel">Mission</span>
-                  <span class="fh-cinematic-meta-value" data-i18n="home.metaMissionValue">Discover</span>
-                </div>
+          <!-- Das einzige, was zu sehen ist. -->
+          <div class="fh-start-countdown">
+            <div class="countdown">
+              <div class="time-box">
+                <span id="days">00</span>
+                <small data-i18n="common.days">Tage</small>
+              </div>
+              <div class="time-box">
+                <span id="hours">00</span>
+                <small data-i18n="common.hours">Stunden</small>
+              </div>
+              <div class="time-box">
+                <span id="minutes">00</span>
+                <small data-i18n="common.minutes">Minuten</small>
+              </div>
+              <div class="time-box">
+                <span id="seconds">00</span>
+                <small data-i18n="common.seconds">Sekunden</small>
               </div>
             </div>
-
-            <div class="fh-scroll-cue" id="fh-scroll-cue">
-              <span data-i18n="home.scrollCue">Scroll</span>
-              <span class="fh-scroll-cue-arrow"></span>
-            </div>
-
-            <div class="fh-journey-progress" aria-hidden="true">
-              <div class="fh-journey-progress-fill"></div>
-            </div>
           </div>
+
         </div>
       </div>
-
-      <!-- ============================================================
-           BESTEHENDER HERO (Countdown + Schiff-Canvas + Riss-Effekt)
-           Unveraendert: alle IDs/Klassen bleiben exakt erhalten, damit
-           main.js / home-crack.js unveraendert weiterlaufen. Nur der
-           umschliessende .fh-hero-section Wrapper ist neu, damit
-           .home-fx{position:absolute;inset:0} weiterhin exakt einen
-           Viewport fuellt - jetzt als Abschluss der Cinematic Experience.
-      ============================================================ -->
-      <div class="fh-hero-section" id="fh-hero-section">
-        <div class="home-fx" id="home-fx">
-          <div class="home-dynamic" id="home-dynamic"></div>
-        </div>
-
-        <div class="home-crack-layer" id="home-crack-layer">
-          <img id="home-reveal-image" class="home-reveal-image" alt="">
-
-          <svg class="home-crack-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
-            <path id="crack-1" class="home-crack tier-3-crack" d="M500,300 L430,220 L460,150 L410,80 L440,10" />
-            <path id="crack-2" class="home-crack tier-3-crack" d="M500,300 L580,230 L550,160 L600,90 L570,20" />
-            <path id="crack-3" class="home-crack tier-4-crack" d="M500,300 L420,360 L370,420 L400,500 L340,580" />
-            <path id="crack-4" class="home-crack tier-4-crack" d="M500,300 L590,370 L640,430 L610,510 L670,590" />
-            <path id="crack-5" class="home-crack tier-5-crack" d="M500,300 L300,280 L150,300 L20,260" />
-            <path id="crack-6" class="home-crack tier-5-crack" d="M500,300 L700,320 L850,290 L980,330" />
-            <path id="crack-7" class="home-crack tier-5-crack" d="M500,300 L520,150 L480,60 L510,-20" />
-            <path id="crack-8" class="home-crack tier-5-crack" d="M500,300 L460,450 L510,540 L470,620" />
-          </svg>
-        </div>
-
-        <div class="hero">
-          <!-- War ein zweites <h1> auf derselben Seite. Die Startseite
-               hat aber genau EINEN Titel - "FIREHELMET" im Cinematic-
-               Auftakt weiter oben. Dieser Block hier ist bewusst die
-               Endphase desselben Ablaufs (siehe Kommentar oben), also
-               eine Unterueberschrift. Optisch aendert sich nichts, die
-               CSS-Regeln greifen weiterhin ueber .hero. -->
-          <p class="fh-hero-kicker" data-i18n="home.kicker">Logbuch der Crew</p>
-          <h2 data-i18n="home.title">COUNTDOWN</h2>
-          <p class="subtitle" data-i18n="home.subtitle">The new Story starts in ...</p>
-
-          <div class="countdown">
-            <div class="time-box">
-              <span id="days">00</span>
-              <small data-i18n="common.days">Tage</small>
-            </div>
-            <div class="time-box">
-              <span id="hours">00</span>
-              <small data-i18n="common.hours">Stunden</small>
-            </div>
-            <div class="time-box">
-              <span id="minutes">00</span>
-              <small data-i18n="common.minutes">Minuten</small>
-            </div>
-            <div class="time-box">
-              <span id="seconds">00</span>
-              <small data-i18n="common.seconds">Sekunden</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ============================================================
-           FH DASHBOARD (Entwurf 1c)
-           Karten-Uebersicht unter der Cinematic-Sequenz: der Besucher
-           sieht auf einen Blick, wo er ueberall stehengeblieben ist,
-           statt sich das aus fuenf Unterseiten zusammensuchen zu
-           muessen.
-
-           Die Karten sind LEER im Markup und werden von
-           scripts/home/dashboard.js aus dem echten Stand befuellt
-           (gelesene Kapitel, Schatzrad-Status, Rennfortschritt,
-           geknackte Codes, Rangliste). Faellt das Skript aus, bleibt
-           der Abschnitt schlicht leer - der Rest der Startseite
-           laeuft unveraendert weiter.
-      ============================================================ -->
-      <section class="fh-dash" id="fh-dash" aria-labelledby="fh-dash-heading">
-        <h2 class="fh-visually-hidden" id="fh-dash-heading" data-i18n="dash.heading">Dein Stand</h2>
-
-        <div class="fh-dash-grid">
-          <article class="fh-card fh-card-wide" id="fh-dash-read"></article>
-          <article class="fh-card fh-card-gold" id="fh-dash-wheel"></article>
-          <article class="fh-card" id="fh-dash-race"></article>
-          <article class="fh-card" id="fh-dash-code"></article>
-          <article class="fh-card" id="fh-dash-board"></article>
-        </div>
-      </section>
-
     </section>
 
     <!-- ======================================================
@@ -1549,7 +1411,7 @@
 
   <!-- Seit GSAP 3.13 sind alle frueheren Club-Plugins frei nutzbar.
        Diese vier kommen neu dazu:
-       SplitText     - Titel buchstabenweise einblenden (cinematic.js)
+       SplitText     - Titel buchstabenweise einblenden
        DrawSVGPlugin - Rennstrecke zeichnen (race.js)
        Flip          - Ranglisten-Plaetze umsortieren (wheel.js)
        CustomEase    - eigene Auslauf-Kurve fuers Schatzrad (wheel.js)
@@ -1568,8 +1430,9 @@
   <script src="scripts/core/motion-fx.js" defer></script>
   <script src="scripts/core/gsap-init.js" defer></script>
 
-  <!-- three.js (WebGL-Sternenfeld/Glut-Partikel der Home-Eroeffnungs-
-       sequenz, siehe scripts/home/journey-scene-3d.js). Bewusst auf
+  <!-- three.js (WebGL-Flaechen: scripts/core/fh-webgl.js und darauf
+       aufbauend seiten-fx-szenen.js, aurora-bg.js,
+       celebration-burst-3d.js, sidebar-ambient-3d.js). Bewusst auf
        0.160.0 statt "latest" gepinnt: neuere Versionen liefern keinen
        klassischen globalen UMD-Build ("build/three.min.js") mehr,
        nur noch ES-Module - 0.160.0 ist die letzte Version mit dem
@@ -1645,10 +1508,8 @@
   <script src="scripts/core/discord-notify-data.js" defer></script>
   <script src="scripts/core/discord-notify.js" defer></script>
   <script src="scripts/core/countdown.js" defer></script>
-  <script src="scripts/home/home-crack-data.js" defer></script>
-  <script src="scripts/home/home-crack.js" defer></script>
-  <script src="scripts/home/journey-scene-3d.js" defer></script>
-  <script src="scripts/home/cinematic.js" defer></script>
+  <script src="scripts/core/reveal.js" defer></script>
+  <script src="scripts/home/startseite.js" defer></script>
   <script src="scripts/stories/stories-data.js" defer></script>
   <script src="scripts/characters/characters-data.js" defer></script>
   <script src="scripts/stories/stories.js" defer></script>
@@ -1682,7 +1543,6 @@
   <!-- Ganz zum Schluss: die Startseiten-Uebersicht liest aus stories.js,
        wheel.js, race.js und codes-data.js und muss daher nach allen
        vieren stehen. -->
-  <script src="scripts/home/dashboard.js" defer></script>
 
 </body>
 </html>

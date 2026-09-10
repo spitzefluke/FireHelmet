@@ -1,0 +1,320 @@
+/* ======================================================
+   STARTSEITE
+   ---------------------------------------------------
+   Eine lange Bahn, eine klebende Buehne, ein sichtbares
+   Element: der Countdown.
+
+   ALLES haengt an --fh-weg (0 bis 1), das
+   scripts/home/startseite.js per ScrollTrigger schreibt.
+   Gerechnet wird hier mit clamp() statt in JavaScript - so
+   laeuft die Sequenz im Compositor und nicht bei jedem
+   Scrollpixel durch den Hauptthread.
+
+   Das Muster dahinter: jeder Abschnitt bekommt ein Fenster
+   [a, b] auf der Strecke, und
+
+       clamp(0, (var(--fh-weg) - a) / (b - a), 1)
+
+   ist sein eigener Fortschritt darin. Auf- und Abblenden ist
+   dann die Differenz zweier solcher Fenster.
+
+   Die sechs Abschnitte:
+     0.00 - 0.18  Tiefe          fast schwarz, aufsteigende Partikel
+     0.18 - 0.38  Aufstieg       Wasser hellt auf, Lichtschacht
+     0.38 - 0.52  Durchbruch     die Oberflaeche zieht vorbei
+     0.52 - 0.72  Sturm          Wolken, Regen, Blitz
+     0.72 - 0.90  Sternenhimmel  es klart auf
+     0.90 - 1.00  Morgengrauen   Gold, der Countdown in voller Staerke
+====================================================== */
+
+#home {
+  --fh-weg: 0;
+
+  /* Die sechs Fenster als eigene Groessen, damit die Formeln
+     darunter lesbar bleiben. */
+  --fh-tiefe:      clamp(0, calc((0.22 - var(--fh-weg)) / 0.22), 1);
+  --fh-aufstieg:   clamp(0, calc((var(--fh-weg) - 0.14) / 0.24), 1);
+  --fh-durchbruch: clamp(0, calc((var(--fh-weg) - 0.36) / 0.16), 1);
+  --fh-sturm:      clamp(0, calc((var(--fh-weg) - 0.50) / 0.14), 1);
+  --fh-sturm-ende: clamp(0, calc((var(--fh-weg) - 0.68) / 0.10), 1);
+  --fh-nacht:      clamp(0, calc((var(--fh-weg) - 0.70) / 0.14), 1);
+  --fh-morgen:     clamp(0, calc((var(--fh-weg) - 0.88) / 0.12), 1);
+
+  background: #04070d;
+
+  /* Die Seite traegt sonst padding: 90px 0 94px fuer Topbar und
+     untere Tab-Leiste. Hier stoert das doppelt: die Kulisse soll
+     randlos bis unter beide laufen, UND die 184px landeten als
+     Zugabe im Scrollweg (gemessen: 4184 statt 4000). Der Countdown
+     sitzt mittig und geraet dadurch unter keine der beiden Leisten. */
+  padding: 0;
+}
+
+/* Der Seiteninhalt scrollt - die Bahn gibt die Laenge vor.
+   Die Hoehe setzt startseite.js, damit die Zahl an EINER Stelle
+   steht (FH_START_WEG). */
+.fh-start {
+  position: relative;
+  width: 100%;
+}
+
+.fh-start-buehne {
+  position: sticky;
+  top: 0;
+  /* --fh-schirm setzt startseite.js auf die Hoehe des
+     Scroll-Containers. Der Ersatzwert greift nur, solange das
+     Skript noch nicht gelaufen ist. */
+  height: var(--fh-schirm, 100svh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.fh-start-kulisse {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fh-start-kulisse > * {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---------- 1. TIEFE ---------- */
+.fh-start-tiefe {
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -10%,
+      rgba(24, 58, 92, calc(.04 + .62 * var(--fh-aufstieg))) 0%,
+      transparent 60%),
+    linear-gradient(180deg,
+      #040913 0%,
+      #020509 45%,
+      #010205 100%);
+}
+
+/* Aufsteigende Partikel. Sie steigen NICHT von selbst, sondern
+   werden vom Scrollen getragen - sonst waere es eine Dauerschleife
+   ohne Bezug zur Bewegung. */
+.fh-start-partikel {
+  background-image:
+    radial-gradient(circle, rgba(180, 220, 255, .5) 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(150, 200, 240, .32) 1px, transparent 1.6px);
+  background-size: 90px 140px, 150px 220px;
+  background-position:
+    0 calc(var(--fh-weg) * -1800px),
+    45px calc(var(--fh-weg) * -2900px);
+  opacity: calc(.75 * var(--fh-tiefe) + .25 * var(--fh-aufstieg) * (1 - var(--fh-durchbruch)));
+}
+
+/* ---------- 2. AUFSTIEG: Lichtschacht von oben ---------- */
+.fh-start-schacht {
+  background:
+    conic-gradient(from 178deg at 50% -30%,
+      transparent 0deg,
+      rgba(150, 205, 255, .13) 3deg,
+      transparent 7deg,
+      transparent 352deg,
+      rgba(150, 205, 255, .10) 356deg,
+      transparent 360deg);
+  opacity: calc(var(--fh-aufstieg) * (1 - var(--fh-durchbruch)));
+  transform: translateY(calc(var(--fh-aufstieg) * 8vh)) scaleY(1.4);
+}
+
+/* ---------- 3. DURCHBRUCH: die Wasseroberflaeche zieht vorbei ---------- */
+.fh-start-oberflaeche {
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      rgba(190, 230, 255, .0) 42%,
+      rgba(210, 240, 255, .55) 49%,
+      rgba(255, 255, 255, .85) 50%,
+      rgba(210, 240, 255, .5) 51%,
+      rgba(120, 180, 230, .18) 58%,
+      transparent 100%);
+  /* Zieht von unten nach oben durch das Bild. */
+  transform: translateY(calc(115% - var(--fh-durchbruch) * 230%));
+  opacity: calc(var(--fh-durchbruch) * (1 - var(--fh-durchbruch)) * 4);
+  filter: blur(1px);
+}
+
+/* ---------- 4. STURM ---------- */
+.fh-start-wolken {
+  background:
+    radial-gradient(ellipse 62% 46% at 18% 30%, rgba(46, 58, 78, .98), transparent 68%),
+    radial-gradient(ellipse 70% 50% at 76% 22%, rgba(34, 44, 62, .96), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 48% 44%, rgba(28, 37, 54, .9),  transparent 70%),
+    linear-gradient(180deg, rgba(14, 19, 30, .96) 0%, rgba(14, 19, 30, .6) 45%, transparent 78%);
+  transform: translateX(calc(var(--fh-weg) * -14vw));
+  opacity: calc(var(--fh-sturm) * (1 - var(--fh-sturm-ende)));
+}
+
+/* Zwei Lagen mit unterschiedlicher Neigung und Geschwindigkeit -
+   eine einzelne sieht aus wie eine Schraffur, zwei wie Regen. */
+.fh-start-regen {
+  background-image:
+    repeating-linear-gradient(101deg,
+      rgba(205, 230, 255, .55) 0 1.5px, transparent 1.5px 11px),
+    repeating-linear-gradient(97deg,
+      rgba(170, 205, 245, .3) 0 1px, transparent 1px 17px);
+  background-size: 100% 260px, 100% 420px;
+  background-position:
+    0 calc(var(--fh-weg) * 7200px),
+    0 calc(var(--fh-weg) * 4300px);
+  opacity: calc(var(--fh-sturm) * (1 - var(--fh-sturm-ende)));
+}
+
+/* Der Blitz wird von startseite.js gezuendet, nicht von einer
+   Schleife - er gehoert zum Sturmabschnitt und sonst nirgendwohin. */
+.fh-start-blitz {
+  background: radial-gradient(ellipse 90% 60% at 50% 8%,
+    rgba(226, 240, 255, .85), rgba(160, 200, 255, .25) 40%, transparent 70%);
+  opacity: 0;
+}
+
+.fh-start-blitz.zuckt {
+  animation: fhStartBlitz 420ms ease-out;
+}
+
+@keyframes fhStartBlitz {
+  0%   { opacity: 0; }
+  6%   { opacity: .9; }
+  12%  { opacity: .1; }
+  20%  { opacity: .75; }
+  100% { opacity: 0; }
+}
+
+/* ---------- 5. STERNENHIMMEL ---------- */
+.fh-start-sterne {
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, .95) 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(200, 225, 255, .7) 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(255, 240, 210, .8) 1.2px, transparent 2px);
+  background-size: 180px 180px, 110px 130px, 320px 300px;
+  background-position:
+    calc(var(--fh-weg) * -60px) calc(var(--fh-weg) * -40px),
+    calc(var(--fh-weg) * 40px)  calc(var(--fh-weg) * -70px),
+    calc(var(--fh-weg) * -20px) calc(var(--fh-weg) * -25px);
+  opacity: calc(var(--fh-nacht) * (1 - var(--fh-morgen) * .55));
+}
+
+/* ---------- 6. MORGENGRAUEN ---------- */
+.fh-start-morgen {
+  background:
+    radial-gradient(ellipse 130% 70% at 50% 108%,
+      rgba(255, 196, 92, .55) 0%,
+      rgba(214, 138, 60, .28) 28%,
+      rgba(60, 40, 70, .12) 55%,
+      transparent 78%);
+  opacity: var(--fh-morgen);
+}
+
+/* Die Kimm taucht mit dem Durchbruch auf und bleibt bis zum Schluss. */
+.fh-start-horizont {
+  background: linear-gradient(180deg,
+    transparent calc(61% - 1px),
+    rgba(255, 214, 140, calc(.12 + .5 * var(--fh-morgen))) 61%,
+    transparent calc(61% + 1.5px));
+  opacity: calc(var(--fh-durchbruch) * .55 + var(--fh-morgen) * .45);
+}
+
+/* ======================================================
+   DER COUNTDOWN
+   Er steht die ganze Strecke ueber still in der Mitte und
+   wandelt nur seine Erscheinung: in der Tiefe matt, klein und
+   fast farblos, am Ende voll und golden.
+====================================================== */
+.fh-start-countdown {
+  position: relative;
+  z-index: 2;
+  padding: 0 20px;
+  /* Zwischen 0.94 und 1.04 - kaum messbar, aber spuerbar. */
+  transform: scale(calc(.94 + .10 * var(--fh-morgen) + .02 * var(--fh-durchbruch)));
+  transition: transform 120ms linear;
+}
+
+#home .countdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(10px, 2.4vw, 26px);
+  justify-content: center;
+  margin: 0;
+}
+
+#home .time-box {
+  min-width: clamp(64px, 15vw, 108px);
+  padding: clamp(12px, 2.2vw, 22px) clamp(10px, 2vw, 18px);
+  border-radius: var(--fh-radius, 14px);
+  text-align: center;
+
+  /* Rand und Flaeche ziehen mit dem Weg an. */
+  border: 1px solid rgba(240, 201, 106, calc(.10 + .45 * var(--fh-morgen) + .12 * var(--fh-nacht)));
+  background: rgba(10, 16, 26, calc(.30 + .45 * var(--fh-sturm) * (1 - var(--fh-sturm-ende))));
+  backdrop-filter: blur(calc(2px + 6px * var(--fh-tiefe)));
+  box-shadow: 0 0 calc(var(--fh-morgen) * 42px) rgba(240, 201, 106, calc(var(--fh-morgen) * .28));
+}
+
+#home .time-box span {
+  display: block;
+  font-family: var(--fh-font-display, 'Oswald'), 'Arial Narrow', sans-serif;
+  font-size: clamp(30px, 7.5vw, 66px);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+
+  /* Von blassblau in der Tiefe nach Gold am Morgen. */
+  color: color-mix(
+    in srgb,
+    var(--fh-gold-bright, #ffe9b0) calc(var(--fh-morgen) * 100%),
+    rgba(196, 220, 245, .82));
+  text-shadow: 0 0 calc(var(--fh-morgen) * 26px) rgba(240, 201, 106, calc(var(--fh-morgen) * .5));
+}
+
+#home .time-box small {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(9px, 1.5vw, 11px);
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgba(190, 208, 230, calc(.35 + .45 * var(--fh-morgen)));
+}
+
+/* Der Sekundentakt (countdown.js setzt .changed/.tick) bleibt
+   erhalten, faellt hier aber leiser aus als auf den anderen
+   Seiten - eine springende Zahl vor einem ruhigen Bild faellt
+   sonst zu hart auf. */
+#home .time-box.tick {
+  animation: fhStartTick 380ms var(--fh-ease, ease-out);
+}
+
+@keyframes fhStartTick {
+  50% { border-color: rgba(240, 201, 106, .55); }
+}
+
+/* ======================================================
+   BEWEGUNG REDUZIEREN
+   startseite.js setzt --fh-weg dann fest auf 1: man sieht
+   sofort das Ende der Reise - goldener Countdown, klarer
+   Himmel - und scrollt durch eine ruhige Seite.
+====================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .fh-start-countdown { transition: none; }
+  .fh-start-blitz.zuckt { animation: none; }
+  #home .time-box.tick { animation: none; }
+}
+
+/* Vier Kaesten brechen auf dem Handy zu 3+1 um - das sieht aus wie
+   ein Versehen. Zwei mal zwei ist ruhiger. */
+@media (max-width: 560px) {
+  #home .countdown {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: min(320px, 88vw);
+  }
+
+  #home .time-box { min-width: 0; padding: 14px 8px; }
+  #home .time-box span { font-size: clamp(34px, 12vw, 52px); }
+}

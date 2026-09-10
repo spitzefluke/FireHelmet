@@ -225,8 +225,15 @@ function updateActiveNavHighlight(pageID) {
    HOME HINTERGRUND-ANIMATION (Canvas)
    Kino-reifer Sternenhimmel: mehrere Parallax-Ebenen aus
    twinkelnden Sternen, langsam driftende Nebel-Wolken und
-   gelegentliche Kometen mit Leuchtspur. Nur aktiv solange
-   man auf der Home/Countdown-Seite ist.
+   gelegentliche Kometen mit Leuchtspur.
+
+   STILLGELEGT seit dem Umbau der Startseite: das Ziel-Element
+   #home-fx gibt es nicht mehr, den Himmel malt jetzt CSS in
+   css/65-startseite.css. setupHomeCanvas() gibt ohne #home-fx
+   false zurueck, damit laeuft der ganze Block ins Leere - er
+   steht hier nur noch, weil er die Audio-Reaktion mitbringt
+   (setupAudioReactivity/applyAudioReactiveUI), die der
+   Musikspieler weiterhin benutzt.
 ------------------------------------------------------ */
 const homeFx = document.getElementById("home-fx");
 
@@ -581,15 +588,6 @@ function setupHomeTapEffect() {
     const y = e.clientY - rect.top;
     spawnHomeRipple(x, y);
   });
-}
-
-// Wird von scripts/home/home-crack.js aufgerufen, wenn sich die
-// Countdown-Stufe ändert, damit Partikel/Sternschnuppen sofort
-// im neuen Tempo weiterlaufen (statt erst bei Seitenwechsel)
-function restartHomeEffectsIntensity() {
-  if (!homeEffectsRunning) return; // Home-Effekte laufen gerade nicht - nichts zu tun
-  stopHomeEffects();
-  startHomeEffects();
 }
 
 function stopHomeEffects() {
