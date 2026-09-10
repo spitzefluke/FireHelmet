@@ -357,15 +357,38 @@
    AVATAR-RAHMEN
    Alle sechzehn sind Zeichnungen aus assets/rahmen/ - je
    höherwertiger der Rahmen, desto reicher die Zeichnung.
-   Sichtbar sind sie derzeit in der Shop-Vorschau und beim
-   Ausrüsten; in der Rangliste gibt wrapAvatarWithFrame()
-   (scripts/wheel/wheel.js) den Avatar unverändert zurück, dort
-   steht stattdessen der Zeilen-Glow .row-frame-*.
+   Sichtbar in der Shop-Vorschau, in der Rangliste, auf dem Podest
+   und in der Boss-Rangliste - überall über wrapAvatarWithFrame()
+   in scripts/wheel/wheel.js. Der Zeilen-Glow .row-frame-* bleibt
+   zusätzlich bestehen.
 ===================================================== */
 .avatar-frame-wrap {
   position: relative;
   display: inline-flex;
   border-radius: 50%;
+}
+
+/* Der Rahmen ragt über das Bild hinaus (inset: -13% weiter unten).
+   In der Tabellenzeile stiesse er ohne diesen Rand links an die
+   Platzziffer und rechts an den Namen. */
+.leaderboard-name .avatar-frame-wrap,
+.boss-leaderboard .avatar-frame-wrap {
+  margin: 0 12px 0 5px;
+  vertical-align: middle;
+}
+
+/* Innerhalb des Rahmens bringen Avatar und Podestbild ihren eigenen
+   Abstand und Rand nicht mehr mit - beides macht jetzt der Rahmen.
+   Der Podest-Avatar hat ausserdem overflow:hidden; deshalb sitzt der
+   Rahmen um ihn herum und nicht auf ihm, sonst schnitte er sich
+   selbst weg. */
+.avatar-frame-wrap .leaderboard-avatar {
+  margin-right: 0;
+  border-color: transparent;
+}
+
+.avatar-frame-wrap .fh-podium-avatar {
+  border-color: transparent;
 }
 
 .shop-item-preview,
@@ -382,9 +405,9 @@
    GEZEICHNETE RAHMEN (assets/rahmen/*.svg)
    Alle sechzehn Rahmen stehen STILL. Vorher waren die sechs
    ältesten rotierende Farbverläufe, die je nach Stufe
-   unterschiedlich schnell liefen - genau das war der Grund,
-   warum der Ring aus der Rangliste geworfen wurde (siehe
-   wrapAvatarWithFrame()). Wer im Shop steht, sieht die höheren
+   unterschiedlich schnell liefen - genau das war seinerzeit der
+   Grund, den Ring aus der Rangliste zu werfen. Weil sie jetzt
+   stillstehen, ist er dort wieder da. Wer im Shop steht, sieht die höheren
    Stufen trotzdem leuchten: dafür sorgt der Seltenheitspuls in
    css/50-redesign.css, nicht der Rahmen selbst.
 

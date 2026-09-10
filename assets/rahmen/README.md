@@ -1,11 +1,13 @@
 # Avatar-Rahmen
 
-Sechzehn gezeichnete Rahmen. Sichtbar in der Shop-Vorschau und beim
-Ausrüsten. In der Rangliste erscheinen sie derzeit **nicht**:
-`wrapAvatarWithFrame()` in `scripts/wheel/wheel.js` gibt den Avatar
-unverändert zurück, weil die früheren, unterschiedlich schnell
-rotierenden Ringe bei 32-px-Avataren zu unruhig waren. Dort steht
-stattdessen der Zeilen-Glow `.row-frame-*`.
+Sechzehn gezeichnete Rahmen. Sichtbar in der Shop-Vorschau, in der
+Rangliste, auf dem Podest und in der Boss-Rangliste — überall über
+`wrapAvatarWithFrame()` in `scripts/wheel/wheel.js`.
+
+Zwischenzeitlich waren sie aus der Rangliste ausgebaut: damals waren es
+rotierende Farbverläufe mit je nach Stufe unterschiedlichem Tempo, und
+bei 32-px-Avataren in einer vollen Tabelle war das zu unruhig. Seit alle
+sechzehn stillstehende Zeichnungen sind, fällt der Grund weg.
 
 ## Wie sie eingebunden sind
 
