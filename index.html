@@ -325,6 +325,36 @@
             <div class="fh-start-sterne"></div>
             <div class="fh-start-morgen"></div>
             <div class="fh-start-horizont"></div>
+
+            <!-- Das Boot. Kommt beim Durchbruch durch die
+                 Wasseroberflaeche ins Bild und bleibt bis zum
+                 Morgengrauen.
+
+                 Steht als LETZTE Ebene der Kulisse, damit Sterne
+                 und Morgenrot dahinter liegen - lieber Regen
+                 hinter dem Boot als Sterne darauf.
+
+                 Die Leinwand bemalt scripts/home/startseite-boot.js
+                 mit three.js. Geht das nicht (kein WebGL, nur
+                 Software-Rendering, zu langsam, reduzierte
+                 Bewegung), setzt das Skript .fh-boot-flach-an und
+                 die flache Silhouette darunter uebernimmt. -->
+            <div class="fh-start-boot" id="fh-start-boot">
+              <canvas class="fh-boot-leinwand"></canvas>
+              <div class="fh-boot-flach">
+                <svg viewBox="0 0 240 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Segel, Mast, Wimpel -->
+                  <path d="M120 20 L120 92" stroke="#3d2b1c" stroke-width="3.4" />
+                  <path d="M120 26 L156 33 L120 41 Z" fill="#d6a84f" />
+                  <path d="M122 40 L162 84 L122 84 Z" fill="#d9dfe6" opacity=".9" />
+                  <path d="M118 40 L82 84 L118 84 Z" fill="#c3cbd4" opacity=".78" />
+                  <!-- Rumpf: dieselben Stationen wie im 3D-Modell,
+                       nur von der Seite und flach. -->
+                  <path d="M44 88 L196 88 L176 112 L64 112 Z" fill="#16243a" />
+                  <path d="M44 88 L196 88 L194 94 L46 94 Z" fill="#d6a84f" />
+                </svg>
+              </div>
+            </div>
           </div>
 
           <!-- Erscheint erst nach drei Sekunden ohne Scrollen und
@@ -1546,6 +1576,9 @@
   <script src="scripts/core/countdown.js" defer></script>
   <script src="scripts/core/reveal.js" defer></script>
   <script src="scripts/home/startseite.js" defer></script>
+  <!-- Braucht three.js und scripts/core/fh-webgl.js, beide stehen
+       weiter oben. Liest --fh-weg, das startseite.js schreibt. -->
+  <script src="scripts/home/startseite-boot.js" defer></script>
   <script src="scripts/stand/stand.js" defer></script>
   <script src="scripts/stories/stories-data.js" defer></script>
   <script src="scripts/characters/characters-data.js" defer></script>

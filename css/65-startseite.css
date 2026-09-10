@@ -92,6 +92,18 @@
   --t-morgen: clamp(0, calc((var(--fh-weg) - 0.86) / 0.14), 1);
   --fh-morgen: calc(var(--t-morgen) * var(--t-morgen) * (3 - 2 * var(--t-morgen)));
 
+  /* DAS BOOT - kommt mit dem Durchbruch und bleibt.
+     Kein Abblenden: es ist das einzige Ding in der Kulisse, das
+     kein Wetter ist, und soll bis zum Morgengrauen mitfahren.
+
+     ACHTUNG: dieselben Zahlen stehen in
+     scripts/home/startseite-boot.js (Konstante AUFTRITT). Das
+     Skript kann sie hier nicht ablesen - getPropertyValue()
+     liefert bei nicht registrierten Custom Properties nur den
+     rohen calc()-Text. Wer eine aendert, aendert beide. */
+  --t-boot: clamp(0, calc((var(--fh-weg) - 0.36) / 0.10), 1);
+  --fh-boot: calc(var(--t-boot) * var(--t-boot) * (3 - 2 * var(--t-boot)));
+
   background: #04070d;
 
   /* Die Seite traegt sonst padding: 90px 0 94px fuer Topbar und
@@ -269,6 +281,78 @@
     rgba(255, 214, 140, calc(.12 + .5 * var(--fh-morgen))) 61%,
     transparent calc(61% + 1.5px));
   opacity: calc(var(--fh-durchbruch) * .55 + var(--fh-morgen) * .45);
+}
+
+/* ======================================================
+   DAS BOOT
+   ---------------------------------------------------
+   Eine Leinwand fuer three.js und darunter dieselbe Silhouette
+   flach als SVG. Sichtbar ist immer nur eine von beiden: ohne
+   brauchbares WebGL setzt scripts/home/startseite-boot.js die
+   Klasse .fh-boot-flach-an, und die Rollen tauschen.
+
+   Das Ein- und Ausblenden macht in beiden Faellen dieselbe
+   Groesse (--fh-boot), damit der Auftritt sich nicht danach
+   richtet, ob 3D lief.
+====================================================== */
+.fh-start-boot {
+  opacity: var(--fh-boot);
+  /* Das Boot faehrt ueber den Weg noch ein Stueck heran - eine
+     Bewegung, die auch ohne 3D vorhanden ist. */
+  transform: scale(calc(.92 + .1 * var(--fh-boot) + .06 * var(--fh-morgen)));
+}
+
+.fh-boot-leinwand {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Der flache Ersatz liegt bereit, zeigt sich aber nur, wenn das
+   Skript ihn anfordert. */
+.fh-boot-flach {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.fh-boot-flach svg {
+  width: min(42vw, 340px);
+  height: auto;
+  /* Dasselbe Wiegen wie in 3D, nur als Keyframe. Ohne
+     "alternate" saehe es aus wie ein Zeiger, der zurueckspringt. */
+  animation: fhBootWiegen 5.5s var(--fh-ease, ease-in-out) infinite alternate;
+  transform-origin: 50% 82%;
+}
+
+.fh-boot-flach-an .fh-boot-leinwand {
+  display: none;
+}
+
+.fh-boot-flach-an .fh-boot-flach {
+  display: flex;
+}
+
+@keyframes fhBootWiegen {
+  from { transform: rotate(-3.2deg) translateY(4px); }
+  to   { transform: rotate(3.2deg) translateY(-4px); }
+}
+
+/* Die Kulisse liegt mit inset: 0 ueber dem ganzen Schirm. Das
+   Boot soll aber im unteren Drittel fahren, nicht mitten durch
+   den Countdown - deshalb hier ein eigener Ausschnitt. */
+.fh-start-kulisse > .fh-start-boot {
+  top: auto;
+  bottom: 0;
+  height: 62%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-boot-flach svg {
+    animation: none;
+  }
 }
 
 /* ======================================================
