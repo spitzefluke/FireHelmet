@@ -1658,19 +1658,28 @@ function renderRewardBadges(rewards) {
 /* ------------------------------------------------------
    AVATAR MIT RAHMEN UMWICKELN
    ---------------------------------------------------
-   War frueher der rotierende Farbverlauf-Ring um den Avatar in
-   Rangliste + Boss-Rangliste (dieselbe Optik wie in der Shop-
-   Vorschau, .avatar-frame-*::before mit avatarFrameSpin-Animation,
-   siehe style.css). Auf Wunsch entfernt: der Ring lief bei kleinen
-   32px-Avataren in Tabellen mit mehreren Spielern (je nach
-   Rahmenstufe unterschiedlich schnell) zu unruhig. Der Zeilen-Glow
-   (rowFrameClass(), .row-frame-*) bleibt als Rahmen-Kennzeichnung
-   bestehen. Die Shop-Vorschau nutzt einen eigenen Code-Pfad
-   (shop.js, direkt "avatar-frame-${item.style}") und ist davon
-   nicht betroffen - dort bleibt die Animation als Vorschau sinnvoll.
+   Legt den gekauften Rahmen um den Avatar in Rangliste,
+   Boss-Rangliste und auf dem Podest - dieselbe Klasse wie in der
+   Shop-Vorschau, damit gekaufte Ware dort auftaucht, wo andere
+   sie sehen.
+
+   Das war zwischenzeitlich ausgebaut: die Rahmen waren damals
+   rotierende Farbverlaeufe mit je nach Stufe unterschiedlichem
+   Tempo, und bei 32px-Avataren in einer Tabelle voller Spieler
+   war das zu unruhig. Seit alle sechzehn Rahmen stillstehende
+   Zeichnungen sind (assets/rahmen/), faellt der Grund weg.
+
+   frameStyle kommt immer aus frameStyleFromId(), also aus dem
+   eigenen Katalog - deshalb ist er hier ohne weitere Pruefung
+   als Klassenname verwendbar.
+
+   Der Zeilen-Glow (rowFrameClass(), .row-frame-*) bleibt
+   zusaetzlich: er ist auch dann noch zu erkennen, wenn die Zeile
+   schnell vorbeigescrollt wird.
 ------------------------------------------------------ */
 function wrapAvatarWithFrame(avatarHtml, frameStyle) {
-  return avatarHtml;
+  if (!avatarHtml || !frameStyle) return avatarHtml;
+  return `<span class="avatar-frame-wrap avatar-frame-${frameStyle}">${avatarHtml}</span>`;
 }
 
 /* ------------------------------------------------------
@@ -1768,7 +1777,7 @@ function buildLeaderboardPodiumEntry(player, rank) {
   return `
     <div class="fh-podium-col fh-podium-rank-${rank} ${rowFrameClass(frameStyle)}">
       ${crownHtml}
-      <div class="fh-podium-avatar">${avatarHtml}</div>
+      ${wrapAvatarWithFrame(`<div class="fh-podium-avatar">${avatarHtml}</div>`, frameStyle)}
       <p class="fh-podium-name">${escapeHtml(player.nickname || "Unbekannt")}</p>
       <p class="fh-podium-score">${player.codesCracked || 0} 🔑</p>
       <div class="fh-podium-pedestal">${rank}</div>

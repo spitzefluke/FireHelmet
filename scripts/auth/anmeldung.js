@@ -55,13 +55,217 @@ function fhAnmeldeZiel() {
 }
 
 function fhAnmeldeStatus(text, art) {
-  const el = document.getElementById("fh-anmelde-status");
+  const el = document.getElementById("fh-login-meldung");
   if (el) {
     el.textContent = text || "";
     el.classList.toggle("ist-fehler", art === "fehler");
+    el.classList.toggle("ist-gut", art === "gut");
   }
   if (art === "fehler" && typeof fhNotice === "function") fhNotice(text, "error");
 }
+
+/* ------------------------------------------------------
+   NAME UND PASSWORT
+   ---------------------------------------------------
+   WARUM HIER EINE ADRESSE ERFUNDEN WIRD
+   Supabase kennt keine Anmeldung per Benutzername. Passwort heisst
+   dort immer signUp({ email, password }) - es gibt schlicht kein
+   Feld fuer einen Namen. Wer ohne E-Mail spielen will, braucht also
+   trotzdem eine Adresse.
+
+   Deshalb wird aus dem Namen eine erzeugt:
+
+     "Kapitaen Ahab"  ->  kapitaen-ahab@spieler.firehelmet.de
+
+   Die sieht niemand, sie ist reiner Schluessel. Zwei angenehme
+   Nebenwirkungen: die Ableitung ist eindeutig (Supabase vergibt
+   keine Adresse zweimal, damit sind Namen automatisch einmalig),
+   und sie ist im Browser berechenbar - es braucht KEINE Tabelle,
+   die Namen auf Adressen abbildet. Eine solche Tabelle waere ein
+   Datenleck: wer sie abfragen darf, kann zu jedem Namen die echte
+   E-Mail auslesen.
+
+   WER EINE ECHTE ADRESSE HINTERLEGT, MELDET SICH MIT DIESER AN
+   Das ist keine Nachlaessigkeit, sondern die Folge derselben
+   Einschraenkung: ein Konto hat bei Supabase GENAU EINE Adresse.
+   Soll das Zuruecksetzen per Mail funktionieren, muss es die echte
+   sein - dann ist die erfundene weg. Das Anmeldefeld nimmt deshalb
+   beides entgegen, und die Fehlermeldung sagt es.
+------------------------------------------------------ */
+const FH_LOGIN_DOMAIN = "spieler.firehelmet.de";
+const FH_PASSWORT_MIN = 8;
+
+/* Name -> Adresse. Bewusst streng: nur a-z, 0-9 und Bindestriche,
+   damit dieselbe Eingabe immer dieselbe Adresse ergibt - auch mit
+   Umlauten, Grossbuchstaben oder doppelten Leerzeichen. */
+function fhNamensSchluessel(name) {
+  return String(name || "")
+    .trim().toLowerCase()
+    .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/* Was der Nutzer eingetippt hat -> womit wir uns anmelden.
+   Steht ein @ drin, ist es schon eine Adresse. */
+function fhLoginAdresse(eingabe) {
+  const roh = String(eingabe || "").trim();
+  if (roh.indexOf("@") > 0) return roh;
+  const schluessel = fhNamensSchluessel(roh);
+  return schluessel ? schluessel + "@" + FH_LOGIN_DOMAIN : "";
+}
+
+/* Der Umschalter oben. */
+function fhAnmeldeTab(welcher) {
+  const paare = [
+    ["fh-tab-anmelden", "fh-feld-anmelden", "anmelden"],
+    ["fh-tab-registrieren", "fh-feld-registrieren", "registrieren"],
+  ];
+  paare.forEach(function (paar) {
+    const tab = document.getElementById(paar[0]);
+    const feld = document.getElementById(paar[1]);
+    const aktiv = paar[2] === welcher;
+    if (tab) {
+      tab.classList.toggle("ist-aktiv", aktiv);
+      tab.setAttribute("aria-selected", aktiv ? "true" : "false");
+    }
+    if (feld) feld.hidden = !aktiv;
+  });
+  fhAnmeldeStatus("");
+}
+
+async function fhRegistrieren() {
+  if (!supabaseClient) {
+    fhAnmeldeStatus("Die Anmeldung ist gerade nicht erreichbar.", "fehler");
+    return;
+  }
+  const name  = (document.getElementById("fh-reg-name") || {}).value || "";
+  const pw    = (document.getElementById("fh-reg-passwort") || {}).value || "";
+  const pw2   = (document.getElementById("fh-reg-passwort2") || {}).value || "";
+  const mail  = String((document.getElementById("fh-reg-mail") || {}).value || "").trim();
+
+  const schluessel = fhNamensSchluessel(name);
+  if (schluessel.length < 2) {
+    fhAnmeldeStatus("Bitte einen Namen mit mindestens zwei Buchstaben oder Ziffern.", "fehler");
+    return;
+  }
+  if (pw.length < FH_PASSWORT_MIN) {
+    fhAnmeldeStatus("Das Passwort braucht mindestens " + FH_PASSWORT_MIN + " Zeichen.", "fehler");
+    return;
+  }
+  if (pw !== pw2) {
+    fhAnmeldeStatus("Die beiden Passwörter stimmen nicht überein.", "fehler");
+    return;
+  }
+  if (mail && (mail.indexOf("@") < 1 || mail.length > 254)) {
+    fhAnmeldeStatus("Die E-Mail-Adresse sieht nicht richtig aus. Du kannst sie auch leer lassen.", "fehler");
+    return;
+  }
+
+  /* Mit Adresse: die echte, damit das Zuruecksetzen spaeter geht.
+     Ohne: die erzeugte. */
+  const adresse = mail || (schluessel + "@" + FH_LOGIN_DOMAIN);
+
+  try {
+    fhAnmeldeStatus("Konto wird angelegt ...");
+    const { data, error } = await supabaseClient.auth.signUp({
+      email: adresse,
+      password: pw,
+      /* Der Anzeigename gehoert in user_metadata, nicht in die
+         Adresse - aus "kapitaen-ahab" liesse sich "Kapitän Ahab"
+         nicht zurueckgewinnen. */
+      options: { data: { anzeige_name: String(name).trim() },
+                 emailRedirectTo: fhAnmeldeZiel() },
+    });
+    if (error) throw error;
+
+    try { localStorage.setItem("wheelNickname", String(name).trim()); } catch (err) {}
+
+    /* Steht in der Antwort eine Sitzung, ist man schon drin. Fehlt
+       sie, verlangt Supabase eine Bestaetigung per Mail - und dann
+       darf hier NICHT "angemeldet" stehen. Ohne echte Adresse ginge
+       die Bestaetigung ins Leere, deshalb der ehrliche Hinweis. */
+    const sitzungDa = !!(data && data.session);
+    if (sitzungDa) {
+      fhAnmeldeStatus("Konto angelegt. Du bist angemeldet.", "gut");
+      if (typeof fhAnmeldungUebernehmen === "function") fhAnmeldungUebernehmen();
+    } else if (mail) {
+      fhAnmeldeStatus("Konto angelegt. Bestätige es über den Link in deiner E-Mail.", "gut");
+    } else {
+      fhAnmeldeStatus("Das Konto wurde angelegt, muss aber noch bestätigt werden – "
+        + "ohne hinterlegte E-Mail geht das nicht. Sag Ändii Bescheid.", "fehler");
+    }
+  } catch (err) {
+    console.error("Registrieren fehlgeschlagen:", err);
+    const txt = String((err && err.message) || "");
+    if (/already registered|already exists/i.test(txt)) {
+      fhAnmeldeStatus("Diesen Namen gibt es schon. Wähl einen anderen.", "fehler");
+    } else {
+      fhAnmeldeStatus("Das hat nicht geklappt: " + txt, "fehler");
+    }
+  }
+}
+
+async function fhAnmeldenMitPasswort() {
+  if (!supabaseClient) {
+    fhAnmeldeStatus("Die Anmeldung ist gerade nicht erreichbar.", "fehler");
+    return;
+  }
+  const eingabe = (document.getElementById("fh-anmelden-name") || {}).value || "";
+  const pw      = (document.getElementById("fh-anmelden-passwort") || {}).value || "";
+  const adresse = fhLoginAdresse(eingabe);
+
+  if (!adresse || !pw) {
+    fhAnmeldeStatus("Bitte Name und Passwort eingeben.", "fehler");
+    return;
+  }
+
+  try {
+    fhAnmeldeStatus("Wird geprüft ...");
+    const { error } = await supabaseClient.auth.signInWithPassword({ email: adresse, password: pw });
+    if (error) throw error;
+    fhAnmeldeStatus("Angemeldet.", "gut");
+    if (typeof fhAnmeldungUebernehmen === "function") fhAnmeldungUebernehmen();
+  } catch (err) {
+    console.error("Anmelden fehlgeschlagen:", err);
+    /* Bewusst EINE Meldung fuer falschen Namen und falsches Passwort:
+       zwei getrennte wuerden verraten, welche Namen es gibt. Der
+       Hinweis auf die E-Mail ist noetig, weil ein Konto mit
+       hinterlegter Adresse eben ueber diese laeuft. */
+    fhAnmeldeStatus("Name oder Passwort stimmt nicht. Hast du bei der Registrierung "
+      + "eine E-Mail hinterlegt? Dann melde dich mit dieser an.", "fehler");
+  }
+}
+
+async function fhPasswortVergessen() {
+  if (!supabaseClient) return;
+  const eingabe = String((document.getElementById("fh-anmelden-name") || {}).value || "").trim();
+
+  if (eingabe.indexOf("@") < 1) {
+    /* Ohne Adresse geht es nicht, und das muss dastehen. Ein Konto
+       ohne hinterlegte E-Mail hat nur die erfundene - dorthin kann
+       niemand etwas schicken. */
+    fhAnmeldeStatus("Trag oben deine E-Mail-Adresse ein, dann schicken wir dir einen Link. "
+      + "Ohne hinterlegte Adresse hilft nur das Wiederherstellungs-Kennwort weiter unten.", "fehler");
+    return;
+  }
+
+  try {
+    fhAnmeldeStatus("Link wird verschickt ...");
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(eingabe, {
+      redirectTo: fhAnmeldeZiel(),
+    });
+    if (error) throw error;
+    /* Absichtlich unabhaengig davon, ob es das Konto gibt - sonst
+       liesse sich durchprobieren, welche Adressen registriert sind. */
+    fhAnmeldeStatus("Wenn es zu dieser Adresse ein Konto gibt, ist der Link unterwegs.", "gut");
+  } catch (err) {
+    console.error("Zuruecksetzen fehlgeschlagen:", err);
+    fhAnmeldeStatus("Der Versand ist für diese Seite noch nicht eingerichtet. "
+      + "Sag Ändii Bescheid – bis dahin hilft das Wiederherstellungs-Kennwort weiter unten.", "fehler");
+  }
+}
+
 
 /* ------------------------------------------------------
    ANMELDEN ODER VERKNUEPFEN
@@ -116,57 +320,6 @@ async function fhAnmeldenMit(provider) {
     console.warn("Anmeldung fehlgeschlagen:", err);
     fhAnmeldeStatus(
       "Anmeldung fehlgeschlagen: " + (err && err.message ? err.message : "unbekannter Fehler"),
-      "fehler"
-    );
-  }
-}
-
-/* ------------------------------------------------------
-   E-MAIL: EINMAL-LINK STATT KENNWORT
-   ---------------------------------------------------
-   Kein Kennwort - eines mehr zu verwalten waere fuer eine
-   Spielseite eine Zumutung, und ein schlecht gewaehltes waere ein
-   Risiko. Supabase schickt einen Link, ein Klick genuegt.
-
-   Bei einer anonymen Sitzung wird updateUser() benutzt statt
-   signInWithOtp(): das haengt die Adresse an das BESTEHENDE Konto,
-   der Fortschritt bleibt also erhalten - dieselbe Ueberlegung wie
-   bei linkIdentity() oben.
------------------------------------------------------- */
-async function fhAnmeldenMitEmail(adresse) {
-  if (!supabaseClient) {
-    fhAnmeldeStatus("Die Anmeldung ist gerade nicht erreichbar.", "fehler");
-    return;
-  }
-  const email = String(adresse || "").trim();
-  // Absichtlich grob: die eigentliche Pruefung macht Supabase, und
-  // eine strenge Regex sperrt regelmaessig gueltige Adressen aus.
-  if (!email || email.indexOf("@") < 1 || email.length > 254) {
-    fhAnmeldeStatus("Bitte eine gültige E-Mail-Adresse eingeben.", "fehler");
-    return;
-  }
-
-  try {
-    const { data: sitzung } = await supabaseClient.auth.getSession();
-    const nutzer = sitzung && sitzung.session ? sitzung.session.user : null;
-
-    if (nutzer && nutzer.is_anonymous) {
-      const { error } = await supabaseClient.auth.updateUser({ email });
-      if (error) throw error;
-      fhAnmeldeStatus("Wir haben dir einen Link geschickt. Dein Fortschritt bleibt erhalten.");
-      return;
-    }
-
-    const { error } = await supabaseClient.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: fhAnmeldeZiel() },
-    });
-    if (error) throw error;
-    fhAnmeldeStatus("Wir haben dir einen Link geschickt. Schau in dein Postfach.");
-  } catch (err) {
-    console.warn("E-Mail-Anmeldung fehlgeschlagen:", err);
-    fhAnmeldeStatus(
-      "Hat nicht geklappt: " + (err && err.message ? err.message : "unbekannter Fehler"),
       "fehler"
     );
   }
@@ -301,15 +454,21 @@ function fhAnmeldungVerdrahten() {
     });
   });
 
-  const form = document.getElementById("fh-email-anmeldung");
-  if (form && !form.dataset.fhVerdrahtet) {
+  /* Die beiden Formulare des Umschalters. Beide senden per submit,
+     damit die Eingabetaste im Passwortfeld genauso funktioniert wie
+     ein Klick auf den Knopf. */
+  [
+    ["fh-passwort-anmeldung", fhAnmeldenMitPasswort],
+    ["fh-registrieren-form", fhRegistrieren],
+  ].forEach(function (paar) {
+    const form = document.getElementById(paar[0]);
+    if (!form || form.dataset.fhVerdrahtet) return;
     form.dataset.fhVerdrahtet = "1";
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      const feld = document.getElementById("fh-email-feld");
-      fhAnmeldenMitEmail(feld ? feld.value : "");
+      paar[1]();
     });
-  }
+  });
 
   const abmelden = document.getElementById("fh-abmelden-btn");
   if (abmelden && !abmelden.dataset.fhVerdrahtet) {

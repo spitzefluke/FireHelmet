@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Wellen-Rahmen">
+<title>Wellen-Rahmen</title>
+<circle cx="50" cy="50" r="45" fill="none" stroke="#134b6b" stroke-width="4"/>
+<path d="M34.61 7.71 Q50.0 -2.0 65.39 7.71" fill="none" stroke="#3aa3d9" stroke-width="4.2" stroke-linecap="round"/>
+<circle cx="50.0" cy="1.2" r="1.9" fill="#dff3ff" opacity=".9"/>
+<circle cx="64.78" cy="9.41" r="1.2" fill="#9fd8f2" opacity=".7"/>
+<path d="M65.39 7.71 Q83.42 10.17 88.97 27.5" fill="none" stroke="#3aa3d9" stroke-width="4.2" stroke-linecap="round"/>
+<circle cx="81.37" cy="12.62" r="1.9" fill="#dff3ff" opacity=".9"/>
+<circle cx="87.41" cy="28.4" r="1.2" fill="#9fd8f2" opacity=".7"/>
+<path d="M88.97 27.5 Q101.21 40.97 94.32 57.81" fill="none" stroke="#3aa3d9" stroke-width="4.2" stroke-linecap="round"/>
+<circle cx="98.06" cy="41.53" r="1.9" fill="#dff3ff" opacity=".9"/>
+<circle cx="92.54" cy="57.5" r="1.2" fill="#9fd8f2" opacity=".7"/>
+<path d="M94.32 57.81 Q95.03 76.0 78.93 84.47" fill="none" stroke="#3aa3d9" stroke-width="4.2" stroke-linecap="round"/>
+<circle cx="92.26" cy="74.4" r="1.9" fill="#dff3ff" opacity=".9"/>
+<circle cx="77.77" cy="83.09" r="1.2" fill="#9fd8f2" opacity=".7"/>
+<path d="M78.93 84.47 Q67.79 98.86 50.0 95.0" fill="none" stroke="#3aa3d9" stroke-width="4.2" stroke-linecap="round"/>
+<circle cx="66.69" cy="95.86" r="1.9" fill="#dff3ff" opacity=".9"/>
+<circle cx="50.0" cy="93.2" r="1.2" fill="#9fd8f2" opacity=".7"/>
+<path d="M50.0 95.0 Q32.21 98.86 21.07 84.47" fill="none" stroke="#3aa3d9" stroke-width="4.2" stroke-linecap="round"/>
+<circle cx="33.31" cy="95.86" r="1.9" fill="#dff3ff" opacity=".9"/>
+<circle cx="22.23" cy="83.09" r="1.2" fill="#9fd8f2" opacity=".7"/>
+<path d="M21.07 84.47 Q4.97 76.0 5.68 57.81" fill="none" stroke="#3aa3d9" stroke-width="4.2" stroke-linecap="round"/>
+<circle cx="7.74" cy="74.4" r="1.9" fill="#dff3ff" opacity=".9"/>
+<circle cx="7.46" cy="57.5" r="1.2" fill="#9fd8f2" opacity=".7"/>
+<path d="M5.68 57.81 Q-1.21 40.97 11.03 27.5" fill="none" stroke="#3aa3d9" stroke-width="4.2" stroke-linecap="round"/>
+<circle cx="1.94" cy="41.53" r="1.9" fill="#dff3ff" opacity=".9"/>
+<circle cx="12.59" cy="28.4" r="1.2" fill="#9fd8f2" opacity=".7"/>
+<path d="M11.03 27.5 Q16.58 10.17 34.61 7.71" fill="none" stroke="#3aa3d9" stroke-width="4.2" stroke-linecap="round"/>
+<circle cx="18.63" cy="12.62" r="1.9" fill="#dff3ff" opacity=".9"/>
+<circle cx="35.22" cy="9.41" r="1.2" fill="#9fd8f2" opacity=".7"/>
+</svg>

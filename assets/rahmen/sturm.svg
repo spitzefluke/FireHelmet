@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Sturm-Rahmen">
+<title>Sturm-Rahmen</title>
+<circle cx="50" cy="50" r="46" fill="none" stroke="#1b2230" stroke-width="7"/>
+<circle cx="50" cy="50" r="46" fill="none" stroke="#5b6b82" stroke-width="3.4"/>
+<path d="M27.0 10.16 Q36.44 -0.61 50.0 4.0" fill="none" stroke="#78899f" stroke-width="6.4" stroke-linecap="round"/>
+<circle cx="38.72" cy="7.89" r="2.2" fill="#5b6b82"/>
+<path d="M80.78 15.82 Q93.95 21.46 93.75 35.79" fill="none" stroke="#78899f" stroke-width="6.4" stroke-linecap="round"/>
+<circle cx="86.57" cy="26.25" r="2.2" fill="#5b6b82"/>
+<path d="M92.02 68.71 Q90.72 82.98 77.04 87.21" fill="none" stroke="#78899f" stroke-width="6.4" stroke-linecap="round"/>
+<circle cx="83.88" cy="77.44" r="2.2" fill="#5b6b82"/>
+<path d="M45.19 95.75 Q31.22 98.92 22.96 87.21" fill="none" stroke="#78899f" stroke-width="6.4" stroke-linecap="round"/>
+<circle cx="34.38" cy="90.7" r="2.2" fill="#5b6b82"/>
+<path d="M5.01 59.56 Q-2.33 47.26 6.25 35.79" fill="none" stroke="#78899f" stroke-width="6.4" stroke-linecap="round"/>
+<circle cx="6.46" cy="47.72" r="2.2" fill="#5b6b82"/>
+<path d="M76.99 5.08 L79.63 12.75 L79.38 10.29 L78.5 18.34" fill="none" stroke="#3a2f0a" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M76.99 5.08 L79.63 12.75 L79.38 10.29 L78.5 18.34" fill="none" stroke="#ffe066" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M101.06 61.79 L94.59 66.67 L96.85 65.67 L88.92 67.33" fill="none" stroke="#3a2f0a" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M101.06 61.79 L94.59 66.67 L96.85 65.67 L88.92 67.33" fill="none" stroke="#ffe066" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M54.57 102.2 L47.92 97.55 L49.57 99.4 L45.55 92.37" fill="none" stroke="#3a2f0a" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M54.57 102.2 L47.92 97.55 L49.57 99.4 L45.55 92.37" fill="none" stroke="#ffe066" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1.77 70.47 L4.13 62.72 L2.89 64.85 L8.33 58.86" fill="none" stroke="#3a2f0a" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1.77 70.47 L4.13 62.72 L2.89 64.85 L8.33 58.86" fill="none" stroke="#ffe066" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15.62 10.45 L23.73 10.31 L21.31 9.78 L28.7 13.11" fill="none" stroke="#3a2f0a" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15.62 10.45 L23.73 10.31 L21.31 9.78 L28.7 13.11" fill="none" stroke="#ffe066" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

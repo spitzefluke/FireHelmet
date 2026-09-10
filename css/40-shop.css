@@ -107,62 +107,75 @@
   line-height: 1.6;
 }
 
-.shop-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+/* Das Schaufenster ist jetzt NACH ART gruppiert statt hinter zwei
+   Reitern versteckt - #shop-grid traegt daher nur noch die
+   Gruppen, das eigentliche Raster liegt eine Ebene tiefer. */
+.shop-grid {
   margin-top: 34px;
 }
 
-.shop-tab {
-  position: relative;
-  padding: 11px 26px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.15);
-  background: rgba(255,255,255,.05);
-  color: #ccc;
-  font-size: 14px;
-  font-weight: 600;
+.shop-gruppe + .shop-gruppe { margin-top: 34px; }
+
+/* Holz und Messing wie in der Spielothek. */
+.shop-gruppe-titel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 9px 14px;
+  border: 1px solid rgba(217, 164, 65, .28);
+  border-left: 4px solid var(--fh-gold, #d6a84f);
+  border-radius: var(--fh-radius, 12px);
+  background: linear-gradient(180deg, rgba(74, 48, 24, .5), rgba(28, 20, 12, .5));
+  font-family: var(--fh-font-display, 'Oswald'), 'Arial Narrow', sans-serif;
+  font-size: 1rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.shop-gruppe-zahl {
+  margin-left: auto;
+  color: var(--fh-muted-fg, #8296ad);
+  font-size: .76rem;
+  font-weight: 400;
   letter-spacing: .02em;
-  cursor: pointer;
-  overflow: hidden;
-  transition: color .25s, border-color .25s, transform .2s;
+  text-transform: none;
 }
 
-.shop-tab:hover {
-  transform: translateY(-2px);
-  color: #fff;
-}
-
-.shop-tab::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(214,168,79,.35), rgba(214,168,79,.15));
-  transform: scaleY(0);
-  transform-origin: bottom;
-  transition: transform .4s cubic-bezier(0.65, 0, 0.35, 1);
-  z-index: -1;
-  border-radius: 999px;
-}
-
-.shop-tab-active::before {
-  transform: scaleY(1);
-}
-
-.shop-tab-active {
-  border-color: rgba(214,168,79,.7);
-  color: var(--fh-gold-bright);
-  font-weight: bold;
-  box-shadow: 0 0 18px rgba(214,168,79,.35);
-}
-
-.shop-grid {
+.shop-gruppe-raster {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 24px;
-  margin-top: 34px;
 }
+
+/* Die Vorschau zeigt das EIGENE Bild im Rahmen (siehe
+   shopVorschauAvatar() in scripts/shop/shop.js). */
+.shop-item-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.shop-item-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.shop-item-familie {
+  margin-left: 8px;
+  opacity: .7;
+  font-weight: 400;
+}
+
 
 .shop-item {
   position: relative;
@@ -253,7 +266,7 @@
   50%      { transform: translateY(-5px); }
 }
 
-.shop-item-emoji {
+.shop-item-avatar {
   position: relative;
   z-index: 1;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,.5));
@@ -342,16 +355,40 @@
 
 /* =====================================================
    AVATAR-RAHMEN
-   Werden überall dort verwendet, wo ein Spieler-Avatar mit
-   Rahmen gezeigt wird (Shop-Vorschau, Rangliste, Podest, Picker).
-   Jeder Rahmen ist ein rotierender Farbverlauf-Ring (nicht nur
-   ein statischer Rand) - je höherwertiger der Rahmen, desto
-   kräftiger Glow/Funken/Tempo.
+   Alle sechzehn sind Zeichnungen aus assets/rahmen/ - je
+   höherwertiger der Rahmen, desto reicher die Zeichnung.
+   Sichtbar in der Shop-Vorschau, in der Rangliste, auf dem Podest
+   und in der Boss-Rangliste - überall über wrapAvatarWithFrame()
+   in scripts/wheel/wheel.js. Der Zeilen-Glow .row-frame-* bleibt
+   zusätzlich bestehen.
 ===================================================== */
 .avatar-frame-wrap {
   position: relative;
   display: inline-flex;
   border-radius: 50%;
+}
+
+/* Der Rahmen ragt über das Bild hinaus (inset: -13% weiter unten).
+   In der Tabellenzeile stiesse er ohne diesen Rand links an die
+   Platzziffer und rechts an den Namen. */
+.leaderboard-name .avatar-frame-wrap,
+.boss-leaderboard .avatar-frame-wrap {
+  margin: 0 12px 0 5px;
+  vertical-align: middle;
+}
+
+/* Innerhalb des Rahmens bringen Avatar und Podestbild ihren eigenen
+   Abstand und Rand nicht mehr mit - beides macht jetzt der Rahmen.
+   Der Podest-Avatar hat ausserdem overflow:hidden; deshalb sitzt der
+   Rahmen um ihn herum und nicht auf ihm, sonst schnitte er sich
+   selbst weg. */
+.avatar-frame-wrap .leaderboard-avatar {
+  margin-right: 0;
+  border-color: transparent;
+}
+
+.avatar-frame-wrap .fh-podium-avatar {
+  border-color: transparent;
 }
 
 .shop-item-preview,
@@ -360,81 +397,70 @@
   position: relative;
 }
 
+@keyframes avatarFrameSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* =====================================================
+   GEZEICHNETE RAHMEN (assets/rahmen/*.svg)
+   Alle sechzehn Rahmen stehen STILL. Vorher waren die sechs
+   ältesten rotierende Farbverläufe, die je nach Stufe
+   unterschiedlich schnell liefen - genau das war seinerzeit der
+   Grund, den Ring aus der Rangliste zu werfen. Weil sie jetzt
+   stillstehen, ist er dort wieder da. Wer im Shop steht, sieht die höheren
+   Stufen trotzdem leuchten: dafür sorgt der Seltenheitspuls in
+   css/50-redesign.css, nicht der Rahmen selbst.
+
+   Sie brauchen keine Maske: die SVG bringt ihre Durchsichtigkeit
+   selbst mit und darf deshalb über den Rand des Bildes
+   hinausragen, was Speichen, Flammen und Tentakel überhaupt
+   erst möglich macht.
+===================================================== */
 .avatar-frame-bronze::before,
 .avatar-frame-silver::before,
 .avatar-frame-gold::before,
 .avatar-frame-fire::before,
 .avatar-frame-kraken::before,
-.avatar-frame-legend::before {
+.avatar-frame-legend::before,
+.avatar-frame-tau::before,
+.avatar-frame-steuerrad::before,
+.avatar-frame-kraken-arm::before,
+.avatar-frame-messing::before,
+.avatar-frame-welle::before,
+.avatar-frame-sturm::before,
+.avatar-frame-dublonen::before,
+.avatar-frame-kompass::before,
+.avatar-frame-fluch::before,
+.avatar-frame-pergament::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
+  /* Nach aussen versetzt, damit Griffe, Arme und der gerissene
+     Pergamentrand Platz haben - die Zeichnungen rechnen mit
+     einem Bildkreis bis r=44 in einer 100er-Flaeche. */
+  inset: -13%;
   z-index: 3;
   pointer-events: none;
-  box-sizing: border-box;
-  padding: 3px;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
 }
 
-.avatar-frame-bronze::before {
-  background: conic-gradient(from 0deg, #cd7f32, #f0b57a, #8a5423, #cd7f32);
-  animation: avatarFrameSpin 7s linear infinite;
-  filter: drop-shadow(0 0 8px rgba(205,127,50,.6));
-}
-
-.avatar-frame-silver::before {
-  background: conic-gradient(from 0deg, #c8c8dc, #ffffff, #8f8fa8, #c8c8dc);
-  animation: avatarFrameSpin 5.5s linear infinite;
-  filter: drop-shadow(0 0 10px rgba(200,200,220,.7));
-}
-
-.avatar-frame-gold::before {
-  background: conic-gradient(from 0deg, var(--menu-hex3), #fff3c4, #b8860b, var(--menu-hex3));
-  animation: avatarFrameSpin 4.2s linear infinite, avatarFrameGoldPulse 2s ease-in-out infinite;
-  filter: drop-shadow(0 0 12px rgba(255,215,107,.8));
-}
-
-@keyframes avatarFrameGoldPulse {
-  0%, 100% { filter: drop-shadow(0 0 10px rgba(255,215,107,.6)); }
-  50%      { filter: drop-shadow(0 0 20px rgba(255,215,107,1)); }
-}
-
-.avatar-frame-fire::before {
-  background: conic-gradient(from 0deg, var(--menu-hex2), #ffcf6b, var(--fh-fire-deep), var(--menu-hex2), #ffb020, var(--menu-hex2));
-  animation: avatarFrameSpin 2.4s linear infinite, avatarFrameFireFlicker 1s ease-in-out infinite;
-}
-
-@keyframes avatarFrameFireFlicker {
-  0%, 100% { filter: drop-shadow(0 0 10px rgba(255,106,42,.7)) drop-shadow(0 0 20px rgba(255,180,60,.4)); }
-  50%      { filter: drop-shadow(0 0 16px rgba(255,140,50,1)) drop-shadow(0 0 28px rgba(255,200,80,.6)); }
-}
-
-.avatar-frame-kraken::before {
-  background: conic-gradient(from 0deg, #0e7c66, #4ade80, #0a3d33, #0e7c66, #1f5c3a, #0e7c66);
-  animation: avatarFrameSpin 6s linear infinite reverse, avatarFrameKrakenPulse 2.6s ease-in-out infinite;
-}
-
-@keyframes avatarFrameKrakenPulse {
-  0%, 100% { filter: drop-shadow(0 0 10px rgba(14,124,102,.6)); }
-  50%      { filter: drop-shadow(0 0 18px rgba(74,222,128,.7)); }
-}
-
-.avatar-frame-legend::before {
-  background: conic-gradient(from 0deg, var(--menu-hex3), var(--menu-hex2), #9146ff, #4da3ff, #4ade80, var(--menu-hex3));
-  animation: avatarFrameSpin 3s linear infinite, avatarFrameLegendPulse 1.8s ease-in-out infinite;
-}
-
-@keyframes avatarFrameLegendPulse {
-  0%, 100% { filter: drop-shadow(0 0 12px rgba(255,215,107,.7)) saturate(1); }
-  50%      { filter: drop-shadow(0 0 22px rgba(145,70,255,.8)) saturate(1.4); }
-}
-
-@keyframes avatarFrameSpin {
-  to { transform: rotate(360deg); }
-}
+.avatar-frame-bronze::before { background-image: url("../assets/rahmen/bronze.svg"); }
+.avatar-frame-silver::before { background-image: url("../assets/rahmen/silver.svg"); }
+.avatar-frame-gold::before { background-image: url("../assets/rahmen/gold.svg"); }
+.avatar-frame-fire::before { background-image: url("../assets/rahmen/fire.svg"); }
+.avatar-frame-kraken::before { background-image: url("../assets/rahmen/kraken.svg"); }
+.avatar-frame-legend::before { background-image: url("../assets/rahmen/legend.svg"); }
+.avatar-frame-tau::before { background-image: url("../assets/rahmen/tau.svg"); }
+.avatar-frame-steuerrad::before { background-image: url("../assets/rahmen/steuerrad.svg"); }
+.avatar-frame-kraken-arm::before { background-image: url("../assets/rahmen/kraken-arm.svg"); }
+.avatar-frame-messing::before { background-image: url("../assets/rahmen/messing.svg"); }
+.avatar-frame-welle::before { background-image: url("../assets/rahmen/welle.svg"); }
+.avatar-frame-sturm::before { background-image: url("../assets/rahmen/sturm.svg"); }
+.avatar-frame-dublonen::before { background-image: url("../assets/rahmen/dublonen.svg"); }
+.avatar-frame-kompass::before { background-image: url("../assets/rahmen/kompass.svg"); }
+.avatar-frame-fluch::before { background-image: url("../assets/rahmen/fluch.svg"); }
+.avatar-frame-pergament::before { background-image: url("../assets/rahmen/pergament.svg"); }
 
 /* =====================================================
    ZEILEN-RAHMEN
@@ -553,7 +579,7 @@ tr.row-frame {
     top: 16px;
   }
 
-  .shop-grid {
+  .shop-gruppe-raster {
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   }
 }
