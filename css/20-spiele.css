@@ -2774,3 +2774,538 @@
 
 .fh-anmelde-status.ist-fehler { color: var(--fh-danger, #ff6b6b); }
 .fh-anmelde-status.ist-gut { color: var(--fh-success, #7ddba4); }
+
+
+/* ======================================================
+   ANMELDESEITE - DURCHGANG 2
+   ---------------------------------------------------
+   Alles hier folgt EINER Staffel statt gewachsener Einzelwerte:
+
+     --fha-luft-1 .5rem   zwischen Beschriftung und Feld
+     --fha-luft-2 .9rem   zwischen zwei Feldern
+     --fha-luft-3 1.4rem  zwischen Bloecken
+     --fha-luft-4 2rem    zwischen Karten
+
+   Farben kommen aus den Tokens in css/00-basis.css, nicht als
+   Rohwert. Die Ersatzwerte in var(...) sind nur Netz und doppelter
+   Boden, falls ein Token einmal fehlt.
+====================================================== */
+#login {
+  --fha-luft-1: .5rem;
+  --fha-luft-2: .9rem;
+  --fha-luft-3: 1.4rem;
+  --fha-luft-4: 2rem;
+  --fha-rand: var(--fh-linie, rgba(255, 255, 255, .12));
+  --fha-flaeche: rgba(255, 255, 255, .035);
+}
+
+/* ---------- Karten: eine Sprache statt drei ---------- */
+#login .fh-anmelde-karte {
+  padding: var(--fha-luft-3);
+  border: 1px solid var(--fha-rand);
+  border-radius: var(--fh-radius, 14px);
+  background: var(--fha-flaeche);
+}
+
+#login .fh-anmelde-spalten {
+  gap: var(--fha-luft-3);
+  margin-bottom: var(--fha-luft-4);
+}
+
+/* ---------- Schrift: drei klar getrennte Ebenen ---------- */
+#login .fh-anmelde-titel {
+  margin: 0 0 var(--fha-luft-2);
+  padding-right: 0;
+  font-family: var(--fh-font-display, 'Oswald'), 'Arial Narrow', sans-serif;
+  font-size: 1.12rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--fh-gold-bright, #ffe9b0);
+}
+
+#login .fh-anmelde-text {
+  margin: 0 0 var(--fha-luft-3);
+  font-size: .87rem;
+  line-height: 1.55;
+  color: var(--fh-muted-fg, #8296ad);
+}
+
+#login .fh-anmelde-feldname {
+  display: block;
+  margin: var(--fha-luft-2) 0 var(--fha-luft-1);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg, #8296ad);
+}
+
+#login .fh-anmelde-formular > .fh-anmelde-feldname:first-child,
+#login .wheel-nickname-box > .fh-anmelde-feldname:first-child { margin-top: 0; }
+
+#login .fh-anmelde-hinweis {
+  margin: var(--fha-luft-2) 0 0;
+  font-size: .78rem;
+  line-height: 1.5;
+  color: var(--fh-muted-fg, #8296ad);
+  opacity: .85;
+}
+
+/* ---------- Felder und Knoepfe ---------- */
+#login .fh-anmelde-feld {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--fha-rand);
+  border-radius: var(--fh-radius, 12px);
+  background: rgba(12, 16, 26, .6);
+  color: inherit;
+  font: inherit;
+  transition: border-color var(--fh-dauer, 200ms) var(--fh-ease, ease),
+              background var(--fh-dauer, 200ms) var(--fh-ease, ease);
+}
+
+#login .fh-anmelde-feld:hover { border-color: rgba(255, 255, 255, .24); }
+
+#login .fh-anmelde-feld:focus {
+  outline: none;
+  border-color: var(--fh-gold, #d6a84f);
+  background: rgba(12, 16, 26, .85);
+}
+
+#login .fh-anmelde-feld:focus-visible {
+  outline: 2px solid var(--fh-gold, #d6a84f);
+  outline-offset: 2px;
+}
+
+#login .fh-anmelde-absenden {
+  width: 100%;
+  margin-top: var(--fha-luft-3);
+}
+
+/* .twitch-login-area ist seit jeher eine flex-Reihe (drei Regeln in
+   drei Dateien setzen daran herum). Seit im selben Kasten auch das
+   Passwortformular und der "oder"-Trenner stehen, wurden die zu
+   Reihen-Elementen und landeten nebeneinander. Eine Spalte raeumt
+   das auf, ohne die alten Regeln anzufassen. */
+#login .twitch-login-area {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--fha-luft-2);
+  margin-top: 0;
+}
+
+#login .twitch-login-btn {
+  width: 100%;
+  justify-content: flex-start;
+  margin: 0;
+}
+
+#login .fh-anmelde-formular { margin: 0; }
+
+/* "oder" mit Linien links und rechts. */
+#login .fh-anmelde-trenner {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin: var(--fha-luft-3) 0;
+  font-size: .74rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg, #8296ad);
+}
+
+#login .fh-anmelde-trenner::before,
+#login .fh-anmelde-trenner::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--fha-rand);
+}
+
+/* ======================================================
+   UMSCHALTER MIT LAEUFER
+   Ein wanderndes Element statt zweier harter Hintergruende -
+   dadurch sieht man, WOHIN man wechselt, nicht nur DASS.
+====================================================== */
+#login .fh-anmelde-umschalter {
+  position: relative;
+  margin-bottom: var(--fha-luft-3);
+}
+
+.fh-anmelde-laeufer {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  bottom: 4px;
+  width: 0;
+  border-radius: calc(var(--fh-radius, 12px) - 4px);
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid var(--fh-linie, rgba(255, 255, 255, .16));
+  transition: transform var(--fh-dauer, 200ms) var(--fh-ease, ease),
+              width var(--fh-dauer, 200ms) var(--fh-ease, ease);
+  pointer-events: none;
+}
+
+/* Der Laeufer traegt jetzt die Flaeche - der Reiter selbst nicht mehr. */
+.fh-anmelde-tab.ist-aktiv {
+  background: transparent;
+  border-color: transparent;
+}
+
+#login .fh-anmelde-tab { position: relative; z-index: 1; }
+
+/* ======================================================
+   FELDWECHSEL MIT RICHTUNG
+   Die Buehne haelt die Hoehe, damit die Karte beim Wechsel nicht
+   springt; overflow versteckt das hereinschiebende Feld, solange
+   es noch draussen ist.
+====================================================== */
+.fh-anmelde-buehne {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes fhFeldRein {
+  from { opacity: 0; transform: translateX(var(--fha-von, 24px)); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fhFeldRaus {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(var(--fha-nach, -24px)); }
+}
+
+.kommt-von-rechts { --fha-von:  24px; animation: fhFeldRein 260ms var(--fh-ease, ease) both; }
+.kommt-von-links  { --fha-von: -24px; animation: fhFeldRein 260ms var(--fh-ease, ease) both; }
+
+/* Das abtretende Feld liegt waehrend des Wechsels darueber, damit
+   die Karte nicht kurz auf null Hoehe zusammenfaellt. */
+.geht-raus-links,
+.geht-raus-rechts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.geht-raus-links  { --fha-nach: -24px; animation: fhFeldRaus 260ms var(--fh-ease, ease) both; }
+.geht-raus-rechts { --fha-nach:  24px; animation: fhFeldRaus 260ms var(--fh-ease, ease) both; }
+
+/* ======================================================
+   UEBERSCHRIFT: BUCHSTABEN LAUFEN EINMAL EIN
+   Der Endzustand steht hier, nicht in der Keyframe - ohne das
+   Skript steht die Ueberschrift also trotzdem vollstaendig da.
+====================================================== */
+/* Der Kicker schimmert auf dieser Seite EINMAL durch statt endlos.
+   Die Dauerschleife aus css/90-typografie.css ist damit hier weg -
+   eine von 98 auf der Seite, und die erste, die faellt. */
+#login .fh-page-kicker { animation: none; }
+
+#login .fh-schrift-auftritt.laeuft-ein {
+  animation: fhKickerRein 480ms var(--fh-ease, cubic-bezier(.22, .9, .32, 1.2)) both,
+             fhKickerSchimmer 1.6s var(--fh-ease, ease) 420ms 1 both;
+}
+
+@keyframes fhKickerRein {
+  from { opacity: 0; transform: translateY(8px); letter-spacing: .6em; }
+  to   { opacity: 1; transform: translateY(0); letter-spacing: .42em; }
+}
+
+/* Die Ueberschrift als Block. transform statt Buchstaben, weil ihr
+   Lichtpunkt-Effekt (css/90-typografie.css) mit background-clip: text
+   arbeitet - Kindelemente haetten dort keine Fuellung mehr. */
+.fh-titel-auftritt.laeuft-ein {
+  animation: fhTitelRein 520ms var(--fh-ease, cubic-bezier(.22, .9, .32, 1.2)) both;
+}
+
+@keyframes fhTitelRein {
+  from { opacity: 0; transform: translateY(14px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------------------------------------------------
+   [hidden] SCHLAEGT NICHT GEGEN EIN EIGENES display
+   Der Browser setzt fuer [hidden] nur display: none in seinem
+   Standardblatt - jede eigene display-Angabe gewinnt dagegen.
+
+   Beide Kaesten hier hatten genau das: .fh-anmelde-spalten ist
+   grid, .fh-anmelde-status ist flex. Der Statuskasten stand
+   dadurch fuer JEDEN abgemeldeten Besucher als leerer, 31px hoher
+   Streifen unter dem Vorspann - obwohl zeichneAnmeldeStatus() ihn
+   ordnungsgemaess auf hidden setzt.
+--------------------------------------------------- */
+#login .fh-anmelde-spalten[hidden],
+#login .fh-anmelde-status[hidden] { display: none; }
+
+/* ======================================================
+   PASSWORTFELD MIT PAPAGEI
+   Er haelt sich die Augen zu, solange getippt wird, und lugt
+   hervor, wenn das Passwort sichtbar ist. Damit sieht man den
+   Zustand des Feldes, statt ihn aus einem Symbol zu raten.
+====================================================== */
+.fh-passwortfeld {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.fh-passwortfeld .fh-anmelde-feld {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-right: 44px;
+}
+
+.fh-papagei-huelle {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+.fh-papagei {
+  width: 40px;
+  height: 40px;
+  overflow: visible;
+}
+
+/* Die Fluegel liegen neben dem Kopf und wandern beim Tippen genau
+   auf die Augen: von (9,30) auf (19,23) sind das +10/-7, spiegel-
+   verkehrt fuer rechts. Reine Verschiebung statt Drehung - bei einer
+   Drehung landete der Fluegel ueber statt auf dem Auge. */
+.fh-papagei-fluegel {
+  transform: translate(0, 0);
+  transition: transform 260ms var(--fh-ease, cubic-bezier(.22, .9, .32, 1.2));
+}
+
+.fh-papagei.haelt-zu .fh-papagei-fluegel-links  { transform: translate(10px, -7px); }
+.fh-papagei.haelt-zu .fh-papagei-fluegel-rechts { transform: translate(-10px, -7px); }
+
+/* Blinzeln, sobald die Fluegel oben sind - sonst starrt der Vogel
+   durch seine eigenen Fluegel hindurch. */
+.fh-papagei.haelt-zu .fh-papagei-augen { opacity: 0; }
+.fh-papagei-augen { transition: opacity 160ms var(--fh-ease, ease) 100ms; }
+
+.fh-papagei-pupille {
+  transition: transform 180ms var(--fh-ease, ease);
+}
+
+.fh-papagei.nickt { animation: fhPapageiNickt 90ms ease-out; }
+
+@keyframes fhPapageiNickt {
+  50% { transform: translateY(1.5px) scale(1.04); }
+}
+
+.fh-passwort-auge {
+  position: absolute;
+  right: 50px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fh-muted-fg, #8296ad);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color var(--fh-dauer, 200ms) var(--fh-ease, ease),
+              background var(--fh-dauer, 200ms) var(--fh-ease, ease);
+}
+
+.fh-passwort-auge:hover {
+  color: var(--fh-gold, #d6a84f);
+  background: rgba(255, 255, 255, .06);
+}
+
+.fh-passwort-auge:focus-visible {
+  outline: 2px solid var(--fh-gold, #d6a84f);
+  outline-offset: 2px;
+}
+
+/* Der Querstrich ueber dem Auge verschwindet, sobald das Passwort
+   sichtbar ist - dieselbe Aussage wie der Papagei, nur klein. */
+.fh-passwort-auge-zu::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 50%;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  box-shadow: 0 -2px 0 rgba(12, 16, 26, .9);
+  transform: rotate(-38deg) scaleX(1);
+  transform-origin: center;
+  transition: transform 200ms var(--fh-ease, ease);
+}
+
+.fh-auge-bild { width: 17px; height: 17px; display: block; }
+
+.fh-passwort-auge.ist-offen { color: var(--fh-gold, #d6a84f); }
+.fh-passwort-auge.ist-offen .fh-passwort-auge-zu::after { transform: rotate(-35deg) scaleX(0); }
+
+/* ---------- Drei Dublonen als Staerke ---------- */
+.fh-passwort-staerke {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  margin: var(--fha-luft-1) 0 0;
+  min-height: 18px;
+  font-size: .76rem;
+  color: var(--fh-muted-fg, #8296ad);
+}
+
+.fh-staerke-muenze {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--fh-linie, rgba(255, 255, 255, .2));
+  background: transparent;
+  transition: background var(--fh-dauer, 200ms) var(--fh-ease, ease),
+              border-color var(--fh-dauer, 200ms) var(--fh-ease, ease);
+}
+
+.fh-staerke-muenze.ist-voll {
+  background: var(--fh-gold, #d6a84f);
+  border-color: var(--fh-gold-bright, #ffe9b0);
+}
+
+.fh-staerke-muenze.faellt { animation: fhMuenzeFaellt 340ms var(--fh-ease, cubic-bezier(.22, .9, .32, 1.2)); }
+
+@keyframes fhMuenzeFaellt {
+  0%   { transform: translateY(-8px) scale(.5); }
+  60%  { transform: translateY(1px) scale(1.15); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.fh-staerke-wort { margin-left: .35rem; }
+.fh-passwort-staerke[data-stufe="3"] .fh-staerke-wort { color: var(--fh-success, #55c878); }
+
+/* ======================================================
+   KENNWORT: ZUGEKLAPPT, BIS MAN ES BRAUCHT
+====================================================== */
+.fh-anmelde-klapp { padding: 0; }
+
+.fh-anmelde-klapp-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: var(--fha-luft-3);
+  cursor: pointer;
+  list-style: none;
+}
+
+.fh-anmelde-klapp-kopf::-webkit-details-marker { display: none; }
+
+.fh-anmelde-klapp-kopf:focus-visible {
+  outline: 2px solid var(--fh-gold, #d6a84f);
+  outline-offset: -2px;
+  border-radius: var(--fh-radius, 14px);
+}
+
+.fh-anmelde-klapp-titel {
+  font-family: var(--fh-font-display, 'Oswald'), 'Arial Narrow', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--fh-gold-bright, #ffe9b0);
+}
+
+/* Ein Pfeil aus zwei Strichen - kein Emoji, kein Zeichensatz. */
+.fh-anmelde-klapp-zeichen {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--fh-muted-fg, #8296ad);
+  border-bottom: 2px solid var(--fh-muted-fg, #8296ad);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform var(--fh-dauer, 200ms) var(--fh-ease, ease);
+}
+
+.fh-anmelde-klapp[open] .fh-anmelde-klapp-zeichen {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+
+.fh-anmelde-klapp-inhalt {
+  padding: 0 var(--fha-luft-3) var(--fha-luft-3);
+  animation: fhKlappRein 240ms var(--fh-ease, ease);
+}
+
+@keyframes fhKlappRein {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#login .fh-kennwort-anzeige,
+#login .fh-kennwort-eingabezeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--fha-luft-2);
+  margin-top: var(--fha-luft-2);
+}
+
+#login .fh-kennwort-eingabezeile .fh-anmelde-feld { flex: 1 1 180px; width: auto; }
+#login .fh-kennwort-trenner { margin-top: var(--fha-luft-3); margin-bottom: 0; }
+
+/* ---------- Platzhalter-Bild in der Menueleiste ---------- */
+.fh-avatar-platzhalter {
+  border: 1.5px dashed var(--fh-linie, rgba(255, 255, 255, .3));
+  opacity: .75;
+  transition: opacity var(--fh-dauer, 200ms) var(--fh-ease, ease),
+              border-color var(--fh-dauer, 200ms) var(--fh-ease, ease);
+}
+
+.fh-avatar-platzhalter:hover {
+  opacity: 1;
+  border-color: var(--fh-gold, #d6a84f);
+}
+
+.fh-player-card-leer {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.fh-player-card-leer .fh-sidebar-footer-status { margin: 0; }
+
+/* ======================================================
+   BEWEGUNG REDUZIEREN
+   Der Papagei bleibt - er ist ein Zustand, keine Animation.
+   Er wechselt dann nur ohne Uebergang.
+====================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .fh-anmelde-laeufer,
+  .fh-papagei-fluegel,
+  .fh-papagei-pupille,
+  .fh-passwort-auge-zu::after,
+  .fh-staerke-muenze,
+  .fh-anmelde-klapp-zeichen {
+    transition: none;
+  }
+
+  .kommt-von-rechts,
+  .kommt-von-links,
+  .geht-raus-links,
+  .geht-raus-rechts,
+  .fh-titel-auftritt.laeuft-ein,
+  #login .fh-schrift-auftritt.laeuft-ein,
+  .fh-staerke-muenze.faellt,
+  .fh-papagei.nickt,
+  .fh-anmelde-klapp-inhalt {
+    animation: none;
+  }
+}
+
+@media (max-width: 560px) {
+  #login {
+    --fha-luft-3: 1.1rem;
+    --fha-luft-4: 1.4rem;
+  }
+}

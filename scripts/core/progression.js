@@ -443,8 +443,22 @@ function handleXpGainSideEffects(oldXp, newXp) {
 function renderPlayerCardHtml(data) {
   const nickname = localStorage.getItem("wheelNickname") || "";
   if (!nickname) {
+    /* Ohne Namen stand hier nur Text - also nichts zum Anklicken.
+       Seit die Avatarwahl nur noch ueber dieses Bild erreichbar ist
+       (das Raster auf der Anmeldeseite ist weg), braucht es auch
+       vorher schon einen Knopf. Der gestrichelte Rand sagt: hier
+       fehlt noch etwas. */
     const label = typeof t === "function" ? t("progression.notLoggedIn", "Noch nicht angemeldet") : "Noch nicht angemeldet";
-    return `<p class="fh-sidebar-footer-status"><span class="fh-status-dot"></span> ${label}</p>`;
+    const avatarTitel0 = typeof t === "function" ? t("avatar.waehlen", "Avatar wählen") : "Avatar wählen";
+    return `
+      <div class="fh-player-card fh-player-card-leer">
+        <button type="button" class="fh-player-card-avatar fh-player-card-avatarknopf fh-avatar-platzhalter"
+                onclick="fhAvatarWahlOeffnen()"
+                title="${avatarTitel0}" aria-label="${avatarTitel0}">
+          <span>🏴‍☠️</span>
+        </button>
+        <p class="fh-sidebar-footer-status"><span class="fh-status-dot"></span> ${label}</p>
+      </div>`;
   }
 
   const xp = (data && data.xp) || 0;
