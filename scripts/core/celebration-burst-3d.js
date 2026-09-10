@@ -19,7 +19,7 @@
    Ablauf der Dauer automatisch wieder auf (Canvas + alle three.js-
    Ressourcen).
 
-   AUS-Bedingungen (dieselbe Konvention wie journey-scene-3d.js):
+   AUS-Bedingungen (dieselbe Konvention wie im ganzen Projekt):
    - typeof THREE === "undefined" (CDN nicht geladen/geblockt)
    - prefers-reduced-motion
    - WebGL selbst nicht verfuegbar (Renderer-Erstellung wirft)

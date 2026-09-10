@@ -73,6 +73,7 @@ const translations = {
     "menu.login": "Anmelden",
     "menu.shop": "Shop",
     "menu.home": "Home",
+    "menu.stand": "Dein Stand",
     "menu.story": "Stories",
     "menu.characters": "Characters",
     "menu.socials": "Socials",
@@ -215,7 +216,9 @@ const translations = {
     "home.subtitle": "Die neue Story startet in ...",
     "home.kicker": "Logbuch der Crew",
 
-    /* Startseiten-Uebersicht (scripts/home/dashboard.js) */
+    /* Startseiten-Uebersicht - die Karten sind mit dem Umbau der
+       Startseite entfallen, die Schluessel bleiben fuer eine
+       spaetere eigene Uebersichtsseite stehen */
     "dash.heading": "Dein Stand",
     "dash.readKicker": "Weiterlesen",
     "dash.readChapters": "Kapitel gelesen",
@@ -287,6 +290,9 @@ const translations = {
     "socials.lead": "Alle Kanäle der Crew an einer Stelle.",
     "socials.daveHeading": "🚂 Socials von Zugfahrer_DaveTV",
 
+    "stand.kicker": "Logbuch",
+    "stand.title": "Dein Stand",
+    "stand.subtitle": "Wo du \u00fcberall stehengeblieben bist \u2013 auf einen Blick.",
     "login.kicker": "Zugang",
     "login.title": "Anmeldung",
     "login.subtitle": "Melde dich an, um in Rangliste und Wochenrennen zu erscheinen",
@@ -578,6 +584,7 @@ const translations = {
     "menu.login": "Login",
     "menu.shop": "Shop",
     "menu.home": "Home",
+    "menu.stand": "Your progress",
     "menu.story": "Stories",
     "menu.characters": "Characters",
     "menu.socials": "Socials",
@@ -720,7 +727,7 @@ const translations = {
     "home.subtitle": "The new Story starts in ...",
     "home.kicker": "The crew's logbook",
 
-    /* Home dashboard (scripts/home/dashboard.js) */
+    /* Home dashboard - see the German block above */
     "dash.heading": "Your progress",
     "dash.readKicker": "Keep reading",
     "dash.readChapters": "chapters read",
@@ -792,6 +799,9 @@ const translations = {
     "socials.lead": "Every channel of the crew in one place.",
     "socials.daveHeading": "🚂 Zugfahrer_DaveTV's socials",
 
+    "stand.kicker": "Logbook",
+    "stand.title": "Your progress",
+    "stand.subtitle": "Where you left off everywhere \u2013 at a glance.",
     "login.kicker": "Access",
     "login.title": "Sign in",
     "login.subtitle": "Log in to appear on the leaderboard and in the weekly race",

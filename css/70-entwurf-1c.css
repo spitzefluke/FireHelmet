@@ -2032,7 +2032,7 @@ h1.fh-page-title,
 
    Nicht abgedeckt: von GSAP gesteuerte Bewegungen. Die pruefen die
    Einstellung in ihrem eigenen Code (siehe path-draw.js,
-   cinematic.js); die Schatzrad-Drehung laeuft bewusst weiter, weil
+   der Startseite); die Schatzrad-Drehung laeuft bewusst weiter, weil
    man sonst nicht sehen wuerde, wo das Rad stehenbleibt.
 ===================================================== */
 @media (prefers-reduced-motion: reduce) {

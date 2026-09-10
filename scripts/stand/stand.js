@@ -1,13 +1,17 @@
 /* ======================================================
-   FH STARTSEITEN-DASHBOARD (Entwurf 1c)
+   DEIN STAND
    ---------------------------------------------------
-   Unter der Cinematic-Sequenz steht jetzt eine Uebersicht mit
-   fuenf Karten: Weiterlesen, Schatzrad, Wochenrennen,
-   Geheimcode und Rangliste.
+   Eine Uebersicht mit fuenf Karten: Weiterlesen, Schatzrad,
+   Wochenrennen, Geheimcode und Rangliste.
 
-   Warum: der eigene Stand lag bisher ueber fuenf Unterseiten
-   verstreut. Wer nach ein paar Tagen wiederkam, musste sich
+   Warum: der eigene Stand liegt sonst ueber fuenf Unterseiten
+   verstreut. Wer nach ein paar Tagen wiederkommt, muesste sich
    durchklicken, um zu sehen, wo er stehengeblieben ist.
+
+   Die Karten standen bis zum Umbau der Startseite unter der
+   Eroeffnungssequenz. Die Startseite zeigt jetzt nur noch den
+   Countdown, also haben sie eine eigene Seite bekommen - der
+   Inhalt ist derselbe geblieben.
 
    ES WIRD NICHTS NEU GERECHNET. Jede Karte liest genau die
    Quelle, aus der auch die zugehoerige Seite liest:
@@ -307,11 +311,15 @@
     });
   }
 
-  window.fhRenderHomeDashboard = fhRenderHomeDashboard;
+  window.fhStandZeichnen = fhRenderHomeDashboard;
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", fhRenderHomeDashboard);
-  } else {
+  /* Beim Seitenwechsel neu zeichnen statt nur einmal beim Laden:
+     wer zwischendurch am Schatzrad dreht und dann hierher
+     zurueckkommt, soll den neuen Stand sehen und nicht den von
+     vorhin. Der Aufruf kommt aus changePage() in
+     scripts/core/main.js. */
+  window.updateStandPage = function (pageID) {
+    if (pageID !== "stand") return;
     fhRenderHomeDashboard();
-  }
+  };
 })();

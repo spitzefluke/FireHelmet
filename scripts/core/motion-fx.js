@@ -5,7 +5,7 @@
    per CDN geladen, global als "Motion" verfuegbar, KEIN Bundler
    noetig). Ergaenzt rein additiv das, was GSAP bisher NICHT abdeckt:
    GSAP kuemmert sich ausschliesslich um die Home-Seite (siehe
-   scripts/home/cinematic.js), die einzelnen Karten/Zeilen auf allen
+   scripts/core/reveal.js), die einzelnen Karten/Zeilen auf allen
    anderen Seiten (Rangliste, Shop, Stories, Characters, ...) hatten
    bisher gar keine Eintritts-Animation - genau diese Luecke fuellt
    staggerReveal() unten.

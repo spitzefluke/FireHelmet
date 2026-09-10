@@ -36,7 +36,7 @@ function loadStories() {
   stories.forEach((story) => {
     const card = document.createElement("div");
     // "fh-reveal" blendet die Karte sanft ein, sobald sie beim Scrollen
-    // ins Blickfeld kommt (scripts/home/cinematic.js/fhScanReveals()) -
+    // ins Blickfeld kommt (scripts/core/reveal.js/fhScanReveals()) -
     // .story-card hatte bisher (anders als z.B. Shop/Rangliste/Characters)
     // ueberhaupt keine Eingangsanimation.
     card.className = "story-card fh-reveal";

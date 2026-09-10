@@ -300,7 +300,7 @@ body.loaded {
 }
 
 /* =====================================================
-   FH SCROLL-REVEAL SYSTEM (siehe scripts/home/cinematic.js)
+   FH SCROLL-REVEAL SYSTEM (siehe scripts/core/reveal.js)
    Zentrale, wiederverwendbare Einblend-Klasse fuer neue
    Komponenten. Nutzt IntersectionObserver statt vieler
    einzelner Scroll-Listener. Bestehende Elemente/Klassen
@@ -1083,10 +1083,23 @@ main {
 }
 
 /* =====================================================
+   TOT SEIT DEM UMBAU DER STARTSEITE
+   ---------------------------------------------------
+   Die Selektoren ab hier (.fh-cinematic-*, .fh-journey-*,
+   .fh-layer-*, .fh-destination, .fh-ember, .fh-scroll-cue)
+   passen auf nichts mehr: die Startseite zeigt nur noch den
+   Countdown, ihr CSS steht in css/65-startseite.css.
+
+   NICHT einfach am Stueck loeschen - zwischen diesen Regeln
+   liegen lebende (.fh-nav-*, fhNavSparkBurst). Wer aufraeumt,
+   muss Selektor fuer Selektor pruefen.
+===================================================== */
+
+/* =====================================================
    FH CINEMATIC HOME EXPERIENCE
    Neue, scroll-gebundene Eroeffnungssequenz vor dem
    bestehenden Hero/Countdown (siehe .fh-hero-section oben).
-   Ein einziger Scroll-Listener (scripts/home/cinematic.js)
+   Ein einziger Scroll-Listener (fruehere Fassung)
    schreibt den Fortschritt (0-1) als CSS-Variable
    --fh-progress auf .fh-journey-scene; alle Bewegungen
    laufen darueber rein per CSS calc()/clamp() auf
@@ -1118,7 +1131,7 @@ main {
 }
 
 /* Dezentes Licht, das der Maus folgt (nur Desktop mit echter
-   Maus, siehe fhInitCursorParallax() in cinematic.js). Auf
+   Maus, fruehere Fassung). Auf
    Touch-Geräten bleiben die Fallback-Werte oben stehen -
    dann ist die Ebene einfach ein ruhiger, statischer Schein. */
 .fh-layer-cursor-light {
@@ -1153,7 +1166,7 @@ main {
 }
 
 /* Sternschnuppe: unsichtbar/opacity 0 in Ruhe, wird per GSAP
-   (fhInitShootingStar() in cinematic.js) beim Erreichen eines
+   (fruehere Fassung) beim Erreichen eines
    bestimmten Scroll-Fortschritts einmal ueber den Himmel gezogen. */
 .fh-shooting-star {
   position: absolute;
@@ -1170,7 +1183,7 @@ main {
 }
 
 /* WebGL-Canvas mit Sternenfeld + Glut-Partikeln (siehe
-   scripts/home/journey-scene-3d.js) - wird per JS direkt hinter
+   fruehere Fassung) - wurde per JS direkt hinter
    .fh-layer-stars eingefuegt, .fh-layer liefert bereits
    position/inset/pointer-events. */
 .fh-layer-webgl {
@@ -1256,7 +1269,7 @@ main {
   mask-image: radial-gradient(ellipse 78% 72% at 50% 42%, #000 0%, #000 45%, transparent 92%);
   -webkit-mask-image: radial-gradient(ellipse 78% 72% at 50% 42%, #000 0%, #000 45%, transparent 92%);
   /* Bleibt jetzt bis ~60% der Journey-Strecke sichtbar (deckt sich mit
-     dem erweiterten ScrollTrigger-Scrub-Fenster in cinematic.js, seit
+     dem erweiterten ScrollTrigger-Scrub-Fenster, seit
      das Vektor-Schiff entfernt wurde) und blendet erst danach, bis
      ~85%, sanft aus - genau dort, wo der Zielhafen (".fh-destination")
      uebernimmt. Deckelt zusaetzlich bei .8 statt 1, damit es nie wie
