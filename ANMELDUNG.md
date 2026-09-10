@@ -119,45 +119,100 @@ nichts an. Solange kein eigener Versand eingerichtet ist, funktioniert
 Einrichten unter *Authentication → Emails → **SMTP Settings***
 (direkt: `https://supabase.com/dashboard/project/_/auth/smtp`).
 
-### Du brauchst dafür eine eigene Domain — aber KEINEN Umzug
+### Warum der GitHub-Link als Absender nicht geht
 
-Häufiges Missverständnis: die Seite liegt auf
-`spitzefluke.github.io/FireHelmet/`, und GitHub Pages kann keine Mails
-verschicken und gibt dir auch keine Absenderadresse. Absender und
-Hosting sind zwei getrennte Dinge.
+Absender und Hosting sind zwei getrennte Dinge. Ein empfangender
+Mailserver fragt bei jeder Mail: *darf dieser Server im Namen dieser
+Domain schicken?* Die Antwort steht in DNS-Einträgen der Domain — also
+in Einträgen, die nur der Eigentümer der Domain setzen kann.
 
-Ein Versanddienst muss beweisen dürfen, dass er in deinem Namen
-schicken darf. Dafür setzt er DNS-Einträge in einer Domain, die dir
-gehört. Ohne Domain geht das nicht — mit einer @gmail.com-Adresse als
-Absender landet die Mail bei den meisten Empfängern im Spam, weil
-Google für gmail.com festlegt, wer in seinem Namen senden darf, und ein
-fremder Dienst da nicht dazugehört.
+`spitzefluke.github.io` gehört GitHub, nicht dir. Du kannst dort keine
+DNS-Einträge setzen. GitHub hat für `github.io` ausserdem selbst
+festgelegt:
 
-**Das Gute:** du musst die Seite dafür nicht umziehen. Es reicht, die
-Domain zu *besitzen* und dort die drei Mail-Einträge zu setzen. Die
-Seite bleibt auf der GitHub-Adresse, `CNAME.wartet` bleibt inaktiv, an
-`DOMAIN.md` ändert sich nichts. Eine `.de` kostet bei INWX oder Netcup
-etwa 5–8 € im Jahr (siehe `DOMAIN.md`, Abschnitt 1).
+    github.io          MX   — kein Eintrag —
+    github.io          TXT  v=spf1 a -all
 
-**Solange du keine Domain hast:** „Passwort vergessen" bleibt aus, und
-die Seite sagt das ehrlich an. Wer sein Passwort vergisst, kommt über
-das **Wiederherstellungs-Kennwort** auf der Anmeldeseite wieder rein —
-das läuft ohne Mail und ist schon eingebaut. Registrieren, Anmelden und
-die drei Plattformen funktionieren ebenfalls ohne SMTP.
+`-all` heisst wörtlich: *kein Server darf Mail als @github.io
+verschicken*, und ohne MX-Eintrag kann dort auch keine ankommen. Das ist
+keine Einstellung, die man umgehen kann — es ist GitHubs Ansage, und
+empfangende Server halten sich daran.
 
-**Was du jetzt schon eintragen musst**, unabhängig vom Versand:
-unter *Authentication → URL Configuration → Redirect URLs* gehört
+### Drei Wege, geordnet nach dem, was ich empfehle
+
+**1. Vorerst gar nichts tun.** „Passwort vergessen" bleibt aus, und die
+Seite sagt das ehrlich an. Das ist weniger schlimm, als es klingt:
+
+- Wer sich über Twitch, Discord oder Google anmeldet, hat bei uns gar
+  kein Passwort und braucht nie ein Zurücksetzen.
+- Wer einen anonymen Namen benutzt, kommt über das
+  **Wiederherstellungs-Kennwort** auf der Anmeldeseite wieder rein. Das
+  läuft ohne Mail und ist längst eingebaut.
+- Registrieren und Anmelden funktionieren ohne SMTP vollständig.
+
+Bei der jetzigen Crewgrösse ist das der vernünftige Stand.
+
+**2. Eine einzelne Adresse bestätigen statt einer Domain.** Manche
+Dienste (Brevo, SendGrid, Mailjet) lassen dich statt einer ganzen Domain
+eine EINZELNE Absenderadresse freischalten: du trägst z. B. deine
+Gmail-Adresse ein, bekommst eine Bestätigungsmail, klickst den Link —
+fertig, ohne Domain.
+
+Technisch geht das. Ehrlich gesagt aber mit einem Haken: die Mail
+behauptet dann, von `@gmail.com` zu kommen, obwohl Brevo sie verschickt.
+Googles Regeln für gmail.com lauten:
+
+    gmail.com          TXT  v=spf1 redirect=_spf.google.com
+    _dmarc.gmail.com   TXT  v=DMARC1; p=none; sp=quarantine
+
+`p=none` heisst: solche Mails werden nicht hart abgewiesen. Aber die
+Prüfung schlägt trotzdem fehl, und empfangende Server — Gmail und
+Outlook voran — stufen nicht bestätigte Mail entsprechend ein. Rechne
+damit, dass ein guter Teil im Spam landet. Für eine Handvoll
+Zurücksetzungen im Monat brauchbar, für mehr nicht.
+
+**3. Eine eigene Domain (~6 € im Jahr).** Der einzige verlässliche Weg.
+Wichtig: **die Seite muss dafür nicht umziehen.** Es reicht, die Domain
+zu *besitzen* und dort die drei Mail-Einträge zu setzen. Die Seite
+bleibt auf der GitHub-Adresse, `CNAME.wartet` bleibt inaktiv, an
+`DOMAIN.md` ändert sich nichts. Registrar siehe `DOMAIN.md`, Abschnitt 1.
+
+### Unabhängig davon jetzt schon eintragen
+
+Unter *Authentication → URL Configuration → Redirect URLs* gehört
 `https://spitzefluke.github.io/FireHelmet/` hinein — sonst führen die
-Rückwege von Twitch, Discord und Google ins Leere.
+Rückwege von Twitch, Discord und Google ins Leere. Das hat mit SMTP
+nichts zu tun und ist in jedem Fall nötig.
 
-Schritt für Schritt mit Resend (kostenlos bis 3.000 Mails im Monat):
+### Weg 2 einrichten: Brevo mit einer einzelnen Adresse
+
+1. Auf `brevo.com` anmelden (kostenlos, 300 Mails am Tag).
+2. *Senders, Domains & Dedicated IPs → Senders → Add a sender*: Name
+   („FireHelmet") und deine E-Mail-Adresse eintragen. Brevo schickt
+   dorthin eine Bestätigung — Link anklicken, danach steht die Adresse
+   auf *verified*.
+3. *SMTP & API → SMTP*: dort stehen Server, Port und Login, und dort
+   erzeugst du einen SMTP-Schlüssel. **Nimm die Werte von dieser Seite**,
+   nicht aus dieser Anleitung — Brevo ändert sie gelegentlich. Üblich
+   sind `smtp-relay.brevo.com`, Port 587, als Benutzername deine
+   Brevo-Login-Adresse.
+4. In Supabase unter *Authentication → Emails → SMTP Settings*
+   **Enable Custom SMTP** einschalten, als *Sender email* **exakt die in
+   Schritt 2 bestätigte Adresse** eintragen (eine andere lehnt Brevo ab),
+   dazu Host, Port, Benutzername und den Schlüssel aus Schritt 3.
+5. Testen — und zwar **nicht nur mit einem Gmail-Konto**. Probier auch
+   eine Outlook- oder GMX-Adresse und schau in den Spam-Ordner. So
+   siehst du, woran du bist.
+
+### Weg 3 einrichten: Resend mit eigener Domain
+
+Kostenlos bis 3.000 Mails im Monat.
 
 1. Auf `resend.com` anmelden.
-2. *Domains → Add Domain* → `firehelmet.de` eintragen. Resend zeigt drei
-   DNS-Einträge (DKIM, SPF, und einen für den Rückweg). Die trägst du bei
-   deinem Domain-Anbieter ein; danach in Resend auf *Verify* klicken.
-   Ohne eigene Domain geht es nicht — an `@gmail.com` als Absender
-   verschickt kein seriöser Dienst.
+2. *Domains → Add Domain* → deine Domain eintragen (unten steht
+   `firehelmet.de` als Beispiel). Resend zeigt drei DNS-Einträge (DKIM,
+   SPF und einen für den Rückweg). Die trägst du bei deinem
+   Domain-Anbieter ein; danach in Resend auf *Verify* klicken.
 3. *API Keys → Create API Key*, Recht *Sending access*. Den Schlüssel
    einmal kopieren, er wird nicht wieder angezeigt.
 4. In Supabase unter *Authentication → Emails → SMTP Settings*
@@ -176,7 +231,11 @@ Schritt für Schritt mit Resend (kostenlos bis 3.000 Mails im Monat):
    Adresse testen.
 
 Statt Resend gehen genauso Brevo, Postmark, AWS SES oder SendGrid — die
-sechs Felder oben sind bei allen dieselben, nur Host/Username ändern sich.
+sechs Felder oben sind bei allen dieselben, nur Host und Benutzername
+ändern sich. Der Unterschied zu Weg 2 liegt nicht im Dienst, sondern
+darin, ob eine ganze Domain oder nur eine einzelne Adresse bestätigt
+wurde — und genau davon hängt ab, ob die Mail im Posteingang oder im
+Spam landet.
 
 Mit eigenem SMTP liegt das Limit bei **30 neuen Nutzern pro Stunde**
 (einstellbar unter *Authentication → Rate Limits*). Vor einem Stream, bei
