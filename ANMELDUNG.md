@@ -85,20 +85,52 @@ jeder anmelden kann, musst du die App veröffentlichen. Google prüft das
 nur bei sensiblen Berechtigungen; für Name und E-Mail geht es meist ohne
 Prüfung durch.
 
-### E-Mail
+### E-Mail und Passwort
 
-Ist bei Supabase schon aktiv. Kontrolliere nur zweierlei:
+Ist bei Supabase schon aktiv. Hier sind **zwei Schalter wichtig**, sonst
+kann sich niemand über die Registrieren-Karte anmelden.
 
-- **Confirm email** eingeschaltet lassen
-- Unter *Authentication → URL Configuration* muss deine Seitenadresse bei
-  **Redirect URLs** stehen, sonst führt der Link aus der Mail ins Leere
+**1. Confirm email AUSSCHALTEN**
 
+*Authentication → Sign In / Providers → Email → **Confirm email** aus.*
+
+Warum: Wer sich ohne E-Mail registriert, bekommt intern eine erfundene
+Adresse (`name@spieler.firehelmet.de`, siehe unten). Dorthin kann keine
+Bestätigungsmail gehen. Bleibt der Schalter an, wird das Konto zwar
+angelegt, aber nie bestätigt — und damit ist die Anmeldung tot. Die Seite
+sagt dann ehrlich „muss noch bestätigt werden", statt so zu tun, als sei
+alles in Ordnung.
+
+**2. Redirect URLs**
+
+*Authentication → URL Configuration → **Redirect URLs*** muss deine
+Seitenadresse enthalten, sonst führt der Link aus der Mail ins Leere.
 Sobald `firehelmet.de` steht, muss die neue Adresse dort ergänzt werden —
 die vollständige Liste steht in `DOMAIN.md`, Abschnitt 7.
 
-Kein Kennwort — Supabase schickt einen Einmal-Link. Eines mehr zu
-verwalten wäre für eine Spielseite eine Zumutung, und ein schlecht
-gewähltes wäre ein Risiko.
+**3. Eigenes SMTP — nötig für „Passwort vergessen"**
+
+Der eingebaute Mailversand von Supabase stellt **nur an Mitglieder deiner
+Organisation** zu. Für alle anderen kommt nichts an. Solange kein eigener
+Versand eingerichtet ist, funktioniert „Passwort vergessen" also nicht,
+und die Seite sagt das auch so.
+
+Einrichten unter *Project Settings → Authentication → SMTP Settings*.
+Kostenlos möglich mit Resend, Brevo oder Postmark.
+
+#### Wie Name und Passwort intern funktionieren
+
+Supabase kennt **keine Anmeldung per Benutzername** — Passwort heißt dort
+immer `signUp({ email, password })`. Deshalb erzeugt die Seite aus dem
+Namen eine Adresse:
+
+    "Kapitän Ahab"  →  kapitaen-ahab@spieler.firehelmet.de
+
+Die sieht niemand, sie ist reiner Schlüssel. Wer bei der Registrierung
+eine **echte** Adresse hinterlegt, bekommt diese als Kontoadresse (ein
+Konto hat bei Supabase genau eine) — und meldet sich dann auch **mit
+dieser** an. Das Anmeldefeld nimmt beides entgegen, und die Fehlermeldung
+sagt es.
 
 ---
 

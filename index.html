@@ -648,10 +648,25 @@
 
         <div class="fh-anmelde-spalten">
 
-          <!-- SPALTE 1: Konto verknuepfen -->
+          <!-- SPALTE 1: Konto - Umschalter zwischen Anmelden und Registrieren -->
           <section class="fh-anmelde-karte">
             <p class="fh-anmelde-nummer">1</p>
-            <h2 class="fh-anmelde-titel" data-i18n="login.karteKonto">Mit Konto anmelden</h2>
+            <h2 class="fh-anmelde-titel" data-i18n="login.karteKonto">Anmelden oder Konto anlegen</h2>
+
+            <!-- Der Umschalter. role="tablist" statt zweier Knoepfe,
+                 damit Vorlesewerkzeuge und Pfeiltasten ihn als das
+                 erkennen, was er ist. -->
+            <div class="fh-anmelde-umschalter" role="tablist">
+              <button type="button" class="fh-anmelde-tab ist-aktiv" id="fh-tab-anmelden"
+                      role="tab" aria-selected="true" aria-controls="fh-feld-anmelden"
+                      onclick="fhAnmeldeTab('anmelden')" data-i18n="login.tabAnmelden">Anmelden</button>
+              <button type="button" class="fh-anmelde-tab" id="fh-tab-registrieren"
+                      role="tab" aria-selected="false" aria-controls="fh-feld-registrieren"
+                      onclick="fhAnmeldeTab('registrieren')" data-i18n="login.tabRegistrieren">Registrieren</button>
+            </div>
+
+            <!-- ===== ANMELDEN ===== -->
+            <div id="fh-feld-anmelden" role="tabpanel" aria-labelledby="fh-tab-anmelden">
             <p class="fh-anmelde-text" data-i18n="login.karteKontoText">Name und Bild kommen dann von dort &ndash; und bleiben auf jedem Ger&auml;t gleich.</p>
 
             <div class="twitch-login-area">
@@ -670,20 +685,27 @@
                 <span data-i18n="login.googleButton">Mit Google anmelden</span>
               </button>
 
-              <!-- E-Mail bewusst ohne Kennwort: eines mehr zu verwalten
-                   waere fuer eine Spielseite eine Zumutung, und ein
-                   schlecht gewaehltes waere ein Risiko. Supabase
-                   schickt einen Link, ein Klick genuegt. -->
-              <form id="fh-email-anmeldung" class="fh-email-anmeldung" autocomplete="on">
-                <label class="fh-email-label" for="fh-email-feld"
-                       data-i18n="login.emailLabel">Oder mit deiner E-Mail-Adresse</label>
-                <div class="fh-email-reihe">
-                  <input id="fh-email-feld" class="fh-email-feld" type="email"
-                         inputmode="email" autocomplete="email" maxlength="254"
-                         placeholder="du@beispiel.de">
-                  <button type="submit" class="code-button fh-email-btn"
-                          data-i18n="login.emailButton">Link schicken</button>
+              <!-- Anmelden mit dem selbst gewaehlten Namen. Wer bei der
+                   Registrierung eine E-Mail hinterlegt hat, meldet sich
+                   MIT DIESER an - der Grund steht bei fhLoginAdresse()
+                   in scripts/auth/anmeldung.js. Deshalb nimmt das Feld
+                   beides entgegen. -->
+              <form id="fh-passwort-anmeldung" class="fh-anmelde-formular" autocomplete="on">
+                <label class="fh-anmelde-feldname" for="fh-anmelden-name"
+                       data-i18n="login.pwLabel">Oder mit Name und Passwort</label>
+                <input id="fh-anmelden-name" class="fh-anmelde-feld" type="text"
+                       autocomplete="username" maxlength="254"
+                       placeholder="Dein Name oder deine E-Mail"
+                       data-i18n-placeholder="login.pwNamePlatzhalter">
+                <div class="fh-anmelde-reihe">
+                  <input id="fh-anmelden-passwort" class="fh-anmelde-feld" type="password"
+                         autocomplete="current-password" maxlength="72"
+                         placeholder="Passwort" data-i18n-placeholder="login.pwPlatzhalter">
+                  <button type="submit" class="code-button fh-anmelde-absenden"
+                          data-i18n="login.pwButton">Anmelden</button>
                 </div>
+                <button type="button" class="fh-anmelde-link" onclick="fhPasswortVergessen()"
+                        data-i18n="login.pwVergessen">Passwort vergessen?</button>
               </form>
 
               <div id="twitch-logged-in" class="twitch-logged-in">
@@ -695,6 +717,45 @@
                 <button class="twitch-logout-btn" onclick="logoutTwitch()" data-i18n="common.logout">Abmelden</button>
               </div>
             </div>
+            </div><!-- /fh-feld-anmelden -->
+
+            <!-- ===== REGISTRIEREN ===== -->
+            <div id="fh-feld-registrieren" role="tabpanel" aria-labelledby="fh-tab-registrieren" hidden>
+              <p class="fh-anmelde-text" data-i18n="login.registrierenText">Nur ein Name und ein Passwort &ndash; keine Adresse n&ouml;tig. Die E-Mail ist freiwillig und dient allein dazu, dein Passwort zur&uuml;ckzusetzen.</p>
+
+              <form id="fh-registrieren-form" class="fh-anmelde-formular" autocomplete="on">
+                <label class="fh-anmelde-feldname" for="fh-reg-name"
+                       data-i18n="login.regNameLabel">Dein Name</label>
+                <input id="fh-reg-name" class="fh-anmelde-feld" type="text"
+                       autocomplete="username" maxlength="18"
+                       placeholder="Kapit&auml;n Ahab" data-i18n-placeholder="login.regNamePlatzhalter">
+
+                <label class="fh-anmelde-feldname" for="fh-reg-passwort"
+                       data-i18n="login.regPwLabel">Passwort (mindestens 8 Zeichen)</label>
+                <input id="fh-reg-passwort" class="fh-anmelde-feld" type="password"
+                       autocomplete="new-password" maxlength="72">
+
+                <label class="fh-anmelde-feldname" for="fh-reg-passwort2"
+                       data-i18n="login.regPw2Label">Passwort wiederholen</label>
+                <input id="fh-reg-passwort2" class="fh-anmelde-feld" type="password"
+                       autocomplete="new-password" maxlength="72">
+
+                <label class="fh-anmelde-feldname" for="fh-reg-mail"
+                       data-i18n="login.regMailLabel">E-Mail (freiwillig, nur zum Zur&uuml;cksetzen)</label>
+                <input id="fh-reg-mail" class="fh-anmelde-feld" type="email"
+                       inputmode="email" autocomplete="email" maxlength="254"
+                       placeholder="du@beispiel.de">
+
+                <button type="submit" class="code-button fh-anmelde-absenden"
+                        data-i18n="login.regButton">Konto anlegen</button>
+              </form>
+            </div><!-- /fh-feld-registrieren -->
+
+            <!-- Meldungen beider Formulare. Bewusst NICHT
+                 #fh-anmelde-status: der Kasten oben gehoert
+                 zeichneAnmeldeStatus() und ist ohne Namen versteckt. -->
+            <p id="fh-login-meldung" class="fh-anmelde-meldung"
+               role="status" aria-live="polite"></p>
           </section>
 
           <!-- SPALTE 2: Als Gast, nur mit Namen -->
