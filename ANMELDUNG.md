@@ -111,12 +111,45 @@ die vollständige Liste steht in `DOMAIN.md`, Abschnitt 7.
 **3. Eigenes SMTP — nötig für „Passwort vergessen"**
 
 Der eingebaute Mailversand von Supabase stellt **nur an Mitglieder deiner
-Organisation** zu. Für alle anderen kommt nichts an. Solange kein eigener
-Versand eingerichtet ist, funktioniert „Passwort vergessen" also nicht,
-und die Seite sagt das auch so.
+Organisation** zu (*Organization Settings → Team*). Jede andere Adresse
+bekommt den Fehler *„Email address not authorized."* — es kommt also
+nichts an. Solange kein eigener Versand eingerichtet ist, funktioniert
+„Passwort vergessen" nicht, und die Seite sagt das auch so.
 
-Einrichten unter *Project Settings → Authentication → SMTP Settings*.
-Kostenlos möglich mit Resend, Brevo oder Postmark.
+Einrichten unter *Authentication → Emails → **SMTP Settings***
+(direkt: `https://supabase.com/dashboard/project/_/auth/smtp`).
+
+Schritt für Schritt mit Resend (kostenlos bis 3.000 Mails im Monat):
+
+1. Auf `resend.com` anmelden.
+2. *Domains → Add Domain* → `firehelmet.de` eintragen. Resend zeigt drei
+   DNS-Einträge (DKIM, SPF, und einen für den Rückweg). Die trägst du bei
+   deinem Domain-Anbieter ein; danach in Resend auf *Verify* klicken.
+   Ohne eigene Domain geht es nicht — an `@gmail.com` als Absender
+   verschickt kein seriöser Dienst.
+3. *API Keys → Create API Key*, Recht *Sending access*. Den Schlüssel
+   einmal kopieren, er wird nicht wieder angezeigt.
+4. In Supabase unter *Authentication → Emails → SMTP Settings*
+   **Enable Custom SMTP** einschalten und eintragen:
+
+   | Feld | Wert |
+   |---|---|
+   | Sender email | `no-reply@firehelmet.de` |
+   | Sender name | `FireHelmet` |
+   | Host | `smtp.resend.com` |
+   | Port | `465` |
+   | Username | `resend` |
+   | Password | der API-Schlüssel aus Schritt 3 |
+
+5. Speichern, dann auf der Seite „Passwort vergessen" mit einer echten
+   Adresse testen.
+
+Statt Resend gehen genauso Brevo, Postmark, AWS SES oder SendGrid — die
+sechs Felder oben sind bei allen dieselben, nur Host/Username ändern sich.
+
+Mit eigenem SMTP liegt das Limit bei **30 neuen Nutzern pro Stunde**
+(einstellbar unter *Authentication → Rate Limits*). Vor einem Stream, bei
+dem sich viele auf einmal anmelden, lohnt es sich, das vorher hochzusetzen.
 
 #### Wie Name und Passwort intern funktionieren
 

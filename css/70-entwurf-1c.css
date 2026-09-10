@@ -2000,8 +2000,7 @@ h1.fh-page-title,
 
 /* Reihen, die ihre Elemente in der Mitte sammelten, beginnen
    jetzt links - sie sind Inhaltslisten, keine Bedienteile. */
-.twitch-login-area,
-.shop-tabs {
+.twitch-login-area {
   justify-content: flex-start;
 }
 

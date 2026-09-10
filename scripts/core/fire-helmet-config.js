@@ -41,7 +41,7 @@ const FIRE_HELMET_CONFIG = {
   // stehen. Ist eine Kategorie kleiner als dieser Wert, werden einfach
   // alle ihre Artikel gezeigt.
   shopRotationSlotsPerType: {
-    frame: 4,
+    frame: 3,
     avatar: 3,
   },
 

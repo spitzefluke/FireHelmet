@@ -1,6 +1,7 @@
 /* ======================================================
    SHOP
-   - Zeigt den Katalog aus scripts/shop/shop-data.js als Grid
+   - Zeigt den Katalog aus scripts/shop/shop-data.js, nach Art
+     gruppiert (Rahmen / Avatare) auf EINER Seite
    - Zwei Kategorien: Avatar-Rahmen UND kaufbare Avatare
    - Kauf zieht Dublonen ab (atomares Supabase-UPDATE) und schaltet
      den Artikel dauerhaft frei (players.owned_shop_items)
@@ -9,15 +10,14 @@
      (genau wie ein per Code freigeschalteter Avatar)
 ====================================================== */
 
-let shopActiveTab = "frame";
-
-function switchShopTab(tab) {
-  shopActiveTab = tab;
-  document.querySelectorAll(".shop-tab").forEach((btn) => {
-    btn.classList.toggle("shop-tab-active", btn.dataset.shopTab === tab);
-  });
-  renderShopGrid();
-}
+/* Reihenfolge und Beschriftung der Gruppen. Frueher waren das
+   zwei Reiter; bei drei Rahmen und drei Avataren im Schaufenster
+   hiess das aber, die Haelfte des Angebots hinter einem Klick zu
+   verstecken. Jetzt stehen beide Gruppen untereinander. */
+const SHOP_GRUPPEN = [
+  { type: "frame",  titel: { de: "Avatar-Rahmen", en: "Avatar frames" } },
+  { type: "avatar", titel: { de: "Avatare", en: "Avatars" } },
+];
 
 function getOwnedShopItems() {
   try {
@@ -42,6 +42,38 @@ function equipFrame(frameId) {
 
   renderShopGrid({ quiet: true });
   if (typeof renderAvatarPicker === "function") renderAvatarPicker();
+}
+
+/* ------------------------------------------------------
+   VORSCHAU AM EIGENEN AVATAR
+   Frueher stand im Rahmen ein Emoji, das mit dem Rahmen nichts
+   zu tun hatte. Jetzt steckt das eigene Bild darin - man sieht
+   also vor dem Kauf genau das, was man hinterher bekommt.
+------------------------------------------------------ */
+function eigenerAvatar() {
+  const gespeichert = localStorage.getItem("wheelAvatar");
+  if (gespeichert) return gespeichert;
+  if (typeof wheelAvatarOptions !== "undefined" && wheelAvatarOptions.length) {
+    return wheelAvatarOptions[0];
+  }
+  return "🏴‍☠️";
+}
+
+function avatarBildHtml(avatar) {
+  return typeof buildAvatarPickerHtml === "function"
+    ? buildAvatarPickerHtml(avatar)
+    : "<span>" + avatar + "</span>";
+}
+
+/* Zu welchem Bild gehoert ein Artikel in der Vorschau?
+   Rahmen zeigen das eigene Bild, Avatare sich selbst. */
+function shopVorschauAvatar(item) {
+  if (item.type !== "avatar") return eigenerAvatar();
+  if (typeof wheelSpecialAvatars !== "undefined") {
+    const treffer = wheelSpecialAvatars.find((a) => a.id === item.avatarId);
+    if (treffer) return treffer.avatar;
+  }
+  return item.emoji || "🏴‍☠️";
 }
 
 /* ------------------------------------------------------
@@ -77,56 +109,84 @@ function renderShopGrid(options) {
   const rotation = typeof getShopRotation === "function" ? getShopRotation(Date.now()) : { itemIds: null };
   const inRotation = (id) => !rotation.itemIds || rotation.itemIds.includes(id);
 
-  // Bereits besessene Artikel bleiben IMMER sichtbar (verwaltbar/
-  // ausrüstbar), unabhängig von der aktuellen Rotation - nur noch
-  // nicht besessene Artikel werden durch die Rotation gefiltert.
-  const items = shopItems.filter((item) => item.type === shopActiveTab && (owned.includes(item.id) || inRotation(item.id)));
+  grid.innerHTML = SHOP_GRUPPEN.map((gruppe) => {
+    // Bereits besessene Artikel bleiben IMMER sichtbar (verwaltbar/
+    // ausrüstbar), unabhängig von der aktuellen Rotation - nur noch
+    // nicht besessene Artikel werden durch die Rotation gefiltert.
+    const items = shopItems.filter(
+      (item) => item.type === gruppe.type && (owned.includes(item.id) || inRotation(item.id))
+    );
+    if (!items.length) return "";
 
-  grid.innerHTML = items
-    .map((item) => {
-      const isOwned = owned.includes(item.id);
-      const isFrame = item.type === "frame";
-      const isEquipped = isFrame && equipped === item.id;
-      const rarity = getRarityInfo(item.rarity);
-      const rarityLabel = rarity.label[lang] || rarity.label.de;
+    // Innerhalb der Gruppe von gewöhnlich nach mythisch, damit die
+    // Karten nicht bei jeder Rotation an anderer Stelle stehen.
+    items.sort((a, b) => getRarityInfo(a.rarity).order - getRarityInfo(b.rarity).order || a.price - b.price);
 
-      let buttonHtml;
-      if (isEquipped) {
-        buttonHtml = `<button type="button" class="shop-item-btn shop-item-equipped" onclick="equipFrame('${item.id}')">✓ Ausgerüstet</button>`;
-      } else if (isOwned && isFrame) {
-        buttonHtml = `<button type="button" class="shop-item-btn shop-item-equip" onclick="equipFrame('${item.id}')">Ausrüsten</button>`;
-      } else if (isOwned) {
-        buttonHtml = `<button type="button" class="shop-item-btn shop-item-equipped" disabled>✓ Freigeschaltet</button>`;
-      } else {
-        buttonHtml = `<button type="button" class="shop-item-btn" onclick="buyShopItem('${item.id}')"><span class="shop-item-price">${item.price.toLocaleString("de-DE")} 💰</span> Kaufen</button>`;
-      }
+    const neuImAngebot = items.filter((item) => !owned.includes(item.id)).length;
+    const titel = gruppe.titel[lang] || gruppe.titel.de;
 
-      const previewClass = isFrame ? `avatar-frame-${item.style}` : "";
-      const categoryLabel = isFrame
-        ? (lang === "en" ? "Avatar Frame" : "Avatar-Rahmen")
-        : (lang === "en" ? "Avatar" : "Avatar");
-
-      return `
-        <div class="shop-item shop-item-rarity-${item.rarity || "common"} ${isOwned ? "shop-item-owned" : ""}" style="--rarity-color:${rarity.color};--rarity-glow:${rarity.glow};">
-          <span class="shop-item-rarity-badge">${rarityLabel}</span>
-          <button type="button" class="shop-item-info-btn" aria-expanded="false" aria-label="Info" onclick="toggleShopItemInfo(this)">i</button>
-
-          <div class="shop-item-preview ${previewClass}">
-            <span class="shop-item-emoji">${item.emoji}</span>
-          </div>
-          <p class="shop-item-name">${item.name}</p>
-          ${buttonHtml}
-
-          <div class="shop-item-info-panel" role="tooltip">
-            <p class="shop-item-info-name">${item.emoji} ${item.name}</p>
-            <p class="shop-item-info-rarity">${rarityLabel}</p>
-            ${item.description ? `<p class="shop-item-info-desc">&bdquo;${item.description}&ldquo;</p>` : ""}
-            <p class="shop-item-info-meta"><span>${categoryLabel}</span><span class="shop-item-price">${item.price.toLocaleString("de-DE")} 💰</span></p>
-          </div>
+    return `
+      <section class="shop-gruppe">
+        <h3 class="shop-gruppe-titel">
+          ${titel}
+          <span class="shop-gruppe-zahl">${neuImAngebot > 0
+            ? (lang === "en" ? `${neuImAngebot} on offer` : `${neuImAngebot} im Angebot`)
+            : (lang === "en" ? "all yours" : "alles deins")}</span>
+        </h3>
+        <div class="shop-gruppe-raster">
+          ${items.map((item) => shopKarteHtml(item, owned, equipped, lang)).join("")}
         </div>
-      `;
-    })
-    .join("");
+      </section>
+    `;
+  }).join("");
+}
+
+/* Eine einzelne Artikelkarte. */
+function shopKarteHtml(item, owned, equipped, lang) {
+  const isOwned = owned.includes(item.id);
+  const isFrame = item.type === "frame";
+  const isEquipped = isFrame && equipped === item.id;
+  const rarity = getRarityInfo(item.rarity);
+  const rarityLabel = rarity.label[lang] || rarity.label.de;
+
+  let buttonHtml;
+  if (isEquipped) {
+    buttonHtml = `<button type="button" class="shop-item-btn shop-item-equipped" onclick="equipFrame('${item.id}')">✓ Ausgerüstet</button>`;
+  } else if (isOwned && isFrame) {
+    buttonHtml = `<button type="button" class="shop-item-btn shop-item-equip" onclick="equipFrame('${item.id}')">Ausrüsten</button>`;
+  } else if (isOwned) {
+    buttonHtml = `<button type="button" class="shop-item-btn shop-item-equipped" disabled>✓ Freigeschaltet</button>`;
+  } else {
+    buttonHtml = `<button type="button" class="shop-item-btn" onclick="buyShopItem('${item.id}')"><span class="shop-item-price">${item.price.toLocaleString("de-DE")} 💰</span> Kaufen</button>`;
+  }
+
+  const previewClass = isFrame ? `avatar-frame-${item.style}` : "";
+  const categoryLabel = isFrame
+    ? (lang === "en" ? "Avatar frame" : "Avatar-Rahmen")
+    : "Avatar";
+  const herkunft = item.familie
+    ? `<span class="shop-item-familie">${item.familie}</span>`
+    : "";
+
+  return `
+    <div class="shop-item shop-item-rarity-${item.rarity || "common"} ${isOwned ? "shop-item-owned" : ""}" style="--rarity-color:${rarity.color};--rarity-glow:${rarity.glow};">
+      <span class="shop-item-rarity-badge">${rarityLabel}</span>
+      <button type="button" class="shop-item-info-btn" aria-expanded="false" aria-label="Info" onclick="toggleShopItemInfo(this)">i</button>
+
+      <div class="shop-item-preview ${previewClass}">
+        <span class="shop-item-avatar">${avatarBildHtml(shopVorschauAvatar(item))}</span>
+      </div>
+      <p class="shop-item-name">${item.name}</p>
+      ${buttonHtml}
+
+      <div class="shop-item-info-panel" role="tooltip">
+        <p class="shop-item-info-name">${item.name}</p>
+        <p class="shop-item-info-rarity">${rarityLabel}${herkunft}</p>
+        ${item.description ? `<p class="shop-item-info-desc">&bdquo;${item.description}&ldquo;</p>` : ""}
+        <p class="shop-item-info-meta"><span>${categoryLabel}</span><span class="shop-item-price">${item.price.toLocaleString("de-DE")} 💰</span></p>
+      </div>
+    </div>
+  `;
 }
 
 /* ------------------------------------------------------

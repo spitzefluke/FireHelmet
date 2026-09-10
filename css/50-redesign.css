@@ -163,25 +163,28 @@
   background: color-mix(in srgb, var(--rarity-color) 16%, rgba(6,9,15,.75));
 }
 
+/* Auf dem Handy ist die Karte nur noch gut 150 px breit; "Ungewöhnlich"
+   schob sich dort unter den Info-Knopf. Kleiner gesetzt passt es. */
+@media (max-width: 560px) {
+  .shop-item-rarity-badge {
+    padding: 2px 7px;
+    font-size: 9px;
+    letter-spacing: .03em;
+  }
+}
+
 /* Jede Seltenheitsstufe fühlt sich spürbar anders an, nicht nur
    andersfarbig (Punkt 15): Common/Uncommon/Rare bleiben ruhig
    (nur Rand-/Badge-Farbe), Epic bekommt einen weichen Puls,
    Legendary zusätzlich einen ständig sichtbaren, langsam
    rotierenden Goldrahmen, Mythic eine eigene, kräftigere
    Variante mit schnellerem, mehrfarbigem Rahmen. */
-.shop-item-rarity-epic {
-  animation: fhRarityPulseSoft 3.4s ease-in-out infinite;
-}
 
 @keyframes fhRarityPulseSoft {
   0%, 100% { box-shadow: 0 0 0 rgba(var(--rarity-glow),0); }
   50%      { box-shadow: 0 0 16px rgba(var(--rarity-glow),.3); }
 }
 
-.shop-item-rarity-legendary,
-.shop-item-rarity-mythic {
-  animation: fhRarityPulse 2.6s ease-in-out infinite;
-}
 
 @keyframes fhRarityPulse {
   0%, 100% { box-shadow: 0 0 0 rgba(var(--rarity-glow),0); }
@@ -193,10 +196,6 @@
   animation-duration: 6s;
 }
 
-.shop-item-rarity-mythic {
-  animation-name: fhRarityPulseMythic;
-  animation-duration: 1.9s;
-}
 
 @keyframes fhRarityPulseMythic {
   0%, 100% { box-shadow: 0 0 0 rgba(255,85,85,0); }
@@ -210,11 +209,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .shop-item,
   .shop-item-rarity-epic,
   .shop-item-rarity-legendary,
   .shop-item-rarity-mythic,
   .shop-item-rarity-legendary::before,
-  .shop-item-rarity-mythic::before {
+  .shop-item-rarity-mythic::before,
+  .shop-grid-quiet .shop-item-rarity-epic,
+  .shop-grid-quiet .shop-item-rarity-legendary,
+  .shop-grid-quiet .shop-item-rarity-mythic {
     animation: none;
   }
 }
@@ -329,8 +332,8 @@
   }
 }
 
-/* Eingangsanimation (spielt nur bei echtem Seitenaufruf/Tab-
-   Wechsel/Rotationswechsel, siehe shop-grid-quiet unten) */
+/* Eingangsanimation (spielt nur bei echtem Seitenaufruf/
+   Rotationswechsel, siehe shop-grid-quiet unten) */
 .shop-item {
   animation-name: shopItemReveal;
 }
@@ -340,11 +343,59 @@
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* ---------------------------------------------------
+   ZWEI ANIMATIONEN, NICHT EINE
+   Eingangsanimation UND Seltenheitspuls laufen auf DEMSELBEN
+   Element. Vorher setzten die Seltenheitsregeln ihren Puls mit
+   der Kurzschreibweise "animation: fhRarityPulse 2.6s ... infinite"
+   - und weil die Regel ".shop-item { animation-name: shopItemReveal }"
+   in derselben Datei DANACH steht, gewann am Ende deren Name,
+   während Dauer und "infinite" vom Puls stehen blieben. Ergebnis:
+   jede epische, legendäre und mythische Karte spielte ihre
+   EINGANGSanimation endlos - blendete also dauerhaft auf und
+   wieder weg - und der Glanz, um den es ging, kam nie.
+   Deshalb hier beide als echte Liste statt als Wettstreit um
+   einen Platz.
+--------------------------------------------------- */
+.shop-item-rarity-epic,
+.shop-item-rarity-legendary,
+.shop-item-rarity-mythic {
+  animation-name: shopItemReveal, fhRarityPulse;
+  animation-duration: .5s, 2.6s;
+  animation-timing-function: cubic-bezier(0.22, 0.9, 0.32, 1.2), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: backwards, none;
+}
+
+.shop-item-rarity-epic {
+  animation-name: shopItemReveal, fhRarityPulseSoft;
+  animation-duration: .5s, 3.4s;
+}
+
+.shop-item-rarity-mythic {
+  animation-name: shopItemReveal, fhRarityPulseMythic;
+  animation-duration: .5s, 1.9s;
+}
+
 /* "quiet" = nach Kauf/Ausrüsten neu gerendert: keine erneute
    Eingangsanimation, Karten stehen sofort da (Punkt 11:
-   "darf nicht bei jedem State-Update erneut abgespielt werden") */
+   "darf nicht bei jedem State-Update erneut abgespielt werden").
+   Der Seltenheitspuls gehört aber zum Aussehen der Karte, nicht
+   zum Eintritt - der bleibt deshalb. */
 .shop-grid-quiet .shop-item {
-  animation: none !important;
+  animation-name: none;
+}
+
+.shop-grid-quiet .shop-item-rarity-epic {
+  animation: fhRarityPulseSoft 3.4s ease-in-out infinite;
+}
+
+.shop-grid-quiet .shop-item-rarity-legendary {
+  animation: fhRarityPulse 2.6s ease-in-out infinite;
+}
+
+.shop-grid-quiet .shop-item-rarity-mythic {
+  animation: fhRarityPulseMythic 1.9s ease-in-out infinite;
 }
 
 /* Ganzer Shop-"Öffnen"-Moment (~1.8s), wie das Betreten eines
