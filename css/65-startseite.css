@@ -18,27 +18,79 @@
    ist sein eigener Fortschritt darin. Auf- und Abblenden ist
    dann die Differenz zweier solcher Fenster.
 
-   Die sechs Abschnitte:
-     0.00 - 0.18  Tiefe          fast schwarz, aufsteigende Partikel
-     0.18 - 0.38  Aufstieg       Wasser hellt auf, Lichtschacht
-     0.38 - 0.52  Durchbruch     die Oberflaeche zieht vorbei
-     0.52 - 0.72  Sturm          Wolken, Regen, Blitz
-     0.72 - 0.90  Sternenhimmel  es klart auf
-     0.90 - 1.00  Morgengrauen   Gold, der Countdown in voller Staerke
+   Die sechs Abschnitte. Die Zahl in Klammern ist das HALTEN -
+   dort steht das Bild still, damit man ankommt statt nur
+   hindurchzureisen.
+     0.00 - 0.20  Tiefe          (bis 0.10) fast schwarz, Partikel
+     0.10 - 0.38  Aufstieg       (0.19-0.29) Wasser hellt auf, Lichtschacht
+     0.34 - 0.49  Durchbruch     (0.40-0.43) die Oberflaeche zieht vorbei
+     0.46 - 0.74  Sturm          (0.55-0.65) Wolken, Regen, Blitz
+     0.70 - 1.00  Sternenhimmel  (ab 0.80) es klart auf
+     0.86 - 1.00  Morgengrauen   Gold, der Countdown in voller Staerke
 ====================================================== */
 
 #home {
   --fh-weg: 0;
 
-  /* Die sechs Fenster als eigene Groessen, damit die Formeln
-     darunter lesbar bleiben. */
-  --fh-tiefe:      clamp(0, calc((0.22 - var(--fh-weg)) / 0.22), 1);
-  --fh-aufstieg:   clamp(0, calc((var(--fh-weg) - 0.14) / 0.24), 1);
-  --fh-durchbruch: clamp(0, calc((var(--fh-weg) - 0.36) / 0.16), 1);
-  --fh-sturm:      clamp(0, calc((var(--fh-weg) - 0.50) / 0.14), 1);
-  --fh-sturm-ende: clamp(0, calc((var(--fh-weg) - 0.68) / 0.10), 1);
-  --fh-nacht:      clamp(0, calc((var(--fh-weg) - 0.70) / 0.14), 1);
-  --fh-morgen:     clamp(0, calc((var(--fh-weg) - 0.88) / 0.12), 1);
+  /* ---------------------------------------------------
+     JEDER ABSCHNITT IST EIN TRAPEZ MIT WEICHEN FLANKEN
+
+     Vorher war jeder Abschnitt eine gerade Rampe: er begann
+     abrupt, stieg gleichmaessig und ging sofort wieder herunter.
+     Man reiste dadurch nur hindurch, ohne irgendwo anzukommen.
+
+     Jetzt hat jeder drei Teile - AUF, HALTEN, AB:
+
+       auf-t   die rohe Rampe von a nach b, 0 bis 1
+       auf     dieselbe Rampe weich gemacht: t*t*(3-2t).
+               Das ist Smoothstep - Anfang und Ende flach, Mitte
+               steil. Genau der Unterschied zwischen "Schieberegler"
+               und "Atemzug".
+       ab      dasselbe fuer das Ausblenden
+       Ergebnis  auf * (1 - ab)
+
+     Zwischen dem Ende von "auf" und dem Anfang von "ab" liegt das
+     HALTEN: dort steht der Abschnitt voll da und veraendert sich
+     nicht. Das ist der Moment des Ankommens.
+  --------------------------------------------------- */
+
+  /* 1. TIEFE - steht am Anfang voll da, geht 0.10 bis 0.20 */
+  --t-tiefe-ab: clamp(0, calc((var(--fh-weg) - 0.10) / 0.10), 1);
+  --fh-tiefe: calc(1 - var(--t-tiefe-ab) * var(--t-tiefe-ab) * (3 - 2 * var(--t-tiefe-ab)));
+
+  /* 2. AUFSTIEG - auf 0.10-0.19, halten bis 0.29, ab bis 0.38 */
+  --t-auf-a: clamp(0, calc((var(--fh-weg) - 0.10) / 0.09), 1);
+  --t-auf-z: clamp(0, calc((var(--fh-weg) - 0.29) / 0.09), 1);
+  --fh-aufstieg: calc(
+      var(--t-auf-a) * var(--t-auf-a) * (3 - 2 * var(--t-auf-a))
+    * (1 - var(--t-auf-z) * var(--t-auf-z) * (3 - 2 * var(--t-auf-z))));
+
+  /* 3. DURCHBRUCH - kurz und heftig: auf 0.34-0.40, halten bis
+        0.43, ab bis 0.49. Die Wasseroberflaeche zieht vorbei, da
+        gibt es nichts lange zu halten. */
+  --t-durch-a: clamp(0, calc((var(--fh-weg) - 0.34) / 0.06), 1);
+  --t-durch-z: clamp(0, calc((var(--fh-weg) - 0.43) / 0.06), 1);
+  --fh-durchbruch: calc(
+      var(--t-durch-a) * var(--t-durch-a) * (3 - 2 * var(--t-durch-a))
+    * (1 - var(--t-durch-z) * var(--t-durch-z) * (3 - 2 * var(--t-durch-z))));
+
+  /* 4. STURM - auf 0.46-0.55, halten bis 0.65, ab bis 0.74 */
+  --t-sturm-a: clamp(0, calc((var(--fh-weg) - 0.46) / 0.09), 1);
+  --t-sturm-z: clamp(0, calc((var(--fh-weg) - 0.65) / 0.09), 1);
+  --fh-sturm: calc(
+      var(--t-sturm-a) * var(--t-sturm-a) * (3 - 2 * var(--t-sturm-a))
+    * (1 - var(--t-sturm-z) * var(--t-sturm-z) * (3 - 2 * var(--t-sturm-z))));
+
+  /* Das reine Abklingen des Sturms - dort setzt die Nacht an. */
+  --fh-sturm-ende: calc(var(--t-sturm-z) * var(--t-sturm-z) * (3 - 2 * var(--t-sturm-z)));
+
+  /* 5. NACHT - auf 0.70-0.80, haelt bis zum Schluss */
+  --t-nacht: clamp(0, calc((var(--fh-weg) - 0.70) / 0.10), 1);
+  --fh-nacht: calc(var(--t-nacht) * var(--t-nacht) * (3 - 2 * var(--t-nacht)));
+
+  /* 6. MORGEN - auf 0.86-1.00, das Ziel der Reise */
+  --t-morgen: clamp(0, calc((var(--fh-weg) - 0.86) / 0.14), 1);
+  --fh-morgen: calc(var(--t-morgen) * var(--t-morgen) * (3 - 2 * var(--t-morgen)));
 
   background: #04070d;
 
@@ -292,8 +344,15 @@
   position: relative;
   z-index: 2;
   padding: 0 20px;
-  /* Zwischen 0.94 und 1.04 - kaum messbar, aber spuerbar. */
-  transform: scale(calc(.94 + .10 * var(--fh-morgen) + .02 * var(--fh-durchbruch)));
+  /* Grundgroesse zwischen 0.94 und 1.04 - kaum messbar, aber
+     spuerbar. Dazu der EINE Moment, in dem der Countdown Teil der
+     Szene wird statt nur davorzustehen: beim Durchstossen der
+     Wasseroberflaeche zuckt er kurz mit (+7%). Danach steht er
+     wieder still. */
+  transform: scale(calc(
+      .94
+    + .10 * var(--fh-morgen)
+    + .07 * var(--fh-durchbruch)));
   transition: transform 120ms linear;
 }
 
@@ -312,7 +371,13 @@
   text-align: center;
 
   /* Rand und Flaeche ziehen mit dem Weg an. */
-  border: 1px solid rgba(240, 201, 106, calc(.10 + .45 * var(--fh-morgen) + .12 * var(--fh-nacht)));
+  /* Der Rand blitzt beim Durchbruch kurz hell auf - dasselbe
+     Ereignis, nur am Rahmen statt an der Groesse. */
+  border: 1px solid rgba(
+    calc(240 + 15 * var(--fh-durchbruch)),
+    calc(201 + 54 * var(--fh-durchbruch)),
+    calc(106 + 149 * var(--fh-durchbruch)),
+    calc(.10 + .45 * var(--fh-morgen) + .12 * var(--fh-nacht) + .55 * var(--fh-durchbruch)));
   background: rgba(10, 16, 26, calc(.30 + .45 * var(--fh-sturm) * (1 - var(--fh-sturm-ende))));
   backdrop-filter: blur(calc(2px + 6px * var(--fh-tiefe)));
   box-shadow: 0 0 calc(var(--fh-morgen) * 42px) rgba(240, 201, 106, calc(var(--fh-morgen) * .28));
