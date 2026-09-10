@@ -636,27 +636,39 @@
     <section id="login" class="page">
       <div class="page-content fh-anmelde-seite">
         <div class="fh-page-head">
-          <p class="fh-page-kicker" data-i18n="login.kicker">Zugang</p>
-          <h1 class="fh-page-title" data-i18n="login.title">Anmeldung</h1>
+          <!-- Die Buchstaben laufen beim Betreten EINMAL ein
+               (scripts/auth/anmelde-fx.js), nicht in einer Schleife.
+
+               Bewusst der KICKER und nicht die Ueberschrift: h1.fh-page-title
+               traegt den Lichtpunkt-Effekt aus css/90-typografie.css und
+               damit -webkit-text-fill-color: transparent. Einzelne
+               Buchstaben-Spans erben diese durchsichtige Fuellung, haben
+               aber keinen eigenen Farbverlauf - der Titel waere unsichtbar.
+               Er bekommt deshalb einen Auftritt als Ganzes. -->
+          <p class="fh-page-kicker fh-schrift-auftritt" data-i18n="login.kicker">Zugang</p>
+          <h1 class="fh-page-title fh-titel-auftritt" data-i18n="login.title">Anmeldung</h1>
           <p class="fh-page-lead" data-i18n="login.subtitle">Melde dich an, um in Rangliste und Wochenrennen zu erscheinen</p>
         </div>
 
-        <!-- Wer bin ich gerade? Wird von updateLoginPage() (wheel.js)
-             und twitch-auth.js gefuellt; ohne Anmeldung bleibt der
-             Kasten leer und faellt damit weg. -->
+        <!-- Wer bin ich gerade? Wird von zeichneAnmeldeStatus()
+             (twitch-auth.js) gefuellt. Ohne Namen bleibt der Kasten leer
+             und faellt weg - dann sind die Karten darunter die Antwort. -->
         <div id="fh-anmelde-status" class="fh-anmelde-status" hidden></div>
 
-        <div class="fh-anmelde-spalten">
+        <!-- Wer schon angemeldet ist, braucht weder Registrieren-Formular
+             noch Gast-Karte. Beides sitzt deshalb in diesem Behaelter,
+             den updateLoginPage() dann ausblendet. -->
+        <div class="fh-anmelde-spalten" id="fh-anmelde-spalten">
 
-          <!-- SPALTE 1: Konto - Umschalter zwischen Anmelden und Registrieren -->
+          <!-- KONTO - Umschalter zwischen Anmelden und Registrieren -->
           <section class="fh-anmelde-karte">
-            <p class="fh-anmelde-nummer">1</p>
             <h2 class="fh-anmelde-titel" data-i18n="login.karteKonto">Anmelden oder Konto anlegen</h2>
 
-            <!-- Der Umschalter. role="tablist" statt zweier Knoepfe,
-                 damit Vorlesewerkzeuge und Pfeiltasten ihn als das
-                 erkennen, was er ist. -->
+            <!-- role="tablist", damit Vorlesewerkzeuge und Pfeiltasten
+                 den Umschalter als das erkennen, was er ist. Der
+                 Laeufer darunter wandert animiert mit. -->
             <div class="fh-anmelde-umschalter" role="tablist">
+              <span class="fh-anmelde-laeufer" aria-hidden="true"></span>
               <button type="button" class="fh-anmelde-tab ist-aktiv" id="fh-tab-anmelden"
                       role="tab" aria-selected="true" aria-controls="fh-feld-anmelden"
                       onclick="fhAnmeldeTab('anmelden')" data-i18n="login.tabAnmelden">Anmelden</button>
@@ -665,58 +677,66 @@
                       onclick="fhAnmeldeTab('registrieren')" data-i18n="login.tabRegistrieren">Registrieren</button>
             </div>
 
+            <div class="fh-anmelde-buehne">
+
             <!-- ===== ANMELDEN ===== -->
             <div id="fh-feld-anmelden" role="tabpanel" aria-labelledby="fh-tab-anmelden">
-            <p class="fh-anmelde-text" data-i18n="login.karteKontoText">Name und Bild kommen dann von dort &ndash; und bleiben auf jedem Ger&auml;t gleich.</p>
+              <div class="twitch-login-area">
+                <button id="twitch-login-btn" class="twitch-login-btn" data-anmeldung="twitch">
+                  <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M4.3 2 3 5.4v14.2h4.9V22h2.8l2.6-2.4h4L21 15.4V2H4.3zm14.9 12.4-3 2.9h-4l-2.6 2.4v-2.4H6.1V3.9h13.1v10.5z"/><path d="M15.5 7.1h1.9v5.2h-1.9zM10.4 7.1h1.9v5.2h-1.9z"/></svg>
+                  <span data-i18n="login.twitchButton">Mit Twitch anmelden</span>
+                </button>
 
-            <div class="twitch-login-area">
-              <button id="twitch-login-btn" class="twitch-login-btn" data-anmeldung="twitch">
-                <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M4.3 2 3 5.4v14.2h4.9V22h2.8l2.6-2.4h4L21 15.4V2H4.3zm14.9 12.4-3 2.9h-4l-2.6 2.4v-2.4H6.1V3.9h13.1v10.5z"/><path d="M15.5 7.1h1.9v5.2h-1.9zM10.4 7.1h1.9v5.2h-1.9z"/></svg>
-                <span data-i18n="login.twitchButton">Mit Twitch anmelden</span>
-              </button>
+                <button id="discord-login-btn" class="twitch-login-btn discord-login-btn" data-anmeldung="discord">
+                  <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M20.3 4.4c-1.5-.7-3.1-1.2-4.7-1.4-.2.4-.4.9-.6 1.3-1.7-.3-3.5-.3-5.2 0-.2-.4-.4-.9-.6-1.3-1.6.3-3.2.7-4.7 1.4C1.5 8.4.8 12.4 1.1 16.3c1.8 1.3 3.5 2.1 5.2 2.7.4-.6.8-1.2 1.1-1.9-.6-.2-1.2-.5-1.7-.8.1-.1.3-.2.4-.3 3.3 1.5 6.9 1.5 10.2 0 .1.1.3.2.4.3-.6.3-1.1.6-1.7.8.3.7.7 1.3 1.1 1.9 1.7-.5 3.4-1.4 5.2-2.7.4-4.5-.8-8.4-2.9-11.9zM8.7 13.9c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9zm6.6 0c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9z"/></svg>
+                  <span data-i18n="login.discordButton">Mit Discord anmelden</span>
+                </button>
 
-              <button id="discord-login-btn" class="twitch-login-btn discord-login-btn" data-anmeldung="discord">
-                <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M20.3 4.4c-1.5-.7-3.1-1.2-4.7-1.4-.2.4-.4.9-.6 1.3-1.7-.3-3.5-.3-5.2 0-.2-.4-.4-.9-.6-1.3-1.6.3-3.2.7-4.7 1.4C1.5 8.4.8 12.4 1.1 16.3c1.8 1.3 3.5 2.1 5.2 2.7.4-.6.8-1.2 1.1-1.9-.6-.2-1.2-.5-1.7-.8.1-.1.3-.2.4-.3 3.3 1.5 6.9 1.5 10.2 0 .1.1.3.2.4.3-.6.3-1.1.6-1.7.8.3.7.7 1.3 1.1 1.9 1.7-.5 3.4-1.4 5.2-2.7.4-4.5-.8-8.4-2.9-11.9zM8.7 13.9c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9zm6.6 0c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9z"/></svg>
-                <span data-i18n="login.discordButton">Mit Discord anmelden</span>
-              </button>
+                <button id="google-login-btn" class="twitch-login-btn google-login-btn" data-anmeldung="google">
+                  <svg viewBox="0 0 24 24" class="twitch-icon" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.7h5.4c-.2 1.2-.9 2.3-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path d="M12 22c2.7 0 5-.9 6.6-2.5l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6C4.7 19.7 8.1 22 12 22z"/><path d="M6.4 13.9c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9V7.5H3.1C2.4 8.9 2 10.4 2 12s.4 3.1 1.1 4.5l3.3-2.6z"/><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 2.9 14.7 2 12 2 8.1 2 4.7 4.3 3.1 7.5l3.3 2.6C7.2 7.8 9.4 5.9 12 5.9z"/></svg>
+                  <span data-i18n="login.googleButton">Mit Google anmelden</span>
+                </button>
 
-              <button id="google-login-btn" class="twitch-login-btn google-login-btn" data-anmeldung="google">
-                <svg viewBox="0 0 24 24" class="twitch-icon" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.7h5.4c-.2 1.2-.9 2.3-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path d="M12 22c2.7 0 5-.9 6.6-2.5l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6C4.7 19.7 8.1 22 12 22z"/><path d="M6.4 13.9c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9V7.5H3.1C2.4 8.9 2 10.4 2 12s.4 3.1 1.1 4.5l3.3-2.6z"/><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 2.9 14.7 2 12 2 8.1 2 4.7 4.3 3.1 7.5l3.3 2.6C7.2 7.8 9.4 5.9 12 5.9z"/></svg>
-                <span data-i18n="login.googleButton">Mit Google anmelden</span>
-              </button>
+                <p class="fh-anmelde-trenner"><span data-i18n="login.oder">oder</span></p>
 
-              <!-- Anmelden mit dem selbst gewaehlten Namen. Wer bei der
-                   Registrierung eine E-Mail hinterlegt hat, meldet sich
-                   MIT DIESER an - der Grund steht bei fhLoginAdresse()
-                   in scripts/auth/anmeldung.js. Deshalb nimmt das Feld
-                   beides entgegen. -->
-              <form id="fh-passwort-anmeldung" class="fh-anmelde-formular" autocomplete="on">
-                <label class="fh-anmelde-feldname" for="fh-anmelden-name"
-                       data-i18n="login.pwLabel">Oder mit Name und Passwort</label>
-                <input id="fh-anmelden-name" class="fh-anmelde-feld" type="text"
-                       autocomplete="username" maxlength="254"
-                       placeholder="Dein Name oder deine E-Mail"
-                       data-i18n-placeholder="login.pwNamePlatzhalter">
-                <div class="fh-anmelde-reihe">
-                  <input id="fh-anmelden-passwort" class="fh-anmelde-feld" type="password"
-                         autocomplete="current-password" maxlength="72"
-                         placeholder="Passwort" data-i18n-placeholder="login.pwPlatzhalter">
+                <!-- Wer bei der Registrierung eine E-Mail hinterlegt hat,
+                     meldet sich MIT DIESER an - der Grund steht bei
+                     fhLoginAdresse() in scripts/auth/anmeldung.js.
+                     Deshalb nimmt das Feld beides entgegen. -->
+                <form id="fh-passwort-anmeldung" class="fh-anmelde-formular" autocomplete="on">
+                  <label class="fh-anmelde-feldname" for="fh-anmelden-name"
+                         data-i18n="login.pwLabel">Name oder E-Mail</label>
+                  <input id="fh-anmelden-name" class="fh-anmelde-feld" type="text"
+                         autocomplete="username" maxlength="254"
+                         placeholder="Kapit&auml;n Ahab"
+                         data-i18n-placeholder="login.pwNamePlatzhalter">
+
+                  <label class="fh-anmelde-feldname" for="fh-anmelden-passwort"
+                         data-i18n="login.pwFeldname">Passwort</label>
+                  <div class="fh-passwortfeld" data-fh-passwort>
+                    <input id="fh-anmelden-passwort" class="fh-anmelde-feld" type="password"
+                           autocomplete="current-password" maxlength="72">
+                    <button type="button" class="fh-passwort-auge" aria-pressed="false"
+                            data-i18n-title="login.pwZeigen" title="Passwort anzeigen">
+                      <svg viewBox="0 0 24 24" class="fh-auge-bild" aria-hidden="true"><path d="M12 5.5c-5 0-9 4-10 6.5 1 2.5 5 6.5 10 6.5s9-4 10-6.5c-1-2.5-5-6.5-10-6.5z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span class="fh-passwort-auge-zu" aria-hidden="true"></span>
+                    </button>
+                  </div>
+
                   <button type="submit" class="code-button fh-anmelde-absenden"
                           data-i18n="login.pwButton">Anmelden</button>
-                </div>
-                <button type="button" class="fh-anmelde-link" onclick="fhPasswortVergessen()"
-                        data-i18n="login.pwVergessen">Passwort vergessen?</button>
-              </form>
+                  <button type="button" class="fh-anmelde-link" onclick="fhPasswortVergessen()"
+                          data-i18n="login.pwVergessen">Passwort vergessen?</button>
+                </form>
 
-              <div id="twitch-logged-in" class="twitch-logged-in">
-                <img id="twitch-avatar" class="twitch-avatar" alt="">
-                <span>
-                  <span id="twitch-logged-in-name"></span>
-                  <small id="login-provider-label" class="login-provider-label"></small>
-                </span>
-                <button class="twitch-logout-btn" onclick="logoutTwitch()" data-i18n="common.logout">Abmelden</button>
+                <div id="twitch-logged-in" class="twitch-logged-in">
+                  <img id="twitch-avatar" class="twitch-avatar" alt="">
+                  <span>
+                    <span id="twitch-logged-in-name"></span>
+                    <small id="login-provider-label" class="login-provider-label"></small>
+                  </span>
+                  <button class="twitch-logout-btn" onclick="logoutTwitch()" data-i18n="common.logout">Abmelden</button>
+                </div>
               </div>
-            </div>
             </div><!-- /fh-feld-anmelden -->
 
             <!-- ===== REGISTRIEREN ===== -->
@@ -732,13 +752,34 @@
 
                 <label class="fh-anmelde-feldname" for="fh-reg-passwort"
                        data-i18n="login.regPwLabel">Passwort (mindestens 8 Zeichen)</label>
-                <input id="fh-reg-passwort" class="fh-anmelde-feld" type="password"
-                       autocomplete="new-password" maxlength="72">
+                <div class="fh-passwortfeld" data-fh-passwort>
+                  <input id="fh-reg-passwort" class="fh-anmelde-feld" type="password"
+                         autocomplete="new-password" maxlength="72" data-fh-staerke>
+                  <button type="button" class="fh-passwort-auge" aria-pressed="false"
+                          data-i18n-title="login.pwZeigen" title="Passwort anzeigen">
+                    <svg viewBox="0 0 24 24" class="fh-auge-bild" aria-hidden="true"><path d="M12 5.5c-5 0-9 4-10 6.5 1 2.5 5 6.5 10 6.5s9-4 10-6.5c-1-2.5-5-6.5-10-6.5z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span class="fh-passwort-auge-zu" aria-hidden="true"></span>
+                  </button>
+                </div>
+                <!-- Drei Dublonen, die sich fuellen. Sie messen NUR
+                     Laenge und Zeichenvielfalt, versprechen also nichts,
+                     was sie nicht wissen koennen. -->
+                <p class="fh-passwort-staerke" id="fh-reg-staerke" aria-live="polite">
+                  <span class="fh-staerke-muenze"></span>
+                  <span class="fh-staerke-muenze"></span>
+                  <span class="fh-staerke-muenze"></span>
+                  <span class="fh-staerke-wort"></span>
+                </p>
 
                 <label class="fh-anmelde-feldname" for="fh-reg-passwort2"
                        data-i18n="login.regPw2Label">Passwort wiederholen</label>
-                <input id="fh-reg-passwort2" class="fh-anmelde-feld" type="password"
-                       autocomplete="new-password" maxlength="72">
+                <div class="fh-passwortfeld" data-fh-passwort>
+                  <input id="fh-reg-passwort2" class="fh-anmelde-feld" type="password"
+                         autocomplete="new-password" maxlength="72">
+                  <button type="button" class="fh-passwort-auge" aria-pressed="false"
+                          data-i18n-title="login.pwZeigen" title="Passwort anzeigen">
+                    <svg viewBox="0 0 24 24" class="fh-auge-bild" aria-hidden="true"><path d="M12 5.5c-5 0-9 4-10 6.5 1 2.5 5 6.5 10 6.5s9-4 10-6.5c-1-2.5-5-6.5-10-6.5z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span class="fh-passwort-auge-zu" aria-hidden="true"></span>
+                  </button>
+                </div>
 
                 <label class="fh-anmelde-feldname" for="fh-reg-mail"
                        data-i18n="login.regMailLabel">E-Mail (freiwillig, nur zum Zur&uuml;cksetzen)</label>
@@ -751,6 +792,8 @@
               </form>
             </div><!-- /fh-feld-registrieren -->
 
+            </div><!-- /fh-anmelde-buehne -->
+
             <!-- Meldungen beider Formulare. Bewusst NICHT
                  #fh-anmelde-status: der Kasten oben gehoert
                  zeichneAnmeldeStatus() und ist ohne Namen versteckt. -->
@@ -758,63 +801,73 @@
                role="status" aria-live="polite"></p>
           </section>
 
-          <!-- SPALTE 2: Als Gast, nur mit Namen -->
+          <!-- GAST - nur ein Name, kein Konto.
+               Das Avatarraster stand frueher hier und war auf dem Handy
+               396px hoch. Es sitzt jetzt hinter dem eigenen Bild unten
+               in der Menueleiste (fhAvatarWahlOeffnen()). -->
           <section class="fh-anmelde-karte">
-            <p class="fh-anmelde-nummer">2</p>
             <h2 class="fh-anmelde-titel" data-i18n="login.karteGast">Oder einfach einen Namen w&auml;hlen</h2>
             <p class="fh-anmelde-text" data-i18n="login.karteGastText">Ohne Konto, sofort dabei. Dein Fortschritt h&auml;ngt dann an diesem Browser &ndash; sichere ihn unten mit dem Kennwort.</p>
 
             <div id="wheel-nickname-box" class="wheel-nickname-box">
-              <div id="wheel-avatar-picker" class="wheel-avatar-picker js-avatar-picker"></div>
-              <label class="fh-visually-hidden" for="wheel-nickname-input"
+              <label class="fh-anmelde-feldname" for="wheel-nickname-input"
                      data-i18n="login.nameLabel">Dein Name in der Crew</label>
               <input
                 type="text"
                 id="wheel-nickname-input"
-                class="code-input"
-                placeholder="Namen manuell eintragen" data-i18n-placeholder="login.namePlaceholder"
+                class="fh-anmelde-feld"
+                placeholder="Kapit&auml;n Ahab" data-i18n-placeholder="login.namePlaceholder"
                 maxlength="18"
                 data-fh-counter
                 autocomplete="off">
-              <button class="code-button" onclick="saveNickname()" data-i18n="common.save">Speichern</button>
+              <button class="code-button fh-anmelde-absenden" onclick="saveNickname()" data-i18n="common.save">Speichern</button>
               <p id="nickname-error" class="nickname-error"></p>
               <div id="nickname-success" class="nickname-success">
                 <span class="nickname-success-check">&check;</span>
                 <span class="nickname-success-text"></span>
               </div>
+              <p class="fh-anmelde-hinweis" data-i18n="login.avatarHinweis">Dein Bild w&auml;hlst du unten links im Men&uuml; &ndash; klick auf dein eigenes Bild.</p>
             </div>
           </section>
         </div>
 
-        <!-- SCHRITT 3: Wiederherstellungs-Kennwort. Rettet Dublonen,
-             Level, Schiff und Turnier-Anmeldung ueber einen
-             Geraetewechsel oder einen geleerten Browserspeicher
-             hinweg. Siehe scripts/core/spieler-kennwort.js. -->
-        <section class="fh-anmelde-karte fh-anmelde-karte-breit" id="fh-kennwort-box">
-          <p class="fh-anmelde-nummer">3</p>
-          <h2 class="fh-anmelde-titel fh-kennwort-titel" data-i18n="kennwort.titel">Dein Wiederherstellungs-Kennwort</h2>
-          <p class="fh-anmelde-text fh-kennwort-text" data-i18n="kennwort.erklaerung">Schreib dir das auf. Damit holst du deinen Fortschritt auf ein anderes Ger&auml;t &ndash; oder zur&uuml;ck, wenn dein Browser den Speicher geleert hat.</p>
+        <!-- WIEDERHERSTELLUNGS-KENNWORT
+             Rettet Dublonen, Level, Schiff und Turnier-Anmeldung ueber
+             einen Geraetewechsel oder einen geleerten Browserspeicher
+             hinweg. Zugeklappt, weil man es meist nur einmal braucht -
+             auf dem Handy waren das 515px, die dauerhaft im Weg standen.
+             <details> statt eigener Knopflogik: Tastatur und
+             Vorlesewerkzeuge koennen das von Haus aus. -->
+        <details class="fh-anmelde-karte fh-anmelde-klapp" id="fh-kennwort-box">
+          <summary class="fh-anmelde-klapp-kopf">
+            <span class="fh-anmelde-klapp-titel" data-i18n="kennwort.titel">Dein Wiederherstellungs-Kennwort</span>
+            <span class="fh-anmelde-klapp-zeichen" aria-hidden="true"></span>
+          </summary>
 
-          <div class="fh-kennwort-anzeige">
-            <code id="fh-kennwort-wert" class="fh-kennwort-wert">&bull;&bull;&bull;&bull;-&bull;&bull;&bull;&bull;</code>
-            <button type="button" class="code-button fh-kennwort-knopf" id="fh-kennwort-zeigen"
-                    onclick="fhKennwortZeigen()" data-i18n="kennwort.zeigen">Anzeigen</button>
-            <button type="button" class="code-button fh-kennwort-knopf" id="fh-kennwort-kopieren"
-                    onclick="fhKennwortKopieren()" hidden data-i18n="kennwort.kopieren">Kopieren</button>
-          </div>
+          <div class="fh-anmelde-klapp-inhalt">
+            <p class="fh-anmelde-text" data-i18n="kennwort.erklaerung">Schreib dir das auf. Damit holst du deinen Fortschritt auf ein anderes Ger&auml;t &ndash; oder zur&uuml;ck, wenn dein Browser den Speicher geleert hat.</p>
 
-          <p class="fh-kennwort-text fh-kennwort-trenner" data-i18n="kennwort.uebernehmenHinweis">Schon ein Kennwort von einem anderen Ger&auml;t? Hier eintragen:</p>
-          <div class="fh-kennwort-eingabezeile">
-            <label class="fh-visually-hidden" for="fh-kennwort-eingabe"
-                   data-i18n="kennwort.eingabeLabel">Wiederherstellungs-Kennwort</label>
-            <input type="text" id="fh-kennwort-eingabe" class="code-input"
-                   placeholder="ABCD-2345" data-i18n-placeholder="kennwort.eingabePlatzhalter"
-                   maxlength="14" autocomplete="off" spellcheck="false">
-            <button type="button" class="code-button" id="fh-kennwort-einloesen"
-                    onclick="fhKennwortEinloesen()" data-i18n="kennwort.einloesen">Konto holen</button>
+            <div class="fh-kennwort-anzeige">
+              <code id="fh-kennwort-wert" class="fh-kennwort-wert">&bull;&bull;&bull;&bull;-&bull;&bull;&bull;&bull;</code>
+              <button type="button" class="code-button fh-kennwort-knopf" id="fh-kennwort-zeigen"
+                      onclick="fhKennwortZeigen()" data-i18n="kennwort.zeigen">Anzeigen</button>
+              <button type="button" class="code-button fh-kennwort-knopf" id="fh-kennwort-kopieren"
+                      onclick="fhKennwortKopieren()" hidden data-i18n="kennwort.kopieren">Kopieren</button>
+            </div>
+
+            <p class="fh-anmelde-text fh-kennwort-trenner" data-i18n="kennwort.uebernehmenHinweis">Schon ein Kennwort von einem anderen Ger&auml;t? Hier eintragen:</p>
+            <div class="fh-kennwort-eingabezeile">
+              <label class="fh-visually-hidden" for="fh-kennwort-eingabe"
+                     data-i18n="kennwort.eingabeLabel">Wiederherstellungs-Kennwort</label>
+              <input type="text" id="fh-kennwort-eingabe" class="fh-anmelde-feld"
+                     placeholder="ABCD-2345" data-i18n-placeholder="kennwort.eingabePlatzhalter"
+                     maxlength="14" autocomplete="off" spellcheck="false">
+              <button type="button" class="code-button" id="fh-kennwort-einloesen"
+                      onclick="fhKennwortEinloesen()" data-i18n="kennwort.einloesen">Konto holen</button>
+            </div>
+            <p id="fh-kennwort-status" class="fh-kennwort-status" role="status"></p>
           </div>
-          <p id="fh-kennwort-status" class="fh-kennwort-status" role="status"></p>
-        </section>
+        </details>
       </div>
     </section>
 
@@ -1568,6 +1621,7 @@
   <script src="scripts/streamraetsel/streamraetsel-data.js" defer></script>
   <script src="scripts/auth/twitch-config.js" defer></script>
   <script src="scripts/auth/anmeldung.js" defer></script>
+  <script src="scripts/auth/anmelde-fx.js" defer></script>
   <script src="scripts/auth/twitch-auth.js" defer></script>
   <script src="scripts/auth/discord-config.js" defer></script>
   <script src="scripts/auth/discord-auth.js" defer></script>

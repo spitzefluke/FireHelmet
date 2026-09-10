@@ -115,22 +115,74 @@ function fhLoginAdresse(eingabe) {
   return schluessel ? schluessel + "@" + FH_LOGIN_DOMAIN : "";
 }
 
-/* Der Umschalter oben. */
+/* Der Umschalter oben.
+
+   Die beiden Felder wechseln MIT RICHTUNG: von "Anmelden" nach
+   "Registrieren" schiebt sich das neue von rechts herein, zurueck
+   von links. Ohne diese Richtung wirkt der Wechsel wie ein Ruck,
+   mit ihr wie ein Blaettern.
+
+   hidden wird erst NACH der Animation gesetzt, sonst waere das alte
+   Feld sofort weg und es gaebe nichts zu sehen. */
+const FH_TAB_DAUER = 260;
+let fhTabLaeuft = null;
+
 function fhAnmeldeTab(welcher) {
   const paare = [
     ["fh-tab-anmelden", "fh-feld-anmelden", "anmelden"],
     ["fh-tab-registrieren", "fh-feld-registrieren", "registrieren"],
   ];
+
+  const vorher = paare.find(function (p) {
+    const f = document.getElementById(p[1]);
+    return f && !f.hidden;
+  });
+  if (vorher && vorher[2] === welcher) return;
+
+  const rueckwaerts = welcher === "anmelden";
+
   paare.forEach(function (paar) {
     const tab = document.getElementById(paar[0]);
-    const feld = document.getElementById(paar[1]);
     const aktiv = paar[2] === welcher;
     if (tab) {
       tab.classList.toggle("ist-aktiv", aktiv);
       tab.setAttribute("aria-selected", aktiv ? "true" : "false");
     }
-    if (feld) feld.hidden = !aktiv;
   });
+  if (typeof fhLaeuferSetzen === "function") fhLaeuferSetzen();
+
+  const neuFeld = document.getElementById(welcher === "anmelden" ? "fh-feld-anmelden" : "fh-feld-registrieren");
+  const altFeld = vorher ? document.getElementById(vorher[1]) : null;
+  const ruhig = typeof fhRuhigeBewegung === "function" && fhRuhigeBewegung();
+
+  clearTimeout(fhTabLaeuft);
+
+  if (!neuFeld || ruhig) {
+    paare.forEach(function (paar) {
+      const feld = document.getElementById(paar[1]);
+      if (feld) feld.hidden = paar[2] !== welcher;
+    });
+    fhAnmeldeStatus("");
+    return;
+  }
+
+  neuFeld.hidden = false;
+  neuFeld.classList.remove("geht-raus-links", "geht-raus-rechts", "kommt-von-links", "kommt-von-rechts");
+  neuFeld.classList.add(rueckwaerts ? "kommt-von-links" : "kommt-von-rechts");
+
+  if (altFeld && altFeld !== neuFeld) {
+    altFeld.classList.remove("kommt-von-links", "kommt-von-rechts");
+    altFeld.classList.add(rueckwaerts ? "geht-raus-rechts" : "geht-raus-links");
+  }
+
+  fhTabLaeuft = setTimeout(function () {
+    if (altFeld && altFeld !== neuFeld) {
+      altFeld.hidden = true;
+      altFeld.classList.remove("geht-raus-links", "geht-raus-rechts");
+    }
+    neuFeld.classList.remove("kommt-von-links", "kommt-von-rechts");
+  }, FH_TAB_DAUER);
+
   fhAnmeldeStatus("");
 }
 

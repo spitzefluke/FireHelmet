@@ -197,9 +197,39 @@ function updateLoginPage(pageID) {
 
   refreshTwitchLoginUI();
   zeichneAnmeldeStatus();
+  anmeldeseiteZuschneiden();
 
   if (typeof syncTempAvatarFromServer === "function") {
     syncTempAvatarFromServer();
+  }
+  if (typeof fhPasswortfelderAufbauen === "function") fhPasswortfelderAufbauen();
+  if (typeof fhLaeuferSetzen === "function") fhLaeuferSetzen();
+  if (typeof fhUeberschriftAuftritt === "function") fhUeberschriftAuftritt();
+}
+
+/* ------------------------------------------------------
+   WER SCHON DA IST, BRAUCHT DIE TUER NICHT MEHR
+   ---------------------------------------------------
+   Angemeldet sind Registrieren-Formular und Gast-Karte ohne
+   Bedeutung - sie standen aber trotzdem da und machten die Seite
+   doppelt so lang. Das Kennwort bleibt sichtbar: es ist genau
+   dann wichtig, wenn man schon einen Fortschritt hat.
+
+   Bewusst nur ausgeblendet, nicht entfernt: wer sich abmeldet,
+   soll die Karten sofort wiederhaben, ohne Neuaufbau.
+------------------------------------------------------ */
+function anmeldeseiteZuschneiden() {
+  const spalten = document.getElementById("fh-anmelde-spalten");
+  if (!spalten) return;
+  const angemeldet = !!localStorage.getItem("wheelNickname");
+  spalten.hidden = angemeldet;
+
+  const kennwort = document.getElementById("fh-kennwort-box");
+  // Wer gerade erst angekommen ist, soll das Kennwort einmal offen
+  // sehen - danach entscheidet der Nutzer selbst.
+  if (kennwort && angemeldet && !kennwort.dataset.fhSchonGezeigt) {
+    kennwort.dataset.fhSchonGezeigt = "1";
+    kennwort.open = true;
   }
 }
 
