@@ -50,10 +50,11 @@
      Dasselbe gilt fuer den Finger: ein Wisch verschiebt das Ziel,
      die Geschwindigkeit bleibt dieselbe wie am Rechner.
 
-     TEMPO   Pixel pro Sekunde. 8000px Reise / 150 sind rund 53
-             Sekunden von der offenen See bis zur Insel, gut
-             siebeneinhalb je Kapitel. Bewusst so gewaehlt - bei
-             1200 war es "noch zu flott".
+     TEMPO   Pixel pro Sekunde. 8000px Reise / 300 sind rund 27
+             Sekunden von der offenen See bis zur Insel, knapp
+             vier je Kapitel. Der Weg dorthin: 1200 war "noch zu
+             flott", 150 dann eine knappe Minute und damit zu
+             zaeh - 300 liegt dazwischen.
      VORLAUF Wie weit das Ziel der Seite vorauslaufen darf. Ohne
              diese Grenze wuerde ein kraeftiger Schwung minutenlang
              nachlaufen, und die Seite reagierte nicht mehr auf den
@@ -62,9 +63,9 @@
              etwa eine Sekunde Fahrt.
      WISCH   Wieviel Ziel ein Pixel Fingerweg erzeugt.
   ------------------------------------------------------ */
-  const FH_TEMPO = 150;
-  const FH_VORLAUF = 300;
-  const FH_SCHRITT = 150;
+  const FH_TEMPO = 300;
+  const FH_VORLAUF = 600;
+  const FH_SCHRITT = 300;
   const FH_WISCH = 1;
 
   const ruhig = window.matchMedia
@@ -181,11 +182,12 @@
      Das Mausrad verschiebt nur noch ein Ziel; dorthin laeuft die
      Seite mit fester Geschwindigkeit. Siehe FH_TEMPO oben.
 
-     Beruehrung, Tastatur und der Scrollbalken bleiben
-     unangetastet: dort zieht man die Seite direkt, und ein
-     Nachlauf wuerde sich wie eine klemmende Seite anfuehlen.
-     Aendert sich scrollTop von aussen, uebernimmt das Ziel den
-     neuen Stand, damit die Schleife nicht dagegen arbeitet.
+     Der Finger laeuft seit derselben Runde ueber dieselbe
+     Schleife - weiter unten bei den touch-Ereignissen. Tastatur
+     und Scrollbalken bleiben nativ: dort springt man an eine
+     Stelle, statt zu blaettern. Aendert sich scrollTop von
+     aussen, uebernimmt das Ziel den neuen Stand, damit die
+     Schleife nicht dagegen arbeitet.
   ------------------------------------------------------ */
   function gleichmaessigScrollen(heim) {
     let ziel = heim.scrollTop;

@@ -24,7 +24,9 @@
       0.46 - 0.56  IV   Vorbei           Dreh bei (rechtsbuendig)
       0.60 - 0.72  V    Im Kielwasser    Kurs nach Suedwest
       0.76 - 0.86  VI   Land in Sicht    Klippen, Dschungel
-      0.89 - 1.06  VII  Die Schatzinsel  + Countdown
+      0.89 - 1.06  VII  Das Ziel - nur der Countdown, eine Zeile,
+                            zwei Knoepfe. Kein Titel: er hat mit der
+                            Zahl um die Aufmerksamkeit gekaempft.
 ====================================================== */
 
 #home {
@@ -205,7 +207,14 @@
    Luft haengt. */
 #home.fh-uhr-3d .fh-kapitel-mitte {
   top: calc(var(--fh-uhr-unten, 0px) + 2.2vh);
-  bottom: 5vh;
+
+  /* Der untere Letterbox-Balken liegt mit z-index 3 UEBER den
+     Kapiteln (z-index 2). Bei bottom: 5vh lagen die Knoepfe zwar
+     im Kasten, wurden aber vom Balken zur Haelfte uebermalt -
+     gemessen bei 1280x900: Knoepfe bis 855, Balkenoberkante bei
+     828. Deshalb dieselbe Formel wie der Balken plus etwas Luft,
+     damit es auch bei jedem Zwischenstand stimmt. */
+  bottom: calc(4vh + 4vh * clamp(0, calc((var(--fh-weg) - 0.42) / 0.2), 1) + 2.5vh);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -237,38 +246,29 @@
   width: 100%;
 }
 
-/* Der Titel nimmt, was da ist: entweder die Wunschgroesse oder
-   einen Anteil der Kastenhoehe - je nachdem, was kleiner ist. */
-#home.fh-uhr-3d .fh-kapitel-mitte h2 {
-  font-size: min(clamp(30px, 8vw, 130px), 28cqh);
-}
-
+/* In Kapitel VII gibt es keinen Titel und keinen Kicker mehr -
+   nur noch eine Zeile und die zwei Knoepfe. Beide bleiben klein
+   genug, dass der Kasten praktisch immer reicht; die
+   cqh-Grenzen stehen trotzdem, damit ein laengerer Satz oder
+   eine breitere Schrift den Kasten nicht sprengt. */
 #home.fh-uhr-3d .fh-kapitel-mitte p {
-  font-size: min(clamp(13px, 1.25vw, 18px), 5cqh);
+  font-size: min(clamp(14px, 1.3vw, 19px), 22cqh);
   line-height: 1.5;
-  margin-top: min(20px, 3cqh);
+  margin-top: 0;
 }
 
 #home.fh-uhr-3d .fh-kapitel-knoepfe {
-  margin-top: min(26px, 5cqh);
+  margin-top: min(26px, 16cqh);
 }
 
-#home.fh-uhr-3d .fh-kapitel-mitte .fh-kapitel-marke {
-  margin-bottom: min(16px, 3cqh);
-}
-
-/* Wird der Kasten wirklich flach, treten die Teile der Reihe nach
-   zurueck, die am wenigsten tragen. Abgefragt wird der Kasten,
-   nicht das Fenster. */
-@container fhkap7 (max-height: 330px) {
+/* Wird der Kasten wirklich flach, tritt die Zeile zurueck - die
+   Knoepfe tragen mehr. Abgefragt wird der Kasten, nicht das
+   Fenster. */
+@container fhkap7 (max-height: 130px) {
   #home .fh-kapitel-mitte p { display: none; }
 }
 
-@container fhkap7 (max-height: 190px) {
-  #home .fh-kapitel-mitte .fh-kapitel-marke { display: none; }
-}
-
-@container fhkap7 (max-height: 120px) {
+@container fhkap7 (max-height: 70px) {
   #home .fh-kapitel-knoepfe { display: none; }
 }
 
@@ -281,10 +281,6 @@
 
 .fh-kapitel-rechts .fh-kapitel-marke {
   justify-content: flex-end;
-}
-
-.fh-kapitel-mitte .fh-kapitel-marke {
-  justify-content: center;
 }
 
 .fh-kapitel-strich {
@@ -330,12 +326,6 @@
 
 .fh-kapitel h2 {
   font-size: clamp(30px, 4.4vw, 60px);
-}
-
-.fh-kapitel-mitte h2 {
-  font-size: clamp(44px, 8vw, 130px);
-  line-height: .92;
-  letter-spacing: -.045em;
 }
 
 .fh-kapitel p {
@@ -614,16 +604,10 @@
    tatsaechlich freien Platz; diese Regeln greifen dann nicht
    mehr, weil sie von der spezifischeren #home.fh-uhr-3d-Regel
    ueberschrieben werden. Sie bleiben fuer den Fall, dass die
-   Uhr noch nicht sichtbar ist.
-   Zwischen der Unterkante der Uhr und dem unteren Rand bleibt
-   auf einem flachen Fenster wenig Platz. Titel und Abstaende
-   ruecken dort zusammen, damit der Block nicht ueberlaeuft.
+   Uhr noch nicht sichtbar ist. Auf flachen Fenstern ruecken
+   Text und Abstaende dort zusammen.
 ====================================================== */
 @media (max-height: 720px) {
-  .fh-kapitel-mitte h2 {
-    font-size: clamp(30px, 5.6vw, 64px);
-  }
-
   .fh-kapitel-mitte p {
     margin-top: 12px;
     font-size: clamp(13px, 1.1vw, 15px);
@@ -633,16 +617,18 @@
   .fh-kapitel-knoepfe {
     margin-top: 16px;
   }
-
-  .fh-kapitel-mitte .fh-kapitel-marke {
-    margin-bottom: 8px;
-  }
 }
 
 @media (max-height: 560px) {
-  /* Noch flacher: der Fliesstext tritt zurueck, Titel, Zahl und
-     die beiden Knoepfe bleiben. */
-  .fh-kapitel-mitte p {
+  /* Noch flacher: die Zeile tritt zurueck, Zahl und Knoepfe
+     bleiben.
+
+     NUR ohne 3D-Uhr. Laeuft die Szene, entscheidet der
+     Container weiter oben (fhkap7, Grenze 130px) - und der misst
+     den wirklich freien Platz. Ohne dieses :not() gewann diese
+     Regel: bei 1024x500 war die Zeile weg, obwohl im Kasten
+     190px frei waren. */
+  #home:not(.fh-uhr-3d) .fh-kapitel-mitte p {
     display: none;
   }
 }
