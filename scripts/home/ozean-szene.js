@@ -112,6 +112,61 @@
     return new THREE.CanvasTexture(c);
   }
 
+  /* Senkrechte Schlieren fuer den Wasserfall. Wird in der
+     Senkrechten wiederholt und im Bildtakt nach unten geschoben -
+     das ist billiger als bewegte Geometrie und sieht aus der
+     Entfernung, in der die Insel steht, genauso aus. */
+  function strahlTextur() {
+    const c = document.createElement("canvas"); c.width = 64; c.height = 256;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "rgba(255,255,255,0.10)"; ctx.fillRect(0, 0, 64, 256);
+    for (let i = 0; i < 90; i++) {
+      const x = Math.random() * 64, br = 1 + Math.random() * 4;
+      const y = Math.random() * 256, h = 30 + Math.random() * 120;
+      const g = ctx.createLinearGradient(0, y, 0, y + h);
+      g.addColorStop(0, "rgba(255,255,255,0)");
+      g.addColorStop(0.5, "rgba(255,255,255," + (0.25 + Math.random() * 0.5).toFixed(2) + ")");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g; ctx.fillRect(x, y, br, h);
+    }
+    /* Zu den Raendern hin ausblenden, damit der Fall keine
+       harten Laengskanten hat. */
+    const rand = ctx.createLinearGradient(0, 0, 64, 0);
+    rand.addColorStop(0, "rgba(0,0,0,1)");
+    rand.addColorStop(0.5, "rgba(0,0,0,0)");
+    rand.addColorStop(1, "rgba(0,0,0,1)");
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.fillStyle = rand; ctx.fillRect(0, 0, 64, 256);
+    ctx.globalCompositeOperation = "source-over";
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    return t;
+  }
+
+  /* Weiches Ringprofil fuer die Brandung.
+
+     Ein RingGeometry mit einfarbigem Material ergibt einen
+     gestochen scharfen Kreis - und die Kueste ist nicht rund,
+     sondern ausgefranst. Aus der Naehe sah die Insel dadurch aus,
+     als stuende sie auf einem Teller. THREE legt die
+     Texturkoordinaten eines Rings ueber sein umschliessendes
+     Quadrat, der Abstand zur Bildmitte entspricht also dem
+     Radius: ein radialer Verlauf mit einem weichen Grat an der
+     richtigen Stelle gibt einen Saum ohne Kanten. */
+  function brandungTextur() {
+    const c = document.createElement("canvas"); c.width = c.height = 256;
+    const ctx = c.getContext("2d");
+    const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    g.addColorStop(0.00, "rgba(255,255,255,0)");
+    g.addColorStop(0.78, "rgba(255,255,255,0)");
+    g.addColorStop(0.88, "rgba(255,255,255,0.55)");
+    g.addColorStop(0.93, "rgba(255,255,255,0.95)");
+    g.addColorStop(0.97, "rgba(255,255,255,0.35)");
+    g.addColorStop(1.00, "rgba(255,255,255,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
+    return new THREE.CanvasTexture(c);
+  }
+
   function segeltuchTextur() {
     const c = document.createElement("canvas"); c.width = c.height = 256;
     const ctx = c.getContext("2d");
@@ -339,7 +394,7 @@
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
     const farben = new Float32Array(pos.count * 3);
-    const cSand = new THREE.Color(0xc8b487), cGras = new THREE.Color(0x36503a), cDschungel = new THREE.Color(0x24402d),
+    const cSand = new THREE.Color(0xe3d2a6), cGras = new THREE.Color(0x36503a), cDschungel = new THREE.Color(0x24402d),
       cFels = new THREE.Color(0x5a5560), cHoch = new THREE.Color(0x8d8896);
     const tmp = new THREE.Color();
     const gipfel = function (x, z, px, pz, h, w) { return h * Math.exp(-((x - px) * (x - px) + (z - pz) * (z - pz)) / (2 * w * w)); };
@@ -367,9 +422,17 @@
       h -= 60 * Math.exp(-((x - 120) * (x - 120) + (z - 620) * (z - 620)) / (2 * 260 * 260)); // Bucht
       pos.setY(i, h);
       const hang = Math.min(1, Math.abs(fbm(x / 120, z / 120, 3) - 0.5) * 2.2);
-      if (h < 8) tmp.copy(cSand);
-      else if (h < 60) tmp.copy(cSand).lerp(cGras, weich(8, 55, h));
-      else if (h < 190) tmp.copy(cGras).lerp(cDschungel, weich(60, 170, h));
+      /* Die Wasserlinie liegt bei h = 10, denn das Gelaende sitzt
+         um 10 tiefer als das Meer (land.position.y = -10). Der
+         Sand endete vorher bei h < 8 - also vollstaendig unter
+         Wasser, und was man ueber der Linie sah, war schon der
+         Verlauf ins Gras. Jetzt liegt ein echtes Band aus hellem
+         Sand ueber der Wasserlinie; erst darueber faengt das
+         Gruen an. Das ist der helle Saum, der die Insel im
+         Gegenlicht vom Wasser abhebt. */
+      if (h < 22) tmp.copy(cSand);
+      else if (h < 68) tmp.copy(cSand).lerp(cGras, weich(22, 64, h));
+      else if (h < 190) tmp.copy(cGras).lerp(cDschungel, weich(68, 180, h));
       else if (h < 330) tmp.copy(cDschungel).lerp(cFels, weich(190, 320, h));
       else tmp.copy(cFels).lerp(cHoch, weich(330, 470, h));
       tmp.offsetHSL(0, 0, (hang - 0.5) * 0.05 + (streu(i, 3) - 0.5) * 0.035);
@@ -427,6 +490,124 @@
     }
     insel.add(palmen);
 
+    /* ---------- Dschungelkronen ----------
+       Zwischen Strand und Fels lag bisher nackte Gelaendefarbe:
+       Palmen stehen nur im Ring zwischen Hoehe 2 und 150, alles
+       darueber war eine glatte gruene Flanke. Die Kronen sind
+       bewusst grobe Koerper mit flacher Schattierung - aus der
+       Entfernung, in der die Insel im Bild steht, zaehlt nur die
+       unruhige Silhouette, nicht das einzelne Blatt. */
+    const kronenMat = new THREE.MeshStandardMaterial({ color: 0x1f3a29, roughness: 1, flatShading: true });
+    const kronenGeo = new THREE.IcosahedronGeometry(1, 0);
+    const kronen = new THREE.Group();
+    const kronenZahl = Math.round(stufe.palmen * 1.2);
+    /* In Gruppen, nicht gleichverteilt. Einzeln verstreut ergaben
+       dieselben Koerper lauter abgesetzte Klumpen am Hang - das
+       las sich wie Geroell, nicht wie Bewuchs. Wald waechst in
+       Nestern, und erst wo sich die Kronen ueberlappen, entsteht
+       eine geschlossene Flaeche mit unruhigem Rand. */
+    let kGesetzt = 0, nester = 0;
+    while (kGesetzt < kronenZahl && nester++ < 900) {
+      const a = Math.random() * Math.PI * 2, rad = 220 + Math.random() * 780;
+      const nx = Math.cos(a) * rad, nz = Math.sin(a) * rad;
+      if (hoeheBei(nx, nz) < 25) continue;
+      const proNest = 4 + Math.floor(Math.random() * 5);
+      for (let n = 0; n < proNest && kGesetzt < kronenZahl; n++) {
+        const x = nx + (Math.random() - 0.5) * 130, z = nz + (Math.random() - 0.5) * 130;
+        const y = hoeheBei(x, z);
+        if (y < 22 || y > 280) continue;
+        const k = new THREE.Mesh(kronenGeo, kronenMat);
+        const gr = 15 + Math.random() * 20;
+        /* Tief genug sitzen, dass die Krone im Hang steckt und
+           nicht darauf liegt. */
+        k.position.set(x, y + gr * 0.3, z);
+        k.scale.set(gr, gr * (0.45 + Math.random() * 0.3), gr);
+        k.rotation.set(Math.random() * 0.5, Math.random() * Math.PI, Math.random() * 0.5);
+        kronen.add(k); kGesetzt++;
+      }
+    }
+    insel.add(kronen);
+
+    /* ---------- Lichter im Dschungel ----------
+       Kapitel VI heisst "Klippen, Dschungel, ein Licht" - bisher
+       gab es genau eins. Jetzt blinzeln mehrere warme Punkte
+       zwischen den Baeumen durch.
+
+       Bewusst Sprites und KEINE PointLights: jedes echte Licht
+       kostet in three.js einen Platz in der Beleuchtung jedes
+       betroffenen Materials und laesst die Shader neu uebersetzen.
+       Ein additiv gezeichneter Punkt sieht aus dieser Entfernung
+       genauso aus und kostet nichts. Das eine echte Feuerlicht
+       weiter unten bleibt, damit das Gelaende darum herum auch
+       wirklich beleuchtet wird. */
+    const lichtTex = weicheTextur("rgba(255,222,170,1)", "rgba(255,170,90,0.5)");
+    const lichter = new THREE.Group();
+    const lichtZahl = stufe.name === "niedrig" ? 4 : 9;
+    let lGesetzt = 0, lVersuche = 0;
+    while (lGesetzt < lichtZahl && lVersuche++ < 3000) {
+      const a = Math.random() * Math.PI * 2, rad = 320 + Math.random() * 760;
+      const x = Math.cos(a) * rad, z = Math.sin(a) * rad, y = hoeheBei(x, z);
+      if (y < 14 || y > 300) continue;
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: lichtTex, color: 0xffc078, transparent: true, opacity: 0.9,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      }));
+      const gr = 52 + Math.random() * 46;
+      sp.scale.set(gr, gr, 1);
+      sp.position.set(x, y + 16, z);
+      /* Jedes Licht flackert mit eigener Frequenz und Phase -
+         gleichmaessiges Pulsieren saehe nach Blinklicht aus. */
+      sp.userData = { ph: Math.random() * 6.3, tempo: 0.7 + Math.random() * 1.9, grund: 0.45 + Math.random() * 0.4 };
+      lichter.add(sp); lGesetzt++;
+    }
+    insel.add(lichter);
+    insel.userData.lichter = lichter;
+
+    /* ---------- Wasserfall ----------
+       An der vorderen Flanke des Hauptgipfels (der steht bei
+       x=-120, z=-160). Die Stelle wird nicht geraten, sondern
+       gesucht: vom Gipfel aus nach vorn laufen, bis das Gelaende
+       auf die Zielhoehe abgefallen ist. Sonst haengt der Fall bei
+       jeder Aenderung an der Hoehenformel in der Luft oder steckt
+       im Berg. */
+    let wasserfall = null;
+    if (stufe.name !== "niedrig") {
+      const wx = -120;
+      let oben = null, unten = null;
+      for (let z = -160; z < 1200; z += 12) {
+        const hh = hoeheBei(wx, z);
+        if (oben === null && hh < 430) oben = { z: z, y: hh };
+        if (oben !== null && hh < 12) { unten = { z: z, y: hh }; break; }
+      }
+      if (oben && unten && unten.z > oben.z + 60) {
+        const fallHoehe = oben.y - unten.y, fallTiefe = unten.z - oben.z;
+        const laenge = Math.hypot(fallHoehe, fallTiefe);
+        const tex = strahlTextur();
+        tex.repeat.set(1, Math.max(2, Math.round(laenge / 150)));
+        const mat = new THREE.MeshBasicMaterial({
+          map: tex, color: 0xdfe9f0, transparent: true, opacity: 0.62,
+          depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
+        });
+        const netz = new THREE.Mesh(new THREE.PlaneGeometry(46, laenge), mat);
+        netz.position.set(wx, (oben.y + unten.y) / 2, (oben.z + unten.z) / 2 + 26);
+        /* Die Ebene steht senkrecht und wird so gekippt, dass sie
+           der Flanke folgt. */
+        netz.rotation.x = -Math.atan2(fallTiefe, fallHoehe);
+        insel.add(netz);
+
+        const fuss = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: weicheTextur("rgba(255,255,255,0.9)", "rgba(255,255,255,0.3)"),
+          color: 0xeaf2f6, transparent: true, opacity: 0.5,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        }));
+        fuss.scale.set(150, 90, 1);
+        fuss.position.set(wx, unten.y + 16, unten.z + 20);
+        insel.add(fuss);
+        wasserfall = { tex: tex, fuss: fuss };
+      }
+    }
+    insel.userData.wasserfall = wasserfall;
+
     const gischt = new THREE.Mesh(
       new THREE.RingGeometry(R * 0.74, R * 0.99, 128, 1),
       new THREE.MeshBasicMaterial({ map: weicheTextur("rgba(255,255,255,0.0)", "rgba(255,255,255,0.7)"), color: 0xdfe6ea, transparent: true, opacity: 0.32, depthWrite: false, side: THREE.DoubleSide })
@@ -434,6 +615,21 @@
     gischt.rotation.x = -Math.PI / 2; gischt.position.y = 1.4;
     insel.add(gischt);
     insel.userData.gischt = gischt;
+
+    /* Die Brandungslinie liegt enger als der breite Gischtring
+       und wird additiv gezeichnet: ein schmaler heller Saum genau
+       dort, wo das Wasser auf den Sand trifft. Sie atmet im
+       Bildtakt, damit die Kueste nicht wie aufgemalt wirkt. */
+    const brandung = new THREE.Mesh(
+      new THREE.RingGeometry(R * 0.80, R * 1.02, 128, 1),
+      new THREE.MeshBasicMaterial({
+        map: brandungTextur(), color: 0xf2f7fa, transparent: true, opacity: 0.42,
+        depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
+      })
+    );
+    brandung.rotation.x = -Math.PI / 2; brandung.position.y = 2.2;
+    insel.add(brandung);
+    insel.userData.brandung = brandung;
 
     const schein = new THREE.Sprite(new THREE.SpriteMaterial({ map: weicheTextur(), color: 0xffc98c, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }));
     schein.scale.set(460, 460, 1); schein.position.set(300, 150, 430);
@@ -884,6 +1080,59 @@
     return netz;
   }
 
+  /* ------------------------------------------------------
+     KRINGEL UNTER DEM ZEIGER
+
+     Wo der Zeiger ueber das Wasser faehrt, zieht ein Ring auf
+     und verklingt - wie bei einem hineingeworfenen Stein.
+
+     Zwei Entscheidungen dahinter:
+
+     1. Ein fester Vorrat an Ringen, kein Anlegen pro Ereignis.
+        Die Maus liefert bis zu hundert Meldungen je Sekunde;
+        wer daraus Geometrie erzeugt, beschaeftigt die
+        Speicherbereinigung mehr als die Grafikkarte.
+     2. Die Groesse haengt am Abstand zur Kamera. Ein Ring mit
+        fester Weltgroesse ist direkt vor dem Bug ein Reifen und
+        am Horizont ein unsichtbarer Punkt.
+  ------------------------------------------------------ */
+  function kringelBauen(anzahl) {
+    const gruppe = new THREE.Group();
+    gruppe.renderOrder = 5;
+    /* Ein schmaler Ring mit Radius 1 - die Groesse macht
+       ausschliesslich die Skalierung. */
+    const geo = new THREE.RingGeometry(0.84, 1.0, 40, 1);
+    geo.rotateX(-Math.PI / 2);
+    const ringe = [];
+    for (let i = 0; i < anzahl; i++) {
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+        color: 0xcfe3ee, transparent: true, opacity: 0,
+        depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
+      }));
+      m.visible = false;
+      m.userData = { alter: 0, dauer: 1, ziel: 1, x: 0, z: 0 };
+      gruppe.add(m); ringe.push(m);
+    }
+    let naechster = 0;
+    return {
+      gruppe: gruppe,
+      ringe: ringe,
+      /* Reihum ueberschreiben: der aelteste Ring ist immer der,
+         der als naechstes wieder gebraucht wird. */
+      ausloesen: function (x, z, ziel) {
+        const m = ringe[naechster];
+        naechster = (naechster + 1) % ringe.length;
+        m.userData.alter = 0;
+        m.userData.dauer = 1.5 + Math.random() * 0.7;
+        m.userData.ziel = ziel;
+        m.userData.x = x; m.userData.z = z;
+        m.position.set(x, 0, z);
+        m.scale.setScalar(ziel * 0.08);
+        m.visible = true;
+      }
+    };
+  }
+
   /* ---------- Partikel ---------- */
   function partikelBauen(anzahl, tex, farbe, groesse, deckkraft) {
     const geo = new THREE.BufferGeometry();
@@ -1064,6 +1313,64 @@
     uhr3d.position.copy(insel.position).add(new THREE.Vector3(0, UHR_HOEHE, 900));
     szene.add(uhr3d);
 
+    /* ---------- Kringel unter dem Zeiger ----------
+       Der Treffpunkt wird NICHT ueber einen Raycaster gegen das
+       Wasser gesucht: das Wasser ist eine Flaeche mit bis zu
+       150x150 Feldern, und die Maus meldet sich bis zu hundert
+       Mal je Sekunde. Stattdessen wird der Strahl mit der
+       gedachten Ebene y=0 geschnitten - eine Handvoll
+       Rechenschritte statt tausender Dreiecksproben. */
+    /* Vorratsgroesse ist nicht geraten: die Drosselung laesst
+       hoechstens 1000/130 = 7,7 Ringe je Sekunde zu, und ein Ring
+       lebt bis zu 2,2 s - es koennen also bis zu 17 gleichzeitig
+       offen sein. Bei 14 wuerde der aelteste mitten im Aufziehen
+       ueberschrieben und spraenge sichtbar auf Anfang zurueck. */
+    const kringel = kringelBauen(stufe.name === "niedrig" ? 8 : 18);
+    szene.add(kringel.gruppe);
+    const zeigerStrahl = new THREE.Raycaster();
+    const zeigerNdc = new THREE.Vector2();
+    const wasserEbene = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const treffer = new THREE.Vector3();
+    let letzterKringel = 0, letzteZeigerX = -1e9, letzteZeigerY = -1e9;
+
+    function zeigerMelden(klientX, klientY, jetzt) {
+      /* Nicht bei jeder Meldung einen Ring: das waeren bis zu
+         hundert je Sekunde. Ein Mindestabstand in Zeit UND Weg -
+         sonst haeuft ein stillstehender Zeiger Ringe uebereinander. */
+      if (jetzt - letzterKringel < 130) return;
+      if (Math.hypot(klientX - letzteZeigerX, klientY - letzteZeigerY) < 26) return;
+
+      const r = huelle.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) return;
+      zeigerNdc.x = ((klientX - r.left) / r.width) * 2 - 1;
+      zeigerNdc.y = -((klientY - r.top) / r.height) * 2 + 1;
+      if (Math.abs(zeigerNdc.x) > 1 || Math.abs(zeigerNdc.y) > 1) return;
+
+      zeigerStrahl.setFromCamera(zeigerNdc, kamera);
+      /* Zeigt der Strahl in den Himmel, gibt es keinen
+         Schnittpunkt - dann passiert schlicht nichts. */
+      if (!zeigerStrahl.ray.intersectPlane(wasserEbene, treffer)) return;
+
+      const weite = treffer.distanceTo(kamera.position);
+      if (weite > 4200) return; // am Horizont waere es ein Punkt
+      letzterKringel = jetzt;
+      letzteZeigerX = klientX; letzteZeigerY = klientY;
+      kringel.ausloesen(treffer.x, treffer.z, klemm(weite * 0.05, 14, 210));
+    }
+
+    huelle.addEventListener("pointermove", function (e) {
+      /* Der Finger loest denselben Effekt aus. pointermove deckt
+         Maus, Stift und Finger gemeinsam ab; passive:true, damit
+         das senkrechte Wischen der Seite nicht gebremst wird. */
+      zeigerMelden(e.clientX, e.clientY, performance.now());
+    }, { passive: true });
+    huelle.addEventListener("pointerdown", function (e) {
+      /* Beim Aufsetzen sofort einen Ring, ohne Wegschwelle -
+       sonst braeuchte eine Beruehrung erst eine Bewegung. */
+      letzteZeigerX = -1e9; letzteZeigerY = -1e9; letzterKringel = 0;
+      zeigerMelden(e.clientX, e.clientY, performance.now());
+    }, { passive: true });
+
     const gischtTex = weicheTextur("rgba(255,255,255,0.95)", "rgba(255,255,255,0.35)");
     const kielwasser = partikelBauen(stufe.wake, gischtTex, 0xe8eef2, 26, 0.4);
     const spritzer = partikelBauen(stufe.spray, gischtTex, 0xf2f6f8, 9, 0.75);
@@ -1236,6 +1543,23 @@
       sonneLicht.intensity = misch(0.35, 3.4, tag * tag);
       fuell.intensity = misch(1.1, 0.85, tag);
 
+      /* Kringel aufziehen lassen. Sie liegen auf dem bewegten
+         Wasser, nicht auf einer gedachten glatten Flaeche -
+         darum wird die Wellenhoehe jedes Bild neu geholt. */
+      for (let i = 0; i < kringel.ringe.length; i++) {
+        const m = kringel.ringe[i];
+        if (!m.visible) continue;
+        const d = m.userData;
+        d.alter += dt;
+        const f = d.alter / d.dauer;
+        if (f >= 1) { m.visible = false; m.material.opacity = 0; continue; }
+        /* Schnell aufziehen, langsam auslaufen: so sieht es aus
+           wie eine Welle, die Schwung verliert. */
+        m.scale.setScalar(d.ziel * (0.08 + 0.92 * Math.sqrt(f)));
+        m.material.opacity = 0.42 * (1 - f) * (1 - f);
+        m.position.y = wellenHoehe(d.x, d.z, t) + 1.2;
+      }
+
       /* Schiff auf der Bahn, an die Wellen gekoppelt */
       const u = schiffU(p);
       bahn.getPointAt(klemm(u, 0, 1), schiffPos);
@@ -1325,6 +1649,28 @@
       voegel.visible = p > 0.7 && stufe.name !== "niedrig";
       insel.userData.schein.material.opacity = (0.3 + 0.16 * Math.sin(t * 1.3)) * (0.35 + 0.65 * weich(0.62, 0.95, p));
       insel.userData.gischt.material.opacity = 0.22 + 0.1 * Math.sin(t * 0.9);
+
+      /* Brandung: zwei Schwingungen verschiedener Laenge
+         uebereinander, damit das Atmen nicht zaehlbar wird. */
+      const br = insel.userData.brandung;
+      br.material.opacity = (0.34 + 0.16 * Math.sin(t * 0.55) + 0.07 * Math.sin(t * 1.43 + 1.2))
+        * (0.4 + 0.6 * weich(0.6, 0.92, p));
+      br.scale.setScalar(1 + 0.012 * Math.sin(t * 0.55));
+
+      /* Lichter im Dschungel, jedes mit eigener Frequenz. */
+      insel.userData.lichter.children.forEach(function (l) {
+        const d = l.userData;
+        l.material.opacity = (d.grund + 0.35 * Math.sin(t * d.tempo + d.ph) + 0.12 * Math.sin(t * d.tempo * 2.7 + d.ph))
+          * weich(0.62, 0.88, p);
+      });
+
+      /* Wasserfall: die Textur nach unten schieben. */
+      if (insel.userData.wasserfall) {
+        const wf = insel.userData.wasserfall;
+        wf.tex.offset.y -= dt * 0.85;
+        if (wf.tex.offset.y < -1) wf.tex.offset.y += 1;
+        wf.fuss.material.opacity = (0.34 + 0.14 * Math.sin(t * 2.1)) * weich(0.6, 0.9, p);
+      }
       if (insel.userData.nebel.visible) {
         insel.userData.nebel.children.forEach(function (s, i) {
           s.position.x += Math.sin(t * 0.06 + i) * 0.35;
