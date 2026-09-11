@@ -287,23 +287,28 @@
 
   <main id="fh-main" tabindex="-1">
 
-    <!-- =====================
-         HOME
-    ===================== -->
     <!-- ============================================================
-         STARTSEITE
+         STARTSEITE: DIE OZEAN-REISE
          ---------------------------------------------------
-         Eine einzige lange Bahn (FH_START_WEG in
-         scripts/home/startseite.js, standardmaessig 4000px) und
-         GENAU EIN sichtbares Element: der Countdown. Er steht
-         waehrend der ganzen Strecke fest in der Mitte, waehrend sich
-         hinter ihm sechs Abschnitte abloesen - Tiefe, Aufstieg,
-         Durchbruch, Sturm, Sternenhimmel, Morgengrauen.
+         Eine lange Bahn (FH_START_WEG in
+         scripts/home/startseite.js, 8000px), eine klebende Buehne
+         und darauf eine 3D-Szene: das Schiff der Crew faehrt von
+         der offenen See bis zur Schatzinsel. Darueber liegen
+         sieben Kapiteltexte, die sich mit dem Scrollen abloesen.
 
-         Alle Ebenen haengen an EINER Variablen --fh-weg (0 bis 1),
-         die GSAP ScrollTrigger schreibt; gerechnet wird in CSS mit
-         clamp(). Der Countdown selbst wandelt sich mit: von matt und
-         klein in der Tiefe bis voll und golden am Ende.
+         Uebernommen aus dem Entwurf "Schatzinsel Scroll"
+         (Claude Design); die Szene zeichnet
+         scripts/home/ozean-szene.js mit three.js.
+
+         Alles haengt an EINER Variablen --fh-weg (0 bis 1), die
+         GSAP ScrollTrigger schreibt. Die Kapitel rechnen ihr
+         Ein- und Ausblenden in CSS daraus selbst aus - jedes
+         traegt sein Fenster als --von und --bis.
+
+         Der Countdown steht in Kapitel VII. Sichtbar ist dort der
+         3D-Countdown IN der Szene; das HTML darunter bleibt als
+         Datenquelle (countdown.js schreibt hinein, ozean-szene.js
+         liest daraus) und fuer Screenreader stehen.
     ============================================================ -->
     <section id="home" class="page active-page">
       <h1 class="fh-visually-hidden" data-i18n="home.title">COUNTDOWN</h1>
@@ -313,81 +318,139 @@
              die Bahn darum herum. -->
         <div class="fh-start-buehne" id="fh-start-buehne">
 
-          <!-- Hintergrund. Rein dekorativ, deshalb aria-hidden. -->
-          <div class="fh-start-kulisse" aria-hidden="true">
-            <div class="fh-start-tiefe"></div>
-            <div class="fh-start-partikel"></div>
-            <div class="fh-start-schacht"></div>
-            <div class="fh-start-oberflaeche"></div>
-            <div class="fh-start-wolken"></div>
-            <div class="fh-start-regen"></div>
-            <div class="fh-start-blitz" id="fh-start-blitz"></div>
-            <div class="fh-start-sterne"></div>
-            <div class="fh-start-morgen"></div>
-            <div class="fh-start-horizont"></div>
+          <!-- Die Szene. Rein dekorativ, deshalb aria-hidden. -->
+          <div class="fh-ozean" id="fh-ozean" aria-hidden="true">
+            <canvas class="fh-ozean-leinwand"></canvas>
+            <div class="fh-ozean-schleier fh-ozean-schleier-rund"></div>
+            <div class="fh-ozean-schleier fh-ozean-schleier-kante"></div>
+            <div class="fh-ozean-schleier fh-ozean-schleier-unten"></div>
+            <div class="fh-ozean-schleier fh-ozean-schleier-seiten"></div>
+          </div>
 
-            <!-- Das Boot. Kommt beim Durchbruch durch die
-                 Wasseroberflaeche ins Bild und bleibt bis zum
-                 Morgengrauen.
+          <div class="fh-ozean-balken fh-ozean-balken-oben" aria-hidden="true"></div>
+          <div class="fh-ozean-balken fh-ozean-balken-unten" aria-hidden="true"></div>
 
-                 Steht als LETZTE Ebene der Kulisse, damit Sterne
-                 und Morgenrot dahinter liegen - lieber Regen
-                 hinter dem Boot als Sterne darauf.
+          <!-- ---------- KAPITEL I ---------- -->
+          <div class="fh-kapitel" style="--von: -0.06; --bis: 0.10;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+              <span class="fh-kapitel-nr" data-i18n="home.kap1Nr">Kapitel I — Auslaufen</span>
+            </div>
+            <h1 data-i18n="home.kap1Titel">Romna liegt hinter uns</h1>
+            <p data-i18n="home.kap1Text">Ein rot bemaltes Schiff, eine Crew, die ihren Captain Fliezpiepenheimer nennt, und eine Fracht, die niemand öffnen darf.</p>
+          </div>
 
-                 Die Leinwand bemalt scripts/home/startseite-boot.js
-                 mit three.js. Geht das nicht (kein WebGL, nur
-                 Software-Rendering, zu langsam, reduzierte
-                 Bewegung), setzt das Skript .fh-boot-flach-an und
-                 die flache Silhouette darunter uebernimmt. -->
-            <div class="fh-start-boot" id="fh-start-boot">
-              <canvas class="fh-boot-leinwand"></canvas>
-              <div class="fh-boot-flach">
-                <svg viewBox="0 0 240 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <!-- Segel, Mast, Wimpel -->
-                  <path d="M120 20 L120 92" stroke="#3d2b1c" stroke-width="3.4" />
-                  <path d="M120 26 L156 33 L120 41 Z" fill="#d6a84f" />
-                  <path d="M122 40 L162 84 L122 84 Z" fill="#d9dfe6" opacity=".9" />
-                  <path d="M118 40 L82 84 L118 84 Z" fill="#c3cbd4" opacity=".78" />
-                  <!-- Rumpf: dieselben Stationen wie im 3D-Modell,
-                       nur von der Seite und flach. -->
-                  <path d="M44 88 L196 88 L176 112 L64 112 Z" fill="#16243a" />
-                  <path d="M44 88 L196 88 L194 94 L46 94 Z" fill="#d6a84f" />
-                </svg>
+          <!-- ---------- KAPITEL II ---------- -->
+          <div class="fh-kapitel" style="--von: 0.14; --bis: 0.26;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+              <span class="fh-kapitel-nr" data-i18n="home.kap2Nr">Kapitel II — Die Fracht</span>
+            </div>
+            <h2 data-i18n="home.kap2Titel">Fünf Schlösser, kein Schlüssel</h2>
+            <p data-i18n="home.kap2Text">Eine massive Metallbox steht unter Deck. Wer sie öffnet, stirbt — das war die einzige Anweisung.</p>
+          </div>
+
+          <!-- ---------- KAPITEL III ---------- -->
+          <div class="fh-kapitel" style="--von: 0.30; --bis: 0.42;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+              <span class="fh-kapitel-nr" data-i18n="home.kap3Nr">Kapitel III — Volle Fahrt</span>
+            </div>
+            <h2 data-i18n="home.kap3Titel">Sie hält direkt auf uns zu</h2>
+            <p data-i18n="home.kap3Text">Schwarze Flagge, alle Segel gesetzt. Dave gibt den Befehl, den keiner hören will.</p>
+          </div>
+
+          <!-- ---------- KAPITEL IV ----------
+               Das einzige rechtsbuendige Kapitel, genau an der
+               Stelle, an der das fremde Schiff vorbeizieht. -->
+          <div class="fh-kapitel fh-kapitel-rechts" style="--von: 0.46; --bis: 0.56;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-nr" data-i18n="home.kap4Nr">Kapitel IV — Vorbei</span>
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+            </div>
+            <h2 data-i18n="home.kap4Titel">Dreh bei. Wir folgen ihr.</h2>
+          </div>
+
+          <!-- ---------- KAPITEL V ---------- -->
+          <div class="fh-kapitel" style="--von: 0.60; --bis: 0.72;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+              <span class="fh-kapitel-nr" data-i18n="home.kap5Nr">Kapitel V — Im Kielwasser</span>
+            </div>
+            <h2 data-i18n="home.kap5Titel">Kurs nach Südwest</h2>
+            <p data-i18n="home.kap5Text">Der Nebel reißt auf. Vor dem Bug wird es hell — und es ist nicht die Sonne.</p>
+          </div>
+
+          <!-- ---------- KAPITEL VI ---------- -->
+          <div class="fh-kapitel" style="--von: 0.76; --bis: 0.86;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+              <span class="fh-kapitel-nr" data-i18n="home.kap6Nr">Kapitel VI — Land in Sicht</span>
+            </div>
+            <h2 data-i18n="home.kap6Titel">Klippen, Dschungel, ein Licht</h2>
+          </div>
+
+          <!-- ---------- KAPITEL VII: DAS ZIEL ---------- -->
+          <div class="fh-kapitel fh-kapitel-mitte" style="--von: 0.89; --bis: 1.06;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-nr" data-i18n="home.kap7Nr">Kapitel VII</span>
+            </div>
+            <h2 data-i18n="home.kap7Titel">Die Schatzinsel</h2>
+
+            <!-- Sichtbar ist der 3D-Countdown in der Szene. Das
+                 hier ist die Datenquelle dafuer und gleichzeitig
+                 das, was ohne Szene uebrig bleibt. -->
+            <div class="fh-start-countdown">
+              <div class="countdown">
+                <div class="time-box">
+                  <span id="days">00</span>
+                  <small data-i18n="common.days">Tage</small>
+                </div>
+                <div class="time-box">
+                  <span id="hours">00</span>
+                  <small data-i18n="common.hours">Stunden</small>
+                </div>
+                <div class="time-box">
+                  <span id="minutes">00</span>
+                  <small data-i18n="common.minutes">Minuten</small>
+                </div>
+                <div class="time-box">
+                  <span id="seconds">00</span>
+                  <small data-i18n="common.seconds">Sekunden</small>
+                </div>
               </div>
+            </div>
+
+            <p data-i18n="home.kap7Text">Sie steht auf keiner Karte. Nur im Logbuch eines Mannes, der nie zurückkam — und in genau so vielen Tagen sind wir dort.</p>
+
+            <div class="fh-kapitel-knoepfe">
+              <button type="button" class="code-button" onclick="changePage('story')" data-i18n="home.kap7Logbuch">Logbuch lesen</button>
+              <button type="button" class="code-button fh-kapitel-knopf-still" onclick="changePage('stand')" data-i18n="home.kap7Land">An Land gehen</button>
+            </div>
+          </div>
+
+          <!-- ---------- RAHMEN ---------- -->
+          <div class="fh-ozean-marke" aria-hidden="true">
+            <span class="fh-ozean-raute"></span>
+            <span data-i18n="home.kicker">Logbuch der Crew</span>
+          </div>
+
+          <div class="fh-ozean-fortschritt" aria-hidden="true">
+            <span id="fh-kapitel-zaehler">I / VII</span>
+            <div class="fh-ozean-schiene">
+              <div class="fh-ozean-balkenzeiger"></div>
             </div>
           </div>
 
           <!-- Erscheint erst nach drei Sekunden ohne Scrollen und
-               verschwindet beim ersten Scrollen fuer immer. Ohne ihn
-               steht man vor einem Countdown und ahnt nicht, dass
-               dahinter eine Reise liegt. -->
+               verschwindet beim ersten Scrollen fuer immer. -->
           <button type="button" class="fh-start-wink" id="fh-start-wink" hidden
                   onclick="fhStartWinkFolgen()">
-            <span class="fh-start-wink-text" data-i18n="home.scrollCue">Scroll</span>
+            <span data-i18n="home.scrollCue">Scroll</span>
             <span class="fh-start-wink-pfeil" aria-hidden="true"></span>
           </button>
 
-          <!-- Das einzige, was sonst zu sehen ist. -->
-          <div class="fh-start-countdown">
-            <div class="countdown">
-              <div class="time-box">
-                <span id="days">00</span>
-                <small data-i18n="common.days">Tage</small>
-              </div>
-              <div class="time-box">
-                <span id="hours">00</span>
-                <small data-i18n="common.hours">Stunden</small>
-              </div>
-              <div class="time-box">
-                <span id="minutes">00</span>
-                <small data-i18n="common.minutes">Minuten</small>
-              </div>
-              <div class="time-box">
-                <span id="seconds">00</span>
-                <small data-i18n="common.seconds">Sekunden</small>
-              </div>
-            </div>
-          </div>
+          <div class="fh-ozean-korn" aria-hidden="true"></div>
 
         </div>
       </div>
@@ -1506,6 +1569,15 @@
        passt (kein Bundler, kein Import-Map-Pattern im restlichen Projekt). -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
   <script src="scripts/core/fh-webgl.js" defer></script>
+
+  <!-- Water und Sky aus three.js/examples. Es gibt sie nur als
+       ES-Module; hier liegen sie als klassische Skripte, die sich
+       an den THREE-Globalen oben haengen. Die Alternative waere,
+       three.js ein zweites Mal als Modul zu laden (670 KB) -
+       diese beiden Dateien kosten zusammen 18 KB. Siehe Kopf von
+       scripts/vendor/three-water.js. -->
+  <script src="scripts/vendor/three-water.js" defer></script>
+  <script src="scripts/vendor/three-sky.js" defer></script>
   <script src="scripts/core/aurora-bg.js" defer></script>
   <script src="scripts/core/celebration-burst-3d.js" defer></script>
   <script src="scripts/core/sidebar-ambient-3d.js" defer></script>
@@ -1576,9 +1648,11 @@
   <script src="scripts/core/countdown.js" defer></script>
   <script src="scripts/core/reveal.js" defer></script>
   <script src="scripts/home/startseite.js" defer></script>
-  <!-- Braucht three.js und scripts/core/fh-webgl.js, beide stehen
-       weiter oben. Liest --fh-weg, das startseite.js schreibt. -->
-  <script src="scripts/home/startseite-boot.js" defer></script>
+  <!-- Die Ozean-Reise. Braucht three.js, fh-webgl.js und die
+       beiden vendor-Dateien (alle weiter oben) sowie countdown.js,
+       aus dessen Feldern sie die Zahlen fuer den 3D-Countdown
+       liest. Liest --fh-weg, das startseite.js schreibt. -->
+  <script src="scripts/home/ozean-szene.js" defer></script>
   <script src="scripts/stand/stand.js" defer></script>
   <script src="scripts/stories/stories-data.js" defer></script>
   <script src="scripts/characters/characters-data.js" defer></script>

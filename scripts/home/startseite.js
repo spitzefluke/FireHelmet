@@ -2,14 +2,21 @@
    STARTSEITE: DER SCROLLWEG
    ---------------------------------------------------
    Eine Aufgabe: den Scrollfortschritt als Zahl zwischen 0 und 1
-   in die CSS-Variable --fh-weg schreiben. Alles Sichtbare rechnet
-   css/65-startseite.css daraus selbst aus.
+   in die CSS-Variable --fh-weg schreiben. Daraus rechnet
+   css/65-startseite.css alles Sichtbare selbst aus - die sieben
+   Kapiteltexte, den Fortschrittsbalken, die Balken oben und
+   unten, den Scroll-Wink. scripts/home/ozean-szene.js liest
+   dieselbe Zahl fuer die 3D-Reise.
 
-   Warum nicht mehr in JavaScript? Weil hier bei jedem Scrollpixel
-   gerechnet wird. Eine einzige Variable zu setzen und den Rest dem
-   Compositor zu ueberlassen ist deutlich billiger, als zehn Ebenen
-   einzeln anzufassen - und es ist dieselbe Bauweise, die die
-   fruehere Sequenz schon hatte.
+   Warum nicht mehr in JavaScript? Weil hier bei jedem
+   Scrollpixel gerechnet wird. Eine einzige Variable zu setzen
+   und den Rest dem Compositor zu ueberlassen ist deutlich
+   billiger, als sieben Kapitel einzeln anzufassen - der Entwurf
+   aus Claude Design tut genau das in einer
+   requestAnimationFrame-Schleife.
+
+   Die EINZIGE Ausnahme ist der Kapitelzaehler oben rechts: ein
+   Textinhalt laesst sich in CSS nicht aus einer Zahl ableiten.
 
    WICHTIG: #home ist der Scroll-Container, nicht das Dokument.
    ScrollTrigger braucht deshalb "scroller: homeSection".
@@ -18,18 +25,20 @@
 (function () {
   "use strict";
 
-  /* Die Laenge der Bahn in Pixeln. An EINER Stelle, damit sie sich
-     ohne Suchen aendern laesst. Bei 8000 bekommt jeder der sechs
-     Abschnitte gut 1300px - genug, damit er wirkt, statt
+  /* Die Laenge der Bahn in Pixeln. An EINER Stelle, damit sie
+     sich ohne Suchen aendern laesst. Bei 8000 bekommt jedes der
+     sieben Kapitel gut 1100px - genug, damit es wirkt, statt
      vorbeizuhuschen. */
   const FH_START_WEG = 8000;
+
+  const ROEMISCH = ["I", "II", "III", "IV", "V", "VI", "VII"];
 
   const ruhig = window.matchMedia
     ? window.matchMedia("(prefers-reduced-motion: reduce)")
     : { matches: false };
 
-  let letzterBlitz = 0;
   let winkUhr = null;
+  let letzteZahl = "";
 
   /* ------------------------------------------------------
      DER SCROLL-WINK
@@ -49,15 +58,12 @@
     }
 
     winkUhr = setTimeout(function () {
-      // Nur zeigen, wenn wirklich noch nichts gescrollt wurde.
       if (heim.scrollTop > 4) return;
       wink.hidden = false;
     }, 3000);
 
     heim.addEventListener("scroll", wegDamit, { passive: true, once: true });
 
-    /* Klick auf den Wink scrollt ein Stueck weiter - wer ihn
-       antippt, will offensichtlich los. */
     window.fhStartWinkFolgen = function () {
       wegDamit();
       heim.scrollTo({ top: heim.clientHeight * 1.2, behavior: "smooth" });
@@ -80,35 +86,36 @@
     bahn.style.height = (FH_START_WEG + schirm) + "px";
   }
 
-  function blitzZuenden(blitz, weg) {
-    if (!blitz || ruhig.matches) return;
-    // Nur im Sturmabschnitt, und hoechstens alle 1,4 Sekunden.
-    if (weg < 0.52 || weg > 0.72) return;
-    const jetzt = Date.now();
-    if (jetzt - letzterBlitz < 1400) return;
-    if (Math.random() > 0.22) return;
-    letzterBlitz = jetzt;
-    blitz.classList.remove("zuckt");
-    void blitz.offsetWidth;
-    blitz.classList.add("zuckt");
+  function zaehlerSetzen(weg) {
+    const feld = document.getElementById("fh-kapitel-zaehler");
+    if (!feld) return;
+    const zahl = ROEMISCH[Math.min(6, Math.floor(weg * 7))];
+    if (zahl === letzteZahl) return; // sonst bei jedem Scrollpixel ein DOM-Schreibzugriff
+    letzteZahl = zahl;
+    feld.textContent = zahl + " / VII";
+  }
+
+  function wegSetzen(heim, weg) {
+    heim.style.setProperty("--fh-weg", weg.toFixed(4));
+    zaehlerSetzen(weg);
   }
 
   function fhStartseiteAufbauen() {
     const heim = document.getElementById("home");
     const bahn = document.getElementById("fh-start");
     const buehne = document.getElementById("fh-start-buehne");
-    const blitz = document.getElementById("fh-start-blitz");
     if (!heim || !bahn || !buehne) return;
 
     bahnHoeheSetzen(heim, bahn);
     window.addEventListener("resize", function () { bahnHoeheSetzen(heim, bahn); });
 
     if (ruhig.matches) {
-      /* Ans Ende der Reise setzen: goldener Countdown, klarer
-         Himmel. Die lange Bahn faellt dabei weg - 8000px zu
-         scrollen, ohne dass sich etwas aendert, waere eine
-         Zumutung und kein Entgegenkommen. */
-      heim.style.setProperty("--fh-weg", "1");
+      /* Ans Ende der Reise setzen: der Countdown steht in Kapitel
+         VII, und der soll ohne Scrollen erreichbar sein. Die
+         lange Bahn faellt dabei weg - 8000px zu scrollen, ohne
+         dass sich etwas aendert, waere eine Zumutung und kein
+         Entgegenkommen. */
+      wegSetzen(heim, 1);
       bahn.style.height = "auto";
       return;
     }
@@ -116,7 +123,7 @@
     winkAufbauen(heim);
 
     if (typeof gsap === "undefined" || typeof ScrollTrigger === "undefined") {
-      fhStartFallback(heim, bahn, buehne, blitz);
+      fhStartFallback(heim, bahn, buehne);
       return;
     }
 
@@ -126,26 +133,21 @@
       start: "top top",
       end: "bottom bottom",
       scrub: true,
-      onUpdate: function (self) {
-        heim.style.setProperty("--fh-weg", self.progress.toFixed(4));
-        blitzZuenden(blitz, self.progress);
-      },
+      onUpdate: function (self) { wegSetzen(heim, self.progress); },
     });
   }
 
   /* Ohne GSAP (CDN nicht erreichbar) derselbe Wert von Hand.
      rAF-gedrosselt, damit der Scroll-Handler nicht bei jedem
      Ereignis rechnet. */
-  function fhStartFallback(heim, bahn, buehne, blitz) {
+  function fhStartFallback(heim, bahn, buehne) {
     let laeuft = false;
 
     function rechnen() {
       laeuft = false;
       const strecke = bahn.offsetHeight - buehne.offsetHeight;
       if (strecke <= 0) return;
-      const weg = Math.min(1, Math.max(0, heim.scrollTop / strecke));
-      heim.style.setProperty("--fh-weg", weg.toFixed(4));
-      blitzZuenden(blitz, weg);
+      wegSetzen(heim, Math.min(1, Math.max(0, heim.scrollTop / strecke)));
     }
 
     heim.addEventListener("scroll", function () {

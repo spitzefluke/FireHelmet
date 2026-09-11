@@ -1,116 +1,41 @@
 /* ======================================================
-   STARTSEITE
+   STARTSEITE: DIE OZEAN-REISE
    ---------------------------------------------------
-   Eine lange Bahn, eine klebende Buehne, ein sichtbares
-   Element: der Countdown.
+   Eine lange Bahn, eine klebende Buehne, eine 3D-Szene und
+   sieben Kapiteltexte darueber. Am Ende, ueber der Schatzinsel,
+   steht der Countdown - in 3D, gezeichnet von
+   scripts/home/ozean-szene.js.
 
    ALLES haengt an --fh-weg (0 bis 1), das
    scripts/home/startseite.js per ScrollTrigger schreibt.
-   Gerechnet wird hier mit clamp() statt in JavaScript - so
-   laeuft die Sequenz im Compositor und nicht bei jedem
-   Scrollpixel durch den Hauptthread.
+   Gerechnet wird hier mit clamp() und min() statt in
+   JavaScript - so laeuft die Sequenz im Compositor und nicht bei
+   jedem Scrollpixel durch den Hauptthread.
 
-   Das Muster dahinter: jeder Abschnitt bekommt ein Fenster
-   [a, b] auf der Strecke, und
+   Das Muster fuer jedes Kapitel: es bekommt ein Fenster
+   [--von, --bis] auf der Strecke und blendet an beiden Enden
+   ueber 0.03 der Strecke ein und aus. Uebernommen aus dem
+   Entwurf "Schatzinsel Scroll", dort in JavaScript gerechnet.
 
-       clamp(0, (var(--fh-weg) - a) / (b - a), 1)
-
-   ist sein eigener Fortschritt darin. Auf- und Abblenden ist
-   dann die Differenz zweier solcher Fenster.
-
-   Die sechs Abschnitte. Die Zahl in Klammern ist das HALTEN -
-   dort steht das Bild still, damit man ankommt statt nur
-   hindurchzureisen.
-     0.00 - 0.20  Tiefe          (bis 0.10) fast schwarz, Partikel
-     0.10 - 0.38  Aufstieg       (0.19-0.29) Wasser hellt auf, Lichtschacht
-     0.34 - 0.49  Durchbruch     (0.40-0.43) die Oberflaeche zieht vorbei
-     0.46 - 0.74  Sturm          (0.55-0.65) Wolken, Regen, Blitz
-     0.70 - 1.00  Sternenhimmel  (ab 0.80) es klart auf
-     0.86 - 1.00  Morgengrauen   Gold, der Countdown in voller Staerke
+   Die sieben Kapitel:
+     -0.06 - 0.10  I    Auslaufen        Romna liegt hinter uns
+      0.14 - 0.26  II   Die Fracht       Fuenf Schloesser
+      0.30 - 0.42  III  Volle Fahrt      Sie haelt auf uns zu
+      0.46 - 0.56  IV   Vorbei           Dreh bei (rechtsbuendig)
+      0.60 - 0.72  V    Im Kielwasser    Kurs nach Suedwest
+      0.76 - 0.86  VI   Land in Sicht    Klippen, Dschungel
+      0.89 - 1.06  VII  Die Schatzinsel  + Countdown
 ====================================================== */
 
 #home {
   --fh-weg: 0;
 
-  /* ---------------------------------------------------
-     JEDER ABSCHNITT IST EIN TRAPEZ MIT WEICHEN FLANKEN
-
-     Vorher war jeder Abschnitt eine gerade Rampe: er begann
-     abrupt, stieg gleichmaessig und ging sofort wieder herunter.
-     Man reiste dadurch nur hindurch, ohne irgendwo anzukommen.
-
-     Jetzt hat jeder drei Teile - AUF, HALTEN, AB:
-
-       auf-t   die rohe Rampe von a nach b, 0 bis 1
-       auf     dieselbe Rampe weich gemacht: t*t*(3-2t).
-               Das ist Smoothstep - Anfang und Ende flach, Mitte
-               steil. Genau der Unterschied zwischen "Schieberegler"
-               und "Atemzug".
-       ab      dasselbe fuer das Ausblenden
-       Ergebnis  auf * (1 - ab)
-
-     Zwischen dem Ende von "auf" und dem Anfang von "ab" liegt das
-     HALTEN: dort steht der Abschnitt voll da und veraendert sich
-     nicht. Das ist der Moment des Ankommens.
-  --------------------------------------------------- */
-
-  /* 1. TIEFE - steht am Anfang voll da, geht 0.10 bis 0.20 */
-  --t-tiefe-ab: clamp(0, calc((var(--fh-weg) - 0.10) / 0.10), 1);
-  --fh-tiefe: calc(1 - var(--t-tiefe-ab) * var(--t-tiefe-ab) * (3 - 2 * var(--t-tiefe-ab)));
-
-  /* 2. AUFSTIEG - auf 0.10-0.19, halten bis 0.29, ab bis 0.38 */
-  --t-auf-a: clamp(0, calc((var(--fh-weg) - 0.10) / 0.09), 1);
-  --t-auf-z: clamp(0, calc((var(--fh-weg) - 0.29) / 0.09), 1);
-  --fh-aufstieg: calc(
-      var(--t-auf-a) * var(--t-auf-a) * (3 - 2 * var(--t-auf-a))
-    * (1 - var(--t-auf-z) * var(--t-auf-z) * (3 - 2 * var(--t-auf-z))));
-
-  /* 3. DURCHBRUCH - kurz und heftig: auf 0.34-0.40, halten bis
-        0.43, ab bis 0.49. Die Wasseroberflaeche zieht vorbei, da
-        gibt es nichts lange zu halten. */
-  --t-durch-a: clamp(0, calc((var(--fh-weg) - 0.34) / 0.06), 1);
-  --t-durch-z: clamp(0, calc((var(--fh-weg) - 0.43) / 0.06), 1);
-  --fh-durchbruch: calc(
-      var(--t-durch-a) * var(--t-durch-a) * (3 - 2 * var(--t-durch-a))
-    * (1 - var(--t-durch-z) * var(--t-durch-z) * (3 - 2 * var(--t-durch-z))));
-
-  /* 4. STURM - auf 0.46-0.55, halten bis 0.65, ab bis 0.74 */
-  --t-sturm-a: clamp(0, calc((var(--fh-weg) - 0.46) / 0.09), 1);
-  --t-sturm-z: clamp(0, calc((var(--fh-weg) - 0.65) / 0.09), 1);
-  --fh-sturm: calc(
-      var(--t-sturm-a) * var(--t-sturm-a) * (3 - 2 * var(--t-sturm-a))
-    * (1 - var(--t-sturm-z) * var(--t-sturm-z) * (3 - 2 * var(--t-sturm-z))));
-
-  /* Das reine Abklingen des Sturms - dort setzt die Nacht an. */
-  --fh-sturm-ende: calc(var(--t-sturm-z) * var(--t-sturm-z) * (3 - 2 * var(--t-sturm-z)));
-
-  /* 5. NACHT - auf 0.70-0.80, haelt bis zum Schluss */
-  --t-nacht: clamp(0, calc((var(--fh-weg) - 0.70) / 0.10), 1);
-  --fh-nacht: calc(var(--t-nacht) * var(--t-nacht) * (3 - 2 * var(--t-nacht)));
-
-  /* 6. MORGEN - auf 0.86-1.00, das Ziel der Reise */
-  --t-morgen: clamp(0, calc((var(--fh-weg) - 0.86) / 0.14), 1);
-  --fh-morgen: calc(var(--t-morgen) * var(--t-morgen) * (3 - 2 * var(--t-morgen)));
-
-  /* DAS BOOT - kommt mit dem Durchbruch und bleibt.
-     Kein Abblenden: es ist das einzige Ding in der Kulisse, das
-     kein Wetter ist, und soll bis zum Morgengrauen mitfahren.
-
-     ACHTUNG: dieselben Zahlen stehen in
-     scripts/home/startseite-boot.js (Konstante AUFTRITT). Das
-     Skript kann sie hier nicht ablesen - getPropertyValue()
-     liefert bei nicht registrierten Custom Properties nur den
-     rohen calc()-Text. Wer eine aendert, aendert beide. */
-  --t-boot: clamp(0, calc((var(--fh-weg) - 0.36) / 0.10), 1);
-  --fh-boot: calc(var(--t-boot) * var(--t-boot) * (3 - 2 * var(--t-boot)));
-
-  background: #04070d;
+  background: #090b12;
 
   /* Die Seite traegt sonst padding: 90px 0 94px fuer Topbar und
-     untere Tab-Leiste. Hier stoert das doppelt: die Kulisse soll
+     untere Tab-Leiste. Hier stoert das doppelt: die Szene soll
      randlos bis unter beide laufen, UND die 184px landeten als
-     Zugabe im Scrollweg (gemessen: 4184 statt 4000). Der Countdown
-     sitzt mittig und geraet dadurch unter keine der beiden Leisten. */
+     Zugabe im Scrollweg (gemessen: 4184 statt 4000). */
   padding: 0;
 }
 
@@ -129,406 +54,493 @@
      Scroll-Containers. Der Ersatzwert greift nur, solange das
      Skript noch nicht gelaufen ist. */
   height: var(--fh-schirm, 100svh);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
   overflow: hidden;
 }
 
-.fh-start-kulisse {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.fh-start-kulisse > * {
-  position: absolute;
-  inset: 0;
-}
-
-/* ---------- 1. TIEFE ---------- */
-.fh-start-tiefe {
-  background:
-    radial-gradient(ellipse 120% 80% at 50% -10%,
-      rgba(24, 58, 92, calc(.04 + .62 * var(--fh-aufstieg))) 0%,
-      transparent 60%),
-    linear-gradient(180deg,
-      #040913 0%,
-      #020509 45%,
-      #010205 100%);
-}
-
-/* Aufsteigende Partikel. Sie steigen NICHT von selbst, sondern
-   werden vom Scrollen getragen - sonst waere es eine Dauerschleife
-   ohne Bezug zur Bewegung. */
-.fh-start-partikel {
-  background-image:
-    radial-gradient(circle, rgba(180, 220, 255, .5) 1px, transparent 1.4px),
-    radial-gradient(circle, rgba(150, 200, 240, .32) 1px, transparent 1.6px);
-  background-size: 90px 140px, 150px 220px;
-  background-position:
-    0 calc(var(--fh-weg) * -1800px),
-    45px calc(var(--fh-weg) * -2900px);
-  opacity: calc(.75 * var(--fh-tiefe) + .25 * var(--fh-aufstieg) * (1 - var(--fh-durchbruch)));
-}
-
-/* ---------- 2. AUFSTIEG: Lichtschacht von oben ---------- */
-.fh-start-schacht {
-  background:
-    conic-gradient(from 178deg at 50% -30%,
-      transparent 0deg,
-      rgba(150, 205, 255, .13) 3deg,
-      transparent 7deg,
-      transparent 352deg,
-      rgba(150, 205, 255, .10) 356deg,
-      transparent 360deg);
-  opacity: calc(var(--fh-aufstieg) * (1 - var(--fh-durchbruch)));
-  transform: translateY(calc(var(--fh-aufstieg) * 8vh)) scaleY(1.4);
-}
-
-/* ---------- 3. DURCHBRUCH: die Wasseroberflaeche zieht vorbei ---------- */
-.fh-start-oberflaeche {
-  background:
-    linear-gradient(180deg,
-      transparent 0%,
-      rgba(190, 230, 255, .0) 42%,
-      rgba(210, 240, 255, .55) 49%,
-      rgba(255, 255, 255, .85) 50%,
-      rgba(210, 240, 255, .5) 51%,
-      rgba(120, 180, 230, .18) 58%,
-      transparent 100%);
-  /* Zieht von unten nach oben durch das Bild. */
-  transform: translateY(calc(115% - var(--fh-durchbruch) * 230%));
-  opacity: calc(var(--fh-durchbruch) * (1 - var(--fh-durchbruch)) * 4);
-  filter: blur(1px);
-}
-
-/* ---------- 4. STURM ---------- */
-.fh-start-wolken {
-  background:
-    radial-gradient(ellipse 62% 46% at 18% 30%, rgba(46, 58, 78, .98), transparent 68%),
-    radial-gradient(ellipse 70% 50% at 76% 22%, rgba(34, 44, 62, .96), transparent 70%),
-    radial-gradient(ellipse 55% 40% at 48% 44%, rgba(28, 37, 54, .9),  transparent 70%),
-    linear-gradient(180deg, rgba(14, 19, 30, .96) 0%, rgba(14, 19, 30, .6) 45%, transparent 78%);
-  transform: translateX(calc(var(--fh-weg) * -14vw));
-  opacity: calc(var(--fh-sturm) * (1 - var(--fh-sturm-ende)));
-}
-
-/* Zwei Lagen mit unterschiedlicher Neigung und Geschwindigkeit -
-   eine einzelne sieht aus wie eine Schraffur, zwei wie Regen. */
-.fh-start-regen {
-  background-image:
-    repeating-linear-gradient(101deg,
-      rgba(205, 230, 255, .55) 0 1.5px, transparent 1.5px 11px),
-    repeating-linear-gradient(97deg,
-      rgba(170, 205, 245, .3) 0 1px, transparent 1px 17px);
-  background-size: 100% 260px, 100% 420px;
-  background-position:
-    0 calc(var(--fh-weg) * 7200px),
-    0 calc(var(--fh-weg) * 4300px);
-  opacity: calc(var(--fh-sturm) * (1 - var(--fh-sturm-ende)));
-}
-
-/* Der Blitz wird von startseite.js gezuendet, nicht von einer
-   Schleife - er gehoert zum Sturmabschnitt und sonst nirgendwohin. */
-.fh-start-blitz {
-  background: radial-gradient(ellipse 90% 60% at 50% 8%,
-    rgba(226, 240, 255, .85), rgba(160, 200, 255, .25) 40%, transparent 70%);
-  opacity: 0;
-}
-
-.fh-start-blitz.zuckt {
-  animation: fhStartBlitz 420ms ease-out;
-}
-
-@keyframes fhStartBlitz {
-  0%   { opacity: 0; }
-  6%   { opacity: .9; }
-  12%  { opacity: .1; }
-  20%  { opacity: .75; }
-  100% { opacity: 0; }
-}
-
-/* ---------- 5. STERNENHIMMEL ---------- */
-.fh-start-sterne {
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, .95) 1px, transparent 1.6px),
-    radial-gradient(circle, rgba(200, 225, 255, .7) 1px, transparent 1.4px),
-    radial-gradient(circle, rgba(255, 240, 210, .8) 1.2px, transparent 2px);
-  background-size: 180px 180px, 110px 130px, 320px 300px;
-  background-position:
-    calc(var(--fh-weg) * -60px) calc(var(--fh-weg) * -40px),
-    calc(var(--fh-weg) * 40px)  calc(var(--fh-weg) * -70px),
-    calc(var(--fh-weg) * -20px) calc(var(--fh-weg) * -25px);
-  opacity: calc(var(--fh-nacht) * (1 - var(--fh-morgen) * .55));
-}
-
-/* ---------- 6. MORGENGRAUEN ---------- */
-.fh-start-morgen {
-  background:
-    radial-gradient(ellipse 130% 70% at 50% 108%,
-      rgba(255, 196, 92, .55) 0%,
-      rgba(214, 138, 60, .28) 28%,
-      rgba(60, 40, 70, .12) 55%,
-      transparent 78%);
-  opacity: var(--fh-morgen);
-}
-
-/* Die Kimm taucht mit dem Durchbruch auf und bleibt bis zum Schluss. */
-.fh-start-horizont {
-  background: linear-gradient(180deg,
-    transparent calc(61% - 1px),
-    rgba(255, 214, 140, calc(.12 + .5 * var(--fh-morgen))) 61%,
-    transparent calc(61% + 1.5px));
-  opacity: calc(var(--fh-durchbruch) * .55 + var(--fh-morgen) * .45);
-}
-
 /* ======================================================
-   DAS BOOT
-   ---------------------------------------------------
-   Eine Leinwand fuer three.js und darunter dieselbe Silhouette
-   flach als SVG. Sichtbar ist immer nur eine von beiden: ohne
-   brauchbares WebGL setzt scripts/home/startseite-boot.js die
-   Klasse .fh-boot-flach-an, und die Rollen tauschen.
-
-   Das Ein- und Ausblenden macht in beiden Faellen dieselbe
-   Groesse (--fh-boot), damit der Auftritt sich nicht danach
-   richtet, ob 3D lief.
+   DIE SZENE
 ====================================================== */
-.fh-start-boot {
-  opacity: var(--fh-boot);
-  /* Das Boot faehrt ueber den Weg noch ein Stueck heran - eine
-     Bewegung, die auch ohne 3D vorhanden ist. */
-  transform: scale(calc(.92 + .1 * var(--fh-boot) + .06 * var(--fh-morgen)));
+.fh-ozean {
+  position: absolute;
+  inset: 0;
 }
 
-.fh-boot-leinwand {
+.fh-ozean-leinwand {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-/* Der flache Ersatz liegt bereit, zeigt sich aber nur, wenn das
-   Skript ihn anfordert. */
-.fh-boot-flach {
+/* Vier Ebenen aus dem Entwurf, die das Bild nach aussen
+   abdunkeln. Sie sind der Grund, warum die Texte am Rand
+   lesbar bleiben, ohne dass jeder Text einen eigenen Kasten
+   braucht. */
+.fh-ozean-schleier {
   position: absolute;
   inset: 0;
-  display: none;
+  pointer-events: none;
+}
+
+.fh-ozean-schleier-rund {
+  background: radial-gradient(115% 85% at 50% 52%,
+    rgba(9, 11, 18, 0) 40%,
+    rgba(9, 11, 18, .62) 100%);
+}
+
+.fh-ozean-schleier-kante {
+  box-shadow: inset 0 0 260px rgba(5, 6, 12, .9);
+}
+
+.fh-ozean-schleier-unten {
+  background: linear-gradient(to top,
+    rgba(10, 12, 20, .92) 0%,
+    rgba(10, 12, 20, .78) 22%,
+    rgba(10, 12, 20, .56) 44%,
+    rgba(10, 12, 20, .2) 60%,
+    transparent 74%);
+}
+
+.fh-ozean-schleier-seiten {
+  background: linear-gradient(to right,
+    rgba(10, 12, 20, .72) 0%,
+    rgba(10, 12, 20, .28) 26%,
+    transparent 46%,
+    rgba(10, 12, 20, .28) 74%,
+    rgba(10, 12, 20, .72) 100%);
+}
+
+/* Filmkorn. Ein eingebettetes SVG, kein Bild - es waere sonst
+   ein weiterer Netzabruf fuer 140x140 Pixel Rauschen. */
+.fh-ozean-korn {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .055;
+  z-index: 5;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+}
+
+/* Die Balken oben und unten wachsen zur Mitte der Reise von
+   4vh auf 8vh - das Bild wird breiter, je naeher die Insel
+   kommt. */
+.fh-ozean-balken {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(4vh + 4vh * clamp(0, calc((var(--fh-weg) - 0.42) / 0.2), 1));
+  background: #090b12;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.fh-ozean-balken-oben { top: 0; }
+.fh-ozean-balken-unten { bottom: 0; }
+
+/* ======================================================
+   DIE KAPITEL
+====================================================== */
+.fh-kapitel {
+  position: absolute;
+  left: 6vw;
+  bottom: 18vh;
+  max-width: min(620px, 80vw);
+  z-index: 2;
+
+  /* Ein- und Ausblenden aus dem eigenen Fenster [--von, --bis].
+     min() nimmt den kleineren der beiden Raender - so blendet
+     das Kapitel am Anfang ein und am Ende wieder aus. */
+  --ein: clamp(0, calc((var(--fh-weg) - var(--von)) / 0.03), 1);
+  --aus: clamp(0, calc((var(--bis) - var(--fh-weg)) / 0.03), 1);
+  --da: min(var(--ein), var(--aus));
+
+  opacity: var(--da);
+  transform: translateY(calc((1 - var(--da)) * 22px));
+  filter: blur(calc((1 - var(--da)) * 4px));
+
+  /* Ohne das faengt der unsichtbare Text Klicks ab, die dem
+     Menue darunter gelten. */
+  pointer-events: none;
+}
+
+.fh-kapitel a {
+  pointer-events: auto;
+}
+
+/* Kapitel IV steht rechts und rechtsbuendig - der einzige
+   Seitenwechsel der ganzen Reise, genau an der Stelle, an der
+   das fremde Schiff vorbeizieht. */
+.fh-kapitel-rechts {
+  left: auto;
+  right: 6vw;
+  bottom: 20vh;
+  max-width: min(460px, 78vw);
+  text-align: right;
+}
+
+/* Kapitel VII sitzt mittig - dort steht der Countdown. */
+.fh-kapitel-mitte {
+  left: 0;
+  right: 0;
+  bottom: 14vh;
+  max-width: none;
+  text-align: center;
+}
+
+.fh-kapitel-marke {
+  display: flex;
   align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.fh-kapitel-rechts .fh-kapitel-marke {
+  justify-content: flex-end;
+}
+
+.fh-kapitel-mitte .fh-kapitel-marke {
   justify-content: center;
 }
 
-.fh-boot-flach svg {
-  width: min(42vw, 340px);
-  height: auto;
-  /* Dasselbe Wiegen wie in 3D, nur als Keyframe. Ohne
-     "alternate" saehe es aus wie ein Zeiger, der zurueckspringt. */
-  animation: fhBootWiegen 5.5s var(--fh-ease, ease-in-out) infinite alternate;
-  transform-origin: 50% 82%;
+.fh-kapitel-strich {
+  display: block;
+  width: 48px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--fh-gold, #d6a84f));
 }
 
-.fh-boot-flach-an .fh-boot-leinwand {
-  display: none;
+.fh-kapitel-rechts .fh-kapitel-strich {
+  background: linear-gradient(90deg, var(--fh-gold, #d6a84f), transparent);
 }
 
-.fh-boot-flach-an .fh-boot-flach {
+.fh-kapitel-nr {
+  font-size: 11px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--fh-gold-bright, #f0c96a);
+  font-weight: 500;
+}
+
+.fh-kapitel h1,
+.fh-kapitel h2 {
+  margin: 0;
+  font-family: var(--fh-font-display, "Oswald", system-ui, sans-serif);
+  font-weight: 300;
+  line-height: 1.02;
+  letter-spacing: -.025em;
+  color: var(--fh-fg, #e9edf5);
+
+  /* KEIN background-clip: text hier. Die Seitentitel auf den
+     anderen Seiten nutzen das, und dann sind Kind-<span> und
+     jede Textfarbe darin unsichtbar - das hat bei der letzten
+     Startseite schon einmal eine Buchstabenanimation
+     verschluckt. Auf dem dunklen Wasser reicht die Farbe. */
+}
+
+.fh-kapitel h1 {
+  font-size: clamp(40px, 6.2vw, 88px);
+  line-height: .98;
+  letter-spacing: -.03em;
+}
+
+.fh-kapitel h2 {
+  font-size: clamp(30px, 4.4vw, 60px);
+}
+
+.fh-kapitel-mitte h2 {
+  font-size: clamp(44px, 8vw, 130px);
+  line-height: .92;
+  letter-spacing: -.045em;
+}
+
+.fh-kapitel p {
+  margin: 18px 0 0;
+  font-size: clamp(15px, 1.25vw, 18px);
+  line-height: 1.65;
+  color: var(--fh-muted-fg, #a7aec0);
+  max-width: 42ch;
+}
+
+.fh-kapitel h1 + p {
+  margin-top: 20px;
+  max-width: 44ch;
+}
+
+.fh-kapitel-mitte p {
+  margin: 22px auto 0;
+  max-width: 40ch;
+  padding: 0 6vw;
+}
+
+.fh-kapitel-knoepfe {
+  margin-top: 28px;
   display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-@keyframes fhBootWiegen {
-  from { transform: rotate(-3.2deg) translateY(4px); }
-  to   { transform: rotate(3.2deg) translateY(-4px); }
+/* ======================================================
+   DER COUNTDOWN
+
+   Sichtbar ist normalerweise der 3D-Countdown in der Szene.
+   Das HTML darunter bleibt trotzdem im Dokument stehen, aus
+   zwei Gruenden:
+
+     1. scripts/core/countdown.js schreibt die Zahlen dort hinein
+        und ozean-szene.js liest sie von dort wieder ab. So kennt
+        genau EINE Stelle den Termin - samt der Moeglichkeit, ihn
+        ueber das Admin-Panel zu ueberschreiben.
+     2. Ein Countdown, den es nur in WebGL gibt, ist fuer einen
+        Screenreader nicht vorhanden.
+
+   Deshalb wird er versteckt, nicht entfernt.
+====================================================== */
+.fh-start-countdown {
+  margin-top: 26px;
 }
 
-/* Die Kulisse liegt mit inset: 0 ueber dem ganzen Schirm. Das
-   Boot soll aber im unteren Drittel fahren, nicht mitten durch
-   den Countdown - deshalb hier ein eigener Ausschnitt. */
-.fh-start-kulisse > .fh-start-boot {
-  top: auto;
-  bottom: 0;
-  height: 62%;
+/* Laeuft die Szene, ist der flache Countdown nur noch fuer
+   Screenreader da. */
+#home:not(.fh-ohne-ozean) .fh-start-countdown {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .fh-boot-flach svg {
-    animation: none;
-  }
+#home .countdown {
+  display: flex;
+  justify-content: center;
+  gap: clamp(8px, 1.4vw, 18px);
+  flex-wrap: wrap;
+}
+
+#home .time-box {
+  min-width: clamp(72px, 9vw, 128px);
+  padding: clamp(10px, 1.4vw, 18px) clamp(8px, 1.2vw, 16px);
+  border-radius: 14px;
+  text-align: center;
+  border: 1px solid rgba(240, 201, 106, .34);
+  background: rgba(10, 16, 26, .5);
+  backdrop-filter: blur(3px);
+}
+
+/* ======================================================
+   RAHMEN: LOGBUCH-MARKE, KAPITELZAEHLER, FORTSCHRITT
+====================================================== */
+.fh-ozean-marke {
+  position: absolute;
+  left: 6vw;
+  top: calc(6vh + 34px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.fh-ozean-raute {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--fh-gold, #d6a84f);
+  transform: rotate(45deg);
+}
+
+.fh-ozean-marke span:last-child,
+.fh-ozean-fortschritt span {
+  font-size: 11px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg, #7e8095);
+  font-weight: 500;
+}
+
+.fh-ozean-fortschritt {
+  position: absolute;
+  right: 6vw;
+  top: calc(6vh + 34px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.fh-ozean-schiene {
+  width: clamp(90px, 13vw, 170px);
+  height: 1px;
+  background: rgba(214, 168, 79, .24);
+  position: relative;
+}
+
+.fh-ozean-balkenzeiger {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 1px;
+  width: calc(var(--fh-weg) * 100%);
+  background: var(--fh-gold, #d6a84f);
+  box-shadow: 0 0 12px rgba(214, 168, 79, .8);
 }
 
 /* ======================================================
    DER SCROLL-WINK
    Kein Dauerlaeufer: er taucht einmal auf, wenn drei Sekunden
-   lang nichts passiert ist, und ist nach dem ersten Scrollen weg.
+   lang nichts passiert ist, und ist nach dem ersten Scrollen
+   weg. Zusaetzlich blendet ihn --fh-weg sofort aus, sobald sich
+   ueberhaupt etwas bewegt.
 ====================================================== */
 .fh-start-wink {
   position: absolute;
   left: 50%;
-  bottom: clamp(28px, 7vh, 64px);
-  z-index: 3;
+  bottom: 5vh;
+  transform: translateX(-50%);
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  transform: translateX(-50%);
+  padding: 8px 14px;
   border: 0;
   background: none;
-  color: var(--fh-muted-fg, #8296ad);
-  font: inherit;
-  font-size: .7rem;
-  font-weight: 600;
-  letter-spacing: .22em;
-  text-transform: uppercase;
   cursor: pointer;
-  animation: fhWinkRein 600ms var(--fh-ease, ease) both;
+  color: var(--fh-muted-fg, #7e8095);
+  font-size: 10px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  opacity: max(0, calc(1 - var(--fh-weg) * 26));
 }
 
-/* Zum zweiten Mal in diesem Projekt: [hidden] bringt vom Browser nur
-   display:none mit, und jede eigene display-Angabe gewinnt dagegen.
-   .fh-start-wink ist display:flex - ohne diese Regel stand der Wink
-   sofort da statt nach drei Sekunden. Gemessen, nicht vermutet. */
-.fh-start-wink[hidden] { display: none; }
-
-.fh-start-wink:hover { color: var(--fh-gold, #d6a84f); }
-
-.fh-start-wink:focus-visible {
-  outline: 2px solid var(--fh-gold, #d6a84f);
-  outline-offset: 4px;
-  border-radius: var(--fh-radius, 12px);
+/* [hidden] allein genuegt NICHT, wenn das Element eine eigene
+   display-Angabe hat - die gewinnt. Ohne diese Regel stand der
+   Wink sofort da, statt nach drei Sekunden. Dieselbe Falle hat
+   diese Datei schon einmal getroffen. */
+.fh-start-wink[hidden] {
+  display: none;
 }
 
 .fh-start-wink-pfeil {
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
-  animation: fhWinkTippt 1.8s var(--fh-ease, ease-in-out) infinite;
+  display: block;
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(180deg, var(--fh-gold, #d6a84f), transparent);
+  animation: fhWinkPuls 2.6s var(--fh-ease, ease-in-out) infinite;
 }
 
-@keyframes fhWinkRein {
-  from { opacity: 0; transform: translate(-50%, 10px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
-}
-
-/* Die einzige Schleife auf dieser Seite - und sie lebt nur, solange
-   der Wink zu sehen ist, also hoechstens bis zum ersten Scrollen. */
-@keyframes fhWinkTippt {
-  0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: .55; }
-  50%      { transform: rotate(45deg) translate(3px, 3px); opacity: 1; }
+@keyframes fhWinkPuls {
+  0%, 100% { transform: translateY(0); opacity: .75; }
+  50% { transform: translateY(5px); opacity: .35; }
 }
 
 /* ======================================================
-   DER COUNTDOWN
-   Er steht die ganze Strecke ueber still in der Mitte und
-   wandelt nur seine Erscheinung: in der Tiefe matt, klein und
-   fast farblos, am Ende voll und golden.
+   OHNE SZENE
+
+   Kein WebGL, nur Software-Rasterung, zu wenig Bilder/s oder
+   reduzierte Bewegung: ozean-szene.js setzt dann
+   .fh-ohne-ozean auf #home.
+
+   Dann bleibt der Countdown auf einem ruhigen dunklen Verlauf -
+   so, wie er auch vorher aussah. Die Kapiteltexte verschwinden:
+   sie beschreiben Bilder, die es ohne Szene nicht gibt
+   ("Schwarze Flagge, alle Segel gesetzt") und stuenden sonst
+   als Behauptung auf leerem Grund.
 ====================================================== */
-.fh-start-countdown {
-  position: relative;
-  z-index: 2;
-  padding: 0 20px;
-  /* Grundgroesse zwischen 0.94 und 1.04 - kaum messbar, aber
-     spuerbar. Dazu der EINE Moment, in dem der Countdown Teil der
-     Szene wird statt nur davorzustehen: beim Durchstossen der
-     Wasseroberflaeche zuckt er kurz mit (+7%). Danach steht er
-     wieder still. */
-  transform: scale(calc(
-      .94
-    + .10 * var(--fh-morgen)
-    + .07 * var(--fh-durchbruch)));
-  transition: transform 120ms linear;
+#home.fh-ohne-ozean .fh-ozean-leinwand,
+#home.fh-ohne-ozean .fh-ozean-korn,
+#home.fh-ohne-ozean .fh-ozean-balken,
+#home.fh-ohne-ozean .fh-ozean-fortschritt,
+#home.fh-ohne-ozean .fh-start-wink,
+#home.fh-ohne-ozean .fh-kapitel:not(.fh-kapitel-mitte) {
+  display: none;
 }
 
-#home .countdown {
+#home.fh-ohne-ozean .fh-start {
+  height: auto !important;
+}
+
+#home.fh-ohne-ozean .fh-ozean {
+  background:
+    radial-gradient(120% 80% at 50% 30%, rgba(32, 48, 74, .55) 0%, transparent 62%),
+    linear-gradient(180deg, #0b1220 0%, #070a11 60%, #05070c 100%);
+}
+
+#home.fh-ohne-ozean .fh-kapitel-mitte {
+  position: static;
+  opacity: 1;
+  filter: none;
+  transform: none;
+  padding: 0 6vw;
+}
+
+#home.fh-ohne-ozean .fh-start-buehne {
   display: flex;
-  flex-wrap: wrap;
-  gap: clamp(10px, 2.4vw, 26px);
+  align-items: center;
   justify-content: center;
-  margin: 0;
-}
-
-#home .time-box {
-  min-width: clamp(64px, 15vw, 108px);
-  padding: clamp(12px, 2.2vw, 22px) clamp(10px, 2vw, 18px);
-  border-radius: var(--fh-radius, 14px);
-  text-align: center;
-
-  /* Rand und Flaeche ziehen mit dem Weg an. */
-  /* Der Rand blitzt beim Durchbruch kurz hell auf - dasselbe
-     Ereignis, nur am Rahmen statt an der Groesse. */
-  border: 1px solid rgba(
-    calc(240 + 15 * var(--fh-durchbruch)),
-    calc(201 + 54 * var(--fh-durchbruch)),
-    calc(106 + 149 * var(--fh-durchbruch)),
-    calc(.10 + .45 * var(--fh-morgen) + .12 * var(--fh-nacht) + .55 * var(--fh-durchbruch)));
-  background: rgba(10, 16, 26, calc(.30 + .45 * var(--fh-sturm) * (1 - var(--fh-sturm-ende))));
-  backdrop-filter: blur(calc(2px + 6px * var(--fh-tiefe)));
-  box-shadow: 0 0 calc(var(--fh-morgen) * 42px) rgba(240, 201, 106, calc(var(--fh-morgen) * .28));
-}
-
-#home .time-box span {
-  display: block;
-  font-family: var(--fh-font-display, 'Oswald'), 'Arial Narrow', sans-serif;
-  font-size: clamp(30px, 7.5vw, 66px);
-  font-weight: 600;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-
-  /* Von blassblau in der Tiefe nach Gold am Morgen. */
-  color: color-mix(
-    in srgb,
-    var(--fh-gold-bright, #ffe9b0) calc(var(--fh-morgen) * 100%),
-    rgba(196, 220, 245, .82));
-  text-shadow: 0 0 calc(var(--fh-morgen) * 26px) rgba(240, 201, 106, calc(var(--fh-morgen) * .5));
-}
-
-#home .time-box small {
-  display: block;
-  margin-top: 6px;
-  font-size: clamp(9px, 1.5vw, 11px);
-  font-weight: 600;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: rgba(190, 208, 230, calc(.35 + .45 * var(--fh-morgen)));
-}
-
-/* Der Sekundentakt (countdown.js setzt .changed/.tick) bleibt
-   erhalten, faellt hier aber leiser aus als auf den anderen
-   Seiten - eine springende Zahl vor einem ruhigen Bild faellt
-   sonst zu hart auf. */
-#home .time-box.tick {
-  animation: fhStartTick 380ms var(--fh-ease, ease-out);
-}
-
-@keyframes fhStartTick {
-  50% { border-color: rgba(240, 201, 106, .55); }
 }
 
 /* ======================================================
-   BEWEGUNG REDUZIEREN
-   startseite.js setzt --fh-weg dann fest auf 1: man sieht
-   sofort das Ende der Reise - goldener Countdown, klarer
-   Himmel - und scrollt durch eine ruhige Seite.
+   SCHMALE SCHIRME
+   Die Texte des Entwurfs sitzen bei 6vw vom Rand und 18vh von
+   unten. Auf dem Handy ist das zu weit unten: dort liegt die
+   Tab-Leiste, und der Text steht mitten im Bild statt darunter.
 ====================================================== */
-@media (prefers-reduced-motion: reduce) {
-  .fh-start-countdown { transition: none; }
-  .fh-start-wink { animation: none; }
-  .fh-start-wink-pfeil { animation: none; }
-  .fh-start-blitz.zuckt { animation: none; }
-  #home .time-box.tick { animation: none; }
-}
-
-/* Vier Kaesten brechen auf dem Handy zu 3+1 um - das sieht aus wie
-   ein Versehen. Zwei mal zwei ist ruhiger. */
-@media (max-width: 560px) {
-  #home .countdown {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    width: min(320px, 88vw);
+@media (max-width: 720px) {
+  .fh-kapitel {
+    left: 6vw;
+    right: 6vw;
+    bottom: 22vh;
+    max-width: none;
   }
 
-  #home .time-box { min-width: 0; padding: 14px 8px; }
-  #home .time-box span { font-size: clamp(34px, 12vw, 52px); }
+  .fh-kapitel-rechts {
+    left: 6vw;
+    right: 6vw;
+    text-align: left;
+  }
+
+  .fh-kapitel-rechts .fh-kapitel-marke {
+    justify-content: flex-start;
+  }
+
+  .fh-kapitel-rechts .fh-kapitel-strich {
+    background: linear-gradient(90deg, transparent, var(--fh-gold, #d6a84f));
+  }
+
+  .fh-ozean-marke {
+    display: none; /* neben dem Hamburger-Knopf waere es zu eng */
+  }
+
+  .fh-kapitel p {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-start-wink-pfeil {
+    animation: none;
+  }
+}
+
+/* Der zweite Knopf in Kapitel VII tritt zurueck. Einen fertigen
+   Sekundaer-Stil gibt es in diesem Projekt nicht - es gibt genau
+   .code-button - deshalb hier eine kleine, auf die Startseite
+   begrenzte Abwandlung statt einer neuen globalen Klasse. */
+#home .fh-kapitel-knopf-still {
+  background: transparent;
+  border-color: rgba(214, 168, 79, .42);
+  color: var(--fh-muted-fg, #8296ad);
+}
+
+#home .fh-kapitel-knopf-still:hover {
+  border-color: var(--fh-gold, #d6a84f);
+  color: var(--fh-gold-bright, #f0c96a);
 }
