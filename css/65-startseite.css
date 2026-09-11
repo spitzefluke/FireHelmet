@@ -189,6 +189,36 @@
   text-align: center;
 }
 
+/* Solange die 3D-Uhr laeuft, beginnt Kapitel VII UNTER ihr.
+   --fh-uhr-unten ist die Unterkante der Tafeln in Pixeln,
+   gemessen und geschrieben von scripts/home/ozean-szene.js.
+
+   Vorher hing der Block nur am unteren Bildrand. Bei kurzen
+   Fenstern wanderte er dadurch in die Tafeln: bei 883x563 stand
+   "KAPITEL VII" mitten zwischen den Ziffern. Da die Tafeln in
+   der 3D-Welt haengen und der Text am Bildrand, gibt es kein
+   Seitenverhaeltnis, bei dem das von allein passt.
+
+   Der Block spannt von der Uhr bis zum unteren Rand und legt
+   seinen Inhalt darin nach unten - so bleibt der Abstand zur
+   Uhr erhalten, ohne dass der Text bei hohen Fenstern in der
+   Luft haengt. */
+#home.fh-uhr-3d .fh-kapitel-mitte {
+  top: calc(var(--fh-uhr-unten, 0px) + 2.2vh);
+  bottom: 5vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Im Flex-Kasten wuerden die auto-Seitenraender der Absaetze die
+   Elemente auf ihre Inhaltsbreite schrumpfen - die 40ch-Grenze
+   und die Zentrierung darin waeren dahin. */
+#home.fh-uhr-3d .fh-kapitel-mitte > * {
+  width: 100%;
+}
+
 .fh-kapitel-marke {
   display: flex;
   align-items: center;
@@ -521,6 +551,40 @@
 
   .fh-kapitel p {
     max-width: none;
+  }
+}
+
+/* ======================================================
+   NIEDRIGE FENSTER
+   Zwischen der Unterkante der Uhr und dem unteren Rand bleibt
+   auf einem flachen Fenster wenig Platz. Titel und Abstaende
+   ruecken dort zusammen, damit der Block nicht ueberlaeuft.
+====================================================== */
+@media (max-height: 720px) {
+  .fh-kapitel-mitte h2 {
+    font-size: clamp(30px, 5.6vw, 64px);
+  }
+
+  .fh-kapitel-mitte p {
+    margin-top: 12px;
+    font-size: clamp(13px, 1.1vw, 15px);
+    line-height: 1.5;
+  }
+
+  .fh-kapitel-knoepfe {
+    margin-top: 16px;
+  }
+
+  .fh-kapitel-mitte .fh-kapitel-marke {
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-height: 560px) {
+  /* Noch flacher: der Fliesstext tritt zurueck, Titel, Zahl und
+     die beiden Knoepfe bleiben. */
+  .fh-kapitel-mitte p {
+    display: none;
   }
 }
 

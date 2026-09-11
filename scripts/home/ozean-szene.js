@@ -484,6 +484,10 @@
     { id: "seconds", wort: "SEKUNDEN", wortEn: "SECONDS" }
   ];
 
+  const TAFEL_BREITE = 250;
+  const TAFEL_HOEHE = 230;
+  const TAFEL_LUFT = 30;
+
   /* 384 statt 256: bei 256 waren die Ziffern auf einem grossen
      Schirm sichtbar weich. Die Textur kostet so 576 KB statt
      256 KB - viermal, also gut 2 MB Grafikspeicher. Vertretbar
@@ -523,11 +527,14 @@
 
   function countdownBauen(gold, englisch) {
     const gruppe = new THREE.Group();
-    const BREITE = 210, HOEHE = 210, LUFT = 34;
+    const BREITE = TAFEL_BREITE, HOEHE = TAFEL_HOEHE, LUFT = TAFEL_LUFT;
     const gesamt = TAFELN.length * BREITE + (TAFELN.length - 1) * LUFT;
 
-    const rahmenMat = new THREE.MeshStandardMaterial({ color: 0x1b2436, roughness: 0.55, metalness: 0.25, transparent: true, opacity: 0 });
-    const kanteMat = new THREE.MeshStandardMaterial({ color: gold, roughness: 0.35, metalness: 0.6, transparent: true, opacity: 0 });
+    /* Dunkler und deckender als zuvor. Die Tafeln standen vor dem
+       hellen Morgenhimmel und dem Berg; bei 0x1b2436 mit 0.88
+       Deckkraft verschwammen die Ziffern mit dem Hintergrund. */
+    const rahmenMat = new THREE.MeshStandardMaterial({ color: 0x0a1020, roughness: 0.6, metalness: 0.2, transparent: true, opacity: 0 });
+    const kanteMat = new THREE.MeshStandardMaterial({ color: gold, roughness: 0.3, metalness: 0.65, transparent: true, opacity: 0 });
     const ziffernGeo = new THREE.PlaneGeometry(BREITE * 0.9, HOEHE * 0.9);
 
     const tafeln = TAFELN.map(function (feld, i) {
@@ -575,8 +582,46 @@
     gruppe.userData.tafeln = tafeln;
     gruppe.userData.rahmenMat = rahmenMat;
     gruppe.userData.kanteMat = kanteMat;
+    gruppe.userData.halbBreite = gesamt / 2;
     gruppe.visible = false;
     return gruppe;
+  }
+
+  /* ------------------------------------------------------
+     WO STEHT DIE UHR AUF DEM SCHIRM?
+
+     Die Tafeln haengen an einer festen Stelle in der 3D-Welt,
+     der Text von Kapitel VII haengt am unteren Bildrand. Bei
+     kurzen Fenstern wandert der Text in die Tafeln hinein -
+     gemessen bei 883x563: "KAPITEL VII" stand mitten zwischen
+     den Ziffern. Es gibt kein Seitenverhaeltnis, bei dem beides
+     von sich aus zusammenpasst.
+
+     Deshalb rechnet die Szene die Unterkante der Uhr in
+     Bildschirmpixel um und schreibt sie als --fh-uhr-unten nach
+     #home. Kapitel VII beginnt in der CSS darunter. Eine
+     Richtung, keine Rueckkopplung: die Szene meldet, das Layout
+     weicht aus.
+  ------------------------------------------------------ */
+  const ECKEN = [];
+  for (let sx = -1; sx <= 1; sx += 2) {
+    for (let sy = -1; sy <= 1; sy += 2) ECKEN.push(new THREE.Vector3(sx, sy, 0));
+  }
+  const eckeHilf = new THREE.Vector3();
+
+  function uhrUnterkante(gruppe, kamera, hoehePx) {
+    const hb = gruppe.userData.halbBreite;
+    const hh = TAFEL_HOEHE / 2 + 5;
+    let unten = -Infinity;
+    for (let i = 0; i < ECKEN.length; i++) {
+      eckeHilf.set(ECKEN[i].x * hb, ECKEN[i].y * hh, 0);
+      gruppe.localToWorld(eckeHilf);
+      eckeHilf.project(kamera);
+      // project() liefert -1..1 mit +1 oben; Bildschirm zaehlt von oben.
+      const y = (1 - eckeHilf.y) * 0.5 * hoehePx;
+      if (y > unten) unten = y;
+    }
+    return unten;
   }
 
   const BLENDE_MS = 200;
@@ -643,7 +688,9 @@
          Verlauf. Die Kapiteltexte bleiben im Markup stehen und
          werden von der CSS ausgeblendet - sie beschreiben Bilder,
          die es ohne Szene nicht gibt. */
-      document.getElementById("home").classList.add("fh-ohne-ozean");
+      const h = document.getElementById("home");
+      h.classList.add("fh-ohne-ozean");
+      h.classList.remove("fh-uhr-3d");
     }
 
     const webgl = window.fhWebGL;
@@ -798,6 +845,8 @@
     const uhr = new THREE.Clock();
     let geglaettet = 0;
     let bildNr = 0;
+    let letzteUhrKante = -1;
+    let uhrGemeldet = false;
 
     function groesseSetzen() {
       const b = huelle.clientWidth || window.innerWidth, h = huelle.clientHeight || window.innerHeight;
@@ -1001,11 +1050,27 @@
       const uhrAn = weich(0.87, 0.95, p);
       uhr3d.visible = uhrAn > 0.004;
       if (uhr3d.visible) {
+        uhr3d.position.y = insel.position.y + UHR_HOEHE + Math.sin(t * 0.5) * 9;
         uhrBlick.copy(kamera.position);
         uhrBlick.y = uhr3d.position.y;
         uhr3d.lookAt(uhrBlick);
-        uhr3d.position.y = insel.position.y + UHR_HOEHE + Math.sin(t * 0.5) * 9;
+        uhr3d.updateMatrixWorld();
         countdownAuffrischen(uhr3d, goldWert, dt, uhrAn);
+
+        /* Kapitel VII darf erst unterhalb der Tafeln beginnen -
+           siehe uhrUnterkante(). Nur schreiben, wenn sich der
+           Wert um mehr als ein Pixel geaendert hat: sonst
+           stuende in jedem Bild ein Stilattribut-Schreibzugriff,
+           und das Layout wuerde bei jedem Wiegen neu gerechnet. */
+        const unten = uhrUnterkante(uhr3d, kamera, huelle.clientHeight || 1);
+        if (Math.abs(unten - letzteUhrKante) > 1) {
+          letzteUhrKante = unten;
+          heim.style.setProperty("--fh-uhr-unten", Math.round(unten) + "px");
+        }
+        if (!uhrGemeldet) { uhrGemeldet = true; heim.classList.add("fh-uhr-3d"); }
+      } else if (uhrGemeldet) {
+        uhrGemeldet = false;
+        heim.classList.remove("fh-uhr-3d");
       }
 
       renderer.render(szene, kamera);
