@@ -508,14 +508,27 @@
 
     /* Zweimal zeichnen: erst breit und weich als Schein, dann
        hart darueber. Ein einzelner shadowBlur macht die Ziffer
-       insgesamt milchig, statt sie leuchten zu lassen. */
+       insgesamt milchig, statt sie leuchten zu lassen.
+
+       Die harte Lage war zuerst fast weiss (#fff3d6). Vor dem
+       hellen Morgenhimmel ging sie darin unter - eine weisse
+       Zahl auf weissem Grund. Jetzt liegt ein Verlauf von hellem
+       zu sattem Gold darauf: oben hell wie angestrahltes Metall,
+       unten dunkler, und dadurch an jeder Stelle ein Kontrast
+       zum Hintergrund. */
     ctx.font = "700 200px Oswald, 'Arial Narrow', Impact, sans-serif";
     ctx.fillStyle = gold;
-    ctx.shadowColor = "rgba(255, 198, 110, 0.9)";
-    ctx.shadowBlur = 40;
+    ctx.shadowColor = "rgba(255, 186, 74, 0.95)";
+    ctx.shadowBlur = 52;
     ctx.fillText(zahl, ZIFF / 2, 172);
+    ctx.fillText(zahl, ZIFF / 2, 172); // zweimal: der Schein traegt weiter
     ctx.shadowBlur = 0;
-    ctx.fillStyle = "#fff3d6";
+
+    const verlauf = ctx.createLinearGradient(0, 62, 0, 262);
+    verlauf.addColorStop(0, "#ffeec2");
+    verlauf.addColorStop(0.45, "#f5c862");
+    verlauf.addColorStop(1, "#c9923a");
+    ctx.fillStyle = verlauf;
     ctx.fillText(zahl, ZIFF / 2, 172);
 
     ctx.fillStyle = "rgba(226, 232, 240, 0.9)";

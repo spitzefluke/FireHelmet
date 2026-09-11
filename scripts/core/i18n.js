@@ -230,9 +230,7 @@ const translations = {
     "home.kap5Text": "Der Nebel reißt auf. Vor dem Bug wird es hell — und es ist nicht die Sonne.",
     "home.kap6Nr": "Kapitel VI — Land in Sicht",
     "home.kap6Titel": "Klippen, Dschungel, ein Licht",
-    "home.kap7Nr": "Kapitel VII",
-    "home.kap7Titel": "Die Schatzinsel",
-    "home.kap7Text": "Sie steht auf keiner Karte. Nur im Logbuch eines Mannes, der nie zurückkam — und in genau so vielen Tagen sind wir dort.",
+    "home.kap7Text": "Noch so lange, bis die Crew auf der Schatzinsel an Land geht.",
     "home.kap7Logbuch": "Logbuch lesen",
     "home.kap7Land": "An Land gehen",
 
@@ -749,9 +747,7 @@ const translations = {
     "home.kap5Text": "The fog breaks open. Ahead of the bow it turns bright — and it is not the sun.",
     "home.kap6Nr": "Chapter VI — Land Ahoy",
     "home.kap6Titel": "Cliffs, jungle, a light",
-    "home.kap7Nr": "Chapter VII",
-    "home.kap7Titel": "Treasure Island",
-    "home.kap7Text": "It is on no chart. Only in the logbook of a man who never came back — and in exactly that many days we will be there.",
+    "home.kap7Text": "That is how long until the crew goes ashore on Treasure Island.",
     "home.kap7Logbuch": "Read the logbook",
     "home.kap7Land": "Go ashore",
 
