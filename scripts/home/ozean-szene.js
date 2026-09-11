@@ -672,6 +672,218 @@
     }
   }
 
+  /* ------------------------------------------------------
+     DER HIMMEL ÜBER DER REISE
+
+     Vorher stand die Sonne die ganzen 8000px zwischen 1,6 und
+     4,0 Grad - es war durchgehend derselbe tiefe Sonnenaufgang,
+     und der Himmel war eine leere Farbflaeche. Jetzt laeuft eine
+     Zeitreise mit: Nacht, Daemmerung, Sturm, Morgen.
+
+     Die Zahlen sind nicht frei erfunden, sondern die Groessen,
+     die THREE.Sky aus der Atmosphaere rechnet:
+
+       hoehe      Sonnenstand in Grad. Negativ = unter dem
+                  Horizont, dann bleibt nur das Streulicht -
+                  genau das macht die blaue Stunde.
+       truebung   Dunst. Klare Nacht wenig, Sturm viel.
+       rayleigh   Streuung an Luftmolekuelen. Hoch = tiefes
+                  Blau oben und kraeftiges Rot am Horizont.
+       mie        Streuung an Tropfen und Staub. Hoch = weisser
+                  Schleier und ein grosser Hof um die Sonne.
+  ------------------------------------------------------ */
+  const HIMMEL_MARKEN = [
+    // weg,  hoehe, truebung, rayleigh, mie,    richtung
+    [0.00, -9.0, 1.6, 4.2, 0.0040, 202],  // Nacht
+    [0.22, -3.5, 2.4, 4.0, 0.0050, 196],  // erstes Grau
+    [0.40, 1.2, 5.0, 3.4, 0.0090, 188],  // Daemmerung, Morgenrot
+    [0.52, 0.6, 8.5, 2.0, 0.0110, 180],  // Sturm: Dunst, Farbe raus
+    [0.68, 0.9, 9.5, 1.8, 0.0120, 174],  // Sturm auf dem Hoehepunkt
+    [0.82, 2.6, 7.0, 3.2, 0.0080, 166],  // es reisst auf
+    [1.00, 5.5, 3.0, 3.8, 0.0035, 158]   // Morgen ueber der Insel
+  ];
+
+  function himmelBei(p, raus) {
+    for (let i = 1; i < HIMMEL_MARKEN.length; i++) {
+      if (p <= HIMMEL_MARKEN[i][0] || i === HIMMEL_MARKEN.length - 1) {
+        const a = HIMMEL_MARKEN[i - 1], b = HIMMEL_MARKEN[i];
+        const roh = klemm((p - a[0]) / (b[0] - a[0]), 0, 1);
+        const t = roh * roh * (3 - 2 * roh);
+        for (let k = 1; k <= 5; k++) raus[k - 1] = misch(a[k], b[k], t);
+        return raus;
+      }
+    }
+    return raus;
+  }
+
+  /* ---------- Wolken ----------
+     Ein Dom um die Szene, auf dessen Innenseite eine Wolkendecke
+     gezeichnet wird. Der Trick fuer echte Perspektive: die
+     Blickrichtung wird auf eine waagerechte Ebene in
+     Wolkenhoehe projiziert (dir.xz / dir.y). Dadurch draengen
+     sich die Wolken zum Horizont hin zusammen, so wie am echten
+     Himmel - eine Textur auf der Kugel wuerde dort stattdessen
+     auseinanderlaufen.
+
+     Die Form kommt aus fbm mit Domain Warping: das Rauschen
+     verzerrt sich selbst, und daraus werden Ballen statt Flecken.
+  ---------------------------------------------------------- */
+  const WOLKEN_FRAG = [
+    "precision highp float;",
+    "uniform float uZeit;",
+    "uniform float uDecke;",     // 0 klar, 1 zugezogen
+    "uniform float uDeck;",       // Gesamtdeckkraft
+    "uniform vec3  uSonne;",
+    "uniform vec3  uHell;",
+    "uniform vec3  uDunkel;",
+    "varying vec3  vWelt;",
+    "",
+    "float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
+    "float noise(vec2 p){",
+    "  vec2 i = floor(p), f = fract(p);",
+    "  vec2 u = f * f * (3.0 - 2.0 * f);",
+    "  return mix(mix(hash(i), hash(i + vec2(1,0)), u.x),",
+    "             mix(hash(i + vec2(0,1)), hash(i + vec2(1,1)), u.x), u.y);",
+    "}",
+    "float fbm(vec2 p){",
+    "  float s = 0.0, a = 0.5;",
+    "  for (int i = 0; i < 5; i++) { s += a * noise(p); p *= 2.03; a *= 0.5; }",
+    "  return s;",
+    "}",
+    "void main(){",
+    "  vec3 dir = normalize(vWelt - cameraPosition);",
+    "  float h = dir.y;",
+    "  if (h <= 0.015) discard;",
+    /* Projektion auf die Wolkenebene - erst dadurch stimmt die
+       Perspektive zum Horizont hin. */
+    "  vec2 ebene = dir.xz / h * 0.55;",
+    "  vec2 wind = vec2(uZeit * 0.9, uZeit * 0.35);",
+    "  vec2 q = ebene * 0.011 + wind * 0.004;",
+    /* Domain Warping: das Rauschen verschiebt seine eigenen
+       Koordinaten. Ohne das bleiben es runde Flecken. */
+    "  vec2 warp = vec2(fbm(q + 3.1), fbm(q + 7.7));",
+    "  float d = fbm(q + warp * 1.6);",
+    "  float schwelle = 1.02 - uDecke * 0.72;",
+    "  float masse = smoothstep(schwelle, schwelle + 0.26, d);",
+    "  if (masse <= 0.002) discard;",
+    /* Beleuchtung: zur Sonne hin heller, dazu ein weicher Rand
+       ueber die Dichte - das gibt den Wolken Volumen. */
+    "  float zurSonne = max(dot(dir, normalize(uSonne)), 0.0);",
+    "  float saum = smoothstep(0.0, 0.45, d - schwelle);",
+    "  vec3 farbe = mix(uDunkel, uHell, clamp(saum * 0.75 + pow(zurSonne, 3.0) * 0.9, 0.0, 1.0));",
+    /* Am Horizont in den Dunst auslaufen lassen - dort wird die
+       Ebenen-Projektion sonst zur Singularitaet. */
+    "  float rand = smoothstep(0.015, 0.22, h);",
+    "  gl_FragColor = vec4(farbe, masse * rand * uDeck);",
+    "}"
+  ].join("\n");
+
+  function wolkenBauen() {
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uZeit: { value: 0 },
+        uDecke: { value: 0.35 },
+        uDeck: { value: 0.9 },
+        uSonne: { value: new THREE.Vector3(0, 0.2, -1) },
+        uHell: { value: new THREE.Color(0xdfe4ee) },
+        uDunkel: { value: new THREE.Color(0x39404f) }
+      },
+      vertexShader: [
+        "varying vec3 vWelt;",
+        "void main(){",
+        "  vec4 w = modelMatrix * vec4(position, 1.0);",
+        "  vWelt = w.xyz;",
+        "  gl_Position = projectionMatrix * viewMatrix * w;",
+        "}"
+      ].join("\n"),
+      fragmentShader: WOLKEN_FRAG,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.BackSide,
+      fog: false
+    });
+    const netz = new THREE.Mesh(new THREE.SphereGeometry(9000, 24, 16), mat);
+    netz.frustumCulled = false;
+    netz.renderOrder = -5; // nach dem Himmel, vor allem anderen
+    return netz;
+  }
+
+  /* ---------- Lichtstrahlen ----------
+     Eine Scheibe direkt vor der Kamera, additiv. Gezeichnet wird
+     ein Faecher aus der Bildschirmposition der Sonne; wie breit
+     die einzelnen Strahlen sind, kommt aus einem Rauschen ueber
+     dem Winkel. Das ist die billige Variante - ein echter
+     Nachbearbeitungsschritt waere ein zweiter Renderdurchgang,
+     und davon hat diese Szene schon einen fuer die
+     Wasserspiegelung.
+  ---------------------------------------------------------- */
+  /* Abstand der Strahlen-Scheibe vor der Kamera. Muss groesser
+     sein als deren Nahebene (1), sonst schneidet die sie weg. */
+  const STRAHL_ABSTAND = 2;
+
+  function strahlenBauen() {
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uSonne: { value: new THREE.Vector2(0.5, 0.6) },
+        uStaerke: { value: 0 },
+        uZeit: { value: 0 },
+        uFarbe: { value: new THREE.Color(0xffd9a0) },
+        uSeite: { value: 1.7 }
+      },
+      vertexShader: [
+        "varying vec2 vUv;",
+        "void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }"
+      ].join("\n"),
+      fragmentShader: [
+        "precision highp float;",
+        "uniform vec2  uSonne;",
+        "uniform float uStaerke;",
+        "uniform float uZeit;",
+        "uniform vec3  uFarbe;",
+        "uniform float uSeite;",
+        "varying vec2  vUv;",
+        "float hash(float n){ return fract(sin(n) * 43758.5453); }",
+        "float noise(vec2 p){",
+        "  vec2 i = floor(p), f = fract(p);",
+        "  vec2 u = f * f * (3.0 - 2.0 * f);",
+        "  float a = hash(i.x + i.y * 57.0), b = hash(i.x + 1.0 + i.y * 57.0);",
+        "  float c = hash(i.x + (i.y + 1.0) * 57.0), d = hash(i.x + 1.0 + (i.y + 1.0) * 57.0);",
+        "  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);",
+        "}",
+        "void main(){",
+        "  if (uStaerke <= 0.001) discard;",
+        /* Seitenverhaeltnis herausrechnen, sonst werden die
+           Strahlen auf breiten Schirmen zu Ellipsen. */
+        "  vec2 d = (vUv - uSonne) * vec2(uSeite, 1.0);",
+        "  float weite = length(d);",
+        "  float winkel = atan(d.y, d.x);",
+        /* Zwei Lagen mit verschiedener Feinheit, langsam
+           gegeneinander wandernd - so wirken die Strahlen wie
+           von ziehenden Wolken zerschnitten. */
+        "  float n = noise(vec2(winkel * 4.0, uZeit * 0.05)) * 0.6",
+        "          + noise(vec2(winkel * 11.0, uZeit * 0.03 + 5.0)) * 0.4;",
+        /* Eng gefasst blieb vom Faecher nur ein gleichmaessiger
+           Hof - die Schwelle lag so hoch, dass fast das ganze
+           Rauschen darunter wegfiel. Breiter gefasst treten
+           einzelne Strahlen hervor. */
+        "  n = smoothstep(0.30, 0.72, n);",
+        "  float abfall = pow(max(0.0, 1.0 - weite * 1.25), 3.0);",
+        "  float hof = pow(max(0.0, 1.0 - weite * 2.6), 6.0);",
+        "  float licht = (abfall * n * 0.85 + hof * 0.5) * uStaerke;",
+        "  gl_FragColor = vec4(uFarbe * licht, licht);",
+        "}"
+      ].join("\n"),
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending
+    });
+    const netz = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
+    netz.frustumCulled = false;
+    netz.renderOrder = 900; // ganz zum Schluss, ueber die Szene
+    return netz;
+  }
+
   /* ---------- Partikel ---------- */
   function partikelBauen(anzahl, tex, farbe, groesse, deckkraft) {
     const geo = new THREE.BufferGeometry();
@@ -778,14 +990,55 @@
     szene.add(new THREE.AmbientLight(0x3d4159, 0.75));
 
     const sonne = new THREE.Vector3();
+    const lichtRichtung = new THREE.Vector3();
     function sonneSetzen(hoehe, richtung) {
-      const phi = THREE.MathUtils.degToRad(90 - hoehe), theta = THREE.MathUtils.degToRad(richtung);
-      sonne.setFromSphericalCoords(1, phi, theta);
+      const theta = THREE.MathUtils.degToRad(richtung);
+      sonne.setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - hoehe), theta);
       hu.sunPosition.value.copy(sonne);
-      if (wasser.material.uniforms) wasser.material.uniforms.sunDirection.value.copy(sonne).normalize();
-      sonneLicht.position.copy(sonne).multiplyScalar(4000);
+      /* Der Himmel darf die Sonne unter den Horizont schicken -
+         das ist die blaue Stunde. Das Licht auf Schiff und Wasser
+         darf es nicht: eine Sonne bei -9 Grad beleuchtet die
+         Segel von unten, und das sieht nicht nach Nacht aus,
+         sondern nach vergessenem Vorzeichen. Also bleibt die
+         Lichtrichtung ueber dem Horizont; wie dunkel es ist,
+         macht allein die Helligkeit weiter unten. */
+      lichtRichtung.setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - Math.max(hoehe, 2.0)), theta);
+      if (wasser.material.uniforms) wasser.material.uniforms.sunDirection.value.copy(lichtRichtung);
+      sonneLicht.position.copy(lichtRichtung).multiplyScalar(4000);
     }
     sonneSetzen(2.2, 178);
+
+    /* Wolken und Lichtstrahlen gibt es erst ab der mittleren
+       Stufe. Beides ist je ein bildschirmfuellender Shader-Durchgang;
+       auf einem Geraet, das schon beim blanken Wasser strauchelt,
+       waere das der Tropfen, der die Bilderrate kippt. */
+    let wolken = stufe.name === "niedrig" ? null : wolkenBauen();
+    if (wolken) szene.add(wolken);
+    let wu = wolken ? wolken.material.uniforms : null;
+
+    let strahlen = stufe.name === "niedrig" ? null : strahlenBauen();
+    if (strahlen) {
+      /* Als Kind der Kamera: dann steht die Scheibe von selbst
+         immer im Bild, ohne sie pro Bild mitzuschleppen. Damit
+         die Kamera ihre Kinder aber auch mitrechnet, muss sie
+         selbst im Szenenbaum haengen - eine freischwebende
+         Kamera aktualisiert keine Nachkommen. */
+      szene.add(kamera);
+      strahlen.position.set(0, 0, -STRAHL_ABSTAND);
+      kamera.add(strahlen);
+    }
+    let su = strahlen ? strahlen.material.uniforms : null;
+
+    /* Farben der Wolken: nachts fast schwarz, im Sturm bleiern,
+       zum Morgen hin von unten angezuendet. Die Objekte werden
+       einmal angelegt und pro Bild nur umgerechnet. */
+    const W_HELL = [new THREE.Color(0x2d3448), new THREE.Color(0x6e7488), new THREE.Color(0xffd7a6)];
+    const W_DUNKEL = [new THREE.Color(0x0d1120), new THREE.Color(0x272b38), new THREE.Color(0x6a5163)];
+    /* Nebel: Nacht -> Dunst der Daemmerung -> Morgendunst. */
+    const N_FOG = [new THREE.Color(0x0a1020), new THREE.Color(0x53525e), new THREE.Color(0xa79c96)];
+    const himmelWerte = [0, 0, 0, 0, 0];
+    const sonneBild = new THREE.Vector3();
+    const kamBlick = new THREE.Vector3();
 
     const schiff = schiffBauen(stufe);
     szene.add(schiff);
@@ -914,6 +1167,12 @@
       if (stufe.name === "niedrig") {
         insel.userData.nebel.visible = false;
         voegel.visible = false;
+        /* Wolken und Strahlen sind zwei bildschirmfuellende
+           Durchgaenge - genau das, was auf der untersten Stufe
+           als Erstes weg muss. Nur unsichtbar schalten reicht
+           nicht, der Speicher soll auch frei werden. */
+        if (wolken) { szene.remove(wolken); wolken.geometry.dispose(); wolken.material.dispose(); wolken = null; wu = null; }
+        if (strahlen) { kamera.remove(strahlen); strahlen.geometry.dispose(); strahlen.material.dispose(); strahlen = null; su = null; }
       }
       groesseSetzen();
     }
@@ -949,12 +1208,33 @@
       }
 
       /* Stimmung */
-      sonneSetzen(misch(1.6, 4.0, weich(0.45, 0.96, p)), misch(181, 175, p));
+      himmelBei(p, himmelWerte);
+      hu.turbidity.value = himmelWerte[1];
+      hu.rayleigh.value = himmelWerte[2];
+      hu.mieCoefficient.value = himmelWerte[3];
+      sonneSetzen(himmelWerte[0], himmelWerte[4]);
+      /* Nachts und im Sturm steht die Sonne tief oder gar nicht;
+         Helligkeit und Dunstfarbe haengen daher am Sonnenstand,
+         nicht mehr bloss am zurueckgelegten Weg. */
+      const tag = klemm((himmelWerte[0] + 6) / 12, 0, 1);
       szene.fog.density = misch(0.0019, 0.00024, weich(0.5, 0.9, p));
-      szene.fog.color.setHSL(misch(0.07, 0.085, p), misch(0.1, 0.34, p), misch(0.5, 0.52, weich(0.4, 0.95, p)));
-      renderer.toneMappingExposure = misch(0.48, 0.64, weich(0.35, 0.92, p));
-      hemi.intensity = misch(0.9, 1.15, weich(0.5, 1, p));
-      sonneLicht.intensity = misch(2.4, 3.4, weich(0.6, 1, p));
+      /* Der Dunst muss mit dem Himmel dunkeln. Bei fester
+         Helligkeit stuende sonst ein hellgrauer Streifen unter
+         einem Nachthimmel.
+
+         Gemischt wird in RGB, NICHT ueber den Farbton: der Weg
+         von Nachtblau (0.62) nach Morgenorange (0.085) fuehrt
+         quer durch den Farbkreis, und der liegt dazwischen im
+         Gruenen. Genau das hat die Insel im Sturm giftgruen
+         eingefaerbt. */
+      szene.fog.color.copy(N_FOG[0]).lerp(N_FOG[1], klemm(tag * 1.6, 0, 1)).lerp(N_FOG[2], tag * tag);
+      /* Der Schluss lief bei 0.64 in die Saettigung: Sonnenhof
+         und Dunst gingen zusammen in ein weisses Feld ueber der
+         Insel - genau dort, wo der Countdown steht. */
+      renderer.toneMappingExposure = misch(0.42, 0.54, weich(0.35, 0.92, p));
+      hemi.intensity = misch(0.45, 1.15, tag);
+      sonneLicht.intensity = misch(0.35, 3.4, tag * tag);
+      fuell.intensity = misch(1.1, 0.85, tag);
 
       /* Schiff auf der Bahn, an die Wellen gekoppelt */
       const u = schiffU(p);
@@ -1089,6 +1369,49 @@
       } else if (uhrGemeldet) {
         uhrGemeldet = false;
         heim.classList.remove("fh-uhr-3d");
+      }
+
+      /* Wolken: die Decke zieht zum Sturm hin zu und reisst zum
+         Morgen wieder auf. Dieselben drei Phasen wie am Himmel,
+         nur als eine Zahl. */
+      if (wu) {
+        const zieht = weich(0.38, 0.62, p);
+        const reisst = weich(0.72, 0.95, p);
+        wu.uZeit.value = t;
+        wu.uDecke.value = klemm(0.30 + 0.62 * zieht - 0.52 * reisst, 0, 1);
+        wu.uDeck.value = misch(0.9, 0.72, reisst);
+        wu.uSonne.value.copy(sonne);
+        /* Der Sturmanteil faellt zum Morgen wieder heraus, sonst
+           blieben die Wolken bleiern, waehrend die Sonne schon
+           steht. */
+        const sturm = zieht * (1 - reisst);
+        const morgen = weich(0.78, 1, p);
+        wu.uHell.value.copy(W_HELL[0]).lerp(W_HELL[1], sturm).lerp(W_HELL[2], morgen);
+        wu.uDunkel.value.copy(W_DUNKEL[0]).lerp(W_DUNKEL[1], sturm).lerp(W_DUNKEL[2], morgen);
+      }
+
+      /* Lichtstrahlen: erst wenn die Decke aufreisst und die
+         Sonne wirklich ueber dem Horizont steht. */
+      if (su) {
+        /* Die Scheibe haengt an der Kamera, deren Bildwinkel sich
+           waehrend der Fahrt aendert - also pro Bild neu auf das
+           Sichtfeld spannen, sonst klafft ein Rand. */
+        const hoch = 2 * Math.tan(THREE.MathUtils.degToRad(kamera.fov) / 2) * STRAHL_ABSTAND;
+        strahlen.scale.set(hoch * kamera.aspect, hoch, 1);
+        su.uSeite.value = kamera.aspect;
+        su.uZeit.value = t;
+
+        kamera.getWorldDirection(kamBlick);
+        /* Steht die Sonne hinter der Kamera, liefert project()
+           trotzdem Koordinaten - gespiegelt. Ohne diese Pruefung
+           hinge der Faecher auf der falschen Bildseite. */
+        const vorn = kamBlick.dot(sonne);
+        sonneBild.copy(sonne).multiplyScalar(20000).project(kamera);
+        su.uSonne.value.set(sonneBild.x * 0.5 + 0.5, sonneBild.y * 0.5 + 0.5);
+        su.uStaerke.value = vorn <= 0.02 ? 0 :
+          weich(0.72, 0.9, p) * klemm(himmelWerte[0] / 3, 0, 1) *
+          klemm((vorn - 0.02) * 6, 0, 1) * (1 - weich(0.9, 1, p) * 0.55) * 0.7;
+        su.uFarbe.value.setHSL(misch(0.085, 0.11, weich(0.8, 1, p)), 0.85, 0.72);
       }
 
       renderer.render(szene, kamera);

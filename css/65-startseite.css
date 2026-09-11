@@ -167,7 +167,13 @@
   pointer-events: none;
 }
 
-.fh-kapitel a {
+/* Die Kapitel selbst fangen keine Klicks ab (siehe oben), ihre
+   Bedienelemente muessen es aber. Hier stand lange nur "a" - und
+   Kapitel VII hat gar keine Verweise, sondern zwei <button>.
+   Die waren dadurch sichtbar, aber tot: ein Treffertest in ihrer
+   Mitte landete auf der Ozean-Flaeche dahinter. */
+.fh-kapitel a,
+.fh-kapitel button {
   pointer-events: auto;
 }
 
@@ -554,6 +560,14 @@
   padding: 0 6vw;
 }
 
+/* Ohne Szene gibt es keinen Scrollweg, --fh-weg bleibt 0 und
+   damit --da ebenfalls. Die Ankunft der Knoepfe haengt an --da -
+   ohne diese Zeile stuenden sie hier dauerhaft 30 bzw. 54 Pixel
+   zu tief, waehrend das Kapitel darum herum schon steht. */
+#home.fh-ohne-ozean .fh-kapitel-knoepfe .code-button {
+  transform: none;
+}
+
 #home.fh-ohne-ozean .fh-start-buehne {
   display: flex;
   align-items: center;
@@ -662,4 +676,118 @@
    also nie. */
 #home.fh-eigener-scroll {
   touch-action: pan-x pinch-zoom;
+}
+
+/* ======================================================
+   DIE ZWEI KNOEPFE AM ENDE DER REISE
+
+   Bewusst NUR hier, nicht auf .code-button allgemein: die
+   Klasse traegt alle 22 Seiten, und ein wandernder Glanz an
+   jedem Formularknopf waere Unruhe statt Akzent. Am Ende einer
+   siebenteiligen Reise ist er einer.
+
+   Die Sprache ist die vorhandene: ein Lichtstreifen, der beim
+   Hover einmal durchlaeuft - dasselbe Muster wie am
+   Code-Knopf (css/30-events.css), nur in Gold statt Gruen.
+====================================================== */
+#home .fh-kapitel-knoepfe .code-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate; /* haelt den Streifen unter der Schrift */
+
+  /* Ankunft. Bewusst KEINE Keyframe-Animation: das Kapitel
+     blendet ueber --da am Scrollweg ein, eine zeitgesteuerte
+     Animation liefe daneben und wuerde beim Zurueckscrollen
+     nicht wieder von vorn beginnen. Stattdessen haengt der
+     Versatz am selben --da wie alles andere - dadurch laeuft
+     die Ankunft vorwaerts wie rueckwaerts richtig.
+
+     Nur verschoben, nicht ausgeblendet: die Deckkraft macht
+     schon das Kapitel. Ein eigener Deckkraft-Verlauf wuerde
+     hier einen unsichtbaren, aber anklickbaren Knopf
+     hinterlassen. */
+  --da-k: var(--da, 1);
+  transform: translateY(calc((1 - var(--da-k)) * var(--fh-knopf-weg, 30px)));
+
+  transition:
+    transform .28s var(--fh-ease, ease),
+    border-color .3s ease,
+    box-shadow .3s ease,
+    color .3s ease;
+}
+
+/* Der zweite kommt spaeter nach - der Versatz ist groesser, also
+   hat er bei gleichem --da noch Weg vor sich. Das ist die
+   Staffelung, ohne eine zweite Zeitachse aufzumachen. */
+#home .fh-kapitel-knoepfe .code-button:nth-child(2) {
+  --fh-knopf-weg: 54px;
+}
+
+#home .fh-kapitel-knoepfe .code-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(115deg,
+    transparent 34%,
+    rgba(255, 233, 176, .5) 47%,
+    rgba(240, 201, 106, .75) 50%,
+    rgba(255, 233, 176, .5) 53%,
+    transparent 66%);
+  background-size: 260% 100%;
+  /* Ruhezustand: der Streifen steht rechts ausserhalb. */
+  background-position: 160% 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#home .fh-kapitel-knoepfe .code-button:hover,
+#home .fh-kapitel-knoepfe .code-button:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--fh-gold-bright, #f0c96a);
+  color: var(--fh-gold-bright, #f0c96a);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, .45),
+    0 0 22px rgba(240, 201, 106, .38);
+}
+
+#home .fh-kapitel-knoepfe .code-button:hover::after,
+#home .fh-kapitel-knoepfe .code-button:focus-visible::after {
+  opacity: 1;
+  animation: fhKnopfSweep .85s var(--fh-ease, ease) forwards;
+}
+
+#home .fh-kapitel-knoepfe .code-button:active {
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Kein Anrutschen - der Knopf steht sofort, wo er hingehoert. */
+  #home .fh-kapitel-knoepfe .code-button {
+    transform: none;
+  }
+}
+
+@keyframes fhKnopfSweep {
+  from { background-position: 160% 0; }
+  to   { background-position: -60% 0; }
+}
+
+/* Der stille zweite Knopf bleibt still, bekommt aber denselben
+   Sweep - sonst faellt er beim Darueberfahren hinter den ersten
+   zurueck. */
+#home .fh-kapitel-knoepfe .fh-kapitel-knopf-still:hover {
+  background: rgba(240, 201, 106, .08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Kein wanderndes Licht - der Rand und der Schein reichen. */
+  #home .fh-kapitel-knoepfe .code-button::after {
+    display: none;
+  }
+
+  #home .fh-kapitel-knoepfe .code-button:hover,
+  #home .fh-kapitel-knoepfe .code-button:focus-visible {
+    transform: none;
+  }
 }
