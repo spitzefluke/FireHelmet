@@ -236,7 +236,14 @@
     }
 
     function schritt(t) {
-      const dt = vorher ? Math.min((t - vorher) / 1000, 0.05) : 0;
+      /* Die Obergrenze fuer dt faengt nur echte Luecken ab -
+         Tabwechsel, Standby - und darf NICHT die Bildrate
+         begrenzen. Mit 0.05 lief die Seite auf einem Geraet mit
+         4 Bildern/s nur 60px pro Bild, also 240 statt 1200 px/s:
+         das Tempo haette wieder an der Hardware gehangen, genau
+         an dem, was diese Schleife abschaffen soll. Gemessen:
+         120 px/s statt der eingestellten 1200. */
+      const dt = vorher ? Math.min((t - vorher) / 1000, 0.25) : 0;
       vorher = t;
       const rest = ziel - heim.scrollTop;
       if (Math.abs(rest) < 0.5) { laeuft = false; return; }
