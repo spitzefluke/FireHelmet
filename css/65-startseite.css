@@ -240,20 +240,21 @@
 /* Der Titel nimmt, was da ist: entweder die Wunschgroesse oder
    einen Anteil der Kastenhoehe - je nachdem, was kleiner ist. */
 #home.fh-uhr-3d .fh-kapitel-mitte h2 {
-  font-size: min(clamp(30px, 8vw, 130px), 38cqh);
+  font-size: min(clamp(30px, 8vw, 130px), 28cqh);
 }
 
 #home.fh-uhr-3d .fh-kapitel-mitte p {
-  font-size: min(clamp(13px, 1.25vw, 18px), 7cqh);
-  margin-top: min(22px, 4cqh);
+  font-size: min(clamp(13px, 1.25vw, 18px), 5cqh);
+  line-height: 1.5;
+  margin-top: min(20px, 3cqh);
 }
 
 #home.fh-uhr-3d .fh-kapitel-knoepfe {
-  margin-top: min(28px, 6cqh);
+  margin-top: min(26px, 5cqh);
 }
 
 #home.fh-uhr-3d .fh-kapitel-mitte .fh-kapitel-marke {
-  margin-bottom: min(18px, 4cqh);
+  margin-bottom: min(16px, 3cqh);
 }
 
 /* Wird der Kasten wirklich flach, treten die Teile der Reihe nach
