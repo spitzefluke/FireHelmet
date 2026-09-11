@@ -691,6 +691,11 @@
       const h = document.getElementById("home");
       h.classList.add("fh-ohne-ozean");
       h.classList.remove("fh-uhr-3d");
+      /* Ohne Szene ist die Bahn nur einen Schirm hoch, es gibt
+         nichts zu scrollen. Dann darf die Seite das senkrechte
+         Wischen auch nicht fuer sich beanspruchen - sonst waere
+         es tot, falls hier je wieder Inhalt dazukommt. */
+      h.classList.remove("fh-eigener-scroll");
     }
 
     const webgl = window.fhWebGL;

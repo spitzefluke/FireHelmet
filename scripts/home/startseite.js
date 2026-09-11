@@ -47,18 +47,25 @@
      verschiebt nur das Ziel; wie schnell die Seite dorthin
      laeuft, ist ueberall gleich.
 
-     TEMPO   Pixel pro Sekunde. 8000px Reise / 1200 = knapp sieben
-             Sekunden von der offenen See bis zur Insel, wenn man
-             durchscrollt.
+     Dasselbe gilt fuer den Finger: ein Wisch verschiebt das Ziel,
+     die Geschwindigkeit bleibt dieselbe wie am Rechner.
+
+     TEMPO   Pixel pro Sekunde. 8000px Reise / 150 sind rund 53
+             Sekunden von der offenen See bis zur Insel, gut
+             siebeneinhalb je Kapitel. Bewusst so gewaehlt - bei
+             1200 war es "noch zu flott".
      VORLAUF Wie weit das Ziel der Seite vorauslaufen darf. Ohne
              diese Grenze wuerde ein kraeftiger Schwung minutenlang
              nachlaufen, und die Seite reagierte nicht mehr auf den
-             Nutzer.
-     SCHRITT Wie weit ein Rad-Klick das Ziel verschiebt.
+             Nutzer. Haengt am Tempo: rund zwei Sekunden Vorrat.
+     SCHRITT Wie weit ein Rad-Klick das Ziel verschiebt - hier
+             etwa eine Sekunde Fahrt.
+     WISCH   Wieviel Ziel ein Pixel Fingerweg erzeugt.
   ------------------------------------------------------ */
-  const FH_TEMPO = 1200;
-  const FH_VORLAUF = 900;
-  const FH_SCHRITT = 380;
+  const FH_TEMPO = 150;
+  const FH_VORLAUF = 300;
+  const FH_SCHRITT = 150;
+  const FH_WISCH = 1;
 
   const ruhig = window.matchMedia
     ? window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -210,16 +217,52 @@
       return Math.sign(roh) * FH_SCHRITT * anteil;
     }
 
-    heim.addEventListener("wheel", function (e) {
-      if (e.ctrlKey) return;               // Zoomen nicht abfangen
+    function zielSchieben(um) {
       const max = grenze();
-      if (max <= 0) return;
-      e.preventDefault();
+      if (max <= 0) return false;
       const jetzt = heim.scrollTop;
       ziel = Math.min(max, Math.max(0,
-        Math.min(jetzt + FH_VORLAUF, Math.max(jetzt - FH_VORLAUF, ziel + weite(e)))));
+        Math.min(jetzt + FH_VORLAUF, Math.max(jetzt - FH_VORLAUF, ziel + um))));
       starten();
+      return true;
+    }
+
+    heim.addEventListener("wheel", function (e) {
+      if (e.ctrlKey) return;               // Zoomen nicht abfangen
+      if (grenze() <= 0) return;
+      e.preventDefault();
+      zielSchieben(weite(e));
     }, { passive: false });
+
+    /* Der Finger. Damit die Reise auf dem Handy genauso lange
+       dauert wie am Rechner, zieht auch ein Wisch nicht direkt an
+       der Seite, sondern verschiebt nur das Ziel.
+
+       touch-action setzt die CSS auf "pan-x pinch-zoom", sobald
+       diese Schleife steht: senkrecht gehoert damit uns,
+       waagerecht und Zoomen bleiben beim Browser. */
+    let fingerY = 0;
+    let einFinger = false;
+
+    heim.addEventListener("touchstart", function (e) {
+      einFinger = e.touches.length === 1;
+      if (einFinger) fingerY = e.touches[0].clientY;
+    }, { passive: true });
+
+    heim.addEventListener("touchmove", function (e) {
+      if (!einFinger || e.touches.length !== 1) return;
+      if (grenze() <= 0) return;
+      const y = e.touches[0].clientY;
+      const weg = fingerY - y;             // nach oben wischen = vorwaerts
+      fingerY = y;
+      if (e.cancelable) e.preventDefault();
+      zielSchieben(weg * FH_WISCH);
+    }, { passive: false });
+
+    heim.addEventListener("touchend", function () { einFinger = false; }, { passive: true });
+    heim.addEventListener("touchcancel", function () { einFinger = false; }, { passive: true });
+
+    heim.classList.add("fh-eigener-scroll");
 
     /* Zieht jemand am Scrollbalken oder springt per Tastatur,
        folgt das Ziel - sonst zerrte die Schleife zurueck. */

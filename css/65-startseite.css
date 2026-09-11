@@ -210,6 +210,24 @@
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
+
+  /* DER KASTEN IST DER MASSSTAB, NICHT DAS FENSTER
+
+     Wieviel Platz hier bleibt, haengt an der Unterkante der Uhr -
+     und die haengt an Kameraweg und Seitenverhaeltnis, nicht an
+     der Fensterhoehe. Eine Media-Query auf die Fensterhoehe misst
+     deshalb das Falsche: bei 1600x620 blieben 234px uebrig, bei
+     1024x500 mehr. Mit container-type: size fragen die Regeln
+     darunter genau diesen Kasten ab.
+
+     overflow: hidden ist die letzte Sicherung. Vorher schob
+     justify-content: flex-end den Ueberlauf nach OBEN aus dem
+     Kasten heraus - gemessen bei 1600x620 stand der Titel 55px
+     ueber der Uhr, obwohl der Kasten selbst korrekt darunter
+     begann. Genau das war der gemeldete Fehler. */
+  container-type: size;
+  container-name: fhkap7;
+  overflow: hidden;
 }
 
 /* Im Flex-Kasten wuerden die auto-Seitenraender der Absaetze die
@@ -217,6 +235,41 @@
    und die Zentrierung darin waeren dahin. */
 #home.fh-uhr-3d .fh-kapitel-mitte > * {
   width: 100%;
+}
+
+/* Der Titel nimmt, was da ist: entweder die Wunschgroesse oder
+   einen Anteil der Kastenhoehe - je nachdem, was kleiner ist. */
+#home.fh-uhr-3d .fh-kapitel-mitte h2 {
+  font-size: min(clamp(30px, 8vw, 130px), 28cqh);
+}
+
+#home.fh-uhr-3d .fh-kapitel-mitte p {
+  font-size: min(clamp(13px, 1.25vw, 18px), 5cqh);
+  line-height: 1.5;
+  margin-top: min(20px, 3cqh);
+}
+
+#home.fh-uhr-3d .fh-kapitel-knoepfe {
+  margin-top: min(26px, 5cqh);
+}
+
+#home.fh-uhr-3d .fh-kapitel-mitte .fh-kapitel-marke {
+  margin-bottom: min(16px, 3cqh);
+}
+
+/* Wird der Kasten wirklich flach, treten die Teile der Reihe nach
+   zurueck, die am wenigsten tragen. Abgefragt wird der Kasten,
+   nicht das Fenster. */
+@container fhkap7 (max-height: 330px) {
+  #home .fh-kapitel-mitte p { display: none; }
+}
+
+@container fhkap7 (max-height: 190px) {
+  #home .fh-kapitel-mitte .fh-kapitel-marke { display: none; }
+}
+
+@container fhkap7 (max-height: 120px) {
+  #home .fh-kapitel-knoepfe { display: none; }
 }
 
 .fh-kapitel-marke {
@@ -555,7 +608,13 @@
 }
 
 /* ======================================================
-   NIEDRIGE FENSTER
+   NIEDRIGE FENSTER - OHNE 3D-UHR
+
+   Laeuft die Szene, misst der Container oben (fhkap7) den
+   tatsaechlich freien Platz; diese Regeln greifen dann nicht
+   mehr, weil sie von der spezifischeren #home.fh-uhr-3d-Regel
+   ueberschrieben werden. Sie bleiben fuer den Fall, dass die
+   Uhr noch nicht sichtbar ist.
    Zwischen der Unterkante der Uhr und dem unteren Rand bleibt
    auf einem flachen Fenster wenig Platz. Titel und Abstaende
    ruecken dort zusammen, damit der Block nicht ueberlaeuft.
@@ -607,4 +666,14 @@
 #home .fh-kapitel-knopf-still:hover {
   border-color: var(--fh-gold, #d6a84f);
   color: var(--fh-gold-bright, #f0c96a);
+}
+
+/* Senkrechtes Wischen gehoert der Schleife in startseite.js,
+   sonst scrollt der Browser zusaetzlich und beide zerren an
+   derselben scrollTop. Waagerecht und Zoomen bleiben beim
+   Browser. Die Klasse setzt startseite.js erst, wenn die
+   Schleife wirklich aufgebaut wurde - bei reduzierter Bewegung
+   also nie. */
+#home.fh-eigener-scroll {
+  touch-action: pan-x pinch-zoom;
 }
