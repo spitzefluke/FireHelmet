@@ -231,7 +231,7 @@ p,
 }
 
 /* =====================================================
-   FH SKELETON (siehe scripts/core/skeleton.js)
+   FH SKELETON (siehe scripts/fx/skeleton.js)
    ---------------------------------------------------
    Platzhalter in der Form der spaeteren Liste. Der
    Schimmer laeuft ueber alle Zeilen, leicht versetzt
@@ -347,7 +347,7 @@ body:has(#story-detail.active-page)::after {
 }
 
 /* =====================================================
-   FH SCHNELLSUCHE (siehe scripts/core/quick-search.js)
+   FH SCHNELLSUCHE (siehe scripts/nav/quick-search.js)
    ---------------------------------------------------
    Sucheingang ueber die 19 Menuepunkte. Liegt ueber den
    Kurzmeldungen, aber unter den Feier-Overlays - eine
@@ -763,12 +763,12 @@ body:has(#story-detail.active-page)::after {
       Icon-Leiste eingedampft. Die Beschriftungen bleiben im Markup
       stehen und werden nur optisch ausgeblendet - sie werden an
       zwei Stellen weiterverwendet:
-        - scripts/core/nav-sync.js klont die Punkte samt Label in
+        - scripts/nav/nav-sync.js klont die Punkte samt Label in
           die Schublade (dort weiterhin mit Text),
-        - scripts/core/quick-search.js liest die Labels als
+        - scripts/nav/quick-search.js liest die Labels als
           Suchbegriffe.
       Statt eines Labels erscheint beim Hover eine Sprechblase
-      neben der Leiste (scripts/core/rail-flyout.js).
+      neben der Leiste (scripts/nav/rail-flyout.js).
 
    2. Alles, was vorher frei in der Ecke schwebte (Musik, Teilen)
       oder in der Sidebar sass (Suche, Sprache), sammelt sich in
@@ -984,7 +984,7 @@ body:has(#story-detail.active-page)::after {
    Bewusst ein einzelnes Element am <body> statt eines ::after am
    Menuepunkt: die Navigationsliste scrollt, und ein Kind eines
    scrollenden Bereichs wird an dessen Rand abgeschnitten. Die
-   Position setzt scripts/core/rail-flyout.js.
+   Position setzt scripts/nav/rail-flyout.js.
 ===================================================== */
 .fh-rail-flyout {
   position: fixed;
@@ -2052,7 +2052,7 @@ h1.fh-page-title,
 /* Platzhalter fuer Bereiche, die keine Liste sind (Turniertafel,
    Ergebnisfeld der Verlosung). Dieselben Balken wie oben, nur
    untereinander in einem Kasten statt in Zeilen.
-   Siehe fhSkeletonKasten() in scripts/core/skeleton.js. */
+   Siehe fhSkeletonKasten() in scripts/fx/skeleton.js. */
 .fh-skeleton-kasten {
   gap: 12px;
   padding: 20px 18px;

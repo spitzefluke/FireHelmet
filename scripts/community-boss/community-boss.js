@@ -1843,7 +1843,7 @@ function applyBossHpDisplay(data, hpTextEl, hpFillEl, boss, defeatedBanner, atta
 
   /* Der Nebel im Seitenhintergrund traegt die Farbe der aktuellen
      Phase (siehe Eintrag "community-boss" in
-     scripts/core/seiten-fx-szenen.js). Er zieht weich nach, damit
+     scripts/fx/seiten-fx-szenen.js). Er zieht weich nach, damit
      ein Phasenwechsel die Farbe nicht schlagartig umlegt.
 
      getBossPhase() liefert nur label/index/key, keine Farbe - die
@@ -2093,7 +2093,7 @@ async function attackCommunityBoss(art) {
     // bossAfter.defeated kommt direkt aus app.attack_community_boss() -
     // ist hier true, war genau DIESER Angriff der finale Treffer (siehe
     // supabase/game-migration/README.md). Der 3D-Konfetti-Ausbruch
-    // (scripts/core/celebration-burst-3d.js) feiert bewusst nur den
+    // (scripts/fx/celebration-burst-3d.js) feiert bewusst nur den
     // Spieler, der den Boss tatsaechlich besiegt hat - jeder spaetere
     // Seitenbesuch sieht stattdessen nur das statische
     // "besiegt"-Banner, ohne den Effekt erneut auszuloesen.
@@ -2521,7 +2521,7 @@ function triggerBossArenaImpact() {
 /* ------------------------------------------------------
    ARENA-GLUT-PARTIKEL
    Wiederverwendet die bereits vorhandene .fh-ember-Klasse/
-   Keyframe-Animation (siehe scripts/core/reveal.js /
+   Keyframe-Animation (siehe scripts/fx/reveal.js /
    style.css) - spawnt sie einmalig in den Arena-Hintergrund.
 ------------------------------------------------------ */
 let bossEmbersSpawned = false;

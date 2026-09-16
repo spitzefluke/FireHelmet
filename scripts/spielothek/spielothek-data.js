@@ -76,7 +76,8 @@ const ANDII_COOLDOWN_QUOTE_COUNT = 8;
    COOLDOWN ZWISCHEN ZWEI SPIELRUNDEN (Auftrag Punkt 1-3)
    ---------------------------------------------------
    Rein die ANZEIGE-Dauer - die tatsaechliche, serverseitig
-   erzwungene Sperre steht in firestore.rules (validSpielothekCooldown()),
+   erzwungene Sperre steht in app.valid_spielothek_cooldown()
+   (supabase/game-migration/01-players-ship-progression.sql),
    siehe ausfuehrlicher Kommentar dort. Beide MUESSEN uebereinstimmen,
    sonst wuerde entweder der Button zu frueh wieder aktiv (Server lehnt
    dann trotzdem ab) oder zu spaet (unnoetig lange Wartezeit). Zentrale,

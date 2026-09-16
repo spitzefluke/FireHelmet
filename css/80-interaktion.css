@@ -345,7 +345,7 @@ a[tabindex]:not([href]):focus-visible {
    5. DIE GEMEINSAME SEITEN-EFFEKTFLÄCHE
    ---------------------------------------------------
    Eine einzige Leinwand fuer die Stimmung ALLER Seiten
-   (scripts/core/seiten-fx.js). Sie liegt ueber dem Nordlicht
+   (scripts/fx/seiten-fx.js). Sie liegt ueber dem Nordlicht
    (z-index -5) und unter dem Seiteninhalt.
 
    Warum nur eine: Chromium haelt hoechstens 16 WebGL-Kontexte und

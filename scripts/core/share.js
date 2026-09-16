@@ -29,7 +29,7 @@
      aendert (die Meta-Angaben in index.html muessen separat
      nachgezogen werden, weil Suchmaschinen und Vorschaudienste
      kein JavaScript ausfuehren). Die vollstaendige Umzugsliste
-     steht in DOMAIN.md. */
+     steht in docs/DOMAIN.md. */
   const SHARE_URL = "https://spitzefluke.github.io/FireHelmet/";
 
   function shareText() {

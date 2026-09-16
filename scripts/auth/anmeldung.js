@@ -36,7 +36,7 @@
    E-Mail-Weg genuegt der bereits aktive Email-Provider.
    Authentication -> URL Configuration: die Adresse der Seite unter
    "Redirect URLs" eintragen (bei einer eigenen Domain spaeter die
-   neue Adresse ergaenzen, siehe DOMAIN.md).
+   neue Adresse ergaenzen, siehe docs/DOMAIN.md).
 ====================================================== */
 
 /* Die vier Wege hinein. "anon" ist bewusst kein Eintrag hier -

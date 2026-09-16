@@ -24,12 +24,12 @@
    betreten wird, und danach behalten. Wer nie ins Turnier geht,
    zahlt auch nichts dafuer.
 
-   Die Sicherungen kommen aus scripts/core/fh-webgl.js: kein WebGL
+   Die Sicherungen kommen aus scripts/fx/fh-webgl.js: kein WebGL
    oder erkennbar Software-Rasterung -> gar nicht erst starten; zu
    lange Bildzeiten -> selbst abraeumen. Bei "Bewegung reduzieren"
    steht ein einziges Bild.
 
-   NEUE SEITE ANSCHLIESSEN: in scripts/core/seiten-fx-szenen.js eine
+   NEUE SEITE ANSCHLIESSEN: in scripts/fx/seiten-fx-szenen.js eine
    Funktion unter dem Seiten-Namen eintragen. Hier ist nichts zu
    aendern.
 ====================================================== */

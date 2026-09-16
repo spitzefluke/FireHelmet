@@ -34,7 +34,7 @@
       CSS-Animationen halb eingeblendete Elemente stehen, die auf
       opacity 0 haengenbleiben - genau der Fehler, den man auf
       Seiten sieht, die Einblend-Animationen ohne Aufraeumen
-      verwenden. GSAP ist ohnehin geladen (scripts/core/gsap-init.js)
+      verwenden. GSAP ist ohnehin geladen (scripts/fx/gsap-init.js)
       und wurde bisher nur an rund zehn Stellen benutzt.
 
    AUSNAHME STARTSEITE: die hat mit ihrem 4000px langen Scrollweg

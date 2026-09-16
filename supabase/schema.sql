@@ -2,7 +2,7 @@
    SUPABASE SCHEMA - FireHelmet (ergaenzende, NICHT sicherheits-
    kritische Statistik-/Verlaufsdaten)
    ---------------------------------------------------
-   WICHTIG - GENAU WIE firestore.rules WIRD DIESE DATEI NICHT
+   WICHTIG - GENAU WIE DIE MIGRATIONEN WIRD DIESE DATEI NICHT
    AUTOMATISCH ANGEWENDET. Einspielen per:
      - Supabase Dashboard -> SQL Editor -> Inhalt einfuegen -> Run
      - ODER (falls die Supabase CLI lokal eingerichtet ist):
@@ -35,8 +35,8 @@
 -- Ein Eintrag pro abgeschlossener Spielothek-Runde (z.B. Slot).
 -- Das eigentliche, sicherheitskritische Ergebnis (Dublonen-Aenderung)
 -- ist zu diesem Zeitpunkt bereits erfolgreich UND server-geprueft
--- in Firestore geschrieben (siehe validSpielothekCooldown() /
--- currency <= oldCurrency + 3000 in firestore.rules) - dieser
+-- in die Datenbank geschrieben (siehe app.valid_players_write():
+-- currency <= alter Stand + 3000) - dieser
 -- Eintrag ist eine reine, nachtraegliche Kopie fuer Statistik/
 -- Verlauf, niemals die Quelle der eigentlichen Gutschrift.
 -- ------------------------------------------------------

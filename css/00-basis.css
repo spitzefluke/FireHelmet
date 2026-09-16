@@ -104,7 +104,7 @@ body.loaded {
 }
 
 /* Die Leinwand traegt Sterne, Nordlicht und Nebelschein in einem
-   einzigen Shader-Durchlauf (scripts/core/aurora-bg.js). */
+   einzigen Shader-Durchlauf (scripts/fx/aurora-bg.js). */
 .fh-bg-canvas {
   position: fixed;
   inset: 0;
@@ -300,7 +300,7 @@ body.loaded {
 }
 
 /* =====================================================
-   FH SCROLL-REVEAL SYSTEM (siehe scripts/core/reveal.js)
+   FH SCROLL-REVEAL SYSTEM (siehe scripts/fx/reveal.js)
    Zentrale, wiederverwendbare Einblend-Klasse fuer neue
    Komponenten. Nutzt IntersectionObserver statt vieler
    einzelner Scroll-Listener. Bestehende Elemente/Klassen
@@ -790,7 +790,7 @@ main {
 }
 
 /* Der Anlaufpunkt kommt aus zwei Variablen, damit der Seitenwechsel
-   die Richtung anzeigen kann: scripts/core/seitenwechsel.js setzt
+   die Richtung anzeigen kann: scripts/nav/seitenwechsel.js setzt
    --fh-seite-x auf +/-26px und --fh-seite-y auf 0, wenn es in der
    Navigationsleiste vorwaerts bzw. rueckwaerts geht. Ohne gesetzte
    Variablen bleibt es beim bisherigen Weg von unten - das gilt fuer

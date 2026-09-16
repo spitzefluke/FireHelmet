@@ -59,7 +59,7 @@ function changePage(pageID) {
   }
 
   // Die gemeinsame Effektflaeche aller Seiten
-  // (scripts/core/seiten-fx.js) - schaltet die Stimmung um.
+  // (scripts/fx/seiten-fx.js) - schaltet die Stimmung um.
   if (typeof fhSeitenEffekt === "function") {
     fhSeitenEffekt(pageID);
   }

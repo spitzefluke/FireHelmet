@@ -2,7 +2,7 @@
    DIE SZENEN DER SEITEN-EFFEKTFLÄCHE
    ---------------------------------------------------
    Hier steht, wie jede Seite im Hintergrund aussieht.
-   scripts/core/seiten-fx.js baut daraus die eine Leinwand und
+   scripts/fx/seiten-fx.js baut daraus die eine Leinwand und
    schaltet beim Seitenwechsel um - warum nur eine, steht dort.
 
    Jeder Eintrag ist eine Funktion, die eine Szene zurueckgibt:

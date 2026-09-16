@@ -2,7 +2,7 @@
    EINFACHES RATE LIMITING (optional, KV-basiert)
    ---------------------------------------------------
    Ergaenzt (ersetzt NICHT) die serverseitigen Cooldowns, die
-   bereits in firestore.rules erzwungen werden (z.B.
+   bereits die RLS-Regeln der Datenbank erzwingen (z.B.
    SPIELOTHEK_COOLDOWN_MS) - hier geht es nur darum, dass niemand
    diesen Worker-Endpunkt direkt (ausserhalb der eigentlichen Seite)
    mit einem echten, aber missbraeuchlich oft wiederverwendeten

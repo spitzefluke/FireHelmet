@@ -388,7 +388,7 @@
   overflow: visible;
 }
 
-/* Canvas von window.fhCelebrationBurst() (scripts/core/celebration-burst-3d.js) -
+/* Canvas von window.fhCelebrationBurst() (scripts/fx/celebration-burst-3d.js) -
    wird per JS deckungsgleich ueber dem jeweiligen Ziel-Element positioniert. */
 .fh-celebration-burst-canvas {
   position: fixed;
@@ -960,7 +960,7 @@
 /* Die Huelle bleibt (das Markup verweist darauf), aber der pulsende
    Doppelschein ist raus: den Rennhintergrund macht jetzt die
    gemeinsame Effektflaeche, und zwar passend zur gefahrenen Strecke
-   (scripts/core/seiten-fx-szenen.js, Eintrag "race"). Zwei
+   (scripts/fx/seiten-fx-szenen.js, Eintrag "race"). Zwei
    Hintergruende uebereinander waeren nur Matsch. */
 .race-fx {
   position: absolute;

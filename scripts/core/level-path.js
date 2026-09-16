@@ -278,7 +278,7 @@ function renderLevelPathOverlay(xp, claimedIds) {
   }
 
   // Erreichte Verbinder von links nach rechts wachsen lassen -
-  // siehe scripts/core/path-draw.js.
+  // siehe scripts/fx/path-draw.js.
   if (typeof fhDrawConnectors === "function") {
     fhDrawConnectors(overlay, ".fh-levelpath-connector-filled");
   }

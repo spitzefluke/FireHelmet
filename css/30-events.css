@@ -1674,7 +1674,7 @@ img, svg, video, canvas {
   }
 }
 
-/* Canvas von scripts/core/sidebar-ambient-3d.js - als erstes Kind
+/* Canvas von scripts/fx/sidebar-ambient-3d.js - als erstes Kind
    von #fh-sidebar eingefuegt, damit die spaeteren Geschwister
    (Logo/Nav/Footer) im normalen Fluss darueber gerendert werden. */
 #fh-sidebar-ambient-webgl {
@@ -2149,7 +2149,7 @@ img, svg, video, canvas {
    ---------------------------------------------------
    Beide hatten kurzzeitig eine EIGENE WebGL-Leinwand samt Huelle im
    Markup. Das ist wieder raus: es gibt jetzt EINE Effektflaeche fuer
-   alle Seiten (scripts/core/seiten-fx.js) - Chromium haelt nur 16
+   alle Seiten (scripts/fx/seiten-fx.js) - Chromium haelt nur 16
    WebGL-Kontexte und raeumt darueber hinaus lautlos ab. Tauwerk und
    Schatzstaub sind dorthin gezogen.
 

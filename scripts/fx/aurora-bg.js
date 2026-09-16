@@ -167,7 +167,7 @@ void main() {
 
     /* Kein WebGL oder erkennbar Software-Rasterung: die drei <div>
        bleiben als Rueckfallebene sichtbar. Warum, steht in
-       scripts/core/fh-webgl.js. */
+       scripts/fx/fh-webgl.js. */
     renderer = window.fhWebGL.rendererErzeugen({ canvas: ziel, alpha: false });
     if (!renderer) return;
 

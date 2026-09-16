@@ -133,7 +133,7 @@
 
   <!-- Hintergrund -->
   <!-- Eine Leinwand statt dreier animierter Vollbild-Ebenen, siehe
-       scripts/core/aurora-bg.js. Die drei <div> darunter bleiben als
+       scripts/fx/aurora-bg.js. Die drei <div> darunter bleiben als
        Rueckfallebene fuer Geraete ohne WebGL - dort sieht man
        weiterhin Sterne und Nebel, dann eben unbewegt. -->
   <canvas class="fh-bg-canvas" id="fh-bg-canvas" aria-hidden="true"></canvas>
@@ -177,7 +177,7 @@
     <!-- Die Menuepunkte werden hier zur Laufzeit aus der
          Desktop-Sidebar (.fh-sidebar-nav) eingesetzt, damit die
          Liste nur EINMAL gepflegt werden muss.
-         Siehe scripts/core/nav-sync.js. -->
+         Siehe scripts/nav/nav-sync.js. -->
     <div data-fh-nav-slot hidden></div>
 
     <a data-page="gateway" tabindex="0" onclick="changePage('gateway')" class="fh-gateway-link">⚙ Gateway</a>
@@ -1588,7 +1588,7 @@
   <!-- GSAP (Animationen). Kein Bundler hier, daher als globale
        <script>-Tags statt "import { gsap } from 'gsap'" - jedes
        Plugin haengt sich als globale Variable an window, die
-       registerPlugin()-Aufrufe stehen in scripts/core/gsap-init.js. -->
+       registerPlugin()-Aufrufe stehen in scripts/fx/gsap-init.js. -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/MotionPathPlugin.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/MorphSVGPlugin.min.js" defer></script>
@@ -1614,10 +1614,10 @@
        Bundler vorhanden, daher kein "import { animate } from 'motion'").
        Version fest auf die lokal installierte gepinnt. -->
   <script src="https://cdn.jsdelivr.net/npm/motion@13.1.1/dist/motion.js" defer></script>
-  <script src="scripts/core/motion-fx.js" defer></script>
-  <script src="scripts/core/gsap-init.js" defer></script>
+  <script src="scripts/fx/motion-fx.js" defer></script>
+  <script src="scripts/fx/gsap-init.js" defer></script>
 
-  <!-- three.js (WebGL-Flaechen: scripts/core/fh-webgl.js und darauf
+  <!-- three.js (WebGL-Flaechen: scripts/fx/fh-webgl.js und darauf
        aufbauend seiten-fx-szenen.js, aurora-bg.js,
        celebration-burst-3d.js, sidebar-ambient-3d.js). Bewusst auf
        0.160.0 statt "latest" gepinnt: neuere Versionen liefern keinen
@@ -1626,7 +1626,7 @@
        klassischen <script>-Tag-Build, der zu Supabase/GSAP/Motion hier
        passt (kein Bundler, kein Import-Map-Pattern im restlichen Projekt). -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
-  <script src="scripts/core/fh-webgl.js" defer></script>
+  <script src="scripts/fx/fh-webgl.js" defer></script>
 
   <!-- Water und Sky aus three.js/examples. Es gibt sie nur als
        ES-Module; hier liegen sie als klassische Skripte, die sich
@@ -1636,29 +1636,29 @@
        scripts/vendor/three-water.js. -->
   <script src="scripts/vendor/three-water.js" defer></script>
   <script src="scripts/vendor/three-sky.js" defer></script>
-  <script src="scripts/core/aurora-bg.js" defer></script>
-  <script src="scripts/core/celebration-burst-3d.js" defer></script>
-  <script src="scripts/core/sidebar-ambient-3d.js" defer></script>
+  <script src="scripts/fx/aurora-bg.js" defer></script>
+  <script src="scripts/fx/celebration-burst-3d.js" defer></script>
+  <script src="scripts/fx/sidebar-ambient-3d.js" defer></script>
 
   <!-- SCRIPTS -->
   <!-- Muss vor allen Skripten stehen, die fhNotice() aufrufen
        (discord-auth.js, twitch-auth.js, stories.js). -->
   <script src="scripts/core/notice.js" defer></script>
   <!-- Ladeplatzhalter, genutzt von wheel.js (Rangliste). -->
-  <script src="scripts/core/skeleton.js" defer></script>
+  <script src="scripts/fx/skeleton.js" defer></script>
   <script src="scripts/core/field-counter.js" defer></script>
-  <script src="scripts/core/nav-sync.js" defer></script>
-  <script src="scripts/core/rail-flyout.js" defer></script>
-  <script src="scripts/core/nav-keys.js" defer></script>
-  <script src="scripts/core/seitenwechsel.js" defer></script>
-  <script src="scripts/core/schrift-licht.js" defer></script>
-  <script src="scripts/core/zaehler.js" defer></script>
+  <script src="scripts/nav/nav-sync.js" defer></script>
+  <script src="scripts/nav/rail-flyout.js" defer></script>
+  <script src="scripts/nav/nav-keys.js" defer></script>
+  <script src="scripts/nav/seitenwechsel.js" defer></script>
+  <script src="scripts/fx/schrift-licht.js" defer></script>
+  <script src="scripts/fx/zaehler.js" defer></script>
   <!-- Erst die Szenen, dann die Flaeche: seiten-fx.js liest
        window.fhSeitenSzenen beim ersten Seitenbesuch. -->
-  <script src="scripts/core/seiten-fx-szenen.js" defer></script>
-  <script src="scripts/core/seiten-fx.js" defer></script>
-  <script src="scripts/core/path-draw.js" defer></script>
-  <script src="scripts/core/quick-search.js" defer></script>
+  <script src="scripts/fx/seiten-fx-szenen.js" defer></script>
+  <script src="scripts/fx/seiten-fx.js" defer></script>
+  <script src="scripts/fx/path-draw.js" defer></script>
+  <script src="scripts/nav/quick-search.js" defer></script>
   <script src="scripts/core/share.js" defer></script>
   <script src="scripts/core/fire-helmet-config.js" defer></script>
   <script src="scripts/core/i18n.js" defer></script>
@@ -1704,7 +1704,7 @@
   <script src="scripts/core/discord-notify-data.js" defer></script>
   <script src="scripts/core/discord-notify.js" defer></script>
   <script src="scripts/core/countdown.js" defer></script>
-  <script src="scripts/core/reveal.js" defer></script>
+  <script src="scripts/fx/reveal.js" defer></script>
   <script src="scripts/home/startseite.js" defer></script>
   <!-- Die Ozean-Reise. Braucht three.js, fh-webgl.js und die
        beiden vendor-Dateien (alle weiter oben) sowie countdown.js,
