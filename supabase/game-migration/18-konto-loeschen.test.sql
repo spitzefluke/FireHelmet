@@ -2,136 +2,139 @@
    PRUEFUNG ZU 18-konto-loeschen.sql
    ---------------------------------------------------
    Im SQL-Editor ausfuehren, NACHDEM 18 eingespielt wurde.
-   Alles laeuft in einer Transaktion und wird am Ende
-   zurueckgerollt - es bleibt nichts stehen.
+   Einfach komplett markieren und laufen lassen.
 
-   Geprueft wird vor allem das, was NICHT passieren darf:
-   ein verifiziertes Konto loeschen, und ein fremdes Konto
-   mitnehmen.
+   WARUM DAS HIER EIN EINZIGER DO-BLOCK IST
+   Die erste Fassung sammelte die Ergebnisse in einer temporaeren
+   Tabelle und klammerte alles in begin/rollback. Das laeuft gegen
+   eine direkte psql-Verbindung, im Supabase-SQL-Editor aber
+   nicht: dort landen die einzelnen Anweisungen nicht zwingend in
+   derselben Sitzung, und dann ist die Tabelle aus Zeile 1 in
+   Zeile 2 schon wieder weg ("relation ergebnis does not exist").
+
+   Als EIN Block kann das nicht passieren. Der Preis: die
+   Ergebnisse kommen als Hinweistext (Notice) statt als Tabelle,
+   und das Aufraeumen muss ausdruecklich passieren - ein
+   "rollback" waere hier wirkungslos, weil ein DO-Block fuer sich
+   abschliesst. Es wird deshalb VOR und NACH dem Lauf aufgeraeumt,
+   auch im Fehlerfall.
+
+   Die drei Testkonten tragen UIDs, die mit 18000000 beginnen -
+   weit weg von allem, was echt sein koennte.
+
+   Geprueft wird vor allem, was NICHT passieren darf: ein
+   verifiziertes Konto loeschen, und ein fremdes Konto mitnehmen.
 
    Erwartet: acht Zeilen, alle "PASS".
 ====================================================== */
-begin;
-
-/* Huelle, damit eine Ausnahme den Test nicht abbricht, sondern
-   als Text in der Ergebnisspalte landet.
-
-   Die Rolle wird NUR hier drin auf authenticated gesetzt, nicht
-   fuer die ganze Datei. Ob eine Zeile hinterher weg ist, ist eine
-   Tatsache ueber die Tabelle - keine Frage danach, was ein Client
-   sehen DARF. Prueft man das als authenticated, scheitert man an
-   den Leserechten und haelt das faelschlich fuer ein Ergebnis. */
-create or replace function pg_temp.probe(p_claims text) returns text
-language plpgsql as $p$
-declare n integer;
+do $$
+declare
+  uid_a    constant text := '18000000-0000-0000-0000-00000000000a';  -- anonym, loescht sich
+  uid_b    constant text := '18000000-0000-0000-0000-00000000000b';  -- anonym, Nachbar
+  uid_c    constant text := '18000000-0000-0000-0000-00000000000c';  -- verifiziert
+  ausgabe  text := E'\n';
+  ergebnis text;
+  n        integer;
 begin
-  perform set_config('role', 'authenticated', true);
-  perform set_config('request.jwt.claims', p_claims, true);
+  perform set_config('role', 'postgres', true);
+
+  /* --- Aufraeumen VOR dem Lauf ----------------------------- */
+  delete from public.site_ratings   where nickname = 'LoeschMich18';
+  delete from public.ship_repair    where firebase_uid in (uid_a, uid_b, uid_c);
+  delete from public.players        where firebase_uid in (uid_a, uid_b, uid_c);
+  delete from auth.users            where id::text   in (uid_a, uid_b, uid_c);
+
+  /* --- Testdaten ------------------------------------------- */
+  insert into auth.users (id) values (uid_a::uuid), (uid_b::uuid), (uid_c::uuid);
+
+  insert into public.players (firebase_uid, nickname, currency) values
+    (uid_a, 'LoeschMich18', 100),
+    (uid_b, 'BleibDa18',    100),
+    (uid_c, 'Verifiziert18',100);
+
+  insert into public.ship_repair (firebase_uid) values (uid_a);
+  insert into public.site_ratings (firebase_uid, value, nickname)
+       values (uid_a, 5, 'LoeschMich18');
+
+  /* ================================================
+     T1-T4: das anonyme Konto A loescht sich selbst
+  ================================================ */
+  perform set_config('request.jwt.claims',
+    '{"sub":"' || uid_a || '","role":"authenticated","is_anonymous":true}', true);
   begin
     n := public.mein_konto_loeschen();
-    perform set_config('role', 'postgres', true);
-    return 'GELOESCHT:' || n;
+    ergebnis := 'GELOESCHT:' || n;
   exception when others then
-    perform set_config('role', 'postgres', true);
-    return 'ABGELEHNT:' || sqlerrm;
+    ergebnis := 'ABGELEHNT:' || sqlerrm;
   end;
-end $p$;
+  ausgabe := ausgabe || case when ergebnis like 'GELOESCHT:%' then 'PASS' else 'FAIL' end
+          || '  T1 anonymes Konto darf sich loeschen (' || ergebnis || ')' || E'\n';
 
-/* Die Ansprueche der beiden Testkonten. */
-create or replace function pg_temp.anon_a() returns text language sql as $p$
-  select '{"sub":"18000000-0000-0000-0000-00000000000a","role":"authenticated","is_anonymous":true}'
-$p$;
-create or replace function pg_temp.twitch_c() returns text language sql as $p$
-  select '{"sub":"18000000-0000-0000-0000-00000000000c","role":"authenticated","app_metadata":{"provider":"twitch"}}'
-$p$;
+  select count(*) into n from public.players where firebase_uid = uid_a;
+  ausgabe := ausgabe || case when n = 0 then 'PASS' else 'FAIL' end
+          || '  T2 players-Zeile ist weg' || E'\n';
 
-/* --- Testdaten: zwei anonyme Konten und ein verifiziertes ---
-   Die UIDs sind bewusst weit weg von echten Werten. */
-insert into auth.users (id, created_at) values
-  ('18000000-0000-0000-0000-00000000000a', now()),
-  ('18000000-0000-0000-0000-00000000000b', now()),
-  ('18000000-0000-0000-0000-00000000000c', now())
-on conflict (id) do nothing;
+  select count(*) into n from public.ship_repair where firebase_uid = uid_a;
+  ausgabe := ausgabe || case when n = 0 then 'PASS' else 'FAIL' end
+          || '  T3 ship_repair-Zeile ist weg' || E'\n';
 
-insert into public.players (firebase_uid, nickname, currency) values
-  ('18000000-0000-0000-0000-00000000000a', 'LoeschMich',  100),
-  ('18000000-0000-0000-0000-00000000000b', 'BleibDa',     100),
-  ('18000000-0000-0000-0000-00000000000c', 'Verifiziert', 100)
-on conflict (firebase_uid) do nothing;
+  select count(*) into n from auth.users where id::text = uid_a;
+  ausgabe := ausgabe || case when n = 0 then 'PASS' else 'FAIL' end
+          || '  T4 auth.users-Zeile ist weg' || E'\n';
 
-insert into public.ship_repair (firebase_uid) values
-  ('18000000-0000-0000-0000-00000000000a')
-on conflict (firebase_uid) do nothing;
+  /* T5: die Bewertung bleibt stehen, nur ohne Bezug zur Person.
+     Zwei Bedingungen: der Inhalt ist noch da UND die UID ist weg.
+     Nur die zweite zu pruefen bestuende auch, wenn die ganze
+     Zeile geloescht worden waere - und das waere falsch. */
+  select count(*) into n from public.site_ratings
+   where nickname = 'LoeschMich18' and firebase_uid is null;
+  ausgabe := ausgabe || case when n = 1 then 'PASS' else 'FAIL' end
+          || '  T5 Bewertung bleibt, aber ohne UID' || E'\n';
 
-insert into public.site_ratings (firebase_uid, value, nickname) values
-  ('18000000-0000-0000-0000-00000000000a', 5, 'LoeschMich');
+  /* T6: das NACHBARKONTO darf nicht mitgegangen sein. */
+  select count(*) into n from public.players where firebase_uid = uid_b;
+  ausgabe := ausgabe || case when n = 1 then 'PASS' else 'FAIL' end
+          || '  T6 fremdes Konto B unangetastet' || E'\n';
 
+  /* ================================================
+     T7-T8: ein VERIFIZIERTES Konto darf sich NICHT loeschen
+     ---------------------------------------------
+     Das ist die wichtigste Stelle dieser Datei. Ginge sie durch,
+     wuerde ein Abmelden ein echtes Konto vernichten.
+  ================================================ */
+  perform set_config('request.jwt.claims',
+    '{"sub":"' || uid_c || '","role":"authenticated",'
+    '"app_metadata":{"provider":"twitch"}}', true);
+  begin
+    n := public.mein_konto_loeschen();
+    ergebnis := 'GELOESCHT:' || n;
+  exception when others then
+    ergebnis := 'ABGELEHNT:' || sqlerrm;
+  end;
+  ausgabe := ausgabe || case when ergebnis = 'ABGELEHNT:nur-anonyme-konten' then 'PASS' else 'FAIL' end
+          || '  T7 verifiziertes Konto wird abgelehnt (' || ergebnis || ')' || E'\n';
 
-/* ======================================================
-   T1-T4: das anonyme Konto A loescht sich selbst
-====================================================== */
-create temp table ergebnis (nr int, test text, wert text);
+  select count(*) into n from public.players where firebase_uid = uid_c;
+  ausgabe := ausgabe || case when n = 1 then 'PASS' else 'FAIL' end
+          || '  T8 verifizierte players-Zeile steht noch' || E'\n';
 
-insert into ergebnis
-select 1, 'T1 anonymes Konto darf sich loeschen',
-       case when pg_temp.probe(pg_temp.anon_a()) like 'GELOESCHT:%' then 'PASS' else 'FAIL' end;
+  /* --- Aufraeumen NACH dem Lauf ---------------------------- */
+  perform set_config('request.jwt.claims', '', true);
+  delete from public.site_ratings   where nickname = 'LoeschMich18';
+  delete from public.ship_repair    where firebase_uid in (uid_a, uid_b, uid_c);
+  delete from public.players        where firebase_uid in (uid_a, uid_b, uid_c);
+  delete from auth.users            where id::text   in (uid_a, uid_b, uid_c);
 
-insert into ergebnis
-select 2, 'T2 players-Zeile ist weg',
-       case when exists (select 1 from public.players
-                          where firebase_uid = '18000000-0000-0000-0000-00000000000a') = false
-            then 'PASS' else 'FAIL' end;
+  raise notice '%', ausgabe;
 
-insert into ergebnis
-select 3, 'T3 ship_repair-Zeile ist weg',
-       case when exists (select 1 from public.ship_repair
-                          where firebase_uid = '18000000-0000-0000-0000-00000000000a') = false
-            then 'PASS' else 'FAIL' end;
-
-insert into ergebnis
-select 4, 'T4 auth.users-Zeile ist weg',
-       case when exists (select 1 from auth.users
-                          where id = '18000000-0000-0000-0000-00000000000a') = false
-            then 'PASS' else 'FAIL' end;
-
-/* T5: die Bewertung bleibt stehen, nur ohne Bezug zur Person.
-   Bewusst gegen "= false" geprueft und nicht gegen "is not true":
-   Letzteres bestuende auch, wenn die Zeile ganz fehlte. */
-insert into ergebnis
-select 5, 'T5 Bewertung bleibt, aber ohne UID',
-       case when exists (select 1 from public.site_ratings
-                          where value = 5 and nickname = 'LoeschMich'
-                            and firebase_uid is null)
-             and exists (select 1 from public.site_ratings
-                          where firebase_uid = '18000000-0000-0000-0000-00000000000a') = false
-            then 'PASS' else 'FAIL' end;
-
-/* T6: das NACHBARKONTO darf nicht mitgegangen sein. */
-insert into ergebnis
-select 6, 'T6 fremdes Konto B unangetastet',
-       case when exists (select 1 from public.players
-                          where firebase_uid = '18000000-0000-0000-0000-00000000000b')
-            then 'PASS' else 'FAIL' end;
-
-
-/* ======================================================
-   T7: ein VERIFIZIERTES Konto darf sich NICHT loeschen
-   ---------------------------------------------------
-   Das ist die wichtigste Zeile dieser Datei. Ginge sie durch,
-   wuerde ein Abmelden ein echtes Konto vernichten.
-====================================================== */
-insert into ergebnis
-select 7, 'T7 verifiziertes Konto wird abgelehnt',
-       case when pg_temp.probe(pg_temp.twitch_c()) = 'ABGELEHNT:nur-anonyme-konten'
-            then 'PASS' else 'FAIL' end;
-
-insert into ergebnis
-select 8, 'T8 verifizierte players-Zeile steht noch',
-       case when exists (select 1 from public.players
-                          where firebase_uid = '18000000-0000-0000-0000-00000000000c')
-            then 'PASS' else 'FAIL' end;
-
-
-select nr, test, wert from ergebnis order by nr;
-
-rollback;
+exception when others then
+  /* Auch bei einem unerwarteten Fehler nichts stehen lassen. */
+  perform set_config('role', 'postgres', true);
+  perform set_config('request.jwt.claims', '', true);
+  delete from public.site_ratings   where nickname = 'LoeschMich18';
+  delete from public.ship_repair    where firebase_uid in (uid_a, uid_b, uid_c);
+  delete from public.players        where firebase_uid in (uid_a, uid_b, uid_c);
+  delete from auth.users            where id::text   in (uid_a, uid_b, uid_c);
+  raise notice '%', ausgabe || E'\nABBRUCH: ' || sqlerrm;
+  raise;
+end $$;
