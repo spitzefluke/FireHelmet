@@ -880,7 +880,21 @@ async function checkCode() {
         triggerCodeSuccessEffect();
       }
 
-      if (typeof awardActionXp === "function") awardActionXp("codeRedeemed");
+      /* Erst die regulaeren Code-Punkte, DANN der Bonus - und
+         bewusst nacheinander (await), nicht nebeneinander. Beide
+         lesen den Punktestand und schreiben ihn erhoeht zurueck;
+         parallel gestartet laesen beide denselben alten Wert und
+         der zweite ueberschriebe den ersten. Ausserdem deckelt die
+         Datenbank jeden Schreibvorgang auf +500 - zusammen in einem
+         Zug waeren es bei einem 500er-Code 515, und der GANZE
+         Vorgang floege raus. Siehe awardCodePassXp(). */
+      if (typeof awardActionXp === "function") await awardActionXp("codeRedeemed");
+      /* Keine Anzeige-Auffrischung noetig: die Passseite baut sich
+         beim Hinnavigieren ohnehin neu auf, und der Spieler steht
+         beim Einloesen auf der Code-Seite. */
+      if (match.passXpReward && typeof awardCodePassXp === "function") {
+        await awardCodePassXp(match.passXpReward);
+      }
 
       playCodeAudio(match);
 

@@ -390,6 +390,75 @@ async function awardActionXp(actionKey) {
   }
 }
 
+/* ------------------------------------------------------
+   PASS-XP AUS EINEM GEHEIMCODE
+   ---------------------------------------------------
+   Eigene Funktion statt eines weiteren Eintrags in
+   PASS_XP_PER_ACTION: dort steht je Aktionsart EIN fester Betrag,
+   die XP-Codes vergeben aber je Code einen anderen.
+
+   DER DECKEL IST DER GRUND FUER DEN ZWEITEN SCHREIBVORGANG
+   app.valid_progression_write() (01-players-ship-progression.sql)
+   laesst je Schreibvorgang hoechstens +500 auf xp und pass_xp zu.
+   Das Einloesen eines Codes vergibt ueber awardActionXp
+   ("codeRedeemed") ohnehin schon 25 XP und 15 Pass-XP. Kaeme der
+   Bonus im selben Schreibvorgang dazu, laege die Summe bei einem
+   500er-Code bei 515 - und die Datenbank lehnte den GANZEN
+   Schreibvorgang ab, also auch die 15 regulaeren Punkte.
+
+   Deshalb zwei getrennte Schreibvorgaenge, die NACHEINANDER laufen
+   muessen (der Aufrufer wartet auf den ersten). Parallel gestartet
+   laesen beide denselben alten Stand und der zweite ueberschriebe
+   den ersten - die 15 Punkte waeren still verloren.
+------------------------------------------------------ */
+async function awardCodePassXp(passAmount) {
+  if (!supabaseClient || typeof wheelAuthReady === "undefined") return;
+  const betrag = Math.floor(Number(passAmount) || 0);
+  if (betrag <= 0) return;
+  /* 500 ist die Obergrenze der Datenbank, nicht eine Vorliebe. Ein
+     hoeherer Wert wuerde nicht gekuerzt, sondern der ganze
+     Schreibvorgang abgelehnt - und der Spieler bekaeme gar nichts.
+     Lieber hier laut sein, als still nichts zu vergeben. */
+  if (betrag > 500) {
+    console.warn("Pass-XP-Code ueber dem Deckel von 500, wird nicht vergeben:", betrag);
+    return;
+  }
+
+  try {
+    const uid = await wheelAuthReady;
+    if (!uid) return;
+
+    await ensureSupabaseProgressionRow(uid);
+
+    const { data: current, error: readError } = await supabaseClient
+      .from("player_progression")
+      .select("pass_id, pass_xp")
+      .eq("firebase_uid", uid)
+      .maybeSingle();
+    if (readError) throw readError;
+
+    const currentPass = getCurrentPirateSeason();
+    if (!currentPass) return;   // ausserhalb einer Saison gibt es nichts zu fuellen
+
+    const data = current || {};
+    const fields = {};
+    if (data.pass_id === currentPass.passId) {
+      fields.pass_xp = (data.pass_xp || 0) + betrag;
+    } else {
+      fields.pass_id = currentPass.passId;
+      fields.pass_xp = betrag;
+    }
+
+    const { error: writeError } = await supabaseClient
+      .from("player_progression")
+      .update(fields)
+      .eq("firebase_uid", uid);
+    if (writeError) throw writeError;
+  } catch (err) {
+    console.warn("Pass-XP aus Code konnte nicht vergeben werden:", err);
+  }
+}
+
 /* Kapitel-Lese-XP: die EINZIGE Aktion ohne bestehendes Server-Feld
    fuer "schon einmal passiert" (Lesefortschritt bleibt bewusst rein
    lokal, siehe getReadChapterIds() in stories.js) - deshalb hier
