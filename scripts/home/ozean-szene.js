@@ -1301,7 +1301,11 @@
         return getComputedStyle(document.documentElement).getPropertyValue("--fh-gold-bright").trim() || "#f0c96a";
       } catch (err) { return "#f0c96a"; }
     })();
-    const englisch = (localStorage.getItem("wheelLang") || "de") === "en";
+    /* "siteLang" ist der Schluessel, den i18n.js wirklich schreibt
+       (getCurrentLang()). Hier stand "wheelLang" - den setzt
+       niemand, also war die Abfrage immer falsch und die Einheiten
+       unter den Ziffern blieben auch auf Englisch deutsch. */
+    const englisch = (localStorage.getItem("siteLang") || "de") === "en";
     /* Hoehe der Tafeln ueber der Insel. Bei 760 standen sie im
        oberen Bildrand und wurden vom Letterbox-Balken
        angeschnitten - die Schlusskamera schaut auf y=270 herab,
