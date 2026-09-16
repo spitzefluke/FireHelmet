@@ -27,6 +27,13 @@
    Gewinn auslöst - erscheint dann als Gewinn-Spalte in der
    Rangliste.
 
+   Optional: "passXpReward" hinzufügen, um zusätzliche Punkte auf
+   den laufenden Piratenpass zu geben (oben drauf auf die 15, die
+   jeder Code ohnehin bringt). HÖCHSTENS 500 - das ist die Grenze,
+   die die Datenbank pro Schreibvorgang zulässt; ein höherer Wert
+   wird nicht gekürzt, sondern gar nicht vergeben. Siehe den Block
+   bei den XP-Codes weiter unten.
+
    Optional: "audio" hinzufügen, um beim Einlösen eine eigene
    Audio-Datei abzuspielen (deine eigene Aufnahme, oder eine mit
    einem beliebigen KI-Sprachtool erzeugte MP3 - z.B. ElevenLabs,
@@ -72,15 +79,6 @@ const codes = [
     hash: "ec6820622d6388215f724a89365d214c25666a951f90b3322e730713bfbd1eec", // sturmflut
     message: "Glückwunsch, zu deinem Glücksradgewinn, merke dir diese 4 Ziffern für ein Game in Roblox: 9562",
     reward: "Roblox-Code",
-  },
-  {
-    hash: "099ef95be2a4db34c612f6326988690bd92b53c4b08d9b53f447c892597c7b5a", // 01864
-    // Hier lag ein "image: scripts/image/raetsel1.png" - die Datei war
-    // aber gar kein Bild, sondern zwei Byte Text (\r\n). Wer diesen Code
-    // loeste, bekam den Satz und darunter ein kaputtes Bild. Sobald das
-    // echte Raetselbild vorliegt, hier wieder eine image-Zeile ergaenzen
-    // (Muster siehe raetsel2.png weiter unten).
-    message: "Glückwunsch Seemann nun etwas schwerer löse dieses Rätsel:",
   },
   {
     hash: "b0c27fca74fa91934900c9ffcb3dcca5b807a3c059a3b516cdd0788807b5ff49", // roma
@@ -218,6 +216,58 @@ const codes = [
     hash: "484aab2f2cd0f77b3c30f91521ba9a76c8c501112a53e100154a098c274f03d3", // sorry
     message: "🪙 +300 Dublonen als Entschuldigung für die technischen Probleme heute - die komplette Spielothek läuft jetzt zuverlässig über Supabase!",
     currencyReward: 300,
+  },
+
+  /* ------------------------------------------------------
+     PASS-XP-CODES
+     ---------------------------------------------------
+     "passXpReward" gibt zusaetzliche Punkte auf den laufenden
+     Piratenpass - oben drauf auf die 15 Pass-XP, die JEDER
+     eingeloeste Code ohnehin bringt (PASS_XP_PER_ACTION
+     .codeRedeemed in scripts/core/progression-data.js).
+
+     500 IST DIE OBERGRENZE, und zwar keine gewaehlte:
+     app.valid_progression_write() in
+     supabase/game-migration/01-players-ship-progression.sql
+     laesst je Schreibvorgang hoechstens +500 auf pass_xp zu. Ein
+     hoeherer Wert wuerde nicht gekuerzt, sondern der ganze
+     Schreibvorgang abgelehnt - der Spieler bekaeme nichts.
+     awardCodePassXp() faengt das ab und meldet es in der Konsole.
+
+     Zur Einordnung: Stufe N des Passes braucht N*(N+1)*50 Punkte
+     (Stufe 1 = 100, Stufe 3 = 600, Stufe 5 = 1500), eine normale
+     Aktion bringt 8 bis 25. 500 Punkte sind also rund 20 bis 60
+     Aktionen auf einen Schlag.
+  ------------------------------------------------------ */
+  {
+    hash: "36bf7bd612005654bbeb6c6fc93ae8a9e1a1444916b748764acadbd798c96c76", // kompass
+    message: "🧭 Ein Kompass für die Reise. +50 Pass-XP für deinen Piratenpass!",
+    passXpReward: 50,
+    reward: "50 Pass-XP",
+  },
+  {
+    hash: "03e47b55eb59a0d75804d2bcb69487d2376d57a4c1e30113efba8977267ef598", // seekarte
+    message: "🗺️ Eine alte Seekarte, halb verblichen - aber sie zeigt den Weg. +100 Pass-XP!",
+    passXpReward: 100,
+    reward: "100 Pass-XP",
+  },
+  {
+    hash: "683ec9b4c215b8391f2749b55d645adcea53cf5c571a28d923a18078927d1097", // nordstern
+    message: "⭐ Der Nordstern steht klar über dem Mast. +200 Pass-XP für deinen Piratenpass!",
+    passXpReward: 200,
+    reward: "200 Pass-XP",
+  },
+  {
+    hash: "686d22d695e2c21166a89498a3a3f198e8d4ad8b09190bd1d86e350a79597341", // kraken
+    message: "🦑 Du hast den Kraken überlebt, Seemann. Das spricht sich herum: +350 Pass-XP!",
+    passXpReward: 350,
+    reward: "350 Pass-XP",
+  },
+  {
+    hash: "0ed2df1bb528a1feb743379a90fa33c50d8b2476cd29796399580aa3bc03b66e", // goldrausch
+    message: "💰 Goldrausch! Die größte Ladung Pass-XP, die es gibt: +500 für deinen Piratenpass!",
+    passXpReward: 500,
+    reward: "500 Pass-XP",
   },
 
   /* ------------------------------------------------------

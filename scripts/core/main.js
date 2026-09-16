@@ -880,7 +880,34 @@ async function checkCode() {
         triggerCodeSuccessEffect();
       }
 
-      if (typeof awardActionXp === "function") awardActionXp("codeRedeemed");
+      /* Erst die regulaeren Code-Punkte, DANN der Bonus - und
+         bewusst nacheinander (await), nicht nebeneinander. Beide
+         lesen den Punktestand und schreiben ihn erhoeht zurueck;
+         parallel gestartet laesen beide denselben alten Wert und
+         der zweite ueberschriebe den ersten. Ausserdem deckelt die
+         Datenbank jeden Schreibvorgang auf +500 - zusammen in einem
+         Zug waeren es bei einem 500er-Code 515, und der GANZE
+         Vorgang floege raus. Siehe awardCodePassXp(). */
+      if (typeof awardActionXp === "function") await awardActionXp("codeRedeemed");
+      /* Der Betrag kommt jetzt vom Server (19-xp-codes.sql).
+         match.passXpReward ist nur noch zweierlei: der Text in der
+         Nachricht, und der Rueckfall, falls die Migration fehlt.
+
+         Keine Anzeige-Auffrischung noetig: die Passseite baut sich
+         beim Hinnavigieren ohnehin neu auf, und der Spieler steht
+         beim Einloesen auf der Code-Seite. */
+      if (match.passXpReward && typeof redeemPassXpCode === "function") {
+        const punkte = await redeemPassXpCode(enteredCode, match.passXpReward);
+        /* Genau 0 heisst: der Server kennt den Code, dieses Konto
+           hatte ihn aber schon. Das gehoert dazugesagt - sonst
+           stuende da "+500 Pass-XP!" und angekommen waere nichts.
+           null heisst "liess sich nicht entscheiden" (Rueckfall)
+           und bleibt bewusst unkommentiert. */
+        if (punkte === 0) {
+          messageEl.textContent = match.message + " " +
+            t("codes.xpSchonEingeloest", "(Diesen Code hattest du schon - die Punkte gibt es nur einmal.)");
+        }
+      }
 
       playCodeAudio(match);
 
