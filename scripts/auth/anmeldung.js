@@ -383,19 +383,166 @@ async function fhAnmeldenMit(provider) {
    Danach legt supabase-client.js beim naechsten Laden wieder eine
    anonyme Sitzung an - man steht also nie vor einer toten Seite,
    sondern spielt einfach wieder als Gast weiter.
+
+   ZWEI FAELLE, DIE SICH GRUNDLEGEND UNTERSCHEIDEN
+
+   Wer ueber Twitch, Discord, Google oder eine E-Mail angemeldet
+   ist, kann sein Konto wiederfinden - Abmelden ist harmlos.
+
+   Wer als Gast spielt, kann das NICHT. Die anonyme UID liegt nur
+   in diesem Browser; nach einem signOut() kommt niemand mehr an
+   sie heran, auch der Betreiber nicht. Der Spielstand waere nicht
+   "weg wie in einem Schliessfach", sondern unerreichbar - und die
+   Zeilen blieben als Karteileichen in der Datenbank liegen.
+
+   Deshalb bekommt der Gast vorher eine Warnung und das Konto wird
+   auf Wunsch gleich mitgeloescht (siehe
+   supabase/game-migration/18-konto-loeschen.sql).
 ------------------------------------------------------ */
+
+/* Ist die laufende Sitzung anonym? Gefragt wird der Token, nicht
+   localStorage: dort steht nur, was die Oberflaeche zuletzt
+   angezeigt hat. */
+async function fhIstGastSitzung() {
+  if (!supabaseClient) return false;
+  try {
+    const { data } = await supabaseClient.auth.getSession();
+    const nutzer = data && data.session ? data.session.user : null;
+    return !!(nutzer && nutzer.is_anonymous);
+  } catch (err) {
+    /* Im Zweifel als Gast behandeln: dann kommt die Warnung zu oft,
+       statt einmal zu wenig. Ein zu viel gezeigter Hinweis kostet
+       einen Klick, ein fehlender kostet den Spielstand. */
+    return true;
+  }
+}
+
+/* Der eigentliche Abmeldevorgang - ohne Rueckfrage. */
+async function fhAbmeldenAusfuehren() {
+  await supabaseClient.auth.signOut();
+  // Der lokale Anzeigename gehoerte zur alten Sitzung.
+  ["wheelNickname", "loginProvider", "wheelAvatar",
+   "twitchAvatar", "discordAvatar", "fhKennwortAngelegt"].forEach((k) => {
+    try { localStorage.removeItem(k); } catch (e) { /* Privatmodus */ }
+  });
+  window.location.reload();
+}
+
 async function fhAbmelden() {
   if (!supabaseClient) return;
   try {
-    await supabaseClient.auth.signOut();
-    // Der lokale Anzeigename gehoerte zur alten Sitzung.
-    ["wheelNickname", "loginProvider", "wheelAvatar",
-     "twitchAvatar", "discordAvatar"].forEach((k) => {
-      try { localStorage.removeItem(k); } catch (e) { /* Privatmodus */ }
-    });
-    window.location.reload();
+    fhAbmeldeDialogOeffnen(await fhIstGastSitzung());
   } catch (err) {
     console.warn("Abmelden fehlgeschlagen:", err);
+  }
+}
+
+/* ------------------------------------------------------
+   DIE RUECKFRAGE
+------------------------------------------------------ */
+let fhAbmeldeIstGast = false;
+
+function fhAbmeldeDialogOeffnen(istGast) {
+  const dlg = document.getElementById("fh-abmelden-dialog");
+  if (!dlg) return;
+  fhAbmeldeIstGast = istGast;
+
+  /* Die beiden Faelle teilen sich Titel und Knopfzeile, der Text
+     dazwischen wird getauscht. [hidden] schlaegt die eigene
+     display-Angabe eines Elements NICHT - deshalb steht in der CSS
+     eine ausdrueckliche Regel dafuer. */
+  const gast = document.getElementById("fh-abmelden-gast");
+  const normal = document.getElementById("fh-abmelden-normal");
+  if (gast) gast.hidden = !istGast;
+  if (normal) normal.hidden = istGast;
+
+  const ja = document.getElementById("fh-abmelden-bestaetigen");
+  if (ja) {
+    /* Der Knopf sagt beim Gast, was wirklich passiert. "Abmelden"
+       waere hier eine Beschoenigung. */
+    ja.textContent = t(istGast ? "logout.trotzdem" : "logout.normalKnopf",
+                       istGast ? "Abmelden und loeschen" : "Abmelden");
+    ja.classList.toggle("fh-abmelde-gefahr", istGast);
+    ja.disabled = false;
+  }
+
+  // Reste eines vorigen Aufrufs wegraeumen.
+  const meldung = document.getElementById("fh-abmelden-meldung");
+  if (meldung) meldung.textContent = "";
+  const wert = document.getElementById("fh-abmelden-kennwort-wert");
+  if (wert) { wert.hidden = true; wert.textContent = ""; }
+  const zeigen = document.getElementById("fh-abmelden-kennwort-zeigen");
+  if (zeigen) { zeigen.hidden = false; zeigen.disabled = false; }
+
+  /* showModal() statt show(): nur das legt den Hintergrund still
+     und faengt den Fokus. Der Abbrechen-Knopf bekommt ihn zuerst -
+     bei einem Schritt, der loescht, ist die harmlose Antwort die
+     richtige Vorauswahl. */
+  if (typeof dlg.showModal === "function") dlg.showModal();
+  else dlg.setAttribute("open", "");
+  const nein = document.getElementById("fh-abmelden-abbrechen");
+  if (nein) nein.focus();
+}
+
+function fhAbmeldeDialogSchliessen() {
+  const dlg = document.getElementById("fh-abmelden-dialog");
+  if (!dlg) return;
+  if (typeof dlg.close === "function") dlg.close();
+  else dlg.removeAttribute("open");
+}
+
+/* Das Kennwort erst auf Klick holen - genau wie im Klappkasten auf
+   der Anmeldeseite. Wer den Dialog nur aus Versehen geoeffnet hat,
+   soll seinen Code nicht ungefragt auf dem Schirm haben (Stream,
+   weitergereichtes Handy). */
+async function fhAbmeldeKennwortZeigen() {
+  const knopf = document.getElementById("fh-abmelden-kennwort-zeigen");
+  const wert = document.getElementById("fh-abmelden-kennwort-wert");
+  if (!knopf || !wert || !supabaseClient) return;
+  knopf.disabled = true;
+  try {
+    const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.rpc("mein_kennwort")
+    );
+    if (error) throw error;
+    wert.textContent = typeof fhKennwortHuebsch === "function"
+      ? fhKennwortHuebsch(data) : String(data || "");
+    wert.hidden = false;
+    knopf.hidden = true;
+  } catch (err) {
+    console.warn("Kennwort im Abmeldedialog:", err);
+    const meldung = document.getElementById("fh-abmelden-meldung");
+    if (meldung) meldung.textContent = t("logout.kennwortFehler", "Kennwort konnte nicht geladen werden.");
+    knopf.disabled = false;
+  }
+}
+
+/* Der Weg hinaus, nachdem bestaetigt wurde. */
+async function fhAbmeldeBestaetigt() {
+  const ja = document.getElementById("fh-abmelden-bestaetigen");
+  const meldung = document.getElementById("fh-abmelden-meldung");
+  if (ja) ja.disabled = true;
+  if (meldung) meldung.textContent = t("logout.laeuft", "Wird abgemeldet ...");
+
+  try {
+    if (fhAbmeldeIstGast) {
+      /* Loeschen MUSS vor dem signOut() laufen: danach gibt es kein
+         Token mehr, mit dem sich die Funktion aufrufen liesse - und
+         das Konto bliebe fuer immer als Karteileiche stehen.
+
+         Der Server prueft selbst, dass nur anonyme Konten
+         geloescht werden (18-konto-loeschen.sql). Die Abfrage hier
+         ist die Hoeflichkeit, nicht die Sicherung. */
+      const { error } = await withSupabaseRlsColdStartRetry(() =>
+        supabaseClient.rpc("mein_konto_loeschen")
+      );
+      if (error) throw error;
+    }
+    await fhAbmeldenAusfuehren();
+  } catch (err) {
+    console.warn("Abmelden fehlgeschlagen:", err);
+    if (meldung) meldung.textContent = t("logout.fehler", "Abmelden hat nicht geklappt. Versuch es bitte noch einmal.");
+    if (ja) ja.disabled = false;
   }
 }
 
@@ -522,11 +669,17 @@ function fhAnmeldungVerdrahten() {
     });
   });
 
-  const abmelden = document.getElementById("fh-abmelden-btn");
-  if (abmelden && !abmelden.dataset.fhVerdrahtet) {
-    abmelden.dataset.fhVerdrahtet = "1";
-    abmelden.addEventListener("click", fhAbmelden);
-  }
+  [
+    ["fh-abmelden-btn", fhAbmelden],
+    ["fh-abmelden-abbrechen", fhAbmeldeDialogSchliessen],
+    ["fh-abmelden-bestaetigen", fhAbmeldeBestaetigt],
+    ["fh-abmelden-kennwort-zeigen", fhAbmeldeKennwortZeigen],
+  ].forEach(function (paar) {
+    const el = document.getElementById(paar[0]);
+    if (!el || el.dataset.fhVerdrahtet) return;
+    el.dataset.fhVerdrahtet = "1";
+    el.addEventListener("click", paar[1]);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", function () {

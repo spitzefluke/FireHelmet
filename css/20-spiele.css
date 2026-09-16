@@ -3309,3 +3309,130 @@
     --fha-luft-4: 1.4rem;
   }
 }
+
+/* ======================================================
+   ABMELDEN
+   ---------------------------------------------------
+   Die Karte steht bewusst unten und ohne Hervorhebung: ein Weg
+   hinaus, den man findet, wenn man ihn sucht - und nicht
+   versehentlich trifft, wenn man sich gerade anmelden wollte.
+====================================================== */
+.fh-abmelde-karte {
+  margin-top: 1.1rem;
+}
+
+/* Das Raster darueber hat zwei Spalten; diese Karte steht allein
+   und soll nicht auf halbe Breite springen. */
+.fh-abmelde-karte .code-button {
+  margin-top: .8rem;
+}
+
+/* ---------- Die Rueckfrage ----------
+   Ein echtes <dialog>. Es bringt Fokusfalle, Esc und den inerten
+   Hintergrund mit - bei einem Schritt, der Daten vernichtet, ist
+   das Pflicht und kein Zusatz. */
+.fh-abmelde-dialog {
+  /* Der Sternchen-Reset in 00-basis.css setzt margin: 0 auf ALLES -
+     damit faellt auch die "margin: auto"-Zentrierung weg, die ein
+     <dialog> vom Browser mitbringt. Der Dialog klebte dadurch oben
+     links in der Ecke. Beides hier wieder ausdruecklich setzen. */
+  inset: 0;
+  margin: auto;
+  width: min(34rem, calc(100vw - 2rem));
+  padding: 1.5rem 1.4rem 1.3rem;
+  border: 1px solid var(--fh-linie, rgba(255, 255, 255, .14));
+  border-radius: var(--fh-radius, 14px);
+  background: var(--fh-surface, #141822);
+  color: var(--fh-text, #e8e6e3);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+}
+
+.fh-abmelde-dialog::backdrop {
+  background: rgba(6, 8, 13, .72);
+  backdrop-filter: blur(3px);
+}
+
+/* [hidden] schlaegt die eigene display-Angabe eines Elements
+   NICHT. Ohne diese Zeile stuenden Gast- und Normalfall
+   gleichzeitig im Dialog - derselbe Fehler ist in diesem Projekt
+   schon mehrfach aufgetreten. */
+.fh-abmelde-dialog [hidden] {
+  display: none !important;
+}
+
+.fh-abmelde-titel {
+  margin: 0 0 .9rem;
+  font-size: clamp(1.1rem, 2.4vw, 1.35rem);
+  color: var(--fh-gold-bright, #f0c96a);
+}
+
+.fh-abmelde-text {
+  margin: 0 0 .8rem;
+  font-size: .95rem;
+  line-height: 1.55;
+  color: var(--fh-text-weich, rgba(232, 230, 227, .82));
+}
+
+/* Die Warnung traegt als einzige Flaeche im Dialog Farbe. Rot
+   allein waere zu wenig - wer es nicht unterscheiden kann, sieht
+   trotzdem den abgesetzten Kasten und den staerkeren Rand. */
+.fh-abmelde-warnung {
+  margin: 0 0 1rem;
+  padding: .7rem .8rem;
+  border-left: 3px solid var(--fh-rot, #c8553d);
+  border-radius: 0 var(--fh-radius-klein, 8px) var(--fh-radius-klein, 8px) 0;
+  background: rgba(200, 85, 61, .12);
+  font-size: .92rem;
+  line-height: 1.5;
+}
+
+.fh-abmelde-kennwort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: 1rem;
+}
+
+.fh-abmelde-meldung {
+  min-height: 1.2em;
+  margin: 0 0 .6rem;
+  font-size: .9rem;
+  color: var(--fh-gold-bright, #f0c96a);
+}
+
+.fh-abmelde-knoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .7rem;
+  justify-content: flex-end;
+}
+
+/* Der gefaehrliche Knopf sieht auch gefaehrlich aus - aber erst
+   im Gastfall, wo wirklich geloescht wird. */
+.fh-abmelde-gefahr {
+  border-color: var(--fh-rot, #c8553d);
+  color: var(--fh-rot-hell, #e07a62);
+}
+
+.fh-abmelde-gefahr:hover,
+.fh-abmelde-gefahr:focus-visible {
+  border-color: var(--fh-rot-hell, #e07a62);
+  color: var(--fh-rot-hell, #e07a62);
+  box-shadow: 0 0 20px rgba(200, 85, 61, .35);
+}
+
+@media (max-width: 460px) {
+  /* Auf schmalen Schirmen untereinander, damit die Beschriftungen
+     nicht umbrechen. column-reverse dreht die Reihenfolge um, so
+     dass "Angemeldet bleiben" UNTEN steht - der harmlose Weg liegt
+     damit am naechsten am Daumen, so wie es die Systemdialoge von
+     iOS und Android auch halten. */
+  .fh-abmelde-knoepfe {
+    flex-direction: column-reverse;
+  }
+
+  .fh-abmelde-knoepfe .code-button {
+    width: 100%;
+  }
+}

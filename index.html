@@ -88,6 +88,49 @@
   <!-- Update-Mitteilung: erscheint einmalig, Inhalt in scripts/core/update-notice-data.js -->
   <div id="update-notice-overlay" class="update-notice-overlay"></div>
 
+  <!-- ABMELDEN-RUECKFRAGE
+       Ein echtes <dialog> und kein eigengebautes Overlay wie sonst
+       auf der Seite. Bei einem Schritt, der Daten vernichtet, sind
+       Fokusfalle, Esc und der inerte Hintergrund keine Zugabe,
+       sondern Pflicht - und die bringt <dialog> von sich aus mit.
+       Nachgebaut waeren das gut hundert Zeilen, die genau dann
+       falsch sind, wenn es darauf ankommt.
+
+       Er liegt hier und nicht in der Anmeldeseite: eine versteckte
+       .page nimmt ihren Inhalt aus dem Fluss, und ein Dialog darin
+       liesse sich nicht oeffnen. -->
+  <dialog id="fh-abmelden-dialog" class="fh-abmelde-dialog"
+          aria-labelledby="fh-abmelden-titel">
+    <h2 id="fh-abmelden-titel" class="fh-abmelde-titel" data-i18n="logout.titel">Wirklich abmelden?</h2>
+
+    <!-- Gastfall: Warnung und das Kennwort als Rettungsanker. -->
+    <div id="fh-abmelden-gast" hidden>
+      <p class="fh-abmelde-text" data-i18n="logout.anonText">Du spielst als Gast. Dein Fortschritt h&auml;ngt an diesem Browser &ndash; es gibt kein Passwort, mit dem du ihn zur&uuml;ckholen k&ouml;nntest.</p>
+      <p class="fh-abmelde-warnung" data-i18n="logout.anonWarnung">Wenn du dich abmeldest, wird dieses Gastkonto gel&ouml;scht: Dublonen, Level, Schiff, Turnier-Anmeldung und Boss-Schaden sind dann weg. Das l&auml;sst sich nicht r&uuml;ckg&auml;ngig machen.</p>
+
+      <p class="fh-abmelde-text" data-i18n="logout.kennwortAngebot">Du kannst deinen Fortschritt vorher sichern &ndash; schreib dir dieses Kennwort auf und l&ouml;se es sp&auml;ter auf einem anderen Ger&auml;t ein:</p>
+      <div class="fh-abmelde-kennwort">
+        <button type="button" class="code-button" id="fh-abmelden-kennwort-zeigen"
+                data-i18n="logout.kennwortZeigen">Kennwort anzeigen</button>
+        <code id="fh-abmelden-kennwort-wert" class="fh-kennwort-wert" hidden></code>
+      </div>
+    </div>
+
+    <!-- Angemeldeter Fall: nur die Feststellung, keine Warnung. -->
+    <div id="fh-abmelden-normal" hidden>
+      <p class="fh-abmelde-text" data-i18n="logout.normalText">Du wirst von diesem Ger&auml;t abgemeldet. Dein Konto und dein Fortschritt bleiben erhalten &ndash; du kannst dich jederzeit wieder anmelden.</p>
+    </div>
+
+    <p id="fh-abmelden-meldung" class="fh-abmelde-meldung" role="status" aria-live="polite"></p>
+
+    <div class="fh-abmelde-knoepfe">
+      <button type="button" class="code-button" id="fh-abmelden-abbrechen"
+              data-i18n="logout.abbrechen">Angemeldet bleiben</button>
+      <button type="button" class="code-button fh-abmelde-gefahr" id="fh-abmelden-bestaetigen"
+              data-i18n="logout.trotzdem">Abmelden und l&ouml;schen</button>
+    </div>
+  </dialog>
+
   <!-- Hintergrund -->
   <!-- Eine Leinwand statt dreier animierter Vollbild-Ebenen, siehe
        scripts/core/aurora-bg.js. Die drei <div> darunter bleiben als
@@ -862,6 +905,18 @@
             <p id="fh-kennwort-status" class="fh-kennwort-status" role="status"></p>
           </div>
         </details>
+
+        <!-- ABMELDEN
+             Bewusst ganz unten und ohne Hervorhebung: ein Weg
+             hinaus, den man findet, wenn man ihn sucht - und nicht
+             versehentlich trifft, wenn man sich gerade anmelden
+             wollte. -->
+        <section class="fh-anmelde-karte fh-abmelde-karte">
+          <h2 class="fh-anmelde-titel" data-i18n="logout.karteTitel">Abmelden</h2>
+          <p class="fh-anmelde-text" data-i18n="logout.karteText">Meldet dich von diesem Ger&auml;t ab. Danach spielst du wieder als Gast weiter.</p>
+          <button type="button" class="code-button" id="fh-abmelden-btn"
+                  data-i18n="logout.knopf">Abmelden</button>
+        </section>
       </div>
     </section>
 
