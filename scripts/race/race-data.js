@@ -34,7 +34,7 @@ const raceConfig = {
    neue Strecke bekommt ihre Umgebung damit geschenkt.
 
    "stil" bestimmt, wie sich der SEITENHINTERGRUND
-   bewegt (scripts/core/seiten-fx-szenen.js, Eintrag
+   bewegt (scripts/fx/seiten-fx-szenen.js, Eintrag
    "race"): flimmernde Hitze, ziehende Lichtstreifen,
    Blitze. Farbe kam schon bisher aus grass/accent -
    die Bewegung kommt jetzt dazu.

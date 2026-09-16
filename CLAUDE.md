@@ -15,8 +15,8 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt ~110 `<script defer>`-Tags in fester
-Reihenfolge. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 112 `<script defer>`-Tags in fester
+Reihenfolge, davon 98 aus diesem Repo. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
 per CDN geladen, nicht gebündelt.
 
 Prüfen heißt hier:
@@ -62,15 +62,33 @@ wie Codefehler. Wenn eine Prüfung fehlschlägt: **erst fragen, ob der Test fals
 
 ### Seiten
 
-`index.html` enthält alle 20 Seiten als `<section id="…" class="page">`. `changePage(pageID)`
+`index.html` enthält alle 22 Seiten als `<section id="…" class="page">`. `changePage(pageID)`
 in `scripts/core/main.js` schaltet `.active-page` um und ruft danach die `update…Page(pageID)`
 jedes Bereichs auf. **Eine neue Seite muss sich dort eintragen**, sonst wird sie nie
 aufgefrischt. Der Wechsel selbst ist eine CSS-Transition auf `.page` (350 ms, `--fh-ease`) —
 diese Animation nicht zusätzlich per JS bespielen.
 
+### Skripte
+
+`scripts/` ist nach Zuständigkeit geteilt, nicht nach Seite. Drei Ordner tragen die
+gemeinsame Grundlage:
+
+- **`scripts/core/`** — Kern und Zustand: `main.js`, `i18n.js`, die beiden
+  `progression*`-Dateien, Konfiguration, Anmeldung, Hinweise.
+- **`scripts/fx/`** — reine Optik ohne eigenen Zustand: `aurora-bg`, `seiten-fx`,
+  `motion-fx`, `reveal`, `skeleton`, `zaehler`, die drei WebGL-Flächen. **Nichts hier
+  darf Spiellogik enthalten** — wer eine dieser Dateien entfernt, darf höchstens
+  Aussehen verlieren, nie Funktion.
+- **`scripts/nav/`** — Navigation: `seitenwechsel`, `nav-sync`, `nav-keys`,
+  `rail-flyout`, `quick-search`.
+
+Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `wheel/`, …).
+**Die Ladereihenfolge in `index.html` ist tragend** — ein neues `<script>` gehört an die
+Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
+
 ### CSS
 
-Zehn Dateien in fester Ladereihenfolge, `css/00-basis.css` bis `css/90-typografie.css`. Die
+Elf Dateien in fester Ladereihenfolge, `css/00-basis.css` bis `css/90-typografie.css`. Die
 Nummer ist die Kaskade: Späteres überschreibt Früheres. Die Design-Tokens (`--fh-gold`,
 `--fh-surface`, `--fh-ease`, …) stehen in `00-basis.css` unter `:root`. **Neue Farben und
 Kurven aus den Tokens nehmen**, nicht als Rohwert schreiben.

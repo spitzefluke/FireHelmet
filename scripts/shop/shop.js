@@ -342,7 +342,7 @@ async function buyShopItem(itemId) {
 function setCurrencyDisplays(currency, angemeldet) {
   const text = currency.toLocaleString("de-DE");
 
-  /* Hochzaehlen statt springen (scripts/core/zaehler.js): bei einem
+  /* Hochzaehlen statt springen (scripts/fx/zaehler.js): bei einem
      Kauf oder Gewinn soll man sehen, WIE VIEL sich geaendert hat.
      Beim ersten Aufbau, bei ausgeblendeten Anzeigen und bei
      reduzierter Bewegung schreibt der Helfer den Wert direkt. */

@@ -1,7 +1,7 @@
 /* ======================================================
    FIREHELMET SUPABASE-PROXY-WORKER
    ---------------------------------------------------
-   WICHTIG - GENAU WIE bei firestore.rules WIRD DIESE DATEI NICHT
+   WICHTIG - GENAU WIE DIE MIGRATIONEN WIRD DIESE DATEI NICHT
    AUTOMATISCH DEPLOYT. Das ist eigenstaendiger Code fuer ein
    SEPARATES Cloudflare-Workers-Projekt (nicht Teil dieser
    statischen GitHub-Pages-Seite) - genau wie der bereits
@@ -28,7 +28,8 @@
      dem vom Client gesendeten JSON-Body - ein Client kann daher
      niemals im Namen eines fremden Accounts schreiben.
    - Zusaetzlich zur Signaturpruefung: dieselben Plausibilitaets-
-     Obergrenzen wie in firestore.rules (payout <= 3000, damage <= 45)
+     Obergrenzen wie in app.valid_players_write() (payout <= 3000,
+     damage <= 45)
      werden HIER NOCHMAL geprueft, bevor irgendetwas nach Supabase
      geschrieben wird (Verteidigung in der Tiefe) - zusaetzlich
      erzwingt auch die CHECK-Constraint direkt in der Datenbank
@@ -76,9 +77,9 @@ async function requireVerifiedUid(request, env) {
 /* ------------------------------------------------------
    POST /spielothek-log
    Body: { gameId: string, betAmount: number, payoutAmount: number, won: boolean }
-   Spiegelt EXAKT die bereits in firestore.rules durchgesetzte
-   Obergrenze fuer die Spielothek (Slot-Jackpot = 3000, siehe
-   validSpielothekCooldown()/currency <= oldCurrency + 3000).
+   Spiegelt EXAKT die bereits von app.valid_players_write()
+   durchgesetzte Obergrenze fuer die Spielothek
+   (Slot-Jackpot = 3000, currency <= alter Stand + 3000).
 ------------------------------------------------------ */
 async function handleSpielothekLog(request, env) {
   const uid = await requireVerifiedUid(request, env);
@@ -114,8 +115,8 @@ async function handleSpielothekLog(request, env) {
 /* ------------------------------------------------------
    POST /boss-attack-log
    Body: { nickname: string, monthId: string, damage: number }
-   Spiegelt die Obergrenze aus community_boss_damage in
-   firestore.rules (totalDamage <= oldNum('totalDamage') + 45).
+   Spiegelt die Obergrenze aus community_boss_damage
+   (Schaden <= alter Stand + 45, siehe supabase/game-migration/).
 ------------------------------------------------------ */
 async function handleBossAttackLog(request, env) {
   const uid = await requireVerifiedUid(request, env);

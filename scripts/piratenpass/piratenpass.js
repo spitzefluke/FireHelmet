@@ -274,7 +274,7 @@ async function renderPassPage() {
   staggerReveal(container, ".piratenpass-node");
 
   // Erreichte Verbinder von links nach rechts wachsen lassen -
-  // siehe scripts/core/path-draw.js.
+  // siehe scripts/fx/path-draw.js.
   if (typeof fhDrawConnectors === "function") {
     fhDrawConnectors(container, ".piratenpass-connector-filled");
   }

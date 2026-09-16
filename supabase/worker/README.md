@@ -1,6 +1,6 @@
 # FireHelmet Supabase-Proxy-Worker
 
-Dieser Ordner ist **Referenzcode** fuer ein eigenstaendiges Cloudflare-Workers-Projekt. Er ist **nicht** Teil der statischen GitHub-Pages-Seite und wird **nicht automatisch deployt** – genau wie `firestore.rules` musst du ihn manuell einrichten. Das entspricht dem bereits bestehenden Discord-Notify-Worker (`scripts/core/discord-notify-data.js`), der nach demselben Muster funktioniert.
+Dieser Ordner ist **Referenzcode** fuer ein eigenstaendiges Cloudflare-Workers-Projekt. Er ist **nicht** Teil der statischen GitHub-Pages-Seite und wird **nicht automatisch deployt** – genau wie die Migrationen unter `supabase/game-migration/` musst du ihn manuell einrichten. Das entspricht dem bereits bestehenden Discord-Notify-Worker (`scripts/core/discord-notify-data.js`), der nach demselben Muster funktioniert.
 
 ## Warum ein Worker und kein direkter Client-Insert?
 
@@ -31,7 +31,7 @@ Das schließt Statistik-Fälschung durch einen manipulierten Client strukturell 
 - `POST /spielothek-log` – Body `{ gameId, betAmount, payoutAmount, won }`, Header `Authorization: Bearer <firebase-id-token>`.
 - `POST /boss-attack-log` – Body `{ nickname, monthId, damage }`, gleicher Header.
 
-Beide validieren serverseitig dieselben Obergrenzen, die auch in `firestore.rules` gelten (`payoutAmount <= 3000`, `damage <= 45`) – zusätzlich zur Datenbank-CHECK-Constraint (Verteidigung in der Tiefe).
+Beide validieren serverseitig dieselben Obergrenzen, die `app.valid_players_write()` erzwingt (`payoutAmount <= 3000`, `damage <= 45`) – zusätzlich zur Datenbank-CHECK-Constraint (Verteidigung in der Tiefe).
 
 ## Ranglisten-Snapshots
 

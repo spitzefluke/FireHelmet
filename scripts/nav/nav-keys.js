@@ -15,7 +15,7 @@
    bleibt.
 
    Das tabindex="0" steht im Markup (index.html), damit auch die
-   Kopien in der Schublade es mitbekommen - scripts/core/nav-sync.js
+   Kopien in der Schublade es mitbekommen - scripts/nav/nav-sync.js
    klont die Punkte einschliesslich Attribute. Hier kommt nur die
    Tastenbedienung dazu.
 

@@ -6,7 +6,7 @@ const stories = [
   {
     id: "treasure",
     title: "The Legendary Treasure",
-    cover: "scripts/Legendary.webp",
+    cover: "assets/stories/Legendary.webp",
     description:
       "Eine mysteriöse Reise auf der Suche nach einem legendären Schatz. Ein Abenteuer voller Geheimnisse, Gefahren und vergessener Geschichten.",
 

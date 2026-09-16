@@ -3,10 +3,10 @@
    ---------------------------------------------------
    Vier Stellen der Seite zeichnen inzwischen mit WebGL:
 
-     scripts/core/aurora-bg.js       Hintergrund aller Seiten
+     scripts/fx/aurora-bg.js       Hintergrund aller Seiten
      scripts/stories/story-threads.js  Logbuecher
      scripts/wheel/wheel-particles.js  Schatzrad
-     scripts/core/celebration-burst-3d.js (aelter, eigener Aufbau)
+     scripts/fx/celebration-burst-3d.js (aelter, eigener Aufbau)
 
    Alle brauchen dieselben Vorpruefungen: Gibt es three.js? Gibt es
    einen WebGL-Kontext? Wird in Software gerendert? Haelt die

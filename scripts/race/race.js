@@ -318,7 +318,7 @@ function buildRaceTrack() {
   // "Wochenrennen" die Woche, das "Diese Woche:" davor waere doppelt.
   if (themeEl) themeEl.textContent = `${track.emoji} ${track.name}`;
 
-  /* Der Seitenhintergrund (scripts/core/seiten-fx-szenen.js, Eintrag
+  /* Der Seitenhintergrund (scripts/fx/seiten-fx-szenen.js, Eintrag
      "race") nimmt Grund- und Akzentfarbe der gefahrenen Strecke.
      Beide stehen ohnehin schon hier - eine zehnte Strecke in
      race-data.js bekommt damit von selbst den passenden
