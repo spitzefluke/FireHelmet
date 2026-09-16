@@ -459,6 +459,47 @@ async function awardCodePassXp(passAmount) {
   }
 }
 
+/* ------------------------------------------------------
+   XP-CODE EINLOESEN - DER SERVER RECHNET
+   ---------------------------------------------------
+   Seit 19-xp-codes.sql steht WIE VIEL ein Code gibt und WIE OFT
+   er zaehlt in der Datenbank, nicht mehr im Browser. Uebergeben
+   wird nur der eingetippte Code; den Betrag schlaegt der Server
+   selbst nach. Ein Argument "so viele Punkte bitte" gibt es
+   bewusst nicht.
+
+   Rueckgabe der RPC:
+     > 0  so viele Punkte wurden gutgeschrieben
+       0  dieser Code wurde von diesem Konto schon eingeloest
+      -1  kein XP-Code
+
+   RUECKFALL, SOLANGE DIE MIGRATION NICHT EINGESPIELT IST
+   Dann gibt es die Funktion nicht und der Aufruf scheitert. In
+   dem Fall wird wie zuvor im Browser vergeben (awardCodePassXp).
+   Das ist Absicht: es ist genau das Verhalten von vor dieser
+   Aenderung - also nie schlechter als vorher, nur eben noch
+   ungesichert. Hart zu scheitern wuerde die Codes in der
+   Zwischenzeit komplett totlegen, und das waere die schlechtere
+   von zwei Zwischenloesungen.
+------------------------------------------------------ */
+async function redeemPassXpCode(code, rueckfallBetrag) {
+  if (!supabaseClient) return null;
+  const pass = getCurrentPirateSeason();
+  if (!pass) return null;   // ausserhalb einer Saison gibt es nichts zu fuellen
+
+  try {
+    const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.rpc("xp_code_einloesen", { p_code: code, p_pass_id: pass.passId })
+    );
+    if (error) throw error;
+    return typeof data === "number" ? data : null;
+  } catch (err) {
+    console.warn("XP-Code ueber den Server fehlgeschlagen, vergebe wie bisher im Browser:", err);
+    await awardCodePassXp(rueckfallBetrag);
+    return null;   // null heisst "liess sich nicht sauber entscheiden"
+  }
+}
+
 /* Kapitel-Lese-XP: die EINZIGE Aktion ohne bestehendes Server-Feld
    fuer "schon einmal passiert" (Lesefortschritt bleibt bewusst rein
    lokal, siehe getReadChapterIds() in stories.js) - deshalb hier
