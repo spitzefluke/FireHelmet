@@ -167,6 +167,25 @@
     return new THREE.CanvasTexture(c);
   }
 
+  /* Weiches, dunkles Band fuer den nassen Sand. Anders als
+     brandungTextur() laeuft es nach INNEN aus: die Brandung ist
+     ein heller Saum genau an der Kante, der nasse Sand ein
+     breiterer, weicher Streifen dahinter, der zum Land hin
+     trocknet. */
+  function nassTextur() {
+    const c = document.createElement("canvas"); c.width = c.height = 256;
+    const ctx = c.getContext("2d");
+    const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    g.addColorStop(0.00, "rgba(255,255,255,0)");
+    g.addColorStop(0.66, "rgba(255,255,255,0)");
+    g.addColorStop(0.80, "rgba(255,255,255,0.55)");
+    g.addColorStop(0.90, "rgba(255,255,255,0.85)");
+    g.addColorStop(0.98, "rgba(255,255,255,0.25)");
+    g.addColorStop(1.00, "rgba(255,255,255,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
+    return new THREE.CanvasTexture(c);
+  }
+
   function segeltuchTextur() {
     const c = document.createElement("canvas"); c.width = c.height = 256;
     const ctx = c.getContext("2d");
@@ -396,23 +415,74 @@
     const farben = new Float32Array(pos.count * 3);
     const cSand = new THREE.Color(0xe3d2a6), cGras = new THREE.Color(0x36503a), cDschungel = new THREE.Color(0x24402d),
       cFels = new THREE.Color(0x5a5560), cHoch = new THREE.Color(0x8d8896);
+    /* Nasser Sand ist nicht "Sand mit weniger Licht", sondern
+       deutlich dunkler und satter: das Wasser zwischen den
+       Koernern schluckt die Streuung, die trockenen Sand hell
+       macht. Darunter, unter der Wasserlinie, kippt der Ton ins
+       Gruenliche - das ist der flache Schelf, den man durch das
+       Wasser hindurch ahnt. */
+    const cNass = new THREE.Color(0x9c8459), cUnter = new THREE.Color(0x76866f);
+    /* Nasser, dunkler Fels - die Klippenwand bekommt ihn bis
+       hinunter ans Wasser, wo staendig Gischt steht. */
+    const cKlippe = new THREE.Color(0x3c3741);
     const tmp = new THREE.Color();
     const gipfel = function (x, z, px, pz, h, w) { return h * Math.exp(-((x - px) * (x - px) + (z - pz) * (z - pz)) / (2 * w * w)); };
 
-    /* Die Hoehenformel steht zweimal: einmal hier fuer das Netz,
-       einmal als hoeheBei() weiter unten, um die Palmen zu
-       setzen. So war es schon im Entwurf. Wer eine aendert, muss
-       die andere mitaendern - sonst schweben die Palmen. */
+    /* ---------- Klippen an der Wetterseite ----------
+       Rundherum flach auslaufender Strand sieht aus wie ein
+       Sandkasten. Eine echte Insel hat eine Seite, die es abbe-
+       kommt: dort frisst die Brandung den Fuss weg, und es bleibt
+       eine Wand stehen.
+
+       Welche Seite, ist nicht beliebig - es ist die, aus der der
+       Wind kommt (WIND_RICHTUNG in der Szene, 2,7 rad). Derselbe
+       Winkel, der das Schiff kraengen laesst, bricht hier das
+       Ufer ab. Bucht, Wasserfall und Lagerfeuer liegen zwischen
+       -0,2 und 0,6 rad, also weit ausserhalb dieses Sektors und
+       bleiben unberuehrt.
+
+       Die Zaehlrichtung ist dieselbe wie beim Kurs des Schiffes:
+       atan2(x, z), also 0 = Richtung +z. */
+    const KLIPPEN_RICHTUNG = 2.7;
+    const klippenAnteil = function (x, z) {
+      /* Kuerzester Winkelabstand zur Wetterseite, 0 bis PI. */
+      const ab = Math.abs(((Math.atan2(x, z) - KLIPPEN_RICHTUNG + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+      return 1 - weich(0.7, 1.6, ab);
+    };
+
+    /* hoeheBei() weiter unten ruft diese Funktion auf, statt die
+       Formel ein zweites Mal zu fuehren. Wer hier etwas aendert,
+       aendert damit auch, wo Palmen, Buesche und Kronen landen -
+       genau so soll es sein, sonst schweben sie. */
     const hoeheRoh = function (x, z) {
       const d = Math.hypot(x, z) / R;
-      const ufer = 1 - weich(0.55, 1.05, d);
+      const kl = klippenAnteil(x, z);
+
+      /* Zwei Uferprofile, ineinander geblendet: weich fuer die
+         Leeseite, kurz und steil fuer die Wetterseite. Der
+         steile faellt erst bei 0,88 ab und ist bei 0,97 zu Ende -
+         auf den letzten Prozent des Radius, das ist die Wand. */
+      const uferWeich = 1 - weich(0.55, 1.05, d);
+      const uferSteil = 1 - weich(0.88, 0.97, d);
+      const ufer = misch(uferWeich, uferSteil, kl);
+
       let h = fbm(x / 420 + 12, z / 420 + 7, 6) * 260 * Math.pow(ufer, 1.2);
       h += gipfel(x, z, -120, -160, 660, 275) * ufer;
       h += gipfel(x, z, 330, 210, 390, 185) * ufer;
       h += gipfel(x, z, -430, 260, 440, 165) * ufer;
       h += gipfel(x, z, 60, -520, 300, 150) * ufer;
       h += fbm(x / 90, z / 90, 4) * 26 * ufer;
-      h -= 34 * weich(0.5, 1.0, d);
+
+      /* Das Plateau, das an der Kante abbricht. Ohne diesen Term
+         liefe die Wetterseite zwar steiler aus, waere an der
+         Wasserlinie aber trotzdem flach - eine Klippe braucht
+         oben etwas, das stehenbleibt. Die Schichtung kommt aus
+         einem groben fbm, damit die Wand nicht glatt ist. */
+      h += kl * uferSteil * (128 + fbm(x / 160 + 31, z / 160 + 5, 3) * 74);
+
+      /* Der Abtrag am Ufer gilt nur dort, wo es flach auslaeuft -
+         an der Klippe wuerde er die Wand wieder abtragen. */
+      h -= 34 * weich(0.5, 1.0, d) * (1 - kl);
       return h;
     };
 
@@ -430,11 +500,24 @@
          Sand ueber der Wasserlinie; erst darueber faengt das
          Gruen an. Das ist der helle Saum, der die Insel im
          Gegenlicht vom Wasser abhebt. */
-      if (h < 22) tmp.copy(cSand);
+      /* Drei Baender statt eines: unter Wasser, nass, trocken.
+         Vorher war alles unter 22 derselbe helle Sand - dadurch
+         lag die Insel auf dem Wasser, statt darin zu stehen. Der
+         dunkle Saum an der Wasserlinie ist genau das, was den
+         Unterschied macht. */
+      if (h < 10) tmp.copy(cUnter).lerp(cNass, weich(-4, 10, h));
+      else if (h < 18) tmp.copy(cNass).lerp(cSand, weich(10, 18, h));
+      else if (h < 22) tmp.copy(cSand);
       else if (h < 68) tmp.copy(cSand).lerp(cGras, weich(22, 64, h));
       else if (h < 190) tmp.copy(cGras).lerp(cDschungel, weich(68, 180, h));
       else if (h < 330) tmp.copy(cDschungel).lerp(cFels, weich(190, 320, h));
       else tmp.copy(cFels).lerp(cHoch, weich(330, 470, h));
+      /* Auf der Wetterseite liegt bis ueber 100 hinauf nackter,
+         nasser Fels statt Sand und Gras. Ohne das haette die
+         Wand zwar die richtige Form, waere aber sandfarben - eine
+         Klippe aus Strand. */
+      const kl = klippenAnteil(x, z);
+      if (kl > 0.2) tmp.lerp(cKlippe, weich(0.2, 0.75, kl) * (1 - weich(110, 210, h)));
       tmp.offsetHSL(0, 0, (hang - 0.5) * 0.05 + (streu(i, 3) - 0.5) * 0.035);
       farben[i * 3] = tmp.r; farben[i * 3 + 1] = tmp.g; farben[i * 3 + 2] = tmp.b;
     }
@@ -472,6 +555,10 @@
       const a = Math.random() * Math.PI * 2, rad = 500 + Math.random() * 700;
       const x = Math.cos(a) * rad, z = Math.sin(a) * rad, y = hoeheBei(x, z);
       if (y < 2 || y > 150) continue;
+      /* Nach oben ausduennen. Die harte Grenze bei 150 stand
+         vorher als Linie im Hang - ueber 85 wird es hier
+         zunehmend unwahrscheinlich, dass noch eine Palme kommt. */
+      if (Math.random() < weich(85, 150, y)) continue;
       const h = 26 + Math.random() * 22;
       const palme = new THREE.Group();
       const stamm = new THREE.Mesh(stammGeo, stammMat);
@@ -515,7 +602,13 @@
       for (let n = 0; n < proNest && kGesetzt < kronenZahl; n++) {
         const x = nx + (Math.random() - 0.5) * 130, z = nz + (Math.random() - 0.5) * 130;
         const y = hoeheBei(x, z);
-        if (y < 22 || y > 280) continue;
+        if (y < 22) continue;
+        /* Baumgrenze als Ausduennen, nicht als Schnitt. Die alte
+           Bedingung y > 280 zog eine Linie um den Berg, an der
+           der Wald schlagartig aufhoerte - von unten sah das aus
+           wie eine Rasenkante. Jetzt wird es ab 170 immer
+           unwahrscheinlicher, ueber 330 waechst nichts mehr. */
+        if (Math.random() < weich(170, 330, y)) continue;
         const k = new THREE.Mesh(kronenGeo, kronenMat);
         const gr = 15 + Math.random() * 20;
         /* Tief genug sitzen, dass die Krone im Hang steckt und
@@ -527,6 +620,39 @@
       }
     }
     insel.add(kronen);
+
+    /* ---------- Gestruepp am Strandsaum ----------
+       Zwischen dem hellen Sand und der ersten Palme lag eine
+       harte Kante: unten Sandfarbe, darueber sofort Stamm und
+       Wedel. So faengt keine Kueste an. Dazwischen gehoert
+       niedriger, trockener Bewuchs - Gras, Buesche, was den Salz-
+       wind aushaelt.
+
+       Dieselben groben Koerper wie bei den Kronen, aber flacher
+       gedrueckt und in einem helleren, trockeneren Gruen. Sie
+       stehen absichtlich schon ab Hoehe 6, also teilweise im
+       nassen Sand: an einer echten Kueste laeuft der Bewuchs
+       ausgefranst bis fast ans Wasser und hoert nicht auf einer
+       Hoehenlinie auf. */
+    const buschMat = new THREE.MeshStandardMaterial({ color: 0x4a5c33, roughness: 1, flatShading: true });
+    const buschGeo = new THREE.IcosahedronGeometry(1, 0);
+    const gestruepp = new THREE.Group();
+    const buschZahl = Math.round(stufe.palmen * 1.6);
+    let bGesetzt = 0, bVersuche = 0;
+    while (bGesetzt < buschZahl && bVersuche++ < 5000) {
+      const a = Math.random() * Math.PI * 2, rad = 700 + Math.random() * 620;
+      const x = Math.cos(a) * rad, z = Math.sin(a) * rad, y = hoeheBei(x, z);
+      if (y < 6 || y > 58) continue;
+      const b = new THREE.Mesh(buschGeo, buschMat);
+      const gr = 4 + Math.random() * 7;
+      /* Flach und tief gesetzt: ein Busch ist breiter als hoch
+         und steckt im Boden, er liegt nicht darauf. */
+      b.position.set(x, y + gr * 0.18, z);
+      b.scale.set(gr * 1.3, gr * (0.3 + Math.random() * 0.25), gr * 1.3);
+      b.rotation.set(Math.random() * 0.4, Math.random() * Math.PI, Math.random() * 0.4);
+      gestruepp.add(b); bGesetzt++;
+    }
+    insel.add(gestruepp);
 
     /* ---------- Lichter im Dschungel ----------
        Kapitel VI heisst "Klippen, Dschungel, ein Licht" - bisher
@@ -582,28 +708,93 @@
       if (oben && unten && unten.z > oben.z + 60) {
         const fallHoehe = oben.y - unten.y, fallTiefe = unten.z - oben.z;
         const laenge = Math.hypot(fallHoehe, fallTiefe);
-        const tex = strahlTextur();
-        tex.repeat.set(1, Math.max(2, Math.round(laenge / 150)));
-        const mat = new THREE.MeshBasicMaterial({
-          map: tex, color: 0xdfe9f0, transparent: true, opacity: 0.62,
-          depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
-        });
-        const netz = new THREE.Mesh(new THREE.PlaneGeometry(46, laenge), mat);
-        netz.position.set(wx, (oben.y + unten.y) / 2, (oben.z + unten.z) / 2 + 26);
-        /* Die Ebene steht senkrecht und wird so gekippt, dass sie
-           der Flanke folgt. */
-        netz.rotation.x = -Math.atan2(fallTiefe, fallHoehe);
-        insel.add(netz);
+        const neigung = -Math.atan2(fallTiefe, fallHoehe);
+        const mitteY = (oben.y + unten.y) / 2, mitteZ = (oben.z + unten.z) / 2 + 26;
 
-        const fuss = new THREE.Sprite(new THREE.SpriteMaterial({
-          map: weicheTextur("rgba(255,255,255,0.9)", "rgba(255,255,255,0.3)"),
-          color: 0xeaf2f6, transparent: true, opacity: 0.5,
+        /* ---------- Warum mehrere Straenge ----------
+           Vorher war das EINE Ebene mit einer durchlaufenden
+           Textur - aus der Ferne ein Aufkleber an der Flanke.
+           Fallendes Wasser tut zwei Dinge, die eine einzelne
+           Ebene nicht kann: es teilt sich in Straenge, und es
+           wird nach unten breiter, weil es auseinanderstiebt.
+
+           Drei Straenge mit verschiedener Breite, Lage und
+           Falltempo genuegen dafuer. Die Ueberlappung erzeugt von
+           selbst hellere und duennere Stellen, die nicht
+           wiederkehren - eine einzelne Textur wiederholt sich
+           immer sichtbar. */
+        function fallNetz(breite, obenF, untenF) {
+          const g = new THREE.PlaneGeometry(breite, laenge, 1, 10);
+          const pos = g.attributes.position;
+          for (let i = 0; i < pos.count; i++) {
+            /* f = 1 am oberen Rand, 0 am unteren. */
+            const f = (pos.getY(i) + laenge / 2) / laenge;
+            pos.setX(i, pos.getX(i) * misch(untenF, obenF, f));
+          }
+          g.computeVertexNormals();
+          return g;
+        }
+
+        const straenge = [];
+        [
+          // breite, oben, unten, quer, tempo, deckkraft
+          [30, 0.55, 1.35, -13, 0.95, 0.52],
+          [38, 0.42, 1.15, 2, 1.25, 0.60],
+          [22, 0.60, 1.55, 15, 0.78, 0.42]
+        ].forEach(function (d) {
+          const tex = strahlTextur();
+          tex.repeat.set(1, Math.max(2, Math.round(laenge / 150)));
+          const netz = new THREE.Mesh(fallNetz(d[0], d[1], d[2]), new THREE.MeshBasicMaterial({
+            map: tex, color: 0xdfe9f0, transparent: true, opacity: d[5],
+            depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
+          }));
+          netz.position.set(wx + d[3], mitteY, mitteZ + d[3] * 0.08);
+          netz.rotation.x = neigung;
+          netz.rotation.z = d[3] * 0.0016;
+          insel.add(netz);
+          straenge.push({ tex: tex, tempo: d[4] });
+        });
+
+        /* ---------- Die Lippe ----------
+           Dort, wo das Wasser die Kante verlaesst, faellt es noch
+           geschlossen und glatt - erst ein Stueck tiefer reisst
+           es auf. Ohne diesen hellen Ansatz beginnt der Fall aus
+           dem Nichts, und man sieht, wo die Ebene anfaengt. */
+        const lippe = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: weicheTextur("rgba(255,255,255,0.95)", "rgba(255,255,255,0.15)"),
+          color: 0xf2f8fb, transparent: true, opacity: 0.55,
           blending: THREE.AdditiveBlending, depthWrite: false
         }));
-        fuss.scale.set(150, 90, 1);
-        fuss.position.set(wx, unten.y + 16, unten.z + 20);
-        insel.add(fuss);
-        wasserfall = { tex: tex, fuss: fuss };
+        lippe.scale.set(66, 34, 1);
+        lippe.position.set(wx, oben.y - 6, oben.z + 24);
+        insel.add(lippe);
+
+        /* ---------- Gischtsaeule ----------
+           Ein einzelner Fleck am Fuss sah aus wie ein Lichtpunkt.
+           Wo so viel Wasser aufschlaegt, steht eine Saeule aus
+           Spruehnebel, unten dicht und breit, nach oben duenner.
+           Drei Schwaden mit eigener Schwingung: ihr Atmen hat
+           kein gemeinsames Vielfaches und wird deshalb nicht
+           zaehlbar. */
+        const fuss = [];
+        [
+          // hoehe ueber dem Aufschlag, breite, hoehe, grunddeckkraft, takt
+          [10, 190, 96, 0.46, 2.1],
+          [58, 140, 120, 0.30, 1.37],
+          [118, 96, 130, 0.17, 0.83]
+        ].forEach(function (d) {
+          const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+            map: weicheTextur("rgba(255,255,255,0.9)", "rgba(255,255,255,0.25)"),
+            color: 0xeaf2f6, transparent: true, opacity: d[3],
+            blending: THREE.AdditiveBlending, depthWrite: false
+          }));
+          sp.scale.set(d[1], d[2], 1);
+          sp.position.set(wx, unten.y + d[0], unten.z + 20);
+          insel.add(sp);
+          fuss.push({ sprite: sp, grund: d[3], takt: d[4], ph: Math.random() * 6.3 });
+        });
+
+        wasserfall = { straenge: straenge, fuss: fuss, lippe: lippe };
       }
     }
     insel.userData.wasserfall = wasserfall;
@@ -615,6 +806,30 @@
     gischt.rotation.x = -Math.PI / 2; gischt.position.y = 1.4;
     insel.add(gischt);
     insel.userData.gischt = gischt;
+
+    /* ---------- Nasser Saum ----------
+       Der dunkle Sand steckt schon in den Vertexfarben des
+       Gelaendes, aber der ist starr. Was eine Kueste lebendig
+       macht, ist das Auf und Ab: die Welle laeuft den Strand
+       hinauf, der Sand dahinter bleibt einen Moment dunkel und
+       trocknet wieder.
+
+       Deshalb hier ein zweiter, beweglicher Saum. Er wird NICHT
+       additiv gezeichnet wie die Brandung, sondern normal mit
+       einem dunklen Ton - er soll den Sand abdunkeln, nicht
+       aufhellen. Er laeuft im selben Takt wie die Brandung, aber
+       eine Viertelschwingung hinterher: das Wasser ist schon
+       zurueck, der nasse Fleck noch da. */
+    const nassSaum = new THREE.Mesh(
+      new THREE.RingGeometry(R * 0.74, R * 0.99, 128, 1),
+      new THREE.MeshBasicMaterial({
+        map: nassTextur(), color: 0x6b5a3e, transparent: true, opacity: 0.3,
+        depthWrite: false, side: THREE.DoubleSide
+      })
+    );
+    nassSaum.rotation.x = -Math.PI / 2; nassSaum.position.y = 1.8;
+    insel.add(nassSaum);
+    insel.userData.nassSaum = nassSaum;
 
     /* Die Brandungslinie liegt enger als der breite Gischtring
        und wird additiv gezeichnet: ein schmaler heller Saum genau
@@ -637,6 +852,36 @@
     insel.userData.schein = schein;
     const feuerLicht = new THREE.PointLight(0xffb268, 26000, 1600, 2);
     feuerLicht.position.set(300, 130, 430); insel.add(feuerLicht);
+
+    /* ---------- Rauch vom Lagerfeuer ----------
+       Es brannte ein Feuer, aber nichts stieg auf. Ein Feuer ohne
+       Rauch ist eine Lampe.
+
+       Der Rauch zieht mit dem Wind ab - derselbe Winkel, der die
+       Klippen setzt und das Schiff kraengen laesst. Der Wind
+       KOMMT aus 2,7 rad, der Rauch zieht also in die
+       Gegenrichtung. Und er zieht nicht gleichmaessig: unten
+       steigt er fast senkrecht, weil die Hitze ihn traegt, weiter
+       oben legt der Wind ihn um. Daher der quadratische Versatz -
+       linear sah es aus wie eine schraege Stange.
+
+       Jede Schwade laeuft denselben Weg, nur zeitversetzt. Bei
+       gleichem Tempo waere daraus eine Perlenkette geworden,
+       darum bekommt jede ihr eigenes. */
+    const rauch = new THREE.Group();
+    const rauchZahl = stufe.name === "niedrig" ? 5 : 11;
+    const rauchAb = { x: -Math.sin(2.7), z: -Math.cos(2.7) };
+    for (let i = 0; i < rauchZahl; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: weicheTextur("rgba(255,255,255,0.5)", "rgba(255,255,255,0.16)"),
+        color: 0x9aa2ab, transparent: true, opacity: 0, depthWrite: false
+      }));
+      sp.userData = { ph: i / rauchZahl, tempo: 0.05 + Math.random() * 0.03, schlenker: Math.random() * 6.3 };
+      rauch.add(sp);
+    }
+    insel.add(rauch);
+    insel.userData.rauch = rauch;
+    insel.userData.rauchAb = rauchAb;
 
     const nebelMat = new THREE.SpriteMaterial({ map: weicheTextur("rgba(255,255,255,0.55)", "rgba(255,255,255,0.2)"), color: 0xcfd4dd, transparent: true, opacity: 0.18, depthWrite: false });
     const nebel = new THREE.Group();
@@ -1400,7 +1645,26 @@
       new THREE.Vector3(26, 0, -1300), new THREE.Vector3(30, 0, -2300), new THREE.Vector3(80, 0, -3200)
     ], false, "catmullrom", 0.35);
 
-    const MARKEN = [[0, 0], [0.12, 0.08], [0.24, 0.17], [0.34, 0.27], [0.42, 0.38], [0.5, 0.47], [0.6, 0.54], [0.72, 0.63], [0.86, 0.8], [1, 1]];
+    /* Scroll-Anteil -> Stelle auf der Bahn.
+       Die erste Haelfte laeuft jetzt mit gut 0,6 des frueheren
+       Tempos: das Schiff bleibt laenger gross im Bild und die
+       traege Rollbewegung bekommt ueberhaupt Zeit, sich zu
+       zeigen - bei der alten Geschwindigkeit war sie vorbei,
+       bevor man sie sah.
+
+       Wichtig ist der VERLAUF der Differenzen, nicht die
+       einzelnen Zahlen: sie steigen von 0,43 auf 1,74
+       durchgehend an, ohne eine einzige Ausnahme. So nimmt das
+       Schiff Fahrt auf, wenn der Sturm aufzieht, und laeuft am
+       Ende auf die Insel zu.
+
+       Faellt eine Differenz gegenueber der vorigen ab, sieht man
+       ein Bremsen, das niemand angeordnet hat. Genau das stand
+       in der alten Tabelle: zwischen 0,34 und 0,6 ging es
+       1,38 -> 1,12 -> 0,70, das Schiff wurde mitten im Sturm
+       langsamer. Wer hier Zahlen aendert, prueft die
+       Differenzen, nicht die Werte. */
+    const MARKEN = [[0, 0], [0.12, 0.051], [0.24, 0.113], [0.34, 0.176], [0.42, 0.237], [0.5, 0.307], [0.6, 0.409], [0.72, 0.554], [0.86, 0.757], [1, 1]];
     function schiffU(p) {
       for (let i = 1; i < MARKEN.length; i++) {
         if (p <= MARKEN[i][0]) {
@@ -1420,6 +1684,50 @@
     const schiffPos = new THREE.Vector3(), tangente = new THREE.Vector3();
     const kamPos = new THREE.Vector3(-10, 11, 170), kamZiel = new THREE.Vector3(0, 10, -600);
     const vorherSchiff = new THREE.Vector3();
+
+    /* ---------- Seegang am Rumpf ----------
+       Das Schiff sass bisher exakt auf der Wellenhoehe und
+       uebernahm das Wellengefaelle unmittelbar als Neigung. Genau
+       das ist der Grund, warum es nach Papier aussah statt nach
+       Holz: es hatte keine Masse. Ein Koerper ohne Traegheit
+       folgt der Oberflaeche ohne jede Verzoegerung, und das gibt
+       es auf dem Wasser nicht.
+
+       Heben, Rollen und Stampfen sind jetzt drei gedaempfte
+       Schwingungen mit eigener Periode. Sie laufen der Welle
+       hinterher, schwingen ueber den Scheitel hinaus und kommen
+       pendelnd zurueck.
+
+       Die Zahlen sind nicht geraten, sondern die Groessen-
+       ordnungen eines grossen Seglers: Rollen dauert am
+       laengsten und ist am schwaechsten gedaempft - darum rollt
+       ein Schiff nach einer einzelnen Welle noch minutenlang
+       weiter. Stampfen ist deutlich kuerzer und stark gedaempft,
+       weil der lange Rumpf sich dagegen stemmt. Wer das Rollen
+       staerker daempft als das Stampfen, dreht die Sache um und
+       bekommt wieder ein Brett. */
+    const SEEGANG = {
+      heben:    { dauer: 7.0, daempfung: 0.42 },
+      rollen:   { dauer: 9.5, daempfung: 0.16 },
+      stampfen: { dauer: 5.0, daempfung: 0.50 }
+    };
+    function feder(s) {
+      const w = (Math.PI * 2) / s.dauer;
+      return { steif: w * w, daempf: 2 * s.daempfung * w };
+    }
+    const fHeben = feder(SEEGANG.heben), fRollen = feder(SEEGANG.rollen), fStampfen = feder(SEEGANG.stampfen);
+
+    /* Auslenkung und Geschwindigkeit je Achse. Bewusst einzelne
+       Zahlen statt eines Objekts: die Schleife laeuft 60 mal je
+       Sekunde, und der Rest dieser Datei vermeidet aus demselben
+       Grund jede Zuweisung pro Bild. */
+    let sHub = 0, sHubV = 0, sRoll = 0, sRollV = 0, sStampf = 0, sStampfV = 0;
+    let sBremsen = 0;
+
+    /* Richtung, aus der es weht. Ein fester Wert in Weltkoordi-
+       naten - daraus ergibt sich von selbst, dass die Kraengung
+       sich aendert, sobald das Schiff auf der Bahn eindreht. */
+    const WIND_RICHTUNG = 2.7;
     const tAnfahrt = new THREE.Vector3(), tFolge = new THREE.Vector3(), tEnthuellung = new THREE.Vector3();
     const bAnfahrt = new THREE.Vector3(), bFolge = new THREE.Vector3(), bEnthuellung = new THREE.Vector3();
     const hilf = new THREE.Vector3(), quer = new THREE.Vector3(), hinten = new THREE.Vector3();
@@ -1571,8 +1879,87 @@
       const wy = wellenHoehe(schiffPos.x, schiffPos.z, t);
       const gx = (wellenHoehe(schiffPos.x + 16, schiffPos.z, t) - wellenHoehe(schiffPos.x - 16, schiffPos.z, t)) / 32;
       const gz = (wellenHoehe(schiffPos.x, schiffPos.z + 26, t) - wellenHoehe(schiffPos.x, schiffPos.z - 26, t)) / 52;
-      schiff.position.set(schiffPos.x, wy - 3.4, schiffPos.z);
-      schiff.rotation.set(gz * 1.5 + Math.sin(t * 0.9) * 0.012, Math.atan2(tangente.x, tangente.z), -gx * 1.6 + Math.sin(t * 0.63 + 1) * 0.02);
+      const kurs = Math.atan2(tangente.x, tangente.z);
+
+      /* Das Wellengefaelle auf die Achsen des SCHIFFES drehen,
+         nicht auf die der Welt. Vorher wurde gz zum Stampfen und
+         gx zum Rollen erklaert - das stimmt nur, solange das
+         Schiff nach +z faehrt. Sobald die Bahn eindreht, rollte
+         es bei Laengswellen und stampfte bei Querwellen, also
+         genau verkehrt herum. Faehrt das Schiff nach +z, kommt
+         hier dasselbe heraus wie vorher. */
+      const gLaengs = gx * tangente.x + gz * tangente.z;
+      const gQuer = gz * tangente.x - gx * tangente.z;
+
+      /* Die drei Schwingungen. Ziel ist, was die Welle gerade
+         vorgibt - erreicht wird es traege. Erst die
+         Geschwindigkeit, dann der Weg (halbimplizit): das bleibt
+         auch bei einem langen Bild stabil, waehrend die
+         umgekehrte Reihenfolge aufschaukeln kann. */
+      let besch = (wy - sHub) * fHeben.steif - sHubV * fHeben.daempf;
+      sHubV += besch * dt; sHub += sHubV * dt;
+
+      besch = (gQuer * 1.6 - sRoll) * fRollen.steif - sRollV * fRollen.daempf;
+      sRollV += besch * dt; sRoll += sRollV * dt;
+
+      besch = (gLaengs * 1.5 - sStampf) * fStampfen.steif - sStampfV * fStampfen.daempf;
+      sStampfV += besch * dt; sStampf += sStampfV * dt;
+
+      /* Kraengung: ein Segler unter Druck liegt dauerhaft schraeg,
+         vom Wind weg. Wie schraeg, haengt davon ab, wie quer der
+         Wind einfaellt - laeuft das Schiff vor dem Wind, richtet
+         es sich von selbst auf. Am staerksten im Sturm, und in
+         Boeen schwankt der Druck. */
+      const sturm = weich(0.30, 0.56, p) * (1 - weich(0.74, 0.92, p));
+      const boe = 0.82 + 0.18 * Math.sin(t * 0.23) + 0.10 * Math.sin(t * 0.61 + 1.7);
+      const kraengung = -Math.sin(kurs - WIND_RICHTUNG) * misch(0.045, 0.125, sturm) * boe;
+
+      /* Gieren: kein Schiff faehrt eine gezogene Linie. Zwei
+         langsame Schwingungen ohne gemeinsames Vielfaches, damit
+         das Wandern nicht zaehlbar wird - zusammen gut ein Grad. */
+      const gieren = Math.sin(t * 0.19) * 0.011 + Math.sin(t * 0.43 + 2.1) * 0.006;
+
+      schiff.position.set(schiffPos.x, sHub - 3.4, schiffPos.z);
+      schiff.rotation.set(sStampf, kurs + gieren, sRoll + kraengung);
+
+      /* ---------- Bug taucht ein ----------
+         Liegt die Welle VOR dem Bug hoeher als der Bug selbst,
+         faellt das Schiff hinein. Der Bugspriet sitzt bei z=29,
+         darum wird 30 voraus gemessen; bei positivem Stampfen
+         geht der Bug nach unten, deshalb das Minus. */
+      hilf.copy(tangente).multiplyScalar(30);
+      const bugX = schiff.position.x + hilf.x, bugZ = schiff.position.z + hilf.z;
+      const bugWasser = wellenHoehe(bugX, bugZ, t);
+      const bugHoehe = schiff.position.y + 6 - sStampf * 30;
+      const eintauchen = klemm((bugWasser - bugHoehe) / 7, 0, 1);
+
+      if (eintauchen > 0.03) {
+        /* Der Auftrieb drueckt den Bug wieder hoch - ein Stoss
+           auf die Stampfschwingung, kein gesetzter Winkel. Genau
+           dadurch wirkt es wie ein Schlag und nicht wie eine
+           Animation. */
+        sStampfV -= eintauchen * 0.9 * dt;
+        quer.set(-tangente.z, 0, tangente.x);
+        const stoesse = 1 + Math.floor(eintauchen * 4);
+        for (let k = 0; k < stoesse; k++) {
+          const w = (Math.random() - 0.5) * 26;
+          ausstossen(spritzer,
+            bugX + quer.x * w, bugWasser + 3, bugZ + quer.z * w,
+            tangente.x * (14 + Math.random() * 26) + quer.x * w * 0.6,
+            22 + Math.random() * 30 * eintauchen,
+            tangente.z * (14 + Math.random() * 26) + quer.z * w * 0.6,
+            0.9 + Math.random() * 0.8);
+        }
+      }
+
+      /* Das kurze Abbremsen. Die Stelle auf der Bahn haengt am
+         Scrollen und laesst sich nicht wirklich verlangsamen -
+         das hier ist ein Versatz nach achtern, der nachgibt und
+         zurueckfedert. Zu sehen ist dasselbe: das Schiff wird von
+         der Welle aufgehalten. */
+      sBremsen += (eintauchen * 11 - sBremsen) * (1 - Math.pow(0.015, dt));
+      schiff.position.x -= tangente.x * sBremsen;
+      schiff.position.z -= tangente.z * sBremsen;
 
       /* Die Segel nur baeuchen, solange das Schiff gross im Bild
          ist. Ab der Insel-Enthuellung ist es ein Punkt am
@@ -1661,6 +2048,16 @@
         * (0.4 + 0.6 * weich(0.6, 0.92, p));
       br.scale.setScalar(1 + 0.012 * Math.sin(t * 0.55));
 
+      /* Der nasse Saum laeuft mit - versetzt um eine Viertel-
+         schwingung (0.55 * t - 1.57), damit er der Welle
+         nachhinkt statt mit ihr zu atmen. Er wandert weiter als
+         die Brandung selbst: das Wasser schiebt sich hoeher den
+         Strand hinauf, als der helle Schaumsaum reicht. */
+      const ns = insel.userData.nassSaum;
+      const nachlauf = Math.sin(t * 0.55 - 1.57);
+      ns.scale.setScalar(1 + 0.028 * nachlauf);
+      ns.material.opacity = (0.26 + 0.1 * nachlauf) * (0.35 + 0.65 * weich(0.6, 0.92, p));
+
       /* Lichter im Dschungel, jedes mit eigener Frequenz. */
       insel.userData.lichter.children.forEach(function (l) {
         const d = l.userData;
@@ -1668,13 +2065,47 @@
           * weich(0.62, 0.88, p);
       });
 
-      /* Wasserfall: die Textur nach unten schieben. */
+      /* Wasserfall: jeder Strang schiebt seine Textur mit
+         eigenem Tempo nach unten. Gleiche Geschwindigkeit fuer
+         alle drei wuerde sie wieder zu einer einzigen Flaeche
+         verschmelzen - der Versatz ist der ganze Zweck. */
       if (insel.userData.wasserfall) {
         const wf = insel.userData.wasserfall;
-        wf.tex.offset.y -= dt * 0.85;
-        if (wf.tex.offset.y < -1) wf.tex.offset.y += 1;
-        wf.fuss.material.opacity = (0.34 + 0.14 * Math.sin(t * 2.1)) * weich(0.6, 0.9, p);
+        const sichtbar = weich(0.6, 0.9, p);
+        for (let i = 0; i < wf.straenge.length; i++) {
+          const st = wf.straenge[i];
+          st.tex.offset.y -= dt * 0.85 * st.tempo;
+          /* Im Bereich halten, sonst waechst der Wert stundenlang
+             und verliert irgendwann seine Nachkommastellen. */
+          if (st.tex.offset.y < -1) st.tex.offset.y += 1;
+        }
+        for (let i = 0; i < wf.fuss.length; i++) {
+          const f = wf.fuss[i];
+          f.sprite.material.opacity = (f.grund + 0.14 * Math.sin(t * f.takt + f.ph)) * sichtbar;
+        }
+        wf.lippe.material.opacity = (0.5 + 0.06 * Math.sin(t * 1.6)) * sichtbar;
       }
+
+      /* Rauch: jede Schwade laeuft ihren Weg von 0 nach 1 und
+         faengt dann wieder unten an. */
+      const rauchSicht = weich(0.6, 0.92, p);
+      const rab = insel.userData.rauchAb;
+      insel.userData.rauch.children.forEach(function (sp) {
+        const d = sp.userData;
+        const f = (t * d.tempo + d.ph) % 1;
+        const versatz = f * f * 300;
+        sp.position.set(
+          300 + rab.x * versatz + Math.sin(t * 0.4 + d.schlenker) * 22 * f,
+          134 + f * 430,
+          430 + rab.z * versatz + Math.cos(t * 0.31 + d.schlenker) * 22 * f
+        );
+        const gr = 40 + f * 210;
+        sp.scale.set(gr, gr, 1);
+        /* Schnell da, langsam weg: aufsteigender Rauch wird
+           sichtbar, sobald er die Flamme verlaesst, und
+           verduennt sich dann ueber die ganze Strecke. */
+        sp.material.opacity = 0.3 * Math.min(1, f * 6) * (1 - f) * (1 - f) * rauchSicht;
+      });
       if (insel.userData.nebel.visible) {
         insel.userData.nebel.children.forEach(function (s, i) {
           s.position.x += Math.sin(t * 0.06 + i) * 0.35;
