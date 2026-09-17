@@ -481,19 +481,33 @@
             <span data-i18n="home.kicker">Logbuch der Crew</span>
           </div>
 
+          <!-- Sieben Punkte statt "I / VII": das Kapitel, in dem man
+               gerade steht, leuchtet auf, die anderen stehen blass
+               daneben. Man sieht damit auf einen Blick, wieviel
+               Reise noch vor einem liegt - eine Bruchzahl muss man
+               dafuer erst lesen. Die roemische Ziffer bleibt
+               darunter, weil sie in den Kapitelmarken auftaucht. -->
           <div class="fh-ozean-fortschritt" aria-hidden="true">
-            <span id="fh-kapitel-zaehler">I / VII</span>
-            <div class="fh-ozean-schiene">
-              <div class="fh-ozean-balkenzeiger"></div>
+            <div class="fh-ozean-punkte">
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
             </div>
+            <span id="fh-kapitel-zaehler">I</span>
           </div>
 
           <!-- Erscheint erst nach drei Sekunden ohne Scrollen und
                verschwindet beim ersten Scrollen fuer immer. -->
           <button type="button" class="fh-start-wink" id="fh-start-wink" hidden
                   onclick="fhStartWinkFolgen()">
-            <span data-i18n="home.scrollCue">Scroll</span>
-            <span class="fh-start-wink-pfeil" aria-hidden="true"></span>
+            <span class="fh-start-wink-rad" aria-hidden="true">
+              <span class="fh-start-wink-kugel"></span>
+            </span>
+            <span data-i18n="home.scrollCue">Sieben Kapitel voraus</span>
           </button>
 
           <div class="fh-ozean-korn" aria-hidden="true"></div>

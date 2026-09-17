@@ -132,7 +132,17 @@
   position: absolute;
   left: 0;
   right: 0;
-  height: calc(4vh + 4vh * clamp(0, calc((var(--fh-weg) - 0.42) / 0.2), 1));
+  /* Zwei Bewegungen uebereinander: die grosse ueber die ganze
+     Reise (der Blick wird zur Mitte hin schmaler), und eine
+     kleine INNERHALB jedes Kapitels - die Balken ziehen beim
+     Auftritt eines Kapitels 1,6 % weiter zu und geben zum
+     Uebergang wieder frei. Das ist zu wenig, um es bewusst zu
+     bemerken, und genug, damit der Rahmen nicht aufgemalt
+     wirkt. --balken-extra kommt aus startseite.js: CSS kann den
+     Abstand zum Kapitelanfang aus --fh-weg allein nicht
+     ableiten. */
+  height: calc(4vh + 4vh * clamp(0, calc((var(--fh-weg) - 0.42) / 0.2), 1)
+               + var(--balken-extra, 0vh));
   background: #090b12;
   pointer-events: none;
   z-index: 3;
@@ -159,12 +169,54 @@
   --da: min(var(--ein), var(--aus));
 
   opacity: var(--da);
-  transform: translateY(calc((1 - var(--da)) * 22px));
-  filter: blur(calc((1 - var(--da)) * 4px));
+
+  /* DREI EBENEN AUS EINER ZAHL
+     Vorher trug der ganze Kapitelblock EINEN Versatz und EINEN
+     Weichzeichner - Marke, Titel und Text kamen als eine Platte
+     angeflogen. Das ist der Unterschied zwischen "eingeblendet"
+     und "aufgetaucht": Tiefe entsteht erst, wenn die Teile
+     verschieden weit hinten liegen.
+
+     Die Faktoren stammen aus dem Claude-Design-Entwurf: die
+     Marke kommt fast schon mit (0,45), der Titel traegt den
+     Normalweg (1), der Text liegt am weitesten zurueck (1,7).
+     Wer sie angleicht, bekommt die alte Platte zurueck. */
+  --par-marke: 0.45;
+  --par-titel: 1;
+  --par-text: 1.7;
 
   /* Ohne das faengt der unsichtbare Text Klicks ab, die dem
      Menue darunter gelten. */
   pointer-events: none;
+}
+
+.fh-kapitel-marke {
+  transform: translateY(calc((1 - var(--da)) * 22px * var(--par-marke)));
+}
+
+/* Nur der Absatz. Die Knoepfe NICHT: die tragen weiter unten
+   ihren eigenen, gestaffelten Versatz (--fh-knopf-weg), und ein
+   zweiter auf dem Behaelter kaeme obendrauf - sie liefen dann
+   doppelt so weit und aus dem Takt der Staffelung. */
+.fh-kapitel p {
+  transform: translateY(calc((1 - var(--da)) * 22px * var(--par-text)));
+}
+
+/* DER TITEL WIRD FREIGELEGT, NICHT WEICHGEZEICHNET
+   Ein Weichzeichner auf Schrift kostet bei jedem Scrollpixel
+   eine neue Rasterung der ganzen Zeile - und er sieht nach
+   Kameraunschaerfe aus, die es hier gar nicht gibt. Die Maske
+   schiebt die Buchstaben stattdessen hinter einer Kante hervor,
+   als stuende der Titel auf und nicht davor.
+
+   Das -0.35em oben gibt Oberlaengen und Umlautpunkten Luft: mit
+   0 schnitt die Maske den Punkt vom "ü" ab. Die 105% unten
+   sorgen dafuer, dass auch Unterlaengen vollstaendig
+   verschwinden, bevor die Deckkraft auf null ist. */
+.fh-kapitel h1,
+.fh-kapitel h2 {
+  transform: translateY(calc((1 - var(--da)) * 22px * var(--par-titel)));
+  clip-path: inset(-0.35em 0 calc((1 - var(--da)) * 105%) 0);
 }
 
 /* Die Kapitel selbst fangen keine Klicks ab (siehe oben), ihre
@@ -448,27 +500,89 @@
   right: 6vw;
   top: calc(6vh + 34px);
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
   z-index: 4;
   pointer-events: none;
 }
 
-.fh-ozean-schiene {
-  width: clamp(90px, 13vw, 170px);
-  height: 1px;
-  background: rgba(214, 168, 79, .24);
-  position: relative;
+/* ---------- Die Punktreihe ----------
+   Hier stand eine durchgehende Schiene mit einem Zeiger darauf.
+   Die war ehrlich, aber stumm: sie zeigte einen Bruchteil, keine
+   Anzahl. Sieben Punkte sagen dagegen sofort, dass es sieben
+   Kapitel gibt und in welchem man steht.
+
+   Die drei Werte je Punkt (-o Deckkraft, -s Groesse, -g Schein)
+   setzt startseite.js. Warum nicht in CSS gerechnet? Dafuer
+   braeuchte es den ABSTAND zum laufenden Kapitel, und abs() ist
+   noch nicht ueberall da, wo diese Seite laeuft. */
+.fh-ozean-punkte {
+  display: flex;
+  align-items: center;
+  gap: 13px;
 }
 
-.fh-ozean-balkenzeiger {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 1px;
-  width: calc(var(--fh-weg) * 100%);
+.fh-ozean-punkt {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
   background: var(--fh-gold, #d6a84f);
-  box-shadow: 0 0 12px rgba(214, 168, 79, .8);
+  opacity: .28;
+  transition:
+    opacity .35s var(--fh-ease, ease),
+    transform .35s var(--fh-ease, ease);
+}
+
+.fh-ozean-punkt:nth-child(1) {
+  opacity: var(--p0-o, .28);
+  transform: scale(var(--p0-s, 1));
+  box-shadow: 0 0 10px rgba(214, 168, 79, var(--p0-g, 0));
+}
+
+.fh-ozean-punkt:nth-child(2) {
+  opacity: var(--p1-o, .28);
+  transform: scale(var(--p1-s, 1));
+  box-shadow: 0 0 10px rgba(214, 168, 79, var(--p1-g, 0));
+}
+
+.fh-ozean-punkt:nth-child(3) {
+  opacity: var(--p2-o, .28);
+  transform: scale(var(--p2-s, 1));
+  box-shadow: 0 0 10px rgba(214, 168, 79, var(--p2-g, 0));
+}
+
+.fh-ozean-punkt:nth-child(4) {
+  opacity: var(--p3-o, .28);
+  transform: scale(var(--p3-s, 1));
+  box-shadow: 0 0 10px rgba(214, 168, 79, var(--p3-g, 0));
+}
+
+.fh-ozean-punkt:nth-child(5) {
+  opacity: var(--p4-o, .28);
+  transform: scale(var(--p4-s, 1));
+  box-shadow: 0 0 10px rgba(214, 168, 79, var(--p4-g, 0));
+}
+
+.fh-ozean-punkt:nth-child(6) {
+  opacity: var(--p5-o, .28);
+  transform: scale(var(--p5-s, 1));
+  box-shadow: 0 0 10px rgba(214, 168, 79, var(--p5-g, 0));
+}
+
+.fh-ozean-punkt:nth-child(7) {
+  opacity: var(--p6-o, .28);
+  transform: scale(var(--p6-s, 1));
+  box-shadow: 0 0 10px rgba(214, 168, 79, var(--p6-g, 0));
+}
+
+#fh-kapitel-zaehler {
+  font-family: var(--fh-font-display, "Oswald", system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .3em;
+  color: var(--fh-gold-bright, #f0c96a);
 }
 
 /* ======================================================
@@ -507,17 +621,44 @@
   display: none;
 }
 
-.fh-start-wink-pfeil {
+/* ---------- Der Wink ist jetzt ein Mausrad ----------
+   Vorher ein senkrechter Strich mit Puls. Der sagte "hier geht
+   es weiter", aber nicht WOMIT. Die Radform benennt die Geste,
+   um die es geht - und die Kugel darin macht sie vor.
+
+   Die Kugel laeuft einmal durch und faengt oben wieder an,
+   statt hin und her zu pendeln: scrollen ist eine gerichtete
+   Bewegung, kein Wippen. */
+.fh-start-wink-rad {
+  position: relative;
   display: block;
-  width: 1px;
-  height: 40px;
-  background: linear-gradient(180deg, var(--fh-gold, #d6a84f), transparent);
-  animation: fhWinkPuls 2.6s var(--fh-ease, ease-in-out) infinite;
+  width: 22px;
+  height: 34px;
+  border: 1px solid rgba(214, 168, 79, .55);
+  border-radius: 12px;
 }
 
-@keyframes fhWinkPuls {
-  0%, 100% { transform: translateY(0); opacity: .75; }
-  50% { transform: translateY(5px); opacity: .35; }
+.fh-start-wink-kugel {
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  margin-left: -1px;
+  width: 2px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--fh-gold-bright, #f0c96a);
+  animation: fhRadPuls 1.9s var(--fh-ease, ease-in-out) infinite;
+}
+
+/* WICHTIG: der 0-%-Schritt setzt opacity ausdruecklich auf 0.
+   Ohne ihn stuende die Kugel zwischen zwei Durchlaeufen sichtbar
+   oben - dieselbe Falle wie bei der Lichtimpuls-Keyframe, die
+   hier schon einmal dauerhaft stehengeblieben ist. */
+@keyframes fhRadPuls {
+  0%   { transform: translateY(0); opacity: 0; }
+  20%  { opacity: 1; }
+  75%  { transform: translateY(7px); opacity: 0; }
+  100% { transform: translateY(7px); opacity: 0; }
 }
 
 /* ======================================================
@@ -558,6 +699,20 @@
   filter: none;
   transform: none;
   padding: 0 6vw;
+}
+
+/* Ohne Szene gibt es keinen Scrollweg: --fh-weg bleibt 0 und
+   damit --da ebenfalls. Die Maske am Titel haette ihn dort
+   vollstaendig verschluckt, und Marke und Absatz staenden 10
+   bzw. 37 Pixel zu tief. Dieselbe Begruendung wie bei den
+   Knoepfen ein Stueck weiter unten - wer oben eine Ebene
+   hinzufuegt, muss sie hier mit abschalten. */
+#home.fh-ohne-ozean .fh-kapitel-mitte h1,
+#home.fh-ohne-ozean .fh-kapitel-mitte h2,
+#home.fh-ohne-ozean .fh-kapitel-mitte p,
+#home.fh-ohne-ozean .fh-kapitel-mitte .fh-kapitel-marke {
+  transform: none;
+  clip-path: none;
 }
 
 /* Ohne Szene gibt es keinen Scrollweg, --fh-weg bleibt 0 und
@@ -648,8 +803,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fh-start-wink-pfeil {
+  .fh-start-wink-kugel {
     animation: none;
+    opacity: 1;
   }
 }
 
