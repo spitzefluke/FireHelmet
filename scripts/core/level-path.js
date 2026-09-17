@@ -134,7 +134,7 @@ function buildLevelPathPlayerHeaderHtml(xp) {
   if (provider === "discord") avatar = localStorage.getItem("discordAvatar") || avatar;
   else if (provider === "twitch") avatar = localStorage.getItem("twitchAvatar") || avatar;
   else avatar = localStorage.getItem("wheelAvatar") || avatar;
-  const avatarHtml = typeof buildAvatarPickerHtml === "function" ? buildAvatarPickerHtml(avatar) : `<span>${avatar}</span>`;
+  const avatarHtml = typeof buildAvatarPickerHtml === "function" ? buildAvatarPickerHtml(avatar) : `<span>${typeof escapeHtml === "function" ? escapeHtml(avatar) : ""}</span>`;
 
   const progress = getLevelProgress(xp);
   const percent = progress.isMaxLevel ? 100 : Math.round((progress.xpIntoLevel / progress.xpForNextLevel) * 100);

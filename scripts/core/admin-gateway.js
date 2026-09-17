@@ -739,7 +739,7 @@ function gatewaySpielerKarte(sp) {
       <div class="gateway-form-row">
         <label>Dublonen<br><input type="number" min="0" class="code-input" id="gsp-cur-${id}" value="${sp.currency}"></label>
         <label>Erfahrungspunkte<br><input type="number" min="0" class="code-input" id="gsp-xp-${id}" value="${sp.xp}"></label>
-        <label>Name<br><input type="text" maxlength="30" class="code-input" id="gsp-nick-${id}" value="${escapeHtml(sp.nickname || "")}"></label>
+        <label>Name<br><input type="text" maxlength="30" class="code-input" id="gsp-nick-${id}" value="${escapeAttr(sp.nickname || "")}"></label>
       </div>
       <button type="button" class="code-button gateway-inline-btn" onclick="gatewaySpielerSpeichern('${id}')">Speichern</button>
       <button type="button" class="code-button gateway-inline-btn" onclick="gatewayNameSperren('${id}')">Namen sperren</button>
@@ -834,11 +834,11 @@ function buildGatewayBandHtml() {
     <div class="gateway-form-row">
       <label>Ankündigung (leer = kein Band)<br>
         <input type="text" id="gateway-ankuendigung" class="code-input" maxlength="160"
-               value="${escapeHtml(a)}" placeholder="z.B. Turnier startet um 20 Uhr">
+               value="${escapeAttr(a)}" placeholder="z.B. Turnier startet um 20 Uhr">
       </label>
       <label>Wartungstext<br>
         <input type="text" id="gateway-wartung-text" class="code-input" maxlength="160"
-               value="${escapeHtml(wt)}" placeholder="Wir bauen gerade um">
+               value="${escapeAttr(wt)}" placeholder="Wir bauen gerade um">
       </label>
     </div>
     <label class="gateway-checkbox">
