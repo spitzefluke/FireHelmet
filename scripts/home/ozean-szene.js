@@ -215,6 +215,45 @@
     return t;
   }
 
+  /* Relief zu den Planken.
+     holzTextur() malt die Fugen nur AUF - das Licht bricht sich
+     nicht daran, und der Rumpf bleibt eine bedruckte Flaeche.
+     Diese Karte gibt denselben Fugen eine Richtung: jede Planke
+     bekommt eine Kante, an der das Licht umschlaegt.
+
+     Bewusst NICHT ueber normalTextur(): das ist ein fbm-Rauschen
+     und damit richtungslos. Planken sind das Gegenteil davon -
+     sie liegen laengs, und genau diese Richtung soll man sehen.
+     Ein Rauschen darauf ergaebe verwitterten Stein. */
+  function plankenNormal() {
+    const G = 256, c = document.createElement("canvas");
+    c.width = c.height = G;
+    const ctx = c.getContext("2d"), bild = ctx.createImageData(G, G);
+    for (let y = 0; y < G; y++) {
+      /* Wo in der Planke liegt diese Zeile? 0 = Fuge, 1 = Mitte. */
+      const inPlanke = (y % 12) / 12;
+      /* Ableitung eines flachen Bogens ueber die Planke: an den
+         Raendern steil, in der Mitte null. Das ist die Wölbung,
+         die altes Schiffsholz hat. */
+      let ny = -Math.sin(inPlanke * Math.PI * 2) * 0.55;
+      for (let x = 0; x < G; x++) {
+        const i = (y * G + x) * 4;
+        /* Etwas Maserung laengs, damit die Planke nicht wie ein
+           gezogenes Profil aussieht. */
+        const nx = (streu(x >> 2, y >> 3) - 0.5) * 0.18;
+        const l = Math.hypot(nx, ny, 1);
+        bild.data[i] = (nx / l * 0.5 + 0.5) * 255;
+        bild.data[i + 1] = (ny / l * 0.5 + 0.5) * 255;
+        bild.data[i + 2] = (1 / l * 0.5 + 0.5) * 255;
+        bild.data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(bild, 0, 0);
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    return t;
+  }
+
   /* ---------- Duenung ---------- */
   const WELLEN = [
     { ri: [1, 0.25], laenge: 620, hub: 5.2, tempo: 0.55 },
@@ -261,14 +300,58 @@
     return new THREE.Mesh(g, mat);
   }
 
+  /* ---------- Segel unter Druck ----------
+     Vorher war das ein glattes Kissen: sin(u) mal sin(v), ueber
+     die ganze Flaeche gleichmaessig gewoelbt. So sieht ein Segel
+     nur im Windstillen aus, wenn es leer haengt.
+
+     Ein Segel unter Druck tut zwei Dinge mehr:
+
+     1. Es wirft FALTEN von den Ecken her. Das Tuch ist dort an
+        Rah und Schot angeschlagen und kann nicht ausweichen -
+        die Spannung laeuft als Kette schmaler Rinnen schraeg ins
+        Feld hinein. Deshalb ein sin() ueber (u + v) und ueber
+        (u - v): zwei Scharen, die sich kreuzen.
+     2. Es ist am STEHENDEN Rand flacher als am fliegenden. Der
+        Bauch sitzt nicht in der Mitte, sondern zu einem Drittel
+        vorn - darum die Verschiebung in der u-Kurve.
+
+     Die Falten werden mit dem Bauch skaliert: haengt das Tuch
+     leer, sind auch die Falten weg. Das ist der Unterschied
+     zwischen Druck und Muster. */
   function baeuchen(netz, t, staerke) {
     const g = netz.geometry, p = g.attributes.position, grund = g.userData.grund;
     const b = g.parameters.width, h = g.parameters.height;
     for (let i = 0; i < p.count; i++) {
       const x = grund[i * 3], y = grund[i * 3 + 1];
       const u = x / b + 0.5, v = y / h + 0.5;
-      const bauch = Math.sin(u * Math.PI) * (0.35 + 0.65 * Math.sin(v * Math.PI));
-      p.setZ(i, bauch * staerke * (1 + 0.14 * Math.sin(t * 1.7 + v * 4 + u * 2)));
+
+      /* Der Bauch, nach vorn verschoben: bei u = 0.38 am
+         tiefsten statt bei 0.5. */
+      const uv = Math.pow(u, 0.78);
+      const bauch = Math.sin(uv * Math.PI) * (0.35 + 0.65 * Math.sin(v * Math.PI));
+
+      /* Zwei Faltenscharen, die vom RAND einlaufen und zur Mitte
+         hin verschwinden, wo das Tuch frei steht.
+
+         Der Abfall ist bewusst 1 - sin(u)*sin(v) und nicht
+         (1-sin u)*(1-sin v): das Produkt der Gegenstuecke wird
+         nur ganz in den vier Ecken gross, und dann faelteln nur
+         die Ecken. Ein Segel fasert aber an den ganzen Kanten -
+         am Achterliek und am Unterliek entlang, wo es
+         angeschlagen ist. Gemessen am Rand, gegenueber der
+         Fassung ohne Falten: 1,45fache Struktur statt 1,29facher
+         mit dem Produkt. */
+      const zumRand = 1 - Math.sin(u * Math.PI) * Math.sin(v * Math.PI);
+      const falten =
+        Math.sin((u + v) * 11.5 + t * 0.9) * 0.5 +
+        Math.sin((u - v) * 9.0 - t * 0.6) * 0.5;
+
+      /* Das Flattern wie bisher - es macht aus dem stehenden
+         Bauch eine lebende Flaeche. */
+      const flattern = 1 + 0.14 * Math.sin(t * 1.7 + v * 4 + u * 2);
+
+      p.setZ(i, (bauch + falten * zumRand * 0.30) * staerke * flattern);
     }
     p.needsUpdate = true;
     g.computeVertexNormals();
@@ -278,10 +361,26 @@
     const schiff = new THREE.Group();
     const holz = holzTextur();
     holz.repeat.set(3, 2);
-    const rumpfMat = new THREE.MeshStandardMaterial({ map: holz, color: 0x6b4c34, roughness: 0.78, metalness: 0.04 });
+    /* Dieselbe Kachelung wie die Farbtextur, sonst laegen Fuge
+       und Relief nicht uebereinander. */
+    const plankenRelief = plankenNormal();
+    plankenRelief.repeat.copy(holz.repeat);
+
+    const rumpfMat = new THREE.MeshStandardMaterial({
+      map: holz, normalMap: plankenRelief,
+      normalScale: new THREE.Vector2(0.85, 0.85),
+      color: 0x6b4c34, roughness: 0.78, metalness: 0.04
+    });
     const dunkel = new THREE.MeshStandardMaterial({ color: 0x241a13, roughness: 0.9 });
-    const zier = new THREE.MeshStandardMaterial({ color: 0x9c7233, roughness: 0.45, metalness: 0.45 });
-    const deckMat = new THREE.MeshStandardMaterial({ map: holz, color: 0x8a6b48, roughness: 0.85 });
+    /* Beschlaege und Zierleisten glaenzen staerker als das Holz -
+       ein Streiflicht faellt hier auf, und genau daran erkennt
+       man aus der Entfernung, dass der Rumpf gegliedert ist. */
+    const zier = new THREE.MeshStandardMaterial({ color: 0x9c7233, roughness: 0.38, metalness: 0.62 });
+    const deckMat = new THREE.MeshStandardMaterial({
+      map: holz, normalMap: plankenRelief,
+      normalScale: new THREE.Vector2(0.6, 0.6),
+      color: 0x8a6b48, roughness: 0.85
+    });
     const segelMat = new THREE.MeshStandardMaterial({ map: segeltuchTextur(), color: 0xe7e0cd, roughness: 0.95, side: THREE.DoubleSide });
     const tauMat = new THREE.LineBasicMaterial({ color: 0x1d1811, transparent: true, opacity: 0.85 });
 
@@ -529,7 +628,21 @@
 
     const hoeheBei = function (x, z) { return hoeheRoh(x, z) - 10; };
 
-    const felsMat = new THREE.MeshStandardMaterial({ color: 0x4c4854, roughness: 1, flatShading: true });
+    /* Relief auf den Felsen. Die Koerper sind flach schattiert
+       und bekommen ihre Form aus dem Netz - das gibt die grobe
+       Silhouette, aber die Flaechen dazwischen bleiben glatt wie
+       Pappe. Die Normalkarte bricht sie auf.
+
+       flatShading und normalMap zusammen sind kein Widerspruch:
+       die flache Schattierung macht die Kanten, die Karte die
+       Flaeche dazwischen. Nur die Karte allein saehe aus wie
+       bedruckte Pappe, nur die Kanten wie Origami. */
+    const felsRelief = normalTextur(128, 5);
+    felsRelief.repeat.set(2, 2);
+    const felsMat = new THREE.MeshStandardMaterial({
+      color: 0x4c4854, roughness: 1, flatShading: true,
+      normalMap: felsRelief, normalScale: new THREE.Vector2(1.1, 1.1)
+    });
     [[-1480, 420, 70, 150], [1520, -180, 55, 120], [-1260, -760, 42, 86], [1180, 780, 48, 100]].forEach(function (f) {
       const x = f[0], z = f[1], r = f[2], h = f[3];
       const g = new THREE.ConeGeometry(r, h, 8, 3);
@@ -769,6 +882,29 @@
         lippe.position.set(wx, oben.y - 6, oben.z + 24);
         insel.add(lippe);
 
+        /* ---------- Die Schaumkrone ----------
+           Ueber der Abrisskante steht weisses Wasser: dort
+           staut es sich, bevor es faellt. Ein flach LIEGENDES
+           Band, nicht ein stehendes - von der Kamera aus sieht
+           man es im Anschnitt, und genau dieser helle Strich
+           trennt den Fall vom Fels darueber.
+
+           Ohne ihn beginnt der Fall aus dem Nichts: die Lippe
+           dahinter ist ein weicher Fleck, der die Kante
+           andeutet, aber nicht zeichnet. */
+        const krone = new THREE.Mesh(
+          new THREE.PlaneGeometry(74, 30),
+          new THREE.MeshBasicMaterial({
+            map: weicheTextur("rgba(255,255,255,1)", "rgba(255,255,255,0.4)"),
+            color: 0xf6fbfe, transparent: true, opacity: 0.6,
+            depthWrite: false, side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending
+          })
+        );
+        krone.rotation.x = -Math.PI / 2;
+        krone.position.set(wx, oben.y + 2, oben.z + 12);
+        insel.add(krone);
+
         /* ---------- Gischtsaeule ----------
            Ein einzelner Fleck am Fuss sah aus wie ein Lichtpunkt.
            Wo so viel Wasser aufschlaegt, steht eine Saeule aus
@@ -794,7 +930,7 @@
           fuss.push({ sprite: sp, grund: d[3], takt: d[4], ph: Math.random() * 6.3 });
         });
 
-        wasserfall = { straenge: straenge, fuss: fuss, lippe: lippe };
+        wasserfall = { straenge: straenge, fuss: fuss, lippe: lippe, krone: krone };
       }
     }
     insel.userData.wasserfall = wasserfall;
@@ -1479,6 +1615,19 @@
     szene.add(sonneLicht);
     const fuell = new THREE.DirectionalLight(0xa9b4d8, 0.85);
     szene.add(fuell);
+
+    /* ---------- Gegenlicht ----------
+       Bisher kam alles Licht von vorn: Sonne, Fuelllicht,
+       Himmel. Was dabei fehlt, ist der helle Saum an der Kante -
+       das, was Gischt leuchten und ein Segel duennhaeutig
+       aussehen laesst, weil Licht hindurchgeht.
+
+       Es steht der Sonne genau GEGENUEBER und etwas tiefer. Es
+       ist bewusst schwach: es soll Kanten zeichnen, nicht die
+       Szene aufhellen. Wer es hochdreht, bekommt eine flach
+       ausgeleuchtete Szene ohne Tiefe - genau das Gegenteil. */
+    const gegenLicht = new THREE.DirectionalLight(0xbfd6ee, 0.0);
+    szene.add(gegenLicht);
     const hemi = new THREE.HemisphereLight(0x9aa6d9, 0x0d1018, 1.0);
     szene.add(hemi);
     szene.add(new THREE.AmbientLight(0x3d4159, 0.75));
@@ -1499,6 +1648,12 @@
       lichtRichtung.setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - Math.max(hoehe, 2.0)), theta);
       if (wasser.material.uniforms) wasser.material.uniforms.sunDirection.value.copy(lichtRichtung);
       sonneLicht.position.copy(lichtRichtung).multiplyScalar(4000);
+      /* Gegenueber und flacher: gespiegelt in x und z, die Hoehe
+         auf ein Drittel. Ein Gegenlicht von oben gaebe es nicht. */
+      gegenLicht.position.set(
+        -lichtRichtung.x * 4000,
+        Math.abs(lichtRichtung.y) * 1400,
+        -lichtRichtung.z * 4000);
     }
     sonneSetzen(2.2, 178);
 
@@ -1853,6 +2008,10 @@
       renderer.toneMappingExposure = misch(0.42, 0.54, weich(0.35, 0.92, p));
       hemi.intensity = misch(0.45, 1.15, tag);
       sonneLicht.intensity = misch(0.35, 3.4, tag * tag);
+      /* Am staerksten, wenn die Sonne tief steht - morgens und
+         im Aufreissen nach dem Sturm. Steht sie hoch, gibt es
+         kein Gegenlicht, das waere nur ein zweiter Scheinwerfer. */
+      gegenLicht.intensity = misch(0.15, 1.15, tag) * (1 - weich(0.86, 1, p) * 0.45);
       fuell.intensity = misch(1.1, 0.85, tag);
 
       /* Kringel aufziehen lassen. Sie liegen auf dem bewegten
@@ -2084,6 +2243,10 @@
           f.sprite.material.opacity = (f.grund + 0.14 * Math.sin(t * f.takt + f.ph)) * sichtbar;
         }
         wf.lippe.material.opacity = (0.5 + 0.06 * Math.sin(t * 1.6)) * sichtbar;
+        /* Die Krone pulst schneller und flacher als die Lippe:
+           gestautes Wasser an einer Kante zittert, es atmet
+           nicht. */
+        wf.krone.material.opacity = (0.56 + 0.1 * Math.sin(t * 3.7) + 0.05 * Math.sin(t * 6.1 + 2)) * sichtbar;
       }
 
       /* Rauch: jede Schwade laeuft ihren Weg von 0 nach 1 und
