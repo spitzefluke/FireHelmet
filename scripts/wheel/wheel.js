@@ -530,8 +530,8 @@ function isAvatarImagePath(value) {
 
 function buildAvatarPickerHtml(avatar) {
   return isAvatarImagePath(avatar)
-    ? `<img src="${avatar}" alt="" loading="lazy" decoding="async">`
-    : `<span>${avatar}</span>`;
+    ? `<img src="${escapeAttr(avatar)}" alt="" loading="lazy" decoding="async">`
+    : `<span>${escapeHtml(avatar)}</span>`;
 }
 
 function getUnlockedAvatarIds() {
@@ -1645,6 +1645,20 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+/* WICHTIG: escapeHtml oben taugt NUR fuer Text ZWISCHEN Tags.
+   Der textContent-Umweg codiert < > & - aber KEINE
+   Anfuehrungszeichen. In einem Attribut (src="...", value="...")
+   bricht ein " deshalb aus, obwohl der Wert "escaped" aussieht.
+   Genau darueber liess sich ueber das Avatar-Feld und den
+   Spitznamen HTML einschleusen (gespeichertes XSS in jeder
+   Rangliste und im Admin-Panel). Fuer Attributwerte deshalb
+   IMMER escapeAttr nehmen, das " und ' mitcodiert. */
+function escapeAttr(str) {
+  return String(str == null ? "" : str).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
 function renderRewardBadges(rewards) {
   if (!rewards || !rewards.length) {
     return '<span class="reward-none">–</span>';
@@ -1745,8 +1759,8 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
 
   let avatarHtml = player.avatar
     ? isAvatarImagePath(player.avatar)
-      ? `<img src="${player.avatar}" class="leaderboard-avatar" alt="" loading="lazy" decoding="async">`
-      : `<span class="leaderboard-avatar leaderboard-avatar-emoji">${player.avatar}</span>`
+      ? `<img src="${escapeAttr(player.avatar)}" class="leaderboard-avatar" alt="" loading="lazy" decoding="async">`
+      : `<span class="leaderboard-avatar leaderboard-avatar-emoji">${escapeHtml(player.avatar)}</span>`
     : "";
 
   avatarHtml = wrapAvatarWithFrame(avatarHtml, frameStyle);
@@ -1767,8 +1781,8 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
 function buildLeaderboardPodiumEntry(player, rank) {
   const avatarHtml = player.avatar
     ? isAvatarImagePath(player.avatar)
-      ? `<img src="${player.avatar}" alt="" loading="lazy" decoding="async">`
-      : `<span>${player.avatar}</span>`
+      ? `<img src="${escapeAttr(player.avatar)}" alt="" loading="lazy" decoding="async">`
+      : `<span>${escapeHtml(player.avatar)}</span>`
     : `<span>🏴‍☠️</span>`;
 
   const crownHtml = rank === 1 ? `<span class="fh-podium-crown">👑</span>` : "";

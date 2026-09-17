@@ -581,7 +581,7 @@ function renderPlayerCardHtml(data) {
   else if (provider === "twitch") avatar = localStorage.getItem("twitchAvatar") || avatar;
   else avatar = localStorage.getItem("wheelAvatar") || avatar;
 
-  let avatarHtml = typeof buildAvatarPickerHtml === "function" ? buildAvatarPickerHtml(avatar) : `<span>${avatar}</span>`;
+  let avatarHtml = typeof buildAvatarPickerHtml === "function" ? buildAvatarPickerHtml(avatar) : `<span>${typeof escapeHtml === "function" ? escapeHtml(avatar) : ""}</span>`;
   if (typeof wrapAvatarWithCapBadge === "function") {
     avatarHtml = wrapAvatarWithCapBadge(avatarHtml, data && data.has_flitzpiepen_cap);
   }

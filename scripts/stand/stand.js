@@ -43,8 +43,12 @@
   /* escapeHtml() kommt aus wheel.js und wird auch von der Rangliste
      benutzt. Fehlt es, lieber grob entschaerfen als ungeprueft
      einsetzen - in die Karten fliessen fremde Spitznamen ein. */
+  /* IMMER quote-sicher escapen, nicht escapeHtml bevorzugen: der
+     Avatar fliesst hier in ein src="..."-Attribut, und escapeHtml
+     (textContent-Umweg) laesst " durch - genau das war die
+     Luecke. Diese Fassung codiert " und ' mit und taugt fuer
+     Attribut UND Text. */
   function esc(value) {
-    if (typeof escapeHtml === "function") return escapeHtml(value);
     return String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
     }[c]));
