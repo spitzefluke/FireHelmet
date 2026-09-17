@@ -283,7 +283,7 @@ const translations = {
     "dash.boardLoading": "Lade Rangliste ...",
     "dash.boardCta": "Ganze Rangliste",
 
-    "home.scrollCue": "Scrollen",
+    "home.scrollCue": "Sieben Kapitel voraus",
 
     "story.kicker": "Archiv der Crew",
     "story.title": "Logbücher",
@@ -814,7 +814,7 @@ const translations = {
     "dash.boardLoading": "Loading leaderboard ...",
     "dash.boardCta": "Full leaderboard",
 
-    "home.scrollCue": "Scroll",
+    "home.scrollCue": "Seven chapters ahead",
 
     "story.kicker": "The crew's archive",
     "story.title": "Logbooks",
