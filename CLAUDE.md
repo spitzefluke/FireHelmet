@@ -58,6 +58,30 @@ Dabei zu beachten:
 Diese drei Fallen haben in der Vergangenheit jeweils zu Testergebnissen geführt, die aussahen
 wie Codefehler. Wenn eine Prüfung fehlschlägt: **erst fragen, ob der Test falsch ist.**
 
+## gstack
+
+**Zum Surfen die Skill `/browse` aus gstack nehmen, nichts anderes.** Die Werkzeuge
+`mcp__claude-in-chrome__*` sind dafür **nicht** zu verwenden.
+
+Verfügbare Skills:
+
+`/office-hours` · `/plan-ceo-review` · `/plan-eng-review` · `/plan-design-review` ·
+`/design-consultation` · `/design-shotgun` · `/design-html` · `/review` · `/ship` ·
+`/land-and-deploy` · `/canary` · `/benchmark` · `/browse` · `/connect-chrome` · `/qa` ·
+`/qa-only` · `/design-review` · `/scrape` · `/setup-browser-cookies` · `/setup-deploy` ·
+`/setup-gbrain` · `/retro` · `/investigate` · `/document-release` · `/document-generate` ·
+`/codex` · `/cso` · `/autoplan` · `/plan-devex-review` · `/devex-review` · `/careful` ·
+`/freeze` · `/guard` · `/unfreeze` · `/gstack-upgrade` · `/learn`
+
+Zwei Hinweise, die beim Eintragen dieser Liste aufgefallen sind und die noch offen sind:
+
+- `/connect-chrome` und `/devex-review` stehen so **nicht** in der gstack-README. Dort
+  heißen die nächstliegenden Einträge `/open-gstack-browser` und `/plan-devex-review`.
+  Wer eine der beiden aufruft und ins Leere läuft, weiß hiermit warum.
+- gstack ist **nicht Teil dieses Repos** und wird pro Rechner installiert
+  (`~/.claude/skills/gstack`). In einer frisch aufgesetzten Umgebung ist es nicht da,
+  und dann gilt für das Surfen wieder, was unter „Im Browser prüfen" steht.
+
 ## Architektur
 
 ### Seiten
