@@ -602,8 +602,23 @@ function renderPlayerCardHtml(data) {
      erlaubt, deshalb der Umbau. */
   const avatarTitel = typeof t === "function" ? t("avatar.aendern", "Avatar ändern") : "Avatar ändern";
 
+  /* Titel und Abzeichen aus dem Skill-Baum (scripts/skilltree/). Nur
+     der hoechste Titel, dazu alle Abzeichen. Die "Legende der sieben
+     Meere" rahmt zusaetzlich die ganze Karte in Gold. Die Namen sind
+     feste Texte aus i18n.js - escaped wird trotzdem. */
+  const auszeichnung = typeof fhSkillAuszeichnungen === "function" ? fhSkillAuszeichnungen() : null;
+  const skillName = typeof fhSkillName === "function" ? fhSkillName : (id) => id;
+  const auszeichnungTexte = auszeichnung
+    ? [auszeichnung.titel ? skillName(auszeichnung.titel) : null].concat(auszeichnung.abzeichen.map(skillName)).filter(Boolean)
+    : [];
+  const esc = typeof escapeHtml === "function" ? escapeHtml : (v) => v;
+  const titelHtml = auszeichnungTexte.length
+    ? `<span class="fh-player-card-titel">${auszeichnungTexte.map(esc).join(" · ")}</span>`
+    : "";
+  const legendeKlasse = auszeichnung && auszeichnung.legende ? " ist-legende" : "";
+
   return `
-    <div class="fh-player-card">
+    <div class="fh-player-card${legendeKlasse}">
       <button type="button" class="fh-player-card-avatar fh-player-card-avatarknopf"
               onclick="fhAvatarWahlOeffnen()"
               title="${avatarTitel}" aria-label="${avatarTitel}">
@@ -612,6 +627,7 @@ function renderPlayerCardHtml(data) {
       </button>
       <button type="button" class="fh-player-card-info" onclick="openLevelPath()" aria-label="${levelLabel} ${progress.level}">
         <span class="fh-player-card-name">${safeNickname}</span>
+        ${titelHtml}
         <span class="fh-player-card-level">${levelLabel} ${progress.level}</span>
         <span class="fh-player-card-xpbar" role="progressbar" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpText}">
           <span class="fh-player-card-xpfill" style="width:${percent}%"></span>

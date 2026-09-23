@@ -324,6 +324,12 @@ function buildGatewayLiveGeschenkeHtml() {
       </label>
       <button type="button" class="gw-live-knopf ist-alle" onclick="gwLiveGrant('avatar')">Avatar an alle</button>
     </div>
+    <div class="gw-live-nachricht">
+      <label class="gw-feld-label">Skillpunkte (1–10)
+        <input type="number" id="gw-live-sp" class="gw-feld" min="1" max="10" value="1">
+      </label>
+      <button type="button" class="gw-live-knopf ist-alle" onclick="gwLiveGrant('skillpunkte')">Skillpunkte an alle</button>
+    </div>
     <p id="gw-geschenk-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <p class="gateway-status-sub">Jeder anwesende Spieler bekommt es genau einmal. Der Betrag wird server-seitig verrechnet.</p>
   `;
@@ -394,6 +400,11 @@ async function gwLiveGrant(art) {
   if (art === "dublonen") {
     wert = parseInt((document.getElementById("gw-live-dub") || {}).value, 10) || 0;
     if (wert <= 0 || wert > 5000) { gwLiveStatus("gw-geschenk-status", "Dublonen zwischen 1 und 5000.", true); return; }
+  } else if (art === "skillpunkte") {
+    /* Dieselbe Grenze prueft die Datenbank (live_grants_skillpunkte_klein,
+       Migration 24) - hier nur, damit die Meldung sofort kommt. */
+    wert = parseInt((document.getElementById("gw-live-sp") || {}).value, 10) || 0;
+    if (wert < 1 || wert > 10) { gwLiveStatus("gw-geschenk-status", "Skillpunkte zwischen 1 und 10.", true); return; }
   } else {
     avatar = ((document.getElementById("gw-live-av") || {}).value || "").trim();
     if (!avatar) { gwLiveStatus("gw-geschenk-status", "Erst eine Avatar-ID eingeben.", true); return; }
@@ -402,7 +413,10 @@ async function gwLiveGrant(art) {
   try {
     const { error } = await supabaseClient.rpc("live_grant_ausloesen", { p_art: art, p_wert: wert, p_avatar: avatar });
     if (error) throw error;
-    gwLiveStatus("gw-geschenk-status", `✓ ${art === "dublonen" ? wert + " Dublonen" : "Avatar „" + avatar + "“"} an alle verteilt`, false);
+    const was = art === "dublonen" ? wert + " Dublonen"
+      : art === "skillpunkte" ? wert + (wert === 1 ? " Skillpunkt" : " Skillpunkte")
+      : "Avatar „" + avatar + "“";
+    gwLiveStatus("gw-geschenk-status", `✓ ${was} an alle verteilt`, false);
   } catch (err) {
     console.error("Grant fehlgeschlagen:", err);
     gwLiveStatus("gw-geschenk-status", "Verteilen fehlgeschlagen: " + ((err && err.message) || err), true);

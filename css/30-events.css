@@ -2459,84 +2459,523 @@ img, svg, video, canvas {
   font-size: 13px;
 }
 
-.fh-skill-punkte {
-  margin: 18px 0 6px;
-  font-family: var(--fh-font-display, "Oswald", system-ui, sans-serif);
-  letter-spacing: .04em;
-  color: var(--fh-muted-fg, #a7aec0);
-}
-.fh-skill-punkte strong { color: var(--fh-gold-bright, #f0c96a); font-size: 1.3em; }
+/* ======================================================
+   SKILL-BAUM ALS STERNBILD (scripts/skilltree/skilltree.js)
+   ---------------------------------------------------
+   Die Sterne sitzen per left/top in Prozent und werden mit
+   translate(-50%, -50%) zentriert. Alles, was beim Zeigen oder
+   Druecken waechst, liegt deshalb auf .fh-stern-kern - ein
+   transform auf .fh-stern selbst wuerde die Zentrierung
+   ueberschreiben und den Stern springen lassen. Aus demselben
+   Grund steht .fh-stern NICHT in den Druck-Listen von
+   80-interaktion.css.
+====================================================== */
 
-/* Die Baumflaeche: Knoten sitzen absolut in Prozent, die Linien
-   liegen als SVG darunter. */
-.fh-skill-flaeche {
+.fh-skill-leiste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 18px;
+  margin: 18px 0 14px;
+}
+
+.fh-skill-punkte {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  color: var(--fh-muted-fg);
+  font-size: 14px;
+}
+
+.fh-skill-punkte strong {
+  font-family: var(--fh-font-display);
+  font-size: 44px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--fh-gold-bright);
+  text-shadow: var(--fh-glow-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.fh-skill-herkunft {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-skill-fortschritt {
+  margin: 0 0 0 auto;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-skill-fortschritt strong {
+  color: var(--fh-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Himmel links, Karte rechts - schmaler untereinander. */
+.fh-skill-buehne {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ---------- Der Himmel ---------- */
+.fh-himmel {
   position: relative;
   width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
-  aspect-ratio: 4 / 3;
-  border-radius: 16px;
-  border: 1px solid var(--fh-surface-line, #1c2a3a);
+  border-radius: var(--fh-radius-lg);
+  border: 1px solid var(--fh-border);
   background:
-    radial-gradient(120% 90% at 50% 0%, rgba(32, 48, 74, .35), transparent 62%),
-    var(--fh-surface, #0b1220);
+    radial-gradient(38% 42% at 50% 50%, color-mix(in srgb, var(--fh-gold) 12%, transparent), transparent 70%),
+    radial-gradient(60% 50% at 18% 20%, color-mix(in srgb, var(--fh-blue) 45%, transparent), transparent 70%),
+    radial-gradient(55% 45% at 85% 85%, color-mix(in srgb, var(--fh-red-deep) 30%, transparent), transparent 70%),
+    var(--fh-ocean);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, .55);
   overflow: hidden;
 }
 
-.fh-skill-linien {
+.fh-himmel-svg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
 }
-.fh-skill-kante {
-  stroke: var(--fh-surface-line, #2c3f56);
-  stroke-width: .6;
+
+.fh-himmel-punkt {
+  fill: var(--fh-fg);
+  opacity: .32;
+}
+
+.fh-himmel-punkt.funkelt {
+  animation: fhHimmelFunkeln 4.5s ease-in-out infinite;
+}
+
+@keyframes fhHimmelFunkeln {
+  0%, 100% { opacity: .15; }
+  50%      { opacity: .85; }
+}
+
+/* Linien: gepunktet, solange nichts leuchtet; gold, sobald beide
+   Enden frei sind. pathLength="1" im Markup - die Strichmuster
+   sind deshalb Bruchteile der Linienlaenge. */
+.fh-himmel-linie {
+  stroke: var(--fh-border-strong);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: .006 .03;
   vector-effect: non-scaling-stroke;
 }
-.fh-skill-kante.ist-frei {
-  stroke: var(--fh-gold, #d6a84f);
-  stroke-width: 1;
+
+.fh-himmel-linie.ist-bereit {
+  stroke: color-mix(in srgb, var(--fh-gold) 70%, transparent);
+  stroke-dasharray: .03 .025;
 }
 
-.fh-skill-knoten {
+.fh-himmel-linie.ist-frei {
+  stroke: var(--fh-gold-bright);
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 4px var(--fh-gold));
+}
+
+/* Gerade freigeschaltet: Licht laeuft vom Vorgaenger zum neuen
+   Stern. forwards haelt das Ende fest (siehe CLAUDE.md). */
+.fh-himmel-linie.ist-neu {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: fhLinieZuenden 700ms var(--fh-ease) forwards;
+}
+
+@keyframes fhLinieZuenden {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ---------- Die Sterne ---------- */
+.fh-stern {
+  --stern: 46px;
   position: absolute;
-  transform: translate(-50%, -50%);
-  width: clamp(48px, 12vw, 66px);
-  height: clamp(48px, 12vw, 66px);
+  z-index: 1;
+  width: var(--stern);
+  height: var(--stern);
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  border: 2px solid var(--fh-surface-line, #2c3f56);
-  background: var(--fh-surface-2, #0f1826);
-  color: var(--fh-fg, #e9edf5);
+  background: none;
+  color: var(--fh-muted-fg);
+  transform: translate(-50%, -50%);
   cursor: pointer;
-  transition: transform .18s var(--fh-ease, ease), border-color .2s ease, box-shadow .2s ease;
 }
-.fh-skill-icon { font-size: clamp(18px, 4.5vw, 26px); line-height: 1; }
-.fh-skill-kosten { font-size: 11px; color: var(--fh-muted-fg, #a7aec0); }
 
-.fh-skill-knoten.ist-frei {
-  border-color: var(--fh-gold, #d6a84f);
-  box-shadow: 0 0 18px rgba(214, 168, 79, .35);
-}
-.fh-skill-knoten.ist-frei .fh-skill-kosten { color: var(--fh-gold-bright, #f0c96a); }
-.fh-skill-knoten.ist-offen {
-  border-color: var(--fh-gold-bright, #f0c96a);
-}
-.fh-skill-knoten.ist-offen:hover { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 22px rgba(240, 201, 106, .4); }
-.fh-skill-knoten.ist-zuteuer { opacity: .8; }
-.fh-skill-knoten.ist-gesperrt { opacity: .4; cursor: not-allowed; }
+.fh-stern.groesse-2 { --stern: 56px; }
+.fh-stern.groesse-3 { --stern: 92px; }
 
-.fh-skill-status { margin-top: 14px; text-align: center; color: var(--fh-muted-fg, #a7aec0); min-height: 1.4em; }
+.fh-stern-kern {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1.5px solid var(--fh-border-strong);
+  background: radial-gradient(circle at 50% 38%, var(--fh-surface-light), var(--fh-bg) 78%);
+  transition:
+    transform var(--fh-dauer) var(--fh-ease),
+    box-shadow var(--fh-dauer) var(--fh-ease),
+    border-color var(--fh-dauer) var(--fh-ease);
+}
+
+.fh-stern-symbol {
+  width: 46%;
+  height: 46%;
+}
+
+/* Kostenpunkte unter dem Stern: ein Punkt je Skillpunkt. */
+.fh-stern-pips {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  display: flex;
+  gap: 4px;
+  transform: translateX(-50%);
+}
+
+.fh-stern-pips i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fh-border-strong);
+}
+
+/* Gesperrt: Voraussetzung fehlt. */
+.fh-stern.ist-gesperrt .fh-stern-kern {
+  border-style: dashed;
+  opacity: .55;
+}
+
+/* Erreichbar, aber zu teuer. */
+.fh-stern.ist-zuteuer {
+  color: var(--fh-fg);
+}
+
+.fh-stern.ist-zuteuer .fh-stern-kern {
+  border-color: color-mix(in srgb, var(--fh-gold) 40%, transparent);
+}
+
+/* Bereit zum Freischalten: ruft mit einem sanften Ring. */
+.fh-stern.ist-offen {
+  color: var(--fh-gold-bright);
+}
+
+.fh-stern.ist-offen .fh-stern-kern {
+  border-color: var(--fh-gold-bright);
+  animation: fhSternRuf 2.4s ease-out infinite;
+}
+
+.fh-stern.ist-offen .fh-stern-pips i {
+  background: var(--fh-gold-bright);
+}
+
+@keyframes fhSternRuf {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--fh-gold-bright) 55%, transparent); }
+  70%  { box-shadow: 0 0 0 14px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* Freigeschaltet: der Stern brennt. */
+.fh-stern.ist-frei {
+  color: var(--fh-bg);
+}
+
+.fh-stern.ist-frei .fh-stern-kern {
+  border-color: var(--fh-gold-bright);
+  background: radial-gradient(circle at 50% 35%, var(--fh-paper) 0%, var(--fh-gold-bright) 38%, var(--fh-gold) 72%, var(--fh-fire-deep) 100%);
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--fh-gold-bright) 70%, transparent),
+    0 0 46px color-mix(in srgb, var(--fh-gold) 35%, transparent);
+}
+
+.fh-stern.ist-frei .fh-stern-pips i {
+  background: var(--fh-gold);
+}
+
+/* Ausgewaehlt: ein Ring um den Stern. */
+.fh-stern.ist-gewaehlt .fh-stern-kern::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--fh-gold-bright);
+  opacity: .9;
+}
+
+@media (hover: hover) {
+  .fh-stern:not(.ist-gesperrt):hover .fh-stern-kern {
+    transform: scale(1.08);
+  }
+}
+
+.fh-stern:active .fh-stern-kern {
+  transform: scale(.94);
+  transition-duration: var(--fh-dauer-kurz);
+}
+
+.fh-stern:focus-visible {
+  outline: none;
+}
+
+.fh-stern:focus-visible .fh-stern-kern {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 4px;
+}
+
+/* Die Legende: groesser, mit langsam kreisenden Strahlen. */
+.fh-stern.groesse-3 .fh-stern-kern {
+  border-width: 2px;
+}
+
+.fh-stern.groesse-3 .fh-stern-kern::before {
+  content: "";
+  position: absolute;
+  inset: -26%;
+  z-index: -1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--fh-gold) 22%, transparent) 0deg 6deg, transparent 6deg 30deg);
+  -webkit-mask: radial-gradient(circle, transparent 42%, #000 46%, transparent 72%);
+  mask: radial-gradient(circle, transparent 42%, #000 46%, transparent 72%);
+  animation: fhLegendeStrahlen 40s linear infinite;
+  opacity: .5;
+}
+
+.fh-stern.groesse-3.ist-frei .fh-stern-kern::before {
+  opacity: 1;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--fh-gold-bright) 55%, transparent) 0deg 6deg, transparent 6deg 30deg);
+}
+
+@keyframes fhLegendeStrahlen {
+  to { transform: rotate(360deg); }
+}
+
+/* Gerade freigeschaltet: kurzes Aufflammen. forwards + Endwert
+   opacity 0, sonst bliebe der Schein stehen (siehe CLAUDE.md). */
+.fh-stern.ist-neu .fh-stern-kern {
+  animation: fhSternZuenden 650ms var(--fh-ease) forwards;
+}
+
+.fh-stern.ist-neu::before {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--fh-paper) 0%, color-mix(in srgb, var(--fh-gold-bright) 60%, transparent) 30%, transparent 68%);
+  pointer-events: none;
+  animation: fhSternFlare 900ms var(--fh-ease) forwards;
+}
+
+@keyframes fhSternZuenden {
+  0%   { transform: scale(.8); }
+  55%  { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fhSternFlare {
+  0%   { opacity: 1; transform: scale(.3); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* ---------- Die Karte zum gewaehlten Stern ---------- */
+.fh-stern-karte {
+  position: sticky;
+  top: calc(var(--fh-topbar-h) + 16px);
+  padding: 18px;
+  border-radius: var(--fh-radius);
+  border: 1px solid var(--fh-border-strong);
+  background: var(--fh-surface);
+  box-shadow: var(--fh-shadow-sm);
+}
+
+.fh-stern-karte.ist-leer {
+  border-style: dashed;
+  color: var(--fh-muted-fg);
+  text-align: center;
+  font-size: 14px;
+}
+
+.fh-stern-karte.ist-legende {
+  border-color: color-mix(in srgb, var(--fh-gold) 60%, transparent);
+  box-shadow: var(--fh-shadow-sm), var(--fh-glow-gold);
+}
+
+.fh-stern-karte-kopf {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.fh-stern-karte-symbol {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--fh-gold);
+  color: var(--fh-gold-bright);
+}
+
+.fh-stern-karte-symbol svg {
+  width: 22px;
+  height: 22px;
+}
+
+.fh-stern-karte-zustand {
+  margin: 0 0 2px;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+.fh-stern-karte.ist-offen .fh-stern-karte-zustand { color: var(--fh-gold-bright); }
+.fh-stern-karte.ist-frei .fh-stern-karte-zustand { color: var(--fh-success); }
+
+.fh-stern-karte-name {
+  margin: 0;
+  font-family: var(--fh-font-display);
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: .02em;
+  color: var(--fh-fg);
+}
+
+.fh-stern-karte-wirkung {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--fh-fg);
+}
+
+.fh-stern-karte-kosten {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+.fh-stern-karte-kosten .fh-stern-pips {
+  position: static;
+  transform: none;
+}
+
+.fh-stern-karte-kosten .fh-stern-pips i {
+  background: var(--fh-gold);
+}
+
+.fh-stern-karte-knopf {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: var(--fh-radius-sm);
+  background: linear-gradient(180deg, var(--fh-gold-bright), var(--fh-gold));
+  color: var(--fh-bg);
+  font-family: var(--fh-font-display);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--fh-glow-gold);
+  transition: filter var(--fh-dauer) var(--fh-ease), transform var(--fh-dauer-kurz) var(--fh-ease);
+}
+
+.fh-stern-karte-knopf span {
+  opacity: .75;
+}
+
+@media (hover: hover) {
+  .fh-stern-karte-knopf:not([disabled]):hover { filter: brightness(1.08); }
+}
+
+.fh-stern-karte-knopf:active:not([disabled]) { transform: scale(.97); }
+.fh-stern-karte-knopf[disabled] { opacity: .6; cursor: progress; }
+
+.fh-stern-karte-knopf:focus-visible {
+  outline: 2px solid var(--fh-gold-bright);
+  outline-offset: 3px;
+}
+
+.fh-stern-karte-frei {
+  margin: 0;
+  font-family: var(--fh-font-display);
+  font-size: 17px;
+  letter-spacing: .06em;
+  color: var(--fh-gold-bright);
+}
+
+.fh-stern-karte-hinweis {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--fh-fg);
+}
+
+.fh-stern-karte-klein {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--fh-muted-fg);
+}
+
+.fh-skill-status {
+  min-height: 1.3em;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+
+/* ---------- Schmale Bildschirme ---------- */
+@media (max-width: 900px) {
+  .fh-skill-buehne {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fh-stern-karte {
+    position: static;
+  }
+}
+
+@media (max-width: 700px) {
+  .fh-stern { --stern: 42px; }
+  .fh-stern.groesse-2 { --stern: 50px; }
+  .fh-stern.groesse-3 { --stern: 76px; }
+  .fh-skill-punkte strong { font-size: 38px; }
+  .fh-skill-fortschritt { margin-left: 0; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .fh-skill-knoten { transition: none; }
-  .fh-skill-knoten.ist-offen:hover { transform: translate(-50%, -50%); }
+  .fh-himmel-punkt.funkelt,
+  .fh-stern.ist-offen .fh-stern-kern,
+  .fh-stern.groesse-3 .fh-stern-kern::before,
+  .fh-stern.ist-neu .fh-stern-kern {
+    animation: none;
+  }
+  .fh-stern.ist-neu::before {
+    display: none;
+  }
+  .fh-himmel-linie.ist-neu {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .fh-stern-kern {
+    transition: none;
+  }
 }
 
 /* ======================================================
