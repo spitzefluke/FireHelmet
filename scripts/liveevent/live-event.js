@@ -179,6 +179,9 @@
         banderole((typeof window.t === "function" ? window.t("live.grantGot", "Geschenk erhalten!") : "Geschenk erhalten!"), "#4f8f5c", "🎁");
         if (typeof refreshPlayerCard === "function") refreshPlayerCard();
         if (typeof refreshShopCurrencyDisplay === "function") refreshShopCurrencyDisplay();
+        /* Waren es Skillpunkte, soll der Baum sie sofort zeigen. Der
+           Rueckgabewert verraet die Art nicht - neu laden ist billig. */
+        if (typeof window.fhSkillNeuLaden === "function") window.fhSkillNeuLaden();
       }
     } catch (err) { console.warn("Grant konnte nicht eingeloest werden:", err); }
   }

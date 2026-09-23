@@ -105,6 +105,11 @@ function getRandomAndiCooldownQuote() {
 let spielothekCooldownUntil = 0;
 let spielothekCooldownInterval = null;
 
+/* Hoechster Gewinn eines Durchlaufs NACH dem Skill-Bonus. Muss zum
+   +30000-Deckel in valid_players_write() passen (siehe
+   01-players-ship-progression.sql) - dort wird er geprueft. */
+const SPIELOTHEK_GEWINN_DECKEL = 30000;
+
 function stopSpielothekCooldownUI() {
   clearInterval(spielothekCooldownInterval);
   spielothekCooldownInterval = null;
@@ -280,9 +285,15 @@ async function playSpielothekGame() {
        Niete:   der Einsatz, mehr nicht - siehe
                 spielothekVerlustAbzug() weiter unten. */
     /* Skill-Bonus "slotdublonen" nur auf den Gewinn, nicht auf den
-       Einsatz. Klein genug fuer den +30000-Deckel. */
+       Einsatz. Danach auf SPIELOTHEK_GEWINN_DECKEL klemmen: der Slot
+       zahlt bis 25000 aus, mit vollem Bonus (+25 %) waeren das 31250 -
+       mehr, als valid_players_write() in einem Schritt zulaesst
+       (Kontostand und total_currency_earned je hoechstens +30000).
+       Ohne die Klemme lehnte die Datenbank genau den Jackpot ab. */
     const slotBonus = typeof fhSkillBonus === "function" ? fhSkillBonus("slotdublonen") : 0;
-    const bonusPayout = spin.payout > 0 ? Math.round(spin.payout * (1 + slotBonus)) : spin.payout;
+    const bonusPayout = spin.payout > 0
+      ? Math.min(Math.round(spin.payout * (1 + slotBonus)), SPIELOTHEK_GEWINN_DECKEL)
+      : spin.payout;
     const abzug = spin.win ? betCost : spielothekVerlustAbzug(currentCurrency, betCost);
     const newCurrency = Math.max(0, currentCurrency - abzug + bonusPayout);
     const angewandtesDelta = newCurrency - currentCurrency;
