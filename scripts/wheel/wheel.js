@@ -1018,8 +1018,7 @@ async function addCurrency(amount) {
         .update({
           currency: (current && current.currency ? current.currency : 0) + amount,
           // Lebenslanger Zaehler, unabhaengig vom (auch wieder sinkenden)
-          // Kontostand - Grundlage fuer die taeglichen Reparatur-Quests
-          // (siehe DAILY_QUESTS in ship-repair-data.js).
+          // Kontostand - Grundlage fuer Ranglisten und Statistik.
           total_currency_earned: (current && current.total_currency_earned ? current.total_currency_earned : 0) + amount,
         })
         .eq("firebase_uid", uid)
@@ -1265,9 +1264,6 @@ async function finalizeSpin(state, today, prize) {
   if (typeof refreshShopCurrencyDisplay === "function") {
     refreshShopCurrencyDisplay();
   }
-  if (typeof renderShipToolInventory === "function") {
-    renderShipToolInventory();
-  }
   if (typeof renderAvatarPicker === "function") {
     renderAvatarPicker();
   }
@@ -1291,7 +1287,7 @@ async function finalizeSpin(state, today, prize) {
    - schreibt Streak/letzte Drehung UND die eigentliche Belohnung in
      einem einzigen Schritt,
    - reused dafür ausschließlich bereits bestehende, bereits validierte
-     Felder (currency/totalCurrencyEarned, shipTools, ownedShopItems) -
+     Felder (currency/totalCurrencyEarned, ownedShopItems) -
      nur für die zeitlich befristete Test-Avatar-Belohnung kommen zwei
      neue, schmale Felder dazu (tempAvatarExpiresAt/tempAvatarId).
 
@@ -1310,7 +1306,7 @@ async function redeemWheelPrize(prize) {
 
   const { data: current, error: readError } = await supabaseClient
     .from("players")
-    .select("last_wheel_spin_at, streak, currency, total_currency_earned, ship_tools, owned_shop_items")
+    .select("last_wheel_spin_at, streak, currency, total_currency_earned, owned_shop_items")
     .eq("firebase_uid", uid)
     .maybeSingle();
   if (readError) throw readError;
@@ -1341,26 +1337,6 @@ async function redeemWheelPrize(prize) {
   if (prize.type === "currency") {
     fields.currency = (data.currency || 0) + prize.amount;
     fields.total_currency_earned = (data.total_currency_earned || 0) + prize.amount;
-  } else if (prize.type === "tool") {
-    const toolIds = typeof SHIP_TOOLS !== "undefined" ? Object.keys(SHIP_TOOLS) : [];
-    if (toolIds.length) {
-      const toolId = toolIds[Math.floor(Math.random() * toolIds.length)];
-      const oldTools = data.ship_tools || {};
-      /* prize.count Stueck von EINEM Werkzeug, nicht je eines von
-         mehreren. Das ist keine Bequemlichkeit, sondern eine
-         Vorgabe des Servers: app.valid_ship_tools() laesst je
-         Schreibvorgang genau einen Schluessel sich aendern
-         (changed_count > 1 -> false). Drei verschiedene Werkzeuge
-         waeren abgelehnt worden, drei Stueck eines gehen durch.
-         Der Deckel von 40 je Werkzeug steht ebenfalls dort. */
-      const anzahl = Math.max(1, Math.min(5, prize.count || 1));
-      fields.ship_tools = {
-        ...oldTools,
-        [toolId]: Math.min(40, (oldTools[toolId] || 0) + anzahl),
-      };
-      prize.grantedToolId = toolId;    // für die Ergebnis-Anzeige
-      prize.grantedToolCount = anzahl;
-    }
   } else if (prize.type === "frame") {
     const owned = data.owned_shop_items || [];
     fields.owned_shop_items = owned.includes(prize.frameId) ? owned : [...owned, prize.frameId];

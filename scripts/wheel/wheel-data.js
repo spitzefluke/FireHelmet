@@ -3,7 +3,7 @@
    ---------------------------------------------------
    NEU: das Rad vergibt jetzt ECHTE, unterschiedliche
    Belohnungen statt nur Flavor-Text. Jeder Eintrag hat:
-   - "type": "currency" | "tool" | "frame" | "tempAvatar"
+   - "type": "currency" | "frame" | "tempAvatar"
    - "rarity": "common" | "rare" | "epic" | "legendary"
      (siehe WHEEL_RARITY_WEIGHTS unten - zentral, leicht
      anpassbar, bestimmt wie WAHRSCHEINLICH dieser Eintrag
@@ -60,8 +60,6 @@ const wheelPrizes = [
     icon: "🪙", label: "75 Dublonen", message: "🪙 +75 Dublonen für dich!" },
   { id: "coins-100", rarity: "common", weight: 12, type: "currency", amount: 100,
     icon: "🪙", label: "100 Dublonen", message: "🪙 +100 Dublonen für dich!" },
-  { id: "tool-find", rarity: "common", weight: 11, type: "tool", count: 1,
-    icon: "🔧", label: "Werkzeug-Fund", message: "🔧 Ein Werkzeug für die Schiffsreparatur wandert in deine Kiste!" },
 
   // --- SELTEN ---
   { id: "coins-150", rarity: "rare", weight: 9, type: "currency", amount: 150,
@@ -70,14 +68,6 @@ const wheelPrizes = [
     icon: "🪙", label: "200 Dublonen", message: "🪙 +200 Dublonen für dich!" },
   { id: "shop-bonus", rarity: "rare", weight: 7, type: "currency", amount: 120,
     icon: "🛍️", label: "Shop-Bonus", message: "🛍️ Shop-Bonus: +120 Dublonen extra für deinen nächsten Einkauf!" },
-  /* Werkzeugkiste: DREIMAL DASSELBE Werkzeug, nicht drei
-     verschiedene. Der Grund steht auf dem Server:
-     app.valid_ship_tools() laesst je Schreibvorgang genau EINEN
-     Schluessel sich aendern (changed_count > 1 -> false). Drei
-     verschiedene Werkzeuge waeren also abgelehnt worden - drei
-     Stueck eines Werkzeugs sind ein Schluessel und gehen durch. */
-  { id: "tool-crate", rarity: "rare", weight: 8, type: "tool", count: 3,
-    icon: "🧰", label: "Werkzeugkiste", message: "🧰 Eine ganze Kiste! Drei Werkzeuge wandern in deine Sammlung." },
   { id: "cosmetic-frame-silver", rarity: "rare", weight: 6, type: "frame", frameId: "frame-silver",
     icon: "🥈", label: "Silber-Rahmen", message: "🥈 Ein silberner Rahmen für dein Profilbild gehört jetzt dir!" },
 

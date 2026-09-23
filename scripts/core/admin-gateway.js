@@ -233,41 +233,6 @@ async function toggleGatewaySpielothekGame(gameId, disabled) {
   }
 }
 
-/* ------------------------------------------------------
-   SCHIFFSREPARATUR <-> STORY-VERKNUEPFUNG
-   Welches Kapitel (falls ueberhaupt eins) automatisch entsperrt
-   wird, sobald das Schiff fertig repariert ist - siehe
-   maybeUnlockChapterAfterShipRepair() in ship-repair.js.
------------------------------------------------------- */
-function buildGatewayShipUnlockSelectHtml() {
-  const groups = getChapterGroupsForGateway();
-  const current = Array.isArray(siteConfig.shipRepairUnlockChapterIds) ? siteConfig.shipRepairUnlockChapterIds : [];
-  const currentGroup = groups.find((g) => g.ids.some((id) => current.includes(id)));
-
-  const options = groups
-    .map((g) => `<option value="${g.key}" ${currentGroup && currentGroup.key === g.key ? "selected" : ""}>${g.displayTitle} (${g.storyTitle})</option>`)
-    .join("");
-
-  return `
-    <label class="gateway-form-row">
-      <span>Kapitel nach abgeschlossener Schiffsreparatur automatisch freischalten:</span><br>
-      <select id="gateway-ship-unlock-chapter" class="code-input" onchange="saveGatewayShipUnlockChapter(this.value)">
-        <option value="">- keins -</option>
-        ${options}
-      </select>
-    </label>
-  `;
-}
-
-async function saveGatewayShipUnlockChapter(groupKey) {
-  if (!supabaseClient) return;
-  const group = getChapterGroupsForGateway().find((g) => g.key === groupKey);
-  try {
-    await patchSupabaseSiteConfig({ shipRepairUnlockChapterIds: group ? group.ids : [] });
-  } catch (err) {
-    console.error("Konnte nicht gespeichert werden:", err);
-  }
-}
 
 function buildGatewayChapterListHtml() {
   const locked = Array.isArray(siteConfig.lockedChapterIds) ? siteConfig.lockedChapterIds : [];
@@ -347,7 +312,6 @@ async function renderGatewayPage() {
 
       <h2 class="fh-ship-section-heading">Kapitel aktivieren/deaktivieren</h2>
       <div class="gateway-chapter-list">${buildGatewayChapterListHtml()}</div>
-      ${buildGatewayShipUnlockSelectHtml()}
 
       <h2 class="fh-ship-section-heading">Ändiis Spielothek</h2>
       ${buildGatewaySpielothekHtml()}

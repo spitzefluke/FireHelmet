@@ -38,9 +38,6 @@ function changePage(pageID) {
   updateRacePage(pageID);
   updateStreamRaetselPage(pageID);
 
-  if (typeof updateShipRepairPage === "function") {
-    updateShipRepairPage(pageID);
-  }
 
   if (typeof updateTournamentPage === "function") {
     updateTournamentPage(pageID);
@@ -103,9 +100,6 @@ function changePage(pageID) {
     updateLoginPage(pageID);
   }
 
-  if (typeof updateDetectiveCasePage === "function") {
-    updateDetectiveCasePage(pageID);
-  }
 
   if (typeof updateStandPage === "function") {
     updateStandPage(pageID);
@@ -870,10 +864,6 @@ async function checkCode() {
 
       if (match.avatarUnlock && typeof unlockAvatar === "function") {
         unlockAvatar(match.avatarUnlock);
-      }
-
-      if (match.toolUnlock && typeof unlockShipTool === "function") {
-        unlockShipTool(match.toolUnlock);
       }
 
       if (typeof triggerCodeSuccessEffect === "function") {

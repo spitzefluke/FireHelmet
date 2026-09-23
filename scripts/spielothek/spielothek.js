@@ -283,9 +283,8 @@ async function playSpielothekGame() {
     const newCurrency = Math.max(0, currentCurrency - abzug + spin.payout);
     const angewandtesDelta = newCurrency - currentCurrency;
 
-    // Lebenslange Zähler, Grundlage der täglichen Reparatur-Quests
-    // (siehe DAILY_QUESTS in ship-repair-data.js) - unabhängig vom
-    // Kontostand, der durch Einsätze/Käufe auch wieder sinkt.
+    // Lebenslange Zähler, unabhängig vom Kontostand, der durch
+    // Einsätze/Käufe auch wieder sinkt - Grundlage für Statistik.
     const currentGamesPlayed = data.games_played || 0;
     const currentGamesWon = data.games_won || 0;
     const currentTotalEarned = data.total_currency_earned || 0;

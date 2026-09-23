@@ -220,8 +220,6 @@
       <a class="fh-nav-item" tabindex="0" data-page="race" onclick="changePage('race')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-flag-checkered"></i></span><span class="fh-nav-label" data-i18n="menu.race">Wochenrennen</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="community-boss" onclick="changePage('community-boss')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-skull"></i></span><span class="fh-nav-label" data-i18n="menu.communityBoss">Community-Boss</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-question"></i></span><span class="fh-nav-label" data-i18n="menu.streamraetselShort">???</span></a>
-      <a class="fh-nav-item" tabindex="0" data-page="ship-repair" onclick="changePage('ship-repair')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-wrench"></i></span><span class="fh-nav-label" data-i18n="menu.shipRepair">Repariere das Schiff</span></a>
-      <a class="fh-nav-item" tabindex="0" data-page="detective-case" onclick="changePage('detective-case')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-fingerprint"></i></span><span class="fh-nav-label" data-i18n="menu.detectiveCase">Der Fall</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionMore">Mehr</p>
       <a class="fh-nav-item" tabindex="0" data-page="support" onclick="changePage('support')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-lifebuoy"></i></span><span class="fh-nav-label" data-i18n="menu.support">Support</span></a>
@@ -1365,38 +1363,6 @@
       <div id="streamraetsel-content" class="streamraetsel-unlocked"></div>
     </section>
 
-    <!-- =====================
-         REPARIERE DAS SCHIFF (eigene Menüseite)
-         Zeigt die vollständige, interaktive Reparatur (Werkzeuge,
-         Rätsel, Reparieren-Button) aus scripts/ship/ship-repair.js
-         (ship_repair/main in Firestore) - komplett unabhängig von
-         der "???"-Seite, immer erreichbar. Einzige Überschrift kommt
-         aus dem gerenderten Inhalt selbst (renderShipRepairPage()),
-         daher hier bewusst kein zusätzliches statisches <h1>.
-    ===================== -->
-    <section id="ship-repair" class="page">
-      <div class="page-content">
-        <div id="ship-repair-page-body"></div>
-      </div>
-    </section>
-
-    <!-- =====================
-         DER FALL DER VERSCHWUNDENEN DUBLONEN
-         Komplett JS-gerendert (scripts/detective/detective-case.js),
-         analog zu "Repariere das Schiff" oben - Ueberschrift/Untertitel
-         bleiben statisch, der eigentliche Fall-Inhalt (Geschichte,
-         Verdaechtige, Hinweise, Ergebnis) kommt aus renderDetectiveCasePage().
-    ===================== -->
-    <section id="detective-case" class="page">
-      <div class="page-content detective-page-content">
-        <div class="fh-page-head">
-          <p class="fh-page-kicker" data-i18n="detectiveCase.kicker">Die verschwundenen Dublonen</p>
-          <h1 class="fh-page-title" data-i18n="detectiveCase.title">Der Fall</h1>
-          <p class="fh-page-lead" data-i18n="detectiveCase.subtitle">Auf der FireHelmet herrscht Unruhe. 400 Dublonen sind aus der Schatzkammer verschwunden. Jemand aus der Crew muss sie genommen haben.</p>
-        </div>
-        <div id="detective-case-content"></div>
-      </div>
-    </section>
 
     <!-- =====================
          THE CHALLENGE (K.-o.-Turnier)
@@ -1730,8 +1696,6 @@
   <script src="scripts/characters/characters-data.js" defer></script>
   <script src="scripts/stories/stories.js" defer></script>
   <script src="scripts/characters/characters.js" defer></script>
-  <script src="scripts/detective/detective-case-data.js" defer></script>
-  <script src="scripts/detective/detective-case.js" defer></script>
   <script src="scripts/race/race.js" defer></script>
   <script src="scripts/community-boss/community-boss.js" defer></script>
   <script src="scripts/wheel/wheel.js" defer></script>
@@ -1746,8 +1710,6 @@
   <script src="scripts/shop/shop-rotation.js" defer></script>
   <script src="scripts/shop/shop.js" defer></script>
   <script src="scripts/streamraetsel/streamraetsel.js" defer></script>
-  <script src="scripts/ship/ship-repair-data.js" defer></script>
-  <script src="scripts/ship/ship-repair.js" defer></script>
   <script src="scripts/core/admin-gateway.js" defer></script>
   <script src="scripts/support/support.js" defer></script>
   <script src="scripts/rating/rating.js" defer></script>

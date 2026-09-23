@@ -139,50 +139,7 @@ const codes = [
   {
     hash: "cac24f302a4a4945ae50be622c14407102347c6527c127d530f16fbbdf9c9da9", // Hörspiel
     message: "Morgen 18:00 auf Spotify",
-  },
-
-  /* ------------------------------------------------------
-     "REPARIERE DAS SCHIFF"-EVENT: REPARATURCODES
-     Werden NICHT durch Hinweise/Suche gefunden, sondern durch
-     Lösen eines Rätsels im Event selbst (siehe scripts/ship/
-     ship-repair-data.js -> SHIP_PUZZLES). Das Rätsel-System
-     zeigt dem Spieler nach richtiger Antwort exakt den Code,
-     der hier unten registriert ist - dieselbe Codes-Seite/
-     derselbe checkCode() wie überall sonst, kein zweites
-     System. "toolUnlock" schaltet ein Reparatur-Werkzeug frei
-     (siehe unlockShipTool() in scripts/ship/ship-repair.js).
-  ------------------------------------------------------ */
-  {
-    hash: "ccdd73ff505f3432fd1a297becac991249d86627ac5f86aae57765de63f25153", // hammer-7k4x
-    message: "🔨 Der Hammer liegt jetzt in deinem Werkzeugkasten. Zeit, den Rumpf zu flicken.",
-    toolUnlock: "hammer",
-  },
-  {
-    hash: "c0980f837e7175583958225393be1393dcd55048bd27f32847be9b3a9bde5510", // saege-3q9p
-    message: "🪚 Die Säge ist jetzt deine. Der Mast wartet auf dich.",
-    toolUnlock: "saw",
-  },
-  {
-    hash: "b893f7cedf706e51ef4bf23ba44692016f7acd6652a15b2747f262e0861dd98d", // pinsel-5r2m
-    message: "🖌️ Der Pinsel gehört jetzt dir. Zeit für den letzten Anstrich.",
-    toolUnlock: "brush",
-  },
-  {
-    hash: "069c360ca57de943aeed22bbc6ea9d689dc4a832cd9c8122d4e6aba91fbbe70e", // hammer-9d2l
-    message: "🔨 Noch ein Hammer für die Werkzeugkiste.",
-    toolUnlock: "hammer",
-  },
-  {
-    hash: "d0e6cbfca5f729b7d719949cd4a67033a4212e643de84fbe7f547b3f20f39f1f", // saege-6t1v
-    message: "🪚 Noch eine Säge - der Rumpf braucht noch mehr Arbeit.",
-    toolUnlock: "saw",
-  },
-  {
-    hash: "fb311c2d661543ef2dbfaf2294dae0f226b9765e64b7922abf62167e5e7b03d6", // pinsel-8w4n
-    message: "🖌️ Ein zweiter Pinsel, für die letzten Details.",
-    toolUnlock: "brush",
-  },
-  {
+  },  {
     hash: "516f8d0acea001b6c788aab67b70f88c7c18eca88fb1a61cf922bb77a8af2769", // fire100
     message: "🪙 +100 Dublonen für dich!",
     currencyReward: 100,
@@ -270,23 +227,6 @@ const codes = [
     reward: "500 Pass-XP",
   },
 
-  /* ------------------------------------------------------
-     "DER FALL DER VERSCHWUNDENEN DUBLONEN" - siehe scripts/detective/.
-     Einziger Code, der GLEICHZEITIG Dublonen UND einen dauerhaften
-     Avatar vergibt - "avatarUnlockSecure" (statt des aelteren, rein
-     clientseitigen "avatarUnlock") laeuft ueber dieselbe atomare,
-     server-verifizierte Transaktion wie currencyReward (siehe
-     redeemCurrencyCode() in wheel.js + app.valid_avatar_unlock() in
-     supabase/game-migration/01-players-ship-progression.sql) - kann
-     also nicht per localStorage-Manipulation gefaelscht werden.
-  ------------------------------------------------------ */
-  {
-    hash: "5836a4ee100cdabe7e2cf26b1a73d9dba43e43b17e27a4d159de60ebc6b41d22", // flame-400-detektiv
-    message: "🕵️ Fall gelöst! +400 Dublonen und der exklusive Meisterdetektiv-Avatar sind jetzt dein.",
-    currencyReward: 400,
-    avatarUnlockSecure: "meisterdetektiv",
-    reward: "🕵️ Meisterdetektiv-Avatar",
-  },
 
   /* ------------------------------------------------------
      10 ZUFALLSCODES - "hacked"
