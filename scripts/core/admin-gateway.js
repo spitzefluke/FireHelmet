@@ -154,10 +154,9 @@ function formatDateForInput(isoOrConfigValue) {
 
 function buildGatewayStatusHtml() {
   const mainTarget = (siteConfig.mainCountdownTarget) || FIRE_HELMET_CONFIG.mainCountdownFallback;
-  // Dieses Datum steuert nur noch die "???"-Seite (siehe scripts/
-  // streamraetsel/streamraetsel.js) - die Schiffsreparatur haengt davon
-  // NICHT mehr ab (eigener Reparatur-Countdown pro Phase, siehe
-  // scripts/ship/ship-repair.js).
+  // Dieses Datum steuert nur die "???"-Seite (siehe scripts/
+  // streamraetsel/streamraetsel.js), trotz des historischen Namens
+  // shipEventUnlockDate.
   const streamTarget = typeof getStreamRaetselUnlockDate === "function" ? getStreamRaetselUnlockDate() : null;
   const lockedCount = Array.isArray(siteConfig.lockedChapterIds) ? siteConfig.lockedChapterIds.length : 0;
 
@@ -177,15 +176,6 @@ function buildGatewayStatusHtml() {
       </div>
     </div>
   `;
-}
-
-async function buildGatewayShipStatusHtml() {
-  // Die Schiffsreparatur ist seit der Personalisierung PRO SPIELER
-  // (ship_repair/{uid}, siehe scripts/ship/ship-repair.js) - es gibt
-  // dadurch keinen einzelnen "globalen" Fortschritt mehr, den man hier
-  // sinnvoll anzeigen könnte, ohne die Reparaturdaten aller Spieler
-  // aufzulisten (was die Security Rules bewusst nicht erlauben).
-  return `<p class="gateway-status-sub">Reparaturfortschritt ist jetzt pro Spieler persönlich - kein globaler Wert mehr.</p>`;
 }
 
 /* ------------------------------------------------------
@@ -261,7 +251,9 @@ const GATEWAY_FEATURE_FLAGS = [
   { key: "skillTree", label: "Skill-Baum", hinweis: "Der Fertigkeitsbaum mit Skillpunkten." },
 ];
 
-function buildGatewayLiveEventHtml() {
+/* Aufgeteilt in drei Teile des Menues (Steuerung, Geschenke,
+   Freigaben), damit keiner davon lang wird. */
+function buildGatewayFreigabenHtml() {
   const flags = (typeof siteConfig !== "undefined" && siteConfig.featureFlags) || {};
   const zeilen = GATEWAY_FEATURE_FLAGS.map((f) => {
     const an = flags[f.key] === true;
@@ -273,56 +265,66 @@ function buildGatewayLiveEventHtml() {
       </label>`;
   }).join("");
   return `
-    <p class="gateway-status-sub"><strong>Funktionen freigeben.</strong> Haken = fuer alle sichtbar. Ohne Haken bleibt die Funktion versteckt und nur fuer dich als Vorschau sichtbar.</p>
+    <p class="gateway-status-sub">Haken = fuer alle sichtbar. Ohne Haken bleibt die Funktion versteckt und nur fuer dich als Vorschau sichtbar.</p>
     ${zeilen}
+  `;
+}
 
-    <h3 class="gateway-unter-titel">Nachricht an alle</h3>
-    <div class="gateway-form-row">
-      <input type="text" id="gw-live-msg" class="code-input" maxlength="280" placeholder="Deine Nachricht ...">
-      <input type="text" id="gw-live-von" class="code-input" maxlength="60" placeholder="Dein Name" style="max-width:160px">
-      <input type="color" id="gw-live-farbe" value="#f0c96a" title="Farbe" style="width:48px;padding:2px">
-    </div>
-    <div class="gateway-btn-reihe">
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveMessage(false)">Bei mir testen</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveMessage(true)">An alle senden</button>
-    </div>
+/* Eine Zeile der Effekt-Tabelle. Impulse (Konfetti ...) haben je
+   einen Knopf, Dauerzustaende (Disco, Buehne) je An und Aus. */
+function gwLiveZeile(name, test, alle) {
+  const knoepfe = (liste, klasse) => liste.map(([text, aufruf]) =>
+    `<button type="button" class="gw-live-knopf ${klasse}" onclick="${aufruf}">${text}</button>`).join("");
+  return `
+    <div class="gw-live-zeile" role="row">
+      <span class="gw-live-name" role="rowheader">${name}</span>
+      <span class="gw-live-zelle" role="cell">${knoepfe(test, "")}</span>
+      <span class="gw-live-zelle" role="cell">${knoepfe(alle, "ist-alle")}</span>
+    </div>`;
+}
 
-    <h3 class="gateway-unter-titel">Effekte</h3>
-    <div class="gateway-btn-reihe">
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('konfetti', false)">Konfetti (Test)</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('konfetti', true)">Konfetti an alle</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('blitz', false)">Blitz (Test)</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('blitz', true)">Blitz an alle</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('sound', false)">Sound (Test)</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('sound', true)">Sound an alle</button>
+function buildGatewayLiveSteuerungHtml() {
+  return `
+    <div class="gw-live-nachricht">
+      <input type="text" id="gw-live-msg" class="gw-feld gw-feld-breit" maxlength="280" placeholder="Nachricht an alle ..." aria-label="Nachricht">
+      <input type="text" id="gw-live-von" class="gw-feld" maxlength="60" placeholder="Dein Name" aria-label="Absender">
+      <input type="color" id="gw-live-farbe" class="gw-farbe" value="#f0c96a" title="Farbe der Banderole" aria-label="Farbe">
+      <button type="button" class="gw-live-knopf" onclick="gwLiveMessage(false)">Bei mir testen</button>
+      <button type="button" class="gw-live-knopf ist-alle" onclick="gwLiveMessage(true)">An alle senden</button>
     </div>
+    <p id="gw-live-status" class="gw-live-status" role="status" aria-live="polite"></p>
 
-    <h3 class="gateway-unter-titel">Disco (Musik kommt)</h3>
-    <div class="gateway-btn-reihe">
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(true, false)">Disco testen</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(false, false)">Test aus</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(true, true)">Disco AN (alle)</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(false, true)">Disco AUS (alle)</button>
+    <div class="gw-live-tabelle" role="table" aria-label="Effekte">
+      <div class="gw-live-zeile gw-live-kopf" role="row">
+        <span role="columnheader">Effekt</span>
+        <span role="columnheader">Nur bei mir</span>
+        <span role="columnheader">An alle</span>
+      </div>
+      ${gwLiveZeile("Konfetti", [["Testen", "gwLivePulse('konfetti', false)"]], [["Senden", "gwLivePulse('konfetti', true)"]])}
+      ${gwLiveZeile("Blitz", [["Testen", "gwLivePulse('blitz', false)"]], [["Senden", "gwLivePulse('blitz', true)"]])}
+      ${gwLiveZeile("Sound", [["Testen", "gwLivePulse('sound', false)"]], [["Senden", "gwLivePulse('sound', true)"]])}
+      ${gwLiveZeile("Disco", [["An", "gwLiveDisco(true, false)"], ["Aus", "gwLiveDisco(false, false)"]], [["An", "gwLiveDisco(true, true)"], ["Aus", "gwLiveDisco(false, true)"]])}
+      ${gwLiveZeile("Live-Bühne", [["An", "gwLiveTakeover(true, false)"], ["Aus", "gwLiveTakeover(false, false)"]], [["An", "gwLiveTakeover(true, true)"], ["Aus", "gwLiveTakeover(false, true)"]])}
     </div>
+    <p class="gateway-status-sub">Die Live-Bühne schickt alle auf eine leere Fläche, auf der deine Effekte wirken.</p>
+  `;
+}
 
-    <h3 class="gateway-unter-titel">Bildschirm-Uebernahme</h3>
-    <p class="gateway-status-sub">Schickt alle auf eine leere Live-Buehne. Dort greifen deine Effekte oben.</p>
-    <div class="gateway-btn-reihe">
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(true, false)">Buehne testen</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(false, false)">Test aus</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(true, true)">Buehne START (alle)</button>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(false, true)">Buehne STOP (alle)</button>
+function buildGatewayLiveGeschenkeHtml() {
+  return `
+    <div class="gw-live-nachricht">
+      <label class="gw-feld-label">Dublonen
+        <input type="number" id="gw-live-dub" class="gw-feld" min="1" max="5000" value="100">
+      </label>
+      <button type="button" class="gw-live-knopf ist-alle" onclick="gwLiveGrant('dublonen')">Dublonen an alle</button>
     </div>
-
-    <h3 class="gateway-unter-titel">Geschenke an alle</h3>
-    <div class="gateway-form-row">
-      <label>Dublonen<br><input type="number" id="gw-live-dub" class="code-input" min="1" max="5000" value="100" style="max-width:120px"></label>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveGrant('dublonen')">Dublonen an alle</button>
+    <div class="gw-live-nachricht">
+      <label class="gw-feld-label">Avatar-ID
+        <input type="text" id="gw-live-av" class="gw-feld" placeholder="z.B. meisterdetektiv">
+      </label>
+      <button type="button" class="gw-live-knopf ist-alle" onclick="gwLiveGrant('avatar')">Avatar an alle</button>
     </div>
-    <div class="gateway-form-row">
-      <label>Avatar-ID<br><input type="text" id="gw-live-av" class="code-input" placeholder="z.B. meisterdetektiv" style="max-width:200px"></label>
-      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveGrant('avatar')">Avatar an alle</button>
-    </div>
+    <p id="gw-geschenk-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <p class="gateway-status-sub">Jeder anwesende Spieler bekommt es genau einmal. Der Betrag wird server-seitig verrechnet.</p>
   `;
 }
@@ -333,32 +335,57 @@ function buildGatewayLiveEventHtml() {
    darf das laut RLS) bzw. loest einen Grant ueber die RPC aus.
    "Bei mir testen" ruft stattdessen direkt den Effekt im eigenen
    Browser auf (window.fhLiveVorschau), sendet also NICHTS.
+
+   Rueckmeldung: supabase-js wirft bei Fehlern nicht, sondern gibt
+   { error } zurueck - und ein von RLS geblocktes UPDATE aendert
+   still null Zeilen. Deshalb .select() und die Zeilen zaehlen,
+   sonst glaubt man mitten im Event, es sei etwas angekommen.
 ------------------------------------------------------ */
-async function liveSend(update) {
+function gwLiveStatus(id, text, istFehler) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.classList.toggle("ist-fehler", !!istFehler);
+}
+
+async function liveSend(update, was) {
   if (!supabaseClient) return;
-  try { await supabaseClient.from("live_event").update(update).eq("id", 1); }
-  catch (err) { console.error("Live-Event senden fehlgeschlagen:", err); }
+  gwLiveStatus("gw-live-status", "Sende ...", false);
+  try {
+    const { data, error } = await supabaseClient.from("live_event").update(update).eq("id", 1).select("id");
+    if (error) throw error;
+    if (!Array.isArray(data) || data.length === 0) {
+      gwLiveStatus("gw-live-status", "Nichts angekommen: keine Schreibrechte. Ist Migration 23 eingespielt und bist du als Admin angemeldet?", true);
+      return;
+    }
+    gwLiveStatus("gw-live-status", `✓ ${was} an alle gesendet (${new Date().toLocaleTimeString("de-DE")})`, false);
+  } catch (err) {
+    console.error("Live-Event senden fehlgeschlagen:", err);
+    gwLiveStatus("gw-live-status", "Senden fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
 }
 function liveJetzt() { return new Date().toISOString(); }
+
+const GW_LIVE_NAMEN = { konfetti: "Konfetti", blitz: "Blitz", sound: "Sound" };
 
 function gwLiveMessage(anAlle) {
   const text = ((document.getElementById("gw-live-msg") || {}).value || "").trim();
   const farbe = (document.getElementById("gw-live-farbe") || {}).value || "#f0c96a";
   const von = ((document.getElementById("gw-live-von") || {}).value || "").trim();
-  if (!text) return;
-  if (anAlle) liveSend({ message: text, message_color: farbe, message_from: von || null, message_at: liveJetzt() });
+  if (!text) { gwLiveStatus("gw-live-status", "Erst eine Nachricht eingeben.", true); return; }
+  if (anAlle) liveSend({ message: text, message_color: farbe, message_from: von || null, message_at: liveJetzt() }, "Nachricht");
   else if (window.fhLiveVorschau) window.fhLiveVorschau.banderole(text, farbe, von);
 }
 function gwLiveDisco(an, anAlle) {
-  if (anAlle) liveSend({ disco: !!an });
+  if (anAlle) liveSend({ disco: !!an }, an ? "Disco AN" : "Disco AUS");
   else if (window.fhLiveVorschau) (an ? window.fhLiveVorschau.discoAn() : window.fhLiveVorschau.discoAus());
 }
 function gwLivePulse(kind, anAlle) {
-  if (anAlle) liveSend({ pulse_kind: kind, pulse_at: liveJetzt() });
+  if (anAlle) liveSend({ pulse_kind: kind, pulse_at: liveJetzt() }, GW_LIVE_NAMEN[kind] || kind);
   else if (window.fhLiveVorschau) window.fhLiveVorschau.pulse(kind);
 }
 function gwLiveTakeover(an, anAlle) {
-  if (anAlle) liveSend({ takeover: !!an });
+  if (anAlle) liveSend({ takeover: !!an }, an ? "Live-Bühne AN" : "Live-Bühne AUS");
   else if (window.fhLiveVorschau) (an ? window.fhLiveVorschau.uebernahmeAn() : window.fhLiveVorschau.uebernahmeAus());
 }
 async function gwLiveGrant(art) {
@@ -366,13 +393,20 @@ async function gwLiveGrant(art) {
   let wert = 0, avatar = null;
   if (art === "dublonen") {
     wert = parseInt((document.getElementById("gw-live-dub") || {}).value, 10) || 0;
-    if (wert <= 0) return;
+    if (wert <= 0 || wert > 5000) { gwLiveStatus("gw-geschenk-status", "Dublonen zwischen 1 und 5000.", true); return; }
   } else {
     avatar = ((document.getElementById("gw-live-av") || {}).value || "").trim();
-    if (!avatar) return;
+    if (!avatar) { gwLiveStatus("gw-geschenk-status", "Erst eine Avatar-ID eingeben.", true); return; }
   }
-  try { await supabaseClient.rpc("live_grant_ausloesen", { p_art: art, p_wert: wert, p_avatar: avatar }); }
-  catch (err) { console.error("Grant fehlgeschlagen:", err); }
+  gwLiveStatus("gw-geschenk-status", "Verteile ...", false);
+  try {
+    const { error } = await supabaseClient.rpc("live_grant_ausloesen", { p_art: art, p_wert: wert, p_avatar: avatar });
+    if (error) throw error;
+    gwLiveStatus("gw-geschenk-status", `✓ ${art === "dublonen" ? wert + " Dublonen" : "Avatar „" + avatar + "“"} an alle verteilt`, false);
+  } catch (err) {
+    console.error("Grant fehlgeschlagen:", err);
+    gwLiveStatus("gw-geschenk-status", "Verteilen fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
 }
 
 async function saveGatewayFeatureFlag(name, on) {
@@ -386,6 +420,122 @@ async function saveGatewayFeatureFlag(name, on) {
   } catch (err) {
     console.error("Feature-Flag konnte nicht gespeichert werden:", err);
   }
+}
+
+/* ------------------------------------------------------
+   MENUE DES ADMIN-GATES
+   ---------------------------------------------------
+   Statt 16 Abschnitten untereinander: sechs Bereiche oben, bei
+   mehreren Teilen eine kleine zweite Reihe darunter. Sichtbar ist
+   immer genau EIN Teil. Alle Teile stehen trotzdem im DOM (nur
+   hidden), weil die Lade-Funktionen (ladeGatewayBoss & Co.) per
+   id in sie hineinschreiben.
+
+   renderGatewayPage() zeichnet nach fast jeder Admin-Aktion alles
+   neu - deshalb merkt sich gwAktiv den gewaehlten Teil und wird
+   danach wieder angewandt, sonst spraenge das Menue nach jedem
+   Klick zurueck auf "Uebersicht".
+------------------------------------------------------- */
+const GW_SVG = (pfade) =>
+  `<svg class="gw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${pfade}</svg>`;
+
+/* Symbole: lucide (ISC) - layout-dashboard, radio, globe, gamepad-2, users, message-circle */
+const GW_MENUE = [
+  { id: "uebersicht", titel: "Übersicht",
+    icon: GW_SVG('<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>'),
+    teile: [{ id: "uebersicht", kurz: "Übersicht", titel: "Übersicht" }] },
+  { id: "live", titel: "Live-Event",
+    icon: GW_SVG('<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/>'),
+    teile: [
+      { id: "live", kurz: "Steuerung", titel: "Live-Steuerung" },
+      { id: "geschenke", kurz: "Geschenke", titel: "Geschenke an alle" },
+      { id: "freigaben", kurz: "Freigaben", titel: "Funktionen freigeben" },
+    ] },
+  { id: "seite", titel: "Seite",
+    icon: GW_SVG('<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>'),
+    teile: [
+      { id: "countdown", kurz: "Countdown", titel: "Countdown" },
+      { id: "kapitel", kurz: "Kapitel", titel: "Kapitel aktivieren/deaktivieren" },
+      { id: "band", kurz: "Ankündigung", titel: "Ankündigung & Wartung" },
+    ] },
+  { id: "spiele", titel: "Spiele",
+    icon: GW_SVG('<line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/>'),
+    teile: [
+      { id: "spielothek", kurz: "Spielothek", titel: "Ändiis Spielothek" },
+      { id: "turnier", kurz: "Turnier", titel: "THE CHALLENGE (Turnier)" },
+      { id: "rennen", kurz: "Wochenrennen", titel: "Wochenrennen" },
+      { id: "boss", kurz: "Boss", titel: "Community-Boss" },
+      { id: "codes", kurz: "Geheimcodes", titel: "Geheimcodes" },
+    ] },
+  { id: "spieler", titel: "Spieler",
+    icon: GW_SVG('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+    teile: [
+      { id: "spieler", kurz: "Verwalten", titel: "Spieler verwalten" },
+      { id: "identitaet", kurz: "Identität", titel: "Spieler-Identität" },
+    ] },
+  { id: "community", titel: "Community",
+    icon: GW_SVG('<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>'),
+    teile: [
+      { id: "support", kurz: "Support", titel: "Support-Meldungen" },
+      { id: "caps", kurz: "Cap-Zusagen", titel: "Cap-Zusagen" },
+      { id: "verlosung", kurz: "Verlosung", titel: "Verlosung" },
+    ] },
+];
+
+const GW_SPEICHER = "fhGatewayMenue";
+
+/* Gewaehlter Bereich + je Bereich der zuletzt offene Teil. */
+let gwAktiv = (function () {
+  try {
+    const roh = JSON.parse(localStorage.getItem(GW_SPEICHER) || "null");
+    if (roh && typeof roh.gruppe === "string" && roh.teil && typeof roh.teil === "object") return roh;
+  } catch (e) { /* privater Modus o.ae. - dann eben ab Uebersicht */ }
+  return { gruppe: "uebersicht", teil: {} };
+})();
+
+function gwZeige(gruppeId, teilId) {
+  const gruppe = GW_MENUE.find((g) => g.id === gruppeId) || GW_MENUE[0];
+  const wunsch = teilId || gwAktiv.teil[gruppe.id];
+  const teil = gruppe.teile.find((t) => t.id === wunsch) || gruppe.teile[0];
+
+  gwAktiv.gruppe = gruppe.id;
+  gwAktiv.teil[gruppe.id] = teil.id;
+
+  document.querySelectorAll("[data-gw-gruppe]").forEach((b) => {
+    b.setAttribute("aria-current", b.dataset.gwGruppe === gruppe.id ? "true" : "false");
+  });
+  document.querySelectorAll("[data-gw-unter]").forEach((u) => {
+    u.hidden = u.dataset.gwUnter !== gruppe.id;
+  });
+  document.querySelectorAll("[data-gw-teil-knopf]").forEach((b) => {
+    b.setAttribute("aria-current", b.dataset.gwTeilKnopf === teil.id ? "true" : "false");
+  });
+  document.querySelectorAll("[data-gw-teil]").forEach((p) => {
+    p.hidden = p.dataset.gwTeil !== teil.id;
+  });
+
+  try { localStorage.setItem(GW_SPEICHER, JSON.stringify(gwAktiv)); } catch (e) { /* egal */ }
+}
+
+function buildGatewayMenueHtml(inhalte) {
+  const gruppen = GW_MENUE.map((g) =>
+    `<button type="button" class="gw-gruppe" data-gw-gruppe="${g.id}" aria-current="false" onclick="gwZeige('${g.id}')">${g.icon}<span>${g.titel}</span></button>`
+  ).join("");
+
+  const unterReihen = GW_MENUE.filter((g) => g.teile.length > 1).map((g) =>
+    `<div class="gw-unter" data-gw-unter="${g.id}" hidden>${g.teile.map((t) =>
+      `<button type="button" class="gw-teil-knopf" data-gw-teil-knopf="${t.id}" aria-current="false" onclick="gwZeige('${g.id}', '${t.id}')">${t.kurz}</button>`
+    ).join("")}</div>`
+  ).join("");
+
+  const teile = GW_MENUE.flatMap((g) => g.teile).map((t) =>
+    `<section class="gw-teil" data-gw-teil="${t.id}" hidden>
+      <h2 class="gw-teil-titel fh-visually-hidden">${t.titel.replace(/&/g, "&amp;")}</h2>
+      ${inhalte[t.id] || ""}
+    </section>`
+  ).join("");
+
+  return `<nav class="gw-menue" aria-label="Admin-Bereiche">${gruppen}</nav>${unterReihen}${teile}`;
 }
 
 async function renderGatewayPage() {
@@ -431,21 +581,14 @@ async function renderGatewayPage() {
   const mainTarget = siteConfig.mainCountdownTarget || FIRE_HELMET_CONFIG.mainCountdownFallback;
   const shipTarget = siteConfig.shipEventUnlockDate || FIRE_HELMET_CONFIG.shipEventUnlockDate;
 
-  container.innerHTML = `
-    <div class="gateway-panel">
-      <p class="gateway-welcome">✅ Angemeldet als ${getGoogleEmail(user)} <button type="button" class="gateway-logout-link" onclick="logoutAdmin()">Abmelden</button></p>
-
-      <h2 class="fh-ship-section-heading">Statusbrett</h2>
+  const inhalte = {
+    uebersicht: `
       <div id="gateway-statusbrett">Lade Zahlen ...</div>
-
-      <h2 class="fh-ship-section-heading">Status</h2>
-      ${buildGatewayStatusHtml()}
-      <div id="gateway-ship-status-sub"></div>
-
-      <h2 class="fh-ship-section-heading">Live-Event</h2>
-      ${buildGatewayLiveEventHtml()}
-
-      <h2 class="fh-ship-section-heading">Countdown</h2>
+      ${buildGatewayStatusHtml()}`,
+    live: buildGatewayLiveSteuerungHtml(),
+    geschenke: buildGatewayLiveGeschenkeHtml(),
+    freigaben: buildGatewayFreigabenHtml(),
+    countdown: `
       <div class="gateway-form-row">
         <label>Haupt-Countdown Endzeit<br>
           <input type="datetime-local" id="gateway-main-countdown" class="code-input" value="${formatDateForInput(mainTarget)}">
@@ -455,46 +598,28 @@ async function renderGatewayPage() {
         </label>
       </div>
       <button type="button" class="code-button" onclick="saveGatewayCountdowns()">Countdown speichern</button>
-      <p id="gateway-save-status" class="wheel-status"></p>
+      <p id="gateway-save-status" class="wheel-status"></p>`,
+    kapitel: `<div class="gateway-chapter-list">${buildGatewayChapterListHtml()}</div>`,
+    band: buildGatewayBandHtml(),
+    spielothek: buildGatewaySpielothekHtml(),
+    turnier: `<div id="gateway-tournament-sub">Lade Turnierstatus...</div>`,
+    rennen: buildGatewayRennenHtml(),
+    boss: `<div id="gateway-boss">Lade Boss ...</div>`,
+    codes: buildGatewayCodesHtml(),
+    spieler: buildGatewaySpielerHtml(),
+    identitaet: buildGatewayIdentitaetHtml(),
+    support: `<div id="gateway-support">Lade Meldungen ...</div>`,
+    caps: `<div id="gateway-caps">Lade Caps ...</div>`,
+    verlosung: `<div id="gateway-verlosung">Lade Verlosung ...</div>`,
+  };
 
-      <h2 class="fh-ship-section-heading">Kapitel aktivieren/deaktivieren</h2>
-      <div class="gateway-chapter-list">${buildGatewayChapterListHtml()}</div>
-
-      <h2 class="fh-ship-section-heading">Ändiis Spielothek</h2>
-      ${buildGatewaySpielothekHtml()}
-
-      <h2 class="fh-ship-section-heading">THE CHALLENGE (Turnier)</h2>
-      <div id="gateway-tournament-sub">Lade Turnierstatus...</div>
-
-      <h2 class="fh-ship-section-heading">Spieler verwalten</h2>
-      ${buildGatewaySpielerHtml()}
-
-      <h2 class="fh-ship-section-heading">Ankündigung &amp; Wartung</h2>
-      ${buildGatewayBandHtml()}
-
-      <h2 class="fh-ship-section-heading">Cap-Zusagen</h2>
-      <div id="gateway-caps">Lade Caps ...</div>
-
-      <h2 class="fh-ship-section-heading">Support-Meldungen</h2>
-      <div id="gateway-support">Lade Meldungen ...</div>
-
-      <h2 class="fh-ship-section-heading">Verlosung</h2>
-      <div id="gateway-verlosung">Lade Verlosung ...</div>
-
-      <h2 class="fh-ship-section-heading">Community-Boss</h2>
-      <div id="gateway-boss">Lade Boss ...</div>
-
-      <h2 class="fh-ship-section-heading">Geheimcodes</h2>
-      ${buildGatewayCodesHtml()}
-
-      <h2 class="fh-ship-section-heading">Wochenrennen</h2>
-      ${buildGatewayRennenHtml()}
-
-      <h2 class="fh-ship-section-heading">Spieler-Identität</h2>
-      ${buildGatewayIdentitaetHtml()}
-
+  container.innerHTML = `
+    <div class="gateway-panel">
+      <p class="gateway-welcome">✅ Angemeldet als ${getGoogleEmail(user)} <button type="button" class="gateway-logout-link" onclick="logoutAdmin()">Abmelden</button></p>
+      ${buildGatewayMenueHtml(inhalte)}
     </div>
   `;
+  gwZeige(gwAktiv.gruppe);
 
   ladeGatewayStatusbrett();
   ladeGatewayBoss();
@@ -502,11 +627,6 @@ async function renderGatewayPage() {
   ladeGatewaySupport();
   ladeGatewayVerlosung();
   ladeGatewayAngriffMarker();
-
-  buildGatewayShipStatusHtml().then((html) => {
-    const sub = document.getElementById("gateway-ship-status-sub");
-    if (sub) sub.innerHTML = html;
-  });
 
   buildGatewayTournamentHtml().then((html) => {
     const sub = document.getElementById("gateway-tournament-sub");

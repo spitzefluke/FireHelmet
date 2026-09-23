@@ -87,6 +87,9 @@
   .tournament-play-button,
   .tournament-enter-button,
   .gateway-inline-btn,
+  .gw-gruppe,
+  .gw-teil-knopf,
+  .gw-live-knopf,
   .combo-check-btn,
   .combo-audio-btn
 ) {
@@ -131,6 +134,9 @@
   .tournament-play-button,
   .tournament-enter-button,
   .gateway-inline-btn,
+  .gw-gruppe,
+  .gw-teil-knopf,
+  .gw-live-knopf,
   .combo-check-btn
 ):active:not([disabled]):not(.disabled) {
   transform: scale(.97);
@@ -210,6 +216,9 @@
   .tournament-play-button,
   .tournament-enter-button,
   .gateway-inline-btn,
+  .gw-gruppe,
+  .gw-teil-knopf,
+  .gw-live-knopf,
   .gateway-chapter-row,
   .gateway-logout-link,
   .fh-gateway-link,
