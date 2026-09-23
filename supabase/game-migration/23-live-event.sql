@@ -8,12 +8,22 @@
 
    WIE ES ZU ALLEN KOMMT
    Ueber Supabase Realtime (Postgres Changes auf dieser Tabelle).
-   WICHTIG FUER DEN BETREIBER: Realtime muss im Supabase-Dashboard
-   fuer public.live_event UND public.live_grants eingeschaltet
-   werden (Database -> Replication / Realtime). Ohne das bleibt
-   das Event stumm - der Browser hat aber zusaetzlich ein kurzes
-   Polling als Rueckfall (alle paar Sekunden), damit es auch dann
-   funktioniert, nur mit etwas Verzoegerung.
+   WICHTIG FUER DEN BETREIBER: Realtime muss fuer public.live_event
+   eingeschaltet werden, d.h. die Tabelle gehoert in die Publikation
+   supabase_realtime. public.live_grants braucht das NICHT - die
+   Browser abonnieren nur live_event und lesen den Grant beim
+   Einloesen ueber die RPC. Einmalig im SQL-Editor (idempotent):
+
+     do $$ begin
+       if not exists (select 1 from pg_publication_tables
+                       where pubname = 'supabase_realtime'
+                         and schemaname = 'public' and tablename = 'live_event') then
+         alter publication supabase_realtime add table public.live_event;
+       end if;
+     end $$;
+
+   Ohne Realtime faellt der Browser auf ein Polling alle 5 s
+   zurueck: das Event kommt trotzdem an, nur verzoegert.
 
    WER DARF SCHREIBEN
    Nur der Admin (app.is_admin() in der RLS-Policy) - genauso wie
