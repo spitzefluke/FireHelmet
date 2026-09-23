@@ -154,6 +154,11 @@ bzw. `data-i18n-placeholder="…"`, JS nutzt `t(key, fallback)`. Nach dynamische
 
 ## Was schon einmal schiefgegangen ist
 
+- **`window.supabaseClient` ist immer `undefined`** — auch im Produktivcode, nicht nur im
+  Test (siehe „Im Browser prüfen“). Eine Prüfung `if (!window.supabaseClient) return;` legte
+  Skill-Baum, Live-Event und Admin-Erkennung still lahm, ohne einen einzigen Fehler zu werfen.
+  Prüfen mit `typeof supabaseClient !== "undefined" && supabaseClient`. Dasselbe gilt für
+  jedes andere top-level `let`/`const`.
 - **`pkill -f muster` erwischt die eigene Shell**, weil das Muster in deren Kommandozeile
   steht. Über die PID beenden (`ss -lptn 'sport = :8765'`).
 - **Vorlagen mit Platzhaltern werden ausgeführt.** Ein `INSERT` mit `'DEIN-CODE-HIER'` läuft

@@ -29,6 +29,11 @@
   const RUHIG = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
   const DISCO_MUSIK = "music/disco.mp3"; // Der Streamer legt hier seine Datei ab; fehlt sie, laeuft Disco ohne Ton.
 
+  /* supabaseClient ist ein top-level let in supabase-client.js und
+     haengt deshalb NICHT an window - window.supabaseClient waere
+     immer undefined (siehe CLAUDE.md). Direkt pruefen. */
+  function dbDa() { return typeof supabaseClient !== "undefined" && !!supabaseClient; }
+
   function esc(v) { return typeof escapeHtml === "function" ? escapeHtml(v == null ? "" : v) : String(v == null ? "" : v); }
 
   /* ------------------------------------------------------
@@ -164,7 +169,7 @@
   let letzte = { message_at: null, pulse_at: null, grant_at: null, disco: false, takeover: false, erstesMal: true };
 
   async function grantEinloesen(grantId) {
-    if (!grantId || !window.supabaseClient) return;
+    if (!grantId || !dbDa()) return;
     try {
       const { data, error } = await withSupabaseRlsColdStartRetry(function () {
         return supabaseClient.rpc("live_grant_einloesen", { p_grant: grantId });
@@ -204,7 +209,7 @@
   }
 
   async function holen() {
-    if (!window.supabaseClient) return;
+    if (!dbDa()) return;
     try {
       const { data, error } = await withSupabaseRlsColdStartRetry(function () {
         return supabaseClient.from("live_event").select("*").eq("id", 1).maybeSingle();
@@ -215,7 +220,7 @@
   }
 
   function starten() {
-    if (!window.supabaseClient) return;
+    if (!dbDa()) return;
     holen(); // Grundzustand
     // Realtime-Abo (wenn im Dashboard aktiviert)
     try {
