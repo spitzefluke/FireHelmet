@@ -52,9 +52,22 @@
     const el = schicht("fh-live-banderole", "fh-live-banderole");
     const sicherFarbe = /^#[0-9a-fA-F]{3,8}$/.test(farbe || "") ? farbe : "var(--fh-gold, #f0c96a)";
     el.style.setProperty("--live-farbe", sicherFarbe);
-    el.innerHTML =
-      (von ? '<span class="fh-live-von">' + esc(von) + '</span>' : "") +
-      '<span class="fh-live-text">' + esc(text) + '</span>';
+    /* Per textContent statt innerHTML aufbauen: der Text landet als
+       reiner Textknoten und kann nie als Markup gelesen werden, egal
+       was in der Zeile steht. (escapeHtml wuerde hier zwar reichen,
+       aber der textContent-Umweg im Escaper laesst CodeQL zu Recht
+       aufhorchen - so gibt es die Stelle gar nicht erst.) */
+    el.textContent = "";
+    if (von) {
+      const vonEl = document.createElement("span");
+      vonEl.className = "fh-live-von";
+      vonEl.textContent = von;
+      el.appendChild(vonEl);
+    }
+    const textEl = document.createElement("span");
+    textEl.className = "fh-live-text";
+    textEl.textContent = text;
+    el.appendChild(textEl);
     el.classList.remove("ist-weg");
     // Reflow erzwingen, damit die Einblend-Animation neu startet
     void el.offsetWidth;
