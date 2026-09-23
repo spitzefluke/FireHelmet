@@ -69,9 +69,6 @@
 .boss-hit-number,
 .fh-boss-stat-value,
 .fh-podium-score,
-.fh-ship-phase-timer,
-.fh-ship-phase-timer-value,
-.fh-ship-overall-progress-count,
 .fh-levelpath-node-number,
 .piratenpass-node-number,
 .shop-item-price,
@@ -2047,7 +2044,6 @@ h1.fh-page-title,
     scroll-behavior: auto !important;
   }
 }
-
 
 /* Platzhalter fuer Bereiche, die keine Liste sind (Turniertafel,
    Ergebnisfeld der Verlosung). Dieselben Balken wie oben, nur

@@ -123,7 +123,7 @@ const PASS_XP_PER_ACTION = {
 /* ------------------------------------------------------
    PIRATENPASS - SAISONS
    ---------------------------------------------------
-   Statische Liste (wie ship-repair-data.js/community-boss-data.js) -
+   Statische Liste (wie community-boss-data.js) -
    ein neuer Pass = ein neuer Eintrag hier (siehe Auftrag Punkt 11:
    "spaeter problemlos ein neuer Pass angelegt werden kann"). passId
    MUSS zusaetzlich im CHECK-Constraint progression_pass_id_valid

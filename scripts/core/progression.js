@@ -367,7 +367,10 @@ async function awardActionXp(actionKey) {
     const currentPass = getCurrentPirateSeason();
 
     const fields = {};
-    if (mainAmount) fields.xp = oldXp + mainAmount;
+    /* Skill-Bonus "xpbonus" auf die Haupt-XP. Klein, bleibt im
+       +500-Deckel von valid_progression_write. */
+    const xpFaktor = 1 + (typeof fhSkillBonus === "function" ? fhSkillBonus("xpbonus") : 0);
+    if (mainAmount) fields.xp = oldXp + Math.round(mainAmount * xpFaktor);
 
     if (currentPass && passAmount) {
       if (data.pass_id === currentPass.passId) {

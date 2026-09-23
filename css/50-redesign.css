@@ -185,7 +185,6 @@
   50%      { box-shadow: 0 0 16px rgba(var(--rarity-glow),.3); }
 }
 
-
 @keyframes fhRarityPulse {
   0%, 100% { box-shadow: 0 0 0 rgba(var(--rarity-glow),0); }
   50%      { box-shadow: 0 0 24px rgba(var(--rarity-glow),.4); }
@@ -195,7 +194,6 @@
   opacity: .5;
   animation-duration: 6s;
 }
-
 
 @keyframes fhRarityPulseMythic {
   0%, 100% { box-shadow: 0 0 0 rgba(255,85,85,0); }
@@ -1150,12 +1148,7 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
    "REPARIERE DAS SCHIFF" - EVENT
    Baut bewusst auf den bestehenden .streamraetsel-* Klassen
    (Layout/Countdown) auf und überschreibt nur die Farbgebung
-   (rot/Glitch -> Gold/Feuer, damit es zur restlichen Seite
-   passt) über die zusätzlichen .fh-ship-* Klassen.
-===================================================== */
-
-/* --- Vorschau/Preview-Gate Hinweis (Punkt 5) --- */
-.fh-dev-badge {
+   (rot/Glitch -> Gold/Feuer {
   display: inline-block;
   margin-top: 18px;
   padding: 8px 18px;
@@ -1194,66 +1187,14 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   padding: 10px 16px;
 }
 
-/* --- Gesperrte Ansicht: kaputtes Schiff + Countdown --- */
-.fh-ship-wreck-scene {
-  position: relative;
-  width: min(480px, 88vw);
-  margin: 0 auto 6px;
-}
-
-.fh-ship-wreck-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  filter: drop-shadow(0 20px 30px rgba(0,0,0,.6));
-  position: relative;
-  z-index: 1;
-}
-
-.fh-ship-wreck-fog {
-  position: absolute;
-  inset: -25% -10% 5% -10%;
-  background: radial-gradient(ellipse 65% 55% at 50% 55%, rgba(100,112,128,.45), transparent 70%);
-  filter: blur(16px);
-  animation: fhShipSmokeDrift 9s ease-in-out infinite;
-  pointer-events: none;
-}
-
 @keyframes fhShipSmokeDrift {
   0%, 100% { transform: translate(0, 0) scale(1); opacity: .85; }
   50%      { transform: translate(2%, -3%) scale(1.06); opacity: 1; }
 }
 
-.fh-ship-badge {
-  background: rgba(240,201,106,.15);
-  border-color: rgba(240,201,106,.55);
-  color: var(--fh-gold-bright);
-}
-
-.fh-ship-badge::before {
-  background: var(--fh-fire);
-  box-shadow: 0 0 10px var(--fh-fire);
-}
-
-.fh-ship-title {
-  color: #fff2d6;
-  text-shadow: 0 0 60px rgba(255,106,42,.55);
-  animation: fhShipTitleFlicker 4.5s ease-in-out infinite;
-}
-
 @keyframes fhShipTitleFlicker {
   0%, 100% { opacity: 1; }
   50%      { opacity: .93; }
-}
-
-.fh-ship-lead {
-  color: #ffd9a8;
-  font-style: normal;
-}
-
-.fh-ship-locked .streamraetsel-countdown .time-box {
-  border-color: rgba(240,201,106,.4);
-  animation: fhShipBoxBreathe 3.6s ease-in-out infinite;
 }
 
 @keyframes fhShipBoxBreathe {
@@ -1268,117 +1209,6 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   font-size: 22px;
   letter-spacing: 1px;
   color: var(--fh-gold-bright);
-}
-
-.fh-ship-complete-banner {
-  margin: 20px auto 10px;
-  padding: 28px 20px;
-  max-width: 560px;
-  border-radius: var(--fh-radius-lg);
-  background: linear-gradient(160deg, rgba(214,168,79,.18), rgba(10,14,20,.9));
-  border: 1px solid rgba(214,168,79,.5);
-  box-shadow: var(--fh-shadow), 0 0 40px rgba(240,201,106,.25);
-}
-
-.fh-ship-complete-eyebrow {
-  font-family: var(--fh-font-display);
-  letter-spacing: 3px;
-  color: var(--fh-gold-bright);
-  font-size: 17px;
-  text-shadow: 0 0 24px rgba(240,201,106,.4);
-}
-
-.fh-ship-complete-name {
-  margin-top: 10px;
-  font-family: var(--fh-font-display);
-  font-size: 38px;
-  color: #fff2d6;
-}
-
-.fh-ship-complete-captain {
-  margin-top: 6px;
-  color: var(--fh-muted-fg);
-}
-
-.fh-ship-complete-hint {
-  margin-top: 16px;
-  color: var(--fh-muted-fg);
-  font-size: 15px;
-}
-
-.fh-ship-phase-card {
-  margin: 24px auto;
-  padding: 24px 20px;
-  max-width: 560px;
-  border-radius: var(--fh-radius);
-  background: var(--fh-surface);
-  border: 1px solid var(--fh-border-strong);
-  text-align: center;
-}
-
-.fh-ship-phase-progress {
-  font-family: var(--fh-font-display);
-  letter-spacing: 2px;
-  color: var(--fh-muted-fg);
-  font-size: 13px;
-  text-transform: uppercase;
-}
-
-.fh-ship-phase-label {
-  margin-top: 8px;
-  font-family: var(--fh-font-display);
-  font-size: 26px;
-  color: var(--fh-gold-bright);
-}
-
-.fh-ship-phase-desc {
-  margin-top: 10px;
-  color: var(--fh-text-muted);
-  line-height: 1.5;
-}
-
-.fh-ship-phase-tool-req {
-  margin-top: 14px;
-  font-size: 14px;
-  color: var(--fh-muted-fg);
-}
-
-.fh-ship-phase-timer {
-  margin-top: 14px;
-}
-
-.fh-ship-phase-progress-bar {
-  margin-top: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .08);
-  border: 1px solid var(--fh-border-strong);
-  overflow: hidden;
-}
-
-.fh-ship-phase-progress-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--fh-fire), var(--fh-gold-bright));
-  transition: width 1s linear;
-}
-
-.fh-ship-phase-timer-value {
-  font-family: var(--fh-font-display);
-  font-size: 32px;
-  color: var(--fh-fire);
-  letter-spacing: 2px;
-  margin-top: 6px;
-}
-
-.fh-ship-phase-timer-by {
-  margin-top: 6px;
-  font-size: 13px;
-  color: var(--fh-muted-fg);
-}
-
-.fh-ship-phase-card .code-button {
-  margin-top: 6px;
 }
 
 /* --- Werkzeug-Inventar --- */
@@ -1414,105 +1244,6 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   opacity: 1;
   border-color: rgba(214,168,79,.55);
   background: rgba(214,168,79,.1);
-}
-
-/* --- Gesamt-Fortschrittsbalken (20 Etappen) --- */
-.fh-ship-overall-progress {
-  max-width: 480px;
-  margin: 22px auto 0;
-  text-align: center;
-}
-
-.fh-ship-overall-progress-label {
-  font-family: var(--fh-font-display);
-  letter-spacing: 2px;
-  color: var(--fh-muted-fg);
-  font-size: 13px;
-  text-transform: uppercase;
-}
-
-.fh-ship-overall-progress-bar {
-  margin-top: 8px;
-  height: 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .08);
-  border: 1px solid var(--fh-border-strong);
-  overflow: hidden;
-}
-
-.fh-ship-overall-progress-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--fh-fire), var(--fh-gold-bright));
-  transition: width .6s var(--fh-ease);
-}
-
-.fh-ship-overall-progress-count {
-  margin-top: 6px;
-  font-family: var(--fh-font-display);
-  color: var(--fh-gold-bright);
-  letter-spacing: 1px;
-}
-
-/* --- Etappen-Checkliste (20 Zeilen) --- */
-.fh-ship-stage-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 560px;
-  margin: 10px auto 0;
-  text-align: left;
-}
-
-.fh-ship-stage-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  border-radius: var(--fh-radius-sm);
-  border: 1px solid var(--fh-border);
-  background: var(--fh-surface);
-  font-size: 14px;
-}
-
-.fh-ship-stage-row-icon {
-  flex: 0 0 auto;
-  width: 22px;
-  text-align: center;
-}
-
-.fh-ship-stage-row-number {
-  flex: 0 0 auto;
-  color: var(--fh-muted-fg);
-  font-size: 12px;
-  min-width: 70px;
-}
-
-.fh-ship-stage-row-label {
-  color: var(--fh-fg);
-}
-
-.fh-ship-stage-row-done {
-  border-color: rgba(85,200,120,.5);
-  background: rgba(85,200,120,.06);
-}
-
-.fh-ship-stage-row-done .fh-ship-stage-row-icon {
-  color: var(--fh-success);
-}
-
-.fh-ship-stage-row-active {
-  border-color: rgba(214,168,79,.6);
-  background: rgba(214,168,79,.08);
-}
-
-.fh-ship-stage-row-active .fh-ship-stage-row-label {
-  font-weight: 700;
-  color: var(--fh-gold-bright);
-}
-
-.fh-ship-stage-row-locked {
-  opacity: .5;
 }
 
 /* --- Tagesquest-Karte --- */
@@ -1564,10 +1295,6 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 .fh-daily-quest-complete {
   margin-top: 8px;
   color: var(--fh-success);
-}
-
-@media (max-width: 600px) {
-  .fh-ship-stage-row-number { display: none; }
 }
 
 /* --- Rätsel-Bank --- */
@@ -1629,69 +1356,6 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   color: var(--fh-gold-bright);
 }
 
-/* --- Schiff-Bühne mit Reparatur-Layern --- */
-.fh-ship-repair-stage {
-  position: relative;
-  width: min(560px, 92vw);
-  margin: 26px auto;
-}
-
-.fh-ship-repair-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  position: relative;
-  z-index: 1;
-  filter: drop-shadow(0 18px 26px rgba(0,0,0,.5));
-  transition: filter 1.2s var(--fh-ease);
-}
-
-.fh-ship-repair-smoke {
-  position: absolute;
-  inset: -14% -8% 30% -8%;
-  background: radial-gradient(ellipse 60% 50% at 50% 60%, rgba(120,120,130,.4), transparent 70%);
-  filter: blur(12px);
-  animation: fhShipSmokeDrift 8s ease-in-out infinite;
-  opacity: 1;
-  transition: opacity 1.4s var(--fh-ease);
-  pointer-events: none;
-}
-
-.fh-ship-part-hull-fixed,
-.fh-ship-part-mast-fixed,
-.fh-ship-part-sails-fixed,
-.fh-ship-part-rudder-fixed,
-.fh-ship-part-final-fixed {
-  opacity: 0;
-  transition: opacity .9s var(--fh-ease);
-}
-
-.fh-ship-part-hull-broken,
-.fh-ship-part-mast-broken,
-.fh-ship-part-sails-broken,
-.fh-ship-part-rudder-broken {
-  opacity: 1;
-  transition: opacity .9s var(--fh-ease);
-}
-
-#fh-ship-repair-stage.fh-phase-hull-done .fh-ship-part-hull-broken   { opacity: 0; }
-#fh-ship-repair-stage.fh-phase-hull-done .fh-ship-part-hull-fixed    { opacity: 1; }
-#fh-ship-repair-stage.fh-phase-mast-done .fh-ship-part-mast-broken   { opacity: 0; }
-#fh-ship-repair-stage.fh-phase-mast-done .fh-ship-part-mast-fixed    { opacity: 1; }
-#fh-ship-repair-stage.fh-phase-sails-done .fh-ship-part-sails-broken { opacity: 0; }
-#fh-ship-repair-stage.fh-phase-sails-done .fh-ship-part-sails-fixed  { opacity: 1; }
-#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-part-rudder-broken { opacity: 0; }
-#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-part-rudder-fixed  { opacity: 1; }
-#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-part-final-fixed   { opacity: 1; }
-
-#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-repair-svg {
-  filter: drop-shadow(0 18px 26px rgba(0,0,0,.5)) saturate(1.25) brightness(1.08);
-}
-
-#fh-ship-repair-stage.fh-phase-hull-done.fh-phase-mast-done .fh-ship-repair-smoke { opacity: .55; }
-#fh-ship-repair-stage.fh-phase-sails-done.fh-phase-rudder-done .fh-ship-repair-smoke { opacity: .25; }
-#fh-ship-repair-stage.fh-phase-rudder-done .fh-ship-repair-smoke { opacity: 0; }
-
 /* --- Reparatur-Abschluss-Toast (nutzt .currency-toast Basisstil) --- */
 .ship-repair-done-toast {
   background: linear-gradient(135deg, rgba(255,106,42,.3), rgba(10,10,20,.95));
@@ -1701,15 +1365,10 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 
 @media (max-width: 900px) {
-  .fh-ship-complete-name   { font-size: 26px; }
-  .fh-ship-phase-label     { font-size: 21px; }
-  .fh-ship-phase-timer-value { font-size: 26px; }
   .ship-puzzle-list        { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 600px) {
-  .fh-ship-wreck-scene     { width: 82vw; }
-  .fh-ship-phase-card      { padding: 18px 14px; }
   .fh-dev-panel-actions    { flex-direction: column; }
   .fh-dev-panel-actions .code-button { width: 100%; }
   .ship-puzzle-input-row   { flex-direction: column; }
@@ -1723,250 +1382,13 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
    Nutzt bestehende Design-Tokens (--fh-gold/--fh-surface/--fh-border/
    --fh-danger/--fh-success/--fh-font-display/--fh-ease usw.), keine
    neuen Farben - soll sich wie ein zusaetzliches Kapitel derselben
-   Piraten-Welt anfuehlen, nicht wie ein fremdes UI-System.
-===================================================== */
-.detective-page-content {
+   Piraten-Welt anfuehlen {
   max-width: 900px;
-}
-
-.detective-story {
-  background: var(--fh-surface);
-  border: 1px solid var(--fh-border);
-  border-radius: var(--fh-radius);
-  padding: 18px 22px;
-  color: var(--fh-text-muted);
-  line-height: 1.6;
-  margin: 18px 0 30px;
-}
-
-.detective-section-heading {
-  font-family: var(--fh-font-display);
-  color: var(--fh-gold-bright);
-  margin: 30px 0 14px;
-}
-
-/* ---- Verdächtige ---- */
-.detective-suspects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.detective-suspect-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-  background: var(--fh-surface);
-  border: 1px solid var(--fh-border);
-  border-radius: var(--fh-radius);
-  padding: 20px 16px;
-  cursor: pointer;
-  transition: border-color .2s var(--fh-ease), transform .2s var(--fh-ease), box-shadow .2s var(--fh-ease);
-  color: var(--fh-text);
-  font-family: var(--fh-font-sans);
-}
-
-.detective-suspect-card:hover {
-  border-color: var(--fh-border-strong);
-  transform: translateY(-3px);
-}
-
-.detective-suspect-card.detective-suspect-selected {
-  border-color: var(--fh-gold-bright);
-  box-shadow: var(--fh-glow-gold);
-}
-
-.detective-suspect-image {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--fh-border-strong);
-}
-
-.detective-suspect-image-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 36px;
-  background: var(--fh-muted);
-}
-
-.detective-suspect-name {
-  font-family: var(--fh-font-display);
-  font-size: 17px;
-  color: var(--fh-gold-bright);
-}
-
-.detective-suspect-role {
-  font-size: 13px;
-  color: var(--fh-text-muted);
-}
-
-.detective-suspect-statement {
-  font-size: 13px;
-  font-style: italic;
-  color: var(--fh-text-muted);
-  line-height: 1.5;
-}
-
-/* ---- Hinweise ---- */
-.detective-clues-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.detective-clue-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-  background: var(--fh-surface);
-  border: 1px solid var(--fh-border);
-  border-radius: var(--fh-radius);
-  padding: 20px 16px;
-  font-family: var(--fh-font-sans);
-  color: var(--fh-text);
-}
-
-button.detective-clue-card {
-  cursor: pointer;
-  transition: border-color .2s var(--fh-ease), transform .2s var(--fh-ease);
-}
-
-button.detective-clue-card:hover {
-  border-color: var(--fh-gold);
-  transform: translateY(-3px);
-}
-
-.detective-clue-icon {
-  font-size: 30px;
-}
-
-.detective-clue-title {
-  font-family: var(--fh-font-display);
-  font-size: 15px;
-  color: var(--fh-gold-bright);
-}
-
-.detective-clue-cta {
-  font-size: 13px;
-  color: var(--fh-text-muted);
-}
-
-.detective-clue-revealed {
-  border-color: var(--fh-success);
-  animation: detectiveClueReveal .4s var(--fh-ease);
-}
-
-.detective-clue-text {
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--fh-text-muted);
 }
 
 @keyframes detectiveClueReveal {
   0%   { opacity: 0; transform: scale(.92); }
   100% { opacity: 1; transform: scale(1); }
-}
-
-/* ---- Falsche Beschuldigung ---- */
-.detective-wrong-guess {
-  margin-top: 24px;
-  padding: 16px 20px;
-  border-radius: var(--fh-radius);
-  border: 1px solid var(--fh-danger);
-  background: rgba(229,57,53,.12);
-  animation: detectiveClueReveal .3s var(--fh-ease);
-}
-
-.detective-wrong-guess-title {
-  font-family: var(--fh-font-display);
-  color: var(--fh-danger);
-  margin-bottom: 6px;
-}
-
-.detective-wrong-guess-hint {
-  color: var(--fh-text-muted);
-  font-size: 13px;
-  margin-top: 6px;
-}
-
-/* ---- Beschuldigen ---- */
-.detective-accuse-box {
-  margin-top: 30px;
-  text-align: center;
-}
-
-.detective-accuse-btn:disabled {
-  opacity: .45;
-  cursor: not-allowed;
-}
-
-/* ---- Fall gelöst ---- */
-.detective-solved {
-  text-align: center;
-  animation: detectiveClueReveal .5s var(--fh-ease);
-}
-
-.detective-solved-reveal {
-  font-family: var(--fh-font-display);
-  font-size: 30px;
-  color: var(--fh-gold-bright);
-  text-shadow: var(--fh-glow-gold);
-  margin: 10px 0;
-}
-
-.detective-solved-heading {
-  font-family: var(--fh-font-display);
-  color: var(--fh-success);
-  margin: 26px 0 8px;
-}
-
-.detective-reward-list {
-  list-style: none;
-  padding: 0;
-  margin: 14px auto 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 17px;
-}
-
-.detective-secret-code {
-  font-family: var(--fh-font-display);
-  font-size: 24px;
-  letter-spacing: 2px;
-  color: var(--fh-gold-bright);
-  background: var(--fh-surface);
-  border: 1px dashed var(--fh-gold);
-  border-radius: var(--fh-radius-sm);
-  padding: 12px 20px;
-  display: inline-block;
-  margin: 10px 0 24px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .detective-clue-revealed,
-  .detective-wrong-guess,
-  .detective-solved {
-    animation: none;
-  }
-  .detective-suspect-card:hover,
-  button.detective-clue-card:hover {
-    transform: none;
-  }
-}
-
-@media (max-width: 640px) {
-  .detective-suspects-grid,
-  .detective-clues-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* =====================================================

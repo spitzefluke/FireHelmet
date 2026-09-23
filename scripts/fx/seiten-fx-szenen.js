@@ -394,106 +394,6 @@ void main() {
 `;
 
   /* =========================================================
-     SCHIFFSREPARATUR - WASSERLICHT
-     Das Netzmuster, das Wellen auf einen Grund werfen. Entsteht
-     aus zwei versetzten Rauschlagen, deren Abstand zueinander die
-     hellen Adern bildet.
-  ========================================================= */
-  const WERFT = `
-void main() {
-  vec2 uv = bild();
-  vec2 p  = gleich() * 3.2;
-
-  float a = fbm(p + vec2(uTime * 0.11, uTime * 0.06));
-  float b = fbm(p + vec2(3.7 - uTime * 0.08, 1.9 + uTime * 0.05));
-
-  /* Wo die beiden Lagen gleich hoch stehen, liegt eine Ader. */
-  float ader = 1.0 - smoothstep(0.0, 0.09, abs(a - b));
-  ader = pow(ader, 2.2);
-
-  vec3 farbe = vec3(0.32, 0.68, 0.92) * ader * 0.42;
-
-  /* Tiefe: unten dunkler, als schaue man in den Rumpf. */
-  farbe *= 0.45 + 0.55 * smoothstep(0.0, 0.9, uv.y);
-
-  /* Ein warmer Schein von der Werftlampe oben links. */
-  vec2 m = gleich() - vec2(0.25, 0.85);
-  farbe += vec3(0.90, 0.62, 0.28) * exp(-dot(m, m) * 5.0) * 0.14;
-
-  ausgeben(farbe, max(max(farbe.r, farbe.g), farbe.b) * 1.5);
-}
-`;
-
-  /* =========================================================
-     DER FALL - KAPITAENSKAJUETE BEI LAMPENLICHT
-     ---------------------------------------------------
-     Vorher drehte sich hier ein Suchscheinwerfer. Der gehoert an
-     eine Gefaengnismauer, nicht auf ein Schiff - und er passte
-     schon gar nicht zu einer Ermittlungstafel, die an einer Wand
-     haengt. Jetzt ist es ein Raum: dunkles Holz, eine schwankende
-     Oellampe als einzige Lichtquelle, und Schatten, die mit ihr
-     mitwandern.
-
-     Der Seegang steuert alles aus EINER Zahl (schwung). Liefen
-     Lampe, Lichtkegel und Schatten getrennt, waeren es drei Dinge,
-     die zufaellig gleichzeitig wackeln - mit einer gemeinsamen
-     Quelle ist es ein Schiff, das sich bewegt.
-  ========================================================= */
-  const FALL = `
-void main() {
-  vec2 uv = bild();
-  float seite = uRes.x / uRes.y;
-  vec2 p = gleich();
-
-  /* Der Seegang. Zwei ungleiche Perioden, damit es nicht metronomisch
-     wird - ein Schiff schaukelt nicht im Takt. */
-  float schwung = sin(uTime * 0.42) * 0.6 + sin(uTime * 0.23 + 1.3) * 0.4;
-
-  /* Die Lampe haengt oben und pendelt mit. */
-  vec2 lampe = vec2(seite * 0.5 + schwung * 0.075, 0.14);
-
-  /* Ihr Licht: nah hell, nach aussen schnell abfallend. Der Flackerwert
-     ist bewusst schwach - eine Lampe, die sichtbar blinkt, sieht nach
-     Wackelkontakt aus, nicht nach Docht. */
-  float flackern = 0.94 + 0.06 * sin(uTime * 7.3) * sin(uTime * 3.1);
-  vec2 d = p - lampe;
-  float licht = exp(-dot(d, d) * 3.4) * flackern;
-
-  vec3 farbe = vec3(1.00, 0.72, 0.38) * licht * 0.85;
-
-  /* Der Docht selbst - ein kleiner, harter Kern im Zentrum. */
-  farbe += vec3(1.0, 0.92, 0.72) * exp(-dot(d, d) * 90.0) * 0.55;
-
-  /* Die Holzwand dahinter. Waagerechte Planken mit unruhiger
-     Maserung; sie wird nur dort sichtbar, wo Licht hinfaellt. */
-  float planke = fract(p.y * 5.2);
-  float fuge = smoothstep(0.045, 0.0, min(planke, 1.0 - planke));
-  float maser = fbm(vec2(p.x * 2.2, p.y * 24.0)) * 0.5 + 0.5;
-
-  vec3 holz = mix(vec3(0.26, 0.15, 0.08), vec3(0.38, 0.23, 0.12), maser);
-  holz = mix(holz, vec3(0.12, 0.07, 0.04), fuge);
-  farbe += holz * licht * 1.15;
-
-  /* Schatten, die mit der Lampe wandern: zwei senkrechte Streifen,
-     die sich gegenlaeufig zum Pendel verschieben - so, wie ein
-     Balken vor der Lampe seinen Schatten wirft. */
-  float b1 = smoothstep(0.055, 0.0, abs(p.x - (seite * 0.20 - schwung * 0.13)));
-  float b2 = smoothstep(0.045, 0.0, abs(p.x - (seite * 0.80 - schwung * 0.17)));
-  farbe *= 1.0 - (b1 + b2) * 0.55;
-
-  /* Aussen wird es dunkel - die Lampe reicht nicht bis in die Ecken.
-     Genau das macht die Kajuete zum Raum statt zur Flaeche. */
-  farbe *= smoothstep(1.35, 0.20, length(uv - vec2(0.5, 0.38)));
-
-  /* Ein Hauch Staub im Lichtkegel. */
-  float korn = hash21(gl_FragCoord.xy + floor(uTime * 12.0));
-  farbe += vec3(korn) * licht * 0.045;
-
-  ausgeben(farbe, max(max(farbe.r, farbe.g), farbe.b) * 1.6);
-}
-`;
-
-  /* =========================================================
      STREAMRÄTSEL - STÖRBILD
      Waagerechte Versaetze, Farbkanaltrennung und ein wandernder
      Suchlaufbalken. Loest den ruhigen roten Schein ab, den die
@@ -860,10 +760,6 @@ void main() {
     spielothek: function (THREE) { return flaeche(THREE, SPIELOTHEK); },
 
     characters: function (THREE) { return flaeche(THREE, CREW); },
-
-    "ship-repair": function (THREE) { return flaeche(THREE, WERFT); },
-
-    "detective-case": function (THREE) { return flaeche(THREE, FALL); },
 
     tournament: function (THREE) { return flaeche(THREE, TURNIER); },
 

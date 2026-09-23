@@ -42,11 +42,6 @@ let siteConfig = {
   disabledGameIds: [], // Spielothek-Spiele-IDs (siehe spielothek-data.js), die der Admin deaktiviert hat
 
   // Kapitel-IDs (beide Sprachvarianten), die automatisch aus
-  // lockedChapterIds entfernt werden, sobald das Schiff vollstaendig
-  // repariert ist (siehe maybeUnlockChapterAfterShipRepair() in
-  // scripts/ship/ship-repair.js). Leeres Array = keine automatische
-  // Freischaltung konfiguriert.
-  shipRepairUnlockChapterIds: [],
 
   // Hinweisband ueber der Seite (siehe scripts/core/hinweisband.js).
   // Leerer Text = kein Band.
@@ -57,6 +52,13 @@ let siteConfig = {
   // stolpert, ohne zu wissen warum.
   wartung: false,
   wartungText: "",
+
+  // Freigeschaltete Funktionen (Feature-Flags). Ein Objekt
+  // { flagName: true }. Steht ein Flag NICHT auf true, ist die
+  // Funktion fuer normale Besucher unsichtbar - der Admin sieht sie
+  // trotzdem als Vorschau (siehe scripts/core/feature-flags.js).
+  // Der Admin schaltet sie im Panel unter "Live-Event" frei.
+  featureFlags: {},
 };
 
 let siteConfigReady = false;
@@ -83,10 +85,10 @@ function applySiteConfigSnapshot(data) {
     shipEventUnlockDate: typeof data.shipEventUnlockDate === "string" ? data.shipEventUnlockDate : null,
     lockedChapterIds: Array.isArray(data.lockedChapterIds) ? data.lockedChapterIds : [],
     disabledGameIds: Array.isArray(data.disabledGameIds) ? data.disabledGameIds : [],
-    shipRepairUnlockChapterIds: Array.isArray(data.shipRepairUnlockChapterIds) ? data.shipRepairUnlockChapterIds : [],
     ankuendigung: typeof data.ankuendigung === "string" ? data.ankuendigung : "",
     wartung: data.wartung === true,
     wartungText: typeof data.wartungText === "string" ? data.wartungText : "",
+    featureFlags: (data.featureFlags && typeof data.featureFlags === "object" && !Array.isArray(data.featureFlags)) ? data.featureFlags : {},
   };
   markSiteConfigReady();
   window.dispatchEvent(new CustomEvent("siteConfigUpdated", { detail: siteConfig }));
@@ -116,8 +118,7 @@ async function initSiteConfig() {
 }
 
 /* ------------------------------------------------------
-   GEMEINSAME SCHREIBFUNKTION (admin-gateway.js + ship-repair.js
-   maybeUnlockChapterAfterShipRepair())
+   GEMEINSAME SCHREIBFUNKTION (admin-gateway.js)
    ---------------------------------------------------
    site_config liegt in Postgres als EIN JSONB-Blob (Spalte "data"),
    nicht als einzelne Top-Level-Spalten wie zuvor in Firestore -

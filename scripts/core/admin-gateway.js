@@ -233,41 +233,6 @@ async function toggleGatewaySpielothekGame(gameId, disabled) {
   }
 }
 
-/* ------------------------------------------------------
-   SCHIFFSREPARATUR <-> STORY-VERKNUEPFUNG
-   Welches Kapitel (falls ueberhaupt eins) automatisch entsperrt
-   wird, sobald das Schiff fertig repariert ist - siehe
-   maybeUnlockChapterAfterShipRepair() in ship-repair.js.
------------------------------------------------------- */
-function buildGatewayShipUnlockSelectHtml() {
-  const groups = getChapterGroupsForGateway();
-  const current = Array.isArray(siteConfig.shipRepairUnlockChapterIds) ? siteConfig.shipRepairUnlockChapterIds : [];
-  const currentGroup = groups.find((g) => g.ids.some((id) => current.includes(id)));
-
-  const options = groups
-    .map((g) => `<option value="${g.key}" ${currentGroup && currentGroup.key === g.key ? "selected" : ""}>${g.displayTitle} (${g.storyTitle})</option>`)
-    .join("");
-
-  return `
-    <label class="gateway-form-row">
-      <span>Kapitel nach abgeschlossener Schiffsreparatur automatisch freischalten:</span><br>
-      <select id="gateway-ship-unlock-chapter" class="code-input" onchange="saveGatewayShipUnlockChapter(this.value)">
-        <option value="">- keins -</option>
-        ${options}
-      </select>
-    </label>
-  `;
-}
-
-async function saveGatewayShipUnlockChapter(groupKey) {
-  if (!supabaseClient) return;
-  const group = getChapterGroupsForGateway().find((g) => g.key === groupKey);
-  try {
-    await patchSupabaseSiteConfig({ shipRepairUnlockChapterIds: group ? group.ids : [] });
-  } catch (err) {
-    console.error("Konnte nicht gespeichert werden:", err);
-  }
-}
 
 function buildGatewayChapterListHtml() {
   const locked = Array.isArray(siteConfig.lockedChapterIds) ? siteConfig.lockedChapterIds : [];
@@ -282,6 +247,145 @@ function buildGatewayChapterListHtml() {
       `;
     })
     .join("");
+}
+
+/* ------------------------------------------------------
+   LIVE-EVENT: FUNKTIONEN FREIGEBEN (Feature-Flags)
+   ---------------------------------------------------
+   Jede neu gebaute Funktion liegt zuerst versteckt auf der Seite
+   und ist nur fuer dich (Admin) als Vorschau sichtbar. Erst ein
+   Klick auf "Freigeben" setzt das Flag, und ab dann sehen es alle.
+   So kannst du eine Funktion in Ruhe pruefen, bevor sie live geht.
+------------------------------------------------------ */
+const GATEWAY_FEATURE_FLAGS = [
+  { key: "skillTree", label: "Skill-Baum", hinweis: "Der Fertigkeitsbaum mit Skillpunkten." },
+];
+
+function buildGatewayLiveEventHtml() {
+  const flags = (typeof siteConfig !== "undefined" && siteConfig.featureFlags) || {};
+  const zeilen = GATEWAY_FEATURE_FLAGS.map((f) => {
+    const an = flags[f.key] === true;
+    return `
+      <label class="gateway-form-row gateway-flag-row">
+        <input type="checkbox" ${an ? "checked" : ""} onchange="saveGatewayFeatureFlag('${f.key}', this.checked)">
+        <span><strong>${escapeHtml(f.label)}</strong>${f.hinweis ? " - " + escapeHtml(f.hinweis) : ""}<br>
+        <small class="gateway-status-sub">${an ? "🟢 Fuer alle sichtbar" : "🔒 Versteckt - nur du siehst sie als Vorschau"}</small></span>
+      </label>`;
+  }).join("");
+  return `
+    <p class="gateway-status-sub"><strong>Funktionen freigeben.</strong> Haken = fuer alle sichtbar. Ohne Haken bleibt die Funktion versteckt und nur fuer dich als Vorschau sichtbar.</p>
+    ${zeilen}
+
+    <h3 class="gateway-unter-titel">Nachricht an alle</h3>
+    <div class="gateway-form-row">
+      <input type="text" id="gw-live-msg" class="code-input" maxlength="280" placeholder="Deine Nachricht ...">
+      <input type="text" id="gw-live-von" class="code-input" maxlength="60" placeholder="Dein Name" style="max-width:160px">
+      <input type="color" id="gw-live-farbe" value="#f0c96a" title="Farbe" style="width:48px;padding:2px">
+    </div>
+    <div class="gateway-btn-reihe">
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveMessage(false)">Bei mir testen</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveMessage(true)">An alle senden</button>
+    </div>
+
+    <h3 class="gateway-unter-titel">Effekte</h3>
+    <div class="gateway-btn-reihe">
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('konfetti', false)">Konfetti (Test)</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('konfetti', true)">Konfetti an alle</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('blitz', false)">Blitz (Test)</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('blitz', true)">Blitz an alle</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('sound', false)">Sound (Test)</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('sound', true)">Sound an alle</button>
+    </div>
+
+    <h3 class="gateway-unter-titel">Disco (Musik kommt)</h3>
+    <div class="gateway-btn-reihe">
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(true, false)">Disco testen</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(false, false)">Test aus</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(true, true)">Disco AN (alle)</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(false, true)">Disco AUS (alle)</button>
+    </div>
+
+    <h3 class="gateway-unter-titel">Bildschirm-Uebernahme</h3>
+    <p class="gateway-status-sub">Schickt alle auf eine leere Live-Buehne. Dort greifen deine Effekte oben.</p>
+    <div class="gateway-btn-reihe">
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(true, false)">Buehne testen</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(false, false)">Test aus</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(true, true)">Buehne START (alle)</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(false, true)">Buehne STOP (alle)</button>
+    </div>
+
+    <h3 class="gateway-unter-titel">Geschenke an alle</h3>
+    <div class="gateway-form-row">
+      <label>Dublonen<br><input type="number" id="gw-live-dub" class="code-input" min="1" max="5000" value="100" style="max-width:120px"></label>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveGrant('dublonen')">Dublonen an alle</button>
+    </div>
+    <div class="gateway-form-row">
+      <label>Avatar-ID<br><input type="text" id="gw-live-av" class="code-input" placeholder="z.B. meisterdetektiv" style="max-width:200px"></label>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveGrant('avatar')">Avatar an alle</button>
+    </div>
+    <p class="gateway-status-sub">Jeder anwesende Spieler bekommt es genau einmal. Der Betrag wird server-seitig verrechnet.</p>
+  `;
+}
+
+/* ------------------------------------------------------
+   LIVE-EVENT: AUSLOESER
+   Schreibt in die Zustandszeile public.live_event (nur der Admin
+   darf das laut RLS) bzw. loest einen Grant ueber die RPC aus.
+   "Bei mir testen" ruft stattdessen direkt den Effekt im eigenen
+   Browser auf (window.fhLiveVorschau), sendet also NICHTS.
+------------------------------------------------------ */
+async function liveSend(update) {
+  if (!supabaseClient) return;
+  try { await supabaseClient.from("live_event").update(update).eq("id", 1); }
+  catch (err) { console.error("Live-Event senden fehlgeschlagen:", err); }
+}
+function liveJetzt() { return new Date().toISOString(); }
+
+function gwLiveMessage(anAlle) {
+  const text = ((document.getElementById("gw-live-msg") || {}).value || "").trim();
+  const farbe = (document.getElementById("gw-live-farbe") || {}).value || "#f0c96a";
+  const von = ((document.getElementById("gw-live-von") || {}).value || "").trim();
+  if (!text) return;
+  if (anAlle) liveSend({ message: text, message_color: farbe, message_from: von || null, message_at: liveJetzt() });
+  else if (window.fhLiveVorschau) window.fhLiveVorschau.banderole(text, farbe, von);
+}
+function gwLiveDisco(an, anAlle) {
+  if (anAlle) liveSend({ disco: !!an });
+  else if (window.fhLiveVorschau) (an ? window.fhLiveVorschau.discoAn() : window.fhLiveVorschau.discoAus());
+}
+function gwLivePulse(kind, anAlle) {
+  if (anAlle) liveSend({ pulse_kind: kind, pulse_at: liveJetzt() });
+  else if (window.fhLiveVorschau) window.fhLiveVorschau.pulse(kind);
+}
+function gwLiveTakeover(an, anAlle) {
+  if (anAlle) liveSend({ takeover: !!an });
+  else if (window.fhLiveVorschau) (an ? window.fhLiveVorschau.uebernahmeAn() : window.fhLiveVorschau.uebernahmeAus());
+}
+async function gwLiveGrant(art) {
+  if (!supabaseClient) return;
+  let wert = 0, avatar = null;
+  if (art === "dublonen") {
+    wert = parseInt((document.getElementById("gw-live-dub") || {}).value, 10) || 0;
+    if (wert <= 0) return;
+  } else {
+    avatar = ((document.getElementById("gw-live-av") || {}).value || "").trim();
+    if (!avatar) return;
+  }
+  try { await supabaseClient.rpc("live_grant_ausloesen", { p_art: art, p_wert: wert, p_avatar: avatar }); }
+  catch (err) { console.error("Grant fehlgeschlagen:", err); }
+}
+
+async function saveGatewayFeatureFlag(name, on) {
+  if (!supabaseClient) return;
+  const flags = Object.assign({}, (typeof siteConfig !== "undefined" && siteConfig.featureFlags) || {});
+  flags[name] = !!on;
+  try {
+    await patchSupabaseSiteConfig({ featureFlags: flags });
+    if (typeof fhFlagsAnwenden === "function") fhFlagsAnwenden();
+    renderGatewayPage();
+  } catch (err) {
+    console.error("Feature-Flag konnte nicht gespeichert werden:", err);
+  }
 }
 
 async function renderGatewayPage() {
@@ -319,6 +423,11 @@ async function renderGatewayPage() {
     return;
   }
 
+  /* Der Betrachter ist jetzt bestaetigter Admin - feature-flags.js
+     davon in Kenntnis setzen, damit die Vorschau gegateter
+     Funktionen ohne Neuladen erscheint. */
+  window.dispatchEvent(new CustomEvent("fhAdminStatusGeaendert"));
+
   const mainTarget = siteConfig.mainCountdownTarget || FIRE_HELMET_CONFIG.mainCountdownFallback;
   const shipTarget = siteConfig.shipEventUnlockDate || FIRE_HELMET_CONFIG.shipEventUnlockDate;
 
@@ -332,6 +441,9 @@ async function renderGatewayPage() {
       <h2 class="fh-ship-section-heading">Status</h2>
       ${buildGatewayStatusHtml()}
       <div id="gateway-ship-status-sub"></div>
+
+      <h2 class="fh-ship-section-heading">Live-Event</h2>
+      ${buildGatewayLiveEventHtml()}
 
       <h2 class="fh-ship-section-heading">Countdown</h2>
       <div class="gateway-form-row">
@@ -347,7 +459,6 @@ async function renderGatewayPage() {
 
       <h2 class="fh-ship-section-heading">Kapitel aktivieren/deaktivieren</h2>
       <div class="gateway-chapter-list">${buildGatewayChapterListHtml()}</div>
-      ${buildGatewayShipUnlockSelectHtml()}
 
       <h2 class="fh-ship-section-heading">Ändiis Spielothek</h2>
       ${buildGatewaySpielothekHtml()}
