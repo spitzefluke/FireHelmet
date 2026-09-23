@@ -2538,3 +2538,123 @@ img, svg, video, canvas {
   .fh-skill-knoten { transition: none; }
   .fh-skill-knoten.ist-offen:hover { transform: translate(-50%, -50%); }
 }
+
+/* ======================================================
+   LIVE-EVENT (scripts/liveevent/live-event.js)
+====================================================== */
+
+/* Admin-Panel: Unterueberschriften und Knopfreihen */
+.gateway-unter-titel {
+  margin: 18px 0 8px;
+  font-family: var(--fh-font-display, "Oswald", system-ui, sans-serif);
+  font-size: 13px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fh-gold, #d6a84f);
+}
+.gateway-btn-reihe { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 4px; }
+.gateway-flag-row { display: flex; align-items: flex-start; gap: 10px; }
+.gateway-flag-row input[type="checkbox"] { margin-top: 3px; width: 18px; height: 18px; }
+
+/* ---------- Banderole ---------- */
+.fh-live-banderole {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 18px 24px;
+  background: linear-gradient(180deg, rgba(8,10,16,.96), rgba(8,10,16,.82));
+  border-bottom: 3px solid var(--live-farbe, #f0c96a);
+  text-align: center;
+  transform: translateY(-140%);
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+}
+.fh-live-banderole.ist-da {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform .5s cubic-bezier(.22,.9,.32,1), opacity .5s ease;
+}
+.fh-live-banderole.ist-weg {
+  transform: translateY(-140%);
+  opacity: 0;
+  transition: transform .5s ease, opacity .5s ease;
+}
+.fh-live-von {
+  font-family: var(--fh-font-display, "Oswald", system-ui, sans-serif);
+  font-size: clamp(16px, 2.4vw, 26px);
+  font-weight: 600;
+  color: var(--live-farbe, #f0c96a);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--live-farbe, #f0c96a) 60%, transparent);
+}
+.fh-live-text {
+  font-family: var(--fh-font-display, "Oswald", system-ui, sans-serif);
+  font-size: clamp(18px, 3.2vw, 40px);
+  font-weight: 500;
+  color: #fff;
+}
+
+/* ---------- Disco ---------- */
+@keyframes fhDiscoHue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+@keyframes fhDiscoLicht {
+  0%   { background: radial-gradient(60% 60% at 20% 20%, rgba(224,64,42,.5), transparent 60%); }
+  25%  { background: radial-gradient(60% 60% at 80% 20%, rgba(90,160,224,.5), transparent 60%); }
+  50%  { background: radial-gradient(60% 60% at 80% 80%, rgba(79,143,92,.5), transparent 60%); }
+  75%  { background: radial-gradient(60% 60% at 20% 80%, rgba(240,201,106,.5), transparent 60%); }
+  100% { background: radial-gradient(60% 60% at 20% 20%, rgba(224,64,42,.5), transparent 60%); }
+}
+body.fh-live-disco { animation: fhDiscoHue 6s linear infinite; }
+.fh-live-disco-licht {
+  position: fixed; inset: 0; z-index: 9996; pointer-events: none;
+  mix-blend-mode: screen;
+  animation: fhDiscoLicht 2.4s steps(1) infinite;
+}
+/* Ruhig-Variante: kein Stroboskop, nur ein sanfter Farbschimmer. */
+body.fh-live-disco-ruhig { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .fh-live-disco-licht { animation: fhDiscoLicht 8s ease-in-out infinite; mix-blend-mode: normal; opacity: .35; }
+}
+
+/* ---------- Konfetti ---------- */
+.fh-live-konfetti { position: fixed; inset: 0; z-index: 9999; pointer-events: none; overflow: hidden; }
+@keyframes fhKonfettiFall {
+  0%   { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: .9; }
+}
+.fh-live-konfetti-stueck {
+  position: absolute;
+  top: 0;
+  width: 10px; height: 14px;
+  border-radius: 2px;
+  animation-name: fhKonfettiFall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+/* ---------- Blitz ---------- */
+.fh-live-blitz { position: fixed; inset: 0; z-index: 10001; pointer-events: none; background: #fff; opacity: 0; }
+@keyframes fhBlitz { 0% { opacity: 0; } 12% { opacity: .9; } 100% { opacity: 0; } }
+.fh-live-blitz.ist-an { animation: fhBlitz .7s ease-out; animation-fill-mode: forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .fh-live-blitz.ist-an { animation: none; opacity: 0; }
+}
+
+/* ---------- Bildschirm-Uebernahme ---------- */
+.fh-live-buehne {
+  position: fixed; inset: 0; z-index: 9998;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(120% 90% at 50% 30%, rgba(20,28,46,.98), rgba(5,6,12,.99));
+  text-align: center;
+}
+.fh-live-buehne-logo { font-size: clamp(48px, 12vw, 96px); display: block; }
+.fh-live-buehne-titel {
+  margin: 12px 0 0;
+  font-family: var(--fh-font-display, "Oswald", system-ui, sans-serif);
+  font-size: clamp(26px, 5vw, 52px);
+  color: var(--fh-gold-bright, #f0c96a);
+}
+.fh-live-buehne-sub { margin: 8px 0 0; color: var(--fh-muted-fg, #a7aec0); }

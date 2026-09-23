@@ -116,6 +116,9 @@ const translations = {
     "skilltree.needPoints": "Nicht genug Skillpunkte.",
     "skilltree.unknown": "Dieser Knoten ist unbekannt.",
     "skilltree.error": "Hat nicht geklappt - versuch es später noch einmal.",
+    "live.stageTitle": "Live-Event läuft",
+    "live.stageSub": "Bleib dran - gleich passiert etwas.",
+    "live.grantGot": "Geschenk erhalten!",
     "menu.rating": "Bewertung",
     "menu.daveAwards": "Dave Awards",
 
@@ -583,6 +586,9 @@ const translations = {
     "skilltree.needPoints": "Not enough skill points.",
     "skilltree.unknown": "Unknown node.",
     "skilltree.error": "Didn't work - try again later.",
+    "live.stageTitle": "Live event running",
+    "live.stageSub": "Stay tuned - something's about to happen.",
+    "live.grantGot": "You got a gift!",
     "menu.rating": "Rating",
     "menu.daveAwards": "Dave Awards",
 

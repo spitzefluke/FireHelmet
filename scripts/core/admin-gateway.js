@@ -273,9 +273,106 @@ function buildGatewayLiveEventHtml() {
       </label>`;
   }).join("");
   return `
-    <p class="gateway-status-sub">Haken setzen = fuer alle freigeben. Ohne Haken bleibt die Funktion versteckt und nur fuer dich als Vorschau sichtbar.</p>
+    <p class="gateway-status-sub"><strong>Funktionen freigeben.</strong> Haken = fuer alle sichtbar. Ohne Haken bleibt die Funktion versteckt und nur fuer dich als Vorschau sichtbar.</p>
     ${zeilen}
+
+    <h3 class="gateway-unter-titel">Nachricht an alle</h3>
+    <div class="gateway-form-row">
+      <input type="text" id="gw-live-msg" class="code-input" maxlength="280" placeholder="Deine Nachricht ...">
+      <input type="text" id="gw-live-von" class="code-input" maxlength="60" placeholder="Dein Name" style="max-width:160px">
+      <input type="color" id="gw-live-farbe" value="#f0c96a" title="Farbe" style="width:48px;padding:2px">
+    </div>
+    <div class="gateway-btn-reihe">
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveMessage(false)">Bei mir testen</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveMessage(true)">An alle senden</button>
+    </div>
+
+    <h3 class="gateway-unter-titel">Effekte</h3>
+    <div class="gateway-btn-reihe">
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('konfetti', false)">Konfetti (Test)</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('konfetti', true)">Konfetti an alle</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('blitz', false)">Blitz (Test)</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('blitz', true)">Blitz an alle</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('sound', false)">Sound (Test)</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLivePulse('sound', true)">Sound an alle</button>
+    </div>
+
+    <h3 class="gateway-unter-titel">Disco (Musik kommt)</h3>
+    <div class="gateway-btn-reihe">
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(true, false)">Disco testen</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(false, false)">Test aus</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(true, true)">Disco AN (alle)</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveDisco(false, true)">Disco AUS (alle)</button>
+    </div>
+
+    <h3 class="gateway-unter-titel">Bildschirm-Uebernahme</h3>
+    <p class="gateway-status-sub">Schickt alle auf eine leere Live-Buehne. Dort greifen deine Effekte oben.</p>
+    <div class="gateway-btn-reihe">
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(true, false)">Buehne testen</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(false, false)">Test aus</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(true, true)">Buehne START (alle)</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveTakeover(false, true)">Buehne STOP (alle)</button>
+    </div>
+
+    <h3 class="gateway-unter-titel">Geschenke an alle</h3>
+    <div class="gateway-form-row">
+      <label>Dublonen<br><input type="number" id="gw-live-dub" class="code-input" min="1" max="5000" value="100" style="max-width:120px"></label>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveGrant('dublonen')">Dublonen an alle</button>
+    </div>
+    <div class="gateway-form-row">
+      <label>Avatar-ID<br><input type="text" id="gw-live-av" class="code-input" placeholder="z.B. meisterdetektiv" style="max-width:200px"></label>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gwLiveGrant('avatar')">Avatar an alle</button>
+    </div>
+    <p class="gateway-status-sub">Jeder anwesende Spieler bekommt es genau einmal. Der Betrag wird server-seitig verrechnet.</p>
   `;
+}
+
+/* ------------------------------------------------------
+   LIVE-EVENT: AUSLOESER
+   Schreibt in die Zustandszeile public.live_event (nur der Admin
+   darf das laut RLS) bzw. loest einen Grant ueber die RPC aus.
+   "Bei mir testen" ruft stattdessen direkt den Effekt im eigenen
+   Browser auf (window.fhLiveVorschau), sendet also NICHTS.
+------------------------------------------------------ */
+async function liveSend(update) {
+  if (!supabaseClient) return;
+  try { await supabaseClient.from("live_event").update(update).eq("id", 1); }
+  catch (err) { console.error("Live-Event senden fehlgeschlagen:", err); }
+}
+function liveJetzt() { return new Date().toISOString(); }
+
+function gwLiveMessage(anAlle) {
+  const text = ((document.getElementById("gw-live-msg") || {}).value || "").trim();
+  const farbe = (document.getElementById("gw-live-farbe") || {}).value || "#f0c96a";
+  const von = ((document.getElementById("gw-live-von") || {}).value || "").trim();
+  if (!text) return;
+  if (anAlle) liveSend({ message: text, message_color: farbe, message_from: von || null, message_at: liveJetzt() });
+  else if (window.fhLiveVorschau) window.fhLiveVorschau.banderole(text, farbe, von);
+}
+function gwLiveDisco(an, anAlle) {
+  if (anAlle) liveSend({ disco: !!an });
+  else if (window.fhLiveVorschau) (an ? window.fhLiveVorschau.discoAn() : window.fhLiveVorschau.discoAus());
+}
+function gwLivePulse(kind, anAlle) {
+  if (anAlle) liveSend({ pulse_kind: kind, pulse_at: liveJetzt() });
+  else if (window.fhLiveVorschau) window.fhLiveVorschau.pulse(kind);
+}
+function gwLiveTakeover(an, anAlle) {
+  if (anAlle) liveSend({ takeover: !!an });
+  else if (window.fhLiveVorschau) (an ? window.fhLiveVorschau.uebernahmeAn() : window.fhLiveVorschau.uebernahmeAus());
+}
+async function gwLiveGrant(art) {
+  if (!supabaseClient) return;
+  let wert = 0, avatar = null;
+  if (art === "dublonen") {
+    wert = parseInt((document.getElementById("gw-live-dub") || {}).value, 10) || 0;
+    if (wert <= 0) return;
+  } else {
+    avatar = ((document.getElementById("gw-live-av") || {}).value || "").trim();
+    if (!avatar) return;
+  }
+  try { await supabaseClient.rpc("live_grant_ausloesen", { p_art: art, p_wert: wert, p_avatar: avatar }); }
+  catch (err) { console.error("Grant fehlgeschlagen:", err); }
 }
 
 async function saveGatewayFeatureFlag(name, on) {
