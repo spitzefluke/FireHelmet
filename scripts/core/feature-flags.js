@@ -76,7 +76,8 @@
      keine E-Mail und ist damit kein Admin. */
   async function adminErmitteln() {
     try {
-      if (!window.supabaseClient) return;
+      // supabaseClient ist ein top-level let und haengt NICHT an window.
+      if (typeof supabaseClient === "undefined" || !supabaseClient) return;
       if (typeof wheelAuthReady !== "undefined" && wheelAuthReady && wheelAuthReady.then) {
         try { await wheelAuthReady; } catch (e) { /* egal */ }
       }

@@ -25,6 +25,11 @@
     return s;
   }
 
+  /* supabaseClient ist ein top-level let in supabase-client.js und
+     haengt deshalb NICHT an window - window.supabaseClient waere
+     immer undefined (siehe CLAUDE.md). Direkt pruefen. */
+  function dbDa() { return typeof supabaseClient !== "undefined" && !!supabaseClient; }
+
   function esc(v) { return typeof escapeHtml === "function" ? escapeHtml(v == null ? "" : v) : String(v == null ? "" : v); }
   function escA(v) { return typeof escapeAttr === "function" ? escapeAttr(v == null ? "" : v) : String(v == null ? "" : v); }
   function t(key, fallback) { return typeof window.t === "function" ? window.t(key, fallback) : fallback; }
@@ -45,7 +50,7 @@
   };
 
   async function laden() {
-    if (!window.supabaseClient) return false;
+    if (!dbDa()) return false;
     try {
       const uid = await wheelAuthReady;
       const knotenAntwort = await withSupabaseRlsColdStartRetry(function () {
@@ -149,7 +154,7 @@
     const id = btn.getAttribute("data-node");
     const statusEl = document.getElementById("fh-skill-status");
     const setz = function (msg) { if (statusEl) statusEl.textContent = msg; };
-    if (!window.supabaseClient) { setz(t("skilltree.noDb", "Verbindung nicht verfuegbar.")); return; }
+    if (!dbDa()) { setz(t("skilltree.noDb", "Verbindung nicht verfuegbar.")); return; }
     btn.disabled = true;
     try {
       const { data, error } = await withSupabaseRlsColdStartRetry(function () {
@@ -203,7 +208,7 @@
   /* Die Boni werden auch ausserhalb der Seite gebraucht (Rad,
      Spielothek). Einmal frueh laden, sobald Anmeldung steht. */
   document.addEventListener("DOMContentLoaded", function () {
-    if (window.supabaseClient && typeof wheelAuthReady !== "undefined") {
+    if (dbDa() && typeof wheelAuthReady !== "undefined") {
       laden();
     }
   });
