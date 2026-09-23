@@ -249,6 +249,48 @@ function buildGatewayChapterListHtml() {
     .join("");
 }
 
+/* ------------------------------------------------------
+   LIVE-EVENT: FUNKTIONEN FREIGEBEN (Feature-Flags)
+   ---------------------------------------------------
+   Jede neu gebaute Funktion liegt zuerst versteckt auf der Seite
+   und ist nur fuer dich (Admin) als Vorschau sichtbar. Erst ein
+   Klick auf "Freigeben" setzt das Flag, und ab dann sehen es alle.
+   So kannst du eine Funktion in Ruhe pruefen, bevor sie live geht.
+------------------------------------------------------ */
+const GATEWAY_FEATURE_FLAGS = [
+  { key: "skillTree", label: "Skill-Baum", hinweis: "Der Fertigkeitsbaum mit Skillpunkten." },
+];
+
+function buildGatewayLiveEventHtml() {
+  const flags = (typeof siteConfig !== "undefined" && siteConfig.featureFlags) || {};
+  const zeilen = GATEWAY_FEATURE_FLAGS.map((f) => {
+    const an = flags[f.key] === true;
+    return `
+      <label class="gateway-form-row gateway-flag-row">
+        <input type="checkbox" ${an ? "checked" : ""} onchange="saveGatewayFeatureFlag('${f.key}', this.checked)">
+        <span><strong>${escapeHtml(f.label)}</strong>${f.hinweis ? " - " + escapeHtml(f.hinweis) : ""}<br>
+        <small class="gateway-status-sub">${an ? "🟢 Fuer alle sichtbar" : "🔒 Versteckt - nur du siehst sie als Vorschau"}</small></span>
+      </label>`;
+  }).join("");
+  return `
+    <p class="gateway-status-sub">Haken setzen = fuer alle freigeben. Ohne Haken bleibt die Funktion versteckt und nur fuer dich als Vorschau sichtbar.</p>
+    ${zeilen}
+  `;
+}
+
+async function saveGatewayFeatureFlag(name, on) {
+  if (!supabaseClient) return;
+  const flags = Object.assign({}, (typeof siteConfig !== "undefined" && siteConfig.featureFlags) || {});
+  flags[name] = !!on;
+  try {
+    await patchSupabaseSiteConfig({ featureFlags: flags });
+    if (typeof fhFlagsAnwenden === "function") fhFlagsAnwenden();
+    renderGatewayPage();
+  } catch (err) {
+    console.error("Feature-Flag konnte nicht gespeichert werden:", err);
+  }
+}
+
 async function renderGatewayPage() {
   const container = document.getElementById("gateway-content");
   if (!container) return;
@@ -284,6 +326,11 @@ async function renderGatewayPage() {
     return;
   }
 
+  /* Der Betrachter ist jetzt bestaetigter Admin - feature-flags.js
+     davon in Kenntnis setzen, damit die Vorschau gegateter
+     Funktionen ohne Neuladen erscheint. */
+  window.dispatchEvent(new CustomEvent("fhAdminStatusGeaendert"));
+
   const mainTarget = siteConfig.mainCountdownTarget || FIRE_HELMET_CONFIG.mainCountdownFallback;
   const shipTarget = siteConfig.shipEventUnlockDate || FIRE_HELMET_CONFIG.shipEventUnlockDate;
 
@@ -297,6 +344,9 @@ async function renderGatewayPage() {
       <h2 class="fh-ship-section-heading">Status</h2>
       ${buildGatewayStatusHtml()}
       <div id="gateway-ship-status-sub"></div>
+
+      <h2 class="fh-ship-section-heading">Live-Event</h2>
+      ${buildGatewayLiveEventHtml()}
 
       <h2 class="fh-ship-section-heading">Countdown</h2>
       <div class="gateway-form-row">

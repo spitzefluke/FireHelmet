@@ -37,6 +37,9 @@ function changePage(pageID) {
   updateLeaderboardPage(pageID);
   updateRacePage(pageID);
   updateStreamRaetselPage(pageID);
+  if (typeof updateSkillTreePage === "function") {
+    updateSkillTreePage(pageID);
+  }
 
 
   if (typeof updateTournamentPage === "function") {

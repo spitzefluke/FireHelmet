@@ -279,8 +279,12 @@ async function playSpielothekGame() {
     /* Gewinn: Einsatz weg, Auszahlung dazu.
        Niete:   der Einsatz, mehr nicht - siehe
                 spielothekVerlustAbzug() weiter unten. */
+    /* Skill-Bonus "slotdublonen" nur auf den Gewinn, nicht auf den
+       Einsatz. Klein genug fuer den +30000-Deckel. */
+    const slotBonus = typeof fhSkillBonus === "function" ? fhSkillBonus("slotdublonen") : 0;
+    const bonusPayout = spin.payout > 0 ? Math.round(spin.payout * (1 + slotBonus)) : spin.payout;
     const abzug = spin.win ? betCost : spielothekVerlustAbzug(currentCurrency, betCost);
-    const newCurrency = Math.max(0, currentCurrency - abzug + spin.payout);
+    const newCurrency = Math.max(0, currentCurrency - abzug + bonusPayout);
     const angewandtesDelta = newCurrency - currentCurrency;
 
     // Lebenslange Zähler, unabhängig vom Kontostand, der durch
@@ -302,7 +306,7 @@ async function playSpielothekGame() {
           currency: newCurrency,
           games_played: currentGamesPlayed + 1,
           games_won: spin.win ? currentGamesWon + 1 : currentGamesWon,
-          total_currency_earned: spin.payout > 0 ? currentTotalEarned + spin.payout : currentTotalEarned,
+          total_currency_earned: bonusPayout > 0 ? currentTotalEarned + bonusPayout : currentTotalEarned,
           last_spielothek_play_at: new Date().toISOString(),
         })
         .eq("firebase_uid", uid)

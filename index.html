@@ -220,6 +220,7 @@
       <a class="fh-nav-item" tabindex="0" data-page="race" onclick="changePage('race')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-flag-checkered"></i></span><span class="fh-nav-label" data-i18n="menu.race">Wochenrennen</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="community-boss" onclick="changePage('community-boss')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-skull"></i></span><span class="fh-nav-label" data-i18n="menu.communityBoss">Community-Boss</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-question"></i></span><span class="fh-nav-label" data-i18n="menu.streamraetselShort">???</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="skill-tree" data-fh-flag="skillTree" onclick="changePage('skill-tree')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-tree-structure"></i></span><span class="fh-nav-label" data-i18n="menu.skillTree">Skill-Baum</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionMore">Mehr</p>
       <a class="fh-nav-item" tabindex="0" data-page="support" onclick="changePage('support')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-lifebuoy"></i></span><span class="fh-nav-label" data-i18n="menu.support">Support</span></a>
@@ -1484,6 +1485,18 @@
         </div>
       </div>
     </section>
+    <!-- =====================
+         SKILL-BAUM (release-gegatet: data-fh-flag)
+         Sichtbar erst, wenn der Admin die Funktion im Live-Event
+         freigibt - vorher nur fuer den Admin als Vorschau. Inhalt
+         JS-gerendert (scripts/skilltree/skilltree.js).
+    ===================== -->
+    <section id="skill-tree" class="page" data-fh-flag="skillTree">
+      <div class="page-content">
+        <div id="skill-tree-content"></div>
+      </div>
+    </section>
+
 
     <!-- =====================
          BEWERTUNG
@@ -1681,6 +1694,7 @@
   <script src="scripts/supabase/supabase-games.js" defer></script>
   <script src="scripts/supabase/supabase-statistics.js" defer></script>
   <script src="scripts/core/site-config.js" defer></script>
+  <script src="scripts/core/feature-flags.js" defer></script>
   <script src="scripts/core/discord-notify-data.js" defer></script>
   <script src="scripts/core/discord-notify.js" defer></script>
   <script src="scripts/core/countdown.js" defer></script>
@@ -1710,6 +1724,8 @@
   <script src="scripts/shop/shop-rotation.js" defer></script>
   <script src="scripts/shop/shop.js" defer></script>
   <script src="scripts/streamraetsel/streamraetsel.js" defer></script>
+  <script src="scripts/skilltree/skilltree-data.js" defer></script>
+  <script src="scripts/skilltree/skilltree.js" defer></script>
   <script src="scripts/core/admin-gateway.js" defer></script>
   <script src="scripts/support/support.js" defer></script>
   <script src="scripts/rating/rating.js" defer></script>

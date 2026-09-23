@@ -2428,3 +2428,113 @@ img, svg, video, canvas {
 @media (prefers-reduced-motion: reduce) {
   .detective-faden { animation: none; stroke-dashoffset: 0; }
 }
+
+/* ======================================================
+   FEATURE-FLAGS + SKILL-BAUM
+   (scripts/core/feature-flags.js, scripts/skilltree/)
+====================================================== */
+
+/* Gegatete Elemente ausblenden. Eigene Klasse statt [hidden],
+   weil [hidden] die eigene display-Angabe eines flex-Nav-Eintrags
+   nicht schlaegt (siehe Notiz in css/20-spiele.css). */
+.fh-flag-aus { display: none !important; }
+
+/* Admin-Vorschau: der Nav-Eintrag ist sichtbar, obwohl das Flag
+   noch aus ist - dezent markiert, damit klar ist "sieht nur ich". */
+.fh-nav-item.fh-flag-vorschau { position: relative; }
+.fh-nav-item.fh-flag-vorschau::after {
+  content: "👁";
+  margin-left: auto;
+  font-size: 12px;
+  opacity: .8;
+}
+
+.fh-skill-vorschau {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--fh-gold, #d6a84f);
+  background: rgba(240, 201, 106, .08);
+  color: var(--fh-gold-bright, #f0c96a);
+  font-size: 13px;
+}
+
+.fh-skill-punkte {
+  margin: 18px 0 6px;
+  font-family: var(--fh-font-display, "Oswald", system-ui, sans-serif);
+  letter-spacing: .04em;
+  color: var(--fh-muted-fg, #a7aec0);
+}
+.fh-skill-punkte strong { color: var(--fh-gold-bright, #f0c96a); font-size: 1.3em; }
+
+/* Die Baumflaeche: Knoten sitzen absolut in Prozent, die Linien
+   liegen als SVG darunter. */
+.fh-skill-flaeche {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  border: 1px solid var(--fh-surface-line, #1c2a3a);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(32, 48, 74, .35), transparent 62%),
+    var(--fh-surface, #0b1220);
+  overflow: hidden;
+}
+
+.fh-skill-linien {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.fh-skill-kante {
+  stroke: var(--fh-surface-line, #2c3f56);
+  stroke-width: .6;
+  vector-effect: non-scaling-stroke;
+}
+.fh-skill-kante.ist-frei {
+  stroke: var(--fh-gold, #d6a84f);
+  stroke-width: 1;
+}
+
+.fh-skill-knoten {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: clamp(48px, 12vw, 66px);
+  height: clamp(48px, 12vw, 66px);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px solid var(--fh-surface-line, #2c3f56);
+  background: var(--fh-surface-2, #0f1826);
+  color: var(--fh-fg, #e9edf5);
+  cursor: pointer;
+  transition: transform .18s var(--fh-ease, ease), border-color .2s ease, box-shadow .2s ease;
+}
+.fh-skill-icon { font-size: clamp(18px, 4.5vw, 26px); line-height: 1; }
+.fh-skill-kosten { font-size: 11px; color: var(--fh-muted-fg, #a7aec0); }
+
+.fh-skill-knoten.ist-frei {
+  border-color: var(--fh-gold, #d6a84f);
+  box-shadow: 0 0 18px rgba(214, 168, 79, .35);
+}
+.fh-skill-knoten.ist-frei .fh-skill-kosten { color: var(--fh-gold-bright, #f0c96a); }
+.fh-skill-knoten.ist-offen {
+  border-color: var(--fh-gold-bright, #f0c96a);
+}
+.fh-skill-knoten.ist-offen:hover { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 22px rgba(240, 201, 106, .4); }
+.fh-skill-knoten.ist-zuteuer { opacity: .8; }
+.fh-skill-knoten.ist-gesperrt { opacity: .4; cursor: not-allowed; }
+
+.fh-skill-status { margin-top: 14px; text-align: center; color: var(--fh-muted-fg, #a7aec0); min-height: 1.4em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-skill-knoten { transition: none; }
+  .fh-skill-knoten.ist-offen:hover { transform: translate(-50%, -50%); }
+}

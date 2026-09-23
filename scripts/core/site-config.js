@@ -52,6 +52,13 @@ let siteConfig = {
   // stolpert, ohne zu wissen warum.
   wartung: false,
   wartungText: "",
+
+  // Freigeschaltete Funktionen (Feature-Flags). Ein Objekt
+  // { flagName: true }. Steht ein Flag NICHT auf true, ist die
+  // Funktion fuer normale Besucher unsichtbar - der Admin sieht sie
+  // trotzdem als Vorschau (siehe scripts/core/feature-flags.js).
+  // Der Admin schaltet sie im Panel unter "Live-Event" frei.
+  featureFlags: {},
 };
 
 let siteConfigReady = false;
@@ -81,6 +88,7 @@ function applySiteConfigSnapshot(data) {
     ankuendigung: typeof data.ankuendigung === "string" ? data.ankuendigung : "",
     wartung: data.wartung === true,
     wartungText: typeof data.wartungText === "string" ? data.wartungText : "",
+    featureFlags: (data.featureFlags && typeof data.featureFlags === "object" && !Array.isArray(data.featureFlags)) ? data.featureFlags : {},
   };
   markSiteConfigReady();
   window.dispatchEvent(new CustomEvent("siteConfigUpdated", { detail: siteConfig }));

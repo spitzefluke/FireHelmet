@@ -1335,8 +1335,12 @@ async function redeemWheelPrize(prize) {
   if (nickname) fields.nickname = nickname;
 
   if (prize.type === "currency") {
-    fields.currency = (data.currency || 0) + prize.amount;
-    fields.total_currency_earned = (data.total_currency_earned || 0) + prize.amount;
+    /* Skill-Bonus "raddublonen" - klein, bleibt im +30000-Deckel
+       von valid_players_write. Ohne freigeschaltete Knoten = 0. */
+    const radFaktor = 1 + (typeof fhSkillBonus === "function" ? fhSkillBonus("raddublonen") : 0);
+    const gewinn = Math.round(prize.amount * radFaktor);
+    fields.currency = (data.currency || 0) + gewinn;
+    fields.total_currency_earned = (data.total_currency_earned || 0) + gewinn;
   } else if (prize.type === "frame") {
     const owned = data.owned_shop_items || [];
     fields.owned_shop_items = owned.includes(prize.frameId) ? owned : [...owned, prize.frameId];
