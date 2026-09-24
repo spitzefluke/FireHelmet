@@ -1477,7 +1477,7 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
    Fokusring kommen zentral aus 80-interaktion.css. */
 .gw-menue {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 4px;
   margin: 12px 0 10px;
   padding: 5px;
@@ -1575,8 +1575,9 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 
 @media (max-width: 560px) {
+  /* 4 + 3 statt 3 + 3 + 1 - sonst stuende "Community" allein. */
   .gw-menue {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
   .gw-teil-knopf {
     min-height: 40px;
@@ -1881,4 +1882,92 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 .gw-titel-treffer-zeile code {
   font-size: 12px;
   color: var(--fh-muted-fg);
+}
+
+
+/* --- Admin-Gate: Codes -> Uebersicht --- */
+.gw-code-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.gw-code-liste {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.gw-code-zeile {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-surface);
+}
+
+.gw-code-kopf,
+.gw-code-daten,
+.gw-code-nachtragen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.gw-code-art {
+  padding: 2px 9px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+.gw-code-art.ist-dublonen { color: var(--fh-gold-bright); }
+.gw-code-art.ist-boss     { color: var(--fh-fire); }
+.gw-code-art.ist-xp       { color: var(--fh-violett); }
+.gw-code-art.ist-story    { color: var(--fh-success); }
+
+.gw-code-klartext {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--fh-bg-secondary);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fh-fg);
+  overflow-wrap: anywhere;
+}
+
+.gw-code-kopieren {
+  margin-left: auto;
+}
+
+.gw-code-unbekannt {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--fh-muted-fg);
+}
+
+.gw-code-belohnung {
+  font-weight: 600;
+}
+
+.gw-code-meta {
+  font-size: 12px;
+  color: var(--fh-muted-fg);
+}
+
+.gw-code-notiz {
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  overflow-wrap: anywhere;
+}
+
+.gw-code-nachtragen .gw-feld {
+  flex: 1;
+  min-width: 140px;
 }
