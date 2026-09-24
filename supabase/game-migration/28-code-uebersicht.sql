@@ -119,8 +119,10 @@ create or replace function public.admin_code_klartext_merken(p_art text, p_code 
 language sql security definer set search_path = public, app, pg_temp
 as $$ select app.admin_code_klartext_merken(p_art, p_code) $$;
 
-revoke execute on function app.admin_code_klartext_merken(text, text)    from public;
-revoke execute on function public.admin_code_klartext_merken(text, text) from public;
+/* "from public" allein reicht auf Supabase nicht: dort bekommt anon
+   neue Funktionen per Default-Privileg ausdruecklich. */
+revoke execute on function app.admin_code_klartext_merken(text, text)    from public, anon;
+revoke execute on function public.admin_code_klartext_merken(text, text) from public, anon;
 grant  execute on function app.admin_code_klartext_merken(text, text)    to authenticated;
 grant  execute on function public.admin_code_klartext_merken(text, text) to authenticated;
 
@@ -166,7 +168,7 @@ returns table (art text, code_sha256 text, klartext text, wert integer, schluess
 language sql stable security definer set search_path = public, app, pg_temp
 as $$ select * from app.admin_codes_uebersicht() $$;
 
-revoke execute on function app.admin_codes_uebersicht()    from public;
-revoke execute on function public.admin_codes_uebersicht() from public;
+revoke execute on function app.admin_codes_uebersicht()    from public, anon;
+revoke execute on function public.admin_codes_uebersicht() from public, anon;
 grant  execute on function app.admin_codes_uebersicht()    to authenticated;
 grant  execute on function public.admin_codes_uebersicht() to authenticated;

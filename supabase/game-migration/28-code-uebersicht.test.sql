@@ -7,7 +7,7 @@
    Die Test-Codes werden direkt in die Code-Tabellen geschrieben,
    nicht ueber admin_code_setzen() - sonst stuenden Eintraege im
    Admin-Protokoll. Alle Testzeilen (Notiz "28TEST") werden am Ende
-   wieder geloescht. Erwartet: acht Zeilen, alle "PASS".
+   wieder geloescht. Erwartet: neun Zeilen, alle "PASS".
 ====================================================== */
 do $$
 declare
@@ -109,6 +109,14 @@ begin
         and exists (select 1 from public.admin_code_klartext where code_sha256 = bhash);
   ausgabe := ausgabe || case when ok = true then 'PASS' else 'FAIL' end
           || '  T8 Klartext eines geloeschten Codes wird aufgeraeumt' || E'\n';
+
+  /* T9: anon darf die Funktionen gar nicht erst aufrufen. */
+  ok := has_function_privilege('anon', 'public.admin_codes_uebersicht()', 'execute') = false
+        and has_function_privilege('anon', 'public.admin_code_klartext_merken(text,text)', 'execute') = false
+        and has_function_privilege('anon', 'app.admin_codes_uebersicht()', 'execute') = false
+        and has_function_privilege('anon', 'app.admin_code_klartext_merken(text,text)', 'execute') = false;
+  ausgabe := ausgabe || case when ok = true then 'PASS' else 'FAIL' end
+          || '  T9 anon hat kein Ausfuehrrecht auf die Admin-Funktionen' || E'\n';
 
   /* Aufraeumen */
   perform set_config('request.jwt.claims', '', true);
