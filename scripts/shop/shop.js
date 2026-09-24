@@ -157,7 +157,7 @@ function shopKarteHtml(item, owned, equipped, lang) {
   } else if (isOwned) {
     buttonHtml = `<button type="button" class="shop-item-btn shop-item-equipped" disabled>✓ Freigeschaltet</button>`;
   } else {
-    buttonHtml = `<button type="button" class="shop-item-btn" onclick="buyShopItem('${item.id}')"><span class="shop-item-price">${item.price.toLocaleString("de-DE")} 💰</span> Kaufen</button>`;
+    buttonHtml = `<button type="button" class="shop-item-btn" onclick="buyShopItem('${item.id}')"><span class="shop-item-price">${shopPreisHtml(item)}</span> Kaufen</button>`;
   }
 
   const previewClass = isFrame ? `avatar-frame-${item.style}` : "";
@@ -183,7 +183,7 @@ function shopKarteHtml(item, owned, equipped, lang) {
         <p class="shop-item-info-name">${item.name}</p>
         <p class="shop-item-info-rarity">${rarityLabel}${herkunft}</p>
         ${item.description ? `<p class="shop-item-info-desc">&bdquo;${item.description}&ldquo;</p>` : ""}
-        <p class="shop-item-info-meta"><span>${categoryLabel}</span><span class="shop-item-price">${item.price.toLocaleString("de-DE")} 💰</span></p>
+        <p class="shop-item-info-meta"><span>${categoryLabel}</span><span class="shop-item-price">${shopPreisHtml(item)}</span></p>
       </div>
     </div>
   `;
@@ -248,6 +248,26 @@ function renderRarityLegend() {
 /* ------------------------------------------------------
    KAUFEN
 ------------------------------------------------------ */
+/* ------------------------------------------------------
+   PREIS MIT SKILL-RABATT ("Feilscher" im Skill-Baum)
+   ---------------------------------------------------
+   Der Server prueft Shop-Preise nicht (bewusste Vereinfachung, siehe
+   CLAUDE.md) - der Rabatt gilt deshalb genau hier: in der Anzeige und
+   beim Abzug. Mindestens 1 Dublone, damit nichts gratis wird.
+------------------------------------------------------ */
+function shopPreis(item) {
+  const rabatt = typeof fhSkillBonus === "function" ? fhSkillBonus("shoprabatt") : 0;
+  return rabatt > 0 ? Math.max(1, Math.round(item.price * (1 - rabatt))) : item.price;
+}
+
+function shopPreisHtml(item) {
+  const preis = shopPreis(item);
+  const alt = preis < item.price
+    ? `<s class="shop-item-price-alt">${item.price.toLocaleString("de-DE")}</s> `
+    : "";
+  return `${alt}${preis.toLocaleString("de-DE")} 💰`;
+}
+
 async function buyShopItem(itemId) {
   const statusEl = document.getElementById("shop-status");
   const item = shopItems.find((i) => i.id === itemId);
@@ -281,7 +301,8 @@ async function buyShopItem(itemId) {
     if (owned.includes(itemId)) {
       throw new Error("already-owned");
     }
-    if (currentCurrency < item.price) {
+    const preis = shopPreis(item);
+    if (currentCurrency < preis) {
       throw new Error("not-enough-currency");
     }
 
@@ -293,7 +314,7 @@ async function buyShopItem(itemId) {
       supabaseClient
         .from("players")
         .update({
-          currency: currentCurrency - item.price,
+          currency: currentCurrency - preis,
           owned_shop_items: [...owned, itemId],
         })
         .eq("firebase_uid", uid)
@@ -502,3 +523,11 @@ async function syncOwnedShopItemsFromServer() {
     console.warn("Shop-Abgleich fehlgeschlagen:", err);
   }
 }
+
+/* Sind die Sterne geladen oder ist gerade "Feilscher" freigeschaltet
+   worden (skilltree.js meldet beides), die Preise im offenen Laden
+   neu zeichnen - sonst stuenden bis zum naechsten Seitenwechsel die
+   alten Preise da. */
+window.addEventListener("fhSkillsGeaendert", () => {
+  if (document.getElementById("shop")?.classList.contains("active-page")) renderShopGrid({ quiet: true });
+});

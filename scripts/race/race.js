@@ -413,6 +413,13 @@ function getLocalRaceProgress() {
 }
 
 function addRaceProgress(amount) {
+  /* Skill-Baum "Rueckenwind": +% auf den Fortschritt, aber nie ueber
+     den Deckel von +15 je Schritt (race_progress_update_own in
+     03-race-boss.sql) - sonst lehnte die Datenbank den ganzen Schritt
+     ab. Nie weniger als ohne Bonus: Math.max haelt den Grundwert. */
+  const rennFaktor = 1 + (typeof fhSkillBonus === "function" ? fhSkillBonus("rennen") : 0);
+  if (rennFaktor > 1) amount = Math.max(amount, Math.min(15, Math.round(amount * rennFaktor)));
+
   const currentWeek = getCurrentWeekId();
   const nickname = localStorage.getItem("wheelNickname") || "";
 
