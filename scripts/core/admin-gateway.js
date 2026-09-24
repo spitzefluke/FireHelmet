@@ -563,7 +563,7 @@ async function saveGatewayFeatureFlag(name, on) {
 /* ------------------------------------------------------
    MENUE DES ADMIN-GATES
    ---------------------------------------------------
-   Statt 16 Abschnitten untereinander: sechs Bereiche oben, bei
+   Statt 16 Abschnitten untereinander: sieben Bereiche oben, bei
    mehreren Teilen eine kleine zweite Reihe darunter. Sichtbar ist
    immer genau EIN Teil. Alle Teile stehen trotzdem im DOM (nur
    hidden), weil die Lade-Funktionen (ladeGatewayBoss & Co.) per
@@ -577,7 +577,7 @@ async function saveGatewayFeatureFlag(name, on) {
 const GW_SVG = (pfade) =>
   `<svg class="gw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${pfade}</svg>`;
 
-/* Symbole: lucide (ISC) - layout-dashboard, radio, globe, gamepad-2, users, message-circle */
+/* Symbole: lucide (ISC) - layout-dashboard, radio, globe, gamepad-2, key-round, users, message-circle */
 const GW_MENUE = [
   { id: "uebersicht", titel: "Übersicht",
     icon: GW_SVG('<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>'),
@@ -604,7 +604,12 @@ const GW_MENUE = [
       { id: "turnier", kurz: "Turnier", titel: "THE CHALLENGE (Turnier)" },
       { id: "rennen", kurz: "Wochenrennen", titel: "Wochenrennen" },
       { id: "boss", kurz: "Boss", titel: "Community-Boss" },
-      { id: "codes", kurz: "Geheimcodes", titel: "Geheimcodes" },
+    ] },
+  { id: "codes", titel: "Codes",
+    icon: GW_SVG('<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>'),
+    teile: [
+      { id: "codeliste", kurz: "Übersicht", titel: "Alle Codes" },
+      { id: "codes", kurz: "Anlegen", titel: "Geheimcodes anlegen" },
     ] },
   { id: "spieler", titel: "Spieler",
     icon: GW_SVG('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
@@ -745,6 +750,7 @@ async function renderGatewayPage() {
     turnier: `<div id="gateway-tournament-sub">Lade Turnierstatus...</div>`,
     rennen: buildGatewayRennenHtml(),
     boss: `<div id="gateway-boss">Lade Boss ...</div>`,
+    codeliste: buildGatewayCodeListeHtml(),
     codes: buildGatewayCodesHtml(),
     spieler: buildGatewaySpielerHtml(),
     identitaet: buildGatewayIdentitaetHtml(),
@@ -767,6 +773,7 @@ async function renderGatewayPage() {
   ladeGatewaySupport();
   ladeGatewayVerlosung();
   ladeGatewayAngriffMarker();
+  gwCodeListeLaden();
 
   buildGatewayTournamentHtml().then((html) => {
     const sub = document.getElementById("gateway-tournament-sub");
@@ -1577,10 +1584,275 @@ async function gatewaySpezialFreischalten() {
 }
 
 /* ------------------------------------------------------
-   GEHEIMCODES
-   Der Code selbst wird nirgends gespeichert, nur sein SHA-256 -
-   auch fuer dich ist er danach nicht mehr auslesbar. Die Liste
-   zeigt deshalb nur die ersten acht Hashzeichen als Kennung.
+   CODES -> UEBERSICHT
+   ---------------------------------------------------
+   Alle Codes auf einen Blick: Dublonen-, Boss- und XP-Codes aus
+   der Datenbank (admin_codes_uebersicht, 28-code-uebersicht.sql)
+   und die Story-Codes aus scripts/codes/codes-data.js.
+
+   WOHER DER KLARTEXT KOMMT
+   - Datenbank: seit Migration 28 merkt sich das Panel den Klartext
+     beim Anlegen. Aeltere Codes traegt man nach, indem man sie
+     eintippt - vorher prueft das Panel selbst, ob der Hash genau zu
+     DIESER Zeile passt, damit ein Tippfehler nicht still als
+     "passt zu einem anderen Code" durchgeht.
+   - codes-data.js: dort steht hinter vielen Hashes der Code als
+     Kommentar. Die Datei ist ohnehin oeffentlich; das Panel liest
+     sie und nimmt ein Kommentarwort nur, wenn sein Hash stimmt.
+
+   Alles, was aus Datenbank oder Datei kommt, landet per
+   textContent im DOM, nie als Markup.
+------------------------------------------------------ */
+const GW_CODE_ARTEN = {
+  dublonen: "Dublonen",
+  boss: "Boss",
+  xp: "Pass-XP",
+  story: "Story",
+};
+
+let gwCodeListe = [];
+let gwCodeFilter = "alle";
+
+function buildGatewayCodeListeHtml() {
+  const chips = [["alle", "Alle"]].concat(Object.entries(GW_CODE_ARTEN)).map(([wert, name]) =>
+    `<button type="button" class="gw-teil-knopf" data-gw-code-filter="${wert}" aria-current="${wert === gwCodeFilter}" onclick="gwCodeFilterSetzen('${wert}')">${name}</button>`
+  ).join("");
+  return `
+    <div class="gw-live-nachricht">
+      <input type="search" id="gw-code-suche" class="gw-feld gw-feld-breit" placeholder="Suchen: Code, Belohnung, Notiz" aria-label="Codes durchsuchen" autocomplete="off" oninput="gwCodeListeZeichnen()">
+      <button type="button" class="gw-live-knopf" onclick="gwCodeListeLaden()">Neu laden</button>
+    </div>
+    <div class="gw-code-filter" role="group" aria-label="Nach Art filtern">${chips}</div>
+    <p id="gw-code-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <div id="gw-code-liste" class="gw-code-liste"></div>
+    <p class="gateway-status-sub">Story-Codes werden nicht je Spieler gespeichert – bei ihnen steht deshalb keine Zahl der Einlösungen. Bei Boss-Codes zählt, wer den Angriff freigeschaltet hat.</p>
+  `;
+}
+
+function gwCodeFilterSetzen(wert) {
+  gwCodeFilter = GW_CODE_ARTEN[wert] ? wert : "alle";
+  document.querySelectorAll("[data-gw-code-filter]").forEach((b) => {
+    b.setAttribute("aria-current", b.dataset.gwCodeFilter === gwCodeFilter ? "true" : "false");
+  });
+  gwCodeListeZeichnen();
+}
+
+/* Wie beim Einloesen: Boss-Codes gross, alle anderen klein. */
+function gwCodeNormal(art, code) {
+  const sauber = String(code || "").trim();
+  return art === "boss" ? sauber.toUpperCase() : sauber.toLowerCase();
+}
+
+/* Hash -> Kommentarwort aus codes-data.js, nur wenn der Hash stimmt. */
+async function gwCodeKommentareLesen() {
+  const treffer = new Map();
+  if (typeof sha256Hex !== "function") return treffer;
+  try {
+    const antwort = await fetch("scripts/codes/codes-data.js", { cache: "no-cache" });
+    if (!antwort.ok) return treffer;
+    const text = await antwort.text();
+    const muster = /hash:\s*"([0-9a-f]{64})"\s*,?\s*\/\/\s*([^\s(]+)/g;
+    let m;
+    const pruefungen = [];
+    while ((m = muster.exec(text))) {
+      const hash = m[1];
+      const wort = m[2];
+      pruefungen.push(sha256Hex(wort.toLowerCase()).then((h) => { if (h === hash) treffer.set(hash, wort); }));
+    }
+    await Promise.all(pruefungen);
+  } catch (e) { /* ohne Datei eben ohne Kommentar-Klartexte */ }
+  return treffer;
+}
+
+function gwCodeBossName(schluessel) {
+  const a = typeof BOSS_SPEZIALANGRIFFE !== "undefined"
+    ? BOSS_SPEZIALANGRIFFE.find((x) => x.schluessel === schluessel) : null;
+  return a && a.name ? (a.name.de || a.name.en || schluessel) : (schluessel || "?");
+}
+
+/* meldung: was nach dem Laden in der Statuszeile stehen soll (z. B.
+   "nachgetragen") - sonst steht dort die Anzahl. */
+async function gwCodeListeLaden(meldung) {
+  const ziel = document.getElementById("gw-code-liste");
+  if (!ziel || !supabaseClient) return;
+  gwLiveStatus("gw-code-status", "Lade ...", false);
+  try {
+    const [{ data, error }, kommentare] = await Promise.all([
+      supabaseClient.rpc("admin_codes_uebersicht"),
+      gwCodeKommentareLesen(),
+    ]);
+    if (error) throw error;
+
+    const zeilen = (data || []).map((c) => ({
+      art: c.art,
+      hash: c.code_sha256,
+      klartext: c.klartext || (c.art !== "boss" && kommentare.get(c.code_sha256)) || "",
+      ausDatei: !c.klartext && c.art !== "boss" && kommentare.has(c.code_sha256),
+      belohnung: c.art === "dublonen" ? `${c.wert} Dublonen`
+               : c.art === "xp" ? `${c.wert} Pass-XP`
+               : `Angriff: ${gwCodeBossName(c.schluessel)}`,
+      notiz: c.notiz || "",
+      angelegt: c.angelegt ? String(c.angelegt).slice(0, 10) : "",
+      einloesungen: typeof c.einloesungen === "number" ? c.einloesungen : null,
+    }));
+    zeilen.forEach((z) => { z.nachtragbar = !z.klartext; });
+
+    /* Story-Codes: alles aus codes-data.js, was nicht schon als
+       Dublonen- oder XP-Code aus der Datenbank kam. */
+    const schonDa = new Set(zeilen.map((z) => z.hash));
+    if (typeof codes !== "undefined" && Array.isArray(codes)) {
+      codes.filter((c) => c && c.hash && !schonDa.has(c.hash)).forEach((c) => {
+        const belohnung = c.avatarUnlock ? `Avatar: ${c.avatarUnlock}`
+                        : c.reward ? String(c.reward)
+                        : c.currencyReward ? `${c.currencyReward} Dublonen`
+                        : "Nachricht";
+        zeilen.push({
+          art: "story",
+          hash: c.hash,
+          klartext: kommentare.get(c.hash) || "",
+          ausDatei: kommentare.has(c.hash),
+          belohnung,
+          notiz: String(c.message || "").slice(0, 90) + (String(c.message || "").length > 90 ? " …" : ""),
+          angelegt: "",
+          einloesungen: null,
+          nachtragbar: false,
+        });
+      });
+    }
+
+    gwCodeListe = zeilen;
+    const ohne = zeilen.filter((z) => !z.klartext).length;
+    gwLiveStatus("gw-code-status", typeof meldung === "string" && meldung ? meldung
+      : `${zeilen.length} Codes` + (ohne ? `, ${ohne} davon ohne bekannten Klartext` : ""), false);
+    gwCodeListeZeichnen();
+  } catch (err) {
+    console.error("Code-Übersicht fehlgeschlagen:", err);
+    gwLiveStatus("gw-code-status", "Übersicht konnte nicht geladen werden: " + ((err && err.message) || err) +
+      " – ist Migration 28 eingespielt?", true);
+  }
+}
+
+function gwCodeZelle(klasse, text) {
+  const el = document.createElement("span");
+  el.className = klasse;
+  el.textContent = text;
+  return el;
+}
+
+function gwCodeListeZeichnen() {
+  const ziel = document.getElementById("gw-code-liste");
+  if (!ziel) return;
+  const suche = ((document.getElementById("gw-code-suche") || {}).value || "").trim().toLowerCase();
+  const sichtbar = gwCodeListe.filter((z) =>
+    (gwCodeFilter === "alle" || z.art === gwCodeFilter) &&
+    (!suche || [z.klartext, z.belohnung, z.notiz, GW_CODE_ARTEN[z.art]].some((t) => String(t).toLowerCase().includes(suche)))
+  );
+
+  ziel.replaceChildren();
+  if (!sichtbar.length) {
+    ziel.appendChild(gwCodeZelle("gateway-status-sub", gwCodeListe.length ? "Nichts gefunden." : "Noch nichts geladen."));
+    return;
+  }
+
+  sichtbar.forEach((z) => {
+    const karte = document.createElement("div");
+    karte.className = "gw-code-zeile";
+
+    const kopf = document.createElement("div");
+    kopf.className = "gw-code-kopf";
+    kopf.appendChild(gwCodeZelle("gw-code-art ist-" + z.art, GW_CODE_ARTEN[z.art] || z.art));
+    if (z.klartext) {
+      const code = document.createElement("code");
+      code.className = "gw-code-klartext";
+      code.textContent = z.klartext;
+      kopf.appendChild(code);
+      const kopieren = document.createElement("button");
+      kopieren.type = "button";
+      kopieren.className = "gw-live-knopf gw-code-kopieren";
+      kopieren.textContent = "Kopieren";
+      kopieren.addEventListener("click", () => {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(z.klartext).then(
+            () => gwLiveStatus("gw-code-status", `„${z.klartext}“ kopiert`, false),
+            () => gwLiveStatus("gw-code-status", "Kopieren ging nicht – bitte von Hand markieren.", true));
+        }
+      });
+      kopf.appendChild(kopieren);
+    } else {
+      kopf.appendChild(gwCodeZelle("gw-code-unbekannt", "Klartext unbekannt · " + z.hash.slice(0, 8) + "…"));
+    }
+    karte.appendChild(kopf);
+
+    const daten = document.createElement("div");
+    daten.className = "gw-code-daten";
+    daten.appendChild(gwCodeZelle("gw-code-belohnung", z.belohnung));
+    if (z.einloesungen !== null) daten.appendChild(gwCodeZelle("gw-code-meta", z.einloesungen + "× eingelöst"));
+    if (z.angelegt) daten.appendChild(gwCodeZelle("gw-code-meta", "angelegt " + z.angelegt));
+    if (z.ausDatei) daten.appendChild(gwCodeZelle("gw-code-meta", "Klartext aus codes-data.js"));
+    karte.appendChild(daten);
+
+    if (z.notiz) karte.appendChild(gwCodeZelle("gw-code-notiz", z.notiz));
+
+    if (z.nachtragbar && z.art !== "story") {
+      const reihe = document.createElement("div");
+      reihe.className = "gw-code-nachtragen";
+      const feld = document.createElement("input");
+      feld.type = "text";
+      feld.className = "gw-feld";
+      feld.autocomplete = "off";
+      feld.placeholder = "Code eintippen";
+      feld.setAttribute("aria-label", "Klartext nachtragen");
+      const knopf = document.createElement("button");
+      knopf.type = "button";
+      knopf.className = "gw-live-knopf";
+      knopf.textContent = "Nachtragen";
+      const los = () => gwCodeNachtragen(z, feld.value);
+      knopf.addEventListener("click", los);
+      feld.addEventListener("keydown", (e) => { if (e.key === "Enter") los(); });
+      reihe.append(feld, knopf);
+      karte.appendChild(reihe);
+    }
+
+    ziel.appendChild(karte);
+  });
+}
+
+/* Den Klartext in der Datenbank merken. Liefert true/false, wirft nie -
+   beim Anlegen soll ein Fehler hier den eigentlichen Code nicht
+   rueckgaengig aussehen lassen. */
+async function gwCodeKlartextMerken(art, code) {
+  if (!supabaseClient) return false;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_code_klartext_merken", { p_art: art, p_code: code });
+    if (error) throw error;
+    return data === true;
+  } catch (err) {
+    console.warn("Klartext merken fehlgeschlagen:", err);
+    return false;
+  }
+}
+
+async function gwCodeNachtragen(zeile, eingabe) {
+  const code = String(eingabe || "").trim();
+  if (!code) { gwLiveStatus("gw-code-status", "Erst den Code eintippen.", true); return; }
+  if (typeof sha256Hex === "function") {
+    const hash = await sha256Hex(gwCodeNormal(zeile.art, code));
+    if (hash !== zeile.hash) {
+      gwLiveStatus("gw-code-status", `„${code}“ ist nicht der Code dieser Zeile.`, true);
+      return;
+    }
+  }
+  const ok = await gwCodeKlartextMerken(zeile.art, code);
+  if (!ok) { gwLiveStatus("gw-code-status", "Nachtragen fehlgeschlagen.", true); return; }
+  gwCodeListeLaden(`✓ „${code}“ nachgetragen`);
+}
+
+/* ------------------------------------------------------
+   GEHEIMCODES ANLEGEN
+   Geprueft wird beim Einloesen nur der SHA-256. Den Klartext merkt
+   sich seit 28-code-uebersicht.sql eine Tabelle, die nur du lesen
+   kannst - direkt nach dem Anlegen, ueber einen zweiten Aufruf.
+   Die Liste dazu steht unter "Codes -> Uebersicht".
 ------------------------------------------------------ */
 function buildGatewayCodesHtml() {
   return `
@@ -1597,11 +1869,9 @@ function buildGatewayCodesHtml() {
       <label>Spezialangriff<br>${buildGatewayAngriffAuswahlHtml()}</label>
     </div>
     <button type="button" class="code-button gateway-inline-btn" onclick="gatewayBossCodeSetzen()">Boss-Code anlegen</button>
-    <button type="button" class="code-button gateway-inline-btn" onclick="gatewayCodesLaden()">Liste laden</button>
 
-    <div id="gateway-codes-liste"></div>
     <p id="gateway-codes-status" class="wheel-status"></p>
-    <p class="gateway-preview-hint">Gespeichert wird nur der Hash, nie der Code. Die Liste zeigt deshalb bloß eine Kennung — schreib dir den Code beim Anlegen selbst auf.</p>
+    <p class="gateway-preview-hint">Neue Codes erscheinen mit Klartext unter <button type="button" class="gateway-logout-link" onclick="gwZeige('codes', 'codeliste')">Codes → Übersicht</button>. Den Klartext siehst nur du; beim Einlösen zählt weiter nur der Hash.</p>
   `;
 }
 
@@ -1622,7 +1892,9 @@ async function gatewayCodeSetzen() {
       p_code: code, p_betrag: Number(betrag), p_bemerkung: notiz || null,
     });
     if (error) throw error;
-    gatewayCodesStatus(`Code „${code}“ gibt jetzt ${betrag} Dublonen. Schreib ihn dir auf — ab jetzt steht nur noch der Hash in der Datenbank.`);
+    const gemerkt = await gwCodeKlartextMerken("dublonen", code);
+    gatewayCodesStatus(`Code „${code}“ gibt jetzt ${betrag} Dublonen.` +
+      (gemerkt ? " Er steht in der Übersicht." : " Der Klartext ließ sich nicht merken – schreib ihn dir auf oder trag ihn in der Übersicht nach."));
     gatewayCodesLaden();
   } catch (err) {
     console.error("Code anlegen fehlgeschlagen:", err);
@@ -1723,7 +1995,9 @@ async function gatewayBossCodeSetzen() {
       ? BOSS_SPEZIALANGRIFFE.find((a) => a.schluessel === key) : null;
     const name = gewaehlt && gewaehlt.name ? (gewaehlt.name.de || gewaehlt.name.en) : key;
 
-    gatewayCodesStatus(`Boss-Code „${code}“ schaltet jetzt „${name}“ frei.`);
+    const gemerkt = await gwCodeKlartextMerken("boss", code);
+    gatewayCodesStatus(`Boss-Code „${code}“ schaltet jetzt „${name}“ frei.` +
+      (gemerkt ? " Er steht in der Übersicht." : " Der Klartext ließ sich nicht merken – schreib ihn dir auf oder trag ihn in der Übersicht nach."));
     gatewayCodesLaden();
     ladeGatewayAngriffMarker();
   } catch (err) {
@@ -1732,24 +2006,10 @@ async function gatewayBossCodeSetzen() {
   }
 }
 
-async function gatewayCodesLaden() {
-  const ziel = document.getElementById("gateway-codes-liste");
-  if (!ziel || !supabaseClient) return;
-  ziel.innerHTML = `<p class="wheel-status">Lade ...</p>`;
-  try {
-    const { data, error } = await supabaseClient.rpc("admin_codes");
-    if (error) throw error;
-    if (!data || !data.length) { ziel.innerHTML = `<p class="wheel-status">Keine Codes hinterlegt.</p>`; return; }
-    ziel.innerHTML = data.map((c) => `
-      <p class="gateway-status-sub">
-        <code>${escapeHtml(c.kennung)}…</code>
-        ${c.art === "dublonen" ? `${c.betrag} Dublonen` : "Boss-Angriff"}
-        ${c.bemerkung ? " – " + escapeHtml(c.bemerkung) : ""}
-      </p>`).join("");
-  } catch (err) {
-    console.error("Codeliste fehlgeschlagen:", err);
-    ziel.innerHTML = `<p class="wheel-status">⚠️ Liste konnte nicht geladen werden.</p>`;
-  }
+/* Frueher eine eigene Liste mit Hash-Kennungen - jetzt frischt es
+   einfach die Uebersicht auf. */
+function gatewayCodesLaden() {
+  gwCodeListeLaden();
 }
 
 /* ------------------------------------------------------
