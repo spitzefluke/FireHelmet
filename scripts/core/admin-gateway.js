@@ -336,6 +336,130 @@ function buildGatewayLiveGeschenkeHtml() {
 }
 
 /* ------------------------------------------------------
+   LIVE-EVENT: EVENT-TITEL (Migration 27)
+   ---------------------------------------------------
+   Ein eigener Titel (bis 32 Zeichen) mit einem der fuenf Stile aus
+   scripts/liveevent/event-titel.js. "An alle Anwesenden" laeuft wie
+   die anderen Geschenke ueber einen Grant; "an einen Spieler" ueber
+   die vorhandene Spielersuche.
+
+   Spielernamen kommen von Nutzern - die Trefferliste und die
+   Vorschau werden deshalb per textContent gebaut, nie per innerHTML.
+------------------------------------------------------ */
+const GW_TITEL_STILE = [
+  ["regenbogen", "Regenbogen"], ["gold", "Goldschimmer"], ["feuer", "Feuer"],
+  ["eis", "Eis / Neon"], ["hacked", "hacked"],
+];
+
+function buildGatewayEventTitelHtml() {
+  const optionen = GW_TITEL_STILE.map(([wert, name]) => `<option value="${wert}">${name}</option>`).join("");
+  return `
+    <div class="gw-live-nachricht">
+      <input type="text" id="gw-titel-text" class="gw-feld gw-feld-breit" maxlength="32" placeholder="Titel, z. B. Held des Sturms" aria-label="Titeltext" oninput="gwTitelVorschau()">
+      <label class="gw-feld-label">Stil
+        <select id="gw-titel-stil" class="gw-feld" onchange="gwTitelVorschau()">${optionen}</select>
+      </label>
+    </div>
+    <p class="gw-titel-vorschau" id="gw-titel-vorschau" aria-label="Vorschau"><span class="fh-event-titel fh-titel-regenbogen">Vorschau</span></p>
+    <div class="gw-live-nachricht">
+      <button type="button" class="gw-live-knopf ist-alle" onclick="gwTitelAnAlle()">Titel an alle Anwesenden</button>
+    </div>
+    <div class="gw-live-nachricht">
+      <input type="text" id="gw-titel-suche" class="gw-feld gw-feld-breit" placeholder="Oder gezielt: Spielername suchen" aria-label="Spieler suchen" autocomplete="off"
+             onkeydown="if (event.key === 'Enter') gwTitelSpielerSuchen()">
+      <button type="button" class="gw-live-knopf" onclick="gwTitelSpielerSuchen()">Suchen</button>
+    </div>
+    <div id="gw-titel-treffer" class="gw-titel-treffer"></div>
+    <p id="gw-titel-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <p class="gateway-status-sub">Jeder Spieler traegt seinen neuesten Event-Titel - auf der Spielerkarte und in der Rangliste, vor einem Skill-Titel.</p>
+  `;
+}
+
+function gwTitelEingabe() {
+  const text = ((document.getElementById("gw-titel-text") || {}).value || "").trim();
+  const stil = (document.getElementById("gw-titel-stil") || {}).value || "regenbogen";
+  return { text, stil: GW_TITEL_STILE.some(([w]) => w === stil) ? stil : "regenbogen" };
+}
+
+function gwTitelVorschau() {
+  const ziel = document.getElementById("gw-titel-vorschau");
+  if (!ziel) return;
+  const { text, stil } = gwTitelEingabe();
+  const probe = document.createElement("span");
+  probe.className = "fh-event-titel fh-titel-" + stil;
+  probe.textContent = text || "Vorschau";
+  ziel.replaceChildren(probe);
+}
+
+function gwTitelPruefen() {
+  const eingabe = gwTitelEingabe();
+  if (!eingabe.text) { gwLiveStatus("gw-titel-status", "Erst einen Titel eingeben.", true); return null; }
+  if (eingabe.text.length > 32) { gwLiveStatus("gw-titel-status", "Hoechstens 32 Zeichen.", true); return null; }
+  return eingabe;
+}
+
+async function gwTitelAnAlle() {
+  const eingabe = gwTitelPruefen();
+  if (!eingabe || !supabaseClient) return;
+  gwLiveStatus("gw-titel-status", "Verteile ...", false);
+  try {
+    const { error } = await supabaseClient.rpc("admin_event_titel_an_alle", { p_text: eingabe.text, p_stil: eingabe.stil });
+    if (error) throw error;
+    gwLiveStatus("gw-titel-status", `✓ Titel „${eingabe.text}“ an alle Anwesenden verteilt`, false);
+  } catch (err) {
+    console.error("Titel an alle fehlgeschlagen:", err);
+    gwLiveStatus("gw-titel-status", "Verteilen fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwTitelSpielerSuchen() {
+  const suche = ((document.getElementById("gw-titel-suche") || {}).value || "").trim();
+  const liste = document.getElementById("gw-titel-treffer");
+  if (!liste || !supabaseClient) return;
+  if (!suche) { gwLiveStatus("gw-titel-status", "Erst einen Namen eingeben.", true); return; }
+  liste.replaceChildren();
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_spieler_suchen", { p_suche: suche });
+    if (error) throw error;
+    if (!data || !data.length) { gwLiveStatus("gw-titel-status", "Niemand gefunden.", true); return; }
+    gwLiveStatus("gw-titel-status", data.length + " Treffer", false);
+    data.forEach((sp) => {
+      const zeile = document.createElement("div");
+      zeile.className = "gw-titel-treffer-zeile";
+      const name = document.createElement("span");
+      name.className = "gw-titel-treffer-name";
+      name.textContent = sp.nickname || "(ohne Namen)";
+      const id = document.createElement("code");
+      id.textContent = String(sp.firebase_uid).slice(0, 8);
+      const knopf = document.createElement("button");
+      knopf.type = "button";
+      knopf.className = "gw-live-knopf";
+      knopf.textContent = "Titel geben";
+      knopf.addEventListener("click", () => gwTitelAnSpieler(sp.firebase_uid, sp.nickname || ""));
+      zeile.append(name, id, knopf);
+      liste.appendChild(zeile);
+    });
+  } catch (err) {
+    console.error("Spielersuche fehlgeschlagen:", err);
+    gwLiveStatus("gw-titel-status", "Suche fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwTitelAnSpieler(uid, name) {
+  const eingabe = gwTitelPruefen();
+  if (!eingabe || !supabaseClient) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_event_titel_an_spieler", { p_text: eingabe.text, p_stil: eingabe.stil, p_uid: uid });
+    if (error) throw error;
+    gwLiveStatus("gw-titel-status", `✓ Titel „${eingabe.text}“ an ${name || uid} vergeben`, false);
+    if (window.fhEventTitel) window.fhEventTitel.laden();
+  } catch (err) {
+    console.error("Titel an Spieler fehlgeschlagen:", err);
+    gwLiveStatus("gw-titel-status", "Vergeben fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+/* ------------------------------------------------------
    LIVE-EVENT: AUSLOESER
    Schreibt in die Zustandszeile public.live_event (nur der Admin
    darf das laut RLS) bzw. loest einen Grant ueber die RPC aus.
@@ -463,6 +587,7 @@ const GW_MENUE = [
     teile: [
       { id: "live", kurz: "Steuerung", titel: "Live-Steuerung" },
       { id: "geschenke", kurz: "Geschenke", titel: "Geschenke an alle" },
+      { id: "titel", kurz: "Titel", titel: "Event-Titel verteilen" },
       { id: "freigaben", kurz: "Freigaben", titel: "Funktionen freigeben" },
     ] },
   { id: "seite", titel: "Seite",
@@ -601,6 +726,7 @@ async function renderGatewayPage() {
       ${buildGatewayStatusHtml()}`,
     live: buildGatewayLiveSteuerungHtml(),
     geschenke: buildGatewayLiveGeschenkeHtml(),
+    titel: buildGatewayEventTitelHtml(),
     freigaben: buildGatewayFreigabenHtml(),
     countdown: `
       <div class="gateway-form-row">

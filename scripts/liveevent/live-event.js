@@ -182,6 +182,8 @@
         /* Waren es Skillpunkte, soll der Baum sie sofort zeigen. Der
            Rueckgabewert verraet die Art nicht - neu laden ist billig. */
         if (typeof window.fhSkillNeuLaden === "function") window.fhSkillNeuLaden();
+        /* War es ein Event-Titel, kuendigt event-titel.js ihn an. */
+        if (window.fhEventTitel) window.fhEventTitel.nachGeschenk();
       }
     } catch (err) { console.warn("Grant konnte nicht eingeloest werden:", err); }
   }

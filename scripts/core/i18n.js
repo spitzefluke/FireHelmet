@@ -178,6 +178,7 @@ const translations = {
     "live.stageTitle": "Live-Event läuft",
     "live.stageSub": "Bleib dran - gleich passiert etwas.",
     "live.grantGot": "Geschenk erhalten!",
+    "live.titleGot": "Neuer Titel",
     "menu.rating": "Bewertung",
     "menu.daveAwards": "Dave Awards",
 
@@ -707,6 +708,7 @@ const translations = {
     "live.stageTitle": "Live event running",
     "live.stageSub": "Stay tuned - something's about to happen.",
     "live.grantGot": "You got a gift!",
+    "live.titleGot": "New title",
     "menu.rating": "Rating",
     "menu.daveAwards": "Dave Awards",
 

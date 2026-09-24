@@ -1763,6 +1763,12 @@ function leaderboardTitelHtml(auszeichnung, klasse, nurTitel) {
   return teile.length ? `<span class="${klasse}">${teile.map((x) => escapeHtml(x)).join(" · ")}</span>` : "";
 }
 
+/* Event-Titel aus dem Live-Event - steht VOR dem Skill-Titel. Auf dem
+   Podium ersetzt er ihn, damit dort nur eine Zeile steht. */
+function eventTitelHtml(titel, klasse) {
+  return titel && window.fhEventTitel ? window.fhEventTitel.html(titel, klasse) : "";
+}
+
 function istLegende(auszeichnung) {
   return !!(auszeichnung && auszeichnung.titel === "legende");
 }
@@ -1800,7 +1806,7 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
   return `
     <tr class="${classes.join(" ")}">
       <td class="leaderboard-rank">${medal}</td>
-      <td class="leaderboard-name">${crownHtml}${avatarHtml}${escapeHtml(player.nickname || "Unbekannt")}${isOwnRow ? ' <span class="leaderboard-you-tag">(Du)</span>' : ""}${leaderboardTitelHtml(player.auszeichnung, "leaderboard-titel")}</td>
+      <td class="leaderboard-name">${crownHtml}${avatarHtml}${escapeHtml(player.nickname || "Unbekannt")}${isOwnRow ? ' <span class="leaderboard-you-tag">(Du)</span>' : ""}${eventTitelHtml(player.eventTitel, "leaderboard-eventtitel")}${leaderboardTitelHtml(player.auszeichnung, "leaderboard-titel")}</td>
       <td class="leaderboard-codes">${player.codesCracked} 🔑</td>
       <td class="leaderboard-rewards">${renderRewardBadges(player.rewards)}</td>
     </tr>
@@ -1822,7 +1828,7 @@ function buildLeaderboardPodiumEntry(player, rank) {
       ${crownHtml}
       ${wrapAvatarWithFrame(`<div class="fh-podium-avatar">${avatarHtml}</div>`, frameStyle)}
       <p class="fh-podium-name">${escapeHtml(player.nickname || "Unbekannt")}</p>
-      ${leaderboardTitelHtml(player.auszeichnung, "fh-podium-titel", true)}
+      ${player.eventTitel ? eventTitelHtml(player.eventTitel, "fh-podium-eventtitel") : leaderboardTitelHtml(player.auszeichnung, "fh-podium-titel", true)}
       <p class="fh-podium-score">${player.codesCracked || 0} 🔑</p>
       <div class="fh-podium-pedestal">${rank}</div>
     </div>
@@ -1873,8 +1879,9 @@ function loadLeaderboard() {
     wheelAuthReady,
     fetchPassCapWinnerUids(),
     fetchSkillAuszeichnungen(),
+    window.fhEventTitel ? window.fhEventTitel.laden() : Promise.resolve(new Map()),
   ])
-    .then(([{ data: rows, error }, ownUid, capWinnerUids, auszeichnungen]) => {
+    .then(([{ data: rows, error }, ownUid, capWinnerUids, auszeichnungen, eventTitel]) => {
       if (error) throw error;
 
       const players = [];
@@ -1889,6 +1896,7 @@ function loadLeaderboard() {
           equippedFrame: row.equipped_frame,
           hasCap: capWinnerUids.has(row.firebase_uid),
           auszeichnung: auszeichnungen.get(row.firebase_uid) || null,
+          eventTitel: eventTitel.get(row.firebase_uid) || null,
         });
       });
 
