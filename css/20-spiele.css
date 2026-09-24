@@ -783,6 +783,33 @@
   color: #fff;
 }
 
+/* Titel und Abzeichen aus dem Skill-Baum, unter dem Namen. */
+.leaderboard-titel,
+.fh-podium-titel {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--fh-gold);
+}
+
+.fh-podium-titel {
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Legende der sieben Meere: goldener Schimmer am Namen. */
+.leaderboard-legende .leaderboard-name,
+.fh-podium-legende .fh-podium-name {
+  text-shadow: 0 0 12px color-mix(in srgb, var(--fh-gold-bright) 60%, transparent);
+}
+
+.leaderboard-legende .leaderboard-titel,
+.fh-podium-legende .fh-podium-titel {
+  color: var(--fh-gold-bright);
+}
+
 .leaderboard-codes {
   color: #bcdfff;
   white-space: nowrap;
