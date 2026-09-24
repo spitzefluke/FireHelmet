@@ -1719,6 +1719,54 @@ async function fetchPassCapWinnerUids() {
   }
 }
 
+/* ------------------------------------------------------
+   TITEL UND ABZEICHEN AUS DEM SKILL-BAUM (Etappe 3)
+   ---------------------------------------------------
+   player_progression ist nur fuer die eigene Zeile lesbar - die
+   Titel ANDERER Spieler kommen deshalb ueber die schmale
+   Server-Funktion skill_auszeichnungen() (Migration 26), die nur
+   uid, Titel und Abzeichen herausgibt.
+
+   Vor dem Release des Skill-Baums (Feature-Flag skillTree) sieht
+   ein Besucher keine Titel - dann geht auch gar keine Anfrage raus.
+   Der Admin sieht sie als Vorschau.
+------------------------------------------------------ */
+async function fetchSkillAuszeichnungen() {
+  const leer = new Map();
+  if (!supabaseClient) return leer;
+  if (typeof fhFeatureSichtbar !== "function" || !fhFeatureSichtbar("skillTree")) return leer;
+  try {
+    const { data, error } = await withSupabaseRlsColdStartRetry(() =>
+      supabaseClient.rpc("skill_auszeichnungen")
+    );
+    if (error) throw error;
+    const karte = new Map();
+    (data || []).forEach((z) => {
+      karte.set(z.firebase_uid, { titel: z.titel || null, abzeichen: Array.isArray(z.abzeichen) ? z.abzeichen : [] });
+    });
+    return karte;
+  } catch (err) {
+    console.warn("Titel fuer die Rangliste konnten nicht geladen werden:", err);
+    return leer;
+  }
+}
+
+/* Die Namen kommen zweisprachig aus i18n.js (skilltree.node.*.name).
+   nurTitel: auf dem schmalen Podium ohne Abzeichen, sonst bricht die
+   Zeile mehrfach um - die Abzeichen stehen dann in der Tabelle. */
+function leaderboardTitelHtml(auszeichnung, klasse, nurTitel) {
+  if (!auszeichnung) return "";
+  const name = typeof fhSkillName === "function" ? fhSkillName : (id) => id;
+  const teile = [auszeichnung.titel ? name(auszeichnung.titel) : null]
+    .concat(nurTitel ? [] : auszeichnung.abzeichen.map(name))
+    .filter(Boolean);
+  return teile.length ? `<span class="${klasse}">${teile.map((x) => escapeHtml(x)).join(" · ")}</span>` : "";
+}
+
+function istLegende(auszeichnung) {
+  return !!(auszeichnung && auszeichnung.titel === "legende");
+}
+
 function frameStyleFromId(frameId) {
   if (!frameId || typeof shopItems === "undefined") return "";
   const item = shopItems.find((i) => i.id === frameId);
@@ -1736,6 +1784,7 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
 
   if (rank <= 3) classes.push(`leaderboard-top leaderboard-top-${rank}`);
   if (isOwnRow) classes.push("leaderboard-you");
+  if (istLegende(player.auszeichnung)) classes.push("leaderboard-legende");
 
   let avatarHtml = player.avatar
     ? isAvatarImagePath(player.avatar)
@@ -1751,7 +1800,7 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
   return `
     <tr class="${classes.join(" ")}">
       <td class="leaderboard-rank">${medal}</td>
-      <td class="leaderboard-name">${crownHtml}${avatarHtml}${escapeHtml(player.nickname || "Unbekannt")}${isOwnRow ? ' <span class="leaderboard-you-tag">(Du)</span>' : ""}</td>
+      <td class="leaderboard-name">${crownHtml}${avatarHtml}${escapeHtml(player.nickname || "Unbekannt")}${isOwnRow ? ' <span class="leaderboard-you-tag">(Du)</span>' : ""}${leaderboardTitelHtml(player.auszeichnung, "leaderboard-titel")}</td>
       <td class="leaderboard-codes">${player.codesCracked} 🔑</td>
       <td class="leaderboard-rewards">${renderRewardBadges(player.rewards)}</td>
     </tr>
@@ -1769,10 +1818,11 @@ function buildLeaderboardPodiumEntry(player, rank) {
   const frameStyle = frameStyleFromId(player.equippedFrame);
 
   return `
-    <div class="fh-podium-col fh-podium-rank-${rank} ${rowFrameClass(frameStyle)}">
+    <div class="fh-podium-col fh-podium-rank-${rank} ${rowFrameClass(frameStyle)}${istLegende(player.auszeichnung) ? " fh-podium-legende" : ""}">
       ${crownHtml}
       ${wrapAvatarWithFrame(`<div class="fh-podium-avatar">${avatarHtml}</div>`, frameStyle)}
       <p class="fh-podium-name">${escapeHtml(player.nickname || "Unbekannt")}</p>
+      ${leaderboardTitelHtml(player.auszeichnung, "fh-podium-titel", true)}
       <p class="fh-podium-score">${player.codesCracked || 0} 🔑</p>
       <div class="fh-podium-pedestal">${rank}</div>
     </div>
@@ -1822,8 +1872,9 @@ function loadLeaderboard() {
       .select("firebase_uid, nickname, codes_cracked, rewards, avatar, equipped_frame"),
     wheelAuthReady,
     fetchPassCapWinnerUids(),
+    fetchSkillAuszeichnungen(),
   ])
-    .then(([{ data: rows, error }, ownUid, capWinnerUids]) => {
+    .then(([{ data: rows, error }, ownUid, capWinnerUids, auszeichnungen]) => {
       if (error) throw error;
 
       const players = [];
@@ -1837,6 +1888,7 @@ function loadLeaderboard() {
           avatar: row.avatar,
           equippedFrame: row.equipped_frame,
           hasCap: capWinnerUids.has(row.firebase_uid),
+          auszeichnung: auszeichnungen.get(row.firebase_uid) || null,
         });
       });
 
@@ -1933,3 +1985,10 @@ function updateLeaderboardPage(pageID) {
     loadLeaderboard();
   }
 }
+
+/* Die Titel haengen am Feature-Flag und an der Admin-Erkennung - beides
+   steht beim ersten Laden evtl. noch nicht fest. Meldet feature-flags.js
+   eine Aenderung, die offene Rangliste einmal neu laden. */
+window.addEventListener("fhFlagsUpdated", () => {
+  if (document.getElementById("leaderboard")?.classList.contains("active-page")) loadLeaderboard();
+});
