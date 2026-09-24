@@ -286,6 +286,14 @@
   filter: drop-shadow(0 0 6px rgba(255,215,107,.55));
 }
 
+/* Alter Preis, wenn der Skill-Rabatt "Feilscher" greift. */
+.shop-item-price-alt {
+  margin-right: 2px;
+  font-size: .85em;
+  font-weight: 400;
+  opacity: .6;
+}
+
 .shop-item-info-meta .shop-item-price {
   color: #ffe9b0;
   font-weight: 700;
