@@ -616,6 +616,11 @@ function renderPlayerCardHtml(data) {
     ? `<span class="fh-player-card-titel">${auszeichnungTexte.map(esc).join(" · ")}</span>`
     : "";
   const legendeKlasse = auszeichnung && auszeichnung.legende ? " ist-legende" : "";
+  /* Event-Titel aus dem Live-Event (scripts/liveevent/event-titel.js)
+     steht VOR dem Skill-Titel. html() escaped den Text selbst. */
+  const eventTitelHtml = window.fhEventTitel
+    ? window.fhEventTitel.html(window.fhEventTitel.eigener(), "fh-player-card-eventtitel")
+    : "";
 
   return `
     <div class="fh-player-card${legendeKlasse}">
@@ -627,6 +632,7 @@ function renderPlayerCardHtml(data) {
       </button>
       <button type="button" class="fh-player-card-info" onclick="openLevelPath()" aria-label="${levelLabel} ${progress.level}">
         <span class="fh-player-card-name">${safeNickname}</span>
+        ${eventTitelHtml}
         ${titelHtml}
         <span class="fh-player-card-level">${levelLabel} ${progress.level}</span>
         <span class="fh-player-card-xpbar" role="progressbar" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100" aria-label="${xpText}">

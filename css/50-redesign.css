@@ -1839,3 +1839,46 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   .gateway-form-row { flex-direction: column; }
 }
 
+
+/* --- Admin-Gate: Event-Titel (Live-Event -> Titel) --- */
+.gw-titel-vorschau {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px dashed var(--fh-border-strong);
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-bg-secondary);
+  font-size: 20px;
+}
+
+.gw-titel-treffer {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.gw-titel-treffer-zeile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-surface);
+}
+
+.gw-titel-treffer-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gw-titel-treffer-zeile code {
+  font-size: 12px;
+  color: var(--fh-muted-fg);
+}
