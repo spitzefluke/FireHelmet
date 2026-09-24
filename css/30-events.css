@@ -2371,65 +2371,6 @@ img, svg, video, canvas {
 }
 
 /* ======================================================
-   DER FALL: ERMITTLUNGSTAFEL, ZEITSTRAHL, NOTIZEN
-   ---------------------------------------------------
-   Vorher waren es zwei Kartenraster untereinander - sauber lesbar,
-   aber nichts daran war detektivisch. Jetzt haengen Verdaechtige und
-   Hinweise auf einem Korkbrett, und rote Faeden ziehen die
-   Verbindung nach {
-  margin: 0 0 12px;
-  font-size: 13px;
-  color: var(--fh-muted, #9aa4b2);
-}
-
-/* Die senkrechte Rasterlinie geht durch alle Zeilen - erst dadurch
-   kann man senkrecht ablesen {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 20px;
-  width: 1px;
-  height: 260px;
-  background: rgba(255, 255, 255, .09);
-}
-
-/* Bestaetigt und unbestaetigt sehen UNTERSCHIEDLICH aus, nicht nur
-   unterschiedlich hell: das eine ist gefuellt {
-  background: rgba(80, 200, 130, .5);
-  border: 1px solid rgba(80, 200, 130, .8);
-}
-
-/* Ereignisse stehen in eigenen Zeilen, im selben Raster wie die
-   Balken - so fluchten sie senkrecht mit ihnen. Als Faehnchen
-   nebeneinander lagen die vier entscheidenden (23:10 bis 23:13)
-   uebereinander {
-  height: 1px;
-  margin: 12px 0 10px;
-  background: rgba(255, 255, 255, .10);
-}
-
-/* Die schweren Ereignisse - die { color: inherit; }
-
-@keyframes detektivFaden { to { stroke-dashoffset: 0; } }
-
-/* Ein Faden, der einer Aussage widerspricht, ist der wichtigste -
-   er ist deshalb kraeftiger { stroke: #e0402a; stroke-width: 2.6; }
-
-/* ---- Zettel {
-  border-color: rgba(224, 64, 42, .65);
-  box-shadow: 0 0 0 1px rgba(224, 64, 42, .3), 0 10px 24px rgba(0, 0, 0, .5);
-  transform: translateY(-3px);
-}
-
-/* Steht immer im Markup { display: none; }
-
-/* Bei reduzierter Bewegung wird der Faden nicht gezogen, er ist
-   einfach da. */
-@media (prefers-reduced-motion: reduce) {
-  .detective-faden { animation: none; stroke-dashoffset: 0; }
-}
-
-/* ======================================================
    FEATURE-FLAGS + SKILL-BAUM
    (scripts/core/feature-flags.js, scripts/skilltree/)
 ====================================================== */
