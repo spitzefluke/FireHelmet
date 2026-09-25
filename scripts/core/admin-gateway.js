@@ -303,10 +303,9 @@ function buildGatewayLiveSteuerungHtml() {
       ${gwLiveZeile("Konfetti", [["Testen", "gwLivePulse('konfetti', false)"]], [["Senden", "gwLivePulse('konfetti', true)"]])}
       ${gwLiveZeile("Blitz", [["Testen", "gwLivePulse('blitz', false)"]], [["Senden", "gwLivePulse('blitz', true)"]])}
       ${gwLiveZeile("Sound", [["Testen", "gwLivePulse('sound', false)"]], [["Senden", "gwLivePulse('sound', true)"]])}
-      ${gwLiveZeile("Disco", [["An", "gwLiveDisco(true, false)"], ["Aus", "gwLiveDisco(false, false)"]], [["An", "gwLiveDisco(true, true)"], ["Aus", "gwLiveDisco(false, true)"]])}
       ${gwLiveZeile("Live-Bühne", [["An", "gwLiveTakeover(true, false)"], ["Aus", "gwLiveTakeover(false, false)"]], [["An", "gwLiveTakeover(true, true)"], ["Aus", "gwLiveTakeover(false, true)"]])}
     </div>
-    <p class="gateway-status-sub">Die Live-Bühne schickt alle auf eine leere Fläche, auf der deine Effekte wirken.</p>
+    <p class="gateway-status-sub">Die Live-Bühne schickt alle auf eine leere Fläche, auf der deine Effekte wirken. Disco, Sturm, Hacked und die anderen Szenen stehen unter „Storys“.</p>
   `;
 }
 
@@ -333,6 +332,182 @@ function buildGatewayLiveGeschenkeHtml() {
     <p id="gw-geschenk-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <p class="gateway-status-sub">Jeder anwesende Spieler bekommt es genau einmal. Der Betrag wird server-seitig verrechnet.</p>
   `;
+}
+
+/* ------------------------------------------------------
+   LIVE-EVENT: STORYS (Migration 29, scripts/liveevent/live-storys.js)
+   ---------------------------------------------------
+   "Vorschau" spielt die Story nur hier im eigenen Browser ab, ohne
+   Belohnung. "Für alle" startet sie ueber admin_live_story() bei
+   allen, die gerade auf der Seite sind. Die Belohnungen legt die
+   Datenbank fest - die Texte hier beschreiben sie nur.
+------------------------------------------------------ */
+const GW_STORYS = [
+  ["schatz", "Schatzregen", "25 s · Zuschauer fangen Münzen · Beute ×10 Dublonen (max. 600), ab 25 zusätzlich +1 Skillpunkt", "gold"],
+  ["hacked", "Hacked", "32 s · Unbekannter gegen Dave · Titel „Firewall-Pirat“ + 1 Skillpunkt, danach 6 Hintertüren zum Schließen (+1 Skillpunkt)", "neon"],
+  ["sturm", "Sturm", "12,4 s · Blitz und Einschlag · +150 Dublonen", "kalt"],
+  ["nordlicht", "Nordlicht", "17 s · Sternschnuppen und ein Wunsch · +150 Dublonen", "violett"],
+  ["nebel", "Geisterschiff", "14 s · Nebel und ein Fluch · +150 Dublonen", "papier"],
+  ["flut", "Sturmflut", "13,6 s · Land unter und Treibgut · +150 Dublonen", "wasser"],
+  ["disco", "Disco-Party", "Endlos, bis du sie beendest · mit Musik (unten hochladen)", "gold"],
+  ["ende", "Systemausfall", "12 s · beendet das Event – die Seite bleibt für alle gehackt, bis die nächste Story startet oder du wiederherstellst", "rot"],
+];
+
+function buildGatewayStorysHtml() {
+  const zeilen = GW_STORYS.map(([id, name, info, ton]) => `
+    <div class="gw-story ist-${ton}">
+      <div class="gw-story-text"><span class="gw-story-name">${name}</span><span class="gw-story-info">${info}</span></div>
+      <div class="gw-story-knoepfe">
+        <button type="button" class="gw-live-knopf" onclick="gwStoryVorschau('${id}')">Vorschau</button>
+        <button type="button" class="gw-live-knopf ist-alle" onclick="gwStoryStart('${id}')">Für alle</button>
+      </div>
+    </div>`).join("");
+  return `
+    <div class="gw-story-lage">
+      <p id="gw-story-jetzt" class="gw-story-jetzt">Lade …</p>
+      <div class="gw-story-lage-knoepfe">
+        <button type="button" class="gw-live-knopf" onclick="gwStoryBeenden()">Disco beenden</button>
+        <button type="button" class="gw-live-knopf" onclick="gwStoryAufraeumen()">Abbrechen / Seite wiederherstellen</button>
+        <button type="button" class="gw-live-knopf" onclick="gwStoryVorschauStopp()">Vorschau stoppen</button>
+      </div>
+    </div>
+    <div class="gw-story-liste">${zeilen}</div>
+    <p id="gw-story-status" class="gw-live-status" role="status" aria-live="polite"></p>
+
+    <div class="gw-musik">
+      <div class="gw-musik-text">
+        <span class="gw-story-name">Disco-Musik</span>
+        <span id="gw-musik-stand" class="gw-story-info">Lade …</span>
+      </div>
+      <label class="gw-live-knopf gw-musik-datei">Datei wählen<input type="file" accept="audio/*" onchange="gwMusikHochladen(this)" hidden></label>
+      <button type="button" class="gw-live-knopf" onclick="gwMusikProbe()">Anhören</button>
+      <button type="button" class="gw-live-knopf" onclick="gwMusikEntfernen()">Entfernen</button>
+    </div>
+    <p id="gw-musik-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <p class="gateway-status-sub">Die Musik liegt in Supabase Storage (Bucket „live-musik“) und wird bei allen abgespielt, sobald die Disco läuft. Ohne eigene Datei läuft music/disco.mp3. Höchstens 15 MB.</p>
+  `;
+}
+
+function gwStoryName(id) {
+  const s = GW_STORYS.find((x) => x[0] === id);
+  return s ? s[1] : id;
+}
+
+async function gwStoryLageLaden() {
+  const ziel = document.getElementById("gw-story-jetzt");
+  const musik = document.getElementById("gw-musik-stand");
+  if (!ziel || !supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from("live_event").select("story, story_at, story_ende_at, musik_version").eq("id", 1).maybeSingle();
+    if (error) throw error;
+    const z = data || {};
+    if (!z.story) ziel.textContent = "Gerade läuft keine Story.";
+    else if (z.story === "ende") ziel.textContent = "Zuletzt: Systemausfall – die Seite ist gehackt, bis du wiederherstellst oder eine neue Story startest.";
+    else if (z.story === "disco" && !z.story_ende_at) ziel.textContent = "Disco läuft seit " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC) – „Disco beenden“ lässt sie ausklingen.";
+    else ziel.textContent = "Zuletzt gestartet: " + gwStoryName(z.story) + " um " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC).";
+    if (musik) musik.textContent = z.musik_version ? "Eigene Datei hochgeladen (Version " + z.musik_version + ")" : "Standard: music/disco.mp3";
+  } catch (err) {
+    ziel.textContent = "Stand nicht lesbar – ist Migration 29 eingespielt?";
+  }
+}
+
+function gwStoryVorschau(id) {
+  if (!window.fhLiveStorys) { gwLiveStatus("gw-story-status", "live-storys.js ist nicht geladen.", true); return; }
+  window.fhLiveStorys.vorschau(id);
+  gwLiveStatus("gw-story-status", "Vorschau: " + gwStoryName(id) + " – nur bei dir, ohne Belohnung.", false);
+}
+
+function gwStoryVorschauStopp() {
+  if (window.fhLiveStorys) window.fhLiveStorys.vorschauStopp();
+  gwLiveStatus("gw-story-status", "Vorschau gestoppt.", false);
+}
+
+async function gwStoryStart(id) {
+  if (!supabaseClient) return;
+  if (id === "ende" && !confirm("Systemausfall für alle starten? Die Seite bleibt danach für alle gehackt, bis die nächste Story startet oder du wiederherstellst.")) return;
+  gwLiveStatus("gw-story-status", "Starte …", false);
+  try {
+    const { error } = await supabaseClient.rpc("admin_live_story", { p_story: id });
+    if (error) throw error;
+    gwLiveStatus("gw-story-status", "✓ " + gwStoryName(id) + " läuft jetzt bei allen.", false);
+    gwStoryLageLaden();
+  } catch (err) {
+    console.error("Story starten fehlgeschlagen:", err);
+    gwLiveStatus("gw-story-status", "Starten fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwStoryBeenden() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_live_story_beenden");
+    if (error) throw error;
+    gwLiveStatus("gw-story-status", data ? "✓ Disco klingt bei allen aus." : "Es lief nichts, das man beenden könnte.", !data);
+    gwStoryLageLaden();
+  } catch (err) {
+    gwLiveStatus("gw-story-status", "Beenden fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwStoryAufraeumen() {
+  if (!supabaseClient) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_live_story", { p_story: null });
+    if (error) throw error;
+    gwLiveStatus("gw-story-status", "✓ Story abgebrochen, Seite bei allen wiederhergestellt.", false);
+    gwStoryLageLaden();
+  } catch (err) {
+    gwLiveStatus("gw-story-status", "Fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwMusikHochladen(feld) {
+  const datei = feld && feld.files && feld.files[0];
+  if (feld) feld.value = "";
+  if (!datei || !supabaseClient) return;
+  if (!/^audio\//.test(datei.type || "")) { gwLiveStatus("gw-musik-status", "Das ist keine Audiodatei.", true); return; }
+  if (datei.size > 15 * 1024 * 1024) { gwLiveStatus("gw-musik-status", "Die Datei ist größer als 15 MB.", true); return; }
+  gwLiveStatus("gw-musik-status", "Lade „" + datei.name + "“ hoch …", false);
+  try {
+    const { error } = await supabaseClient.storage.from("live-musik").upload("disco", datei, { upsert: true, contentType: datei.type, cacheControl: "60" });
+    if (error) throw error;
+    /* Neue Version: alle Browser holen die Datei frisch, statt die
+       alte aus dem Cache zu spielen. */
+    const version = Date.now().toString(36);
+    const { data, error: e2 } = await supabaseClient.from("live_event").update({ musik_version: version, updated_at: new Date().toISOString() }).eq("id", 1).select("id");
+    if (e2) throw e2;
+    if (!data || !data.length) throw new Error("Keine Berechtigung für live_event");
+    gwLiveStatus("gw-musik-status", "✓ „" + datei.name + "“ ist die neue Disco-Musik.", false);
+    gwStoryLageLaden();
+  } catch (err) {
+    console.error("Musik hochladen fehlgeschlagen:", err);
+    gwLiveStatus("gw-musik-status", "Hochladen fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwMusikEntfernen() {
+  if (!supabaseClient) return;
+  try {
+    const { error } = await supabaseClient.storage.from("live-musik").remove(["disco"]);
+    if (error) throw error;
+    const { error: e2 } = await supabaseClient.from("live_event").update({ musik_version: null, updated_at: new Date().toISOString() }).eq("id", 1).select("id");
+    if (e2) throw e2;
+    gwLiveStatus("gw-musik-status", "✓ Eigene Musik entfernt – es läuft wieder music/disco.mp3.", false);
+    gwStoryLageLaden();
+  } catch (err) {
+    gwLiveStatus("gw-musik-status", "Entfernen fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+let gwMusikAudio = null;
+function gwMusikProbe() {
+  if (gwMusikAudio && !gwMusikAudio.paused) { gwMusikAudio.pause(); gwLiveStatus("gw-musik-status", "Angehalten.", false); return; }
+  const url = window.fhLiveStorys ? window.fhLiveStorys.musikUrl() : "music/disco.mp3";
+  gwMusikAudio = new Audio(url);
+  gwMusikAudio.volume = 0.6;
+  gwMusikAudio.play().then(
+    () => gwLiveStatus("gw-musik-status", "Spielt – nochmal „Anhören“ zum Anhalten.", false),
+    () => gwLiveStatus("gw-musik-status", "Konnte nicht abgespielt werden – ist eine Datei vorhanden?", true));
 }
 
 /* ------------------------------------------------------
@@ -506,10 +681,6 @@ function gwLiveMessage(anAlle) {
   if (anAlle) liveSend({ message: text, message_color: farbe, message_from: von || null, message_at: liveJetzt() }, "Nachricht");
   else if (window.fhLiveVorschau) window.fhLiveVorschau.banderole(text, farbe, von);
 }
-function gwLiveDisco(an, anAlle) {
-  if (anAlle) liveSend({ disco: !!an }, an ? "Disco AN" : "Disco AUS");
-  else if (window.fhLiveVorschau) (an ? window.fhLiveVorschau.discoAn() : window.fhLiveVorschau.discoAus());
-}
 function gwLivePulse(kind, anAlle) {
   if (anAlle) liveSend({ pulse_kind: kind, pulse_at: liveJetzt() }, GW_LIVE_NAMEN[kind] || kind);
   else if (window.fhLiveVorschau) window.fhLiveVorschau.pulse(kind);
@@ -586,6 +757,7 @@ const GW_MENUE = [
     icon: GW_SVG('<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/>'),
     teile: [
       { id: "live", kurz: "Steuerung", titel: "Live-Steuerung" },
+      { id: "storys", kurz: "Storys", titel: "Live-Storys" },
       { id: "geschenke", kurz: "Geschenke", titel: "Geschenke an alle" },
       { id: "titel", kurz: "Titel", titel: "Event-Titel verteilen" },
       { id: "freigaben", kurz: "Freigaben", titel: "Funktionen freigeben" },
@@ -730,6 +902,7 @@ async function renderGatewayPage() {
       <div id="gateway-statusbrett">Lade Zahlen ...</div>
       ${buildGatewayStatusHtml()}`,
     live: buildGatewayLiveSteuerungHtml(),
+    storys: buildGatewayStorysHtml(),
     geschenke: buildGatewayLiveGeschenkeHtml(),
     titel: buildGatewayEventTitelHtml(),
     freigaben: buildGatewayFreigabenHtml(),
@@ -774,6 +947,7 @@ async function renderGatewayPage() {
   ladeGatewayVerlosung();
   ladeGatewayAngriffMarker();
   gwCodeListeLaden();
+  gwStoryLageLaden();
 
   buildGatewayTournamentHtml().then((html) => {
     const sub = document.getElementById("gateway-tournament-sub");

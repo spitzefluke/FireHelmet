@@ -51,18 +51,28 @@
     return el;
   }
 
-  let banderoleUhr = null;
-  function banderole(text, farbe, von) {
+  /* Banderole wie im Entwurf: faellt federnd herein, der Text baut
+     sich Buchstabe fuer Buchstabe auf, ein Lichtstreif laeuft
+     darueber, und eine Leiste unten zeigt, wie lange sie noch steht.
+     Alles per textContent - der Text kommt aus der Datenbank und
+     wird nie als Markup gelesen. mono: Konsolenschrift (Hacked). */
+  let banderoleUhr = null, banderoleWegUhr = null;
+  function banderole(text, farbe, von, mono) {
     if (!text) return;
-    const el = schicht("fh-live-banderole", "fh-live-banderole");
-    const sicherFarbe = /^#[0-9a-fA-F]{3,8}$/.test(farbe || "") ? farbe : "var(--fh-gold, #f0c96a)";
+    const alt = document.getElementById("fh-live-banderole");
+    if (alt) alt.remove();
+    clearTimeout(banderoleUhr); clearTimeout(banderoleWegUhr);
+
+    const el = document.createElement("div");
+    el.id = "fh-live-banderole";
+    el.className = "fh-live-banderole" + (mono ? " ist-mono" : "");
+    el.setAttribute("role", "status");
+    const sicherFarbe = /^#[0-9a-fA-F]{3,8}$/.test(farbe || "") ? farbe : "var(--fh-gold-bright, #f0c96a)";
     el.style.setProperty("--live-farbe", sicherFarbe);
-    /* Per textContent statt innerHTML aufbauen: der Text landet als
-       reiner Textknoten und kann nie als Markup gelesen werden, egal
-       was in der Zeile steht. (escapeHtml wuerde hier zwar reichen,
-       aber der textContent-Umweg im Escaper laesst CodeQL zu Recht
-       aufhorchen - so gibt es die Stelle gar nicht erst.) */
-    el.textContent = "";
+
+    const glanz = document.createElement("span");
+    glanz.className = "fh-live-glanz";
+    el.appendChild(glanz);
     if (von) {
       const vonEl = document.createElement("span");
       vonEl.className = "fh-live-von";
@@ -71,16 +81,43 @@
     }
     const textEl = document.createElement("span");
     textEl.className = "fh-live-text";
-    textEl.textContent = text;
+    const zeichen = Array.from(String(text));
+    if (RUHIG.matches || zeichen.length > 140) {
+      textEl.textContent = text;
+    } else {
+      /* Buchstaben je Wort buendeln: umgebrochen wird nur zwischen
+         Woertern, nie mitten im Wort. */
+      let wort = null;
+      zeichen.forEach(function (ch, i) {
+        if (/\s/.test(ch)) {
+          wort = null;
+          textEl.appendChild(document.createTextNode(ch));
+          return;
+        }
+        if (!wort) {
+          wort = document.createElement("span");
+          wort.className = "fh-live-wort";
+          textEl.appendChild(wort);
+        }
+        const b = document.createElement("span");
+        b.className = "fh-live-buchstabe";
+        b.style.animationDelay = (220 + i * 20) + "ms";
+        b.textContent = ch;
+        wort.appendChild(b);
+      });
+    }
     el.appendChild(textEl);
-    el.classList.remove("ist-weg");
-    // Reflow erzwingen, damit die Einblend-Animation neu startet
-    void el.offsetWidth;
-    el.classList.add("ist-da");
-    clearTimeout(banderoleUhr);
+    const leiste = document.createElement("span");
+    leiste.className = "fh-live-leiste";
+    const lauf = document.createElement("span");
+    lauf.className = "fh-live-leiste-lauf";
+    el.appendChild(leiste);
+    el.appendChild(lauf);
+    document.body.appendChild(el);
+
     banderoleUhr = setTimeout(function () {
-      el.classList.remove("ist-da");
       el.classList.add("ist-weg");
+      banderoleWegUhr = setTimeout(function () { el.remove(); }, 600);
     }, 6000);
   }
 
@@ -104,21 +141,27 @@
     if (discoAudio) { try { discoAudio.pause(); } catch (e) {} }
   }
 
+  /* Konfetti-Kanonen aus beiden unteren Ecken (Entwurf). */
   function konfetti() {
     if (RUHIG.matches) return; // bei reduzierter Bewegung kein Konfetti
     const halter = schicht("fh-live-konfetti", "fh-live-konfetti");
-    const farben = ["#f0c96a", "#e0402a", "#4f8f5c", "#5aa0e0", "#d6a84f", "#ffffff"];
-    for (let i = 0; i < 80; i++) {
+    const farben = ["var(--fh-gold-bright)", "var(--fh-danger)", "var(--fh-success)", "var(--fh-cold)", "var(--fh-gold)", "var(--fh-paper)", "var(--fh-fire)"];
+    const r = Math.random;
+    for (let i = 0; i < 110; i++) {
+      const links = i % 2 === 0;
+      const mx = (links ? 1 : -1) * (8 + r() * 38);
+      const my = -(40 + r() * 45);
       const p = document.createElement("span");
       p.className = "fh-live-konfetti-stueck";
-      p.style.left = Math.random() * 100 + "%";
-      p.style.background = farben[i % farben.length];
-      p.style.animationDelay = (Math.random() * 0.5) + "s";
-      p.style.animationDuration = (1.8 + Math.random() * 1.4) + "s";
-      p.style.transform = "rotate(" + (Math.random() * 360) + "deg)";
+      p.style.cssText = "left:" + (links ? "3%" : "97%") + ";width:" + (7 + r() * 5).toFixed(1) + "px;height:" + (10 + r() * 6).toFixed(1) + "px;" +
+        "border-radius:" + (r() < 0.3 ? "50%" : "2px") + ";background:" + farben[i % farben.length] + ";" +
+        "--mx:" + mx.toFixed(1) + "vw;--my:" + my.toFixed(1) + "vh;--ex:" + (mx * 1.5).toFixed(1) + "vw;--ey:" + (my + 70 + r() * 30).toFixed(1) + "vh;" +
+        "--r1:" + (r() * 540).toFixed(0) + "deg;--r2:" + (540 + r() * 720).toFixed(0) + "deg;" +
+        "animation-duration:" + (2 + r() * 1.3).toFixed(2) + "s;animation-delay:" + (r() * 0.25).toFixed(2) + "s;";
       halter.appendChild(p);
     }
-    setTimeout(function () { if (halter) halter.innerHTML = ""; }, 3600);
+    clearTimeout(konfetti.uhr);
+    konfetti.uhr = setTimeout(function () { if (halter) halter.innerHTML = ""; }, 3800);
   }
 
   function blitz() {
@@ -157,6 +200,7 @@
     if (el) el.remove();
   }
 
+  /* banderole(text, farbe, von, mono) - auch fuer live-storys.js. */
   window.fhLiveVorschau = {
     banderole: banderole, discoAn: discoAn, discoAus: discoAus,
     konfetti: konfetti, blitz: blitz, sound: sound, pulse: pulse,
@@ -191,6 +235,9 @@
   function anwenden(z) {
     if (!z) return;
     const erst = letzte.erstesMal;
+
+    /* Storys (Sturm, Hacked, Schatzregen ...) spielt live-storys.js ab. */
+    if (window.fhLiveStorys) window.fhLiveStorys.zustand(z, erst);
 
     /* Beim ERSTEN Laden nicht rueckwirkend feuern (sonst blitzt es
        bei jedem Seitenaufruf, weil pulse_at schon gesetzt ist) -

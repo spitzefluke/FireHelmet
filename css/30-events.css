@@ -3234,46 +3234,79 @@ img, svg, video, canvas {
 .gateway-flag-row { display: flex; align-items: flex-start; gap: 10px; }
 .gateway-flag-row input[type="checkbox"] { margin-top: 3px; width: 18px; height: 18px; }
 
-/* ---------- Banderole ---------- */
+/* ---------- Banderole (Entwurf "Skill-Baum & Live-Event") ----------
+   Faellt federnd herein, Buchstaben bauen sich auf, ein Lichtstreif
+   laeuft darueber, die Leiste unten zeigt die Restzeit (6 s). */
 .fh-live-banderole {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 10000;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 18px 24px;
+  gap: 6px 14px;
+  padding: 18px 24px 21px;
+  overflow: hidden;
   background: linear-gradient(180deg, rgba(8,10,16,.96), rgba(8,10,16,.82));
-  border-bottom: 3px solid var(--live-farbe, #f0c96a);
   text-align: center;
-  transform: translateY(-140%);
-  opacity: 0;
   pointer-events: none;
   box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  perspective: 600px;
+  animation: fhStBanderoleRein .6s cubic-bezier(.22,1.35,.36,1) both;
 }
-.fh-live-banderole.ist-da {
-  transform: translateY(0);
-  opacity: 1;
-  transition: transform .5s cubic-bezier(.22,.9,.32,1), opacity .5s ease;
-}
-.fh-live-banderole.ist-weg {
-  transform: translateY(-140%);
-  opacity: 0;
-  transition: transform .5s ease, opacity .5s ease;
+.fh-live-banderole.ist-weg { animation: fhStBanderoleRaus .5s ease forwards; }
+.fh-live-glanz {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 35%, color-mix(in srgb, var(--live-farbe) 22%, transparent) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: fhStSweep 1.8s .35s ease-out both;
 }
 .fh-live-von {
-  font-family: var(--fh-font-display, "Oswald", system-ui, sans-serif);
+  position: relative;
+  font-family: var(--fh-font-display);
   font-size: clamp(16px, 2.4vw, 26px);
   font-weight: 600;
   color: var(--live-farbe, #f0c96a);
   text-shadow: 0 0 18px color-mix(in srgb, var(--live-farbe, #f0c96a) 60%, transparent);
+  animation: fhStBuchstabe .5s .1s both, fhStVonPuls 1.6s ease-in-out .6s infinite;
 }
 .fh-live-text {
-  font-family: var(--fh-font-display, "Oswald", system-ui, sans-serif);
+  position: relative;
+  font-family: var(--fh-font-display);
   font-size: clamp(18px, 3.2vw, 40px);
   font-weight: 500;
-  color: #fff;
+  color: var(--fh-fg);
+}
+.fh-live-wort { display: inline-block; white-space: nowrap; }
+.fh-live-buchstabe {
+  display: inline-block;
+  white-space: pre;
+  animation: fhStBuchstabe 520ms cubic-bezier(.22,.9,.32,1) both;
+}
+.fh-live-banderole.ist-mono .fh-live-von,
+.fh-live-banderole.ist-mono .fh-live-text {
+  font-family: var(--fh-mono);
+  letter-spacing: .14em;
+}
+.fh-live-banderole.ist-mono .fh-live-text {
+  font-size: clamp(15px, 2.2vw, 26px);
+  color: var(--live-farbe);
+  animation: fhStGlitchText 2.6s steps(1, end) 1.6s infinite;
+}
+.fh-live-leiste,
+.fh-live-leiste-lauf {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 3px;
+}
+.fh-live-leiste { background: color-mix(in srgb, var(--live-farbe) 25%, transparent); }
+.fh-live-leiste-lauf {
+  background: var(--live-farbe);
+  box-shadow: 0 0 12px var(--live-farbe);
+  transform-origin: left;
+  animation: fhStBalken 6s linear forwards;
 }
 
 /* ---------- Disco ---------- */
@@ -3298,25 +3331,23 @@ body.fh-live-disco-ruhig { animation: none; }
 }
 
 /* ---------- Konfetti ---------- */
+/* Kanonen aus beiden unteren Ecken; Flugbahn ueber --mx/--my
+   (Scheitel) und --ex/--ey (Ende), gesetzt in live-event.js. */
 .fh-live-konfetti { position: fixed; inset: 0; z-index: 9999; pointer-events: none; overflow: hidden; }
-@keyframes fhKonfettiFall {
-  0%   { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(110vh) rotate(720deg); opacity: .9; }
-}
 .fh-live-konfetti-stueck {
   position: absolute;
-  top: 0;
-  width: 10px; height: 14px;
-  border-radius: 2px;
-  animation-name: fhKonfettiFall;
-  animation-timing-function: ease-in;
-  animation-fill-mode: forwards;
+  bottom: -14px;
+  animation-name: fhStKanone;
+  animation-timing-function: cubic-bezier(.15,.7,.3,1);
+  animation-fill-mode: both;
 }
 
 /* ---------- Blitz ---------- */
-.fh-live-blitz { position: fixed; inset: 0; z-index: 10001; pointer-events: none; background: #fff; opacity: 0; }
-@keyframes fhBlitz { 0% { opacity: 0; } 12% { opacity: .9; } 100% { opacity: 0; } }
-.fh-live-blitz.ist-an { animation: fhBlitz .7s ease-out; animation-fill-mode: forwards; }
+.fh-live-blitz {
+  position: fixed; inset: 0; z-index: 10001; pointer-events: none; opacity: 0;
+  background: radial-gradient(80% 70% at 50% 20%, #fff, color-mix(in srgb, var(--fh-cold) 40%, #fff) 60%, var(--fh-cold));
+}
+.fh-live-blitz.ist-an { animation: fhStBlitz .75s ease-out forwards; }
 @media (prefers-reduced-motion: reduce) {
   .fh-live-blitz.ist-an { animation: none; opacity: 0; }
 }
@@ -3336,6 +3367,476 @@ body.fh-live-disco-ruhig { animation: none; }
   color: var(--fh-gold-bright, #f0c96a);
 }
 .fh-live-buehne-sub { margin: 8px 0 0; color: var(--fh-muted-fg, #a7aec0); }
+
+/* ======================================================
+   LIVE-STORYS (scripts/liveevent/live-storys.js)
+   ---------------------------------------------------
+   Die Szenen selbst tragen ihre Stile inline (wie im Entwurf).
+   Hier stehen nur die Dinge, die Klassen brauchen: der Farbfilter
+   der Seite, die Bewegung der ganzen Seite, die Stimmung des
+   Skill-Baums - und alle Keyframes der Storys (fhSt...).
+====================================================== */
+
+/* Farbfilter ueber der ganzen Seite. backdrop-filter statt filter
+   auf #fh-main: ein filter machte #fh-main zum Bezugsrahmen aller
+   fest positionierten Elemente darin (Dialoge, Karten). */
+#fh-story-filter {
+  position: fixed;
+  inset: 0;
+  z-index: 9988;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* Bewegung der ganzen Seite - nur kurz oder waehrend einer Szene. */
+#fh-main.fh-story-glitch { animation: fhStGlitchSeite 1.4s steps(1, end) both; }
+#fh-main.fh-story-schwanken { animation: fhStSchwanken 3s ease-in-out infinite; }
+#fh-main.fh-story-schaukeln { animation: fhStSchaukeln 3.2s ease-in-out infinite; }
+#fh-main.fh-story-gehackt-flackern { animation: fhStGehacktFlackern 7s steps(1, end) infinite; }
+#fh-main.fh-story-beben-1 { animation: fhStWackeln1 .45s cubic-bezier(.22,.9,.32,1); }
+#fh-main.fh-story-beben-2 { animation: fhStWackeln2 .45s cubic-bezier(.22,.9,.32,1); }
+
+/* Schatzregen: die Zahl ploppt bei jedem Fang. */
+.fh-story-pop-1 { animation: fhStPop1 .35s cubic-bezier(.22,.9,.32,1); }
+.fh-story-pop-2 { animation: fhStPop2 .35s cubic-bezier(.22,.9,.32,1); }
+
+/* Die Hintertueren nach "Hacked" wachsen beim Zeigen. */
+.fh-story-loch > div { transition: transform 200ms var(--fh-ease); }
+@media (hover: hover) {
+  .fh-story-loch:hover > div { transform: scale(1.14); }
+}
+.fh-story-loch:focus-visible { outline: 2px solid var(--fh-neon); outline-offset: 4px; border-radius: 50%; }
+.fh-spiel-hack:hover { background: rgba(57,255,20,.18) !important; box-shadow: 0 0 26px rgba(57,255,20,.35); }
+.fh-spiel-hack:active { transform: scale(.97); }
+
+/* Der Skill-Baum spielt mit: gekapert (neon), Beat, aufgeladen,
+   geisterhaft, schwimmend, Wunsch. */
+body.fh-story-hack .fh-stern-kern {
+  color: var(--fh-neon);
+  border-color: var(--fh-neon);
+  border-style: solid;
+  opacity: 1;
+  background: radial-gradient(circle at 50% 38%, #0c2410, var(--fh-bg) 78%);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--fh-neon) 45%, transparent);
+  animation: fhStHackFlackern .8s steps(1) infinite;
+}
+body.fh-story-hack .fh-himmel-linie { stroke: var(--fh-neon); filter: drop-shadow(0 0 4px var(--fh-neon)); }
+body.fh-story-hack .fh-himmel { border-color: rgba(57,255,20,.4); }
+body.fh-story-hack .fh-skill-punkte strong { color: var(--fh-neon); font-family: var(--fh-mono); text-shadow: 0 0 16px rgba(57,255,20,.6); }
+body.fh-story-beat .fh-stern-kern { animation: fhStBeatStern .5s cubic-bezier(.22,.9,.32,1) infinite; }
+body.fh-story-beat .fh-himmel { border-color: var(--fh-gold-bright); }
+body.fh-story-geladen .fh-stern.ist-frei .fh-stern-kern,
+body.fh-story-geladen .fh-stern.ist-offen .fh-stern-kern {
+  border-color: var(--fh-cold);
+  box-shadow: 0 0 20px var(--fh-cold), 0 0 44px color-mix(in srgb, var(--fh-cold) 40%, transparent);
+  animation: fhStHackFlackern .3s steps(1) infinite;
+}
+body.fh-story-geladen .fh-himmel { border-color: var(--fh-cold); }
+body.fh-story-geist .fh-stern-kern {
+  color: var(--fh-paper);
+  border-color: color-mix(in srgb, var(--fh-paper) 60%, transparent);
+  border-style: dashed;
+  background: radial-gradient(circle at 50% 38%, rgba(232,213,168,.18), var(--fh-bg) 80%);
+  box-shadow: 0 0 24px rgba(232,213,168,.25);
+  animation: fhStGeist 2.6s ease-in-out infinite;
+}
+body.fh-story-geist .fh-himmel { border-color: rgba(232,213,168,.4); }
+body.fh-story-schwimmt .fh-stern-kern { animation: fhStSchweben 2.3s ease-in-out infinite; }
+body.fh-story-schwimmt .fh-himmel { border-color: rgba(90,160,224,.5); }
+body.fh-story-wunsch .fh-stern.ist-frei .fh-stern-kern {
+  box-shadow: 0 0 22px rgba(166,107,255,.6), 0 0 50px rgba(85,200,120,.3);
+}
+
+/* Reduzierte Bewegung: Szenen stehen still (Texte bleiben lesbar).
+   Muenzen und der Gegenhack-Cursor brauchen Bewegung - ohne sie
+   waeren die Spiele nicht spielbar -, deshalb ausgenommen. */
+@media (prefers-reduced-motion: reduce) {
+  #fh-story > :not(#fh-story-muenzen):not(#fh-story-spiel),
+  #fh-story > :not(#fh-story-muenzen):not(#fh-story-spiel) * {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+  }
+  #fh-main[class*="fh-story-"],
+  body[class*="fh-story-"] .fh-stern-kern,
+  .fh-live-banderole, .fh-live-banderole *, .fh-story-pop-1, .fh-story-pop-2 {
+    animation: none !important;
+  }
+}
+
+/* Keyframes der Storys - aus dem Entwurf uebernommen, mit Praefix
+   fhSt, damit sie keine gleichnamigen Keyframes der Seite
+   ueberschreiben. Wer hier etwas aendert, sucht den Namen in
+   live-storys.js / live-event.js. */
+@keyframes fhStAlarm {
+  0%,100%{opacity:.35}
+  50%{opacity:1}
+}
+@keyframes fhStAn {
+  to{opacity:1}
+}
+@keyframes fhStAurora {
+  0%{transform:translateX(-10%) skewY(-6deg) scaleY(.8)}
+  100%{transform:translateX(10%) skewY(5deg) scaleY(1.25)}
+}
+@keyframes fhStAus {
+  to{opacity:0}
+}
+@keyframes fhStBalken {
+  from{transform:scaleX(1)}
+  to{transform:scaleX(0)}
+}
+@keyframes fhStBanderoleRaus {
+  from{transform:translateY(0);opacity:1}
+  to{transform:translateY(-140%);opacity:0}
+}
+@keyframes fhStBanderoleRein {
+  from{transform:translateY(-140%)}
+  to{transform:translateY(0)}
+}
+@keyframes fhStBeat {
+  0%{opacity:1}
+  100%{opacity:0}
+}
+@keyframes fhStBeatStern {
+  0%{transform:scale(1.14);filter:brightness(1.45)}
+  100%{transform:scale(1);filter:none}
+}
+@keyframes fhStBlase {
+  0%{transform:translate(0,0);opacity:0}
+  10%{opacity:1}
+  100%{transform:translate(18px,-70vh);opacity:0}
+}
+@keyframes fhStBlitz {
+  0%{opacity:0}
+  10%{opacity:.92}
+  30%{opacity:.2}
+  42%{opacity:.7}
+  100%{opacity:0}
+}
+@keyframes fhStBoltAus {
+  0%,55%{opacity:1}
+  65%{opacity:.2}
+  72%{opacity:1}
+  100%{opacity:0}
+}
+@keyframes fhStBuchstabe {
+  from{opacity:0;transform:translateY(.55em) rotateX(70deg);filter:blur(4px)}
+  to{opacity:1;transform:none;filter:none}
+}
+@keyframes fhStCodeRegen {
+  from{transform:translateY(-110%)}
+  to{transform:translateY(110vh)}
+}
+@keyframes fhStCrtAus {
+  0%{transform:scale(1,1);opacity:.85}
+  55%{transform:scale(1,.006);opacity:1}
+  100%{transform:scale(0,.006);opacity:0}
+}
+@keyframes fhStCursor {
+  0%,49%{opacity:1}
+  50%,100%{opacity:0}
+}
+@keyframes fhStCursorLauf1 {
+  from{left:0}
+  to{left:calc(100% - 4px)}
+}
+@keyframes fhStCursorLauf2 {
+  from{left:0}
+  to{left:calc(100% - 4px)}
+}
+@keyframes fhStDiscoLicht {
+  0%{background:radial-gradient(60% 60% at 20% 20%,rgba(224,64,42,.5),transparent 60%)}
+  25%{background:radial-gradient(60% 60% at 80% 20%,rgba(90,160,224,.5),transparent 60%)}
+  50%{background:radial-gradient(60% 60% at 80% 80%,rgba(79,143,92,.5),transparent 60%)}
+  75%{background:radial-gradient(60% 60% at 20% 80%,rgba(240,201,106,.5),transparent 60%)}
+  100%{background:radial-gradient(60% 60% at 20% 20%,rgba(224,64,42,.5),transparent 60%)}
+}
+@keyframes fhStEinblenden {
+  from{opacity:0}
+  to{opacity:1}
+}
+@keyframes fhStEntschl {
+  from{transform:translateY(0)}
+  to{transform:translateY(-9.9em)}
+}
+@keyframes fhStFerneBlitz {
+  0%,18%{opacity:0}
+  20%{opacity:1}
+  23%{opacity:.1}
+  25%{opacity:.8}
+  30%,58%{opacity:0}
+  60%{opacity:.6}
+  64%,100%{opacity:0}
+}
+@keyframes fhStFluestern {
+  0%{opacity:0;transform:translateY(8px)}
+  40%{opacity:.75;transform:none}
+  100%{opacity:0;transform:translateY(-8px)}
+}
+@keyframes fhStFuellen {
+  from{width:0}
+  to{width:100%}
+}
+@keyframes fhStGehacktFlackern {
+  0%,91%,100%{transform:none}
+  92%{transform:translate(-6px,1px) skewX(2deg)}
+  93%{transform:translate(4px,-1px)}
+  94%{transform:none}
+  97%{transform:translateX(3px)}
+  98%{transform:none}
+}
+@keyframes fhStGeist {
+  0%,100%{opacity:.35}
+  50%{opacity:.8}
+}
+@keyframes fhStGeistBuchstabe {
+  0%{opacity:0;filter:blur(14px);transform:translateY(20px)}
+  35%{opacity:.95;filter:blur(0);transform:none}
+  80%{opacity:.85}
+  100%{opacity:0;filter:blur(10px);transform:translateY(-10px)}
+}
+@keyframes fhStGeistLicht {
+  from{transform:translateX(0)}
+  to{transform:translateX(160vw)}
+}
+@keyframes fhStGeistText {
+  0%{opacity:0;filter:blur(12px);letter-spacing:.5em}
+  30%{opacity:.9;filter:blur(1px);letter-spacing:.3em}
+  45%{opacity:.4}
+  55%{opacity:.9}
+  85%{opacity:.8;filter:blur(0)}
+  100%{opacity:0;filter:blur(8px);letter-spacing:.3em}
+}
+@keyframes fhStGischt {
+  0%{opacity:0;transform:translate(0,0)}
+  15%{opacity:1}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy))}
+}
+@keyframes fhStGlitchBalken {
+  0%,100%{opacity:0;transform:none}
+  12%{opacity:1;transform:translateX(-24px)}
+  24%{opacity:1;transform:translateX(32px)}
+  36%{opacity:0}
+  58%{opacity:1;transform:translateX(-10px)}
+  64%{opacity:0}
+}
+@keyframes fhStGlitchSeite {
+  0%{transform:none;filter:none}
+  8%{transform:translate(-9px,2px) skewX(3deg);filter:hue-rotate(95deg) saturate(2.2)}
+  16%{transform:none;filter:none}
+  30%{transform:translate(7px,-3px);filter:hue-rotate(-70deg) contrast(1.4)}
+  38%{transform:none;filter:none}
+  52%{transform:translate(-3px,0) skewX(-5deg);filter:hue-rotate(120deg)}
+  60%{transform:none;filter:none}
+  74%{transform:translate(11px,4px);filter:contrast(1.7) hue-rotate(80deg)}
+  82%{transform:none;filter:none}
+  92%{transform:translate(-5px,-2px) skewX(2deg);filter:hue-rotate(100deg) saturate(1.6)}
+  100%{transform:none;filter:saturate(.3) brightness(.55)}
+}
+@keyframes fhStGlitchText {
+  0%,100%{text-shadow:-3px 0 #e53935,3px 0 #42b8ff,0 0 24px rgba(57,255,20,.6);transform:none}
+  18%{text-shadow:3px 0 #e53935,-3px 0 #42b8ff,0 0 24px rgba(57,255,20,.6);transform:translateX(3px) skewX(-7deg)}
+  36%{transform:translateX(-4px)}
+  54%{text-shadow:-1px 0 #e53935,1px 0 #42b8ff,0 0 24px rgba(57,255,20,.6);transform:skewX(5deg)}
+  72%{transform:none}
+}
+@keyframes fhStHackFlackern {
+  0%,100%{opacity:1}
+  50%{opacity:.35}
+}
+@keyframes fhStHoch {
+  from{opacity:0;transform:translateY(14px)}
+  to{opacity:1;transform:none}
+}
+@keyframes fhStHuepf {
+  0%,100%{transform:translateY(0)}
+  30%{transform:translateY(-.18em)}
+}
+@keyframes fhStIrrlicht {
+  from{transform:translate(-40px,20px)}
+  to{transform:translate(60px,-30px)}
+}
+@keyframes fhStKanone {
+  0%{transform:translate(0,0) rotate(0);opacity:1}
+  45%{transform:translate(var(--mx),var(--my)) rotate(var(--r1));opacity:1}
+  100%{transform:translate(var(--ex),var(--ey)) rotate(var(--r2));opacity:0}
+}
+@keyframes fhStKaustik {
+  to{background-position:320px 220px}
+}
+@keyframes fhStKegel {
+  from{transform:translate(-50%,-50%) rotate(0)}
+  to{transform:translate(-50%,-50%) rotate(360deg)}
+}
+@keyframes fhStLaufband {
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+@keyframes fhStLinieZuenden {
+  to{stroke-dashoffset:0}
+}
+@keyframes fhStLivePunkt {
+  0%,100%{opacity:1}
+  50%{opacity:.25}
+}
+@keyframes fhStLochAuf {
+  0%{transform:translate(-50%,-50%) scale(0) rotate(-30deg);opacity:0}
+  60%{transform:translate(-50%,-50%) scale(1.2) rotate(6deg);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(1) rotate(0);opacity:1}
+}
+@keyframes fhStLochDreh {
+  to{transform:rotate(360deg)}
+}
+@keyframes fhStLochFlackern {
+  0%,46%,100%{opacity:1;transform:none}
+  48%{opacity:.55;transform:translateX(3px) skewX(-6deg)}
+  51%{opacity:1;transform:translateX(-2px)}
+  53%{transform:none}
+}
+@keyframes fhStLochZu {
+  0%{transform:translate(-50%,-50%) scale(1);opacity:1}
+  35%{transform:translate(-50%,-50%) scale(1.15);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(0);opacity:0}
+}
+@keyframes fhStMuenzeDreh {
+  0%,100%{transform:scaleX(1)}
+  50%{transform:scaleX(.3)}
+}
+@keyframes fhStMuenzeFall {
+  from{transform:translate(-50%,-80px)}
+  to{transform:translate(-50%,calc(100vh + 80px))}
+}
+@keyframes fhStNebelDrift {
+  from{transform:translateX(-6%)}
+  to{transform:translateX(6%)}
+}
+@keyframes fhStNebelWeg {
+  to{opacity:0;transform:translateY(-6%)}
+}
+@keyframes fhStPop1 {
+  0%{transform:scale(1)}
+  35%{transform:scale(1.35)}
+  100%{transform:scale(1)}
+}
+@keyframes fhStPop2 {
+  0%{transform:scale(1)}
+  35%{transform:scale(1.35)}
+  100%{transform:scale(1)}
+}
+@keyframes fhStPunktPop {
+  0%{opacity:1;transform:translate(-50%,-50%) scale(.7)}
+  30%{opacity:1;transform:translate(-50%,-110%) scale(1.25)}
+  100%{opacity:0;transform:translate(-50%,-190%) scale(1)}
+}
+@keyframes fhStRauschen {
+  to{background-position:0 6px,3px 0}
+}
+@keyframes fhStRegen {
+  from{background-position:0 0}
+  to{background-position:-60px 220px}
+}
+@keyframes fhStScan {
+  to{background-position:0 8px,0 0}
+}
+@keyframes fhStSchaukeln {
+  0%,100%{transform:translateY(0) rotate(0)}
+  50%{transform:translateY(8px) rotate(-.4deg)}
+}
+@keyframes fhStSchnuppeFlug {
+  0%{opacity:0;translate:0 0}
+  15%{opacity:1}
+  100%{opacity:0;translate:-420px 230px}
+}
+@keyframes fhStSchwanken {
+  0%,100%{transform:rotate(0) translateY(0)}
+  25%{transform:rotate(.5deg) translateY(2px)}
+  75%{transform:rotate(-.5deg) translateY(-2px)}
+}
+@keyframes fhStSchweben {
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+@keyframes fhStStrahlenAuf {
+  from{opacity:0;transform:translateX(-50%) rotate(-10deg)}
+  to{opacity:1;transform:translateX(-50%) rotate(10deg)}
+}
+@keyframes fhStStrudel {
+  from{transform:translate(-50%,50%) rotate(0) scale(1)}
+  to{transform:translate(-50%,50%) rotate(720deg) scale(.2);opacity:0}
+}
+@keyframes fhStSweep {
+  from{background-position:130% 0}
+  to{background-position:-70% 0}
+}
+@keyframes fhStTippDots {
+  0%,60%,100%{opacity:.3;transform:none}
+  30%{opacity:1;transform:translateY(-3px)}
+}
+@keyframes fhStTippen {
+  to{max-width:var(--w)}
+}
+@keyframes fhStTresor {
+  from{width:12%}
+  to{width:100%}
+}
+@keyframes fhStUmkehr {
+  0%,39%,44%,71%,74%,100%{filter:none}
+  40%,72%{filter:invert(1) hue-rotate(180deg)}
+}
+@keyframes fhStVonPuls {
+  0%,100%{filter:drop-shadow(0 0 0 transparent)}
+  50%{filter:drop-shadow(0 0 10px var(--live-farbe))}
+}
+@keyframes fhStWabern {
+  0%,100%{translate:0 0}
+  50%{translate:0 -6px}
+}
+@keyframes fhStWackeln1 {
+  0%,100%{transform:none}
+  15%{transform:translate(-7px,3px)}
+  35%{transform:translate(6px,-4px)}
+  55%{transform:translate(-4px,-2px)}
+  75%{transform:translate(3px,2px)}
+}
+@keyframes fhStWackeln2 {
+  0%,100%{transform:none}
+  15%{transform:translate(-7px,3px)}
+  35%{transform:translate(6px,-4px)}
+  55%{transform:translate(-4px,-2px)}
+  75%{transform:translate(3px,2px)}
+}
+@keyframes fhStWelle {
+  0%{transform:scale(.7);opacity:.9}
+  100%{transform:scale(2.8);opacity:0}
+}
+@keyframes fhStWellenZug {
+  to{transform:translateX(-50%)}
+}
+@keyframes fhStWisch {
+  from{clip-path:inset(0 0 0 0)}
+  to{clip-path:inset(0 0 0 100%)}
+}
+@keyframes fhStWischLinie {
+  0%{left:0;opacity:0}
+  6%{opacity:1}
+  94%{opacity:1}
+  100%{left:100%;opacity:0}
+}
+@keyframes fhStZahl {
+  0%{opacity:0;transform:scale(2.2)}
+  20%{opacity:1;transform:scale(1)}
+  80%{opacity:1;transform:scale(.96)}
+  100%{opacity:0;transform:scale(.7)}
+}
+@keyframes fhStZeile {
+  from{max-height:0;opacity:0;margin-top:0}
+  to{max-height:140px;opacity:1;margin-top:12px}
+}
+@keyframes fhStZoomRein {
+  from{opacity:0;transform:scale(1.3);filter:blur(8px)}
+  to{opacity:1;transform:none;filter:none}
+}
 
 /* ======================================================
    EVENT-TITEL MIT FARBANIMATION (scripts/liveevent/event-titel.js)
