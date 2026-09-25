@@ -179,22 +179,59 @@
     return s;
   }
 
+  function zweigVon(id) { return id.replace(/\d+$/, ""); }
+  /* Stufen-Knoten: die drei Sterne eines Zweigs (rad1..markt3). */
+  function istStufe(id) { return /\d$/.test(id) && !/^(titel|abzeichen)/.test(id); }
+
+  /* Alle Vorfahren eines Sterns (mit ihm selbst) - der Pfad, der
+     beim Auswaehlen hervorgehoben wird. */
+  function vorfahren(id, menge) {
+    menge = menge || new Set([id]);
+    const n = cache.nodes && cache.nodes[id];
+    ((n && n.benoetigt) || []).forEach(function (b) {
+      if (!menge.has(b)) { menge.add(b); vorfahren(b, menge); }
+    });
+    return menge;
+  }
+
+  /* Fortschritt ueber alle Stufen-Knoten - fuer den Ring um die
+     Legende und ihren Tooltip. */
+  function stufenStand() {
+    const stufen = sichtbareSterne().filter(istStufe);
+    const frei = stufen.filter(function (id) { return cache.unlocked.indexOf(id) !== -1; }).length;
+    return { frei: frei, alle: stufen.length };
+  }
+
   function himmelHtml() {
     const h = himmel();
     const ids = sichtbareSterne();
+    const pfad = auswahl ? vorfahren(auswahl) : new Set();
+    const stand = stufenStand();
 
-    let linien = "";
-    SKILL_KANTEN.forEach(function (k) {
+    /* Linien in drei Lagen: Grundlinie (gepunktet, "bereit" mit
+       fliessendem Strich, frei in Gold), darueber auf freien Linien
+       ein Lichtpuls, der vom Vorgaenger zum Nachfolger wandert. */
+    let linien = "", pulse = "";
+    SKILL_KANTEN.forEach(function (k, i) {
       const a = h.punkte[k[0]], b = h.punkte[k[1]];
       if (!a || !b || ids.indexOf(k[0]) === -1 || ids.indexOf(k[1]) === -1) return;
       const vonFrei = cache.unlocked.indexOf(k[0]) !== -1;
       const nachFrei = cache.unlocked.indexOf(k[1]) !== -1;
-      const klasse = vonFrei && nachFrei ? " ist-frei" : (vonFrei ? " ist-bereit" : "");
-      /* pathLength="1": die Licht-Animation beim Freischalten braucht
-         so keine gemessene Linienlaenge. */
-      linien += '<line class="fh-himmel-linie' + klasse + (neu === k[1] && nachFrei ? ' ist-neu' : '') + '"' +
-        ' x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '" pathLength="1"/>';
+      const imPfad = pfad.has(k[0]) && pfad.has(k[1]);
+      const klasse = (vonFrei && nachFrei ? " ist-frei" : (vonFrei ? " ist-bereit" : "")) +
+        (imPfad ? " im-pfad" : "") + (neu === k[1] && nachFrei ? " ist-neu" : "");
+      /* pathLength="1": Strichmuster und Licht-Animation brauchen so
+         keine gemessene Linienlaenge. */
+      const koord = ' x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '" pathLength="1"';
+      linien += '<line class="fh-himmel-linie' + klasse + '"' + koord + '/>';
+      if (vonFrei && nachFrei && neu !== k[1]) {
+        pulse += '<line class="fh-himmel-puls"' + koord + ' style="animation-delay:' + (i * 0.23).toFixed(2) + 's"/>';
+      }
     });
+
+    /* Eine Sternschnuppe, die alle paar Sekunden quer ueber den Himmel zieht. */
+    const sx = (h.breite * 0.86).toFixed(0), sy = (h.hoehe * 0.1).toFixed(0);
+    const schnuppe = '<line class="fh-himmel-schnuppe" x1="' + sx + '" y1="' + sy + '" x2="' + (+sx + 70) + '" y2="' + (sy - 38) + '" stroke="url(#fhSchnuppeVerlauf)"/>';
 
     let sterne = "";
     ids.forEach(function (id) {
@@ -203,6 +240,32 @@
       const z = zustand(id);
       const groesse = id === "legende" ? 3 : Math.min(n.kosten, 2);
       const zustandText = t("skilltree.state." + z, z);
+
+      /* Legende: kreisende Strahlen und ein Ring, der sich mit den
+         freigeschalteten Stufen fuellt. */
+      let legende = "";
+      if (id === "legende") {
+        const anteil = (stand.frei / Math.max(1, stand.alle) * 100).toFixed(1);
+        legende = '<span class="fh-stern-strahlen" aria-hidden="true"></span>' +
+          '<span class="fh-stern-ring" aria-hidden="true" style="--fortschritt:' + anteil + '%"></span>';
+      }
+
+      /* Freischalt-Effekt: Aufflammen, zwei Wellen, zwoelf Funken. */
+      let effekt = "";
+      if (neu === id && !RUHIG.matches) {
+        const px = { 1: 46, 2: 56, 3: 92 }[groesse] || 46;
+        let funken = "";
+        for (let f = 0; f < 12; f++) {
+          const w = f / 12 * Math.PI * 2;
+          const d = px * (0.9 + (f % 3) * 0.25);
+          funken += '<i style="--dx:' + (Math.cos(w) * d).toFixed(1) + 'px;--dy:' + (Math.sin(w) * d).toFixed(1) + 'px;animation-delay:' + (f % 3) * 40 + 'ms"></i>';
+        }
+        effekt = '<span class="fh-stern-flare" aria-hidden="true"></span>' +
+          '<span class="fh-stern-welle" aria-hidden="true"></span>' +
+          '<span class="fh-stern-welle ist-zweite" aria-hidden="true"></span>' +
+          '<span class="fh-stern-funken" aria-hidden="true">' + funken + '</span>';
+      }
+
       sterne +=
         '<button type="button" class="fh-stern groesse-' + groesse + ' ist-' + z +
           (auswahl === id ? ' ist-gewaehlt' : '') + (neu === id ? ' ist-neu' : '') + '"' +
@@ -210,20 +273,83 @@
         ' data-stern="' + escA(id) + '" onclick="fhSkillWaehle(this.dataset.stern)"' +
         ' aria-pressed="' + (auswahl === id ? 'true' : 'false') + '"' +
         ' aria-label="' + escA(name(id) + ' - ' + n.kosten + ' ' + punkteWort(n.kosten) + ' - ' + zustandText) + '">' +
-          '<span class="fh-stern-kern">' + symbolSvg(id, "fh-stern-symbol") + '</span>' +
+          '<span class="fh-stern-huelle">' +
+            legende +
+            '<span class="fh-stern-kern">' + symbolSvg(id, "fh-stern-symbol") + '</span>' +
+            (auswahl === id ? '<span class="fh-stern-auswahl" aria-hidden="true"></span>' : '') +
+            effekt +
+          '</span>' +
           pips(n.kosten) +
         '</button>';
     });
 
+    /* Zweig-Namen mit Fortschritt (nur am weiten Himmel). */
+    let zweige = "";
+    if (!SCHMAL.matches && typeof SKILL_ZWEIGE !== "undefined") {
+      Object.keys(SKILL_ZWEIGE).forEach(function (zw) {
+        const d = SKILL_ZWEIGE[zw];
+        if (ids.indexOf(zw + "1") === -1) return;
+        const frei = [1, 2, 3].filter(function (i) { return cache.unlocked.indexOf(zw + i) !== -1; }).length;
+        zweige += '<div class="fh-himmel-zweig ist-' + d.ausrichtung + (frei === 3 ? ' ist-voll' : '') + '"' +
+          ' style="left:' + (d.x / h.breite * 100).toFixed(3) + '%;top:' + (d.y / h.hoehe * 100).toFixed(3) + '%" aria-hidden="true">' +
+          '<span>' + esc(t("skilltree.branch." + zw, zw)) + '</span><span class="fh-himmel-zweig-zahl">' + frei + '/3</span></div>';
+      });
+    }
+
     return '' +
       '<div class="fh-himmel ' + (SCHMAL.matches ? 'ist-schmal' : 'ist-weit') + '" style="aspect-ratio:' + h.breite + ' / ' + h.hoehe + '">' +
         '<svg class="fh-himmel-svg" viewBox="0 0 ' + h.breite + ' ' + h.hoehe + '" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' +
+          '<defs><linearGradient id="fhSchnuppeVerlauf" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#e8d5a8"/><stop offset="1" stop-color="#e8d5a8" stop-opacity="0"/></linearGradient></defs>' +
           '<g class="fh-himmel-hintergrund">' + hintergrundSterne(h) + '</g>' +
-          '<g class="fh-himmel-linien">' + linien + '</g>' +
+          '<g class="fh-himmel-linien">' + linien + pulse + '</g>' +
+          schnuppe +
         '</svg>' +
+        zweige +
         sterne +
+        '<div class="fh-himmel-tipp" id="fh-himmel-tipp" hidden></div>' +
       '</div>';
   }
+
+  /* Tooltip beim Zeigen auf einen Stern (nur mit Maus und am weiten
+     Himmel). Er wird nur verschoben und beschriftet, der Himmel wird
+     dafuer NICHT neu gezeichnet - sonst verloere der Stern sein :hover. */
+  function tooltipAnbinden() {
+    const tipp = document.getElementById("fh-himmel-tipp");
+    if (!tipp || SCHMAL.matches || !(window.matchMedia && window.matchMedia("(hover: hover)").matches)) return;
+    document.querySelectorAll(".fh-himmel .fh-stern").forEach(function (knopf) {
+      knopf.addEventListener("mouseenter", function () {
+        const id = knopf.dataset.stern;
+        const n = cache.nodes[id];
+        if (!n) return;
+        const z = zustand(id);
+        let info = n.kosten + " " + punkteWort(n.kosten) + " · " + t("skilltree.state." + z, z);
+        if (id === "legende") {
+          const st = stufenStand();
+          info += " · " + st.frei + "/" + st.alle + " " + t("skilltree.tiers", "Stufen");
+        }
+        const kopf = document.createElement("div");
+        kopf.className = "fh-himmel-tipp-name";
+        kopf.textContent = name(id);
+        const zeile = document.createElement("div");
+        zeile.className = "fh-himmel-tipp-info ist-" + z;
+        zeile.textContent = info;
+        tipp.replaceChildren(kopf, zeile);
+        tipp.style.left = knopf.style.left;
+        tipp.style.top = knopf.style.top;
+        tipp.style.setProperty("--abstand", (knopf.offsetHeight / 2 + 14) + "px");
+        tipp.hidden = false;
+        /* Einblenden neu anstossen, wenn man von Stern zu Stern faehrt. */
+        tipp.classList.remove("ist-da"); void tipp.offsetWidth; tipp.classList.add("ist-da");
+      });
+      knopf.addEventListener("mouseleave", function () { tipp.hidden = true; });
+    });
+  }
+
+  const ROEMISCH = ["I", "II", "III"];
+  const HAKEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+  const SCHLOSS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+
+  let karteZaehler = 0;   // wechselt die Einblend-Animation, damit sie bei jedem Wechsel neu startet
 
   function karteHtml() {
     if (!auswahl || !cache.nodes[auswahl]) {
@@ -232,12 +358,47 @@
     const id = auswahl;
     const n = cache.nodes[id];
     const z = zustand(id);
+    const zw = zweigVon(id);
+
+    /* Stufen-Knoten: die Spur I - II - III des Zweigs. */
+    let spur = "";
+    if (istStufe(id)) {
+      let schritte = "";
+      [1, 2, 3].forEach(function (i) {
+        const nid = zw + i;
+        const nz = cache.nodes[nid] ? zustand(nid) : "gesperrt";
+        const naechstFrei = i < 3 && cache.unlocked.indexOf(nid) !== -1 && cache.unlocked.indexOf(zw + (i + 1)) !== -1;
+        schritte += '<div class="fh-spur-schritt">' +
+          '<span class="fh-spur-punkt ist-' + nz + (nid === id ? ' ist-aktiv' : '') + '">' + ROEMISCH[i - 1] + '</span>' +
+          (i < 3 ? '<span class="fh-spur-linie' + (naechstFrei ? ' ist-frei' : '') + '"></span>' : '') +
+        '</div>';
+      });
+      spur = '<div class="fh-stern-karte-spur">' +
+        '<p class="fh-stern-karte-etikett">' + esc(t("skilltree.branchLabel", "Zweig")) + ' · ' + esc(t("skilltree.branch." + zw, zw)) + '</p>' +
+        '<div class="fh-spur">' + schritte + '</div></div>';
+    }
+
+    /* Andere Knoten mit Voraussetzungen: Liste mit Haken/Schloss. */
+    let bedingungen = "";
+    if (!istStufe(id) && (n.benoetigt || []).length) {
+      const liste = n.benoetigt.filter(function (b) { return cache.nodes[b]; });
+      const erfuellt = liste.filter(function (b) { return cache.unlocked.indexOf(b) !== -1; }).length;
+      bedingungen = '<div class="fh-stern-karte-bedingungen">' +
+        '<p class="fh-stern-karte-etikett">' + esc(t("skilltree.needs", "Braucht")) + ' ' + erfuellt + ' / ' + liste.length + '</p>' +
+        liste.map(function (b) {
+          const ok = cache.unlocked.indexOf(b) !== -1;
+          return '<div class="fh-bedingung' + (ok ? ' ist-ok' : '') + '">' + (ok ? HAKEN : SCHLOSS) + '<span>' + esc(name(b)) + '</span></div>';
+        }).join("") +
+      '</div>';
+    }
+
     let unten = "";
     if (z === "frei") {
-      unten = '<p class="fh-stern-karte-frei">' + esc(neu === id ? t("skilltree.justUnlocked", "Freigeschaltet!") : t("skilltree.state.frei", "Freigeschaltet")) + '</p>';
+      unten = '<p class="fh-stern-karte-frei' + (neu === id ? ' ist-stempel' : '') + '">' + esc(neu === id ? t("skilltree.justUnlocked", "Freigeschaltet!") : t("skilltree.state.frei", "Freigeschaltet")) + '</p>';
     } else if (z === "offen") {
       unten = '<button type="button" class="fh-stern-karte-knopf" onclick="fhSkillFreischalten()"' + (beschaeftigt ? ' disabled' : '') + '>' +
-        esc(t("skilltree.unlockBtn", "Freischalten")) + ' <span>· ' + n.kosten + ' ' + esc(punkteWort(n.kosten)) + '</span></button>';
+        '<span class="fh-stern-karte-glanz" aria-hidden="true"></span>' +
+        '<span class="fh-stern-karte-knopftext">' + esc(t("skilltree.unlockBtn", "Freischalten")) + ' <span>· ' + n.kosten + ' ' + esc(punkteWort(n.kosten)) + '</span></span></button>';
     } else if (z === "zuteuer") {
       const fehlt = n.kosten - verfuegbar();
       unten = '<p class="fh-stern-karte-hinweis">' + esc(t("skilltree.missingPoints", "Dir fehlen noch") + ' ' + fehlt + ' ' + punkteWort(fehlt) + '.') + '</p>' +
@@ -247,23 +408,32 @@
       unten = '<p class="fh-stern-karte-hinweis">' + esc(t("skilltree.needsFirst", "Braucht zuerst:") + ' ' + fehlend) + '</p>';
     }
     return '' +
-      '<div class="fh-stern-karte ist-' + z + (id === "legende" ? ' ist-legende' : '') + '">' +
+      '<div class="fh-stern-karte ist-' + z + (id === "legende" ? ' ist-legende' : '') + ' rein-' + (karteZaehler % 2 + 1) + '">' +
         '<div class="fh-stern-karte-kopf">' +
           '<span class="fh-stern-karte-symbol">' + symbolSvg(id, "") + '</span>' +
           '<div><p class="fh-stern-karte-zustand">' + esc(t("skilltree.state." + z, z)) + '</p>' +
           '<h2 class="fh-stern-karte-name">' + esc(name(id)) + '</h2></div>' +
         '</div>' +
+        spur +
         '<p class="fh-stern-karte-wirkung">' + esc(t("skilltree.node." + id + ".effect", "")) + '</p>' +
+        bedingungen +
         '<p class="fh-stern-karte-kosten">' + esc(t("skilltree.cost", "Kosten")) + ' ' + pips(n.kosten) + ' <span>' + n.kosten + ' ' + esc(punkteWort(n.kosten)) + '</span></p>' +
         unten +
         '<p class="fh-skill-status" id="fh-skill-status" role="status" aria-live="polite"></p>' +
       '</div>';
   }
 
+  let letztePunkte = null;  // fuer das "Aufploppen" der Punktezahl, wenn sie sich aendert
+  let popZaehler = 0;
+
   function kopfHtml() {
     const vorschau = typeof window.fhFeatureNurVorschau === "function" && window.fhFeatureNurVorschau(FLAG);
     const alle = sichtbareSterne();
     const frei = alle.filter(function (id) { return cache.unlocked.indexOf(id) !== -1; }).length;
+    const punkte = verfuegbar();
+    if (letztePunkte !== null && punkte !== letztePunkte) popZaehler++;
+    const pop = letztePunkte !== null && punkte !== letztePunkte;
+    letztePunkte = punkte;
     return '' +
       '<div class="fh-page-head">' +
         '<p class="fh-page-kicker">' + esc(t("skilltree.kicker", "Fertigkeiten")) + '</p>' +
@@ -272,7 +442,7 @@
         '<p class="fh-page-lead">' + esc(t("skilltree.lead", "Ein Punkt je Pass-Stufe, dazu Geschenke im Live-Event. Jeder Stern bleibt dauerhaft.")) + '</p>' +
       '</div>' +
       '<div class="fh-skill-leiste">' +
-        '<p class="fh-skill-punkte"><strong>' + verfuegbar() + '</strong><span>' + esc(t("skilltree.points", "Freie Skillpunkte")) + '</span></p>' +
+        '<p class="fh-skill-punkte"><strong' + (pop ? ' class="ist-pop-' + (popZaehler % 2 + 1) + '"' : '') + '>' + punkte + '</strong><span>' + esc(t("skilltree.points", "Freie Skillpunkte")) + '</span></p>' +
         '<p class="fh-skill-herkunft">' +
           esc(t("skilltree.fromLevel", "Pass-Stufe")) + ' ' + skillLevel(cache.passXp) +
           ' · ' + cache.bonus + ' ' + esc(t("skilltree.fromGift", "geschenkt")) +
@@ -292,6 +462,7 @@
       auswahl = sichtbareSterne().filter(function (id) { return zustand(id) === "offen"; })[0] || null;
     }
     el.innerHTML = kopfHtml() + '<div class="fh-skill-buehne">' + himmelHtml() + karteHtml() + '</div>';
+    tooltipAnbinden();
   }
 
   function statusSetzen(msg) {
@@ -301,6 +472,7 @@
 
   window.fhSkillWaehle = function (id) {
     if (!cache.nodes || !cache.nodes[id]) return;
+    if (auswahl !== id) karteZaehler++;
     auswahl = id;
     zeichnen();
     /* Auf dem Handy liegt die Karte unter dem Himmel - hinscrollen. */

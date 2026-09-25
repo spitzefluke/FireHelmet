@@ -74,6 +74,20 @@ const SKILL_KANTEN = [
   ["boss3", "legende"], ["rennen3", "legende"], ["markt3", "legende"],
 ];
 
+/* Zweig-Beschriftungen am weiten Himmel: Position (Einheiten der
+   weiten viewBox 1000x680) und Ausrichtung. "start" = linksbuendig
+   ab dem Punkt, "mitte" = zentriert. Der Name steht in i18n.js
+   (skilltree.branch.*). Am schmalen Himmel gibt es keine - dort
+   stehen die Saeulen zu dicht. */
+const SKILL_ZWEIGE = {
+  rad:    { x: 560, y: 50,  ausrichtung: "start" },
+  slot:   { x: 839, y: 140, ausrichtung: "mitte" },
+  boss:   { x: 839, y: 555, ausrichtung: "mitte" },
+  rennen: { x: 560, y: 630, ausrichtung: "start" },
+  markt:  { x: 161, y: 555, ausrichtung: "mitte" },
+  xp:     { x: 161, y: 140, ausrichtung: "mitte" },
+};
+
 /* Symbole: lucide (ISC), stroke-width 1.6 - ship-wheel, dice-5,
    sparkles, swords, anchor, crown, skull, flag, coins. */
 const SKILL_SYMBOLE = {

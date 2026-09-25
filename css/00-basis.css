@@ -210,6 +210,8 @@ body.loaded {
   /* Fuer die Event-Titel (Regenbogen, "hacked"), css/30-events.css. */
   --fh-violett: #a66bff;
   --fh-neon: #39ff14;
+  /* Konsolenschrift der Live-Storys (Hacked, Systemausfall). */
+  --fh-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
   /* ---- Zusätzliche Design-System-Tokens für das professionelle
      Redesign. Rein additiv, siehe Hinweis oben. ---- */

@@ -1731,3 +1731,60 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   flex: 1;
   min-width: 140px;
 }
+
+
+/* --- Admin-Gate: Live-Storys --- */
+.gw-story-lage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px dashed var(--fh-border-strong);
+  border-radius: var(--fh-radius-sm);
+}
+.gw-story-jetzt { flex: 1 1 260px; margin: 0; font-size: 13px; color: var(--fh-fg); }
+.gw-story-lage-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.gw-story-liste { display: grid; gap: 8px; margin-bottom: 10px; }
+
+.gw-story {
+  --ton: var(--fh-border-strong);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--fh-border);
+  border-left: 3px solid var(--ton);
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-surface);
+}
+.gw-story.ist-gold    { --ton: var(--fh-gold-bright); }
+.gw-story.ist-neon    { --ton: var(--fh-neon); }
+.gw-story.ist-kalt    { --ton: var(--fh-cold); }
+.gw-story.ist-violett { --ton: var(--fh-violett); }
+.gw-story.ist-papier  { --ton: var(--fh-paper); }
+.gw-story.ist-wasser  { --ton: #5aa0e0; }
+.gw-story.ist-rot     { --ton: var(--fh-danger); }
+
+.gw-story-text,
+.gw-musik-text { display: flex; flex: 1 1 240px; flex-direction: column; gap: 2px; min-width: 0; }
+.gw-story-name { font-size: 14px; font-weight: 600; color: var(--fh-fg); }
+.gw-story.ist-neon .gw-story-name { font-family: var(--fh-mono); color: var(--fh-neon); }
+.gw-story.ist-rot .gw-story-name { font-family: var(--fh-mono); color: var(--fh-danger); }
+.gw-story-info { font-size: 12px; line-height: 1.4; color: var(--fh-muted-fg); }
+.gw-story-knoepfe { display: flex; gap: 6px; }
+
+.gw-musik {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in srgb, var(--fh-gold) 45%, transparent);
+  border-radius: var(--fh-radius-sm);
+}
+.gw-musik-datei { display: inline-flex; align-items: center; cursor: pointer; }
