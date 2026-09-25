@@ -84,6 +84,8 @@
   let letztesEnde = null;   // story_ende_at der zuletzt gesehenen Zeile
   let musikVersion = null;  // live_event.musik_version
   let gehackt = false;      // Systemausfall: bleibt bis zur naechsten Story
+  let nachregen = false;    // nach dem Sturm: leiser Regen bis zum naechsten Event
+  let sturmNachwirkung = true;
   const timer = [];         // alle Zeitgeber der laufenden Story
   const ebenen = {};        // Name -> Element
 
@@ -496,6 +498,14 @@
       return aus('<div style="' + VOLL + 'z-index:9997;overflow:hidden;background:radial-gradient(120% 80% at 50% 0%, rgba(42,74,114,.5), rgba(5,7,11,.55));' + (s === 1 ? 'animation:fhStEinblenden 1.2s both;' : s === 5 ? 'animation:fhStAus 2.4s ease forwards;' : '') + '">' +
         '<div style="position:absolute;inset:0;background-image:repeating-linear-gradient(105deg, transparent 0 26px, rgba(200,222,245,.16) 26px 27px, transparent 27px 60px);background-size:220px 220px;animation:fhStRegen .45s linear infinite;"></div>' +
         '<div style="position:absolute;inset:0;opacity:.6;background-image:repeating-linear-gradient(102deg, transparent 0 40px, rgba(200,222,245,.12) 40px 41px, transparent 41px 90px);background-size:300px 300px;animation:fhStRegen .8s linear infinite;"></div>' +
+      '</div>');
+    }],
+    /* Nachwirkung: nach dem Sturm regnet es leise weiter - ohne die
+       Abdunklung, damit die Seite benutzbar bleibt. */
+    ["nachregen", function () { return nachregen && !lauf; }, function () {
+      return aus('<div style="' + VOLL + 'z-index:9997;overflow:hidden;opacity:.55;animation:fhStEinblenden 2.4s both;">' +
+        '<div style="position:absolute;inset:0;background-image:repeating-linear-gradient(105deg, transparent 0 26px, rgba(200,222,245,.14) 26px 27px, transparent 27px 60px);background-size:220px 220px;animation:fhStRegen .6s linear infinite;"></div>' +
+        '<div style="position:absolute;inset:0;opacity:.6;background-image:repeating-linear-gradient(102deg, transparent 0 40px, rgba(200,222,245,.1) 40px 41px, transparent 41px 90px);background-size:300px 300px;animation:fhStRegen 1s linear infinite;"></div>' +
       '</div>');
     }],
     ["sturm1", function () { return sz("sturm") === 1; }, function () {
@@ -1182,6 +1192,7 @@
     lauf = null;
     if (st === "hacked") loecherSpawnen(id, vorschau);
     if (st === "ende") gehackt = true;
+    if (st === "sturm" && !vorschau) nachregen = true;
     anzeigen();
   }
 
@@ -1189,6 +1200,7 @@
     if (!STORYS[st]) return;
     stoppen();
     gehackt = false;
+    nachregen = false;
     if (st === "hacked") loecherWeg();
     lauf = { story: st, id: id, vorschau: !!vorschau, n: 0, ausklingen: !!endeMs };
     const pos = position(st, ms, endeMs);
@@ -1196,6 +1208,7 @@
       /* Schon vorbei: nur den Dauerzustand herstellen. */
       lauf = null;
       if (st === "ende") gehackt = true;
+      if (st === "sturm" && !vorschau && sturmNachwirkung) nachregen = true;
       anzeigen();
       return;
     }
@@ -1233,9 +1246,13 @@
       letztesEnde = z.story_ende_at || null;
       if (!id || !z.story) {
         gehackt = false;
+        nachregen = false;
         stoppen();
         return;
       }
+      /* Ein Sturm VOR dem laufenden Event (Countdown hoechstens 60 s)
+         hinterlaesst keinen Regen mehr - "bis zum naechsten Event". */
+      sturmNachwirkung = !(z.event_live_ab && Date.parse(z.story_at) < Date.parse(z.event_live_ab) - 61000);
       const ms = erstesMal ? Math.max(0, Date.now() - Date.parse(z.story_at)) : 0;
       const endeMs = z.story_ende_at ? (erstesMal ? Date.parse(z.story_ende_at) : Date.now()) : null;
       starten(z.story, id, ms, false, endeMs);
@@ -1255,6 +1272,8 @@
     vorschauStopp: function () { gehackt = false; loecherWeg(); stoppen(); },
     laeuft: function () { return lauf ? { story: lauf.story, szene: lauf.n, szenen: STORYS[lauf.story].szenen.length, vorschau: lauf.vorschau } : null; },
     istGehackt: function () { return gehackt; },
+    /* live-zuschauer.js: ein neues Event beendet den Nachregen. */
+    nachregenAus: function () { if (nachregen) { nachregen = false; anzeigen(); } },
     musikUrl: musikUrl,
     STORYS: Object.keys(STORYS),
   };

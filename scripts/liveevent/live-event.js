@@ -238,6 +238,8 @@
 
     /* Storys (Sturm, Hacked, Schatzregen ...) spielt live-storys.js ab. */
     if (window.fhLiveStorys) window.fhLiveStorys.zustand(z, erst);
+    /* Event-Start, Live-Anzeige, Abstimmung, Abzeichen: live-zuschauer.js. */
+    if (window.fhLiveZuschauer) window.fhLiveZuschauer.zustand(z, erst);
 
     /* Beim ERSTEN Laden nicht rueckwirkend feuern (sonst blitzt es
        bei jedem Seitenaufruf, weil pulse_at schon gesetzt ist) -

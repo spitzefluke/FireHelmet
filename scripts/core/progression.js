@@ -622,6 +622,10 @@ function renderPlayerCardHtml(data) {
     ? window.fhEventTitel.html(window.fhEventTitel.eigener(), "fh-player-card-eventtitel")
     : "";
 
+  /* Event-Abzeichen ("War dabei"): Knopf zur Sammlung,
+     scripts/liveevent/live-zuschauer.js. Leer ohne Abzeichen. */
+  const abzeichenKnopf = window.fhLiveZuschauer ? window.fhLiveZuschauer.kartenKnopfHtml() : "";
+
   return `
     <div class="fh-player-card${legendeKlasse}">
       <button type="button" class="fh-player-card-avatar fh-player-card-avatarknopf"
@@ -640,6 +644,7 @@ function renderPlayerCardHtml(data) {
         </span>
         <span class="fh-player-card-xptext">${xpText}</span>
       </button>
+      ${abzeichenKnopf}
     </div>
   `;
 }
