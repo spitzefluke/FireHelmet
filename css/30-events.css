@@ -2512,9 +2512,11 @@ img, svg, video, canvas {
   vector-effect: non-scaling-stroke;
 }
 
+/* Bereit: der Strich fliesst vom freien Stern zum naechsten. */
 .fh-himmel-linie.ist-bereit {
   stroke: color-mix(in srgb, var(--fh-gold) 70%, transparent);
   stroke-dasharray: .03 .025;
+  animation: fhHimmelFluss 1.4s linear infinite;
 }
 
 .fh-himmel-linie.ist-frei {
@@ -2522,6 +2524,112 @@ img, svg, video, canvas {
   stroke-width: 2.5;
   stroke-dasharray: none;
   filter: drop-shadow(0 0 4px var(--fh-gold));
+}
+
+/* Der Pfad zum gewaehlten Stern tritt hervor. */
+.fh-himmel-linie.im-pfad {
+  stroke: var(--fh-paper);
+  stroke-width: 2;
+  stroke-dasharray: .012 .03;
+  opacity: .75;
+}
+.fh-himmel-linie.ist-bereit.im-pfad {
+  stroke: var(--fh-gold-bright);
+  stroke-width: 2.5;
+  stroke-dasharray: .03 .025;
+  opacity: 1;
+}
+.fh-himmel-linie.ist-frei.im-pfad {
+  stroke: var(--fh-gold-bright);
+  stroke-width: 3.5;
+  stroke-dasharray: none;
+  opacity: 1;
+}
+
+/* Lichtpuls auf freien Linien: ein kurzer heller Strich wandert
+   von Stern zu Stern. */
+.fh-himmel-puls {
+  stroke: var(--fh-paper);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: .12 2;
+  stroke-dashoffset: .12;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 5px var(--fh-gold-bright));
+  animation: fhHimmelPuls 2.8s linear infinite;
+}
+
+.fh-himmel-schnuppe {
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  opacity: 0;
+  animation: fhHimmelSchnuppe 11s ease-in 3s infinite;
+}
+
+@keyframes fhHimmelFluss { to { stroke-dashoffset: -.11; } }
+@keyframes fhHimmelPuls {
+  from { stroke-dashoffset: .12; }
+  to   { stroke-dashoffset: -1; }
+}
+@keyframes fhHimmelSchnuppe {
+  0%, 86%   { opacity: 0; transform: translate(0, 0); }
+  88%       { opacity: 1; }
+  96%, 100% { opacity: 0; transform: translate(-300px, 160px); }
+}
+
+/* Zweig-Namen am weiten Himmel, mit Fortschritt n/3. */
+.fh-himmel-zweig {
+  position: absolute;
+  display: flex;
+  gap: 8px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--fh-muted-fg);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+.fh-himmel-zweig.ist-start { transform: translate(0, -50%); }
+.fh-himmel-zweig.ist-voll { color: var(--fh-gold); }
+.fh-himmel-zweig-zahl { opacity: .7; font-variant-numeric: tabular-nums; }
+.fh-himmel-zweig.ist-voll .fh-himmel-zweig-zahl { opacity: 1; color: var(--fh-gold-bright); }
+
+/* Tooltip beim Zeigen auf einen Stern. */
+.fh-himmel-tipp {
+  position: absolute;
+  z-index: 5;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--fh-border-strong);
+  background: color-mix(in srgb, var(--fh-surface) 94%, transparent);
+  box-shadow: var(--fh-shadow-sm);
+  text-align: center;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - var(--abstand, 40px)));
+}
+.fh-himmel-tipp.ist-da { animation: fhHimmelTipp .18s var(--fh-ease) both; }
+.fh-himmel-tipp-name {
+  font-family: var(--fh-font-display);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  color: var(--fh-fg);
+}
+.fh-himmel-tipp-info {
+  margin-top: 2px;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--fh-muted-fg);
+}
+.fh-himmel-tipp-info.ist-offen { color: var(--fh-gold-bright); }
+.fh-himmel-tipp-info.ist-frei  { color: var(--fh-success); }
+@keyframes fhHimmelTipp {
+  from { opacity: 0; margin-top: 6px; }
+  to   { opacity: 1; margin-top: 0; }
 }
 
 /* Gerade freigeschaltet: Licht laeuft vom Vorgaenger zum neuen
@@ -2555,8 +2663,18 @@ img, svg, video, canvas {
 .fh-stern.groesse-2 { --stern: 56px; }
 .fh-stern.groesse-3 { --stern: 92px; }
 
+/* Die Huelle waechst beim Zeigen - mit Kern, Ring und Strahlen. */
+.fh-stern-huelle {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: transform 200ms var(--fh-ease);
+}
+
 .fh-stern-kern {
   position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 100%;
@@ -2565,9 +2683,9 @@ img, svg, video, canvas {
   border: 1.5px solid var(--fh-border-strong);
   background: radial-gradient(circle at 50% 38%, var(--fh-surface-light), var(--fh-bg) 78%);
   transition:
-    transform var(--fh-dauer) var(--fh-ease),
     box-shadow var(--fh-dauer) var(--fh-ease),
-    border-color var(--fh-dauer) var(--fh-ease);
+    border-color var(--fh-dauer) var(--fh-ease),
+    background 300ms var(--fh-ease);
 }
 
 .fh-stern-symbol {
@@ -2640,29 +2758,43 @@ img, svg, video, canvas {
     0 0 46px color-mix(in srgb, var(--fh-gold) 35%, transparent);
 }
 
+.fh-stern.ist-frei .fh-stern-kern {
+  animation: fhSternGlimmen 4s ease-in-out infinite;
+}
+
 .fh-stern.ist-frei .fh-stern-pips i {
   background: var(--fh-gold);
 }
 
-/* Ausgewaehlt: ein Ring um den Stern. */
-.fh-stern.ist-gewaehlt .fh-stern-kern::after {
-  content: "";
+@keyframes fhSternGlimmen {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.14); }
+}
+
+/* Ausgewaehlt: ein atmender Ring um den Stern. */
+.fh-stern-auswahl {
   position: absolute;
   inset: -8px;
   border-radius: 50%;
   border: 1.5px solid var(--fh-gold-bright);
-  opacity: .9;
+  pointer-events: none;
+  animation: fhSternAuswahl 2.4s ease-in-out infinite;
+}
+
+@keyframes fhSternAuswahl {
+  0%, 100% { transform: scale(1); opacity: .9; }
+  50%      { transform: scale(1.06); opacity: .55; }
 }
 
 @media (hover: hover) {
-  .fh-stern:not(.ist-gesperrt):hover .fh-stern-kern {
+  .fh-stern:not(.ist-gesperrt):hover .fh-stern-huelle {
     transform: scale(1.08);
   }
 }
 
-.fh-stern:active .fh-stern-kern {
+.fh-stern:active .fh-stern-huelle {
   transform: scale(.94);
-  transition-duration: var(--fh-dauer-kurz);
+  transition-duration: 120ms;
 }
 
 .fh-stern:focus-visible {
@@ -2679,12 +2811,11 @@ img, svg, video, canvas {
   border-width: 2px;
 }
 
-.fh-stern.groesse-3 .fh-stern-kern::before {
-  content: "";
+.fh-stern-strahlen {
   position: absolute;
   inset: -26%;
-  z-index: -1;
   border-radius: 50%;
+  pointer-events: none;
   background: repeating-conic-gradient(color-mix(in srgb, var(--fh-gold) 22%, transparent) 0deg 6deg, transparent 6deg 30deg);
   -webkit-mask: radial-gradient(circle, transparent 42%, #000 46%, transparent 72%);
   mask: radial-gradient(circle, transparent 42%, #000 46%, transparent 72%);
@@ -2692,9 +2823,20 @@ img, svg, video, canvas {
   opacity: .5;
 }
 
-.fh-stern.groesse-3.ist-frei .fh-stern-kern::before {
+.fh-stern.ist-frei .fh-stern-strahlen {
   opacity: 1;
   background: repeating-conic-gradient(color-mix(in srgb, var(--fh-gold-bright) 55%, transparent) 0deg 6deg, transparent 6deg 30deg);
+}
+
+/* Ring um die Legende: fuellt sich mit jeder freigeschalteten Stufe. */
+.fh-stern-ring {
+  position: absolute;
+  inset: -13%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(var(--fh-gold-bright) var(--fortschritt, 0%), color-mix(in srgb, var(--fh-border-strong) 80%, transparent) 0);
+  -webkit-mask: radial-gradient(circle, transparent 66%, #000 67.5%, #000 70%, transparent 71.5%);
+  mask: radial-gradient(circle, transparent 66%, #000 67.5%, #000 70%, transparent 71.5%);
 }
 
 @keyframes fhLegendeStrahlen {
@@ -2707,14 +2849,54 @@ img, svg, video, canvas {
   animation: fhSternZuenden 650ms var(--fh-ease) forwards;
 }
 
-.fh-stern.ist-neu::before {
-  content: "";
+.fh-stern-flare {
   position: absolute;
   inset: -45%;
+  z-index: 2;
   border-radius: 50%;
   background: radial-gradient(circle, var(--fh-paper) 0%, color-mix(in srgb, var(--fh-gold-bright) 60%, transparent) 30%, transparent 68%);
   pointer-events: none;
   animation: fhSternFlare 900ms var(--fh-ease) forwards;
+}
+
+/* Zwei Druckwellen - opacity 0 am Ende, forwards (siehe CLAUDE.md). */
+.fh-stern-welle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--fh-gold-bright);
+  pointer-events: none;
+  animation: fhSternWelle 900ms ease-out forwards;
+}
+.fh-stern-welle.ist-zweite {
+  border: 1px solid var(--fh-paper);
+  opacity: 0;
+  animation: fhSternWelle 1100ms ease-out 160ms forwards;
+}
+
+.fh-stern-funken i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--fh-gold-bright);
+  box-shadow: 0 0 6px var(--fh-gold-bright);
+  pointer-events: none;
+  animation: fhSternFunke 800ms var(--fh-ease) forwards;
+}
+.fh-stern-funken i:nth-child(even) { background: var(--fh-paper); }
+
+@keyframes fhSternWelle {
+  0%   { transform: scale(.7); opacity: .9; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+
+@keyframes fhSternFunke {
+  0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) scale(.2); opacity: 0; }
 }
 
 @keyframes fhSternZuenden {
@@ -2838,9 +3020,6 @@ img, svg, video, canvas {
   transition: filter var(--fh-dauer) var(--fh-ease), transform var(--fh-dauer-kurz) var(--fh-ease);
 }
 
-.fh-stern-karte-knopf span {
-  opacity: .75;
-}
 
 @media (hover: hover) {
   .fh-stern-karte-knopf:not([disabled]):hover { filter: brightness(1.08); }
@@ -2882,6 +3061,119 @@ img, svg, video, canvas {
   color: var(--fh-muted-fg);
 }
 
+/* Die Karte gleitet bei jedem Wechsel neu herein. Zwei gleiche
+   Keyframes im Wechsel, damit die Animation auch bei gleicher
+   Klasse neu startet. */
+.fh-stern-karte.rein-1 { animation: fhKarteRein1 .35s var(--fh-ease) both; }
+.fh-stern-karte.rein-2 { animation: fhKarteRein2 .35s var(--fh-ease) both; }
+@keyframes fhKarteRein1 { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes fhKarteRein2 { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.fh-stern-karte-etikett {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
+/* Spur I - II - III eines Zweigs */
+.fh-stern-karte-spur { margin: 0 0 14px; }
+.fh-spur { display: flex; align-items: center; }
+.fh-spur-schritt { display: flex; flex: 1 1 0; align-items: center; }
+.fh-spur-schritt:last-child { flex: 0 0 auto; }
+.fh-spur-punkt {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1.5px solid var(--fh-border-strong);
+  font-family: var(--fh-font-display);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fh-muted-fg);
+}
+.fh-spur-punkt.ist-gesperrt { border-style: dashed; }
+.fh-spur-punkt.ist-offen { border-color: var(--fh-gold-bright); color: var(--fh-gold-bright); }
+.fh-spur-punkt.ist-frei {
+  border-color: var(--fh-gold-bright);
+  background: linear-gradient(180deg, var(--fh-gold-bright), var(--fh-gold));
+  color: var(--fh-bg);
+}
+.fh-spur-punkt.ist-aktiv { outline: 1.5px solid var(--fh-gold-bright); outline-offset: 3px; }
+.fh-spur-linie {
+  flex: 1;
+  height: 2px;
+  margin: 0 6px;
+  border-radius: 1px;
+  background: var(--fh-border-strong);
+}
+.fh-spur-linie.ist-frei { background: var(--fh-gold-bright); box-shadow: 0 0 8px var(--fh-gold); }
+
+/* Voraussetzungen der Titel, des Abzeichens und der Legende */
+.fh-stern-karte-bedingungen {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--fh-border);
+  background: var(--fh-surface-2);
+}
+.fh-stern-karte-bedingungen .fh-stern-karte-etikett { margin-bottom: 2px; }
+.fh-bedingung {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+}
+.fh-bedingung.ist-ok { color: var(--fh-success); }
+.fh-bedingung svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* "Freigeschaltet!" direkt nach dem Klick: ein Stempel. */
+.fh-stern-karte-frei.ist-stempel {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1.5px solid var(--fh-gold-bright);
+  border-radius: 8px;
+  text-shadow: 0 0 16px rgba(240, 201, 106, .6);
+  animation: fhKarteStempel 520ms var(--fh-ease) both;
+}
+@keyframes fhKarteStempel {
+  0%   { opacity: 0; transform: scale(1.7) rotate(-9deg); }
+  60%  { opacity: 1; transform: scale(.95) rotate(-3deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-3deg); }
+}
+
+/* Freischalten-Knopf: ein Lichtstreif laeuft darueber. */
+.fh-stern-karte-knopf { position: relative; overflow: hidden; }
+.fh-stern-karte-glanz {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 250, 235, .55) 50%, transparent 65%);
+  background-size: 250% 100%;
+  pointer-events: none;
+  animation: fhKnopfGlanz 3.2s ease-in-out infinite;
+}
+.fh-stern-karte-knopftext { position: relative; }
+.fh-stern-karte-knopf .fh-stern-karte-knopftext > span { opacity: .75; }
+@keyframes fhKnopfGlanz {
+  from { background-position: 130% 0; }
+  to   { background-position: -70% 0; }
+}
+
+/* Die Punktezahl ploppt auf, wenn sie sich aendert. */
+.fh-skill-punkte strong { display: inline-block; }
+.fh-skill-punkte strong.ist-pop-1 { animation: fhPunktePop1 520ms var(--fh-ease); }
+.fh-skill-punkte strong.ist-pop-2 { animation: fhPunktePop2 520ms var(--fh-ease); }
+@keyframes fhPunktePop1 { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@keyframes fhPunktePop2 { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 100% { transform: scale(1); } }
+
 /* ---------- Schmale Bildschirme ---------- */
 @media (max-width: 900px) {
   .fh-skill-buehne {
@@ -2902,19 +3194,34 @@ img, svg, video, canvas {
 
 @media (prefers-reduced-motion: reduce) {
   .fh-himmel-punkt.funkelt,
+  .fh-himmel-linie.ist-bereit,
   .fh-stern.ist-offen .fh-stern-kern,
-  .fh-stern.groesse-3 .fh-stern-kern::before,
-  .fh-stern.ist-neu .fh-stern-kern {
+  .fh-stern.ist-frei .fh-stern-kern,
+  .fh-stern-strahlen,
+  .fh-stern-auswahl,
+  .fh-stern.ist-neu .fh-stern-kern,
+  .fh-stern-karte.rein-1,
+  .fh-stern-karte.rein-2,
+  .fh-stern-karte-glanz,
+  .fh-stern-karte-frei.ist-stempel,
+  .fh-skill-punkte strong,
+  .fh-himmel-tipp.ist-da {
     animation: none;
   }
-  .fh-stern.ist-neu::before {
+  /* Nur Zier: ohne Bewegung ganz weglassen. */
+  .fh-himmel-puls,
+  .fh-himmel-schnuppe,
+  .fh-stern-flare,
+  .fh-stern-welle,
+  .fh-stern-funken {
     display: none;
   }
   .fh-himmel-linie.ist-neu {
     animation: none;
     stroke-dashoffset: 0;
   }
-  .fh-stern-kern {
+  .fh-stern-kern,
+  .fh-stern-huelle {
     transition: none;
   }
 }
