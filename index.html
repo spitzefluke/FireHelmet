@@ -57,20 +57,20 @@
        gewinnt (z.B. .fh-row nach .chapter-card, .fh-page-title nach
        .page-content h1). Diese Liste darf daher weder umsortiert noch
        um einen Eintrag verkuerzt werden. -->
-  <link rel="stylesheet" href="css/00-basis.css">
-  <link rel="stylesheet" href="css/10-inhaltsseiten.css">
-  <link rel="stylesheet" href="css/20-spiele.css">
-  <link rel="stylesheet" href="css/30-events.css">
-  <link rel="stylesheet" href="css/40-shop.css">
-  <link rel="stylesheet" href="css/50-redesign.css">
-  <link rel="stylesheet" href="css/60-fortschritt.css">
-  <link rel="stylesheet" href="css/65-startseite.css">
-  <link rel="stylesheet" href="css/70-entwurf-1c.css">
+  <link rel="stylesheet" href="css/00-basis.css?v=db1631bba5">
+  <link rel="stylesheet" href="css/10-inhaltsseiten.css?v=1a230c2caa">
+  <link rel="stylesheet" href="css/20-spiele.css?v=2970bf6bc5">
+  <link rel="stylesheet" href="css/30-events.css?v=73c235a358">
+  <link rel="stylesheet" href="css/40-shop.css?v=0b38d26fe9">
+  <link rel="stylesheet" href="css/50-redesign.css?v=62bedce12c">
+  <link rel="stylesheet" href="css/60-fortschritt.css?v=38aa01329f">
+  <link rel="stylesheet" href="css/65-startseite.css?v=e6eb9160d1">
+  <link rel="stylesheet" href="css/70-entwurf-1c.css?v=3a8f14a3ad">
   <!-- 80 kommt bewusst zuletzt: die Datei vereinheitlicht Tempo,
        Druckgefuehl und Tastaturfokus aller Bedienelemente und muss
        dafuer die Regeln aus 00 bis 70 ueberschreiben koennen. -->
-  <link rel="stylesheet" href="css/80-interaktion.css">
-  <link rel="stylesheet" href="css/90-typografie.css">
+  <link rel="stylesheet" href="css/80-interaktion.css?v=f333fbccb6">
+  <link rel="stylesheet" href="css/90-typografie.css?v=73aff913ba">
 </head>
 <body>
 
@@ -1606,8 +1606,8 @@
        Bundler vorhanden, daher kein "import { animate } from 'motion'").
        Version fest auf die lokal installierte gepinnt. -->
   <script src="https://cdn.jsdelivr.net/npm/motion@13.1.1/dist/motion.js" defer></script>
-  <script src="scripts/fx/motion-fx.js" defer></script>
-  <script src="scripts/fx/gsap-init.js" defer></script>
+  <script src="scripts/fx/motion-fx.js?v=5766caf862" defer></script>
+  <script src="scripts/fx/gsap-init.js?v=1350093cf7" defer></script>
 
   <!-- three.js (WebGL-Flaechen: scripts/fx/fh-webgl.js und darauf
        aufbauend seiten-fx-szenen.js, aurora-bg.js,
@@ -1618,7 +1618,7 @@
        klassischen <script>-Tag-Build, der zu Supabase/GSAP/Motion hier
        passt (kein Bundler, kein Import-Map-Pattern im restlichen Projekt). -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
-  <script src="scripts/fx/fh-webgl.js" defer></script>
+  <script src="scripts/fx/fh-webgl.js?v=7516a195d5" defer></script>
 
   <!-- Water und Sky aus three.js/examples. Es gibt sie nur als
        ES-Module; hier liegen sie als klassische Skripte, die sich
@@ -1626,115 +1626,115 @@
        three.js ein zweites Mal als Modul zu laden (670 KB) -
        diese beiden Dateien kosten zusammen 18 KB. Siehe Kopf von
        scripts/vendor/three-water.js. -->
-  <script src="scripts/vendor/three-water.js" defer></script>
-  <script src="scripts/vendor/three-sky.js" defer></script>
-  <script src="scripts/fx/aurora-bg.js" defer></script>
-  <script src="scripts/fx/celebration-burst-3d.js" defer></script>
-  <script src="scripts/fx/sidebar-ambient-3d.js" defer></script>
+  <script src="scripts/vendor/three-water.js?v=5096ca9394" defer></script>
+  <script src="scripts/vendor/three-sky.js?v=94c5724368" defer></script>
+  <script src="scripts/fx/aurora-bg.js?v=c89d577f7a" defer></script>
+  <script src="scripts/fx/celebration-burst-3d.js?v=269541d893" defer></script>
+  <script src="scripts/fx/sidebar-ambient-3d.js?v=1e54c6738a" defer></script>
 
   <!-- SCRIPTS -->
   <!-- Muss vor allen Skripten stehen, die fhNotice() aufrufen
        (discord-auth.js, twitch-auth.js, stories.js). -->
-  <script src="scripts/core/notice.js" defer></script>
+  <script src="scripts/core/notice.js?v=7526a5f4b4" defer></script>
   <!-- Ladeplatzhalter, genutzt von wheel.js (Rangliste). -->
-  <script src="scripts/fx/skeleton.js" defer></script>
-  <script src="scripts/core/field-counter.js" defer></script>
-  <script src="scripts/nav/nav-sync.js" defer></script>
-  <script src="scripts/nav/rail-flyout.js" defer></script>
-  <script src="scripts/nav/nav-keys.js" defer></script>
-  <script src="scripts/nav/seitenwechsel.js" defer></script>
-  <script src="scripts/fx/schrift-licht.js" defer></script>
-  <script src="scripts/fx/zaehler.js" defer></script>
+  <script src="scripts/fx/skeleton.js?v=228cc45f42" defer></script>
+  <script src="scripts/core/field-counter.js?v=439dfa0838" defer></script>
+  <script src="scripts/nav/nav-sync.js?v=7bb522e580" defer></script>
+  <script src="scripts/nav/rail-flyout.js?v=d25ae49fe6" defer></script>
+  <script src="scripts/nav/nav-keys.js?v=838d82d96c" defer></script>
+  <script src="scripts/nav/seitenwechsel.js?v=ba30d3630c" defer></script>
+  <script src="scripts/fx/schrift-licht.js?v=f34244176d" defer></script>
+  <script src="scripts/fx/zaehler.js?v=f28a9b6052" defer></script>
   <!-- Erst die Szenen, dann die Flaeche: seiten-fx.js liest
        window.fhSeitenSzenen beim ersten Seitenbesuch. -->
-  <script src="scripts/fx/seiten-fx-szenen.js" defer></script>
-  <script src="scripts/fx/seiten-fx.js" defer></script>
-  <script src="scripts/fx/path-draw.js" defer></script>
-  <script src="scripts/nav/quick-search.js" defer></script>
-  <script src="scripts/core/share.js" defer></script>
-  <script src="scripts/core/fire-helmet-config.js" defer></script>
-  <script src="scripts/core/i18n.js" defer></script>
-  <script src="scripts/core/audiobook-link.js" defer></script>
-  <script src="scripts/core/update-notice-data.js" defer></script>
-  <script src="scripts/core/update-notice.js" defer></script>
-  <script src="scripts/codes/codes-data.js" defer></script>
-  <script src="scripts/music/music-data.js" defer></script>
-  <script src="scripts/music/music-player.js" defer></script>
-  <script src="scripts/wheel/wheel-data.js" defer></script>
-  <script src="scripts/wheel/avatars-data.js" defer></script>
-  <script src="scripts/core/progression-data.js" defer></script>
-  <script src="scripts/wheel/nickname-filter-data.js" defer></script>
-  <script src="scripts/wheel/nickname-filter.js" defer></script>
-  <script src="scripts/race/race-data.js" defer></script>
-  <script src="scripts/community-boss/community-boss-data.js" defer></script>
-  <script src="scripts/community-boss/boss-attacks-data.js" defer></script>
-  <script src="scripts/community-boss/boss-spezial-fx.js" defer></script>
-  <script src="scripts/streamraetsel/streamraetsel-data.js" defer></script>
-  <script src="scripts/auth/twitch-config.js" defer></script>
-  <script src="scripts/auth/anmeldung.js" defer></script>
-  <script src="scripts/auth/anmelde-fx.js" defer></script>
-  <script src="scripts/auth/twitch-auth.js" defer></script>
-  <script src="scripts/auth/discord-config.js" defer></script>
-  <script src="scripts/auth/discord-auth.js" defer></script>
+  <script src="scripts/fx/seiten-fx-szenen.js?v=a428448470" defer></script>
+  <script src="scripts/fx/seiten-fx.js?v=e01278a95e" defer></script>
+  <script src="scripts/fx/path-draw.js?v=5d4d69c831" defer></script>
+  <script src="scripts/nav/quick-search.js?v=9cb3a6421f" defer></script>
+  <script src="scripts/core/share.js?v=afae2a5ba3" defer></script>
+  <script src="scripts/core/fire-helmet-config.js?v=b6367d549e" defer></script>
+  <script src="scripts/core/i18n.js?v=42d046e9a8" defer></script>
+  <script src="scripts/core/audiobook-link.js?v=5ab730a9b0" defer></script>
+  <script src="scripts/core/update-notice-data.js?v=6eba9592e6" defer></script>
+  <script src="scripts/core/update-notice.js?v=15d517ed67" defer></script>
+  <script src="scripts/codes/codes-data.js?v=044c2364b9" defer></script>
+  <script src="scripts/music/music-data.js?v=70e2cc0cc7" defer></script>
+  <script src="scripts/music/music-player.js?v=ccffbd43b3" defer></script>
+  <script src="scripts/wheel/wheel-data.js?v=801674a79e" defer></script>
+  <script src="scripts/wheel/avatars-data.js?v=e73f1126f4" defer></script>
+  <script src="scripts/core/progression-data.js?v=3f33a5c004" defer></script>
+  <script src="scripts/wheel/nickname-filter-data.js?v=c17982c5ff" defer></script>
+  <script src="scripts/wheel/nickname-filter.js?v=5fa0c18636" defer></script>
+  <script src="scripts/race/race-data.js?v=6bfe336fb6" defer></script>
+  <script src="scripts/community-boss/community-boss-data.js?v=6f77b31557" defer></script>
+  <script src="scripts/community-boss/boss-attacks-data.js?v=39f74a0f93" defer></script>
+  <script src="scripts/community-boss/boss-spezial-fx.js?v=9894dde7fd" defer></script>
+  <script src="scripts/streamraetsel/streamraetsel-data.js?v=ad372b2aa1" defer></script>
+  <script src="scripts/auth/twitch-config.js?v=2a29ec2561" defer></script>
+  <script src="scripts/auth/anmeldung.js?v=a6b475392b" defer></script>
+  <script src="scripts/auth/anmelde-fx.js?v=b2397a9b43" defer></script>
+  <script src="scripts/auth/twitch-auth.js?v=529cc3519b" defer></script>
+  <script src="scripts/auth/discord-config.js?v=f3a331e202" defer></script>
+  <script src="scripts/auth/discord-auth.js?v=aea76db756" defer></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
-  <script src="scripts/supabase/turnstile-config.js" defer></script>
-  <script src="scripts/supabase/supabase-config.js" defer></script>
-  <script src="scripts/supabase/supabase-proxy-data.js" defer></script>
-  <script src="scripts/supabase/supabase-client.js" defer></script>
-  <script src="scripts/core/spieler-kennwort.js" defer></script>
-  <script src="scripts/core/hinweisband.js" defer></script>
-  <script src="scripts/core/avatar-wahl.js" defer></script>
-  <script src="scripts/supabase/supabase-players.js" defer></script>
-  <script src="scripts/tournament/tournament-api.js" defer></script>
-  <script src="scripts/tournament/tournament-data.js" defer></script>
-  <script src="scripts/tournament/tournament-bracket.js" defer></script>
-  <script src="scripts/tournament/games/reaction-game.js" defer></script>
-  <script src="scripts/tournament/tournament.js" defer></script>
-  <script src="scripts/supabase/supabase-games.js" defer></script>
-  <script src="scripts/supabase/supabase-statistics.js" defer></script>
-  <script src="scripts/core/site-config.js" defer></script>
-  <script src="scripts/core/feature-flags.js" defer></script>
-  <script src="scripts/liveevent/live-event.js" defer></script>
-  <script src="scripts/liveevent/event-titel.js" defer></script>
-  <script src="scripts/liveevent/live-storys.js" defer></script>
-  <script src="scripts/core/discord-notify-data.js" defer></script>
-  <script src="scripts/core/discord-notify.js" defer></script>
-  <script src="scripts/core/countdown.js" defer></script>
-  <script src="scripts/fx/reveal.js" defer></script>
-  <script src="scripts/home/startseite.js" defer></script>
+  <script src="scripts/supabase/turnstile-config.js?v=02c0e6d9e3" defer></script>
+  <script src="scripts/supabase/supabase-config.js?v=70ff2ba109" defer></script>
+  <script src="scripts/supabase/supabase-proxy-data.js?v=7e251334d5" defer></script>
+  <script src="scripts/supabase/supabase-client.js?v=d1e6451c56" defer></script>
+  <script src="scripts/core/spieler-kennwort.js?v=5193f07587" defer></script>
+  <script src="scripts/core/hinweisband.js?v=63c0489cde" defer></script>
+  <script src="scripts/core/avatar-wahl.js?v=92c602674a" defer></script>
+  <script src="scripts/supabase/supabase-players.js?v=65c36142ed" defer></script>
+  <script src="scripts/tournament/tournament-api.js?v=01513802aa" defer></script>
+  <script src="scripts/tournament/tournament-data.js?v=0edd8b0596" defer></script>
+  <script src="scripts/tournament/tournament-bracket.js?v=2eb0a6ab10" defer></script>
+  <script src="scripts/tournament/games/reaction-game.js?v=2fef3480c8" defer></script>
+  <script src="scripts/tournament/tournament.js?v=65c5abb90c" defer></script>
+  <script src="scripts/supabase/supabase-games.js?v=6b4b7b629c" defer></script>
+  <script src="scripts/supabase/supabase-statistics.js?v=45cf0cc929" defer></script>
+  <script src="scripts/core/site-config.js?v=5dc18a0acc" defer></script>
+  <script src="scripts/core/feature-flags.js?v=3e7e628f44" defer></script>
+  <script src="scripts/liveevent/live-event.js?v=09299d1d6d" defer></script>
+  <script src="scripts/liveevent/event-titel.js?v=afc5b6b4cf" defer></script>
+  <script src="scripts/liveevent/live-storys.js?v=2e2c700751" defer></script>
+  <script src="scripts/core/discord-notify-data.js?v=e0fdc8d435" defer></script>
+  <script src="scripts/core/discord-notify.js?v=aad2217ad4" defer></script>
+  <script src="scripts/core/countdown.js?v=ddbc62363d" defer></script>
+  <script src="scripts/fx/reveal.js?v=b8f9971b93" defer></script>
+  <script src="scripts/home/startseite.js?v=207933b961" defer></script>
   <!-- Die Ozean-Reise. Braucht three.js, fh-webgl.js und die
        beiden vendor-Dateien (alle weiter oben) sowie countdown.js,
        aus dessen Feldern sie die Zahlen fuer den 3D-Countdown
        liest. Liest --fh-weg, das startseite.js schreibt. -->
-  <script src="scripts/home/ozean-szene.js" defer></script>
-  <script src="scripts/stand/stand.js" defer></script>
-  <script src="scripts/stories/stories-data.js" defer></script>
-  <script src="scripts/characters/characters-data.js" defer></script>
-  <script src="scripts/stories/stories.js" defer></script>
-  <script src="scripts/characters/characters.js" defer></script>
-  <script src="scripts/race/race.js" defer></script>
-  <script src="scripts/community-boss/community-boss.js" defer></script>
-  <script src="scripts/wheel/wheel.js" defer></script>
-  <script src="scripts/core/progression.js" defer></script>
-  <script src="scripts/core/level-path.js" defer></script>
-  <script src="scripts/piratenpass/piratenpass.js" defer></script>
-  <script src="scripts/piratenpass/schatzkarte.js" defer></script>
-  <script src="scripts/spielothek/spielothek-data.js" defer></script>
-  <script src="scripts/spielothek/games/slot.js" defer></script>
-  <script src="scripts/spielothek/spielothek.js" defer></script>
-  <script src="scripts/shop/shop-data.js" defer></script>
-  <script src="scripts/shop/shop-rotation.js" defer></script>
-  <script src="scripts/shop/shop.js" defer></script>
-  <script src="scripts/streamraetsel/streamraetsel.js" defer></script>
-  <script src="scripts/skilltree/skilltree-data.js" defer></script>
-  <script src="scripts/skilltree/skilltree.js" defer></script>
-  <script src="scripts/core/admin-gateway.js" defer></script>
-  <script src="scripts/support/support.js" defer></script>
-  <script src="scripts/rating/rating.js" defer></script>
-  <script src="scripts/core/main.js" defer></script>
-  <script src="scripts/codes/code-button-effect.js" defer></script>
-  <script src="scripts/codes/code-ambient-fx.js" defer></script>
-  <script src="scripts/codes/code-history.js" defer></script>
+  <script src="scripts/home/ozean-szene.js?v=4e804856b1" defer></script>
+  <script src="scripts/stand/stand.js?v=576a0f65d3" defer></script>
+  <script src="scripts/stories/stories-data.js?v=73c784316f" defer></script>
+  <script src="scripts/characters/characters-data.js?v=f71edfe488" defer></script>
+  <script src="scripts/stories/stories.js?v=3efc94339b" defer></script>
+  <script src="scripts/characters/characters.js?v=9b277fc541" defer></script>
+  <script src="scripts/race/race.js?v=d442979724" defer></script>
+  <script src="scripts/community-boss/community-boss.js?v=8ed8b9d19e" defer></script>
+  <script src="scripts/wheel/wheel.js?v=c03dcce624" defer></script>
+  <script src="scripts/core/progression.js?v=58aebb5cac" defer></script>
+  <script src="scripts/core/level-path.js?v=d138110544" defer></script>
+  <script src="scripts/piratenpass/piratenpass.js?v=a6785124f9" defer></script>
+  <script src="scripts/piratenpass/schatzkarte.js?v=981ca3cb04" defer></script>
+  <script src="scripts/spielothek/spielothek-data.js?v=3de3bc21cc" defer></script>
+  <script src="scripts/spielothek/games/slot.js?v=a5baf8663e" defer></script>
+  <script src="scripts/spielothek/spielothek.js?v=21a5120cfd" defer></script>
+  <script src="scripts/shop/shop-data.js?v=dcf9471bba" defer></script>
+  <script src="scripts/shop/shop-rotation.js?v=d5d15e7218" defer></script>
+  <script src="scripts/shop/shop.js?v=6106847f60" defer></script>
+  <script src="scripts/streamraetsel/streamraetsel.js?v=46de70f427" defer></script>
+  <script src="scripts/skilltree/skilltree-data.js?v=cacda48de0" defer></script>
+  <script src="scripts/skilltree/skilltree.js?v=e4ac131da9" defer></script>
+  <script src="scripts/core/admin-gateway.js?v=3f040fcb85" defer></script>
+  <script src="scripts/support/support.js?v=ffbe30a325" defer></script>
+  <script src="scripts/rating/rating.js?v=a06c7d42b8" defer></script>
+  <script src="scripts/core/main.js?v=9c8a3d861e" defer></script>
+  <script src="scripts/codes/code-button-effect.js?v=12af905b26" defer></script>
+  <script src="scripts/codes/code-ambient-fx.js?v=61b476b1dd" defer></script>
+  <script src="scripts/codes/code-history.js?v=2530fa82ec" defer></script>
 
   <!-- Ganz zum Schluss: die Startseiten-Uebersicht liest aus stories.js,
        wheel.js, race.js und codes-data.js und muss daher nach allen

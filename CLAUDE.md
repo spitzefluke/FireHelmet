@@ -176,6 +176,13 @@ Die Seite ist GitHub Pages auf `main` — **jeder Merge geht sofort live.** Es g
 Staging-Umgebung. Auf `main` laufen CodeQL und eine JavaScript-Analyse; vor dem Merge abwarten,
 nicht darüber hinweggehen.
 
+**Vor jedem Commit, der JS oder CSS ändert:** `python3 werkzeuge/cache-versionen.py`. Es
+schreibt an jedes Skript und Stylesheet in `index.html` ein `?v=` aus dem Dateiinhalt. Pages
+lässt Browser Dateien zehn Minuten zwischenspeichern; ohne neue Nummer sehen Besucher nach
+einem Merge noch das alte JavaScript („die neuen Sachen sind nicht da“). Eine vergessene
+Nummer macht nichts kaputt, sie verzögert nur. `--pruefen` meldet veraltete Nummern, ohne
+etwas zu ändern. Ein neues `<script>` bekommt seine Nummer beim nächsten Lauf von selbst.
+
 Migrationen und Dashboard-Einstellungen sind **nicht** Teil des Deployments. Wenn eine Änderung
 beides braucht, gehört in den PR-Text, was der Betreiber danach von Hand tun muss — sonst ist
 die Funktion live und kaputt.
