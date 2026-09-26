@@ -354,10 +354,12 @@ const GW_STORYS = [
   ["werbung", "Werbungsflut", "bis 1 min · ??? spamt 32 Fenster · 6 Secrets à +25 Dublonen (max. 150)", "neon"],
   ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – bereitet das nächste Event vor", "violett"],
 ];
-/* Nur als Vorschau - fuer alle laufen sie ueber "Finale auslösen". */
-const GW_STORYS_NUR_VORSCHAU = [
-  ["gegenhack_sieg", "Gegenhack: Sieg", "Blitz, Konfetti, Sieg-Bildschirm mit Belohnung", "violett"],
-  ["gegenhack_niederlage", "Gegenhack: Niederlage", "??? zeigt sich, danach die Werbungsflut; Seite bleibt gehackt bis zum nächsten Event", "rot"],
+/* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
+   stehen darum nicht in der Liste - hier nur ihre Namen fuer die
+   Anzeige "Zuletzt gestartet". */
+const GW_STORYS_FINALE = [
+  ["gegenhack_sieg", "Gegenhack: Sieg"],
+  ["gegenhack_niederlage", "Gegenhack: Niederlage"],
 ];
 
 function buildGatewayStorysHtml() {
@@ -367,12 +369,6 @@ function buildGatewayStorysHtml() {
       <div class="gw-story-knoepfe">
         <button type="button" class="gw-live-knopf" onclick="gwStoryVorschau('${id}')">Vorschau</button>
         <button type="button" class="gw-live-knopf ist-alle" onclick="gwStoryStart('${id}')">Für alle</button>
-      </div>
-    </div>`).join("") + GW_STORYS_NUR_VORSCHAU.map(([id, name, info, ton]) => `
-    <div class="gw-story ist-${ton}">
-      <div class="gw-story-text"><span class="gw-story-name">${name}</span><span class="gw-story-info">${info}</span></div>
-      <div class="gw-story-knoepfe">
-        <button type="button" class="gw-live-knopf" onclick="gwStoryVorschau('${id}')">Vorschau</button>
       </div>
     </div>`).join("");
   return `
@@ -511,7 +507,7 @@ async function gwAbstimmungStarten() {
 }
 
 function gwStoryName(id) {
-  const s = GW_STORYS.concat(GW_STORYS_NUR_VORSCHAU).find((x) => x[0] === id);
+  const s = GW_STORYS.concat(GW_STORYS_FINALE).find((x) => x[0] === id);
   return s ? s[1] : id;
 }
 
