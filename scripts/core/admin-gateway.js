@@ -354,10 +354,12 @@ const GW_STORYS = [
   ["werbung", "Werbungsflut", "bis 1 min · ??? spamt 32 Fenster · 6 Secrets à +25 Dublonen (max. 150)", "neon"],
   ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – bereitet das nächste Event vor", "violett"],
 ];
-/* Nur als Vorschau - fuer alle laufen sie ueber "Finale auslösen". */
-const GW_STORYS_NUR_VORSCHAU = [
-  ["gegenhack_sieg", "Gegenhack: Sieg", "Blitz, Konfetti, Sieg-Bildschirm mit Belohnung", "violett"],
-  ["gegenhack_niederlage", "Gegenhack: Niederlage", "??? zeigt sich, danach die Werbungsflut; Seite bleibt gehackt bis zum nächsten Event", "rot"],
+/* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
+   stehen darum nicht in der Liste - hier nur ihre Namen fuer die
+   Anzeige "Zuletzt gestartet". */
+const GW_STORYS_FINALE = [
+  ["gegenhack_sieg", "Gegenhack: Sieg"],
+  ["gegenhack_niederlage", "Gegenhack: Niederlage"],
 ];
 
 function buildGatewayStorysHtml() {
@@ -367,12 +369,6 @@ function buildGatewayStorysHtml() {
       <div class="gw-story-knoepfe">
         <button type="button" class="gw-live-knopf" onclick="gwStoryVorschau('${id}')">Vorschau</button>
         <button type="button" class="gw-live-knopf ist-alle" onclick="gwStoryStart('${id}')">Für alle</button>
-      </div>
-    </div>`).join("") + GW_STORYS_NUR_VORSCHAU.map(([id, name, info, ton]) => `
-    <div class="gw-story ist-${ton}">
-      <div class="gw-story-text"><span class="gw-story-name">${name}</span><span class="gw-story-info">${info}</span></div>
-      <div class="gw-story-knoepfe">
-        <button type="button" class="gw-live-knopf" onclick="gwStoryVorschau('${id}')">Vorschau</button>
       </div>
     </div>`).join("");
   return `
@@ -386,6 +382,8 @@ function buildGatewayStorysHtml() {
         <button type="button" class="gw-live-knopf" onclick="gwStoryVorschauStopp()">Vorschau stoppen</button>
       </div>
     </div>
+    ${buildGatewayPlanHtml()}
+    <p class="gw-plan-ueberschrift">Alle Storys</p>
     <div class="gw-story-liste">${zeilen}</div>
     <p id="gw-story-status" class="gw-live-status" role="status" aria-live="polite"></p>
 
@@ -473,6 +471,8 @@ async function gwEventStarten() {
     const { error } = await supabaseClient.rpc("admin_event_starten", { p_name: name, p_sekunden: sek });
     if (error) throw error;
     gwLiveStatus("gw-event-status", "✓ Countdown läuft bei allen – in " + sek + " s ist „" + name + "“ live.", false);
+    const plan = typeof gwPlanAktiv === "function" ? gwPlanAktiv() : null;
+    if (plan && plan.schritt) gwPlanSpeichern(plan, { schritt: 0 }, "Ablauf „" + plan.name + "“ beginnt von vorn.");
     gwEventLageLaden();
     gwStoryLageLaden();
   } catch (err) {
@@ -511,7 +511,7 @@ async function gwAbstimmungStarten() {
 }
 
 function gwStoryName(id) {
-  const s = GW_STORYS.concat(GW_STORYS_NUR_VORSCHAU).find((x) => x[0] === id);
+  const s = GW_STORYS.concat(GW_STORYS_FINALE).find((x) => x[0] === id);
   return s ? s[1] : id;
 }
 
@@ -613,9 +613,241 @@ async function gwGegenhackAbbrechen() {
   }
 }
 
+/* ------------------------------------------------------
+   ABLAUFPLAN JE EVENT (Migration 33)
+   ---------------------------------------------------
+   Vorab geplante Events mit ihren Storys in fester Reihenfolge.
+   Der gewaehlte Plan steht oben ueber "Alle Storys": jede Story
+   mit Vorschau und "Für alle", die naechste ist markiert. Wer eine
+   Story ueber den Plan startet, rueckt "als Nächstes" weiter;
+   "Event starten" setzt den Plan auf Anfang. Nur Admins sehen die
+   Plaene (RLS); gewaehlt ist er fuer alle Admin-Geraete gleich.
+------------------------------------------------------ */
+let gwPlaene = [];
+
+function gwPlanAktiv() { return gwPlaene.find((p) => p.aktiv) || null; }
+
+function buildGatewayPlanHtml() {
+  const optionen = GW_STORYS.map(([id, name]) => `<option value="${id}">${name}</option>`).join("");
+  return `
+    <div class="gw-plan">
+      <div class="gw-plan-kopf">
+        <span class="gw-story-name">Ablaufplan</span>
+        <select id="gw-plan-wahl" class="gw-feld gw-feld-breit" onchange="gwPlanWaehlen(this.value)" aria-label="Ablaufplan wählen">
+          <option value="">– kein Plan: alle Storys –</option>
+        </select>
+        <button type="button" class="gw-live-knopf" onclick="gwPlanNeu()">Neuer Plan</button>
+        <button type="button" class="gw-live-knopf" onclick="gwPlanUmbenennen()">Umbenennen</button>
+        <button type="button" class="gw-live-knopf" onclick="gwPlanLoeschen()">Löschen</button>
+      </div>
+      <ol id="gw-plan-ablauf" class="gw-plan-ablauf"></ol>
+      <div id="gw-plan-fuss" class="gw-plan-fuss" hidden>
+        <select id="gw-plan-dazu" class="gw-feld" aria-label="Story für den Ablauf">${optionen}</select>
+        <button type="button" class="gw-live-knopf" onclick="gwPlanStoryDazu()">Zum Ablauf</button>
+        <button type="button" class="gw-live-knopf" onclick="gwPlanVonVorn()">Ablauf von vorn</button>
+      </div>
+      <p id="gw-plan-status" class="gw-live-status" role="status" aria-live="polite"></p>
+      <p class="gateway-status-sub">Leg für jedes kommende Event einen Plan an und stell die Storys in die Reihenfolge, in der sie laufen sollen. Beim Event wählst du den Plan – „Event starten“ übernimmt seinen Namen und fängt den Ablauf von vorn an.</p>
+    </div>
+  `;
+}
+
+async function gwPlaeneLaden() {
+  if (!supabaseClient || !document.getElementById("gw-plan-wahl")) return;
+  try {
+    const { data, error } = await supabaseClient.from("event_ablaufplaene").select("plan_id, name, storys, aktiv, schritt").order("name");
+    if (error) throw error;
+    gwPlaene = Array.isArray(data) ? data : [];
+  } catch (err) {
+    gwLiveStatus("gw-plan-status", "Pläne nicht lesbar – ist Migration 33 eingespielt?", true);
+    gwPlaene = [];
+  }
+  gwPlanZeichnen();
+}
+
+function gwPlanZeichnen() {
+  const wahl = document.getElementById("gw-plan-wahl");
+  const liste = document.getElementById("gw-plan-ablauf");
+  const fuss = document.getElementById("gw-plan-fuss");
+  if (!wahl || !liste) return;
+  const aktiv = gwPlanAktiv();
+
+  /* Auswahl neu fuellen - Namen nur als Text. */
+  while (wahl.options.length > 1) wahl.remove(1);
+  gwPlaene.forEach((p) => { const o = document.createElement("option"); o.value = p.plan_id; o.textContent = p.name; wahl.appendChild(o); });
+  wahl.value = aktiv ? aktiv.plan_id : "";
+  if (fuss) fuss.hidden = !aktiv;
+
+  liste.replaceChildren();
+  if (!aktiv) return;
+  const storys = aktiv.storys || [];
+  if (!storys.length) {
+    const leer = document.createElement("li");
+    leer.className = "gw-plan-leer";
+    leer.textContent = "Noch keine Storys im Ablauf – unten eine auswählen und „Zum Ablauf“.";
+    liste.appendChild(leer);
+    return;
+  }
+  storys.forEach((id, i) => {
+    const eintrag = GW_STORYS.find((x) => x[0] === id);
+    const zeile = document.createElement("li");
+    const status = i < aktiv.schritt ? "ist-gelaufen" : i === aktiv.schritt ? "ist-naechste" : "";
+    zeile.className = "gw-story gw-plan-schritt ist-" + (eintrag ? eintrag[3] : "rot") + (status ? " " + status : "");
+    const text = document.createElement("div");
+    text.className = "gw-story-text";
+    const name = document.createElement("span");
+    name.className = "gw-story-name";
+    name.textContent = (i + 1) + ". " + gwStoryName(id) + (i < aktiv.schritt ? "  ✓" : "");
+    const info = document.createElement("span");
+    info.className = "gw-story-info";
+    info.textContent = i === aktiv.schritt ? "Als Nächstes" + (eintrag ? " · " + eintrag[2] : "") : eintrag ? eintrag[2] : "Unbekannte Story – bitte entfernen";
+    text.append(name, info);
+    const knoepfe = document.createElement("div");
+    knoepfe.className = "gw-story-knoepfe";
+    const knopf = (beschriftung, klick, extra, titel) => {
+      const k = document.createElement("button");
+      k.type = "button";
+      k.className = "gw-live-knopf" + (extra ? " " + extra : "");
+      k.textContent = beschriftung;
+      if (titel) k.setAttribute("aria-label", titel);
+      k.addEventListener("click", klick);
+      knoepfe.appendChild(k);
+      return k;
+    };
+    knopf("↑", () => gwPlanVerschieben(i, -1), "ist-klein", "Nach oben").disabled = i === 0;
+    knopf("↓", () => gwPlanVerschieben(i, 1), "ist-klein", "Nach unten").disabled = i === storys.length - 1;
+    knopf("✕", () => gwPlanStoryWeg(i), "ist-klein", "Aus dem Ablauf entfernen");
+    if (eintrag) {
+      knopf("Vorschau", () => gwStoryVorschau(id));
+      knopf("Für alle", () => gwPlanStart(i), "ist-alle");
+    }
+    zeile.append(text, knoepfe);
+    liste.appendChild(zeile);
+  });
+}
+
+/* Eine Aenderung am gewaehlten Plan speichern und neu zeichnen. */
+async function gwPlanSpeichern(plan, felder, meldung) {
+  try {
+    const { error } = await supabaseClient.from("event_ablaufplaene")
+      .update(Object.assign({ geaendert_am: new Date().toISOString() }, felder)).eq("plan_id", plan.plan_id);
+    if (error) throw error;
+    /* gwPlaene kann inzwischen neu geladen sein - dort eintragen. */
+    Object.assign(gwPlaene.find((p) => p.plan_id === plan.plan_id) || plan, felder);
+    gwPlanZeichnen();
+    if (meldung) gwLiveStatus("gw-plan-status", meldung, false);
+    return true;
+  } catch (err) {
+    gwLiveStatus("gw-plan-status", "Speichern fehlgeschlagen: " + ((err && err.message) || err), true);
+    return false;
+  }
+}
+
+async function gwPlanWaehlen(planId) {
+  if (!supabaseClient) return;
+  try {
+    /* Erst alle abwaehlen - es darf nur einen gewaehlten geben. */
+    const { error: e1 } = await supabaseClient.from("event_ablaufplaene").update({ aktiv: false }).eq("aktiv", true);
+    if (e1) throw e1;
+    if (planId) {
+      const { error: e2 } = await supabaseClient.from("event_ablaufplaene").update({ aktiv: true }).eq("plan_id", planId);
+      if (e2) throw e2;
+    }
+    gwPlaene.forEach((p) => { p.aktiv = p.plan_id === planId; });
+    gwPlanZeichnen();
+    const plan = gwPlanAktiv();
+    const feld = document.getElementById("gw-event-name");
+    if (plan && feld && !feld.value.trim()) feld.value = plan.name.slice(0, 60);
+    gwLiveStatus("gw-plan-status", plan ? "✓ Plan „" + plan.name + "“ gewählt." : "Kein Plan gewählt.", false);
+  } catch (err) {
+    gwLiveStatus("gw-plan-status", "Wählen fehlgeschlagen: " + ((err && err.message) || err), true);
+    gwPlaeneLaden();
+  }
+}
+
+async function gwPlanNeu() {
+  if (!supabaseClient) return;
+  const name = (prompt("Name des geplanten Events, z. B. „Event 3 – Der Riss“:") || "").trim();
+  if (!name) return;
+  if (name.length > 60) { gwLiveStatus("gw-plan-status", "Höchstens 60 Zeichen.", true); return; }
+  try {
+    const { data, error } = await supabaseClient.from("event_ablaufplaene").insert({ name: name }).select("plan_id").single();
+    if (error) throw error;
+    await gwPlaeneLaden();
+    await gwPlanWaehlen(data.plan_id);
+  } catch (err) {
+    gwLiveStatus("gw-plan-status", "Anlegen fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwPlanUmbenennen() {
+  const plan = gwPlanAktiv();
+  if (!plan) { gwLiveStatus("gw-plan-status", "Erst einen Plan wählen.", true); return; }
+  const name = (prompt("Neuer Name:", plan.name) || "").trim();
+  if (!name || name === plan.name) return;
+  if (name.length > 60) { gwLiveStatus("gw-plan-status", "Höchstens 60 Zeichen.", true); return; }
+  if (await gwPlanSpeichern(plan, { name: name }, "✓ Umbenannt.")) gwPlaeneLaden();
+}
+
+async function gwPlanLoeschen() {
+  const plan = gwPlanAktiv();
+  if (!plan) { gwLiveStatus("gw-plan-status", "Erst einen Plan wählen.", true); return; }
+  if (!confirm("Plan „" + plan.name + "“ löschen? Die Storys selbst bleiben.")) return;
+  try {
+    const { error } = await supabaseClient.from("event_ablaufplaene").delete().eq("plan_id", plan.plan_id);
+    if (error) throw error;
+    gwLiveStatus("gw-plan-status", "✓ Plan gelöscht.", false);
+    gwPlaeneLaden();
+  } catch (err) {
+    gwLiveStatus("gw-plan-status", "Löschen fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+function gwPlanStoryDazu() {
+  const plan = gwPlanAktiv();
+  const id = (document.getElementById("gw-plan-dazu") || {}).value;
+  if (!plan || !id) return;
+  const storys = (plan.storys || []).concat(id);
+  if (storys.length > 30) { gwLiveStatus("gw-plan-status", "Höchstens 30 Storys je Plan.", true); return; }
+  gwPlanSpeichern(plan, { storys: storys }, "✓ " + gwStoryName(id) + " steht jetzt an Stelle " + storys.length + ".");
+}
+
+function gwPlanStoryWeg(i) {
+  const plan = gwPlanAktiv();
+  if (!plan) return;
+  const storys = plan.storys.slice();
+  storys.splice(i, 1);
+  gwPlanSpeichern(plan, { storys: storys, schritt: Math.min(plan.schritt - (i < plan.schritt ? 1 : 0), storys.length) });
+}
+
+function gwPlanVerschieben(i, richtung) {
+  const plan = gwPlanAktiv();
+  const j = i + richtung;
+  if (!plan || j < 0 || j >= plan.storys.length) return;
+  const storys = plan.storys.slice();
+  const x = storys[i]; storys[i] = storys[j]; storys[j] = x;
+  gwPlanSpeichern(plan, { storys: storys });
+}
+
+function gwPlanVonVorn() {
+  const plan = gwPlanAktiv();
+  if (plan) gwPlanSpeichern(plan, { schritt: 0 }, "Ablauf steht wieder am Anfang.");
+}
+
+/* Story aus dem Plan fuer alle starten - danach ist die folgende dran. */
+async function gwPlanStart(i) {
+  const plan = gwPlanAktiv();
+  if (!plan) return;
+  const ok = await gwStoryStart(plan.storys[i]);
+  /* gwStoryStart laedt die Plaene schon neu - danach noch einmal,
+     damit der alte Stand den neuen Schritt nicht ueberholt. */
+  if (ok && await gwPlanSpeichern(plan, { schritt: Math.max(plan.schritt, i + 1) })) gwPlaeneLaden();
+}
+
 async function gwStoryLageLaden() {
   gwEventLageLaden();
   gwGegenhackLageLaden();
+  gwPlaeneLaden();
   const ziel = document.getElementById("gw-story-jetzt");
   const musik = document.getElementById("gw-musik-stand");
   if (!ziel || !supabaseClient) return;
@@ -646,8 +878,8 @@ function gwStoryVorschauStopp() {
 }
 
 async function gwStoryStart(id) {
-  if (!supabaseClient) return;
-  if (id === "ende" && !confirm("Systemausfall für alle starten? Die Seite bleibt danach für alle gehackt, bis die nächste Story startet oder du wiederherstellst.")) return;
+  if (!supabaseClient) return false;
+  if (id === "ende" && !confirm("Systemausfall für alle starten? Die Seite bleibt danach für alle gehackt, bis die nächste Story startet oder du wiederherstellst.")) return false;
   gwLiveStatus("gw-story-status", "Starte …", false);
   try {
     const { error } = await supabaseClient.rpc("admin_live_story", { p_story: id });
@@ -655,9 +887,11 @@ async function gwStoryStart(id) {
     gwLiveStatus("gw-story-status", "✓ " + gwStoryName(id) + " läuft jetzt bei allen.", false);
     gwLogbuch(gwStoryName(id));
     gwStoryLageLaden();
+    return true;
   } catch (err) {
     console.error("Story starten fehlgeschlagen:", err);
     gwLiveStatus("gw-story-status", "Starten fehlgeschlagen: " + ((err && err.message) || err), true);
+    return false;
   }
 }
 

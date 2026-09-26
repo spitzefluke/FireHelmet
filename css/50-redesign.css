@@ -1777,6 +1777,38 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 .gw-story-info { font-size: 12px; line-height: 1.4; color: var(--fh-muted-fg); }
 .gw-story-knoepfe { display: flex; gap: 6px; }
 
+/* Ablaufplan je Event (admin-gateway.js, Migration 33) */
+.gw-plan {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--fh-gold) 40%, transparent);
+  border-radius: var(--fh-radius-sm);
+  background: color-mix(in srgb, var(--fh-gold) 5%, var(--fh-surface));
+}
+.gw-plan-kopf, .gw-plan-fuss { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.gw-plan-kopf .gw-story-name { margin-right: 4px; color: var(--fh-gold-bright); }
+.gw-plan-kopf .gw-feld-breit { flex: 1 1 220px; }
+.gw-plan-ablauf { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.gw-plan-leer { font-size: 13px; color: var(--fh-muted-fg); }
+.gw-plan-schritt.ist-gelaufen { opacity: .55; }
+.gw-plan-schritt.ist-naechste {
+  border-color: color-mix(in srgb, var(--fh-gold) 60%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-gold) 35%, transparent), 0 0 18px -6px var(--fh-gold);
+}
+.gw-plan-schritt.ist-naechste .gw-story-info { color: var(--fh-gold-bright); }
+.gw-live-knopf.ist-klein { min-width: 34px; padding-left: 8px; padding-right: 8px; }
+.gw-live-knopf:disabled { opacity: .35; cursor: default; }
+.gw-plan-ueberschrift {
+  margin: 4px 0 8px;
+  font-family: var(--fh-font-display);
+  font-size: 11px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--fh-muted-fg);
+}
+
 .gw-musik {
   display: flex;
   flex-wrap: wrap;
