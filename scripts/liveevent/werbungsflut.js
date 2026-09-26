@@ -53,19 +53,20 @@
   const A = function (n) { return "scripts/avatare/" + n + ".png"; };
 
   /* Aufbau der Fenster. Index = Textnummer in i18n.js (werbung.sN.*).
-     geheim: "secret" zaehlt als Secret, "text" ist nur ein Witz. */
+     geheim: "fund" zaehlt als Secret (nicht "secret" - das haelt
+     CodeQL fuer ein echtes Geheimnis), "text" ist nur ein Witz. */
   const SPAM = [
     { icon: "pokal", grund: "#ffe14d", farbe: "#d10000", tinte: "#111", ctaGrund: "#d10000", ctaTinte: "#fff", geheim: "text" },
-    { icon: "warnung", grund: "#fff", farbe: "#c00", tinte: "#222", ctaGrund: "#0a246a", ctaTinte: "#fff", geheim: "secret" },
+    { icon: "warnung", grund: "#fff", farbe: "#c00", tinte: "#222", ctaGrund: "#0a246a", ctaTinte: "#fff", geheim: "fund" },
     { icon: "herz", grund: "#ff3fb4", farbe: "#fff", tinte: "#fff", ctaGrund: "#fff", ctaTinte: "#ff3fb4", geheim: "text" },
-    { icon: "muenzen", grund: "#00d26a", farbe: "#fff200", tinte: "#012", ctaGrund: "#fff200", ctaTinte: "#012", geheim: "secret" },
+    { icon: "muenzen", grund: "#00d26a", farbe: "#fff200", tinte: "#012", ctaGrund: "#fff200", ctaTinte: "#012", geheim: "fund" },
     { icon: "herz", grund: "#ff8a00", farbe: "#fff", tinte: "#1a0a00", ctaGrund: "#1a0a00", ctaTinte: "#ff8a00", geheim: "text" },
-    { icon: "warnung", grund: "#d4d0c8", farbe: "#000", tinte: "#000", ctaGrund: "#0a246a", ctaTinte: "#fff", geheim: "secret" },
+    { icon: "warnung", grund: "#d4d0c8", farbe: "#000", tinte: "#000", ctaGrund: "#0a246a", ctaTinte: "#fff", geheim: "fund" },
     { icon: "frage", grund: "#fff", farbe: "#0a246a", tinte: "#222", ctaGrund: "#0a246a", ctaTinte: "#fff", hydra: true },
     { icon: "brief", grund: "#fffbe6", farbe: "#0a246a", tinte: "#222", ctaGrund: "#0a246a", ctaTinte: "#fff", geheim: "text" },
     { icon: "chat", grund: "#e6f3ff", farbe: "#0a246a", tinte: "#222", ctaGrund: "#3a6ea5", ctaTinte: "#fff", geheim: "text" },
     { icon: "frage", grund: "#1b1b1b", farbe: "#ffe14d", tinte: "#eee", ctaGrund: "#ffe14d", ctaTinte: "#111", geheim: "text" },
-    { icon: "bild", bild: ANDII, bildFilter: "sepia(1) contrast(1.3)", meme: true, stempel: true, grund: "#f1dcaa", farbe: "#5a3a12", tinte: "#3a260c", ctaGrund: "#5a3a12", ctaTinte: "#f1dcaa", geheim: "secret" },
+    { icon: "bild", bild: ANDII, bildFilter: "sepia(1) contrast(1.3)", meme: true, stempel: true, grund: "#f1dcaa", farbe: "#5a3a12", tinte: "#3a260c", ctaGrund: "#5a3a12", ctaTinte: "#f1dcaa", geheim: "fund" },
     { icon: "bild", bild: A(1), bildFilter: "saturate(4) contrast(2.2) brightness(1.1)", bildTransform: "scale(1.35)", meme: true, grund: "#fff", farbe: "#000", tinte: "#222", ctaGrund: "#000", ctaTinte: "#fff", geheim: "text" },
     { icon: "bild", duo: true, bild: A(2), grund: "#ffe6f2", farbe: "#c0006a", tinte: "#222", ctaGrund: "#c0006a", ctaTinte: "#fff", geheim: "text" },
     { icon: "pokal", bild: ANDII, bildFilter: "hue-rotate(40deg) saturate(1.6)", bildKlasse: "ist-drehbild", meme: true, grund: "#fff200", farbe: "#0a246a", tinte: "#111", ctaGrund: "#0a246a", ctaTinte: "#fff", geheim: "text" },
@@ -76,10 +77,10 @@
     { icon: "brief", grund: "#fff", farbe: "#e00", tinte: "#222", ctaGrund: "#e00", ctaTinte: "#fff", geheim: "text" },
     { icon: "megafon", marquee: true, grund: "#c00", farbe: "#fff", tinte: "#fff", ctaGrund: "#fff", ctaTinte: "#c00", geheim: "text" },
     { icon: "pokal", rad: true, grund: "#6a00ff", farbe: "#fff200", tinte: "#fff", ctaGrund: "#fff200", ctaTinte: "#6a00ff", geheim: "text" },
-    { icon: "monitor", dvd: true, grund: "#111", farbe: "#39ff14", tinte: "#ddd", ctaGrund: "#39ff14", ctaTinte: "#111", geheim: "secret" },
+    { icon: "monitor", dvd: true, grund: "#111", farbe: "#39ff14", tinte: "#ddd", ctaGrund: "#39ff14", ctaTinte: "#111", geheim: "fund" },
     { icon: "warnung", fensterKlasse: "ist-wackeln", grund: "#ffe14d", farbe: "#c00", tinte: "#111", ctaGrund: "#c00", ctaTinte: "#fff", geheim: "text" },
     { icon: "herz", tanz: true, bild: ANDII, fensterKlasse: "ist-regenbogen", grund: "#ff3fb4", farbe: "#fff", tinte: "#fff", ctaGrund: "#fff", ctaTinte: "#ff3fb4", geheim: "text" },
-    { icon: "chat", tippt: true, grund: "#e6f3ff", farbe: "#0a246a", tinte: "#222", ctaGrund: "#0a246a", ctaTinte: "#fff", geheim: "secret" },
+    { icon: "chat", tippt: true, grund: "#e6f3ff", farbe: "#0a246a", tinte: "#222", ctaGrund: "#0a246a", ctaTinte: "#fff", geheim: "fund" },
     { icon: "uhr", countdown: true, grund: "#000", farbe: "#ff2d2d", tinte: "#fff", ctaGrund: "#ff2d2d", ctaTinte: "#fff", geheim: "text" },
     { icon: "warnung", fensterKlasse: "ist-pumpen", grund: "#00d26a", farbe: "#fff", tinte: "#012", ctaGrund: "#012", ctaTinte: "#00d26a", geheim: "text" },
     { icon: "chat", stimme: true, grund: "#fff", farbe: "#c00", tinte: "#222", ctaGrund: "#c00", ctaTinte: "#fff", geheim: "text" },
@@ -90,7 +91,7 @@
     { icon: "monitor", bild: ANDII, bildFilter: "blur(2px) grayscale(.6)", meme: true, grund: "#1b1b1b", farbe: "#ff3fb4", tinte: "#eee", ctaGrund: "#ff3fb4", ctaTinte: "#fff", geheim: "text" },
     { icon: "herz", bild: A(6), bildFilter: "saturate(1.8) hue-rotate(-20deg)", bildTransform: "scale(1.2) rotate(-6deg)", meme: true, grund: "#ff3fb4", farbe: "#fff", tinte: "#fff", ctaGrund: "#fff", ctaTinte: "#ff3fb4", geheim: "text" },
   ];
-  const SECRETS = SPAM.map(function (c, i) { return c.geheim === "secret" ? i : -1; }).filter(function (i) { return i >= 0; });
+  const FUNDE = SPAM.map(function (c, i) { return c.geheim === "fund" ? i : -1; }).filter(function (i) { return i >= 0; });
   const HYDRA = SPAM.findIndex(function (c) { return c.hydra; });
   const FENSTER_GESAMT = 32;
 
@@ -105,8 +106,8 @@
      Hydra-Fenster an Platz 5, 16 und 27 wie im Entwurf. */
   function reihenfolge() {
     const mischen = function (a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const x = a[i]; a[i] = a[j]; a[j] = x; } return a; };
-    const rest = mischen(SPAM.map(function (_, i) { return i; }).filter(function (i) { return i !== HYDRA && SECRETS.indexOf(i) < 0; }));
-    const basis = mischen(SECRETS.concat(rest.slice(0, FENSTER_GESAMT - 3 - SECRETS.length)));
+    const rest = mischen(SPAM.map(function (_, i) { return i; }).filter(function (i) { return i !== HYDRA && FUNDE.indexOf(i) < 0; }));
+    const basis = mischen(FUNDE.concat(rest.slice(0, FENSTER_GESAMT - 3 - FUNDE.length)));
     basis.splice(4, 0, HYDRA); basis.splice(15, 0, HYDRA); basis.splice(26, 0, HYDRA);
     return basis;
   }
@@ -205,11 +206,11 @@
       return;
     }
     e.enthuellt = true;
-    const istSecret = c.geheim === "secret";
-    if (istSecret && lauf.gefunden.indexOf(e.k) < 0) lauf.gefunden.push(e.k);
+    const istFund = c.geheim === "fund";
+    if (istFund && lauf.gefunden.indexOf(e.k) < 0) lauf.gefunden.push(e.k);
     const inhalt = e.el.querySelector(".fh-wf-inhalt");
-    const neu = aus('<div class="fh-wf-enthuellt"><p class="fh-wf-enthuellt-kopf' + (istSecret ? ' ist-secret' : '') + '">' + svg(istSecret ? IC.schloss : IC.chat) + '<span>' +
-      esc(istSecret ? W("secretFound", "Secret gefunden") : W("fromUnknown", "Nachricht von ???")) + '</span></p><p class="fh-wf-enthuellt-text"></p></div>');
+    const neu = aus('<div class="fh-wf-enthuellt"><p class="fh-wf-enthuellt-kopf' + (istFund ? ' ist-secret' : '') + '">' + svg(istFund ? IC.schloss : IC.chat) + '<span>' +
+      esc(istFund ? W("secretFound", "Secret gefunden") : W("fromUnknown", "Nachricht von ???")) + '</span></p><p class="fh-wf-enthuellt-text"></p></div>');
     neu.querySelector(".fh-wf-enthuellt-text").textContent = textVon(e.k, "geheim");
     inhalt.replaceWith(neu);
     e.el.classList.remove("ist-wackeln", "ist-pumpen", "ist-regenbogen");
@@ -218,7 +219,7 @@
 
   function hud() {
     if (!lauf || !lauf.hud) return;
-    lauf.hud.querySelector(".fh-wf-hud-secrets").textContent = W("secrets", "Secrets") + " " + lauf.gefunden.length + " / " + SECRETS.length;
+    lauf.hud.querySelector(".fh-wf-hud-secrets").textContent = W("secrets", "Secrets") + " " + lauf.gefunden.length + " / " + FUNDE.length;
     lauf.hud.querySelector(".fh-wf-hud-fenster").textContent = lauf.offen.size + " " + W("windowsOpen", "Fenster offen");
     if (lauf.gespawnt >= FENSTER_GESAMT && lauf.offen.size === 0) abschluss();
   }
@@ -261,7 +262,7 @@
     const textZiel = box.querySelector(".fh-wf-ende-text");
     textZiel.textContent = "> " + (typeof o.text === "string" ? o.text : W("endText", "??? hat euer Schiff mit Werbung geflutet – und dabei mehr verraten, als gut war."));
     if (o.text && typeof o.text.then === "function") o.text.then(function (s) { if (s) textZiel.textContent = "> " + s; });
-    box.querySelector(".fh-wf-ende-label").textContent = W("foundSecrets", "Gefundene Secrets") + " · " + l.gefunden.length + " / " + SECRETS.length;
+    box.querySelector(".fh-wf-ende-label").textContent = W("foundSecrets", "Gefundene Secrets") + " · " + l.gefunden.length + " / " + FUNDE.length;
     const liste = box.querySelector(".fh-wf-ende-liste");
     if (!l.gefunden.length) {
       const p = document.createElement("p"); p.className = "fh-wf-ende-leer"; p.textContent = W("noSecrets", "Keine. In den Werbefenstern steckte mehr, als man denkt.");
@@ -316,6 +317,6 @@
     zeitUm: zeitUm,
     weg: weg,
     laeuft: function () { return !!lauf && !lauf.ende; },
-    SECRETS: SECRETS.length,
+    FUNDE: FUNDE.length,
   };
 })();
