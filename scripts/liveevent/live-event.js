@@ -240,6 +240,8 @@
     if (window.fhLiveStorys) window.fhLiveStorys.zustand(z, erst);
     /* Event-Start, Live-Anzeige, Abstimmung, Abzeichen: live-zuschauer.js. */
     if (window.fhLiveZuschauer) window.fhLiveZuschauer.zustand(z, erst);
+    /* Community-Quest Gegenhack: gegenhack.js. */
+    if (window.fhGegenhack) window.fhGegenhack.zustand(z);
 
     /* Beim ERSTEN Laden nicht rueckwirkend feuern (sonst blitzt es
        bei jedem Seitenaufruf, weil pulse_at schon gesetzt ist) -

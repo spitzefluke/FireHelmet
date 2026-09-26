@@ -57,10 +57,10 @@
        gewinnt (z.B. .fh-row nach .chapter-card, .fh-page-title nach
        .page-content h1). Diese Liste darf daher weder umsortiert noch
        um einen Eintrag verkuerzt werden. -->
-  <link rel="stylesheet" href="css/00-basis.css?v=db1631bba5">
+  <link rel="stylesheet" href="css/00-basis.css?v=04d0df9120">
   <link rel="stylesheet" href="css/10-inhaltsseiten.css?v=1a230c2caa">
   <link rel="stylesheet" href="css/20-spiele.css?v=2970bf6bc5">
-  <link rel="stylesheet" href="css/30-events.css?v=d48a776bd5">
+  <link rel="stylesheet" href="css/30-events.css?v=fc55696611">
   <link rel="stylesheet" href="css/40-shop.css?v=0b38d26fe9">
   <link rel="stylesheet" href="css/50-redesign.css?v=62bedce12c">
   <link rel="stylesheet" href="css/60-fortschritt.css?v=38aa01329f">
@@ -219,6 +219,8 @@
       <a class="fh-nav-item" tabindex="0" data-page="tournament" onclick="changePage('tournament')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-crown-simple"></i></span><span class="fh-nav-label" data-i18n="menu.tournament">THE CHALLENGE</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="race" onclick="changePage('race')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-flag-checkered"></i></span><span class="fh-nav-label" data-i18n="menu.race">Wochenrennen</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="community-boss" onclick="changePage('community-boss')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-skull"></i></span><span class="fh-nav-label" data-i18n="menu.communityBoss">Community-Boss</span></a>
+      <!-- Nur sichtbar, solange eine Gegenhack-Quest laeuft (scripts/liveevent/gegenhack.js) -->
+      <a class="fh-nav-item fh-flag-aus" tabindex="0" data-page="gegenhack" onclick="changePage('gegenhack')"><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"/><path d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5"/><circle cx="12" cy="9" r="2"/><path d="M16.2 4.8c2 2 2.26 5.11.8 7.47"/><path d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1"/><path d="M9.5 18h5"/><path d="m8 22 4-11 4 11"/></svg></span><span class="fh-nav-label" data-i18n="menu.gegenhack">Gegenhack</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-question"></i></span><span class="fh-nav-label" data-i18n="menu.streamraetselShort">???</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="skill-tree" data-fh-flag="skillTree" onclick="changePage('skill-tree')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-tree-structure"></i></span><span class="fh-nav-label" data-i18n="menu.skillTree">Skill-Baum</span></a>
 
@@ -1382,6 +1384,15 @@
     <!-- =====================
          GEWINNSPIEL
     ===================== -->
+    <!-- =====================
+         COMMUNITY-QUEST GEGENHACK (scripts/liveevent/gegenhack.js)
+    ===================== -->
+    <section id="gegenhack" class="page">
+      <div class="page-content fh-gh-seite">
+        <div id="gegenhack-inhalt"></div>
+      </div>
+    </section>
+
     <section id="community-boss" class="page">
       <!-- ============================================================
            BOSS-ARENA-HINTERGRUND
@@ -1650,10 +1661,10 @@
   <script src="scripts/fx/seiten-fx-szenen.js?v=a428448470" defer></script>
   <script src="scripts/fx/seiten-fx.js?v=e01278a95e" defer></script>
   <script src="scripts/fx/path-draw.js?v=5d4d69c831" defer></script>
-  <script src="scripts/nav/quick-search.js?v=9cb3a6421f" defer></script>
+  <script src="scripts/nav/quick-search.js?v=a9e82ce22c" defer></script>
   <script src="scripts/core/share.js?v=afae2a5ba3" defer></script>
   <script src="scripts/core/fire-helmet-config.js?v=b6367d549e" defer></script>
-  <script src="scripts/core/i18n.js?v=c3424649af" defer></script>
+  <script src="scripts/core/i18n.js?v=69f4b52d45" defer></script>
   <script src="scripts/core/audiobook-link.js?v=5ab730a9b0" defer></script>
   <script src="scripts/core/update-notice-data.js?v=6eba9592e6" defer></script>
   <script src="scripts/core/update-notice.js?v=15d517ed67" defer></script>
@@ -1694,10 +1705,12 @@
   <script src="scripts/supabase/supabase-statistics.js?v=45cf0cc929" defer></script>
   <script src="scripts/core/site-config.js?v=5dc18a0acc" defer></script>
   <script src="scripts/core/feature-flags.js?v=3e7e628f44" defer></script>
-  <script src="scripts/liveevent/live-event.js?v=f2fc4622af" defer></script>
+  <script src="scripts/liveevent/live-event.js?v=123a5c5d0b" defer></script>
   <script src="scripts/liveevent/event-titel.js?v=afc5b6b4cf" defer></script>
-  <script src="scripts/liveevent/live-storys.js?v=63d3e936bf" defer></script>
-  <script src="scripts/liveevent/live-zuschauer.js?v=55fcbaed26" defer></script>
+  <script src="scripts/liveevent/live-storys.js?v=5897962cd7" defer></script>
+  <script src="scripts/liveevent/live-zuschauer.js?v=59b7e265a4" defer></script>
+  <script src="scripts/liveevent/werbungsflut.js?v=ef023a842f" defer></script>
+  <script src="scripts/liveevent/gegenhack.js?v=1e3eeae6a7" defer></script>
   <script src="scripts/core/discord-notify-data.js?v=e0fdc8d435" defer></script>
   <script src="scripts/core/discord-notify.js?v=aad2217ad4" defer></script>
   <script src="scripts/core/countdown.js?v=ddbc62363d" defer></script>
@@ -1729,10 +1742,10 @@
   <script src="scripts/streamraetsel/streamraetsel.js?v=46de70f427" defer></script>
   <script src="scripts/skilltree/skilltree-data.js?v=cacda48de0" defer></script>
   <script src="scripts/skilltree/skilltree.js?v=e4ac131da9" defer></script>
-  <script src="scripts/core/admin-gateway.js?v=8873471f09" defer></script>
+  <script src="scripts/core/admin-gateway.js?v=1750b83762" defer></script>
   <script src="scripts/support/support.js?v=ffbe30a325" defer></script>
   <script src="scripts/rating/rating.js?v=a06c7d42b8" defer></script>
-  <script src="scripts/core/main.js?v=9c8a3d861e" defer></script>
+  <script src="scripts/core/main.js?v=b5375768f1" defer></script>
   <script src="scripts/codes/code-button-effect.js?v=12af905b26" defer></script>
   <script src="scripts/codes/code-ambient-fx.js?v=61b476b1dd" defer></script>
   <script src="scripts/codes/code-history.js?v=2530fa82ec" defer></script>
