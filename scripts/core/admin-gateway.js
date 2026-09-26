@@ -351,6 +351,12 @@ const GW_STORYS = [
   ["flut", "Sturmflut", "13,6 s · Land unter und Treibgut · +150 Dublonen", "wasser"],
   ["disco", "Disco-Party", "Endlos, bis du sie beendest · mit Musik (unten hochladen)", "gold"],
   ["ende", "Systemausfall", "12 s · beendet das Event – die Seite bleibt für alle gehackt, bis die nächste Story startet oder du wiederherstellst", "rot"],
+  ["werbung", "Werbungsflut", "bis 1 min · ??? spamt 32 Fenster · 6 Secrets à +25 Dublonen (max. 150)", "neon"],
+];
+/* Nur als Vorschau - fuer alle laufen sie ueber "Finale auslösen". */
+const GW_STORYS_NUR_VORSCHAU = [
+  ["gegenhack_sieg", "Gegenhack: Sieg", "Blitz, Konfetti, Sieg-Bildschirm mit Belohnung", "violett"],
+  ["gegenhack_niederlage", "Gegenhack: Niederlage", "??? zeigt sich, danach die Werbungsflut; Seite bleibt gehackt bis zum nächsten Event", "rot"],
 ];
 
 function buildGatewayStorysHtml() {
@@ -361,9 +367,16 @@ function buildGatewayStorysHtml() {
         <button type="button" class="gw-live-knopf" onclick="gwStoryVorschau('${id}')">Vorschau</button>
         <button type="button" class="gw-live-knopf ist-alle" onclick="gwStoryStart('${id}')">Für alle</button>
       </div>
+    </div>`).join("") + GW_STORYS_NUR_VORSCHAU.map(([id, name, info, ton]) => `
+    <div class="gw-story ist-${ton}">
+      <div class="gw-story-text"><span class="gw-story-name">${name}</span><span class="gw-story-info">${info}</span></div>
+      <div class="gw-story-knoepfe">
+        <button type="button" class="gw-live-knopf" onclick="gwStoryVorschau('${id}')">Vorschau</button>
+      </div>
     </div>`).join("");
   return `
     ${buildGatewayEventHtml()}
+    ${buildGatewayGegenhackHtml()}
     <div class="gw-story-lage">
       <p id="gw-story-jetzt" class="gw-story-jetzt">Lade …</p>
       <div class="gw-story-lage-knoepfe">
@@ -497,12 +510,111 @@ async function gwAbstimmungStarten() {
 }
 
 function gwStoryName(id) {
-  const s = GW_STORYS.find((x) => x[0] === id);
+  const s = GW_STORYS.concat(GW_STORYS_NUR_VORSCHAU).find((x) => x[0] === id);
   return s ? s[1] : id;
+}
+
+/* ------------------------------------------------------
+   COMMUNITY-QUEST GEGENHACK (Migration 31,
+   scripts/liveevent/gegenhack.js)
+   ---------------------------------------------------
+   Starten: Titel, Ziel (Zahl geloester Aufgaben, jede Aufgabe
+   zaehlt je Spieler einmal - hoechstens 3 pro Kopf) und Termin
+   (nur Anzeige und Kalendereintrag). "Finale auslösen" geht nur
+   waehrend eines Events: Sieg zahlt sofort aus, Niederlage laesst
+   die Seite bis zum naechsten Event gehackt.
+------------------------------------------------------ */
+function buildGatewayGegenhackHtml() {
+  return `
+    <div class="gw-story-lage">
+      <p id="gw-gh-jetzt" class="gw-story-jetzt">Lade …</p>
+      <div class="gw-live-nachricht">
+        <input type="text" id="gw-gh-titel" class="gw-feld gw-feld-breit" maxlength="60" placeholder="Titel, z. B. Gegenhack vorbereiten" aria-label="Titel der Quest">
+        <label class="gw-story-info">Ziel <input type="number" id="gw-gh-ziel" class="gw-feld" min="1" max="100000" value="300" aria-label="Ziel: gelöste Aufgaben"></label>
+        <label class="gw-story-info">Termin <input type="datetime-local" id="gw-gh-termin" class="gw-feld" aria-label="Termin des Gegenhacks"></label>
+        <button type="button" class="gw-live-knopf ist-alle" onclick="gwGegenhackStarten()">Quest starten</button>
+      </div>
+      <div class="gw-live-nachricht">
+        <button type="button" class="gw-live-knopf ist-alle" onclick="gwGegenhackFinale()">Finale auslösen</button>
+        <button type="button" class="gw-live-knopf" onclick="gwGegenhackAbbrechen()">Quest abbrechen</button>
+      </div>
+      <p id="gw-gh-status" class="gw-live-status" role="status" aria-live="polite"></p>
+      <p class="gateway-status-sub">Ziel = Zahl gelöster Aufgaben der ganzen Crew; jeder Pirat kann höchstens 3 beitragen. Das Finale geht nur während eines Events. Sieg: jeder Helfer bekommt sofort 500 Dublonen je Aufgabe (max. 1500) und das Abzeichen „Gegenhacker“. Niederlage: ??? und die Werbungsflut, die Seite bleibt bis zum nächsten Event gehackt.</p>
+    </div>
+  `;
+}
+
+async function gwGegenhackLageLaden() {
+  const ziel = document.getElementById("gw-gh-jetzt");
+  if (!ziel || !supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from("live_event").select("quest_id").eq("id", 1).maybeSingle();
+    if (error) throw error;
+    if (!data || !data.quest_id) { ziel.textContent = "Gerade läuft keine Gegenhack-Quest."; return; }
+    const { data: st, error: e2 } = await supabaseClient.rpc("gegenhack_stand", { p_quest: data.quest_id });
+    if (e2) throw e2;
+    const p = st && st.ziel ? Math.floor(Math.min(100, st.geloest / st.ziel * 100)) : 0;
+    ziel.textContent = "Quest läuft: „" + (st.titel || "") + "“ – " + st.geloest + " von " + st.ziel + " Aufgaben (" + p + " %), " + st.helfer + " Helfer" +
+      (st.geloest >= st.ziel ? " · reicht für den Sieg" : " · reicht noch nicht") + ".";
+  } catch (err) {
+    ziel.textContent = "Stand nicht lesbar – ist Migration 31 eingespielt?";
+  }
+}
+
+async function gwGegenhackStarten() {
+  if (!supabaseClient) return;
+  const titel = ((document.getElementById("gw-gh-titel") || {}).value || "").trim() || "Gegenhack vorbereiten";
+  const zielZahl = parseInt((document.getElementById("gw-gh-ziel") || {}).value, 10);
+  const terminWert = (document.getElementById("gw-gh-termin") || {}).value || "";
+  if (!(zielZahl >= 1 && zielZahl <= 100000)) { gwLiveStatus("gw-gh-status", "Ziel zwischen 1 und 100000.", true); return; }
+  /* datetime-local ist Ortszeit ohne Zone - new Date() liest es genau so. */
+  const termin = terminWert ? new Date(terminWert) : null;
+  if (termin && isNaN(termin.getTime())) { gwLiveStatus("gw-gh-status", "Termin nicht lesbar.", true); return; }
+  if (!confirm("Quest „" + titel + "“ mit Ziel " + zielZahl + " für alle starten? Eine laufende Quest wird dabei ohne Belohnung abgebrochen.")) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_gegenhack_starten", { p_titel: titel, p_ziel: zielZahl, p_termin: termin ? termin.toISOString() : null });
+    if (error) throw error;
+    gwLiveStatus("gw-gh-status", "✓ Quest läuft – Menüpunkt und Hinweis auf der Startseite sind jetzt bei allen sichtbar.", false);
+    gwGegenhackLageLaden();
+  } catch (err) {
+    gwLiveStatus("gw-gh-status", "Starten fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwGegenhackFinale() {
+  if (!supabaseClient) return;
+  if (!confirm("Finale jetzt für alle auslösen? Sieg oder Niederlage steht dann fest – das lässt sich nicht zurücknehmen.")) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_gegenhack_finale");
+    if (error) throw error;
+    gwLiveStatus("gw-gh-status", data && data.ergebnis === "sieg"
+      ? "✓ Sieg: " + data.geloest + " von " + data.ziel + " – " + data.helfer + " Helfer wurden ausgezahlt."
+      : "✓ Niederlage: " + (data ? data.geloest + " von " + data.ziel : "") + " – ??? übernimmt.", false);
+    gwGegenhackLageLaden();
+    gwStoryLageLaden();
+  } catch (err) {
+    const text = String((err && err.message) || err);
+    gwLiveStatus("gw-gh-status", /kein-event/.test(text) ? "Erst ein Event starten – das Finale gehört zum Event."
+      : /keine-quest/.test(text) ? "Es läuft keine Quest." : "Fehlgeschlagen: " + text, true);
+  }
+}
+
+async function gwGegenhackAbbrechen() {
+  if (!supabaseClient) return;
+  if (!confirm("Quest ohne Belohnung abbrechen?")) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_gegenhack_abbrechen");
+    if (error) throw error;
+    gwLiveStatus("gw-gh-status", data ? "✓ Quest abgebrochen." : "Es lief keine Quest.", !data);
+    gwGegenhackLageLaden();
+  } catch (err) {
+    gwLiveStatus("gw-gh-status", "Fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
 }
 
 async function gwStoryLageLaden() {
   gwEventLageLaden();
+  gwGegenhackLageLaden();
   const ziel = document.getElementById("gw-story-jetzt");
   const musik = document.getElementById("gw-musik-stand");
   if (!ziel || !supabaseClient) return;
@@ -512,6 +624,7 @@ async function gwStoryLageLaden() {
     const z = data || {};
     if (!z.story) ziel.textContent = "Gerade läuft keine Story.";
     else if (z.story === "ende") ziel.textContent = "Zuletzt: Systemausfall – die Seite ist gehackt, bis du wiederherstellst oder eine neue Story startest.";
+    else if (z.story === "gegenhack_niederlage") ziel.textContent = "Zuletzt: Gegenhack verloren – die Seite bleibt gehackt bis zum nächsten Event (oder bis du wiederherstellst).";
     else if (z.story === "disco" && !z.story_ende_at) ziel.textContent = "Disco läuft seit " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC) – „Disco beenden“ lässt sie ausklingen.";
     else ziel.textContent = "Zuletzt gestartet: " + gwStoryName(z.story) + " um " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC).";
     if (musik) musik.textContent = z.musik_version ? "Eigene Datei hochgeladen (Version " + z.musik_version + ")" : "Standard: music/disco.mp3";

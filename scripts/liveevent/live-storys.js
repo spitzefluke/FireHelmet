@@ -68,6 +68,12 @@
     disco:     { szenen: [1400, 2700, 4200, 3600, 2600], loop: [3, 4] },
     sturm:     { szenen: [2000, 2400, 1800, 3200, 3000] },
     nordlicht: { szenen: [2400, 4400, 3600, 3600, 3000] },
+    /* Migration 31: Werbungsflut und das Gegenhack-Finale. Die Flut
+       und der Sieg-Bildschirm leben in werbungsflut.js/gegenhack.js;
+       die Szene gibt nur den Rahmen vor. */
+    werbung:              { szenen: [2200, 55000, 800] },
+    gegenhack_niederlage: { szenen: [4800, 55000, 800] },
+    gegenhack_sieg:       { szenen: [1600, 30000] },
   };
   const ZEITEN_IN_SZENE = {};  // Summe der Dauer bis zum Beginn jeder Szene
   Object.keys(STORYS).forEach(function (st) {
@@ -492,6 +498,44 @@
         '</div></div>');
     }],
 
+    /* ================= WERBUNGSFLUT / GEGENHACK (31) ================= */
+    ["wb-intro", function () { return sz("werbung") === 1; }, function () {
+      return aus(textZeile(esc(t("werbung.intro", "??? hat Werbung gebucht.")), '38%', 'clamp(22px, 4vw, 44px)', 'var(--fh-neon)', null, 'fhStHoch .5s both, fhStGlitchText 1.4s steps(1, end) .5s infinite', MONO + 'text-transform:uppercase;'));
+    }],
+    /* Niederlage: der Grund bleibt, bis die Flut vorbei ist. */
+    ["gh-grund", function () { const n = sz("gegenhack_niederlage"); return n === 1 || n === 2; }, function () {
+      return aus('<div style="' + VOLL + 'z-index:9990;background:repeating-linear-gradient(0deg, rgba(57,255,20,.06) 0 1px, transparent 1px 3px), radial-gradient(90% 80% at 50% 45%, #2a0707, #030604 70%);animation:fhStEinblenden .4s both;"></div>');
+    }],
+    /* ??? zeigt sich - das ASCII-Gesicht aus dem Entwurf. */
+    ["gh-gesicht", function () { return sz("gegenhack_niederlage") === 1; }, function () {
+      const gesicht = [
+        "        ▄▄████████▄▄        ",
+        "      ▄██████████████▄      ",
+        "     ████▀▀      ▀▀████     ",
+        "    ███▀  ▄▄    ▄▄  ▀███    ",
+        "    ██   ████  ████   ██    ",
+        "    ██   ▀██▀  ▀██▀   ██    ",
+        "    ██       ▄▄       ██    ",
+        "    ███     ▀▀▀▀     ███    ",
+        "     ███  ▀▄▄▄▄▄▄▀  ███     ",
+        "      ▀███▄      ▄███▀      ",
+        "        ▀▀████████▀▀        ",
+      ].join("\n");
+      const zeile = function (key, de, d, schritte, farbe) {
+        return '<span style="display:block;margin:0 auto;max-width:0;overflow:hidden;white-space:nowrap;color:' + farbe + ';animation:fhGhTippZeile .6s ' + d + 's steps(' + schritte + ', end) both;">' + esc(t(key, de)) + '</span>';
+      };
+      return aus('<div style="' + VOLL + 'z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;' + MONO + 'color:var(--fh-fg);animation:fhGhFinaleGlitch 1.2s steps(1, end);">' +
+        '<div style="animation:fhGhFaceRein .9s 1.1s cubic-bezier(.22,1.2,.36,1) both, fhGhFaceZurueck .8s 4s ease forwards;">' +
+          '<pre style="margin:0;font-family:inherit;font-size:clamp(11px, 2.4vw, 22px);line-height:1.02;color:var(--fh-neon);animation:fhStGlitchText 1.4s steps(1, end) infinite;">' + gesicht + '</pre>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px;margin-top:26px;font-size:clamp(16px, 3vw, 26px);letter-spacing:.08em;text-transform:uppercase;">' +
+          zeile("werbung.face1", "Hallo, Crew.", 2, 12, "var(--fh-fg)") +
+          zeile("werbung.face2", "Ihr wart zu langsam.", 2.9, 20, "var(--fh-fg)") +
+          zeile("werbung.face3", "Zeit für Werbung.", 3.7, 18, "var(--fh-danger)") +
+        '</div>' +
+      '</div>');
+    }],
+
     /* ================= STURM ================= */
     [function () { return "regen" + (sz("sturm") === 1 ? "A" : sz("sturm") === 5 ? "Z" : ""); }, function () { return sz("sturm") >= 1; }, function () {
       const s = sz("sturm");
@@ -656,6 +700,7 @@
     if (hk >= 2 && hk <= 5) return ["saturate(.3) brightness(.5)", 600];
     if (hk === 6) return [null, 1600];
     if (en === 1) return ["saturate(1.4) brightness(.8)", 300];
+    if (sz("werbung") === 2) return ["brightness(.7) saturate(.8)", 600];
     if (en === 2) return ["saturate(.3) brightness(.45)", 600];
     if (sr === 2 || sr === 3) return ["brightness(.5) saturate(.7)", 800];
     if (ds === 1 || ds === 2) return ["brightness(.35)", 200];
@@ -669,7 +714,7 @@
 
   function bewegungFuer() {
     const hk = sz("hacked"), nb = sz("nebel"), fl = sz("flut");
-    if (hk === 1) return "fh-story-glitch";
+    if (hk === 1 || sz("gegenhack_niederlage") === 1) return "fh-story-glitch";
     if (nb === 4) return "fh-story-schwanken";
     if (fl >= 2 && fl <= 4) return "fh-story-schaukeln";
     if (gehackt && !lauf) return "fh-story-gehackt-flackern";
@@ -999,6 +1044,7 @@
     if (art === "hacked") return { ok: true, dublonen: 0, skillpunkte: 1, titel: "Firewall-Pirat", vorschau: true };
     if (art === "hintertueren") return { ok: true, dublonen: 0, skillpunkte: 1, vorschau: true };
     if (art === "schatz") return { ok: true, dublonen: b * 10, skillpunkte: b >= 25 ? 1 : 0, vorschau: true };
+    if (art === "werbung") return { ok: true, dublonen: Math.min(6, b) * 25, skillpunkte: 0, vorschau: true };
     return null;
   }
 
@@ -1087,6 +1133,28 @@
       const p = lauf.belohnung || belohnungAbholen(id, "wetter", 0, vorschau);
       p.then(function (erg) { banderole(text + belohnungsText(erg), von, farbe, false); });
     };
+
+    /* Werbungsflut allein oder nach der Gegenhack-Niederlage (31). */
+    const flut = function (gehackt) {
+      if (!window.fhWerbungsflut) return;
+      window.fhWerbungsflut.start({
+        dauer: lauf.rest,
+        gehackt: gehackt,
+        belohnen: function (zahl) { return belohnungAbholen(id, "werbung", zahl, vorschau); },
+        ende: gehackt ? {
+          kopf: t("werbung.lostKicker", "Gegenhack fehlgeschlagen"),
+          titel: t("werbung.lostTitle", "Ruhe. Vorerst."),
+          text: window.fhGegenhack ? window.fhGegenhack.niederlageText(id, vorschau) : undefined,
+        } : null,
+      });
+    };
+    if (st === "werbung" && n === 1) blitz();
+    if (st === "werbung" && n === 2) flut(false);
+    if ((st === "werbung" || st === "gegenhack_niederlage") && n === 3 && window.fhWerbungsflut) window.fhWerbungsflut.zeitUm();
+    if (st === "gegenhack_niederlage" && n === 1) { blitz(); spaeter(beben, 1100); }
+    if (st === "gegenhack_niederlage" && n === 2) flut(true);
+    if (st === "gegenhack_sieg" && n === 1) { blitz(); spaeter(konfetti, 400); }
+    if (st === "gegenhack_sieg" && n === 2 && window.fhGegenhack) window.fhGegenhack.siegZeigen(id, vorschau);
 
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
     if (st === "hacked" && n === 7) {
@@ -1191,7 +1259,7 @@
     regenStop();
     lauf = null;
     if (st === "hacked") loecherSpawnen(id, vorschau);
-    if (st === "ende") gehackt = true;
+    if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
     if (st === "sturm" && !vorschau) nachregen = true;
     anzeigen();
   }
@@ -1207,7 +1275,7 @@
     if (!pos) {
       /* Schon vorbei: nur den Dauerzustand herstellen. */
       lauf = null;
-      if (st === "ende") gehackt = true;
+      if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
       if (st === "sturm" && !vorschau && sturmNachwirkung) nachregen = true;
       anzeigen();
       return;
@@ -1218,6 +1286,8 @@
   function stoppen() {
     timerWeg();
     regenStop();
+    if (window.fhWerbungsflut) window.fhWerbungsflut.weg();
+    if (window.fhGegenhack) window.fhGegenhack.siegWeg();
     if (musikLaeuft) musikAus(0);
     lauf = null;
     anzeigen();

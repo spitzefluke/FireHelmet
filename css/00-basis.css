@@ -210,6 +210,20 @@ body.loaded {
   /* Fuer die Event-Titel (Regenbogen, "hacked"), css/30-events.css. */
   --fh-violett: #a66bff;
   --fh-neon: #39ff14;
+  /* Abstufungen fuer die gekaperte Konsole (Gegenhack, Werbungsflut). */
+  --fh-neon-hell: #8fff7a;
+  --fh-neon-tief: #1f7a0c;
+  --fh-neon-text: #8fd98a;
+  --fh-neon-matt: #6fa86b;
+  --fh-neon-nacht: #03100a;
+  /* "Bordnetz der Crew" - das Violett aus dem Nocturne-Entwurf fuer
+     die Community-Quest (css/30-events.css, .fh-gh-*). */
+  --fh-nocturne: #9184d9;
+  --fh-nocturne-hell: #bdb3f2;
+  --fh-nocturne-tief: #5d519f;
+  --fh-nocturne-dunkel: #2b2741;
+  --fh-nocturne-karte: #1d1e2c;
+  --fh-nocturne-grund: #161826;
   /* Konsolenschrift der Live-Storys (Hacked, Systemausfall). */
   --fh-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 

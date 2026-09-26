@@ -15,8 +15,8 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 115 `<script defer>`-Tags in fester
-Reihenfolge, davon 101 aus diesem Repo. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 117 `<script defer>`-Tags in fester
+Reihenfolge, davon 103 aus diesem Repo. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
 per CDN geladen, nicht gebündelt.
 
 Prüfen heißt hier:

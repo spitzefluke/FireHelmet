@@ -626,6 +626,10 @@
     kartenKnopfHtml: kartenKnopfHtml,
     abzeichenJeSpieler: abzeichenJeSpieler,
     chipHtml: chipHtml,
+    /* werbungsflut.js: "Du hast fuer ... gestimmt" */
+    letzteStimme: function () { return letzteStimme ? letzteStimme.text : null; },
+    /* gegenhack.js nach dem Sieg: das neue Abzeichen zeigen */
+    sammlungNeu: function () { neuesAbzeichen = true; sammlungLaden().then(spielerkarteAuffrischen); },
   };
 
   /* Die Sammlung einmal frueh laden - fuer den Knopf auf der
