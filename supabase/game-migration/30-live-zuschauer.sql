@@ -427,6 +427,14 @@ grant execute on function public.live_war_dabei(text)                           
 grant execute on function app.meine_abzeichen()                                   to authenticated;
 grant execute on function public.meine_abzeichen()                                to authenticated;
 
+/* Tabellen: Supabase gibt anon/authenticated per Default-Privileg
+   auch Schreibrechte. RLS haelt sie ohnehin auf (keine Policy) -
+   trotzdem ausdruecklich weg. Ins Logbuch schreibt nur der Admin. */
+revoke insert, update, delete on public.live_events       from anon, authenticated;
+revoke insert, update, delete on public.event_abzeichen   from anon, authenticated;
+revoke insert, update, delete on public.live_abstimmungen from anon, authenticated;
+revoke insert on public.live_logbuch from anon;
+
 /* Stand und Rangliste auch ohne Anmeldung lesbar. */
 grant execute on function app.live_abstimmung_stand(text)    to anon, authenticated;
 grant execute on function public.live_abstimmung_stand(text) to anon, authenticated;

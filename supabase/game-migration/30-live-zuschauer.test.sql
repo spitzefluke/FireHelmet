@@ -10,8 +10,9 @@
    werden direkt in die Tabellen geschrieben; die Admin-Funktionen
    werden nur als Nicht-Admin geprueft (muessen abgewiesen werden).
 
-   Alle Testzeilen (event_id beginnt mit "30test") werden am Ende
-   wieder geloescht. Erwartet: neun Zeilen, alle "PASS".
+   Alle Testzeilen (event_id/abst_id beginnen mit "30test") werden
+   am Ende wieder geloescht - die Abstimmungen ausdruecklich, weil
+   ihr Fremdschluessel beim Loeschen des Events nur auf NULL geht. Erwartet: neun Zeilen, alle "PASS".
 ====================================================== */
 do $$
 declare
@@ -24,6 +25,7 @@ declare
   zeile   record;
 begin
   perform set_config('role', 'postgres', true);
+  delete from public.live_abstimmungen where abst_id like '30test%';
   delete from public.live_events where event_id like '30test%';
   delete from public.event_abzeichen where abzeichen_id like 'dabei-30test%';
 
@@ -99,7 +101,10 @@ begin
         and has_table_privilege('authenticated', 'public.spieler_abzeichen', 'insert') = false
         and has_function_privilege('anon', 'public.live_abstimmen(text,text)', 'execute') = false
         and has_function_privilege('anon', 'public.admin_event_starten(text,integer)', 'execute') = false
-        and has_function_privilege('anon', 'public.abzeichen_je_spieler()', 'execute') = true;
+        and has_function_privilege('anon', 'public.abzeichen_je_spieler()', 'execute') = true
+        and has_table_privilege('anon', 'public.live_logbuch', 'insert') = false
+        and has_table_privilege('authenticated', 'public.live_events', 'insert') = false
+        and has_table_privilege('authenticated', 'public.event_abzeichen', 'update') = false;
   ausgabe := ausgabe || case when ok = true then 'PASS' else 'FAIL' end
           || '  T8 keine direkten Rechte, anon nur Lesefunktionen' || E'\n';
 
@@ -117,12 +122,14 @@ begin
   /* Aufraeumen */
   perform set_config('role', 'postgres', true);
   perform set_config('request.jwt.claims', '', true);
+  delete from public.live_abstimmungen where abst_id like '30test%';
   delete from public.event_abzeichen where abzeichen_id like 'dabei-30test%';
   delete from public.live_events where event_id like '30test%';
   raise notice '%', ausgabe;
 
 exception when others then
   perform set_config('role', 'postgres', true);
+  delete from public.live_abstimmungen where abst_id like '30test%';
   delete from public.event_abzeichen where abzeichen_id like 'dabei-30test%';
   delete from public.live_events where event_id like '30test%';
   raise notice '%', ausgabe || E'\nABBRUCH: ' || sqlerrm;
