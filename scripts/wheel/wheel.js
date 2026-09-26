@@ -1806,7 +1806,7 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
   return `
     <tr class="${classes.join(" ")}">
       <td class="leaderboard-rank">${medal}</td>
-      <td class="leaderboard-name">${crownHtml}${avatarHtml}${escapeHtml(player.nickname || "Unbekannt")}${isOwnRow ? ' <span class="leaderboard-you-tag">(Du)</span>' : ""}${eventTitelHtml(player.eventTitel, "leaderboard-eventtitel")}${leaderboardTitelHtml(player.auszeichnung, "leaderboard-titel")}</td>
+      <td class="leaderboard-name">${crownHtml}${avatarHtml}${escapeHtml(player.nickname || "Unbekannt")}${isOwnRow ? ' <span class="leaderboard-you-tag">(Du)</span>' : ""}${window.fhLiveZuschauer ? window.fhLiveZuschauer.chipHtml(player.eventAbzeichen) : ""}${eventTitelHtml(player.eventTitel, "leaderboard-eventtitel")}${leaderboardTitelHtml(player.auszeichnung, "leaderboard-titel")}</td>
       <td class="leaderboard-codes">${player.codesCracked} 🔑</td>
       <td class="leaderboard-rewards">${renderRewardBadges(player.rewards)}</td>
     </tr>
@@ -1880,8 +1880,10 @@ function loadLeaderboard() {
     fetchPassCapWinnerUids(),
     fetchSkillAuszeichnungen(),
     window.fhEventTitel ? window.fhEventTitel.laden() : Promise.resolve(new Map()),
+    // Event-Abzeichen ("war_dabei"-Chip), scripts/liveevent/live-zuschauer.js
+    window.fhLiveZuschauer ? window.fhLiveZuschauer.abzeichenJeSpieler() : Promise.resolve(new Map()),
   ])
-    .then(([{ data: rows, error }, ownUid, capWinnerUids, auszeichnungen, eventTitel]) => {
+    .then(([{ data: rows, error }, ownUid, capWinnerUids, auszeichnungen, eventTitel, eventAbzeichen]) => {
       if (error) throw error;
 
       const players = [];
@@ -1897,6 +1899,7 @@ function loadLeaderboard() {
           hasCap: capWinnerUids.has(row.firebase_uid),
           auszeichnung: auszeichnungen.get(row.firebase_uid) || null,
           eventTitel: eventTitel.get(row.firebase_uid) || null,
+          eventAbzeichen: eventAbzeichen.get(row.firebase_uid) || null,
         });
       });
 

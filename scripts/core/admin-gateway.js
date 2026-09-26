@@ -363,6 +363,7 @@ function buildGatewayStorysHtml() {
       </div>
     </div>`).join("");
   return `
+    ${buildGatewayEventHtml()}
     <div class="gw-story-lage">
       <p id="gw-story-jetzt" class="gw-story-jetzt">Lade …</p>
       <div class="gw-story-lage-knoepfe">
@@ -388,12 +389,120 @@ function buildGatewayStorysHtml() {
   `;
 }
 
+/* ------------------------------------------------------
+   LIVE-EVENT: START, ABSTIMMUNG, LOGBUCH (Migration 30,
+   scripts/liveevent/live-zuschauer.js)
+   ---------------------------------------------------
+   "Event starten" zeigt allen einen Countdown und danach die
+   Live-Anzeige oben; wer dann da ist, bekommt das Abzeichen
+   "War dabei: <Name>". Das Logbuch fuellt sich von selbst: Start,
+   jede Story fuer alle, jede Nachricht an alle, jede Abstimmung.
+------------------------------------------------------ */
+function buildGatewayEventHtml() {
+  return `
+    <div class="gw-story-lage">
+      <p id="gw-event-jetzt" class="gw-story-jetzt">Lade …</p>
+      <div class="gw-live-nachricht">
+        <input type="text" id="gw-event-name" class="gw-feld gw-feld-breit" maxlength="60" placeholder="Name des Events, z. B. Sturm vor Tortuga" aria-label="Name des Events">
+        <label class="gw-story-info">Countdown <input type="number" id="gw-event-sek" class="gw-feld" min="3" max="60" value="10" aria-label="Countdown in Sekunden"> s</label>
+        <button type="button" class="gw-live-knopf ist-alle" onclick="gwEventStarten()">Event starten</button>
+        <button type="button" class="gw-live-knopf" onclick="gwEventBeenden()">Event beenden</button>
+      </div>
+      <p class="gateway-status-sub">Nach dem Ende bekommt jeder, der dabei war, ein Andenken-Fenster. Ein neues Event beendet ein laufendes, räumt den Systemausfall auf und stoppt den Regen nach dem Sturm.</p>
+      <div class="gw-live-nachricht">
+        <input type="text" id="gw-abst-frage" class="gw-feld gw-feld-breit" maxlength="120" placeholder="Frage an die Crew, z. B. Welchen Kurs setzen wir?" aria-label="Frage">
+        <input type="text" id="gw-abst-a" class="gw-feld" maxlength="40" placeholder="Antwort A" aria-label="Antwort A">
+        <input type="text" id="gw-abst-b" class="gw-feld" maxlength="40" placeholder="Antwort B" aria-label="Antwort B">
+        <select id="gw-abst-sek" class="gw-feld" aria-label="Dauer"><option value="20">20 s</option><option value="60" selected>60 s</option></select>
+        <button type="button" class="gw-live-knopf ist-alle" onclick="gwAbstimmungStarten()">Abstimmung starten</button>
+      </div>
+      <p id="gw-event-status" class="gw-live-status" role="status" aria-live="polite"></p>
+      <p class="gateway-status-sub">Eine Stimme je Spieler. Das Ergebnis siehst du wie alle anderen unten auf der Seite – die passende Story startest du danach selbst.</p>
+    </div>
+  `;
+}
+
+async function gwEventLageLaden() {
+  const ziel = document.getElementById("gw-event-jetzt");
+  if (!ziel || !supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from("live_event").select("event_id, event_name, event_live_ab").eq("id", 1).maybeSingle();
+    if (error) throw error;
+    const z = data || {};
+    ziel.textContent = z.event_id
+      ? "Event läuft: „" + (z.event_name || "") + "“ – live seit " + String(z.event_live_ab || "").slice(11, 16) + " Uhr (UTC)."
+      : "Gerade läuft kein Event.";
+  } catch (err) {
+    ziel.textContent = "Stand nicht lesbar – ist Migration 30 eingespielt?";
+  }
+}
+
+/* Eine Zeile ins Logbuch des laufenden Events. Ohne Event: nichts. */
+async function gwLogbuch(text) {
+  if (!supabaseClient || !text) return;
+  try {
+    const { data } = await supabaseClient.from("live_event").select("event_id").eq("id", 1).maybeSingle();
+    if (!data || !data.event_id) return;
+    await supabaseClient.from("live_logbuch").insert({ event_id: data.event_id, text: String(text).slice(0, 140) });
+  } catch (err) { console.warn("Logbuch-Eintrag fehlgeschlagen:", err); }
+}
+
+async function gwEventStarten() {
+  if (!supabaseClient) return;
+  const name = ((document.getElementById("gw-event-name") || {}).value || "").trim();
+  const sek = parseInt((document.getElementById("gw-event-sek") || {}).value, 10) || 10;
+  if (!name) { gwLiveStatus("gw-event-status", "Erst einen Namen für das Event eingeben.", true); return; }
+  if (sek < 3 || sek > 60) { gwLiveStatus("gw-event-status", "Countdown zwischen 3 und 60 Sekunden.", true); return; }
+  if (!confirm("„" + name + "“ für alle starten? Alle sehen jetzt " + sek + " Sekunden Countdown.")) return;
+  gwLiveStatus("gw-event-status", "Starte …", false);
+  try {
+    const { error } = await supabaseClient.rpc("admin_event_starten", { p_name: name, p_sekunden: sek });
+    if (error) throw error;
+    gwLiveStatus("gw-event-status", "✓ Countdown läuft bei allen – in " + sek + " s ist „" + name + "“ live.", false);
+    gwEventLageLaden();
+    gwStoryLageLaden();
+  } catch (err) {
+    console.error("Event starten fehlgeschlagen:", err);
+    gwLiveStatus("gw-event-status", "Starten fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwEventBeenden() {
+  if (!supabaseClient) return;
+  if (!confirm("Event für alle beenden?")) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_event_beenden");
+    if (error) throw error;
+    gwLiveStatus("gw-event-status", data ? "✓ Event beendet. Wer dabei war, sieht jetzt sein Andenken." : "Es lief kein Event.", !data);
+    gwEventLageLaden();
+  } catch (err) {
+    gwLiveStatus("gw-event-status", "Beenden fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwAbstimmungStarten() {
+  if (!supabaseClient) return;
+  const wert = (id) => ((document.getElementById(id) || {}).value || "").trim();
+  const frage = wert("gw-abst-frage"), a = wert("gw-abst-a"), b = wert("gw-abst-b");
+  const sek = parseInt(wert("gw-abst-sek"), 10) || 60;
+  if (!frage || !a || !b) { gwLiveStatus("gw-event-status", "Frage und beide Antworten eingeben.", true); return; }
+  try {
+    const { error } = await supabaseClient.rpc("admin_abstimmung_starten", { p_frage: frage, p_a: a, p_b: b, p_sekunden: sek });
+    if (error) throw error;
+    gwLiveStatus("gw-event-status", "✓ Abstimmung läuft " + sek + " s bei allen.", false);
+  } catch (err) {
+    const text = String((err && err.message) || err);
+    gwLiveStatus("gw-event-status", /kein-event/.test(text) ? "Erst ein Event starten – Abstimmungen gibt es nur während eines Events." : "Fehlgeschlagen: " + text, true);
+  }
+}
+
 function gwStoryName(id) {
   const s = GW_STORYS.find((x) => x[0] === id);
   return s ? s[1] : id;
 }
 
 async function gwStoryLageLaden() {
+  gwEventLageLaden();
   const ziel = document.getElementById("gw-story-jetzt");
   const musik = document.getElementById("gw-musik-stand");
   if (!ziel || !supabaseClient) return;
@@ -430,6 +539,7 @@ async function gwStoryStart(id) {
     const { error } = await supabaseClient.rpc("admin_live_story", { p_story: id });
     if (error) throw error;
     gwLiveStatus("gw-story-status", "✓ " + gwStoryName(id) + " läuft jetzt bei allen.", false);
+    gwLogbuch(gwStoryName(id));
     gwStoryLageLaden();
   } catch (err) {
     console.error("Story starten fehlgeschlagen:", err);
@@ -654,16 +764,17 @@ function gwLiveStatus(id, text, istFehler) {
 }
 
 async function liveSend(update, was) {
-  if (!supabaseClient) return;
+  if (!supabaseClient) return false;
   gwLiveStatus("gw-live-status", "Sende ...", false);
   try {
     const { data, error } = await supabaseClient.from("live_event").update(update).eq("id", 1).select("id");
     if (error) throw error;
     if (!Array.isArray(data) || data.length === 0) {
       gwLiveStatus("gw-live-status", "Nichts angekommen: keine Schreibrechte. Ist Migration 23 eingespielt und bist du als Admin angemeldet?", true);
-      return;
+      return false;
     }
     gwLiveStatus("gw-live-status", `✓ ${was} an alle gesendet (${new Date().toLocaleTimeString("de-DE")})`, false);
+    return true;
   } catch (err) {
     console.error("Live-Event senden fehlgeschlagen:", err);
     gwLiveStatus("gw-live-status", "Senden fehlgeschlagen: " + ((err && err.message) || err), true);
@@ -678,7 +789,10 @@ function gwLiveMessage(anAlle) {
   const farbe = (document.getElementById("gw-live-farbe") || {}).value || "#f0c96a";
   const von = ((document.getElementById("gw-live-von") || {}).value || "").trim();
   if (!text) { gwLiveStatus("gw-live-status", "Erst eine Nachricht eingeben.", true); return; }
-  if (anAlle) liveSend({ message: text, message_color: farbe, message_from: von || null, message_at: liveJetzt() }, "Nachricht");
+  if (anAlle) {
+    liveSend({ message: text, message_color: farbe, message_from: von || null, message_at: liveJetzt() }, "Nachricht")
+      .then((ok) => { if (ok) gwLogbuch((von ? von + ": " : "") + text); });
+  }
   else if (window.fhLiveVorschau) window.fhLiveVorschau.banderole(text, farbe, von);
 }
 function gwLivePulse(kind, anAlle) {
