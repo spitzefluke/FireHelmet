@@ -352,6 +352,7 @@ const GW_STORYS = [
   ["disco", "Disco-Party", "Endlos, bis du sie beendest · mit Musik (unten hochladen)", "gold"],
   ["ende", "Systemausfall", "12 s · beendet das Event – die Seite bleibt für alle gehackt, bis die nächste Story startet oder du wiederherstellst", "rot"],
   ["werbung", "Werbungsflut", "bis 1 min · ??? spamt 32 Fenster · 6 Secrets à +25 Dublonen (max. 150)", "neon"],
+  ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – bereitet das nächste Event vor", "violett"],
 ];
 /* Nur als Vorschau - fuer alle laufen sie ueber "Finale auslösen". */
 const GW_STORYS_NUR_VORSCHAU = [

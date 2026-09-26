@@ -74,6 +74,11 @@
     werbung:              { szenen: [2200, 55000, 800] },
     gegenhack_niederlage: { szenen: [4800, 55000, 800] },
     gegenhack_sieg:       { szenen: [1600, 30000] },
+    /* Migration 32: "Der Riss" - der 5-Minuten-Film aus riss-film.js.
+       Die zwoelf Szenen sind die Kapitel des Entwurfs (OM_SCENES);
+       der Film selbst rechnet aus der Zeit, hier zaehlt nur, wo ein
+       Zuschauer einsteigt und wann alles vorbei ist. */
+    riss: { szenen: [18000, 22000, 35000, 25000, 25000, 25000, 18000, 27000, 20000, 35000, 32000, 18000] },
   };
   const ZEITEN_IN_SZENE = {};  // Summe der Dauer bis zum Beginn jeder Szene
   Object.keys(STORYS).forEach(function (st) {
@@ -1156,6 +1161,13 @@
     if (st === "gegenhack_sieg" && n === 1) { blitz(); spaeter(konfetti, 400); }
     if (st === "gegenhack_sieg" && n === 2 && window.fhGegenhack) window.fhGegenhack.siegZeigen(id, vorschau);
 
+    /* Der Riss (32): einmal je Lauf starten - an der Stelle, an der man
+       einsteigt. Wer "Ueberspringen" drueckt, bekommt ihn nicht wieder. */
+    if (st === "riss" && !lauf.rissGestartet && window.fhRissFilm) {
+      lauf.rissGestartet = true;
+      window.fhRissFilm.start({ ab: ZEITEN_IN_SZENE.riss[n - 1] + STORYS.riss.szenen[n - 1] - lauf.rest, vorschau: vorschau });
+    }
+
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
     if (st === "hacked" && n === 7) {
       const p = belohnungAbholen(id, "hacked", 0, vorschau);
@@ -1258,6 +1270,7 @@
     timerWeg();
     regenStop();
     lauf = null;
+    if (st === "riss" && window.fhRissFilm) window.fhRissFilm.ende();
     if (st === "hacked") loecherSpawnen(id, vorschau);
     if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
     if (st === "sturm" && !vorschau) nachregen = true;
@@ -1288,6 +1301,7 @@
     regenStop();
     if (window.fhWerbungsflut) window.fhWerbungsflut.weg();
     if (window.fhGegenhack) window.fhGegenhack.siegWeg();
+    if (window.fhRissFilm) window.fhRissFilm.weg();
     if (musikLaeuft) musikAus(0);
     lauf = null;
     anzeigen();

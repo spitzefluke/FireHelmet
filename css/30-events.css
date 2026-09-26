@@ -4863,3 +4863,21 @@ body.fh-story-wunsch .fh-stern.ist-frei .fh-stern-kern {
   .fh-wf-bild img.ist-drehbild, .fh-wf-laufband div, .fh-wf-rad-scheibe, .fh-wf-dvd span, .fh-wf-tanz img, .fh-wf-tippt span,
   .fh-wf-countdown, .fh-wf-cta, .fh-wf-ende, .fh-wf-ende-titel, .fh-wf-hud, .fh-wf-enthuellt { animation: none; }
 }
+
+/* ======================================================
+   LIVE-STORY "DER RISS" (scripts/liveevent/riss-film.js)
+   Die Buehne ist 1920 x 1080 und wird per JS eingepasst; alles im
+   Film ist Inline-Stil wie im Entwurf.
+====================================================== */
+.fh-riss { position: fixed; inset: 0; z-index: 10050; overflow: hidden; background: #000; animation: fhRissRein .6s var(--fh-ease) both; }
+.fh-riss.ist-aus { animation: fhRissRaus 1.2s var(--fh-ease-aus) forwards; }
+.fh-riss-buehne { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 50% 50%; overflow: hidden; font-family: var(--fh-font-sans, 'Inter'), sans-serif; color: var(--fh-fg); }
+.fh-riss-hinweis { display: none; position: absolute; left: 0; right: 0; top: 18px; margin: 0; padding: 0 16px; text-align: center; font-size: 13px; letter-spacing: .08em; color: var(--fh-muted-fg); }
+.fh-riss.ist-hochkant .fh-riss-hinweis { display: block; }
+.fh-riss-weiter { position: absolute; right: 16px; bottom: 16px; height: 36px; padding: 0 14px; border: 1px solid rgba(232,237,244,.18); border-radius: 8px; background: rgba(5,7,11,.55); color: var(--fh-muted-fg); font: 500 12px/1 var(--fh-font-display); letter-spacing: .14em; text-transform: uppercase; cursor: pointer; opacity: .55; transition: opacity .2s var(--fh-ease), color .2s var(--fh-ease); }
+.fh-riss-weiter:hover, .fh-riss-weiter:focus-visible { opacity: 1; color: var(--fh-gold-bright); }
+@keyframes fhRissRein { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fhRissRaus { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .fh-riss, .fh-riss.ist-aus { animation-duration: .01s; }
+}
