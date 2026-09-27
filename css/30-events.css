@@ -4881,3 +4881,17 @@ body.fh-story-wunsch .fh-stern.ist-frei .fh-stern-kern {
 @media (prefers-reduced-motion: reduce) {
   .fh-riss, .fh-riss.ist-aus { animation-duration: .01s; }
 }
+
+/* Ton-Freigabe auf dem Handy (live-storys.js): Handys spielen Ton erst
+   nach einem Tippen - dann steht hier "Ton an". */
+.fh-ton-an {
+  position: fixed; left: 50%; bottom: max(84px, env(safe-area-inset-bottom)); z-index: 10004;
+  display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px;
+  border: 1px solid color-mix(in srgb, var(--fh-gold) 60%, transparent); border-radius: 999px;
+  background: rgba(5, 7, 11, .88); color: var(--fh-gold-bright);
+  font: 500 14px/1 var(--fh-font-display); letter-spacing: .08em; text-transform: uppercase;
+  box-shadow: 0 0 24px -6px var(--fh-gold); cursor: pointer; white-space: nowrap;
+  transform: translateX(-50%); animation: fhTonAn 1.6s var(--fh-ease) infinite;
+}
+@keyframes fhTonAn { 0%, 100% { box-shadow: 0 0 24px -6px var(--fh-gold); } 50% { box-shadow: 0 0 34px -2px var(--fh-gold-bright); } }
+@media (prefers-reduced-motion: reduce) { .fh-ton-an { animation: none; } }

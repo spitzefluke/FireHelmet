@@ -47,6 +47,86 @@ const FH_ANMELDE_WEGE = Object.freeze({
   google:  { label: "Google",  farbe: "#ffffff", icon: "🔴" },
 });
 
+/* ------------------------------------------------------
+   RUECKKEHR VOM ANBIETER MIT FEHLER
+   ---------------------------------------------------
+   Scheitert Twitch/Discord/Google, schickt Supabase den Nutzer mit
+   ?error=...&error_description=... (oder im #-Teil) zurueck. Frueher
+   ging das stumm verloren: man war wieder Gast und wusste nicht,
+   warum. Die Adresse wird hier gelesen, BEVOR supabase-client.js
+   laedt (Ladereihenfolge in index.html), und nach der Auswertung
+   bereinigt.
+------------------------------------------------------ */
+const FH_ANMELDE_RUECKKEHR = (function () {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    const h = new URLSearchParams(String(window.location.hash || "").replace(/^#/, ""));
+    const hol = (k) => q.get(k) || h.get(k) || "";
+    const fehler = hol("error"), code = hol("error_code"), text = hol("error_description");
+    return fehler || code ? { fehler: fehler, code: code, text: text } : null;
+  } catch (e) { return null; }
+})();
+
+/* Welcher Anbieter zuletzt angefragt wurde - fuer die Meldung und
+   fuer den zweiten Anlauf, falls das Konto schon woanders haengt. */
+function fhAnbieterMerken(provider) {
+  try { sessionStorage.setItem("fhAnmeldeAnbieter", provider); } catch (e) { /* Privatmodus */ }
+}
+function fhAnbieterGemerkt() {
+  try { return sessionStorage.getItem("fhAnmeldeAnbieter") || ""; } catch (e) { return ""; }
+}
+
+/* Eine Meldung ueber das Neuladen hinweg (nach Anmelden/Registrieren
+   laedt die Seite neu, damit alles mit der neuen Konto-ID arbeitet). */
+function fhMeldungNachNeuladen(text) {
+  try { sessionStorage.setItem("fhAnmeldeMeldung", text); } catch (e) { /* egal */ }
+}
+
+function fhNeuLadenAngemeldet(text) {
+  fhMeldungNachNeuladen(text);
+  window.location.reload();
+}
+
+async function fhRueckkehrAuswerten() {
+  const r = FH_ANMELDE_RUECKKEHR;
+  if (!r) return;
+  /* Adresse aufraeumen, sonst kommt die Meldung bei jedem Neuladen. */
+  try { history.replaceState(null, "", window.location.pathname); } catch (e) { /* egal */ }
+
+  const anbieter = fhAnbieterGemerkt();
+  const name = FH_ANMELDE_WEGE[anbieter] ? FH_ANMELDE_WEGE[anbieter].label : t("login.provider", "dem Anbieter");
+  const text = String(r.text || "").replace(/\+/g, " ");
+
+  /* Das Konto beim Anbieter haengt schon an einem anderen Spielstand
+     (z. B. auf dem ersten Geraet angemeldet). Dann ist nicht
+     Verknuepfen richtig, sondern ganz normal dort anmelden. Nur
+     einmal versuchen, damit es keine Schleife gibt. */
+  if ((r.code === "identity_already_exists" || /already linked/i.test(text)) && FH_ANMELDE_WEGE[anbieter]) {
+    let schonVersucht = false;
+    try { schonVersucht = sessionStorage.getItem("fhAnmeldeUmweg") === anbieter; sessionStorage.setItem("fhAnmeldeUmweg", anbieter); } catch (e) {}
+    if (!schonVersucht && supabaseClient) {
+      fhAnmeldeStatus(t("login.errLinked", "Dieses Konto hat schon einen Spielstand – du wirst dort angemeldet …"));
+      const { error } = await supabaseClient.auth.signInWithOAuth({ provider: anbieter, options: { redirectTo: fhAnmeldeZiel() } });
+      if (!error) return;
+    }
+  }
+
+  let meldung;
+  if (/email/i.test(text) && /provider/i.test(text)) {
+    meldung = t("login.errNoEmail", "{anbieter} hat uns keine E-Mail-Adresse geschickt. Bestätige deine E-Mail in den {anbieter}-Einstellungen und versuch es noch einmal – oder melde dich anders an.").replace(/\{anbieter\}/g, name);
+  } else if (r.fehler === "access_denied") {
+    meldung = t("login.errDenied", "Anmeldung über {anbieter} abgebrochen.").replace(/\{anbieter\}/g, name);
+  } else {
+    meldung = t("login.errProvider", "Anmeldung über {anbieter} hat nicht geklappt:").replace(/\{anbieter\}/g, name) + " " + (text || r.code || r.fehler);
+  }
+  fhAnmeldeStatus(meldung, "fehler");
+  /* Zur Anmeldeseite - erst nach dem Laden, sonst schaltet die
+     Startlogik der Seite gleich wieder auf die Startseite zurueck. */
+  const zurAnmeldung = function () { if (typeof changePage === "function") changePage("login"); };
+  if (document.readyState === "complete") zurAnmeldung();
+  else window.addEventListener("load", function () { setTimeout(zurAnmeldung, 0); }, { once: true });
+}
+
 function fhAnmeldeZiel() {
   /* Wohin Supabase nach dem Anmelden zurueckschickt. Bewusst ohne
      Fragment und ohne Suchteil: sonst landet der Nutzer nach dem
@@ -218,8 +298,32 @@ async function fhRegistrieren() {
      Ohne: die erzeugte. */
   const adresse = mail || (schluessel + "@" + FH_LOGIN_DOMAIN);
 
+  const anzeigeName = String(name).trim();
   try {
     fhAnmeldeStatus("Konto wird angelegt ...");
+
+    /* GAST BLEIBT GAST-KONTO: Wer schon anonym spielt, bekommt Name
+       und Passwort an DASSELBE Konto gehaengt (updateUser) - gleiche
+       ID, Dublonen und Fortschritt bleiben. signUp() wuerde ein neues
+       Konto anlegen, und der Gast-Spielstand waere unerreichbar.
+       Klappt das nicht (z. B. weil Supabase fuer die Adresse erst
+       eine Bestaetigung will), geht es wie bisher ueber signUp(). */
+    const { data: sitzung } = await supabaseClient.auth.getSession();
+    const gast = sitzung && sitzung.session && sitzung.session.user && sitzung.session.user.is_anonymous;
+    if (gast) {
+      const { data: neu, error: fehlerUmwandeln } = await supabaseClient.auth.updateUser({
+        email: adresse, password: pw, data: { anzeige_name: anzeigeName },
+      });
+      if (fehlerUmwandeln && /already|exists|registered/i.test(String(fehlerUmwandeln.message || ""))) throw fehlerUmwandeln;
+      const u = neu && neu.user;
+      if (!fehlerUmwandeln && u && !u.is_anonymous && String(u.email || "").toLowerCase() === adresse.toLowerCase()) {
+        try { localStorage.setItem("wheelNickname", anzeigeName); } catch (err) {}
+        fhNeuLadenAngemeldet(t("login.regKept", "Konto angelegt – dein bisheriger Spielstand ist dabei."));
+        return;
+      }
+      console.warn("Gast-Konto liess sich nicht umwandeln, lege neues an:", fehlerUmwandeln || u);
+    }
+
     const { data, error } = await supabaseClient.auth.signUp({
       email: adresse,
       password: pw,
@@ -239,8 +343,11 @@ async function fhRegistrieren() {
        die Bestaetigung ins Leere, deshalb der ehrliche Hinweis. */
     const sitzungDa = !!(data && data.session);
     if (sitzungDa) {
-      fhAnmeldeStatus("Konto angelegt. Du bist angemeldet.", "gut");
-      if (typeof fhAnmeldungUebernehmen === "function") fhAnmeldungUebernehmen();
+      /* Neu laden: sonst schreibt die Seite weiter auf die alte
+         Gast-ID (wheelAuthReady steht seit dem Laden fest) - Name und
+         Anmeldeart kamen dadurch nie im neuen Konto an. */
+      fhNeuLadenAngemeldet(t("login.regDone", "Konto angelegt. Du bist angemeldet."));
+      return;
     } else if (mail) {
       fhAnmeldeStatus("Konto angelegt. Bestätige es über den Link in deiner E-Mail.", "gut");
     } else {
@@ -276,8 +383,8 @@ async function fhAnmeldenMitPasswort() {
     fhAnmeldeStatus("Wird geprüft ...");
     const { error } = await supabaseClient.auth.signInWithPassword({ email: adresse, password: pw });
     if (error) throw error;
-    fhAnmeldeStatus("Angemeldet.", "gut");
-    if (typeof fhAnmeldungUebernehmen === "function") fhAnmeldungUebernehmen();
+    /* Neu laden - aus demselben Grund wie beim Registrieren. */
+    fhNeuLadenAngemeldet(t("login.loggedIn", "Angemeldet."));
   } catch (err) {
     console.error("Anmelden fehlgeschlagen:", err);
     /* Bewusst EINE Meldung fuer falschen Namen und falsches Passwort:
@@ -328,6 +435,8 @@ async function fhAnmeldenMit(provider) {
     return;
   }
   if (!FH_ANMELDE_WEGE[provider]) return;
+  fhAnbieterMerken(provider);
+  try { sessionStorage.removeItem("fhAnmeldeUmweg"); } catch (e) {}
 
   try {
     const { data: sitzung } = await supabaseClient.auth.getSession();
@@ -562,7 +671,7 @@ function fhNameAusToken(nutzer) {
   const m = nutzer.user_metadata || {};
   // Die Anbieter benutzen unterschiedliche Felder - der Reihe nach
   // durchprobieren statt einen einzelnen zu erraten.
-  const roh = m.preferred_username || m.nickname || m.user_name ||
+  const roh = m.anzeige_name || m.preferred_username || m.nickname || m.user_name ||
               m.full_name || m.name || (nutzer.email || "").split("@")[0] || "";
   return String(roh).slice(0, 30);
 }
@@ -636,9 +745,15 @@ async function fhAnmeldungUebernehmen() {
      aus dem Token, das Argument dient nur der Nachvollziehbarkeit -
      ein gefaelschter Wert aendert nichts. */
   if (supabaseClient) {
+    /* Erst die players-Zeile sicherstellen: Die Funktion aendert nur
+       eine vorhandene Zeile. Bei einem frischen Konto kam der Aufruf
+       sonst vor der Zeile an und die Anmeldeart blieb leer. */
+    try { if (typeof ensureSupabasePlayerRow === "function") await ensureSupabasePlayerRow(nutzer.id, name); }
+    catch (err) { /* savePlayerData versucht es ohnehin */ }
     try { await supabaseClient.rpc("anmeldeart_festhalten"); }
     catch (err) { /* Migration noch nicht eingespielt - unkritisch */ }
   }
+  try { sessionStorage.removeItem("fhAnmeldeUmweg"); } catch (e) {}
 }
 
 /* ------------------------------------------------------
@@ -684,6 +799,15 @@ function fhAnmeldungVerdrahten() {
 
 document.addEventListener("DOMContentLoaded", function () {
   fhAnmeldungVerdrahten();
+  fhRueckkehrAuswerten();
+  try {
+    const m = sessionStorage.getItem("fhAnmeldeMeldung");
+    if (m) {
+      sessionStorage.removeItem("fhAnmeldeMeldung");
+      if (typeof fhNotice === "function") fhNotice(m, "success");
+      fhAnmeldeStatus(m, "gut");
+    }
+  } catch (e) { /* egal */ }
   // Nach einem Redirect vom Anbieter steht die Sitzung schon - dann
   // Name und Bild einmal nachtragen.
   fhAnmeldungUebernehmen();

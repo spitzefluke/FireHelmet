@@ -303,7 +303,16 @@ manual linking* fehlt, siehe oben.
 schon einmal passiert, die Notiz dazu steht in
 `supabase/game-migration/README.md`.
 
+**„Error getting user email from external provider"** (steht in den
+Auth-Logs, die Seite sagt es seit dem 27.09. auch dem Nutzer) — der
+Anbieter hat keine E-Mail-Adresse geliefert. Bei Twitch heisst das fast
+immer: im Twitch-Konto ist keine E-Mail bestätigt. Abhilfe: dort die
+E-Mail bestätigen, oder im Supabase-Dashboard beim Anbieter „Allow users
+without an email" einschalten, falls es den Schalter gibt.
+
 **„Identity is already linked to another user"** — die Twitch-Kennung
 hängt schon an einem anderen Konto. Passiert, wenn man sich früher schon
-einmal angemeldet hatte. Über das Admin-Panel lässt sich das umhängen
+einmal angemeldet hatte — etwa auf einem zweiten Gerät. Seit dem 27.09.
+meldet die Seite den Nutzer in diesem Fall von selbst ganz normal dort an
+(`fhRueckkehrAuswerten()` in `scripts/auth/anmeldung.js`). Über das Admin-Panel lässt sich das umhängen
 (`admin_identitaet_umhaengen`).
