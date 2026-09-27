@@ -541,160 +541,16 @@
       '</div>');
     }],
 
-    /* ================= STURM ================= */
-    [function () { return "regen" + (sz("sturm") === 1 ? "A" : sz("sturm") === 5 ? "Z" : ""); }, function () { return sz("sturm") >= 1; }, function () {
-      const s = sz("sturm");
-      return aus('<div style="' + VOLL + 'z-index:9997;overflow:hidden;background:radial-gradient(120% 80% at 50% 0%, rgba(42,74,114,.5), rgba(5,7,11,.55));' + (s === 1 ? 'animation:fhStEinblenden 1.2s both;' : s === 5 ? 'animation:fhStAus 2.4s ease forwards;' : '') + '">' +
-        '<div style="position:absolute;inset:0;background-image:repeating-linear-gradient(105deg, transparent 0 26px, rgba(200,222,245,.16) 26px 27px, transparent 27px 60px);background-size:220px 220px;animation:fhStRegen .45s linear infinite;"></div>' +
-        '<div style="position:absolute;inset:0;opacity:.6;background-image:repeating-linear-gradient(102deg, transparent 0 40px, rgba(200,222,245,.12) 40px 41px, transparent 41px 90px);background-size:300px 300px;animation:fhStRegen .8s linear infinite;"></div>' +
-      '</div>');
-    }],
+    /* ================= STURM, GEISTERSCHIFF, STURMFLUT, NORDLICHT =================
+       Die vier Wetter-Storys zeichnet story-wetter.js auf einer Leinwand
+       (Entwurf "Live-Storys Labor"); hier bleibt nur der leise Nachregen
+       nach dem Sturm. */
     /* Nachwirkung: nach dem Sturm regnet es leise weiter - ohne die
        Abdunklung, damit die Seite benutzbar bleibt. */
     ["nachregen", function () { return nachregen && !lauf; }, function () {
       return aus('<div style="' + VOLL + 'z-index:9997;overflow:hidden;opacity:.55;animation:fhStEinblenden 2.4s both;">' +
         '<div style="position:absolute;inset:0;background-image:repeating-linear-gradient(105deg, transparent 0 26px, rgba(200,222,245,.14) 26px 27px, transparent 27px 60px);background-size:220px 220px;animation:fhStRegen .6s linear infinite;"></div>' +
         '<div style="position:absolute;inset:0;opacity:.6;background-image:repeating-linear-gradient(102deg, transparent 0 40px, rgba(200,222,245,.1) 40px 41px, transparent 41px 90px);background-size:300px 300px;animation:fhStRegen 1s linear infinite;"></div>' +
-      '</div>');
-    }],
-    ["sturm1", function () { return sz("sturm") === 1; }, function () {
-      return aus(textZeile(T("storm.t1", "Ein Sturm zieht auf …"), '20%', 'clamp(20px, 3vw, 34px)', 'var(--fh-fg)', '0 0 30px rgba(66,184,255,.45)', 'fhStHoch .8s .4s both'));
-    }],
-    ["sturm2", function () { return sz("sturm") === 2; }, function () {
-      return aus('<div>' +
-        '<div style="' + VOLL + 'z-index:9998;background:radial-gradient(60% 50% at 72% 8%, rgba(66,184,255,.4), transparent 70%);opacity:0;animation:fhStFerneBlitz 2.4s both;"></div>' +
-        textZeile(T("storm.t2", "Hörst du das Grollen?"), '20%', 'clamp(20px, 3vw, 34px)', 'var(--fh-muted-fg)', '', 'fhStHoch .6s both') +
-      '</div>');
-    }],
-    ["sturm3", function () { return sz("sturm") === 3; }, function () {
-      const linie = function (pts, w, d) { return '<polyline points="' + pts + '" fill="none" stroke="#e8edf4" stroke-width="' + w + '" stroke-linejoin="round" stroke-linecap="round" pathLength="1" vector-effect="non-scaling-stroke" style="stroke-dasharray:1;stroke-dashoffset:1;animation:fhStLinieZuenden .22s ease-out ' + d + 's forwards;"/>'; };
-      return aus('<div>' +
-        '<svg viewBox="0 0 100 200" preserveAspectRatio="none" aria-hidden="true" style="position:fixed;left:50%;top:0;width:min(260px, 40vw);height:78vh;transform:translateX(-50%);z-index:10001;pointer-events:none;filter:drop-shadow(0 0 10px var(--fh-cold)) drop-shadow(0 0 28px var(--fh-cold));animation:fhStBoltAus 1.6s ease-out forwards;">' +
-          linie('55,0 38,52 60,58 30,118 54,122 22,200', 3.5, 0) + linie('60,58 80,86 72,104', 1.8, .12) + linie('30,118 12,140', 1.4, .16) +
-        '</svg>' +
-        '<p style="' + MITTE + 'bottom:18%;z-index:10001;' + DISPLAY + 'font-size:clamp(40px, 8vw, 96px);font-weight:500;letter-spacing:.2em;color:var(--fh-fg);text-shadow:0 0 40px var(--fh-cold), 0 0 80px rgba(66,184,255,.5);animation:fhStZoomRein .4s .15s cubic-bezier(.22,.9,.32,1) both;">' + T("storm.impact", "EINSCHLAG") + '</p>' +
-      '</div>');
-    }],
-    ["sturm4", function () { return sz("sturm") === 4; }, function () {
-      return aus(karte('14%', 'var(--fh-cold)', 'rgba(66,184,255,.3)', 'var(--fh-cold)', 'solid', IC.zap, 'var(--fh-cold)', T("storm.charged", "Aufgeladen"), T("storm.card", "Der Blitz hat die Schatzkiste aufgesprengt – +150 Dublonen."), 'fhStHackFlackern .3s steps(1) infinite'));
-    }],
-
-    /* ================= GEISTERSCHIFF (NEBEL) ================= */
-    [function () { return "nebel" + (sz("nebel") === 1 ? "A" : sz("nebel") === 5 ? "Z" : ""); }, function () { return sz("nebel") >= 1; }, function () {
-      const n = sz("nebel");
-      return aus('<div style="' + VOLL + 'z-index:9997;overflow:hidden;' + (n === 1 ? 'animation:fhStEinblenden 2s ease both;' : n === 5 ? 'animation:fhStNebelWeg 2.8s ease forwards;' : '') + '">' +
-        '<div style="position:absolute;inset:-20%;background:radial-gradient(40% 30% at 20% 60%, rgba(232,237,244,.16), transparent 70%), radial-gradient(35% 25% at 70% 40%, rgba(232,237,244,.12), transparent 70%);filter:blur(30px);animation:fhStNebelDrift 9s ease-in-out infinite alternate;"></div>' +
-        '<div style="position:absolute;inset:-20%;background:radial-gradient(45% 30% at 60% 75%, rgba(232,213,168,.12), transparent 70%), radial-gradient(30% 25% at 30% 25%, rgba(232,237,244,.12), transparent 70%);filter:blur(40px);animation:fhStNebelDrift 12s ease-in-out -4s infinite alternate-reverse;"></div>' +
-        '<div style="position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 50%, transparent 30%, rgba(5,7,11,.65));"></div>' +
-      '</div>');
-    }],
-    ["nebel2", function () { return sz("nebel") === 2; }, function () {
-      return aus(textZeile(T("fog.t2", "Da draußen ist etwas …"), '20%', 'clamp(20px, 3vw, 34px)', 'var(--fh-paper)', '0 0 30px rgba(232,213,168,.4)', 'fhStHoch 1s .2s both'));
-    }],
-    ["irrlichter", function () { const n = sz("nebel"); return n >= 2 && n <= 4; }, function () {
-      let s = "";
-      for (let i = 0; i < 6; i++) {
-        const g = 14 + (i % 3) * 6;
-        s += '<span style="position:absolute;left:' + (8 + i * 16) + '%;top:' + (30 + (i * 23) % 45) + '%;width:' + g + 'px;height:' + g + 'px;border-radius:50%;background:radial-gradient(circle, #fffaf0, rgba(232,213,168,.6) 40%, transparent 70%);box-shadow:0 0 30px 10px rgba(232,213,168,.25);animation:fhStIrrlicht ' + (4 + i * 0.7).toFixed(1) + 's ease-in-out ' + (-i * 0.9).toFixed(1) + 's infinite alternate, fhStGeist 1.6s ease-in-out infinite;"></span>';
-      }
-      return aus('<div style="' + VOLL + 'z-index:9998;overflow:hidden;">' + s + '</div>');
-    }],
-    ["nebel3", function () { return sz("nebel") === 3; }, function () {
-      const buchst = function () {
-        return Array.from(t("story.fog.ship", "GEISTERSCHIFF")).map(function (c, i) {
-          return '<span style="display:inline-block;animation:fhStGeistBuchstabe 3.2s cubic-bezier(.45,0,.2,1) ' + (i * 0.07).toFixed(2) + 's both, fhStWabern 2.4s ease-in-out ' + (i * 0.15).toFixed(2) + 's infinite;">' + esc(c) + '</span>';
-        }).join("");
-      };
-      const stil = DISPLAY + 'font-size:clamp(34px, 7vw, 84px);font-weight:500;letter-spacing:.24em;line-height:1;color:var(--fh-paper);text-shadow:0 0 40px rgba(232,213,168,.7), 0 0 90px rgba(232,213,168,.3);';
-      return aus('<div>' +
-        '<div style="' + VOLL + 'z-index:9998;overflow:hidden;"><div style="position:absolute;left:-60vw;top:28%;width:60vw;height:34vh;border-radius:50%;background:radial-gradient(closest-side, rgba(232,213,168,.35), rgba(232,237,244,.08) 60%, transparent);filter:blur(20px);animation:fhStGeistLicht 3.2s ease-in-out both;"></div></div>' +
-        '<div style="position:fixed;left:0;right:0;top:38%;z-index:10000;display:flex;flex-direction:column;align-items:center;pointer-events:none;">' +
-          '<div style="' + stil + '">' + buchst() + '</div>' +
-          '<div aria-hidden="true" style="' + stil + 'transform:scaleY(-1);margin-top:6px;opacity:.22;filter:blur(2px);-webkit-mask-image:linear-gradient(0deg, #000, transparent 70%);mask-image:linear-gradient(0deg, #000, transparent 70%);">' + buchst() + '</div>' +
-        '</div></div>');
-    }],
-    ["nebel4", function () { return sz("nebel") === 4; }, function () {
-      const worte = [T("fog.w1", "kehrt um …"), T("fog.w2", "zu spät"), T("fog.w3", "ihr gehört uns"), T("fog.w4", "hört ihr die glocke?"), T("fog.w5", "niemand entkommt"), T("fog.w6", "tiefer …")];
-      const links = [12, 68, 30, 74, 18, 52], oben = [22, 30, 62, 70, 48, 84];
-      const fl = worte.map(function (w, i) {
-        return '<span style="position:absolute;left:' + links[i] + '%;top:' + oben[i] + '%;' + DISPLAY + 'font-size:' + (18 + (i % 3) * 6) + 'px;letter-spacing:.2em;color:var(--fh-paper);opacity:0;filter:blur(1px);text-shadow:0 0 18px rgba(232,213,168,.6);animation:fhStFluestern 2.2s ease-in-out ' + (i * 0.42).toFixed(2) + 's both;">' + w + '</span>';
-      }).join("");
-      return aus('<div>' +
-        '<div style="' + VOLL + 'z-index:9999;">' + fl + '</div>' +
-        karte('14%', 'rgba(232,213,168,.45)', 'rgba(232,213,168,.18)', 'var(--fh-paper)', 'dashed', IC.skull, 'var(--fh-paper)', T("fog.cursed", "Verflucht"), T("fog.card", "Ein Fluch liegt über dem Deck – halt dich fest."), 'fhStGeist 2s ease-in-out infinite') +
-      '</div>');
-    }],
-    ["nebel5", function () { return sz("nebel") === 5; }, function () {
-      return aus('<div>' +
-        '<div style="' + VOLL + 'z-index:9996;background:radial-gradient(90% 60% at 50% 110%, rgba(240,201,106,.28), rgba(255,106,42,.08) 50%, transparent 75%);animation:fhStEinblenden 1.2s both, fhStAus .8s 2.4s forwards;"></div>' +
-        '<div style="position:fixed;left:50%;bottom:-40vh;z-index:9996;width:180vmax;height:180vmax;pointer-events:none;mix-blend-mode:screen;background:repeating-conic-gradient(from 0deg at 50% 50%, rgba(240,201,106,.14) 0deg 4deg, transparent 4deg 18deg);-webkit-mask-image:radial-gradient(circle, #000 10%, transparent 55%);mask-image:radial-gradient(circle, #000 10%, transparent 55%);animation:fhStStrahlenAuf 3.2s cubic-bezier(.45,0,.2,1) both, fhStAus .8s 2.4s forwards;"></div>' +
-      '</div>');
-    }],
-
-    /* ================= STURMFLUT ================= */
-    ["flutWasser", function () { return sz("flut") >= 1; }, function () {
-      const pfad = function (amp, per, y) { let d = 'M0 ' + y; for (let x = 0; x <= 2400; x += per / 2) d += ' Q' + (x + per / 4) + ' ' + (y + (((x / (per / 2)) % 2) ? amp : -amp)) + ' ' + (x + per / 2) + ' ' + y; return d + ' V80 H0 Z'; };
-      const lage = function (amp, per, y, farbe, dauer, op) { return '<svg viewBox="0 0 2400 80" preserveAspectRatio="none" style="position:absolute;left:0;top:-46px;width:200%;height:60px;opacity:' + op + ';animation:fhStWellenZug ' + dauer + 's linear infinite;"><path d="' + pfad(amp, per, y) + '" fill="' + farbe + '"/></svg>'; };
-      return aus('<div id="fh-story-wasser" style="position:fixed;left:0;right:0;bottom:0;z-index:9997;height:0;pointer-events:none;background:linear-gradient(180deg, rgba(42,74,114,.55), rgba(11,24,36,.85));box-shadow:inset 0 1px 0 rgba(200,222,245,.35);">' +
-        '<div style="position:absolute;inset:0;pointer-events:none;">' + lage(10, 300, 40, 'rgba(90,160,224,.35)', 9, 1) + lage(14, 400, 44, 'rgba(42,74,114,.6)', 6, 1) + lage(7, 240, 48, 'rgba(200,222,245,.25)', 4, .9) +
-        '<div style="position:absolute;inset:0;mix-blend-mode:screen;background:radial-gradient(40px 14px at 20% 30%, rgba(200,222,245,.12), transparent), radial-gradient(60px 18px at 65% 55%, rgba(200,222,245,.1), transparent), radial-gradient(50px 12px at 40% 80%, rgba(200,222,245,.1), transparent);background-size:320px 220px;animation:fhStKaustik 5s linear infinite;"></div></div>' +
-      '</div>');
-    }],
-    ["flut1", function () { return sz("flut") === 1; }, function () {
-      return aus(textZeile(T("flood.t1", "Das Wasser zieht sich zurück …"), '20%', 'clamp(20px, 3vw, 34px)', 'var(--fh-fg)', '0 0 30px rgba(90,160,224,.5)', 'fhStHoch .8s .2s both'));
-    }],
-    ["gischt", function () { return sz("flut") === 2; }, function () {
-      let s = "";
-      for (let i = 0; i < 36; i++) {
-        const g = 5 + (i % 4) * 2;
-        s += '<span style="position:absolute;bottom:28vh;left:' + ((i * 29) % 100) + '%;width:' + g + 'px;height:' + g + 'px;border-radius:50%;background:rgba(200,222,245,.75);--dx:' + ((i % 7) - 3) * 14 + 'px;--dy:' + -(80 + (i * 37) % 160) + 'px;animation:fhStGischt 1.2s cubic-bezier(.2,.8,.4,1) ' + ((i % 6) * 0.08).toFixed(2) + 's both;"></span>';
-      }
-      return aus('<div style="' + VOLL + 'z-index:9999;overflow:hidden;">' + s + '</div>');
-    }],
-    ["landUnter", function () { return sz("flut") === 3; }, function () {
-      return aus('<p style="' + MITTE + 'top:14%;z-index:10000;' + DISPLAY + 'font-size:clamp(44px, 9vw, 110px);font-weight:500;letter-spacing:.14em;color:var(--fh-fg);text-shadow:0 0 40px rgba(90,160,224,.7);animation:fhStZoomRein .6s cubic-bezier(.22,.9,.32,1) both, fhStSchweben 2.4s ease-in-out .6s infinite;">' + T("flood.land", "LAND UNTER") + '</p>');
-    }],
-    ["blasen", function () { const f = sz("flut"); return f === 3 || f === 4; }, function () {
-      let s = "";
-      for (let i = 0; i < 28; i++) {
-        const g = 4 + (i * 7) % 14;
-        s += '<span style="position:absolute;bottom:-20px;left:' + ((i * 37) % 100) + '%;width:' + g + 'px;height:' + g + 'px;border-radius:50%;border:1px solid rgba(200,222,245,.55);background:radial-gradient(circle at 35% 30%, rgba(232,237,244,.5), transparent 60%);animation:fhStBlase ' + (2.4 + (i % 5) * 0.6).toFixed(1) + 's ease-in ' + ((i % 9) * 0.3).toFixed(1) + 's infinite;"></span>';
-      }
-      return aus('<div style="' + VOLL + 'z-index:9998;overflow:hidden;">' + s + '</div>');
-    }],
-    ["flut4", function () { return sz("flut") === 4; }, function () {
-      return aus(karte('calc(42vh - 76px)', 'rgba(90,160,224,.6)', 'rgba(90,160,224,.25)', 'var(--fh-success)', 'solid', IC.gift, '#5aa0e0', T("flood.drift", "Treibgut"), T("flood.card", "Eine Kiste treibt an Deck – +150 Dublonen."), '', true));
-    }],
-    ["strudel", function () { return sz("flut") === 5; }, function () {
-      return aus('<div style="position:fixed;left:50%;bottom:0;z-index:9998;width:70vmin;height:70vmin;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(rgba(90,160,224,.35) 0deg 10deg, transparent 10deg 30deg);-webkit-mask-image:radial-gradient(circle, transparent 12%, #000 30%, transparent 70%);mask-image:radial-gradient(circle, transparent 12%, #000 30%, transparent 70%);animation:fhStStrudel 2.8s cubic-bezier(.45,0,.2,1) forwards;"></div>');
-    }],
-
-    /* ================= NORDLICHT ================= */
-    [function () { return "nordlicht" + (sz("nordlicht") === 1 ? "A" : sz("nordlicht") === 5 ? "Z" : ""); }, function () { return sz("nordlicht") >= 1; }, function () {
-      const n = sz("nordlicht");
-      return aus('<div style="' + VOLL + 'z-index:9996;overflow:hidden;mix-blend-mode:screen;' + (n === 1 ? 'animation:fhStEinblenden 2.4s cubic-bezier(.45,0,.2,1) both;' : n === 5 ? 'animation:fhStAus 2.8s cubic-bezier(.45,0,.2,1) forwards;' : '') + '">' +
-        '<div style="position:absolute;left:-20%;top:4%;width:140%;height:40vh;border-radius:50%;background:linear-gradient(90deg, transparent, rgba(85,200,120,.5), rgba(66,184,255,.35), rgba(166,107,255,.45), transparent);filter:blur(46px);animation:fhStAurora 9s cubic-bezier(.45,0,.55,1) infinite alternate;"></div>' +
-        '<div style="position:absolute;left:-20%;top:16%;width:140%;height:30vh;border-radius:50%;background:linear-gradient(90deg, transparent, rgba(166,107,255,.4), rgba(85,200,120,.45), transparent);filter:blur(56px);animation:fhStAurora 12s cubic-bezier(.45,0,.55,1) -5s infinite alternate-reverse;"></div>' +
-        '<div style="position:absolute;left:-10%;top:0;width:120%;height:60vh;background:repeating-linear-gradient(90deg, rgba(200,245,220,.07) 0 2px, transparent 2px 16px);-webkit-mask-image:linear-gradient(180deg, transparent, #000 30%, transparent 85%);mask-image:linear-gradient(180deg, transparent, #000 30%, transparent 85%);animation:fhStAurora 10s cubic-bezier(.45,0,.55,1) -2s infinite alternate;"></div>' +
-      '</div>');
-    }],
-    ["nl1", function () { return sz("nordlicht") === 1; }, function () {
-      return aus(textZeile(T("aurora.t1", "Der Himmel wird still …"), '22%', 'clamp(20px, 3vw, 34px)', 'var(--fh-fg)', '', 'fhStHoch 1.4s cubic-bezier(.45,0,.2,1) .4s both', 'letter-spacing:.1em;'));
-    }],
-    ["nl2", function () { return sz("nordlicht") === 2; }, function () {
-      return aus('<p style="' + MITTE + 'top:40%;z-index:10000;' + DISPLAY + 'font-size:clamp(40px, 8vw, 100px);font-weight:500;color:var(--fh-fg);text-shadow:0 0 50px rgba(166,107,255,.6), 0 0 90px rgba(85,200,120,.35);animation:fhStGeistText 4.4s cubic-bezier(.45,0,.2,1) both;">' + T("aurora.title", "NORDLICHT") + '</p>');
-    }],
-    ["schnuppen", function () { return sz("nordlicht") === 3; }, function () {
-      let s = "";
-      for (let i = 0; i < 16; i++) {
-        s += '<span style="position:absolute;left:' + (40 + (i * 37) % 70) + '%;top:' + ((i * 23) % 45) + '%;width:' + (140 + (i % 3) * 60) + 'px;height:2px;border-radius:2px;background:linear-gradient(90deg, rgba(232,237,244,0), #e8edf4);box-shadow:0 0 10px rgba(232,237,244,.6);transform:rotate(-28deg);opacity:0;animation:fhStSchnuppeFlug 1.3s cubic-bezier(.3,0,.2,1) ' + (i * 0.2).toFixed(2) + 's both;"></span>';
-      }
-      return aus('<div style="' + VOLL + 'z-index:9998;overflow:hidden;">' + s + '</div>');
-    }],
-    ["nl4", function () { return sz("nordlicht") === 4; }, function () {
-      return aus('<div style="' + VOLL + 'z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">' +
-        '<p style="margin:0;' + DISPLAY + 'font-size:clamp(36px, 7vw, 84px);font-weight:500;letter-spacing:.06em;color:var(--fh-fg);text-shadow:0 0 50px rgba(166,107,255,.6);animation:fhStGeistBuchstabe 3.6s cubic-bezier(.45,0,.2,1) both;">' + T("aurora.wish", "Wünsch dir was") + '</p>' +
-        '<p style="margin:14px 0 0;font-size:16px;color:var(--fh-fg);animation:fhStHoch 1s cubic-bezier(.45,0,.2,1) .8s both;">' + T("aurora.granted", "Ein Wunsch geht in Erfüllung – +150 Dublonen") + '</p>' +
       '</div>');
     }],
   ];
@@ -750,12 +606,6 @@
     seitenFilter(f[0], f[1]);
     seitenBewegung(bewegungFuer());
     himmelStimmung(stimmungFuer());
-    const w = document.getElementById("fh-story-wasser");
-    if (w) {
-      const fl = sz("flut");
-      w.style.transition = "height " + (fl === 5 ? 2.6 : 2) + "s cubic-bezier(.45,0,.2,1)";
-      requestAnimationFrame(function () { w.style.height = ([0, 4, 32, 72, 58, 0][fl] || 0) + "vh"; });
-    }
   }
 
   /* ------------------------------------------------------
@@ -1178,6 +1028,14 @@
   ------------------------------------------------------ */
   function onSzene(st, n) {
     const id = lauf.id, vorschau = lauf.vorschau;
+
+    /* Wetter-Storys (story-wetter.js): beim ersten Betreten starten -
+       an der Stelle, an der man einsteigt -, danach weiterschalten. */
+    if (window.fhStoryWetter && window.fhStoryWetter.STORYS.indexOf(st) >= 0) {
+      const imSzene = STORYS[st].szenen[n - 1] - (lauf.rest || STORYS[st].szenen[n - 1]);
+      if (window.fhStoryWetter.laeuft() !== st) window.fhStoryWetter.start(st, n, imSzene);
+      else window.fhStoryWetter.szene(n, imSzene);
+    }
     const wetter = function (text, von, farbe) {
       /* Die Belohnung wurde eine Szene vorher abgeholt (oder jetzt). */
       const p = lauf.belohnung || belohnungAbholen(id, "wetter", 0, vorschau);
@@ -1245,18 +1103,14 @@
     if (st === "disco" && n === 4) konfetti();
     if (st === "disco" && n === 5) { musikAus(2400); banderole(t("story.disco.thanks", "Danke fürs Tanzen, Crew!"), "Ändii", "#f0c96a", false); }
 
-    if (st === "sturm" && n === 2) { spaeter(beben, 500); spaeter(beben, 1500); }
-    if (st === "sturm" && n === 3) blitz();
     if (st === "sturm" && n === 4) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau);
     if (st === "sturm" && n === 5) wetter(t("story.storm.done", "Sturm überstanden"), "Ändii", "#42b8ff");
 
     if (st === "nordlicht" && n === 4) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau);
     if (st === "nordlicht" && n === 5) wetter(t("story.aurora.done", "Dein Wunsch wurde erhört"), t("story.aurora.from", "Nordlicht"), "#a66bff");
 
-    if (st === "nebel" && n === 4) spaeter(beben, 1200);
     if (st === "nebel" && n === 5) wetter(t("story.fog.done", "Der Fluch ist gebrochen"), "Ändii", "#e8d5a8");
 
-    if (st === "flut" && n === 1) spaeter(beben, 900);
     if (st === "flut" && n === 4) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau);
     if (st === "flut" && n === 5) wetter(t("story.flood.done", "Treibgut geborgen"), "Ändii", "#5aa0e0");
   }
@@ -1315,6 +1169,7 @@
     timerWeg();
     regenStop();
     lauf = null;
+    if (window.fhStoryWetter) window.fhStoryWetter.ende();
     if (st === "riss" && window.fhRissFilm) window.fhRissFilm.ende();
     if (st === "hacked") loecherSpawnen(id, vorschau);
     if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
@@ -1347,6 +1202,7 @@
     if (window.fhWerbungsflut) window.fhWerbungsflut.weg();
     if (window.fhGegenhack) window.fhGegenhack.siegWeg();
     if (window.fhRissFilm) window.fhRissFilm.weg();
+    if (window.fhStoryWetter) window.fhStoryWetter.weg();
     if (musikLaeuft) musikAus(0);
     lauf = null;
     anzeigen();
