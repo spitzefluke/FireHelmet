@@ -132,7 +132,20 @@
         discoAudio.volume = 0.6;
       } catch (e) { discoAudio = null; }
     }
-    if (discoAudio) { discoAudio.currentTime = 0; discoAudio.play().catch(function () { /* Autoplay evtl. blockiert */ }); }
+    if (discoAudio) {
+      discoAudio.currentTime = 0;
+      /* Handy ohne vorheriges Tippen: Ton beim ersten Tippen nachholen
+         (der Knopf "Ton an" kommt aus live-storys.js nur fuer Storys). */
+      discoAudio.play().catch(function () {
+        const nachholen = function () {
+          document.removeEventListener("pointerdown", nachholen, true);
+          if (document.body.classList.contains("fh-live-disco") || document.body.classList.contains("fh-live-disco-ruhig")) {
+            discoAudio.play().catch(function () {});
+          }
+        };
+        document.addEventListener("pointerdown", nachholen, true);
+      });
+    }
   }
   function discoAus() {
     document.body.classList.remove("fh-live-disco", "fh-live-disco-ruhig");
@@ -288,6 +301,10 @@
     } catch (e) { /* kein Realtime -> Polling traegt */ }
     // Rueckfall-Polling: alle 5 s. Guenstig genug fuer ein Live-Event.
     setInterval(holen, 5000);
+    /* Handy aus dem Hintergrund zurueck (Bildschirm war aus, anderer
+       Tab): sofort nachsehen statt bis zu 5 s spaeter - im Hintergrund
+       frieren Handys Abfragen und Live-Verbindung ein. */
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) holen(); });
   }
 
   document.addEventListener("DOMContentLoaded", function () {

@@ -1111,12 +1111,57 @@
     audio.loop = true;
     audio.volume = 0.6;
     audio.currentTime = 0;
-    audio.play().catch(function () { /* Autoplay evtl. blockiert, bis man einmal geklickt hat */ });
     musikLaeuft = true;
+    tonAbspielen();
   }
+
+  /* ------------------------------------------------------
+     TON-FREIGABE AUF DEM HANDY
+     Handys (Samsung Internet, Chrome, Safari) spielen Ton erst,
+     nachdem man einmal auf die Seite getippt hat. Zuschauer, die nur
+     zuschauen, hoerten die Disco deshalb nie - der Fehler wurde
+     verschluckt. Jetzt erscheint dann "Ton an", und die Musik
+     startet beim ersten Tippen irgendwo auf der Seite.
+  ------------------------------------------------------ */
+  let tonKnopf = null;
+  const IC_TON = '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>';
+
+  function tonAbspielen() {
+    if (!audio || !musikLaeuft) return;
+    const p = audio.play();
+    if (p && p.then) p.then(tonFreigabeWeg).catch(function (e) { if (e && e.name === "NotAllowedError") tonFreigabeZeigen(); });
+  }
+  function tonFreigabeZeigen() {
+    if (tonKnopf || !musikLaeuft) return;
+    tonKnopf = document.createElement("button");
+    tonKnopf.type = "button";
+    tonKnopf.className = "fh-ton-an";
+    tonKnopf.innerHTML = svg(IC_TON, "18px") + "<span></span>";
+    tonKnopf.querySelector("span").textContent = t("story.soundOn", "Ton an – tippen");
+    document.body.appendChild(tonKnopf);
+    document.addEventListener("pointerdown", tonFreigeben, true);
+    document.addEventListener("keydown", tonFreigeben, true);
+  }
+  function tonFreigabeWeg() {
+    document.removeEventListener("pointerdown", tonFreigeben, true);
+    document.removeEventListener("keydown", tonFreigeben, true);
+    if (tonKnopf) tonKnopf.remove();
+    tonKnopf = null;
+  }
+  /* Das Tippen selbst ist die Freigabe - play() muss IN diesem
+     Ereignis aufgerufen werden, sonst zaehlt es nicht. */
+  function tonFreigeben() {
+    tonFreigabeWeg();
+    if (audio && musikLaeuft) audio.play().catch(function () { /* dann eben still */ });
+  }
+  /* Handy aus dem Hintergrund zurueck: laufende Musik wieder an. */
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && musikLaeuft && audio && audio.paused) tonAbspielen();
+  });
 
   function musikAus(ms) {
     musikLaeuft = false;
+    tonFreigabeWeg();
     if (!audio) return;
     clearInterval(fadeUhr);
     if (!ms) { audio.pause(); return; }
