@@ -5,5 +5,21 @@ node_modules/
 # Anleitungen ohne Einfluss auf die ausgelieferte Seite - sie gehoeren zur
 # Arbeitsumgebung, nicht zum Projekt, und werden bei Bedarf neu installiert.
 .agents/skills/
-.claude/skills/
 skills-lock.json
+
+# Die Strix-Sicherheits-Skills bleiben aus demselben Grund draussen.
+# Der Rest von .claude/skills/ kommt von ECC (ecc-universal, Profil
+# "minimal") und wird bewusst mit eingecheckt - Stand und Herkunft
+# jeder Datei stehen in .claude/ecc/install-state.json.
+.claude/skills/api-security-testing
+.claude/skills/application-security-testing
+.claude/skills/ci-security-scanning-with-strix
+.claude/skills/find-security-vulnerabilities-in-code
+.claude/skills/fix-security-vulnerabilities-with-strix
+.claude/skills/managed-pentesting-with-strix
+.claude/skills/owasp-top-10-testing
+.claude/skills/penetration-testing-with-strix
+.claude/skills/web-app-penetration-testing
+
+# Rechnerbezogene Einstellung (schaltet die Co-Autor-Zeile ab), bleibt lokal.
+.claude/settings.json
