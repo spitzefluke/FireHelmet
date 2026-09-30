@@ -1,11 +1,23 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+# Dependabot: woechentliche Versions-PRs.
+# npm betrifft nur Werkzeuge der Entwicklung (shadcn) und die
+# Versionsangaben in package.json - die Seite selbst laedt gsap, three
+# und motion per CDN. Ein Update hier aendert also nichts, was
+# Besucher bekommen, bis die CDN-Adresse in index.html mitgezogen wird.
+# three steht bewusst fest auf 0.160.0 und wird deshalb ausgenommen.
 
 version: 2
 updates:
-  - package-ecosystem: "" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "three"
+    groups:
+      entwicklung:
+        dependency-type: "development"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
