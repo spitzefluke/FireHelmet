@@ -1769,8 +1769,7 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 .gw-story.ist-wasser  { --ton: #5aa0e0; }
 .gw-story.ist-rot     { --ton: var(--fh-danger); }
 
-.gw-story-text,
-.gw-musik-text { display: flex; flex: 1 1 240px; flex-direction: column; gap: 2px; min-width: 0; }
+.gw-story-text { display: flex; flex: 1 1 240px; flex-direction: column; gap: 2px; min-width: 0; }
 .gw-story-name { font-size: 14px; font-weight: 600; color: var(--fh-fg); }
 .gw-story.ist-neon .gw-story-name { font-family: var(--fh-mono); color: var(--fh-neon); }
 .gw-story.ist-rot .gw-story-name { font-family: var(--fh-mono); color: var(--fh-danger); }
@@ -1809,14 +1808,5 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   color: var(--fh-muted-fg);
 }
 
-.gw-musik {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-top: 14px;
-  padding: 10px 12px;
-  border: 1px dashed color-mix(in srgb, var(--fh-gold) 45%, transparent);
-  border-radius: var(--fh-radius-sm);
-}
-.gw-musik-datei { display: inline-flex; align-items: center; cursor: pointer; }
+/* Musik je Story (admin-gateway.js, Migration 34) */
+.gw-musik-datei { display: inline-flex; align-items: center; white-space: nowrap; cursor: pointer; }
