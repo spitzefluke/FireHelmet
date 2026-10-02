@@ -93,7 +93,8 @@
   let lauf = null;          // { story, id, n, vorschau, timer, szeneAb }
   let aktuelleId = null;    // story_id der zuletzt gesehenen Zeile
   let letztesEnde = null;   // story_ende_at der zuletzt gesehenen Zeile
-  let musikVersion = null;  // live_event.musik_version
+  let musikVersion = null;  // live_event.musik_version (Disco, aus 29)
+  let musikVersionen = {};  // live_event.musik_versionen: Story -> Version (34)
   let gehackt = false;      // Systemausfall: bleibt bis zur naechsten Story
   let nachregen = false;    // nach dem Sturm: leiser Regen bis zum naechsten Event
   let sturmNachwirkung = true;
@@ -937,30 +938,46 @@
   }
 
   /* ------------------------------------------------------
-     DISCO-MUSIK
-     Hochgeladen im Admin-Panel (Bucket "live-musik", Datei "disco");
-     ohne Upload die Datei music/disco.mp3 aus dem Repo.
+     MUSIK JE STORY (Migration 34)
+     Hochgeladen im Admin-Panel, Bucket "live-musik", Datei = Kennung
+     der Story ("riss", "sturm", ...). Eine Story mit Datei spielt sie
+     vom Start bis zum Ende in Schleife und blendet dann aus; wer
+     spaeter dazukommt, hoert an der passenden Stelle. Ohne Datei
+     bleibt die Story still. Die Disco hat ihren eigenen Ablauf (ab
+     Szene 3, Ausklang in Szene 5) und ohne Upload music/disco.mp3.
   ------------------------------------------------------ */
   let audio = null, fadeUhr = null, musikLaeuft = false;
+  const MUSIK_LAUT = 0.6;
 
-  function musikUrl() {
-    if (musikVersion && dbDa() && supabaseClient.storage) {
+  function musikUrl(st) {
+    st = st || "disco";
+    const version = musikVersionen[st] || (st === "disco" ? musikVersion : null);
+    if (version && dbDa() && supabaseClient.storage) {
       try {
-        const d = supabaseClient.storage.from("live-musik").getPublicUrl("disco").data;
-        if (d && d.publicUrl) return d.publicUrl + "?v=" + encodeURIComponent(musikVersion);
-      } catch (e) { /* dann die Datei aus dem Repo */ }
+        const d = supabaseClient.storage.from("live-musik").getPublicUrl(st).data;
+        if (d && d.publicUrl) return d.publicUrl + "?v=" + encodeURIComponent(version);
+      } catch (e) { /* dann wie ohne Datei */ }
     }
-    return "music/disco.mp3";
+    return st === "disco" ? "music/disco.mp3" : null;
   }
 
-  function musikStart() {
-    const src = musikUrl();
+  /* abMs: wie weit die Story schon ist - die Musik springt an die
+     Stelle (bei kurzen Stuecken modulo Laenge, sie laeuft ja im
+     Kreis), sobald der Browser die Laenge kennt. */
+  function musikStart(src, abMs) {
+    if (!src) return;
     if (!audio) audio = new Audio();
     clearInterval(fadeUhr);
     if (audio.getAttribute("src") !== src) audio.src = src;
     audio.loop = true;
-    audio.volume = 0.6;
-    audio.currentTime = 0;
+    audio.volume = MUSIK_LAUT;
+    const ab = Math.max(0, (abMs || 0) / 1000);
+    const springen = function () {
+      const d = audio.duration;
+      try { audio.currentTime = isFinite(d) && d > 0 ? ab % d : 0; } catch (e) { /* dann von vorn */ }
+    };
+    if (ab > 0.5 && !(audio.readyState >= 1)) audio.addEventListener("loadedmetadata", springen, { once: true });
+    else springen();
     musikLaeuft = true;
     tonAbspielen();
   }
@@ -1099,7 +1116,7 @@
       });
     }
 
-    if (st === "disco" && n === 3 && !musikLaeuft) musikStart();
+    if (st === "disco" && n === 3 && !musikLaeuft) musikStart(musikUrl("disco"), 0);
     if (st === "disco" && n === 4) konfetti();
     if (st === "disco" && n === 5) { musikAus(2400); banderole(t("story.disco.thanks", "Danke fürs Tanzen, Crew!"), "Ändii", "#f0c96a", false); }
 
@@ -1169,6 +1186,7 @@
     timerWeg();
     regenStop();
     lauf = null;
+    if (musikLaeuft) musikAus(1500);
     if (window.fhStoryWetter) window.fhStoryWetter.ende();
     if (st === "riss" && window.fhRissFilm) window.fhRissFilm.ende();
     if (st === "hacked") loecherSpawnen(id, vorschau);
@@ -1194,6 +1212,7 @@
       return;
     }
     szeneBetreten(pos.n, pos.rest);
+    if (st !== "disco" && lauf) musikStart(musikUrl(st), ms);
   }
 
   function stoppen() {
@@ -1225,6 +1244,7 @@
   function zustand(z, erstesMal) {
     if (!z) return;
     musikVersion = z.musik_version || null;
+    musikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
     const id = z.story_id || null;
     if (id !== aktuelleId) {
       aktuelleId = id;

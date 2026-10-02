@@ -349,7 +349,7 @@ const GW_STORYS = [
   ["nordlicht", "Nordlicht", "17 s · Sternschnuppen und ein Wunsch · +150 Dublonen", "violett"],
   ["nebel", "Geisterschiff", "14 s · Nebel und ein Fluch · +150 Dublonen", "papier"],
   ["flut", "Sturmflut", "13,6 s · Land unter und Treibgut · +150 Dublonen", "wasser"],
-  ["disco", "Disco-Party", "Endlos, bis du sie beendest · mit Musik (unten hochladen)", "gold"],
+  ["disco", "Disco-Party", "Endlos, bis du sie beendest · Musik ab der Tanzfläche (ohne eigene Datei: music/disco.mp3)", "gold"],
   ["ende", "Systemausfall", "12 s · beendet das Event – die Seite bleibt für alle gehackt, bis die nächste Story startet oder du wiederherstellst", "rot"],
   ["werbung", "Werbungsflut", "bis 1 min · ??? spamt 32 Fenster · 6 Secrets à +25 Dublonen (max. 150)", "neon"],
   ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – bereitet das nächste Event vor", "violett"],
@@ -387,18 +387,54 @@ function buildGatewayStorysHtml() {
     <div class="gw-story-liste">${zeilen}</div>
     <p id="gw-story-status" class="gw-live-status" role="status" aria-live="polite"></p>
 
-    <div class="gw-musik">
-      <div class="gw-musik-text">
-        <span class="gw-story-name">Disco-Musik</span>
-        <span id="gw-musik-stand" class="gw-story-info">Lade …</span>
-      </div>
-      <label class="gw-live-knopf gw-musik-datei">Datei wählen<input type="file" accept="audio/*" onchange="gwMusikHochladen(this)" hidden></label>
-      <button type="button" class="gw-live-knopf" onclick="gwMusikProbe()">Anhören</button>
-      <button type="button" class="gw-live-knopf" onclick="gwMusikEntfernen()">Entfernen</button>
-    </div>
-    <p id="gw-musik-status" class="gw-live-status" role="status" aria-live="polite"></p>
-    <p class="gateway-status-sub">Die Musik liegt in Supabase Storage (Bucket „live-musik“) und wird bei allen abgespielt, sobald die Disco läuft. Ohne eigene Datei läuft music/disco.mp3. Höchstens 15 MB.</p>
+    ${buildGatewayMusikHtml()}
   `;
+}
+
+/* ------------------------------------------------------
+   LIVE-EVENT: MUSIK JE STORY (Migration 34)
+   ---------------------------------------------------
+   Jede Story kann eine eigene Datei bekommen (Bucket "live-musik",
+   Dateiname = Kennung der Story). Sie laeuft bei allen vom Start bis
+   zum Ende der Story in Schleife und blendet dann aus - auch in der
+   Vorschau, so hoert man sie vorher. Die Disco spielt ab der
+   Tanzflaeche und ohne eigene Datei music/disco.mp3.
+------------------------------------------------------ */
+const GW_MUSIK_STORYS = GW_STORYS.map(([id, name, , ton]) => [id, name, ton])
+  .concat([["gegenhack_sieg", "Gegenhack: Sieg", "neon"], ["gegenhack_niederlage", "Gegenhack: Niederlage", "rot"]]);
+let gwMusikVersionen = {};
+let gwMusikVersionAlt = null;  // live_event.musik_version aus 29 (Disco)
+
+function buildGatewayMusikHtml() {
+  const zeilen = GW_MUSIK_STORYS.map(([id, name, ton]) => `
+    <div class="gw-story ist-${ton}">
+      <div class="gw-story-text"><span class="gw-story-name">${name}</span><span id="gw-musik-stand-${id}" class="gw-story-info">Lade …</span></div>
+      <div class="gw-story-knoepfe">
+        <label class="gw-live-knopf gw-musik-datei">Datei wählen<input type="file" accept="audio/*" onchange="gwMusikHochladen('${id}', this)" hidden></label>
+        <button type="button" class="gw-live-knopf" onclick="gwMusikProbe('${id}')">Anhören</button>
+        <button type="button" class="gw-live-knopf" onclick="gwMusikEntfernen('${id}')">Entfernen</button>
+      </div>
+    </div>`).join("");
+  return `
+    <p class="gw-plan-ueberschrift">Musik je Story</p>
+    <div class="gw-story-liste">${zeilen}</div>
+    <p id="gw-musik-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <p class="gateway-status-sub">Die Musik liegt in Supabase Storage (Bucket „live-musik“) und läuft bei allen, solange die Story läuft – in Schleife, am Ende ausgeblendet. Wer später dazukommt, hört an der passenden Stelle. Höchstens 15 MB je Datei.</p>
+  `;
+}
+
+function gwMusikVersion(id) {
+  return gwMusikVersionen[id] || (id === "disco" ? gwMusikVersionAlt : null);
+}
+
+function gwMusikStandZeigen() {
+  GW_MUSIK_STORYS.forEach(([id]) => {
+    const el = document.getElementById("gw-musik-stand-" + id);
+    if (!el) return;
+    const v = gwMusikVersion(id);
+    if (v) el.textContent = "Eigene Datei (Version " + v + ")";
+    else el.textContent = id === "disco" ? "Standard: music/disco.mp3" : "Keine Musik – die Story läuft still";
+  });
 }
 
 /* ------------------------------------------------------
@@ -849,10 +885,9 @@ async function gwStoryLageLaden() {
   gwGegenhackLageLaden();
   gwPlaeneLaden();
   const ziel = document.getElementById("gw-story-jetzt");
-  const musik = document.getElementById("gw-musik-stand");
   if (!ziel || !supabaseClient) return;
   try {
-    const { data, error } = await supabaseClient.from("live_event").select("story, story_at, story_ende_at, musik_version").eq("id", 1).maybeSingle();
+    const { data, error } = await supabaseClient.from("live_event").select("*").eq("id", 1).maybeSingle();
     if (error) throw error;
     const z = data || {};
     if (!z.story) ziel.textContent = "Gerade läuft keine Story.";
@@ -860,7 +895,9 @@ async function gwStoryLageLaden() {
     else if (z.story === "gegenhack_niederlage") ziel.textContent = "Zuletzt: Gegenhack verloren – die Seite bleibt gehackt bis zum nächsten Event (oder bis du wiederherstellst).";
     else if (z.story === "disco" && !z.story_ende_at) ziel.textContent = "Disco läuft seit " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC) – „Disco beenden“ lässt sie ausklingen.";
     else ziel.textContent = "Zuletzt gestartet: " + gwStoryName(z.story) + " um " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC).";
-    if (musik) musik.textContent = z.musik_version ? "Eigene Datei hochgeladen (Version " + z.musik_version + ")" : "Standard: music/disco.mp3";
+    gwMusikVersionAlt = z.musik_version || null;
+    gwMusikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
+    gwMusikStandZeigen();
   } catch (err) {
     ziel.textContent = "Stand nicht lesbar – ist Migration 29 eingespielt?";
   }
@@ -919,53 +956,71 @@ async function gwStoryAufraeumen() {
   }
 }
 
-async function gwMusikHochladen(feld) {
+function gwMusikName(id) {
+  const z = GW_MUSIK_STORYS.find(([k]) => k === id);
+  return z ? z[1] : id;
+}
+
+async function gwMusikHochladen(id, feld) {
   const datei = feld && feld.files && feld.files[0];
   if (feld) feld.value = "";
-  if (!datei || !supabaseClient) return;
+  if (!datei || !supabaseClient || !GW_MUSIK_STORYS.some(([k]) => k === id)) return;
   if (!/^audio\//.test(datei.type || "")) { gwLiveStatus("gw-musik-status", "Das ist keine Audiodatei.", true); return; }
   if (datei.size > 15 * 1024 * 1024) { gwLiveStatus("gw-musik-status", "Die Datei ist größer als 15 MB.", true); return; }
-  gwLiveStatus("gw-musik-status", "Lade „" + datei.name + "“ hoch …", false);
+  gwLiveStatus("gw-musik-status", "Lade „" + datei.name + "“ für " + gwMusikName(id) + " hoch …", false);
   try {
-    const { error } = await supabaseClient.storage.from("live-musik").upload("disco", datei, { upsert: true, contentType: datei.type, cacheControl: "60" });
+    const { error } = await supabaseClient.storage.from("live-musik").upload(id, datei, { upsert: true, contentType: datei.type, cacheControl: "60" });
     if (error) throw error;
     /* Neue Version: alle Browser holen die Datei frisch, statt die
        alte aus dem Cache zu spielen. */
     const version = Date.now().toString(36);
-    const { data, error: e2 } = await supabaseClient.from("live_event").update({ musik_version: version, updated_at: new Date().toISOString() }).eq("id", 1).select("id");
+    const { error: e2 } = await supabaseClient.rpc("admin_story_musik", { p_story: id, p_version: version });
     if (e2) throw e2;
-    if (!data || !data.length) throw new Error("Keine Berechtigung für live_event");
-    gwLiveStatus("gw-musik-status", "✓ „" + datei.name + "“ ist die neue Disco-Musik.", false);
+    gwLiveStatus("gw-musik-status", "✓ „" + datei.name + "“ ist jetzt die Musik für " + gwMusikName(id) + ".", false);
     gwStoryLageLaden();
   } catch (err) {
     console.error("Musik hochladen fehlgeschlagen:", err);
-    gwLiveStatus("gw-musik-status", "Hochladen fehlgeschlagen: " + ((err && err.message) || err), true);
+    gwLiveStatus("gw-musik-status", "Hochladen fehlgeschlagen: " + ((err && err.message) || err) + " – ist Migration 34 eingespielt?", true);
   }
 }
 
-async function gwMusikEntfernen() {
+async function gwMusikEntfernen(id) {
   if (!supabaseClient) return;
+  if (!gwMusikVersion(id)) { gwLiveStatus("gw-musik-status", gwMusikName(id) + " hat keine eigene Musik.", true); return; }
   try {
-    const { error } = await supabaseClient.storage.from("live-musik").remove(["disco"]);
+    const { error } = await supabaseClient.storage.from("live-musik").remove([id]);
     if (error) throw error;
-    const { error: e2 } = await supabaseClient.from("live_event").update({ musik_version: null, updated_at: new Date().toISOString() }).eq("id", 1).select("id");
+    const { error: e2 } = await supabaseClient.rpc("admin_story_musik", { p_story: id, p_version: null });
     if (e2) throw e2;
-    gwLiveStatus("gw-musik-status", "✓ Eigene Musik entfernt – es läuft wieder music/disco.mp3.", false);
+    gwLiveStatus("gw-musik-status", id === "disco"
+      ? "✓ Eigene Disco-Musik entfernt – es läuft wieder music/disco.mp3."
+      : "✓ Musik für " + gwMusikName(id) + " entfernt – die Story läuft wieder still.", false);
     gwStoryLageLaden();
   } catch (err) {
     gwLiveStatus("gw-musik-status", "Entfernen fehlgeschlagen: " + ((err && err.message) || err), true);
   }
 }
 
-let gwMusikAudio = null;
-function gwMusikProbe() {
-  if (gwMusikAudio && !gwMusikAudio.paused) { gwMusikAudio.pause(); gwLiveStatus("gw-musik-status", "Angehalten.", false); return; }
-  const url = window.fhLiveStorys ? window.fhLiveStorys.musikUrl() : "music/disco.mp3";
+let gwMusikAudio = null, gwMusikAudioId = null;
+function gwMusikProbe(id) {
+  if (gwMusikAudio && !gwMusikAudio.paused) {
+    gwMusikAudio.pause();
+    const gleich = gwMusikAudioId === id;
+    gwMusikAudio = null;
+    if (gleich) { gwLiveStatus("gw-musik-status", "Angehalten.", false); return; }
+  }
+  const v = gwMusikVersion(id);
+  let url = id === "disco" ? "music/disco.mp3" : null;
+  if (v) {
+    try { url = supabaseClient.storage.from("live-musik").getPublicUrl(id).data.publicUrl + "?v=" + encodeURIComponent(v); } catch (e) { /* bleibt */ }
+  }
+  if (!url) { gwLiveStatus("gw-musik-status", gwMusikName(id) + " hat noch keine Musik – erst eine Datei wählen.", true); return; }
   gwMusikAudio = new Audio(url);
+  gwMusikAudioId = id;
   gwMusikAudio.volume = 0.6;
   gwMusikAudio.play().then(
-    () => gwLiveStatus("gw-musik-status", "Spielt – nochmal „Anhören“ zum Anhalten.", false),
-    () => gwLiveStatus("gw-musik-status", "Konnte nicht abgespielt werden – ist eine Datei vorhanden?", true));
+    () => gwLiveStatus("gw-musik-status", "Spielt: " + gwMusikName(id) + " – nochmal „Anhören“ zum Anhalten.", false),
+    () => gwLiveStatus("gw-musik-status", "Konnte nicht abgespielt werden – ist die Datei vorhanden?", true));
 }
 
 /* ------------------------------------------------------
