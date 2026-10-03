@@ -8,11 +8,11 @@
      riss     scripts/liveevent/riss-film.js  (nur die Story "Der Riss")
      wetter   scripts/liveevent/story-wetter.js (nur die Wetter-Storys)
 
-   Die Adressen stehen als <meta name="fh-nachladen"> im <head> von
-   index.html. Dort bekommen sie wie jedes andere Skript ihre
-   ?v=-Nummer von werkzeuge/cache-versionen.py (das Muster erfasst
-   auch data-src) - nach einem Merge holt der Browser also auch diese
-   Dateien frisch.
+   Die Adressen stehen fest hier in ADRESSEN - nicht im HTML, damit
+   keine Skriptadresse aus dem DOM gelesen wird (CodeQL: "DOM text
+   reinterpreted as HTML"). Ihre ?v=-Nummern pflegt
+   werkzeuge/cache-versionen.py in dieser Datei mit - nach einem Merge
+   holt der Browser also auch diese Dateien frisch.
 
    fhNachladen("riss").then(...) laedt jede Datei hoechstens einmal.
    Schlaegt das Laden fehl, darf der naechste Aufruf es neu versuchen.
@@ -21,15 +21,22 @@
 (function () {
   "use strict";
 
-  const laeuft = {};
+  const ADRESSEN = {
+    admin: "scripts/core/admin-gateway.js?v=2b6a98303f",
+    riss: "scripts/liveevent/riss-film.js?v=c60d9cac41",
+    wetter: "scripts/liveevent/story-wetter.js?v=09456d8d47"
+  };
+
+  const laeuft = Object.create(null);
 
   window.fhNachladen = function (name) {
     if (laeuft[name]) return laeuft[name];
-    const eintrag = document.querySelector('meta[name="fh-nachladen"][data-name="' + name + '"]');
-    if (!eintrag) return Promise.reject(new Error("fhNachladen: unbekannt – " + name));
+    if (!Object.prototype.hasOwnProperty.call(ADRESSEN, name)) {
+      return Promise.reject(new Error("fhNachladen: unbekannt – " + name));
+    }
     laeuft[name] = new Promise(function (fertig, fehler) {
       const s = document.createElement("script");
-      s.src = eintrag.getAttribute("data-src");
+      s.src = ADRESSEN[name];
       s.onload = function () { fertig(); };
       s.onerror = function () {
         delete laeuft[name];

@@ -17,9 +17,10 @@ Datei, die du gerade anfasst.
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 118 `<script defer>`-Tags in fester
 Reihenfolge, davon 104 aus diesem Repo. Drei große Skripte, die fast niemand braucht
-(`admin-gateway.js`, `riss-film.js`, `story-wetter.js`), stehen stattdessen als
-`<meta name="fh-nachladen">` im `<head>` und kommen erst bei Bedarf über
-`fhNachladen(name)` (`scripts/core/nachladen.js`). `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
+(`admin-gateway.js`, `riss-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
+`ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
+Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
+meldet CodeQL das als hohe Sicherheitslücke. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
 per CDN geladen, nicht gebündelt.
 
 Prüfen heißt hier:
