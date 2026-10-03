@@ -54,15 +54,17 @@
 
   /* ------------------------------------------------------
      DIE STORYS - Szenen und Dauer in ms, wie im Entwurf.
-     loop: Disco springt von Szene 4 zurueck auf 3, bis der Admin
-     sie beendet (story_ende_at), dann Szene 5.
+     loop: [von, bis] - die Story springt nach Szene "bis" zurueck auf
+     "von", bis der Admin sie beendet (story_ende_at), dann laeuft nur
+     noch die letzte Szene. Disco dreht Szene 3-4 im Kreis, der
+     Schatzregen bleibt in Szene 3 (der Regen selbst).
      Die fruehesten Belohnungszeiten in 29-live-storys.sql sind an
      diese Dauern angelehnt - wer sie aendert, prueft dort mit.
   ------------------------------------------------------ */
   const STORYS = {
     hacked:    { szenen: [1400, 4800, 3600, 10500, 3800, 3200, 5200] },
     ende:      { szenen: [2600, 3800, 2600, 2800] },
-    schatz:    { szenen: [3200, 2700, 15000, 4500] },
+    schatz:    { szenen: [3200, 2700, 15000, 4500], loop: [3, 3] },
     nebel:     { szenen: [2200, 2400, 3200, 3000, 3200] },
     flut:      { szenen: [1800, 2600, 3200, 3000, 3000] },
     disco:     { szenen: [1400, 2700, 4200, 3600, 2600], loop: [3, 4] },
@@ -90,7 +92,7 @@
   /* ------------------------------------------------------
      ZUSTAND
   ------------------------------------------------------ */
-  let lauf = null;          // { story, id, n, vorschau, timer, szeneAb }
+  let lauf = null;          // { story, id, n, vorschau, timer, szeneAb, beginn }
   let aktuelleId = null;    // story_id der zuletzt gesehenen Zeile
   let letztesEnde = null;   // story_ende_at der zuletzt gesehenen Zeile
   let musikVersion = null;  // live_event.musik_version (Disco, aus 29)
@@ -443,7 +445,7 @@
           muenze('5', 'radial-gradient(circle at 40% 32%, #fffaf0, var(--fh-gold-bright) 35%, var(--fh-gold) 70%, var(--fh-fire-deep))', 'var(--fh-gold-bright)', '#3a2408', '+5 · ' + T("treasure.rare", "selten"), 'var(--fh-gold-bright)', 'box-shadow:0 0 22px var(--fh-gold-bright);') +
           muenze(svg(IC.skull, '18px'), 'radial-gradient(circle at 40% 35%, #b3312c, var(--fh-red-deep) 60%, #2a0a09)', 'var(--fh-danger)', 'var(--fh-paper)', '−3', 'var(--fh-danger)') +
         '</div>' +
-        '<p style="margin:18px 0 0;font-size:13px;color:var(--fh-muted-fg);animation:fhStHoch .5s .9s both;">' + T("treasure.reward", "Jede Dublone zählt ×10 · ab 25 zusätzlich +1 Skillpunkt") + '</p>' +
+        '<p style="margin:18px 0 0;font-size:13px;color:var(--fh-muted-fg);animation:fhStHoch .5s .9s both;">' + T("treasure.reward", "Jede Dublone zählt ×10 (höchstens 600) · ab 25 zusätzlich +1 Skillpunkt") + '</p>' +
       '</div>');
     }],
     ["schatz2", function () { return sz("schatz") === 2; }, function () { return aus(countdown()); }],
@@ -452,7 +454,7 @@
         '<div style="display:flex;align-items:center;gap:18px;padding:10px 18px;border:1px solid rgba(214,168,79,.5);border-radius:var(--fh-radius);background:rgba(8,10,16,.9);box-shadow:var(--fh-glow-gold), var(--fh-shadow-sm);animation:fhStHoch .4s both;">' +
           '<div style="display:flex;align-items:baseline;gap:10px;"><strong id="fh-schatz-punkte" style="display:inline-block;' + DISPLAY + 'font-size:56px;font-weight:500;line-height:1;color:var(--fh-gold-bright);text-shadow:var(--fh-glow-gold);font-variant-numeric:tabular-nums;">0</strong><span style="font-size:13px;color:var(--fh-muted-fg);">' + T("treasure.coins", "Dublonen") + '</span></div>' +
           '<span style="width:1px;align-self:stretch;background:linear-gradient(180deg, transparent, var(--fh-border-strong), transparent);"></span>' +
-          '<div style="display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--fh-muted-fg);"><span id="fh-schatz-zeit" style="' + MONO + 'font-size:18px;color:var(--fh-fg);">15 s</span><span>' + T("treasure.left", "übrig") + '</span></div>' +
+          '<div style="display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--fh-muted-fg);"><span id="fh-schatz-zeit" style="' + MONO + 'font-size:18px;color:var(--fh-fg);">0:00</span><span>' + T("treasure.running", "Regenzeit") + '</span></div>' +
           '<span id="fh-schatz-combo" hidden style="padding:4px 10px;border:1px solid var(--fh-gold-bright);border-radius:999px;font-size:12px;font-weight:600;color:var(--fh-gold-bright);"></span>' +
         '</div></div>');
     }],
@@ -615,7 +617,7 @@
      D = 1, Gold = 5, Fluch = -3; ab fuenf in Folge doppelte Beute.
   ------------------------------------------------------ */
   let schatz = null;        // { punkte, gefangen, verpasst, combo }
-  let muenzUhr = null, regenEnde = 0;
+  let muenzUhr = null, regenSeit = 0;
 
   function muenzStil(typ) {
     const gr = typ === "gold" ? 56 : 46;
@@ -651,21 +653,23 @@
     }
   }
 
-  function regenStart(dauer) {
+  /* Endlos: Muenzen fallen, bis regenStop() kommt (Admin beendet die
+     Story -> Szene 4). seit = wann der Regen begonnen hat, fuer die
+     Uhr in der Anzeige. Gemaechlich: 6-8 s vom oberen bis zum
+     unteren Rand, alle MUENZ_TAKT ms eine neue Muenze. */
+  const MUENZ_TAKT = 380;
+  function regenStart(seit) {
     clearInterval(muenzUhr);
     const layer = muenzEbene();
-    regenEnde = Date.now() + dauer;
+    regenSeit = seit;
     const schaedel = svg(IC.skull, "18px");
     muenzUhr = setInterval(function () {
-      const rest = Math.max(0, regenEnde - Date.now());
       const zeit = document.getElementById("fh-schatz-zeit");
-      if (zeit) zeit.textContent = Math.ceil(rest / 1000) + " s";
-      if (rest <= 0) { clearInterval(muenzUhr); muenzUhr = null; return; }
-      const fort = 1 - rest / 15000;
+      if (zeit) zeit.textContent = uhrzeit(Date.now() - regenSeit);
       const r = Math.random();
       const typ = r < 0.08 ? "gold" : r < 0.22 ? "fluch" : "normal";
       const w = document.createElement("div");
-      w.style.cssText = "position:absolute;top:0;left:" + (4 + Math.random() * 88).toFixed(1) + "%;will-change:transform;animation:fhStMuenzeFall " + (3.8 - fort * 1.4 + Math.random() * 0.8).toFixed(2) + "s linear forwards";
+      w.style.cssText = "position:absolute;top:0;left:" + (4 + Math.random() * 88).toFixed(1) + "%;will-change:transform;animation:fhStMuenzeFall " + (6 + Math.random() * 2).toFixed(2) + "s linear forwards";
       const b = document.createElement("button");
       b.type = "button";
       b.setAttribute("aria-label", typ === "fluch" ? t("story.treasure.cursedCoin", "Verfluchte Münze") : t("story.treasure.catch", "Dublone fangen"));
@@ -679,7 +683,13 @@
       });
       w.appendChild(b);
       layer.appendChild(w);
-    }, 260);
+    }, MUENZ_TAKT);
+  }
+
+  /* 75000 ms -> "1:15" */
+  function uhrzeit(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
   }
 
   function regenStop() {
@@ -1132,7 +1142,13 @@
 
     if (st === "schatz" && (n === 1 || !schatz)) schatz = { punkte: 0, gefangen: 0, verpasst: 0, combo: 0 };
     if (st === "schatz" && n === 1) konfetti();
-    if (st === "schatz" && n === 3) spaeter(function () { regenStart(Math.max(1000, lauf.rest || 15000)); schatzAnzeige(); }, 30);
+    /* Der Regen laeuft, bis der Admin ihn beendet - die Schleife
+       betritt Szene 3 alle 15 s neu, der Regen darf dann nicht neu
+       anfangen. Seit wann er laeuft, zaehlt die Uhr in der Anzeige. */
+    if (st === "schatz" && n === 3 && !muenzUhr) {
+      const regenSeit = Math.min(Date.now(), lauf.beginn + ZEITEN_IN_SZENE.schatz[2]);
+      spaeter(function () { regenStart(regenSeit); schatzAnzeige(); }, 30);
+    }
     if (st === "schatz" && n === 4) {
       regenStop();
       const pk = schatz ? schatz.punkte : 0;
@@ -1164,20 +1180,31 @@
   ------------------------------------------------------ */
 
   /* Wo steht eine Story nach "ms" Millisekunden? { n, rest } oder
-     null, wenn sie vorbei ist. Disco dreht Szene 3-4 im Kreis, bis
-     endeMs gesetzt ist - dann laeuft nur noch Szene 5. */
+     null, wenn sie vorbei ist. Eine Story mit loop dreht ihre Schleife
+     im Kreis, bis endeMs gesetzt ist - dann laeuft nur noch die
+     letzte Szene. */
   function position(st, ms, endeMs) {
     const def = STORYS[st];
     const d = def.szenen;
     if (def.loop) {
+      const letzte = d.length;
       if (endeMs) {
         const seit = Math.max(0, Date.now() - endeMs);
-        return seit < d[4] ? { n: 5, rest: d[4] - seit } : null;
+        return seit < d[letzte - 1] ? { n: letzte, rest: d[letzte - 1] - seit } : null;
       }
-      if (ms < d[0]) return { n: 1, rest: d[0] - ms };
-      if (ms < d[0] + d[1]) return { n: 2, rest: d[0] + d[1] - ms };
-      const m = (ms - d[0] - d[1]) % (d[2] + d[3]);
-      return m < d[2] ? { n: 3, rest: d[2] - m } : { n: 4, rest: d[2] + d[3] - m };
+      const von = def.loop[0], bis = def.loop[1];
+      const vorher = ZEITEN_IN_SZENE[st][von - 1];
+      if (ms < vorher) {
+        for (let i = 0; i < von - 1; i++) {
+          if (ms < ZEITEN_IN_SZENE[st][i] + d[i]) return { n: i + 1, rest: ZEITEN_IN_SZENE[st][i] + d[i] - ms };
+        }
+      }
+      const runde = ZEITEN_IN_SZENE[st][bis - 1] + d[bis - 1] - vorher;
+      let m = (ms - vorher) % runde;
+      for (let n = von; n <= bis; n++) {
+        if (m < d[n - 1]) return { n: n, rest: d[n - 1] - m };
+        m -= d[n - 1];
+      }
     }
     if (ms >= def.gesamt) return null;
     let summe = 0;
@@ -1229,7 +1256,8 @@
     gehackt = false;
     nachregen = false;
     if (st === "hacked") loecherWeg();
-    lauf = { story: st, id: id, vorschau: !!vorschau, n: 0, ausklingen: !!endeMs };
+    if (st === "schatz") schatz = null;   // neuer Regen, neue Beute - auch beim spaeten Einstieg
+    lauf = { story: st, id: id, vorschau: !!vorschau, n: 0, ausklingen: !!endeMs, beginn: Date.now() - ms };
     const pos = position(st, ms, endeMs);
     if (!pos) {
       /* Schon vorbei: nur den Dauerzustand herstellen. */
@@ -1255,7 +1283,7 @@
     anzeigen();
   }
 
-  /* Disco beenden: sofort in den Ausklang. */
+  /* Endlos-Story (Disco, Schatzregen) beenden: sofort in die letzte Szene. */
   function ausklingen() {
     if (!lauf || !STORYS[lauf.story].loop || lauf.ausklingen) return;
     lauf.ausklingen = true;
