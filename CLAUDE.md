@@ -15,8 +15,11 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 117 `<script defer>`-Tags in fester
-Reihenfolge, davon 103 aus diesem Repo. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 118 `<script defer>`-Tags in fester
+Reihenfolge, davon 104 aus diesem Repo. Drei große Skripte, die fast niemand braucht
+(`admin-gateway.js`, `riss-film.js`, `story-wetter.js`), stehen stattdessen als
+`<meta name="fh-nachladen">` im `<head>` und kommen erst bei Bedarf über
+`fhNachladen(name)` (`scripts/core/nachladen.js`). `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
 per CDN geladen, nicht gebündelt.
 
 Prüfen heißt hier:
@@ -109,6 +112,11 @@ gemeinsame Grundlage:
 Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `wheel/`, …).
 **Die Ladereihenfolge in `index.html` ist tragend** — ein neues `<script>` gehört an die
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
+
+Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
+`window.fhStoryWetter` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+nach `fhNachladen(...)`. Was andere Dateien früher brauchen, gehört in die kleine
+Immer-geladen-Datei daneben (`admin-zugang.js`: `isAuthorizedAdmin`, `updateGatewayPage`).
 
 ### CSS
 

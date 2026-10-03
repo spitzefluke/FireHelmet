@@ -29,14 +29,9 @@
    eigenen Spielerzeile abhaengt.
 ====================================================== */
 
-function getGoogleEmail(user) {
-  return user ? user.email : null;
-}
-
-function isAuthorizedAdmin(user) {
-  const email = getGoogleEmail(user);
-  return !!email && typeof FIRE_HELMET_CONFIG !== "undefined" && email.toLowerCase() === (FIRE_HELMET_CONFIG.ownerEmail || "").toLowerCase();
-}
+/* getGoogleEmail() und isAuthorizedAdmin() stehen in
+   scripts/core/admin-zugang.js - die braucht die Seite auch, bevor
+   diese Datei nachgeladen ist (siehe scripts/core/nachladen.js). */
 
 async function loginAdminWithGoogle() {
   const statusEl = document.getElementById("gateway-login-status");

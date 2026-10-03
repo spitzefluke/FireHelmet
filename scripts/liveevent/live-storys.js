@@ -1043,15 +1043,36 @@
   /* ------------------------------------------------------
      WAS BEIM BETRETEN EINER SZENE PASSIERT
   ------------------------------------------------------ */
+  /* Wie weit die laufende Szene gerade ist (ms) - auch dann richtig,
+     wenn seit dem Betreten Zeit vergangen ist (Nachladen). */
+  function imSzeneMs() {
+    const dauer = STORYS[lauf.story].szenen[lauf.n - 1];
+    const beimBetreten = dauer - (lauf.rest || dauer);
+    return Math.min(dauer, beimBetreten + (Date.now() - (lauf.seit || Date.now())));
+  }
+
+  const WETTER_STORYS = ["nebel", "sturm", "flut", "nordlicht"];
+  function wetterSzene(st, n) {
+    if (window.fhStoryWetter.STORYS.indexOf(st) < 0) return;
+    if (window.fhStoryWetter.laeuft() !== st) window.fhStoryWetter.start(st, n, imSzeneMs());
+    else window.fhStoryWetter.szene(n, imSzeneMs());
+  }
+
   function onSzene(st, n) {
     const id = lauf.id, vorschau = lauf.vorschau;
 
     /* Wetter-Storys (story-wetter.js): beim ersten Betreten starten -
-       an der Stelle, an der man einsteigt -, danach weiterschalten. */
-    if (window.fhStoryWetter && window.fhStoryWetter.STORYS.indexOf(st) >= 0) {
-      const imSzene = STORYS[st].szenen[n - 1] - (lauf.rest || STORYS[st].szenen[n - 1]);
-      if (window.fhStoryWetter.laeuft() !== st) window.fhStoryWetter.start(st, n, imSzene);
-      else window.fhStoryWetter.szene(n, imSzene);
+       an der Stelle, an der man einsteigt -, danach weiterschalten.
+       Die Datei wird erst beim ersten Mal nachgeladen
+       (scripts/core/nachladen.js); was das Laden dauert, wird danach
+       uebersprungen, damit alle im Takt bleiben. */
+    if (WETTER_STORYS.indexOf(st) >= 0) {
+      if (window.fhStoryWetter) wetterSzene(st, n);
+      else if (window.fhNachladen) {
+        window.fhNachladen("wetter").then(function () {
+          if (lauf && lauf.id === id && lauf.story === st && window.fhStoryWetter) wetterSzene(st, lauf.n);
+        }, function (e) { console.warn(e); });
+      }
     }
     const wetter = function (text, von, farbe) {
       /* Die Belohnung wurde eine Szene vorher abgeholt (oder jetzt). */
@@ -1083,9 +1104,15 @@
 
     /* Der Riss (32): einmal je Lauf starten - an der Stelle, an der man
        einsteigt. Wer "Ueberspringen" drueckt, bekommt ihn nicht wieder. */
-    if (st === "riss" && !lauf.rissGestartet && window.fhRissFilm) {
+    if (st === "riss" && !lauf.rissGestartet) {
       lauf.rissGestartet = true;
-      window.fhRissFilm.start({ ab: ZEITEN_IN_SZENE.riss[n - 1] + STORYS.riss.szenen[n - 1] - lauf.rest, vorschau: vorschau });
+      const rissStart = function () {
+        if (!lauf || lauf.id !== id || lauf.story !== "riss" || !window.fhRissFilm) return;
+        window.fhRissFilm.start({ ab: ZEITEN_IN_SZENE.riss[lauf.n - 1] + imSzeneMs(), vorschau: vorschau });
+      };
+      /* riss-film.js (84 KB) wird erst jetzt nachgeladen. */
+      if (window.fhRissFilm) rissStart();
+      else if (window.fhNachladen) window.fhNachladen("riss").then(rissStart, function (e) { console.warn(e); });
     }
 
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
@@ -1166,6 +1193,7 @@
     clearTimeout(lauf.timer);
     lauf.n = n;
     lauf.rest = rest;
+    lauf.seit = Date.now();
     onSzene(lauf.story, n);
     anzeigen();
     lauf.timer = spaeter(naechsteSzene, rest);

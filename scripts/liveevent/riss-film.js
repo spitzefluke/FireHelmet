@@ -127,7 +127,7 @@
   function attrsSetzen(el, p, svg) {
     const alt = el.__p || {};
     for (const k in p) {
-      if (k === "key" || k === "children") continue;
+      if (k === "key" || k === "children" || k === "male") continue;
       const v = p[k];
       if (k === "style") {
         const s = stilText(v);
@@ -140,6 +140,8 @@
       else el.setAttribute(name, v);
     }
     el.__p = p;
+    /* Canvas: "male" zeichnet nach jedem Abgleich hinein. */
+    if (typeof p.male === "function") p.male(el);
   }
 
   function neu(v, svg) {
@@ -265,7 +267,7 @@
     const STARS = Array.from({ length: 120 }, (_, i) => ({ x: rnd(i * 3.1) * SITE_W, y: rnd(i * 7.7 + 2) * SITE_H, r: 0.6 + rnd(i * 1.3) * 1.4, p: rnd(i * 9.1) * 6.28 }));
     function Background({ T }) {
       const pw = power(T, OFF.bg);
-      return _h("div", { style: { position: "absolute", inset: 0, background: C.page } }, _h("div", { style: { position: "absolute", inset: 0, opacity: pw, background: "radial-gradient(60% 50% at 78% 18%, rgba(240,201,106,.07), transparent 70%), radial-gradient(70% 60% at 20% 90%, rgba(42,74,114,.22), transparent 70%), radial-gradient(50% 40% at 10% 40%, rgba(217,67,30,.06), transparent 70%)" } }), _h("div", { style: { position: "absolute", inset: 0, opacity: pw } }, STARS.map((s, i) => _h("span", { key: i, style: { position: "absolute", left: s.x, top: s.y, width: s.r * 2, height: s.r * 2, borderRadius: "50%", background: "#dfe6f0", opacity: 0.25 + 0.35 * (0.5 + 0.5 * Math.sin(T * 0.9 + s.p)) } }))));
+      return _h("div", { style: { position: "absolute", inset: 0, background: C.page } }, _h("div", { style: { position: "absolute", inset: 0, opacity: pw, background: "radial-gradient(60% 50% at 78% 18%, rgba(240,201,106,.07), transparent 70%), radial-gradient(70% 60% at 20% 90%, rgba(42,74,114,.22), transparent 70%), radial-gradient(50% 40% at 10% 40%, rgba(217,67,30,.06), transparent 70%)" } }), _h("div", { style: { position: "absolute", inset: 0, opacity: pw } }, STARS.map((s, i) => _h("span", { key: i, className: "fh-riss-stern", style: { left: s.x, top: s.y, width: s.r * 2, height: s.r * 2, animationDelay: -(s.p / 0.9 % 6.98).toFixed(2) + "s" } }))));
     }
     const NAV = [
       ["ph-sign-in", "login"],
@@ -416,7 +418,7 @@
     function Scan({ T, level }) {
       if (level <= 0) return null;
       const off = T * 40 % 4;
-      return _h("div", { style: { position: "absolute", inset: 0, opacity: level, pointerEvents: "none" } }, _h("div", { style: { position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg, rgba(57,255,20,.07) 0 1px, transparent 1px 4px)", backgroundPosition: "0 " + off + "px" } }), _h("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(90% 70% at 50% 50%, rgba(57,255,20,.10), rgba(0,0,0,.45))" } }));
+      return _h("div", { style: { position: "absolute", inset: 0, opacity: level, pointerEvents: "none", willChange: "opacity" } }, _h("div", { style: { position: "absolute", left: 0, right: 0, top: -4, bottom: 0, backgroundImage: "repeating-linear-gradient(0deg, rgba(57,255,20,.07) 0 1px, transparent 1px 4px)", transform: "translateY(" + off.toFixed(2) + "px)", willChange: "transform" } }), _h("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(90% 70% at 50% 50%, rgba(57,255,20,.10), rgba(0,0,0,.45))" } }));
     }
     function GlitchBars({ T }) {
       let p = 0;
@@ -431,10 +433,10 @@
     function CodeRain({ T, from, to, max }) {
       const o = win(T, from, to, 0.8) * (max || 1);
       if (o <= 0) return null;
-      return _h("div", { style: { position: "absolute", left: 76, right: 0, top: 0, bottom: 0, overflow: "hidden", opacity: o, pointerEvents: "none" } }, Array.from({ length: 22 }, (_, i) => {
+      return _h("div", { style: { position: "absolute", left: 76, right: 0, top: 0, bottom: 0, overflow: "hidden", opacity: o, pointerEvents: "none", willChange: "opacity" } }, Array.from({ length: 22 }, (_, i) => {
         const sp = 90 + i % 5 * 40;
         const y = (T * sp + i * 137) % (SITE_H + 600) - 600;
-        return _h("div", { key: i, style: { position: "absolute", left: i * 4.6 + 1 + "%", top: y, display: "flex", flexDirection: "column", fontFamily: F_MONO, fontSize: 14, lineHeight: 1.25, color: C.neon, opacity: 0.18 + i % 4 * 0.08, textShadow: "0 0 6px rgba(57,255,20,.6)" } }, Array.from({ length: 26 }, (_2, j) => _h("span", { key: j }, glyph(i * 91 + j * 7 + Math.floor(T * 7 + j * 0.3)))));
+        return _h("div", { key: i, style: { position: "absolute", left: i * 4.6 + 1 + "%", top: 0, transform: "translateY(" + y.toFixed(1) + "px)", willChange: "transform", display: "flex", flexDirection: "column", fontFamily: F_MONO, fontSize: 14, lineHeight: 1.25, color: C.neon, opacity: 0.18 + i % 4 * 0.08, textShadow: "0 0 6px rgba(57,255,20,.6)" } }, Array.from({ length: 26 }, (_2, j) => _h("span", { key: j }, glyph(i * 91 + j * 7 + Math.floor(T * 7 + j * 0.3)))));
       }));
     }
     function Ticker({ T }) {
@@ -443,7 +445,7 @@
       const txt = L("ticker", "System kompromittiert · live-event beendet von ??? · alle stationen offline · widerstand ist zwecklos · ");
       const w = txt.length * 7.8;
       const x = -(T * 70 % w);
-      return _h("div", { style: { position: "absolute", left: 76, right: 0, top: 742, height: 34, overflow: "hidden", opacity: o, borderTop: "1px solid rgba(57,255,20,.3)", borderBottom: "1px solid rgba(57,255,20,.3)", background: "rgba(3,10,5,.85)" } }, _h("div", { style: { position: "absolute", left: x, top: 8, whiteSpace: "nowrap", fontFamily: F_MONO, fontSize: 13, letterSpacing: ".02em", textTransform: "uppercase", color: C.neon, textShadow: "0 0 6px rgba(57,255,20,.6)" } }, txt + txt + txt + txt));
+      return _h("div", { style: { position: "absolute", left: 76, right: 0, top: 742, height: 34, overflow: "hidden", opacity: o, borderTop: "1px solid rgba(57,255,20,.3)", borderBottom: "1px solid rgba(57,255,20,.3)", background: "rgba(3,10,5,.85)" } }, _h("div", { style: { position: "absolute", left: 0, top: 8, transform: "translateX(" + x.toFixed(1) + "px)", willChange: "transform", whiteSpace: "nowrap", fontFamily: F_MONO, fontSize: 13, letterSpacing: ".02em", textTransform: "uppercase", color: C.neon, textShadow: "0 0 6px rgba(57,255,20,.6)" } }, txt + txt + txt + txt));
     }
     const neonBox = { border: "1px solid rgba(57,255,20,.4)", borderRadius: 10, background: "rgba(3,10,5,.92)", boxShadow: "0 0 0 1px rgba(0,0,0,.6), 0 0 60px rgba(57,255,20,.18), 0 18px 40px rgba(0,0,0,.45)", fontFamily: F_MONO, color: C.neon };
     const goldBox = { border: "1px solid rgba(214,168,79,.6)", borderRadius: 10, background: "rgba(8,10,16,.94)", boxShadow: "0 0 30px rgba(240,201,106,.35), 0 18px 40px rgba(0,0,0,.45)", fontFamily: F_MONO, color: C.goldBright };
@@ -521,7 +523,42 @@
       const endText = win(T, 146, 149.6, 0.3);
       const gx = flick(T, 10, 12, 0.35) ? (rnd(Math.floor(T * 10)) - 0.5) * 24 : 0;
       const signal = win(T, 152, 159.6, 0.6) * (flick(T, 5, 13, 0.25) ? 0.3 : 1);
-      return _h("div", { style: { position: "absolute", inset: 0, background: C.page } }, _h("div", { style: { position: "absolute", inset: 0, opacity: noise * 0.6, backgroundImage: "repeating-linear-gradient(0deg, rgba(232,237,244,.05) 0 1px, transparent 1px 2px), repeating-linear-gradient(90deg, rgba(232,237,244,.035) 0 1px, transparent 1px 3px)", backgroundPosition: Math.floor(T * 24) % 3 + "px " + Math.floor(T * 24) % 2 + "px" } }), _h("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" } }, endText > 0 ? _h("p", { style: { position: "absolute", margin: 0, fontFamily: F_MONO, fontSize: 104, fontWeight: 700, letterSpacing: ".14em", color: C.danger, opacity: endText, transform: "translateX(" + gx + "px)", textShadow: gx ? -gx / 3 + "px 0 rgba(57,255,20,.6), " + gx / 3 + "px 0 rgba(66,184,255,.6)" : "0 0 30px rgba(229,57,53,.5)" } }, L("failure", "SYSTEMAUSFALL")) : null, signal > 0 ? _h("p", { style: { margin: 0, fontFamily: F_MONO, fontSize: 24, letterSpacing: ".3em", textTransform: "uppercase", color: C.lead, opacity: signal } }, L("signalLost", "Signal verloren")) : null));
+      return _h("div", { style: { position: "absolute", inset: 0, background: C.page } }, noise > 0 ? _h("div", { style: { position: "absolute", left: -3, top: -2, right: 0, bottom: 0, opacity: noise * 0.6, backgroundImage: "repeating-linear-gradient(0deg, rgba(232,237,244,.05) 0 1px, transparent 1px 2px), repeating-linear-gradient(90deg, rgba(232,237,244,.035) 0 1px, transparent 1px 3px)", transform: "translate(" + Math.floor(T * 24) % 3 + "px, " + Math.floor(T * 24) % 2 + "px)", willChange: "transform, opacity" } }) : null, _h("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" } }, endText > 0 ? _h("p", { style: { position: "absolute", margin: 0, fontFamily: F_MONO, fontSize: 104, fontWeight: 700, letterSpacing: ".14em", color: C.danger, opacity: endText, transform: "translateX(" + gx + "px)", textShadow: gx ? -gx / 3 + "px 0 rgba(57,255,20,.6), " + gx / 3 + "px 0 rgba(66,184,255,.6)" : "0 0 30px rgba(229,57,53,.5)" } }, L("failure", "SYSTEMAUSFALL")) : null, signal > 0 ? _h("p", { style: { margin: 0, fontFamily: F_MONO, fontSize: 24, letterSpacing: ".3em", textTransform: "uppercase", color: C.lead, opacity: signal } }, L("signalLost", "Signal verloren")) : null));
+    }
+    /* Das Leuchten um den Riss: zwei unscharfe Flaechen (Radius 16 und
+       60). Als SVG-Filter malte der Browser sie in jedem Bild in voller
+       Groesse neu - das war der teuerste Teil des Films. Hier auf ein
+       Canvas in Viertel-Aufloesung, das auf die Buehne gestreckt wird:
+       unscharf sieht es gleich aus, kostet aber ein Sechzehntel.
+       flaechen: [[Pfad, Farbe, Deckkraft, Radius in Buehnen-px], ...] */
+    function rissLeuchten(cv, flaechen) {
+      const c = cv.getContext("2d");
+      if (!c) return;
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.clearRect(0, 0, cv.width, cv.height);
+      const k = cv.width / 1920;
+      const mitFilter = "filter" in c;
+      flaechen.forEach(([d, farbe, deck, radius]) => {
+        const pfad = new Path2D(d);
+        c.save();
+        c.globalAlpha = deck;
+        c.fillStyle = farbe;
+        if (mitFilter) {
+          c.setTransform(k, 0, 0, k, 0, 0);
+          c.filter = "blur(" + (radius * k).toFixed(1) + "px)";
+          c.fill(pfad);
+        } else {
+          /* Ohne ctx.filter (aeltere Safari): nur den Schatten zeigen,
+             die Flaeche selbst liegt ausserhalb des Canvas. */
+          const weg = cv.width * 2;
+          c.setTransform(k, 0, 0, k, -weg, 0);
+          c.shadowColor = farbe;
+          c.shadowBlur = radius * k * 2;
+          c.shadowOffsetX = weg;
+          c.fill(pfad);
+        }
+        c.restore();
+      });
     }
     function riftSize(T) {
       const h = tw(T, 167.6, 172.2, 0, 780, Easing.easeOutExpo);
@@ -561,7 +598,7 @@
       const { w, h, blow } = riftSize(T);
       const open = clamp(w / 160, 0, 1);
       const cx = 960, cy = 540;
-      return _h("div", { style: { position: "absolute", inset: 0 } }, _h("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(" + (30 + open * 30) + "% " + (40 + open * 30) + "% at 50% 50%, rgba(53,59,128," + 0.5 * open + "), transparent 70%)" } }), _h("div", { style: { position: "absolute", left: cx - 5, top: cy - 5, width: 10, height: 10, borderRadius: "50%", background: N.a100, opacity: pt * (T < 168 ? 0.6 + 0.4 * Math.sin(T * 4) : 1), boxShadow: "0 0 " + (20 + pt * 30) + "px " + (6 + pt * 10) + "px rgba(181,171,252,.7)" } }), _h("svg", { width: "1920", height: "1080", viewBox: "0 0 1920 1080", style: { position: "absolute", inset: 0, overflow: "visible" } }, _h("defs", null, _h("linearGradient", { id: "rg", x1: "0", x2: "1", y1: "0", y2: "0" }, _h("stop", { offset: "0", stopColor: N.a600 }), _h("stop", { offset: ".32", stopColor: N.a300 }), _h("stop", { offset: ".5", stopColor: N.a100 }), _h("stop", { offset: ".68", stopColor: N.a300 }), _h("stop", { offset: "1", stopColor: N.a600 })), _h("filter", { id: "b1", x: "-50%", y: "-50%", width: "200%", height: "200%" }, _h("feGaussianBlur", { stdDeviation: "16" })), _h("filter", { id: "b2", x: "-100%", y: "-50%", width: "300%", height: "200%" }, _h("feGaussianBlur", { stdDeviation: "60" }))), h > 2 ? _h("g", null, _h("path", { d: riftPath(w + 120, h + 80, cx, cy), fill: N.glow, opacity: 0.9, filter: "url(#b2)" }), _h("path", { d: riftPath(w + 30, h + 20, cx, cy), fill: N.a500, opacity: 0.85, filter: "url(#b1)" }), _h("path", { d: riftPath(Math.max(2, w), h, cx, cy), fill: "url(#rg)" })) : null, CRACKS.map((c, i) => {
+      return _h("div", { style: { position: "absolute", inset: 0 } }, _h("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(60% 70% at 50% 50%, rgba(53,59,128,.5), transparent 70%)", opacity: open.toFixed(3), transform: "scale(" + ((30 + open * 30) / 60).toFixed(3) + ", " + ((40 + open * 30) / 70).toFixed(3) + ")", willChange: "transform, opacity" } }), _h("canvas", { width: 480, height: 270, style: { position: "absolute", left: 0, top: 0, width: 1920, height: 1080 }, male: (cv) => rissLeuchten(cv, h > 2 ? [[riftPath(w + 120, h + 80, cx, cy), N.glow, 0.9, 60], [riftPath(w + 30, h + 20, cx, cy), N.a500, 0.85, 16]] : []) }), _h("div", { style: { position: "absolute", left: cx - 5, top: cy - 5, width: 10, height: 10, borderRadius: "50%", background: N.a100, opacity: pt * (T < 168 ? 0.6 + 0.4 * Math.sin(T * 4) : 1), boxShadow: "0 0 " + (20 + pt * 30) + "px " + (6 + pt * 10) + "px rgba(181,171,252,.7)" } }), _h("svg", { width: "1920", height: "1080", viewBox: "0 0 1920 1080", style: { position: "absolute", inset: 0, overflow: "visible" } }, _h("defs", null, _h("linearGradient", { id: "rg", x1: "0", x2: "1", y1: "0", y2: "0" }, _h("stop", { offset: "0", stopColor: N.a600 }), _h("stop", { offset: ".32", stopColor: N.a300 }), _h("stop", { offset: ".5", stopColor: N.a100 }), _h("stop", { offset: ".68", stopColor: N.a300 }), _h("stop", { offset: "1", stopColor: N.a600 }))), h > 2 ? _h("g", null, _h("path", { d: riftPath(Math.max(2, w), h, cx, cy), fill: "url(#rg)" })) : null, CRACKS.map((c, i) => {
         const p = tw(T, c.t0, c.t0 + 2.2, 0, 1, MOTION.enter);
         if (p <= 0) return null;
         return _h("path", { key: i, d: c.d, pathLength: "1", fill: "none", stroke: N.a300, strokeWidth: "1.6", strokeDasharray: "1", strokeDashoffset: 1 - p, opacity: (0.5 + 0.5 * Math.sin(T * 5 + i)) * (1 - blow) });
@@ -676,7 +713,7 @@
       const o = win(T, 213.5, 282.4, 2);
       if (o <= 0) return null;
       const rot = T * 4;
-      return _h(_Frag, null, _h("div", { style: { position: "absolute", left: 960 - 1400, top: 540 - 1400, width: 2800, height: 2800, borderRadius: "50%", opacity: o * 0.55, transform: "rotate(" + rot + "deg) scaleY(.55)", background: "conic-gradient(from 0deg, transparent, rgba(150,138,224,.35), transparent 18%, rgba(240,201,106,.18), transparent 40%, rgba(66,184,255,.2), transparent 62%, rgba(150,138,224,.3), transparent 82%, rgba(229,90,60,.15), transparent)", WebkitMaskImage: "radial-gradient(circle, #000 8%, transparent 62%)", maskImage: "radial-gradient(circle, #000 8%, transparent 62%)" } }), _h("div", { style: { position: "absolute", left: 960 - 1500, top: 540 - 1500, width: 3e3, height: 3e3, opacity: o * (0.25 + 0.1 * Math.sin(T * 1.7)), transform: "rotate(" + -rot * 1.8 + "deg)", background: "repeating-conic-gradient(from 0deg, rgba(245,244,255,.22) 0deg 1.2deg, transparent 1.2deg 9deg)", WebkitMaskImage: "radial-gradient(circle, transparent 4%, #000 12%, transparent 55%)", maskImage: "radial-gradient(circle, transparent 4%, #000 12%, transparent 55%)" } }), _h("div", { style: { position: "absolute", left: 960 - 90, top: 540 - 90, width: 180, height: 180, borderRadius: "50%", opacity: o, background: "radial-gradient(circle, #fff, rgba(210,206,253,.9) 20%, rgba(150,138,224,.4) 50%, transparent 70%)", transform: "scale(" + (1 + 0.15 * Math.sin(T * 2.3)) + ")" } }));
+      return _h(_Frag, null, _h("div", { style: { position: "absolute", left: 960 - 1400, top: 540 - 1400, width: 2800, height: 2800, borderRadius: "50%", opacity: o * 0.55, transform: "rotate(" + rot.toFixed(2) + "deg) scaleY(.55)", willChange: "transform, opacity", background: "conic-gradient(from 0deg, transparent, rgba(150,138,224,.35), transparent 18%, rgba(240,201,106,.18), transparent 40%, rgba(66,184,255,.2), transparent 62%, rgba(150,138,224,.3), transparent 82%, rgba(229,90,60,.15), transparent)", WebkitMaskImage: "radial-gradient(circle, #000 8%, transparent 62%)", maskImage: "radial-gradient(circle, #000 8%, transparent 62%)" } }), _h("div", { style: { position: "absolute", left: 960 - 1500, top: 540 - 1500, width: 3e3, height: 3e3, opacity: o * (0.25 + 0.1 * Math.sin(T * 1.7)), transform: "rotate(" + (-rot * 1.8).toFixed(2) + "deg)", willChange: "transform, opacity", background: "repeating-conic-gradient(from 0deg, rgba(245,244,255,.22) 0deg 1.2deg, transparent 1.2deg 9deg)", WebkitMaskImage: "radial-gradient(circle, transparent 4%, #000 12%, transparent 55%)", maskImage: "radial-gradient(circle, transparent 4%, #000 12%, transparent 55%)" } }), _h("div", { style: { position: "absolute", left: 960 - 90, top: 540 - 90, width: 180, height: 180, borderRadius: "50%", opacity: o, background: "radial-gradient(circle, #fff, rgba(210,206,253,.9) 20%, rgba(150,138,224,.4) 50%, transparent 70%)", transform: "scale(" + (1 + 0.15 * Math.sin(T * 2.3)).toFixed(4) + ")", willChange: "transform, opacity" } }));
     }
     const CHAPTERS = [
       [t("home.kap1Nr", "Kapitel I — Auslaufen"), t("home.kap1Titel", "Romna liegt hinter uns")],
@@ -687,6 +724,72 @@
       [t("home.kap6Nr", "Kapitel VI — Land in Sicht"), t("home.kap6Titel", "Klippen, Dschungel, ein Licht")],
       [L("ch7Nr", "Kapitel VII"), L("ch7Title", "Die Schatzinsel")]
     ];
+    /* Tunnel: 9 Ringe (mit Zeiger-Strichen ab 250 s) und 420
+       Sternspuren. Als DOM-Elemente bewegte sich jedes Bild alles ueber
+       die ganze Flaeche - der Browser malte die Buehne jedes Mal neu.
+       Hier auf ein Canvas (2/3 Aufloesung), gleiche Formeln wie vorher. */
+    const transparentVon = (hex) => "rgba(" + parseInt(hex.slice(1, 3), 16) + "," + parseInt(hex.slice(3, 5), 16) + "," + parseInt(hex.slice(5, 7), 16) + ",0)";
+    WSTARS.forEach((s) => { s.c0 = transparentVon(s.c); });
+    function tunnelMalen(cv, T, D, v, rings, ticks, tunnelWob) {
+      const c = cv.getContext("2d");
+      if (!c) return;
+      const k = cv.width / 1920;
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.clearRect(0, 0, cv.width, cv.height);
+      if (rings > 0) {
+        const farbe = ticks > 0.5 ? C.gold : N.a500;
+        for (let i = 0; i < 9; i++) {
+          const z = 1.02 - (i / 9 + D * 0.11) % 1;
+          const rad = Math.min(3200, 300 / z);
+          const wb = tunnelWob(z);
+          const o = rings * Math.min(1, (1.02 - z) * 2.2) * Math.min(1, z * 5) * 0.55;
+          if (o <= 0) continue;
+          const bw = 1 + (1 - z) * 2.5;
+          const mx = 960 + wb.x, my = 540 + wb.y;
+          c.setTransform(k, 0, 0, k, 0, 0);
+          c.globalAlpha = o;
+          c.strokeStyle = farbe;
+          c.lineWidth = bw;
+          c.beginPath();
+          c.arc(mx, my, Math.max(0, rad - bw / 2), 0, Math.PI * 2);
+          c.stroke();
+          if (ticks > 0) {
+            const wd = 2 + (1 - z) * 2, ht = 10 + 40 * (1 - z);
+            c.globalAlpha = o * ticks;
+            c.fillStyle = C.goldBright;
+            for (let j = 0; j < 12; j++) {
+              const ang = (j * 30 + T * (i % 2 ? 12 : -12)) * Math.PI / 180;
+              c.setTransform(k, 0, 0, k, 0, 0);
+              c.translate(mx - 1 + wd / 2, my);
+              c.rotate(ang);
+              c.fillRect(-wd / 2, -rad + 2, wd, ht);
+            }
+          }
+        }
+      }
+      for (let i = 0; i < WSTARS.length; i++) {
+        const s = WSTARS[i];
+        const z = 1.02 - (s.ph + D * 0.34) % 1;
+        const z2 = Math.min(1.02, z + v * 0.34 * 0.07);
+        const hx = 960 + s.x * 560 / z, hy = 540 + s.y * 560 / z;
+        const tx = 960 + s.x * 560 / z2, ty = 540 + s.y * 560 / z2;
+        if (hx < -200 || hx > 2120 || hy < -200 || hy > 1280) continue;
+        const len = Math.max(2, Math.hypot(hx - tx, hy - ty));
+        const o = Math.min(1, (1.02 - z) * 1.6);
+        if (o <= 0) continue;
+        const wd = 1.2 + (1 - z) * 2.4;
+        c.setTransform(k, 0, 0, k, 0, 0);
+        c.translate(tx, ty);
+        c.rotate(Math.atan2(hy - ty, hx - tx));
+        const g = c.createLinearGradient(0, 0, len, 0);
+        g.addColorStop(0, s.c0);
+        g.addColorStop(1, s.c);
+        c.globalAlpha = o;
+        c.fillStyle = g;
+        c.fillRect(0, -wd / 2, len, wd);
+      }
+      c.globalAlpha = 1;
+    }
     function Warp({ T }) {
       if (T < 212.5 || T > 283.2) return null;
       const vis = win(T, 212.6, 283.2, 0.8);
@@ -695,30 +798,13 @@
       const tunnelWob = (z) => ({ x: Math.sin(T * 0.37) * 60 * (1 - z), y: Math.cos(T * 0.29) * 40 * (1 - z) });
       const rings = win(T, 223, 282.6, 2);
       const ticks = tw(T, 250, 254, 0, 1, MOTION.enter);
-      return _h("div", { style: { position: "absolute", inset: 0, opacity: vis, background: "radial-gradient(60% 60% at 50% 50%, " + N.a900 + ", " + C.page + " 70%)", filter: "sepia(" + (ageAt(T) * 0.9).toFixed(3) + ") saturate(" + (1 - ageAt(T) * 0.3).toFixed(3) + ")" } }, NEBULAE.map((n, i) => {
+      return _h("div", { style: { position: "absolute", inset: 0, opacity: vis, background: "radial-gradient(60% 60% at 50% 50%, " + N.a900 + ", " + C.page + " 70%)", filter: "sepia(" + (ageAt(T) * 0.9).toFixed(3) + ") saturate(" + (1 - ageAt(T) * 0.3).toFixed(3) + ")", willChange: "filter, opacity" } }, NEBULAE.map((n, i) => {
         const p = (T - n[0]) / 7;
         if (p <= 0 || p >= 1) return null;
         const size = 400 + p * p * 4200;
         const ox = Math.cos(i * 2.1) * p * 500, oy = Math.sin(i * 2.1) * p * 300;
-        return _h("div", { key: i, style: { position: "absolute", left: 960 + ox - size / 2, top: 540 + oy - size / 2, width: size, height: size, borderRadius: "50%", background: "radial-gradient(circle, " + n[1] + ", transparent 65%)", opacity: Math.sin(Math.PI * p) * 0.85 } });
-      }), _h(Kosmos, { T }), rings > 0 ? Array.from({ length: 9 }, (_, i) => {
-        const z = 1.02 - (i / 9 + D * 0.11) % 1;
-        const rad = Math.min(3200, 300 / z);
-        const wb = tunnelWob(z);
-        const o = rings * Math.min(1, (1.02 - z) * 2.2) * Math.min(1, z * 5) * 0.55;
-        return _h("div", { key: i, style: { position: "absolute", left: 960 + wb.x - rad, top: 540 + wb.y - rad, width: rad * 2, height: rad * 2, borderRadius: "50%", border: 1 + (1 - z) * 2.5 + "px solid " + (ticks > 0.5 ? C.gold : N.a500), opacity: o, boxSizing: "border-box" } }, ticks > 0 ? Array.from({ length: 12 }, (_2, k) => _h("span", { key: k, style: { position: "absolute", left: "50%", top: "50%", width: 2 + (1 - z) * 2, height: 10 + 40 * (1 - z), marginLeft: -1, background: C.goldBright, opacity: ticks, transform: "rotate(" + (k * 30 + T * (i % 2 ? 12 : -12)) + "deg) translateY(" + (-rad + 2) + "px)", transformOrigin: "50% 0" } })) : null);
-      }) : null, WSTARS.map((s, i) => {
-        const z = 1.02 - (s.ph + D * 0.34) % 1;
-        const z2 = Math.min(1.02, z + v * 0.34 * 0.07);
-        const hx = 960 + s.x * 560 / z, hy = 540 + s.y * 560 / z;
-        const tx = 960 + s.x * 560 / z2, ty = 540 + s.y * 560 / z2;
-        if (hx < -200 || hx > 2120 || hy < -200 || hy > 1280) return null;
-        const len = Math.max(2, Math.hypot(hx - tx, hy - ty));
-        const ang = Math.atan2(hy - ty, hx - tx) * 180 / Math.PI;
-        const o = Math.min(1, (1.02 - z) * 1.6);
-        const wd = 1.2 + (1 - z) * 2.4;
-        return _h("span", { key: i, style: { position: "absolute", left: tx, top: ty - wd / 2, width: len, height: wd, borderRadius: wd, background: "linear-gradient(90deg, transparent, " + s.c + ")", opacity: o, transform: "rotate(" + ang + "deg)", transformOrigin: "0 50%" } });
-      }), _h(Flyers, { T }), _h("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(10% 10% at 50% 50%, rgba(245,244,255," + clamp(v / 3, 0, 0.35) + "), transparent)" } }), _h("div", { style: { position: "absolute", inset: 0, opacity: ageAt(T) * 0.45, background: "radial-gradient(120% 100% at 50% 50%, transparent 35%, rgba(143,109,62,.8))", backgroundImage: "repeating-linear-gradient(0deg, rgba(232,218,185,.06) 0 1px, transparent 1px 3px)" } }));
+        return _h("div", { key: i, style: { position: "absolute", left: 460, top: 40, width: 1000, height: 1000, borderRadius: "50%", background: "radial-gradient(circle, " + n[1] + ", transparent 65%)", opacity: (Math.sin(Math.PI * p) * 0.85).toFixed(3), transform: "translate(" + ox.toFixed(1) + "px, " + oy.toFixed(1) + "px) scale(" + (size / 1000).toFixed(4) + ")", willChange: "transform, opacity" } });
+      }), _h(Kosmos, { T }), _h("canvas", { width: 1280, height: 720, style: { position: "absolute", left: 0, top: 0, width: 1920, height: 1080 }, male: (cv) => tunnelMalen(cv, T, D, v, rings, ticks, tunnelWob) }), _h(Flyers, { T }), _h("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(10% 10% at 50% 50%, rgba(245,244,255,.35), transparent)", opacity: (clamp(v / 3, 0, 0.35) / 0.35).toFixed(3), willChange: "opacity" } }), _h("div", { style: { position: "absolute", inset: 0, opacity: (ageAt(T) * 0.45).toFixed(3), willChange: "opacity", background: "radial-gradient(120% 100% at 50% 50%, transparent 35%, rgba(143,109,62,.8))", backgroundImage: "repeating-linear-gradient(0deg, rgba(232,218,185,.06) 0 1px, transparent 1px 3px)" } }));
     }
     function yearAt(T) {
       return 2026 - 306 * Easing.easeInOutCubic(clamp((T - 252) / 27, 0, 1));
@@ -776,7 +862,7 @@
       const stamp = tw(T, 293.2, 293.7, 0, 1, Easing.easeOutBack);
       const stampIn = T >= 293.2;
       const cx = [236, 736, 1236], cw = 484;
-      return _h("div", { style: { position: "absolute", inset: 0, overflow: "hidden", background: P.edge } }, _h("div", { style: { position: "absolute", inset: 0, transform: "scale(" + push + ")", transformOrigin: "55% 45%" } }, _h("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(120% 100% at 50% 45%, " + P.paper + " 0%, #dfcda6 55%, " + P.paperDark + " 85%, " + P.edge + " 100%)" } }), _h("div", { style: { position: "absolute", inset: 0, opacity: 0.35, backgroundImage: "repeating-linear-gradient(0deg, rgba(94,70,48,.05) 0 1px, transparent 1px 3px), radial-gradient(40% 30% at 22% 70%, rgba(143,109,62,.25), transparent 70%), radial-gradient(25% 20% at 80% 20%, rgba(143,109,62,.2), transparent 70%)" } }), _h("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: 132, display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "26px 0", background: "linear-gradient(90deg, " + P.leather + ", " + P.leatherHi + ")", boxShadow: "6px 0 18px rgba(53,37,26,.45)", boxSizing: "border-box", ...ink(T, 283.4) } }, _h("div", { style: { position: "absolute", top: 10, bottom: 10, right: 10, borderRight: "2px dashed " + P.thread, opacity: 0.55 } }), _h("div", { style: { width: 62, height: 62, borderRadius: "50%", display: "grid", placeItems: "center", background: "radial-gradient(circle at 40% 35%, #b43a26, " + P.wax + ")", boxShadow: "inset 0 -3px 6px rgba(0,0,0,.35), 0 3px 6px rgba(0,0,0,.35)", color: "#f0d6b0", fontSize: 30 } }, _h("i", { className: "ph ph-fire" })), _h("div", { style: { width: 60, height: 1, background: P.thread, opacity: 0.5 } }), OLD_NAV.map((ic, i) => _h("i", { key: i, className: "ph " + ic, style: { fontSize: 28, color: i === 2 ? "#f0d6b0" : P.thread, opacity: i === 2 ? 1 : 0.7 } }))), _h("div", { style: { position: "absolute", left: 162, right: 30, top: 26, display: "flex", alignItems: "center", justifyContent: "space-between", ...ink(T, 284) } }, _h("span", { style: { display: "flex", alignItems: "center", gap: 12, padding: "8px 20px", borderBottom: "1.5px solid " + P.inkSoft, fontFamily: FELL, fontStyle: "italic", fontSize: 22, color: P.inkSoft } }, _h("i", { className: "ph ph-magnifying-glass", style: { fontSize: 22 } }), L("oldSearch", "Seite aufschlagen …")), _h("div", { style: { display: "flex", alignItems: "center", gap: 16 } }, _h("span", { style: { display: "inline-flex", alignItems: "center", gap: 10, padding: "8px 18px", border: "1.5px solid " + P.gold, borderRadius: 4, fontFamily: FELL_SC, fontSize: 22, color: P.ink } }, _h("i", { className: "ph ph-coins", style: { fontSize: 22, color: P.gold } }), L("oldCoins", "1.250 Dublonen")), _h("span", { style: { padding: "8px 14px", border: "1.5px solid " + P.inkSoft, borderRadius: 4, fontFamily: FELL_SC, fontSize: 18, letterSpacing: ".12em", color: P.inkSoft } }, SPRACHE))), _h("div", { style: { position: "absolute", left: 236, width: 1484, top: 128, textAlign: "center" } }, _h("p", { style: { margin: 0, fontFamily: FELL_SC, fontSize: 22, letterSpacing: ".36em", color: P.rust, ...ink(T, 284.6) } }, "Anno Domini MDCCXX"), _h("h1", { style: { margin: "10px 0 0", fontFamily: FELL, fontSize: 96, fontWeight: 400, lineHeight: 1, color: P.ink, ...ink(T, 285.1) } }, L("oldTitle", "Stand der Dinge")), _h("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 14, margin: "14px 0 0", ...ink(T, 285.6) } }, _h("span", { style: { width: 120, height: 1, background: P.inkSoft } }), _h("i", { className: "ph ph-compass-rose", style: { fontSize: 22, color: P.inkSoft } }), _h("span", { style: { width: 120, height: 1, background: P.inkSoft } })), _h("p", { style: { margin: "14px 0 0", ...pNote, fontSize: 24, ...ink(T, 286) } }, L("oldLead", "Wo du überall stehengeblieben bist – mit Tinte festgehalten."))), _h(Ledger, { T, t0: 286.6, x: cx[0], y: 400, w: cw * 2 + 16, h: 250, row: true }, _h("img", { src: "scripts/image/logbuch2.webp", style: { width: 140, height: 196, objectFit: "cover", border: "2px solid " + P.inkSoft, filter: "sepia(1) contrast(.9) brightness(.9)" } }), _h("div", { style: { flex: 1, display: "flex", flexDirection: "column", gap: 10 } }, _h("p", { style: pKick }, L("read", "Weiterlesen")), _h("p", { style: pTitle }, t("home.kap2Titel", "Fünf Schlösser, kein Schlüssel")), _h("p", { style: pNote }, L("oldRead", "Logbuch II · Seite 4 von 8")), _h(InkBar, { p: 50 }))), _h(Ledger, { T, t0: 287.3, x: cx[2], y: 400, w: cw, h: 250 }, _h("p", { style: pKick }, L("oldWheel", "Kompassrose")), _h("p", { style: pTitle }, L("spinFree", "Dreh frei")), _h("p", { style: pNote }, L("oldDays", "Drei Tage in Folge")), _h("div", { style: { flex: 1 } }), _h("span", { style: { alignSelf: "flex-start", fontFamily: FELL_SC, fontSize: 20, letterSpacing: ".12em", color: P.rust, borderBottom: "1.5px solid " + P.rust } }, L("oldToWheel", "Zur Kompassrose ›"))), _h(Ledger, { T, t0: 288, x: cx[0], y: 676, w: cw, h: 290 }, _h("p", { style: pKick }, L("oldRace", "Seemeilen")), _h("p", { style: { ...pTitle, fontSize: 52 } }, "86 ", _h("span", { style: { ...pNote } }, L("of150", "von 150"))), _h("p", { style: pNote }, L("oldCourse", "Kurs: Kielwasser")), _h(InkBar, { p: 57 })), _h(Ledger, { T, t0: 288.7, x: cx[1], y: 676, w: cw, h: 290 }, _h("p", { style: pKick }, L("oldCode", "Chiffre")), _h("p", { style: { ...pTitle, fontSize: 52 } }, "VII ", _h("span", { style: { ...pNote } }, L("oldOf12", "von XII"))), _h("p", { style: pNote }, L("oldCodesLeft", "Fünf noch nicht entschlüsselt")), _h(InkBar, { p: 58 })), _h(Ledger, { T, t0: 289.4, x: cx[2], y: 676, w: cw, h: 290 }, _h("p", { style: pKick }, L("board", "Rangliste")), [["I.", "Zugfahrer Dave", "4.820"], ["II.", "Flitzpiepe", "3.910"], ["III.", L("you", "Du"), "2.140"]].map((r, i) => _h("div", { key: i, style: { display: "flex", alignItems: "baseline", gap: 12, borderBottom: "1px dotted " + P.inkSoft, paddingBottom: 6 } }, _h("span", { style: { width: 40, fontFamily: FELL_SC, fontSize: 20, color: P.rust } }, r[0]), _h("span", { style: { flex: 1, fontFamily: FELL, fontStyle: "italic", fontSize: 24, color: P.ink } }, r[1]), _h("span", { style: { fontFamily: FELL, fontSize: 20, color: P.inkSoft } }, r[2])))), stampIn ? _h("div", { style: { position: "absolute", right: 70, bottom: 40, padding: "10px 22px", border: "3px solid " + P.wax, borderRadius: 6, fontFamily: FELL_SC, fontSize: 24, letterSpacing: ".14em", color: P.wax, opacity: 0.85 * Math.min(1, stamp), transform: "rotate(-6deg) scale(" + (2.2 - 1.2 * stamp) + ")" } }, L("stamp", "Kapitel VIII · Jenseits des Risses")) : null), _h("div", { style: { position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(70% 60% at 45% 40%, rgba(255,190,110," + 0.12 * candle + "), transparent 60%), radial-gradient(130% 110% at 50% 50%, transparent 55%, rgba(53,37,26,.55))" } }));
+      return _h("div", { style: { position: "absolute", inset: 0, overflow: "hidden", background: P.edge } }, _h("div", { style: { position: "absolute", inset: 0, transform: "scale(" + push.toFixed(5) + ")", transformOrigin: "55% 45%", willChange: "transform" } }, _h("div", { style: { position: "absolute", inset: 0, background: "radial-gradient(120% 100% at 50% 45%, " + P.paper + " 0%, #dfcda6 55%, " + P.paperDark + " 85%, " + P.edge + " 100%)" } }), _h("div", { style: { position: "absolute", inset: 0, opacity: 0.35, backgroundImage: "repeating-linear-gradient(0deg, rgba(94,70,48,.05) 0 1px, transparent 1px 3px), radial-gradient(40% 30% at 22% 70%, rgba(143,109,62,.25), transparent 70%), radial-gradient(25% 20% at 80% 20%, rgba(143,109,62,.2), transparent 70%)" } }), _h("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, width: 132, display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "26px 0", background: "linear-gradient(90deg, " + P.leather + ", " + P.leatherHi + ")", boxShadow: "6px 0 18px rgba(53,37,26,.45)", boxSizing: "border-box", ...ink(T, 283.4) } }, _h("div", { style: { position: "absolute", top: 10, bottom: 10, right: 10, borderRight: "2px dashed " + P.thread, opacity: 0.55 } }), _h("div", { style: { width: 62, height: 62, borderRadius: "50%", display: "grid", placeItems: "center", background: "radial-gradient(circle at 40% 35%, #b43a26, " + P.wax + ")", boxShadow: "inset 0 -3px 6px rgba(0,0,0,.35), 0 3px 6px rgba(0,0,0,.35)", color: "#f0d6b0", fontSize: 30 } }, _h("i", { className: "ph ph-fire" })), _h("div", { style: { width: 60, height: 1, background: P.thread, opacity: 0.5 } }), OLD_NAV.map((ic, i) => _h("i", { key: i, className: "ph " + ic, style: { fontSize: 28, color: i === 2 ? "#f0d6b0" : P.thread, opacity: i === 2 ? 1 : 0.7 } }))), _h("div", { style: { position: "absolute", left: 162, right: 30, top: 26, display: "flex", alignItems: "center", justifyContent: "space-between", ...ink(T, 284) } }, _h("span", { style: { display: "flex", alignItems: "center", gap: 12, padding: "8px 20px", borderBottom: "1.5px solid " + P.inkSoft, fontFamily: FELL, fontStyle: "italic", fontSize: 22, color: P.inkSoft } }, _h("i", { className: "ph ph-magnifying-glass", style: { fontSize: 22 } }), L("oldSearch", "Seite aufschlagen …")), _h("div", { style: { display: "flex", alignItems: "center", gap: 16 } }, _h("span", { style: { display: "inline-flex", alignItems: "center", gap: 10, padding: "8px 18px", border: "1.5px solid " + P.gold, borderRadius: 4, fontFamily: FELL_SC, fontSize: 22, color: P.ink } }, _h("i", { className: "ph ph-coins", style: { fontSize: 22, color: P.gold } }), L("oldCoins", "1.250 Dublonen")), _h("span", { style: { padding: "8px 14px", border: "1.5px solid " + P.inkSoft, borderRadius: 4, fontFamily: FELL_SC, fontSize: 18, letterSpacing: ".12em", color: P.inkSoft } }, SPRACHE))), _h("div", { style: { position: "absolute", left: 236, width: 1484, top: 128, textAlign: "center" } }, _h("p", { style: { margin: 0, fontFamily: FELL_SC, fontSize: 22, letterSpacing: ".36em", color: P.rust, ...ink(T, 284.6) } }, "Anno Domini MDCCXX"), _h("h1", { style: { margin: "10px 0 0", fontFamily: FELL, fontSize: 96, fontWeight: 400, lineHeight: 1, color: P.ink, ...ink(T, 285.1) } }, L("oldTitle", "Stand der Dinge")), _h("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 14, margin: "14px 0 0", ...ink(T, 285.6) } }, _h("span", { style: { width: 120, height: 1, background: P.inkSoft } }), _h("i", { className: "ph ph-compass-rose", style: { fontSize: 22, color: P.inkSoft } }), _h("span", { style: { width: 120, height: 1, background: P.inkSoft } })), _h("p", { style: { margin: "14px 0 0", ...pNote, fontSize: 24, ...ink(T, 286) } }, L("oldLead", "Wo du überall stehengeblieben bist – mit Tinte festgehalten."))), _h(Ledger, { T, t0: 286.6, x: cx[0], y: 400, w: cw * 2 + 16, h: 250, row: true }, _h("img", { src: "scripts/image/logbuch2.webp", style: { width: 140, height: 196, objectFit: "cover", border: "2px solid " + P.inkSoft, filter: "sepia(1) contrast(.9) brightness(.9)" } }), _h("div", { style: { flex: 1, display: "flex", flexDirection: "column", gap: 10 } }, _h("p", { style: pKick }, L("read", "Weiterlesen")), _h("p", { style: pTitle }, t("home.kap2Titel", "Fünf Schlösser, kein Schlüssel")), _h("p", { style: pNote }, L("oldRead", "Logbuch II · Seite 4 von 8")), _h(InkBar, { p: 50 }))), _h(Ledger, { T, t0: 287.3, x: cx[2], y: 400, w: cw, h: 250 }, _h("p", { style: pKick }, L("oldWheel", "Kompassrose")), _h("p", { style: pTitle }, L("spinFree", "Dreh frei")), _h("p", { style: pNote }, L("oldDays", "Drei Tage in Folge")), _h("div", { style: { flex: 1 } }), _h("span", { style: { alignSelf: "flex-start", fontFamily: FELL_SC, fontSize: 20, letterSpacing: ".12em", color: P.rust, borderBottom: "1.5px solid " + P.rust } }, L("oldToWheel", "Zur Kompassrose ›"))), _h(Ledger, { T, t0: 288, x: cx[0], y: 676, w: cw, h: 290 }, _h("p", { style: pKick }, L("oldRace", "Seemeilen")), _h("p", { style: { ...pTitle, fontSize: 52 } }, "86 ", _h("span", { style: { ...pNote } }, L("of150", "von 150"))), _h("p", { style: pNote }, L("oldCourse", "Kurs: Kielwasser")), _h(InkBar, { p: 57 })), _h(Ledger, { T, t0: 288.7, x: cx[1], y: 676, w: cw, h: 290 }, _h("p", { style: pKick }, L("oldCode", "Chiffre")), _h("p", { style: { ...pTitle, fontSize: 52 } }, "VII ", _h("span", { style: { ...pNote } }, L("oldOf12", "von XII"))), _h("p", { style: pNote }, L("oldCodesLeft", "Fünf noch nicht entschlüsselt")), _h(InkBar, { p: 58 })), _h(Ledger, { T, t0: 289.4, x: cx[2], y: 676, w: cw, h: 290 }, _h("p", { style: pKick }, L("board", "Rangliste")), [["I.", "Zugfahrer Dave", "4.820"], ["II.", "Flitzpiepe", "3.910"], ["III.", L("you", "Du"), "2.140"]].map((r, i) => _h("div", { key: i, style: { display: "flex", alignItems: "baseline", gap: 12, borderBottom: "1px dotted " + P.inkSoft, paddingBottom: 6 } }, _h("span", { style: { width: 40, fontFamily: FELL_SC, fontSize: 20, color: P.rust } }, r[0]), _h("span", { style: { flex: 1, fontFamily: FELL, fontStyle: "italic", fontSize: 24, color: P.ink } }, r[1]), _h("span", { style: { fontFamily: FELL, fontSize: 20, color: P.inkSoft } }, r[2])))), stampIn ? _h("div", { style: { position: "absolute", right: 70, bottom: 40, padding: "10px 22px", border: "3px solid " + P.wax, borderRadius: 6, fontFamily: FELL_SC, fontSize: 24, letterSpacing: ".14em", color: P.wax, opacity: 0.85 * Math.min(1, stamp), transform: "rotate(-6deg) scale(" + (2.2 - 1.2 * stamp) + ")" } }, L("stamp", "Kapitel VIII · Jenseits des Risses")) : null), _h("div", { style: { position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(70% 60% at 45% 40%, rgba(255,190,110,.12), transparent 60%)", opacity: candle.toFixed(3), willChange: "opacity" } }), _h("div", { style: { position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(130% 110% at 50% 50%, transparent 55%, rgba(53,37,26,.55))" } }));
     }
     function Flash({ T }) {
       const o = T < 214 ? 0 : T < 217 ? interpolate([214, 214.8, 217], [0, 1, 0], MOTION.draw)(T) : T > 281 && T < 285 ? interpolate([281.2, 282.3, 284.6], [0, 1, 0], MOTION.draw)(T) : 0;
@@ -793,7 +879,7 @@
       const tx = 960 - fx * s + sx, ty = 540 - fy * s + sy;
       const siteOn = T < 146.2;
       const logoHack = !(T >= 70 && T < 100.5);
-      return _h("div", { style: { position: "absolute", inset: 0, overflow: "hidden", background: C.page } }, siteOn ? _h("div", { style: { position: "absolute", left: 0, top: 0, width: SITE_W, height: SITE_H, transformOrigin: "0 0", transform: "translate(" + tx + "px, " + ty + "px) scale(" + s + ")", fontFamily: F_SANS, color: C.fg } }, _h(Background, { T }), _h("div", { style: { position: "absolute", inset: 0 } }, _h(Page, { T })), _h(Sidebar, { T, hack: logoHack ? 1 : 0 }), _h(Topbar, { T }), _h(Scan, { T, level: hackLevel(T) }), _h(CodeRain, { T, from: -1, to: 18, max: 0.6 }), _h(CodeRain, { T, from: 101, to: 125, max: 0.8 }), _h(GlitchBars, { T }), _h(Ticker, { T }), _h(Notfall, { T }), _h(Dock, { T }), _h(Fehler, { T }), _h(Ueberlast, { T })) : null, siteOn ? _h("div", { style: { position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(120% 90% at 50% 50%, transparent 60%, rgba(0,0,0,.35))" } }) : null, _h(Notstrom, { T }), _h(Crt, { T }), _h(Dunkel, { T }), _h("div", { style: { position: "absolute", inset: 0, transform: "translate(" + sx + "px, " + sy + "px)" } }, _h(Warp, { T }), _h(Riss, { T }), _h(Sog, { T }), _h(Zeit, { T })), _h(Ankunft, { T }), _h(Flash, { T }));
+      return _h("div", { style: { position: "absolute", inset: 0, overflow: "hidden", background: C.page } }, siteOn ? _h("div", { style: { position: "absolute", left: 0, top: 0, width: SITE_W, height: SITE_H, transformOrigin: "0 0", transform: "translate(" + tx + "px, " + ty + "px) scale(" + s + ")", willChange: "transform", fontFamily: F_SANS, color: C.fg } }, _h(Background, { T }), _h("div", { style: { position: "absolute", inset: 0 } }, _h(Page, { T })), _h(Sidebar, { T, hack: logoHack ? 1 : 0 }), _h(Topbar, { T }), _h(Scan, { T, level: hackLevel(T) }), _h(CodeRain, { T, from: -1, to: 18, max: 0.6 }), _h(CodeRain, { T, from: 101, to: 125, max: 0.8 }), _h(GlitchBars, { T }), _h(Ticker, { T }), _h(Notfall, { T }), _h(Dock, { T }), _h(Fehler, { T }), _h(Ueberlast, { T })) : null, siteOn ? _h("div", { style: { position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(120% 90% at 50% 50%, transparent 60%, rgba(0,0,0,.35))" } }) : null, _h(Notstrom, { T }), _h(Crt, { T }), _h(Dunkel, { T }), _h("div", { style: { position: "absolute", inset: 0, transform: "translate(" + sx + "px, " + sy + "px)", willChange: "transform" } }, _h(Warp, { T }), _h(Riss, { T }), _h(Sog, { T }), _h(Zeit, { T })), _h(Ankunft, { T }), _h(Flash, { T }));
     }
 
     return Film;
@@ -831,6 +917,14 @@
 
   function taste(e) { if (e.key === "Escape") weg(); }
 
+  /* Der Film deckt alles ab. Die WebGL-Flaechen der Seite (Nordlicht,
+     Seiten-3D, Seitenleiste) halten so lange an, statt unsichtbar
+     weiterzurechnen - das war ein guter Teil des Ruckelns. */
+  function vollbild(an) {
+    window.fhVollbildAn = an;
+    document.dispatchEvent(new CustomEvent("fh:vollbild", { detail: { an: an } }));
+  }
+
   function start(opts) {
     weg();
     opts = opts || {};
@@ -859,6 +953,7 @@
     window.addEventListener("resize", einpassen);
     document.addEventListener("keydown", taste);
     lauf.uhr = requestAnimationFrame(bild);
+    vollbild(true);
   }
 
   /* Story vorbei: das letzte Bild blendet kurz aus. */
@@ -876,6 +971,7 @@
     document.removeEventListener("keydown", taste);
     lauf.wurzel.remove();
     lauf = null;
+    vollbild(false);
   }
 
   window.fhRissFilm = {

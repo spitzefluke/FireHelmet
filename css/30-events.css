@@ -4878,8 +4878,14 @@ body.fh-story-wunsch .fh-stern.ist-frei .fh-stern-kern {
 .fh-riss-weiter:hover, .fh-riss-weiter:focus-visible { opacity: 1; color: var(--fh-gold-bright); }
 @keyframes fhRissRein { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fhRissRaus { from { opacity: 1; } to { opacity: 0; } }
+/* Sterne im Hintergrund des Films: funkeln per CSS statt per Bild aus
+   JavaScript - so malt der Browser die Buehne nicht in jedem Bild neu
+   (riss-film.js setzt nur die Verzoegerung je Stern). */
+.fh-riss-stern { position: absolute; border-radius: 50%; background: #dfe6f0; opacity: .25; animation: fhRissFunkeln 3.49s ease-in-out infinite alternate; will-change: opacity; }
+@keyframes fhRissFunkeln { from { opacity: .25; } to { opacity: .6; } }
 @media (prefers-reduced-motion: reduce) {
   .fh-riss, .fh-riss.ist-aus { animation-duration: .01s; }
+  .fh-riss-stern { animation: none; opacity: .42; }
 }
 
 /* Ton-Freigabe auf dem Handy (live-storys.js): Handys spielen Ton erst
