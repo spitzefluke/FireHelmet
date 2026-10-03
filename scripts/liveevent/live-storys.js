@@ -1264,6 +1264,71 @@
   }
 
   /* ------------------------------------------------------
+     EPOCHE 1720 (Migration 35)
+     Nach dem Riss sieht die ganze Seite aus wie im Jahr 1720
+     (css/95-epoche-1720.css, Klasse html.fh-1720) - fuer alle, bis
+     der Admin zurueckschaltet. live_event.jahr_1720_ab sagt, ab wann:
+     beim Riss ist das das Filmende, die Seite wechselt also genau,
+     wenn der Film ausblendet. Der letzte Stand liegt im Browser,
+     damit beim naechsten Oeffnen nicht erst 2026 aufblitzt.
+  ------------------------------------------------------ */
+  const SCHRIFT_1720 = "https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap";
+  let epocheUhr = null;
+  let epocheVorschau = null;   // Admin: true/false nur im eigenen Browser, null = wie live
+
+  function epocheSchrift() {
+    /* Dieselbe Schrift wie im Film - dort heisst der Link genauso. */
+    if (document.getElementById("fh-riss-schrift")) return;
+    const l = document.createElement("link");
+    l.id = "fh-riss-schrift"; l.rel = "stylesheet"; l.href = SCHRIFT_1720;
+    document.head.appendChild(l);
+  }
+
+  function epocheAn(an) {
+    const h = document.documentElement;
+    if (h.classList.contains("fh-1720") === an) return;
+    if (an) {
+      epocheSchrift();
+      /* Fest positionierte Hinweise im Inhalt an den body haengen -
+         der Farbfilter auf #fh-main wuerde sie sonst an dessen Rand
+         statt an den Bildschirmrand setzen. */
+      document.querySelectorAll("#fh-main .currency-toast").forEach(function (el) { document.body.appendChild(el); });
+    }
+    h.classList.add("fh-1720-wechsel");
+    h.classList.toggle("fh-1720", an);
+    setTimeout(function () { h.classList.remove("fh-1720-wechsel"); }, 1200);
+    try { localStorage.setItem("fhEpoche", an ? "1720" : "2026"); } catch (e) { /* Privatmodus */ }
+    document.dispatchEvent(new CustomEvent("fh:epoche", { detail: { jahr: an ? 1720 : 2026 } }));
+  }
+
+  function epocheSetzen(ab) {
+    clearTimeout(epocheUhr);
+    if (epocheVorschau !== null) return;
+    const zeit = ab ? Date.parse(ab) : NaN;
+    if (!isFinite(zeit)) { epocheAn(false); return; }
+    const rest = zeit - Date.now();
+    if (rest <= 0) { epocheAn(true); return; }
+    epocheAn(false);
+    /* Der Riss laeuft noch: genau zum Filmende umschalten. */
+    epocheUhr = setTimeout(function () { epocheAn(true); }, Math.min(rest, 2147483000));
+  }
+
+  /* Schon beim Laden der letzte bekannte Stand - die echte Zeile aus
+     der Datenbank kommt ein paar hundert Millisekunden spaeter. */
+  try { if (localStorage.getItem("fhEpoche") === "1720") epocheAn(true); } catch (e) { /* egal */ }
+
+  window.fhEpoche = {
+    /* Admin-Vorschau: true/false nur hier, null = wieder wie bei allen. */
+    vorschau: function (an) {
+      epocheVorschau = an === null || an === undefined ? null : !!an;
+      if (epocheVorschau !== null) { clearTimeout(epocheUhr); epocheAn(epocheVorschau); }
+      else epocheSetzen(letzteEpoche);
+    },
+    jahr: function () { return document.documentElement.classList.contains("fh-1720") ? 1720 : 2026; },
+  };
+  let letzteEpoche = null;
+
+  /* ------------------------------------------------------
      VON live-event.js: die Zustandszeile
      Beim ersten Laden steigt man anhand von story_at ein. Kommt eine
      Aenderung LIVE an (Realtime/Polling), beginnt die Story bei 0 -
@@ -1273,6 +1338,8 @@
     if (!z) return;
     musikVersion = z.musik_version || null;
     musikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
+    letzteEpoche = z.jahr_1720_ab || null;
+    epocheSetzen(letzteEpoche);
     const id = z.story_id || null;
     if (id !== aktuelleId) {
       aktuelleId = id;

@@ -1,0 +1,265 @@
+/* =====================================================
+   EPOCHE 1720 - DIE SEITE NACH DEM RISS
+   -----------------------------------------------------
+   Der Film "Der Riss" (scripts/liveevent/riss-film.js) endet im
+   Jahr 1720 auf einer Seite aus Pergament, Tinte und Leder. Danach
+   sieht die ganze Website so aus - fuer alle, bis der Admin
+   zurueckschaltet (Migration 35, live_event.jahr_1720_ab).
+   Ein- und ausgeschaltet wird nur die Klasse html.fh-1720
+   (scripts/liveevent/live-storys.js, Abschnitt EPOCHE).
+
+   WIE ES GEBAUT IST
+   Die Seite hat rund 20 000 Zeilen CSS, viele mit festen dunklen
+   Farben. Statt sie einzeln umzufaerben, dreht ein Farbfilter den
+   Inhalt um: aus fast Schwarz wird Papier, aus hellem Text Tinte,
+   aus Gold ein dunkles Altgold - der Farbton bleibt, nur hell und
+   dunkel tauschen (invert + hue-rotate), dazu ein Sepia-Ton.
+   Bilder, Videos und Canvas werden zurueckgedreht und behalten so
+   ihre Farben (mit dem Sepia-Ton der Seite).
+
+   Ausgenommen vom Filter und hier von Hand gestaltet:
+   - die Leiste (.fh-sidebar) als Ledereinband mit Faden,
+     Wachssiegel statt Flamme,
+   - die Kopfzeile (.fh-topbar) mit Tintenlinien,
+   - der Hintergrund (body) als Pergament mit Kerzenlicht.
+   Ebenfalls ausgenommen: die Live-Effekte (Story-Ebenen, Disco,
+   Konfetti, Banderole, Wetter, Riss) - die sind fuer sich
+   gestaltet und sollen bleiben, wie sie sind.
+
+   Neue Farben hier sind die Tinten- und Lederfarben aus dem Film
+   (Ankunft, Objekt P in riss-film.js), als Tokens unten.
+===================================================== */
+
+html.fh-1720 {
+  --fh-1720-papier: #e8dab9;
+  --fh-1720-papier-dunkel: #c9b183;
+  --fh-1720-rand: #8f6d3e;
+  --fh-1720-tinte: #35251a;
+  --fh-1720-tinte-weich: #5e4630;
+  --fh-1720-rost: #7c2f1c;
+  --fh-1720-wachs: #8e2418;
+  --fh-1720-gold: #9a742c;
+  --fh-1720-leder: #4a2e1b;
+  --fh-1720-leder-hell: #6b4527;
+  --fh-1720-faden: #d9c296;
+
+  /* Schrift und Ecken wie im Film. Die Farbtokens bleiben - der
+     Inhalt wird ohnehin per Filter umgefaerbt. */
+  --fh-font-display: 'IM Fell English SC', 'IM Fell English', Georgia, 'Times New Roman', serif;
+  --fh-font-sans: 'IM Fell English', Georgia, 'Times New Roman', serif;
+  --fh-radius-sm: 4px;
+  --fh-radius: 6px;
+  --fh-radius-lg: 8px;
+}
+
+/* ---- Pergament mit Kerzenlicht ---- */
+html.fh-1720 body {
+  font-family: var(--fh-font-sans);
+  background:
+    repeating-linear-gradient(0deg, rgba(94,70,48,.05) 0 1px, transparent 1px 3px),
+    radial-gradient(40% 30% at 22% 70%, rgba(143,109,62,.22), transparent 70%),
+    radial-gradient(25% 20% at 80% 20%, rgba(143,109,62,.18), transparent 70%),
+    radial-gradient(120% 100% at 50% 45%, var(--fh-1720-papier) 0%, #dfcda6 55%, var(--fh-1720-papier-dunkel) 85%, var(--fh-1720-rand) 100%) fixed;
+  background-color: var(--fh-1720-papier);
+}
+
+/* Papier ueber allem Inhalt: im Multiplizier-Modus wird Weiss zu
+   Pergament, Tinte bleibt dunkel - und Faserung und Flecken liegen
+   auch auf Karten und Knoepfen. Unter Leiste und Kopfzeile, faengt
+   keine Klicks. */
+html.fh-1720 body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--fh-z-sidebar) - 2);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  background:
+    repeating-linear-gradient(0deg, rgba(94,70,48,.045) 0 1px, transparent 1px 3px),
+    radial-gradient(40% 30% at 22% 70%, rgba(143,109,62,.20), transparent 70%),
+    radial-gradient(25% 20% at 80% 20%, rgba(143,109,62,.16), transparent 70%),
+    radial-gradient(120% 100% at 50% 45%, #f1e4c4 0%, #e8d7b0 60%, #d9c296 100%);
+}
+
+/* Kerzenschein und dunkle Raender - ueber dem Inhalt, unter Leiste
+   und Kopfzeile, faengt keine Klicks. */
+html.fh-1720 body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--fh-z-sidebar) - 1);
+  pointer-events: none;
+  background:
+    radial-gradient(70% 60% at 45% 40%, rgba(255,190,110,.10), transparent 60%),
+    radial-gradient(130% 110% at 50% 50%, transparent 58%, rgba(53,37,26,.42));
+}
+
+/* Der Sternenhimmel und das Nordlicht gehoeren ins Jahr 2026. */
+html.fh-1720 #fh-bg-canvas,
+html.fh-1720 .stars,
+html.fh-1720 .stars2,
+html.fh-1720 .nebula {
+  display: none !important;
+}
+
+/* ---- Der Farbfilter fuer alles Uebrige ---- */
+html.fh-1720 body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an),
+html.fh-1720 dialog[open] {
+  filter: invert(1) hue-rotate(180deg) sepia(.45) saturate(.9);
+}
+
+/* Bilder, Videos und Canvas darin zurueckdrehen - sie behalten ihre
+   Farben, nur mit dem Sepia-Ton der Seite. */
+html.fh-1720 body > :not(#fh-sidebar):not(#fh-topbar) :is(img, video, canvas, iframe),
+html.fh-1720 dialog[open] :is(img, video, canvas, iframe) {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* ---- Leiste: Ledereinband mit Faden ---- */
+html.fh-1720 .fh-sidebar {
+  background:
+    repeating-linear-gradient(180deg, var(--fh-1720-faden) 0 7px, transparent 7px 13px) right 10px top 10px / 2px calc(100% - 20px) no-repeat,
+    linear-gradient(90deg, var(--fh-1720-leder), var(--fh-1720-leder-hell));
+  border-right: 0;
+  box-shadow: 6px 0 18px rgba(53,37,26,.45);
+}
+
+html.fh-1720 .fh-sidebar-flame {
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #b43a26, var(--fh-1720-wachs));
+  box-shadow: inset 0 -3px 6px rgba(0,0,0,.35), 0 3px 6px rgba(0,0,0,.35);
+  color: #f0d6b0;
+}
+
+html.fh-1720 .fh-sidebar-title,
+html.fh-1720 .fh-sidebar-subtitle {
+  color: #f0d6b0;
+  font-family: var(--fh-font-display);
+}
+
+html.fh-1720 .fh-sidebar-nav .fh-nav-item {
+  color: var(--fh-1720-faden);
+  opacity: .78;
+  background: transparent;
+}
+
+html.fh-1720 .fh-sidebar-nav .fh-nav-item:hover,
+html.fh-1720 .fh-sidebar-nav .fh-nav-item:focus-visible {
+  color: #f0d6b0;
+  opacity: 1;
+  background: rgba(240,214,176,.10);
+  outline-color: #f0d6b0;
+}
+
+html.fh-1720 .fh-sidebar-nav .fh-nav-item.fh-nav-active {
+  color: #f0d6b0;
+  opacity: 1;
+  background: rgba(240,214,176,.14);
+}
+
+html.fh-1720 .fh-sidebar-nav .fh-nav-item.fh-nav-active::before {
+  background: var(--fh-1720-faden);
+  box-shadow: none;
+}
+
+html.fh-1720 .fh-sidebar-nav .fh-nav-section-label {
+  background: linear-gradient(90deg, transparent, rgba(217,194,150,.55), transparent);
+}
+
+html.fh-1720 .fh-sidebar-footer,
+html.fh-1720 .fh-sidebar-footer-wrap {
+  color: #f0d6b0;
+}
+
+/* ---- Kopfzeile mit Tintenlinien ---- */
+html.fh-1720 .fh-topbar {
+  background: linear-gradient(180deg, rgba(232,218,185,.92), rgba(232,218,185,0));
+  color: var(--fh-1720-tinte);
+}
+
+/* Die Jahreszahl wie auf der Seite im Film. */
+html.fh-1720 .fh-topbar::after {
+  content: "Anno Domini MDCCXX";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'IM Fell English SC', Georgia, serif;
+  font-size: 15px;
+  letter-spacing: .36em;
+  color: var(--fh-1720-rost);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@media (max-width: 1180px) {
+  html.fh-1720 .fh-topbar::after { display: none; }
+}
+
+html.fh-1720 .fh-topbar .fh-qs-trigger {
+  background: transparent;
+  border: 0;
+  border-bottom: 1.5px solid var(--fh-1720-tinte-weich);
+  border-radius: 0;
+  color: var(--fh-1720-tinte-weich);
+  font-family: var(--fh-font-sans);
+  font-style: italic;
+  font-size: 16px;
+  box-shadow: none;
+}
+
+html.fh-1720 .fh-topbar .fh-qs-trigger kbd {
+  background: transparent;
+  border: 1px solid var(--fh-1720-tinte-weich);
+  border-radius: 3px;
+  color: var(--fh-1720-tinte-weich);
+  font-style: normal;
+}
+
+html.fh-1720 .fh-topbar-btn,
+html.fh-1720 .fh-topbar-lang {
+  background: transparent;
+  border: 1.5px solid var(--fh-1720-tinte-weich);
+  border-radius: 4px;
+  color: var(--fh-1720-tinte-weich);
+  box-shadow: none;
+}
+
+html.fh-1720 .fh-topbar-btn:hover,
+html.fh-1720 .fh-topbar-lang:hover {
+  color: var(--fh-1720-rost);
+  border-color: var(--fh-1720-rost);
+  background: rgba(124,47,28,.06);
+}
+
+html.fh-1720 .fh-topbar-coins {
+  background: transparent;
+  border: 1.5px solid var(--fh-1720-gold);
+  border-radius: 4px;
+  color: var(--fh-1720-tinte);
+  font-family: var(--fh-font-display);
+  box-shadow: none;
+}
+
+html.fh-1720 .fh-topbar-coins .ph {
+  color: var(--fh-1720-gold);
+}
+
+/* ---- Seitenkoepfe: Zierlinie unter dem Titel ---- */
+html.fh-1720 .fh-page-title {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+html.fh-1720 .fh-page-kicker {
+  font-family: 'IM Fell English SC', Georgia, serif;
+  letter-spacing: .3em;
+}
+
+/* Bewegung reduzieren: der Wechsel der Epoche passiert ohne Blende. */
+@media (prefers-reduced-motion: no-preference) {
+  html.fh-1720-wechsel body > * {
+    transition: filter .9s var(--fh-ease), background-color .9s var(--fh-ease);
+  }
+}

@@ -120,10 +120,17 @@ Immer-geladen-Datei daneben (`admin-zugang.js`: `isAuthorizedAdmin`, `updateGate
 
 ### CSS
 
-Elf Dateien in fester Ladereihenfolge, `css/00-basis.css` bis `css/90-typografie.css`. Die
+Zwölf Dateien in fester Ladereihenfolge, `css/00-basis.css` bis `css/95-epoche-1720.css`. Die
 Nummer ist die Kaskade: Späteres überschreibt Früheres. Die Design-Tokens (`--fh-gold`,
 `--fh-surface`, `--fh-ease`, …) stehen in `00-basis.css` unter `:root`. **Neue Farben und
 Kurven aus den Tokens nehmen**, nicht als Rohwert schreiben.
+
+`95-epoche-1720.css` gilt nur unter `html.fh-1720` (nach dem Riss, Migration 35): Ein
+Farbfilter dreht dort den ganzen Inhalt von dunkel auf Pergament. Neues Markup braucht
+dafür nichts Eigenes. Nur wer ein neues festes Element direkt an `body` hängt, das **nicht**
+umgefärbt werden soll (ein Live-Effekt), trägt es dort in die `:not(...)`-Liste ein. Und:
+`position: fixed` im Inhalt landet unter 1720 am Rand von `#fh-main` statt am
+Bildschirmrand – feste Hinweise an `body` hängen.
 
 ### Datenbank und Anmeldung
 
