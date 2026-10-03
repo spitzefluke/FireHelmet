@@ -338,7 +338,7 @@ function buildGatewayLiveGeschenkeHtml() {
    Datenbank fest - die Texte hier beschreiben sie nur.
 ------------------------------------------------------ */
 const GW_STORYS = [
-  ["schatz", "Schatzregen", "25 s · Zuschauer fangen Münzen · Beute ×10 Dublonen (max. 600), ab 25 zusätzlich +1 Skillpunkt", "gold"],
+  ["schatz", "Schatzregen", "Endlos, bis du ihn beendest · Zuschauer fangen Münzen · Beute ×10 Dublonen (max. 600), ab 25 zusätzlich +1 Skillpunkt", "gold"],
   ["hacked", "Hacked", "32 s · Unbekannter gegen Dave · Titel „Firewall-Pirat“ + 1 Skillpunkt, danach 6 Hintertüren zum Schließen (+1 Skillpunkt)", "neon"],
   ["sturm", "Sturm", "12,4 s · Blitz und Einschlag · +150 Dublonen", "kalt"],
   ["nordlicht", "Nordlicht", "17 s · Sternschnuppen und ein Wunsch · +150 Dublonen", "violett"],
@@ -372,7 +372,7 @@ function buildGatewayStorysHtml() {
     <div class="gw-story-lage">
       <p id="gw-story-jetzt" class="gw-story-jetzt">Lade …</p>
       <div class="gw-story-lage-knoepfe">
-        <button type="button" class="gw-live-knopf" onclick="gwStoryBeenden()">Disco beenden</button>
+        <button type="button" class="gw-live-knopf" onclick="gwStoryBeenden()">Disco / Schatzregen beenden</button>
         <button type="button" class="gw-live-knopf" onclick="gwStoryAufraeumen()">Abbrechen / Seite wiederherstellen</button>
         <button type="button" class="gw-live-knopf" onclick="gwStoryVorschauStopp()">Vorschau stoppen</button>
       </div>
@@ -941,7 +941,8 @@ async function gwStoryLageLaden() {
     if (!z.story) ziel.textContent = "Gerade läuft keine Story.";
     else if (z.story === "ende") ziel.textContent = "Zuletzt: Systemausfall – die Seite ist gehackt, bis du wiederherstellst oder eine neue Story startest.";
     else if (z.story === "gegenhack_niederlage") ziel.textContent = "Zuletzt: Gegenhack verloren – die Seite bleibt gehackt bis zum nächsten Event (oder bis du wiederherstellst).";
-    else if (z.story === "disco" && !z.story_ende_at) ziel.textContent = "Disco läuft seit " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC) – „Disco beenden“ lässt sie ausklingen.";
+    else if (z.story === "disco" && !z.story_ende_at) ziel.textContent = "Disco läuft seit " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC) – „Disco / Schatzregen beenden“ lässt sie ausklingen.";
+    else if (z.story === "schatz" && !z.story_ende_at) ziel.textContent = "Schatzregen läuft seit " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC) – „Disco / Schatzregen beenden“ stoppt den Regen, dann gibt es die Beute.";
     else ziel.textContent = "Zuletzt gestartet: " + gwStoryName(z.story) + " um " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC).";
     gwEpocheZeigen(z.jahr_1720_ab || null);
     gwMusikVersionAlt = z.musik_version || null;
@@ -982,11 +983,19 @@ async function gwStoryStart(id) {
 }
 
 async function gwStoryBeenden() {
+  /* Laeuft hier gerade eine Vorschau, endet nur die - ohne die
+     Story bei allen anzufassen. */
+  const vorschau = window.fhLiveStorys && window.fhLiveStorys.laeuft();
+  if (vorschau && vorschau.vorschau) {
+    window.fhLiveStorys.vorschauAusklingen();
+    gwLiveStatus("gw-story-status", "✓ Vorschau klingt aus (nur hier).", false);
+    return;
+  }
   if (!supabaseClient) return;
   try {
     const { data, error } = await supabaseClient.rpc("admin_live_story_beenden");
     if (error) throw error;
-    gwLiveStatus("gw-story-status", data ? "✓ Disco klingt bei allen aus." : "Es lief nichts, das man beenden könnte.", !data);
+    gwLiveStatus("gw-story-status", data ? "✓ Klingt bei allen aus." : "Es lief nichts, das man beenden könnte.", !data);
     gwStoryLageLaden();
   } catch (err) {
     gwLiveStatus("gw-story-status", "Beenden fehlgeschlagen: " + ((err && err.message) || err), true);
