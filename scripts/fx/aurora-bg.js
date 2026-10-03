@@ -254,7 +254,12 @@ void main() {
       // meisten Browsern von selbst, aber nicht in allen und nicht
       // in jedem Fenstermodus.
       document.addEventListener("visibilitychange", () => {
-        if (document.hidden) stopp(); else start();
+        if (document.hidden) stopp(); else if (!window.fhVollbildAn) start();
+      });
+      // Ein Vollbild-Film (Live-Story "Der Riss") verdeckt alles - dann
+      // rechnet das Nordlicht darunter nur fuer niemanden mit.
+      document.addEventListener("fh:vollbild", (e) => {
+        if (e.detail && e.detail.an) stopp(); else if (!document.hidden) start();
       });
     }
   }

@@ -222,7 +222,12 @@
 
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) anhalten();
-    else if (aktuelle) starten();
+    else if (aktuelle && !window.fhVollbildAn) starten();
+  });
+  /* Vollbild-Film (Live-Story "Der Riss") verdeckt die Seite: anhalten. */
+  document.addEventListener("fh:vollbild", function (e) {
+    if (e.detail && e.detail.an) anhalten();
+    else if (aktuelle && !document.hidden) starten();
   });
 
   window.fhSeitenEffekt = seitenEffekt;

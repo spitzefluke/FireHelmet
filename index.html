@@ -60,7 +60,7 @@
   <link rel="stylesheet" href="css/00-basis.css?v=04d0df9120">
   <link rel="stylesheet" href="css/10-inhaltsseiten.css?v=1a230c2caa">
   <link rel="stylesheet" href="css/20-spiele.css?v=2970bf6bc5">
-  <link rel="stylesheet" href="css/30-events.css?v=ec60eddbbd">
+  <link rel="stylesheet" href="css/30-events.css?v=5842ebda89">
   <link rel="stylesheet" href="css/40-shop.css?v=0b38d26fe9">
   <link rel="stylesheet" href="css/50-redesign.css?v=bea9655ca0">
   <link rel="stylesheet" href="css/60-fortschritt.css?v=38aa01329f">
@@ -71,6 +71,7 @@
        dafuer die Regeln aus 00 bis 70 ueberschreiben koennen. -->
   <link rel="stylesheet" href="css/80-interaktion.css?v=f333fbccb6">
   <link rel="stylesheet" href="css/90-typografie.css?v=73aff913ba">
+  <link rel="stylesheet" href="css/95-epoche-1720.css?v=bdc84718c2">
 </head>
 <body>
 
@@ -1639,9 +1640,9 @@
        scripts/vendor/three-water.js. -->
   <script src="scripts/vendor/three-water.js?v=5096ca9394" defer></script>
   <script src="scripts/vendor/three-sky.js?v=94c5724368" defer></script>
-  <script src="scripts/fx/aurora-bg.js?v=c89d577f7a" defer></script>
+  <script src="scripts/fx/aurora-bg.js?v=c3bafa323c" defer></script>
   <script src="scripts/fx/celebration-burst-3d.js?v=269541d893" defer></script>
-  <script src="scripts/fx/sidebar-ambient-3d.js?v=1e54c6738a" defer></script>
+  <script src="scripts/fx/sidebar-ambient-3d.js?v=d7872cf6e7" defer></script>
 
   <!-- SCRIPTS -->
   <!-- Muss vor allen Skripten stehen, die fhNotice() aufrufen
@@ -1659,11 +1660,12 @@
   <!-- Erst die Szenen, dann die Flaeche: seiten-fx.js liest
        window.fhSeitenSzenen beim ersten Seitenbesuch. -->
   <script src="scripts/fx/seiten-fx-szenen.js?v=a428448470" defer></script>
-  <script src="scripts/fx/seiten-fx.js?v=e01278a95e" defer></script>
+  <script src="scripts/fx/seiten-fx.js?v=f5919195ed" defer></script>
   <script src="scripts/fx/path-draw.js?v=5d4d69c831" defer></script>
   <script src="scripts/nav/quick-search.js?v=a9e82ce22c" defer></script>
   <script src="scripts/core/share.js?v=afae2a5ba3" defer></script>
   <script src="scripts/core/fire-helmet-config.js?v=b6367d549e" defer></script>
+  <script src="scripts/core/nachladen.js?v=bacfc6a41b" defer></script>
   <script src="scripts/core/i18n.js?v=eefc06733f" defer></script>
   <script src="scripts/core/audiobook-link.js?v=5ab730a9b0" defer></script>
   <script src="scripts/core/update-notice-data.js?v=6eba9592e6" defer></script>
@@ -1707,12 +1709,10 @@
   <script src="scripts/core/feature-flags.js?v=3e7e628f44" defer></script>
   <script src="scripts/liveevent/live-event.js?v=47efb61535" defer></script>
   <script src="scripts/liveevent/event-titel.js?v=afc5b6b4cf" defer></script>
-  <script src="scripts/liveevent/story-wetter.js?v=09456d8d47" defer></script>
-  <script src="scripts/liveevent/live-storys.js?v=682a08ea01" defer></script>
+  <script src="scripts/liveevent/live-storys.js?v=99d15ba003" defer></script>
   <script src="scripts/liveevent/live-zuschauer.js?v=59b7e265a4" defer></script>
   <script src="scripts/liveevent/werbungsflut.js?v=ef023a842f" defer></script>
   <script src="scripts/liveevent/gegenhack.js?v=1e3eeae6a7" defer></script>
-  <script src="scripts/liveevent/riss-film.js?v=bc9feb73be" defer></script>
   <script src="scripts/core/discord-notify-data.js?v=e0fdc8d435" defer></script>
   <script src="scripts/core/discord-notify.js?v=aad2217ad4" defer></script>
   <script src="scripts/core/countdown.js?v=ddbc62363d" defer></script>
@@ -1744,7 +1744,7 @@
   <script src="scripts/streamraetsel/streamraetsel.js?v=46de70f427" defer></script>
   <script src="scripts/skilltree/skilltree-data.js?v=cacda48de0" defer></script>
   <script src="scripts/skilltree/skilltree.js?v=e4ac131da9" defer></script>
-  <script src="scripts/core/admin-gateway.js?v=651512f830" defer></script>
+  <script src="scripts/core/admin-zugang.js?v=676fb09072" defer></script>
   <script src="scripts/support/support.js?v=ffbe30a325" defer></script>
   <script src="scripts/rating/rating.js?v=a06c7d42b8" defer></script>
   <script src="scripts/core/main.js?v=b5375768f1" defer></script>

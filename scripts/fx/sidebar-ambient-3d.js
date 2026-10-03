@@ -132,6 +132,8 @@
       // (unter 1024px ist .fh-sidebar per CSS display:none -> canvas
       // hat dann kein offsetParent).
       if (canvas.offsetParent === null) return;
+      // Unter einem Vollbild-Film (Live-Story "Der Riss") nicht rechnen.
+      if (window.fhVollbildAn) return;
 
       const dt = Math.min(clock.getDelta(), 0.1);
       const pos = geometry.attributes.position.array;

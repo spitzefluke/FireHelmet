@@ -1043,15 +1043,36 @@
   /* ------------------------------------------------------
      WAS BEIM BETRETEN EINER SZENE PASSIERT
   ------------------------------------------------------ */
+  /* Wie weit die laufende Szene gerade ist (ms) - auch dann richtig,
+     wenn seit dem Betreten Zeit vergangen ist (Nachladen). */
+  function imSzeneMs() {
+    const dauer = STORYS[lauf.story].szenen[lauf.n - 1];
+    const beimBetreten = dauer - (lauf.rest || dauer);
+    return Math.min(dauer, beimBetreten + (Date.now() - (lauf.seit || Date.now())));
+  }
+
+  const WETTER_STORYS = ["nebel", "sturm", "flut", "nordlicht"];
+  function wetterSzene(st, n) {
+    if (window.fhStoryWetter.STORYS.indexOf(st) < 0) return;
+    if (window.fhStoryWetter.laeuft() !== st) window.fhStoryWetter.start(st, n, imSzeneMs());
+    else window.fhStoryWetter.szene(n, imSzeneMs());
+  }
+
   function onSzene(st, n) {
     const id = lauf.id, vorschau = lauf.vorschau;
 
     /* Wetter-Storys (story-wetter.js): beim ersten Betreten starten -
-       an der Stelle, an der man einsteigt -, danach weiterschalten. */
-    if (window.fhStoryWetter && window.fhStoryWetter.STORYS.indexOf(st) >= 0) {
-      const imSzene = STORYS[st].szenen[n - 1] - (lauf.rest || STORYS[st].szenen[n - 1]);
-      if (window.fhStoryWetter.laeuft() !== st) window.fhStoryWetter.start(st, n, imSzene);
-      else window.fhStoryWetter.szene(n, imSzene);
+       an der Stelle, an der man einsteigt -, danach weiterschalten.
+       Die Datei wird erst beim ersten Mal nachgeladen
+       (scripts/core/nachladen.js); was das Laden dauert, wird danach
+       uebersprungen, damit alle im Takt bleiben. */
+    if (WETTER_STORYS.indexOf(st) >= 0) {
+      if (window.fhStoryWetter) wetterSzene(st, n);
+      else if (window.fhNachladen) {
+        window.fhNachladen("wetter").then(function () {
+          if (lauf && lauf.id === id && lauf.story === st && window.fhStoryWetter) wetterSzene(st, lauf.n);
+        }, function (e) { console.warn(e); });
+      }
     }
     const wetter = function (text, von, farbe) {
       /* Die Belohnung wurde eine Szene vorher abgeholt (oder jetzt). */
@@ -1083,9 +1104,15 @@
 
     /* Der Riss (32): einmal je Lauf starten - an der Stelle, an der man
        einsteigt. Wer "Ueberspringen" drueckt, bekommt ihn nicht wieder. */
-    if (st === "riss" && !lauf.rissGestartet && window.fhRissFilm) {
+    if (st === "riss" && !lauf.rissGestartet) {
       lauf.rissGestartet = true;
-      window.fhRissFilm.start({ ab: ZEITEN_IN_SZENE.riss[n - 1] + STORYS.riss.szenen[n - 1] - lauf.rest, vorschau: vorschau });
+      const rissStart = function () {
+        if (!lauf || lauf.id !== id || lauf.story !== "riss" || !window.fhRissFilm) return;
+        window.fhRissFilm.start({ ab: ZEITEN_IN_SZENE.riss[lauf.n - 1] + imSzeneMs(), vorschau: vorschau });
+      };
+      /* riss-film.js (84 KB) wird erst jetzt nachgeladen. */
+      if (window.fhRissFilm) rissStart();
+      else if (window.fhNachladen) window.fhNachladen("riss").then(rissStart, function (e) { console.warn(e); });
     }
 
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
@@ -1166,6 +1193,7 @@
     clearTimeout(lauf.timer);
     lauf.n = n;
     lauf.rest = rest;
+    lauf.seit = Date.now();
     onSzene(lauf.story, n);
     anzeigen();
     lauf.timer = spaeter(naechsteSzene, rest);
@@ -1236,6 +1264,71 @@
   }
 
   /* ------------------------------------------------------
+     EPOCHE 1720 (Migration 35)
+     Nach dem Riss sieht die ganze Seite aus wie im Jahr 1720
+     (css/95-epoche-1720.css, Klasse html.fh-1720) - fuer alle, bis
+     der Admin zurueckschaltet. live_event.jahr_1720_ab sagt, ab wann:
+     beim Riss ist das das Filmende, die Seite wechselt also genau,
+     wenn der Film ausblendet. Der letzte Stand liegt im Browser,
+     damit beim naechsten Oeffnen nicht erst 2026 aufblitzt.
+  ------------------------------------------------------ */
+  const SCHRIFT_1720 = "https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap";
+  let epocheUhr = null;
+  let epocheVorschau = null;   // Admin: true/false nur im eigenen Browser, null = wie live
+
+  function epocheSchrift() {
+    /* Dieselbe Schrift wie im Film - dort heisst der Link genauso. */
+    if (document.getElementById("fh-riss-schrift")) return;
+    const l = document.createElement("link");
+    l.id = "fh-riss-schrift"; l.rel = "stylesheet"; l.href = SCHRIFT_1720;
+    document.head.appendChild(l);
+  }
+
+  function epocheAn(an) {
+    const h = document.documentElement;
+    if (h.classList.contains("fh-1720") === an) return;
+    if (an) {
+      epocheSchrift();
+      /* Fest positionierte Hinweise im Inhalt an den body haengen -
+         der Farbfilter auf #fh-main wuerde sie sonst an dessen Rand
+         statt an den Bildschirmrand setzen. */
+      document.querySelectorAll("#fh-main .currency-toast").forEach(function (el) { document.body.appendChild(el); });
+    }
+    h.classList.add("fh-1720-wechsel");
+    h.classList.toggle("fh-1720", an);
+    setTimeout(function () { h.classList.remove("fh-1720-wechsel"); }, 1200);
+    try { localStorage.setItem("fhEpoche", an ? "1720" : "2026"); } catch (e) { /* Privatmodus */ }
+    document.dispatchEvent(new CustomEvent("fh:epoche", { detail: { jahr: an ? 1720 : 2026 } }));
+  }
+
+  function epocheSetzen(ab) {
+    clearTimeout(epocheUhr);
+    if (epocheVorschau !== null) return;
+    const zeit = ab ? Date.parse(ab) : NaN;
+    if (!isFinite(zeit)) { epocheAn(false); return; }
+    const rest = zeit - Date.now();
+    if (rest <= 0) { epocheAn(true); return; }
+    epocheAn(false);
+    /* Der Riss laeuft noch: genau zum Filmende umschalten. */
+    epocheUhr = setTimeout(function () { epocheAn(true); }, Math.min(rest, 2147483000));
+  }
+
+  /* Schon beim Laden der letzte bekannte Stand - die echte Zeile aus
+     der Datenbank kommt ein paar hundert Millisekunden spaeter. */
+  try { if (localStorage.getItem("fhEpoche") === "1720") epocheAn(true); } catch (e) { /* egal */ }
+
+  window.fhEpoche = {
+    /* Admin-Vorschau: true/false nur hier, null = wieder wie bei allen. */
+    vorschau: function (an) {
+      epocheVorschau = an === null || an === undefined ? null : !!an;
+      if (epocheVorschau !== null) { clearTimeout(epocheUhr); epocheAn(epocheVorschau); }
+      else epocheSetzen(letzteEpoche);
+    },
+    jahr: function () { return document.documentElement.classList.contains("fh-1720") ? 1720 : 2026; },
+  };
+  let letzteEpoche = null;
+
+  /* ------------------------------------------------------
      VON live-event.js: die Zustandszeile
      Beim ersten Laden steigt man anhand von story_at ein. Kommt eine
      Aenderung LIVE an (Realtime/Polling), beginnt die Story bei 0 -
@@ -1245,6 +1338,8 @@
     if (!z) return;
     musikVersion = z.musik_version || null;
     musikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
+    letzteEpoche = z.jahr_1720_ab || null;
+    epocheSetzen(letzteEpoche);
     const id = z.story_id || null;
     if (id !== aktuelleId) {
       aktuelleId = id;

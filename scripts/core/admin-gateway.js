@@ -29,14 +29,9 @@
    eigenen Spielerzeile abhaengt.
 ====================================================== */
 
-function getGoogleEmail(user) {
-  return user ? user.email : null;
-}
-
-function isAuthorizedAdmin(user) {
-  const email = getGoogleEmail(user);
-  return !!email && typeof FIRE_HELMET_CONFIG !== "undefined" && email.toLowerCase() === (FIRE_HELMET_CONFIG.ownerEmail || "").toLowerCase();
-}
+/* getGoogleEmail() und isAuthorizedAdmin() stehen in
+   scripts/core/admin-zugang.js - die braucht die Seite auch, bevor
+   diese Datei nachgeladen ist (siehe scripts/core/nachladen.js). */
 
 async function loginAdminWithGoogle() {
   const statusEl = document.getElementById("gateway-login-status");
@@ -352,7 +347,7 @@ const GW_STORYS = [
   ["disco", "Disco-Party", "Endlos, bis du sie beendest · Musik ab der Tanzfläche (ohne eigene Datei: music/disco.mp3)", "gold"],
   ["ende", "Systemausfall", "12 s · beendet das Event – die Seite bleibt für alle gehackt, bis die nächste Story startet oder du wiederherstellst", "rot"],
   ["werbung", "Werbungsflut", "bis 1 min · ??? spamt 32 Fenster · 6 Secrets à +25 Dublonen (max. 150)", "neon"],
-  ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – bereitet das nächste Event vor", "violett"],
+  ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – danach ist die ganze Seite für alle im 1720-Design, bis du oben zurückschaltest", "violett"],
 ];
 /* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
    stehen darum nicht in der Liste - hier nur ihre Namen fuer die
@@ -382,6 +377,7 @@ function buildGatewayStorysHtml() {
         <button type="button" class="gw-live-knopf" onclick="gwStoryVorschauStopp()">Vorschau stoppen</button>
       </div>
     </div>
+    ${buildGatewayEpocheHtml()}
     ${buildGatewayPlanHtml()}
     <p class="gw-plan-ueberschrift">Alle Storys</p>
     <div class="gw-story-liste">${zeilen}</div>
@@ -389,6 +385,58 @@ function buildGatewayStorysHtml() {
 
     ${buildGatewayMusikHtml()}
   `;
+}
+
+/* ------------------------------------------------------
+   LIVE-EVENT: EPOCHE 1720 (Migration 35, css/95-epoche-1720.css)
+   ---------------------------------------------------
+   Nach dem Riss sieht die Seite fuer alle aus wie im Jahr 1720 -
+   von selbst zum Filmende. Hier geht es zurueck ins Heute, oder
+   ohne Film sofort nach 1720. "Vorschau" schaltet nur diesen Browser.
+------------------------------------------------------ */
+function buildGatewayEpocheHtml() {
+  return `
+    <div class="gw-story-lage">
+      <p id="gw-epoche-jetzt" class="gw-story-jetzt">Epoche: lade …</p>
+      <div class="gw-story-lage-knoepfe">
+        <button type="button" class="gw-live-knopf" onclick="gwEpocheSetzen('2026')">Zurück ins Jahr 2026</button>
+        <button type="button" class="gw-live-knopf" onclick="gwEpocheSetzen('1720')">1720 jetzt für alle</button>
+        <button type="button" class="gw-live-knopf" onclick="gwEpocheVorschau()">Vorschau 1720 (nur hier)</button>
+      </div>
+    </div>
+    <p id="gw-epoche-status" class="gw-live-status" role="status" aria-live="polite"></p>
+  `;
+}
+
+function gwEpocheZeigen(ab) {
+  const el = document.getElementById("gw-epoche-jetzt");
+  if (!el) return;
+  const zeit = ab ? Date.parse(ab) : NaN;
+  if (!isFinite(zeit)) el.textContent = "Epoche: Jahr 2026 (normal).";
+  else if (zeit > Date.now()) el.textContent = "Epoche: Der Riss läuft – um " + new Date(zeit).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) + " Uhr wird die Seite für alle zum Jahr 1720.";
+  else el.textContent = "Epoche: Jahr 1720 – alle sehen das Pergament-Design, bis du zurückschaltest.";
+}
+
+async function gwEpocheSetzen(jahr) {
+  if (!supabaseClient) return;
+  if (jahr === "1720" && !confirm("Die Seite jetzt für alle ins Jahr 1720 schalten – ohne den Film?")) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_epoche", { p_jahr: jahr });
+    if (error) throw error;
+    if (window.fhEpoche) window.fhEpoche.vorschau(null);
+    gwEpocheZeigen(data);
+    gwLiveStatus("gw-epoche-status", jahr === "1720" ? "✓ Alle sehen jetzt das Jahr 1720." : "✓ Zurück im Jahr 2026 – für alle.", false);
+  } catch (err) {
+    console.error("Epoche umschalten fehlgeschlagen:", err);
+    gwLiveStatus("gw-epoche-status", "Umschalten fehlgeschlagen: " + ((err && err.message) || err) + " – ist Migration 35 eingespielt?", true);
+  }
+}
+
+function gwEpocheVorschau() {
+  if (!window.fhEpoche) return;
+  const an = window.fhEpoche.jahr() !== 1720;
+  window.fhEpoche.vorschau(an ? true : null);
+  gwLiveStatus("gw-epoche-status", an ? "Vorschau: Jahr 1720 – nur bei dir. Nochmal drücken beendet die Vorschau." : "Vorschau beendet – wieder wie bei allen.", false);
 }
 
 /* ------------------------------------------------------
@@ -895,6 +943,7 @@ async function gwStoryLageLaden() {
     else if (z.story === "gegenhack_niederlage") ziel.textContent = "Zuletzt: Gegenhack verloren – die Seite bleibt gehackt bis zum nächsten Event (oder bis du wiederherstellst).";
     else if (z.story === "disco" && !z.story_ende_at) ziel.textContent = "Disco läuft seit " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC) – „Disco beenden“ lässt sie ausklingen.";
     else ziel.textContent = "Zuletzt gestartet: " + gwStoryName(z.story) + " um " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC).";
+    gwEpocheZeigen(z.jahr_1720_ab || null);
     gwMusikVersionAlt = z.musik_version || null;
     gwMusikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
     gwMusikStandZeigen();
