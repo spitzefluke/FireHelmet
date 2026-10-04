@@ -1776,6 +1776,11 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 .gw-story-info { font-size: 12px; line-height: 1.4; color: var(--fh-muted-fg); }
 .gw-story-knoepfe { display: flex; gap: 6px; }
 
+/* Belohnungen je Story (admin-gateway.js, Migration 36) */
+.gw-preis-felder { display: flex; flex: 1 1 100%; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.gw-preis-felder .gw-feld { width: 150px; }
+.gw-preis-felder .gw-feld-zahl { width: 96px; }
+
 /* Ablaufplan je Event (admin-gateway.js, Migration 33) */
 .gw-plan {
   display: grid;

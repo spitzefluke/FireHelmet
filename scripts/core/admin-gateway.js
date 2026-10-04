@@ -338,15 +338,15 @@ function buildGatewayLiveGeschenkeHtml() {
    Datenbank fest - die Texte hier beschreiben sie nur.
 ------------------------------------------------------ */
 const GW_STORYS = [
-  ["schatz", "Schatzregen", "Endlos, bis du ihn beendest · Zuschauer fangen Münzen · Beute ×10 Dublonen (max. 600), ab 25 zusätzlich +1 Skillpunkt", "gold"],
-  ["hacked", "Hacked", "32 s · Unbekannter gegen Dave · Titel „Firewall-Pirat“ + 1 Skillpunkt, danach 6 Hintertüren zum Schließen (+1 Skillpunkt)", "neon"],
-  ["sturm", "Sturm", "12,4 s · Blitz und Einschlag · +150 Dublonen", "kalt"],
-  ["nordlicht", "Nordlicht", "17 s · Sternschnuppen und ein Wunsch · +150 Dublonen", "violett"],
-  ["nebel", "Geisterschiff", "14 s · Nebel und ein Fluch · +150 Dublonen", "papier"],
-  ["flut", "Sturmflut", "13,6 s · Land unter und Treibgut · +150 Dublonen", "wasser"],
+  ["schatz", "Schatzregen", "Endlos, bis du ihn beendest · Zuschauer fangen Münzen", "gold"],
+  ["hacked", "Hacked", "32 s · Unbekannter gegen Dave, danach 6 Hintertüren zum Schließen", "neon"],
+  ["sturm", "Sturm", "12,4 s · Blitz und Einschlag", "kalt"],
+  ["nordlicht", "Nordlicht", "17 s · Sternschnuppen und ein Wunsch", "violett"],
+  ["nebel", "Geisterschiff", "14 s · Nebel und ein Fluch", "papier"],
+  ["flut", "Sturmflut", "13,6 s · Land unter und Treibgut", "wasser"],
   ["disco", "Disco-Party", "Endlos, bis du sie beendest · Musik ab der Tanzfläche (ohne eigene Datei: music/disco.mp3)", "gold"],
   ["ende", "Systemausfall", "12 s · beendet das Event – die Seite bleibt für alle gehackt, bis die nächste Story startet oder du wiederherstellst", "rot"],
-  ["werbung", "Werbungsflut", "bis 1 min · ??? spamt 32 Fenster · 6 Secrets à +25 Dublonen (max. 150)", "neon"],
+  ["werbung", "Werbungsflut", "bis 1 min · ??? spamt 32 Fenster mit 6 Secrets", "neon"],
   ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – danach ist die ganze Seite für alle im 1720-Design, bis du oben zurückschaltest", "violett"],
 ];
 /* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
@@ -360,7 +360,7 @@ const GW_STORYS_FINALE = [
 function buildGatewayStorysHtml() {
   const zeilen = GW_STORYS.map(([id, name, info, ton]) => `
     <div class="gw-story ist-${ton}">
-      <div class="gw-story-text"><span class="gw-story-name">${name}</span><span class="gw-story-info">${info}</span></div>
+      <div class="gw-story-text"><span class="gw-story-name">${name}</span><span class="gw-story-info">${info}<span id="gw-story-preis-${id}"></span></span></div>
       <div class="gw-story-knoepfe">
         <button type="button" class="gw-live-knopf" onclick="gwStoryVorschau('${id}')">Vorschau</button>
         <button type="button" class="gw-live-knopf ist-alle" onclick="gwStoryStart('${id}')">Für alle</button>
@@ -382,6 +382,8 @@ function buildGatewayStorysHtml() {
     <p class="gw-plan-ueberschrift">Alle Storys</p>
     <div class="gw-story-liste">${zeilen}</div>
     <p id="gw-story-status" class="gw-live-status" role="status" aria-live="polite"></p>
+
+    ${buildGatewayPreiseHtml()}
 
     ${buildGatewayMusikHtml()}
   `;
@@ -437,6 +439,133 @@ function gwEpocheVorschau() {
   const an = window.fhEpoche.jahr() !== 1720;
   window.fhEpoche.vorschau(an ? true : null);
   gwLiveStatus("gw-epoche-status", an ? "Vorschau: Jahr 1720 – nur bei dir. Nochmal drücken beendet die Vorschau." : "Vorschau beendet – wieder wie bei allen.", false);
+}
+
+/* ------------------------------------------------------
+   LIVE-EVENT: BELOHNUNGEN JE STORY (Migration 36)
+   ---------------------------------------------------
+   Je Story Dublonen, Skillpunkte und optional ein Event-Titel.
+   Schatzregen und Werbungsflut zahlen je Stueck (Muenze bzw.
+   Secret): dort gibt es dazu den Deckel und "ab wie vielen Stueck"
+   Skillpunkte und Titel dazukommen. Disco, Riss und Systemausfall
+   zahlen am Ende der Story. 0 und kein Titel = keine Belohnung.
+
+   Die Werte kommen aus live_event.story_preise und gehen ueber
+   admin_story_preis() zurueck; die Datenbank prueft die Grenzen
+   (hoechstens 30000 Dublonen auf einmal, 10 Skillpunkte).
+   Der Titeltext geht nur per value/textContent ins DOM.
+------------------------------------------------------ */
+const GW_PREISE = [
+  // [schluessel, name, ton, stueck (null = pauschal), wann]
+  ["sturm", "Sturm", "kalt", null, "nach dem Einschlag"],
+  ["nordlicht", "Nordlicht", "violett", null, "wenn der Wunsch erhört ist"],
+  ["nebel", "Geisterschiff", "papier", null, "wenn der Fluch gebrochen ist"],
+  ["flut", "Sturmflut", "wasser", null, "für das Treibgut"],
+  ["hacked", "Hacked", "neon", null, "wenn Dave gewinnt"],
+  ["hintertueren", "Hintertüren (nach Hacked)", "neon", null, "wer alle 6 schließt"],
+  ["schatz", "Schatzregen", "gold", "Münze", "je gefangener Münze"],
+  ["werbung", "Werbungsflut (auch Gegenhack-Niederlage)", "neon", "Secret", "je gefundenem Secret, höchstens 6"],
+  ["disco", "Disco-Party", "gold", null, "am Ende"],
+  ["riss", "Der Riss", "violett", null, "am Ende des Films"],
+  ["ende", "Systemausfall", "rot", null, "am Ende"],
+];
+let gwPreise = {};
+
+function buildGatewayPreiseHtml() {
+  const stile = GW_TITEL_STILE.map(([wert, name]) => `<option value="${wert}">${name}</option>`).join("");
+  const zeilen = GW_PREISE.map(([id, name, ton, stueck, wann]) => `
+    <div class="gw-story gw-preis ist-${ton}">
+      <div class="gw-story-text"><span class="gw-story-name">${name}</span><span id="gw-preis-stand-${id}" class="gw-story-info">${wann}</span></div>
+      <div class="gw-preis-felder">
+        <label class="gw-feld-label">${stueck ? "Dublonen je " + stueck : "Dublonen"}<input type="number" id="gw-preis-${id}-dub" class="gw-feld gw-feld-zahl" min="0" max="30000" step="1" value="0"></label>
+        <label class="gw-feld-label">Skillpunkte<input type="number" id="gw-preis-${id}-sp" class="gw-feld gw-feld-zahl" min="0" max="10" step="1" value="0"></label>
+        ${stueck ? `
+        <label class="gw-feld-label">Höchstens ${stueck === "Secret" ? "Secrets" : "Münzen"}<input type="number" id="gw-preis-${id}-deckel" class="gw-feld gw-feld-zahl" min="1" max="${stueck === "Secret" ? 6 : 500}" step="1" value="1"></label>
+        <label class="gw-feld-label">Skillpunkte/Titel ab<input type="number" id="gw-preis-${id}-ab" class="gw-feld gw-feld-zahl" min="1" max="500" step="1" value="1"></label>` : ""}
+        <label class="gw-feld-label">Titel (leer = keiner)<input type="text" id="gw-preis-${id}-titel" class="gw-feld" maxlength="32" placeholder="z. B. Sturmreiter"></label>
+        <label class="gw-feld-label">Stil<select id="gw-preis-${id}-stil" class="gw-feld">${stile}</select></label>
+        <button type="button" class="gw-live-knopf ist-alle" onclick="gwPreisSpeichern('${id}')">Speichern</button>
+      </div>
+    </div>`).join("");
+  return `
+    <p class="gw-plan-ueberschrift">Belohnungen je Story</p>
+    <div class="gw-story-liste">${zeilen}</div>
+    <p id="gw-preis-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <p class="gateway-status-sub">Gilt ab dem nächsten Start der Story. Jeder bekommt jede Belohnung je Start einmal. Höchstens 30.000 Dublonen auf einmal (beim Schatzregen: je Münze × Höchstzahl) und 10 Skillpunkte. Ein neuer Titel landet in der Titelliste und kann auch von Hand vergeben werden.</p>
+  `;
+}
+
+/* "+150 Dublonen · +1 Skillpunkt · Titel „X“" - leer ohne Belohnung. */
+function gwPreisText(id) {
+  const p = gwPreise[id];
+  if (!p) return "";
+  const teile = [];
+  const dub = Number(p.dublonen) || 0, sp = Number(p.skillpunkte) || 0;
+  const titel = p.titel && p.titel.text ? "Titel „" + p.titel.text + "“" : "";
+  if (p.deckel) {
+    const stueck = id === "werbung" ? "Secret" : "Münze";
+    if (dub > 0) teile.push("+" + dub + " Dublonen je " + stueck + " (max. " + (dub * p.deckel).toLocaleString("de-DE") + ")");
+    const extra = [sp > 0 ? "+" + sp + " Skillpunkt" + (sp === 1 ? "" : "e") : "", titel].filter(Boolean).join(", ");
+    if (extra) teile.push((Number(p.extra_ab) > 1 ? "ab " + p.extra_ab + ": " : "") + extra);
+  } else {
+    if (dub > 0) teile.push("+" + dub.toLocaleString("de-DE") + " Dublonen");
+    if (sp > 0) teile.push("+" + sp + " Skillpunkt" + (sp === 1 ? "" : "e"));
+    if (titel) teile.push(titel);
+  }
+  return teile.join(" · ");
+}
+
+function gwPreiseZeigen(preise) {
+  const da = preise && typeof preise === "object" && Object.keys(preise).length > 0;
+  gwPreise = da ? preise : {};
+  GW_PREISE.forEach(([id, , , stueck, wann]) => {
+    const p = gwPreise[id] || {};
+    const setze = (feld, wert) => { const el = document.getElementById("gw-preis-" + id + "-" + feld); if (el && document.activeElement !== el) el.value = wert; };
+    setze("dub", Number(p.dublonen) || 0);
+    setze("sp", Number(p.skillpunkte) || 0);
+    if (stueck) { setze("deckel", Number(p.deckel) || 1); setze("ab", Number(p.extra_ab) || 1); }
+    setze("titel", p.titel && p.titel.text ? p.titel.text : "");
+    setze("stil", p.titel && p.titel.stil ? p.titel.stil : "regenbogen");
+    const stand = document.getElementById("gw-preis-stand-" + id);
+    if (stand) stand.textContent = !da ? "Migration 36 fehlt – bisher feste Belohnungen" : wann + ": " + (gwPreisText(id) || "keine Belohnung");
+  });
+  /* In der Story-Liste oben: " · Belohnung: …" */
+  GW_STORYS.forEach(([id]) => {
+    const el = document.getElementById("gw-story-preis-" + id);
+    if (!el) return;
+    let text = gwPreisText(id);
+    if (id === "hacked" && gwPreisText("hintertueren")) text = [text, "Hintertüren: " + gwPreisText("hintertueren")].filter(Boolean).join(" · ");
+    el.textContent = da ? " · " + (text ? "Belohnung: " + text : "ohne Belohnung") : "";
+  });
+}
+
+async function gwPreisSpeichern(id) {
+  if (!supabaseClient) return;
+  const wert = (feld) => { const el = document.getElementById("gw-preis-" + id + "-" + feld); return el ? el.value : ""; };
+  const zahl = (feld) => { const n = parseInt(wert(feld), 10); return Number.isFinite(n) ? n : 0; };
+  const stueck = (GW_PREISE.find(([k]) => k === id) || [])[3];
+  const titel = String(wert("titel") || "").trim();
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_story_preis", {
+      p_schluessel: id,
+      p_dublonen: zahl("dub"),
+      p_skillpunkte: zahl("sp"),
+      p_deckel: stueck ? zahl("deckel") : null,
+      p_extra_ab: stueck ? zahl("ab") : null,
+      p_titel_text: titel || null,
+      p_titel_stil: titel ? (wert("stil") || "regenbogen") : null,
+    });
+    if (error) throw error;
+    gwPreiseZeigen(data);
+    const name = (GW_PREISE.find(([k]) => k === id) || [])[1] || id;
+    gwLiveStatus("gw-preis-status", "✓ " + name + ": " + (gwPreisText(id) || "keine Belohnung") + " – gilt ab dem nächsten Start.", false);
+  } catch (err) {
+    console.error("Belohnung speichern fehlgeschlagen:", err);
+    const m = String((err && err.message) || err);
+    const grund = /check|violat/i.test(m) ? "Wert außerhalb der Grenzen (höchstens 30.000 Dublonen auf einmal, 10 Skillpunkte, beim Schatzregen höchstens 500, bei der Werbungsflut höchstens 6 Stück)."
+      : /admin_story_preis|function/i.test(m) ? m + " – ist Migration 36 eingespielt?" : m;
+    gwLiveStatus("gw-preis-status", "Speichern fehlgeschlagen: " + grund, true);
+  }
 }
 
 /* ------------------------------------------------------
@@ -948,6 +1077,7 @@ async function gwStoryLageLaden() {
     gwMusikVersionAlt = z.musik_version || null;
     gwMusikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
     gwMusikStandZeigen();
+    gwPreiseZeigen(z.story_preise);
   } catch (err) {
     ziel.textContent = "Stand nicht lesbar – ist Migration 29 eingespielt?";
   }

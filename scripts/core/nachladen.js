@@ -22,9 +22,9 @@
   "use strict";
 
   const ADRESSEN = {
-    admin: "scripts/core/admin-gateway.js?v=c579cc5c7f",
+    admin: "scripts/core/admin-gateway.js?v=e959685d96",
     riss: "scripts/liveevent/riss-film.js?v=c60d9cac41",
-    wetter: "scripts/liveevent/story-wetter.js?v=09456d8d47"
+    wetter: "scripts/liveevent/story-wetter.js?v=d38bfcebe3"
   };
 
   const laeuft = Object.create(null);

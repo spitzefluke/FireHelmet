@@ -4,8 +4,8 @@
    ??? flutet die Seite mit 32 Werbefenstern im Stil von 2003.
    Zu schliessen ueber das X; wer auf den Knopf im Fenster klickt,
    sieht, was dahinter steckt - sechs Fenster verraten ein Secret
-   (+25 Dublonen je Secret, hoechstens 150, ueber
-   live_story_belohnung(..., 'werbung', Zahl)). "Alle Fenster
+   (Betrag je Secret stellt der Admin ein, Migration 36; ausgezahlt
+   ueber live_story_belohnung(..., 'werbung', Zahl)). "Alle Fenster
    schliessen?" macht drei neue auf.
 
    live-storys.js startet die Flut in den Storys "werbung" und
@@ -279,8 +279,11 @@
     if (l.gefunden.length && typeof l.opts.belohnen === "function") {
       try {
         const erg = await l.opts.belohnen(l.gefunden.length);
-        if (erg && erg.ok && erg.dublonen > 0) {
-          box.querySelector(".fh-wf-ende-beute").textContent = "+" + erg.dublonen + " " + W("coins", "Dublonen") + (erg.vorschau ? " (" + t("story.preview", "Vorschau") + ")" : "");
+        /* Dublonen, Skillpunkte, Titel - so, wie die anderen Storys sie nennen. */
+        const zeile = window.fhLiveStorys && window.fhLiveStorys.belohnungsZeile ? window.fhLiveStorys.belohnungsZeile(erg)
+          : (erg && erg.ok && erg.dublonen > 0 ? "+" + erg.dublonen + " " + W("coins", "Dublonen") : "");
+        if (zeile) {
+          box.querySelector(".fh-wf-ende-beute").textContent = zeile + (erg.vorschau ? " (" + t("story.preview", "Vorschau") + ")" : "");
         }
       } catch (e) { /* ohne Beute-Zeile */ }
     }
