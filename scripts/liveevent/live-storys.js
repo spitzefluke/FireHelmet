@@ -17,7 +17,10 @@
      alle fest positionierten Elemente darin), Wackeln/Schaukeln
      kurz per transform auf #fh-main.
    - Belohnungen holt live_story_belohnung() ab; Betrag, Titel und
-     Skillpunkte legt die Datenbank fest, nicht dieser Code.
+     Skillpunkte legt die Datenbank fest, nicht dieser Code. Was der
+     Admin eingestellt hat (Migration 36), steht in
+     live_event.story_preise - daraus kommen die Betraege in den
+     Texten und die Vorschau.
    - Die Hintertueren nach "Hacked" und der Schatzregen sind kleine
      Spiele im Browser.
 
@@ -97,6 +100,16 @@
   let letztesEnde = null;   // story_ende_at der zuletzt gesehenen Zeile
   let musikVersion = null;  // live_event.musik_version (Disco, aus 29)
   let musikVersionen = {};  // live_event.musik_versionen: Story -> Version (34)
+  /* live_event.story_preise (36). Bis die Zeile da ist (oder ohne
+     Migration 36): die Werte von vor 36. */
+  let preise = {
+    sturm: { dublonen: 150, skillpunkte: 0 }, nordlicht: { dublonen: 150, skillpunkte: 0 },
+    nebel: { dublonen: 150, skillpunkte: 0 }, flut: { dublonen: 150, skillpunkte: 0 },
+    hacked: { dublonen: 0, skillpunkte: 1, titel: { text: "Firewall-Pirat", stil: "hacked" } },
+    hintertueren: { dublonen: 0, skillpunkte: 1 },
+    schatz: { dublonen: 10, skillpunkte: 1, deckel: 60, extra_ab: 25 },
+    werbung: { dublonen: 25, skillpunkte: 0, deckel: 6 },
+  };
   let gehackt = false;      // Systemausfall: bleibt bis zur naechsten Story
   let nachregen = false;    // nach dem Sturm: leiser Regen bis zum naechsten Event
   let sturmNachwirkung = true;
@@ -374,7 +387,9 @@
       return aus('<div style="position:fixed;left:0;right:0;top:28%;z-index:10000;display:flex;justify-content:center;padding:0 16px;pointer-events:none;animation:fhStAus .6s 4.5s forwards;"><div style="display:flex;flex-direction:column;gap:8px;width:min(480px, 100%);">' +
         '<div style="display:flex;gap:10px;align-items:flex-end;animation:fhStHoch .4s .2s both;"><span style="display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:50%;border:1px solid var(--fh-neon);background:#0c2410;' + MONO + 'font-size:15px;color:var(--fh-neon);box-shadow:0 0 14px rgba(57,255,20,.4);">?</span>' +
           '<span style="padding:10px 14px;border-radius:12px 12px 12px 4px;border:1px solid rgba(57,255,20,.4);' + NEON_BOX + 'box-shadow:var(--fh-shadow-sm);"><span style="display:block;' + MONO + 'font-size:11px;color:var(--fh-neon);">' + T("unknown", "unbekannt") + '</span><span style="' + m + 'color:var(--fh-fg);">' + T("hack.e1", "nicht schlecht, crew. diesmal habt ihr gewonnen.") + '</span></span></div>' +
-        blase('<span style="' + m + 'color:var(--fh-fg);">' + T("hack.e2", "ich komme wieder. bis dahin – ein titel für jeden an deck:") + '</span> <span style="' + m + 'color:var(--fh-neon);text-shadow:0 0 6px rgba(57,255,20,.7);">Firewall-Pirat_</span>', 1.3) +
+        (preise.hacked && preise.hacked.titel && preise.hacked.titel.text
+          ? blase('<span style="' + m + 'color:var(--fh-fg);">' + T("hack.e2", "ich komme wieder. bis dahin – ein titel für jeden an deck:") + '</span> <span style="' + m + 'color:var(--fh-neon);text-shadow:0 0 6px rgba(57,255,20,.7);">' + esc(preise.hacked.titel.text) + '_</span>', 1.3)
+          : blase('<span style="' + m + 'color:var(--fh-fg);">' + T("hack.e2kein", "ich komme wieder.") + '</span>', 1.3)) +
         blase('<span style="' + m + 'color:var(--fh-fg);">' + T("hack.e3a", "ach ja – ich hab euch ein paar") + ' </span><span style="' + m + 'color:var(--fh-danger);">' + T("hack.e3b", "hintertüren") + '</span><span style="' + m + 'color:var(--fh-fg);"> ' + T("hack.e3c", "dagelassen.") + '</span>', 2.6, true) +
         '</div></div>');
     }],
@@ -445,7 +460,7 @@
           muenze('5', 'radial-gradient(circle at 40% 32%, #fffaf0, var(--fh-gold-bright) 35%, var(--fh-gold) 70%, var(--fh-fire-deep))', 'var(--fh-gold-bright)', '#3a2408', '+5 · ' + T("treasure.rare", "selten"), 'var(--fh-gold-bright)', 'box-shadow:0 0 22px var(--fh-gold-bright);') +
           muenze(svg(IC.skull, '18px'), 'radial-gradient(circle at 40% 35%, #b3312c, var(--fh-red-deep) 60%, #2a0a09)', 'var(--fh-danger)', 'var(--fh-paper)', '−3', 'var(--fh-danger)') +
         '</div>' +
-        '<p style="margin:18px 0 0;font-size:13px;color:var(--fh-muted-fg);animation:fhStHoch .5s .9s both;">' + T("treasure.reward", "Jede Dublone zählt ×10 (höchstens 600) · ab 25 zusätzlich +1 Skillpunkt") + '</p>' +
+        '<p style="margin:18px 0 0;font-size:13px;color:var(--fh-muted-fg);animation:fhStHoch .5s .9s both;">' + esc(schatzRegel()) + '</p>' +
       '</div>');
     }],
     ["schatz2", function () { return sz("schatz") === 2; }, function () { return aus(countdown()); }],
@@ -461,9 +476,9 @@
     ["schatz4", function () { return sz("schatz") === 4; }, function () {
       const pk = schatz ? schatz.punkte : 0;
       const rang = pk >= 40 ? T("treasure.r4", "Schatzmeister") : pk >= 25 ? T("treasure.r3", "Goldgräber") : pk >= 10 ? T("treasure.r2", "Leichtmatrose") : T("treasure.r1", "Deckschrubber");
-      const dub = Math.min(60, pk) * 10;
-      const beloh = pk > 0
-        ? T("treasure.rewardGot", "Deine Beute:") + ' +' + dub + ' ' + T("treasure.coins", "Dublonen") + (pk >= 25 ? ' · +1 ' + T("skillpoint", "Skillpunkt") : '')
+      const gibt = preisText("schatz", pk);
+      const beloh = pk > 0 && gibt
+        ? T("treasure.rewardGot", "Deine Beute:") + ' ' + esc(gibt)
         : T("treasure.rewardNone", "Diesmal keine Beute – beim nächsten Regen!");
       return aus('<div style="' + VOLL + 'z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px;">' +
         '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:min(420px, 100%);padding:24px 22px;border:1px solid rgba(214,168,79,.6);border-radius:var(--fh-radius-lg);background:rgba(8,10,16,.94);box-shadow:var(--fh-glow-gold), var(--fh-shadow);text-align:center;animation:fhStZoomRein .45s cubic-bezier(.22,.9,.32,1) both;">' +
@@ -884,7 +899,7 @@
     if (loecher.every(function (l) { return l.zu; })) {
       setTimeout(function () {
         konfetti();
-        belohnungAbholen(loecherStory, "hintertueren", 0, loecherVorschau).then(function (erg) {
+        (hatPreis("hintertueren") ? belohnungAbholen(loecherStory, "hintertueren", 0, loecherVorschau) : Promise.resolve(null)).then(function (erg) {
           banderole(t("story.backdoor.allClosed", "Alle Hintertüren geschlossen") + belohnungsText(erg), t("story.dave", "Schifffahrer Dave"), "#f0c96a", false);
         });
         loecher = [];
@@ -904,18 +919,42 @@
      In der Vorschau des Admins wird nichts abgeholt - dort steht
      nur, was es gaebe.
   ------------------------------------------------------ */
-  function vorschauBelohnung(art, beute) {
-    const b = Math.max(0, Math.min(60, beute || 0));
-    if (art === "wetter") return { ok: true, dublonen: 150, skillpunkte: 0, vorschau: true };
-    if (art === "hacked") return { ok: true, dublonen: 0, skillpunkte: 1, titel: "Firewall-Pirat", vorschau: true };
-    if (art === "hintertueren") return { ok: true, dublonen: 0, skillpunkte: 1, vorschau: true };
-    if (art === "schatz") return { ok: true, dublonen: b * 10, skillpunkte: b >= 25 ? 1 : 0, vorschau: true };
-    if (art === "werbung") return { ok: true, dublonen: Math.min(6, b) * 25, skillpunkte: 0, vorschau: true };
-    return null;
+  /* Schluessel in story_preise: bei Wetter und Abschluss die Story
+     selbst, sonst die Art. */
+  function preisSchluessel(art, story) {
+    return art === "wetter" || art === "abschluss" ? story : art;
   }
 
-  async function belohnungAbholen(storyId, art, beute, vorschau) {
-    if (vorschau || !storyId) return vorschauBelohnung(art, beute);
+  /* Was gaebe es? Rechnet wie live_story_belohnung() in 36 - nur fuer
+     die Anzeige (Vorschau, Ansagen). Ausgezahlt wird, was die
+     Datenbank sagt. */
+  function preisFuer(schl, beute) {
+    const p = preise[schl];
+    if (!p) return null;
+    const erg = { ok: true, dublonen: Number(p.dublonen) || 0, skillpunkte: Number(p.skillpunkte) || 0, titel: p.titel && p.titel.text ? p.titel.text : null };
+    if (p.deckel) {
+      const stueck = Math.max(0, Math.min(Number(p.deckel), beute || 0));
+      erg.dublonen *= stueck;
+      if (stueck < Math.max(1, Number(p.extra_ab) || 1)) { erg.skillpunkte = 0; erg.titel = null; }
+    }
+    return erg.dublonen > 0 || erg.skillpunkte > 0 || erg.titel ? erg : null;
+  }
+
+  /* Gibt es fuer diese Story ueberhaupt etwas? (Disco, Riss und
+     Systemausfall fragen sonst bei jedem Ende umsonst nach.) */
+  function hatPreis(schl) {
+    const p = preise[schl];
+    return !!p && (Number(p.dublonen) > 0 || Number(p.skillpunkte) > 0 || !!(p.titel && p.titel.text));
+  }
+
+  function vorschauBelohnung(art, beute, story) {
+    const erg = preisFuer(preisSchluessel(art, story), beute);
+    if (erg) erg.vorschau = true;
+    return erg;
+  }
+
+  async function belohnungAbholen(storyId, art, beute, vorschau, story) {
+    if (vorschau || !storyId) return vorschauBelohnung(art, beute, story);
     if (!dbDa()) return null;
     try {
       if (typeof wheelAuthReady !== "undefined") await wheelAuthReady;
@@ -936,15 +975,45 @@
     }
   }
 
-  /* " · +150 Dublonen · +1 Skillpunkt" - leer, wenn es nichts gab
-     (schon abgeholt, zu spaet, keine Verbindung). */
-  function belohnungsText(erg) {
-    if (!erg || !erg.ok) return "";
+  /* ["+150 Dublonen", "+1 Skillpunkt", "Titel „…“"] - leer, wenn es
+     nichts gab (schon abgeholt, zu spaet, keine Verbindung). */
+  function belohnungsTeile(erg) {
+    if (!erg || !erg.ok) return [];
     const teile = [];
     if (erg.dublonen > 0) teile.push("+" + erg.dublonen + " " + t("story.treasure.coins", "Dublonen"));
     if (erg.skillpunkte > 0) teile.push("+" + erg.skillpunkte + " " + (erg.skillpunkte === 1 ? t("story.skillpoint", "Skillpunkt") : t("story.skillpoints", "Skillpunkte")));
+    if (erg.titel) teile.push(t("story.titleGot", "Titel „{titel}“").replace("{titel}", erg.titel));
+    return teile;
+  }
+
+  /* " · +150 Dublonen · +1 Skillpunkt" */
+  function belohnungsText(erg) {
+    const teile = belohnungsTeile(erg);
     if (!teile.length) return "";
     return " · " + teile.join(" · ") + (erg.vorschau ? " (" + t("story.preview", "Vorschau") + ")" : "");
+  }
+
+  /* Regelzeile vor dem Schatzregen, z. B. "Jede Dublone zählt ×10
+     (höchstens 600) · ab 25 zusätzlich +1 Skillpunkt". */
+  function schatzRegel() {
+    const p = preise.schatz;
+    if (!p || !hatPreis("schatz")) return t("story.treasure.ruleNone", "Diesmal nur zum Spaß – ohne Beute.");
+    const teile = [];
+    const dub = Number(p.dublonen) || 0, deckel = Number(p.deckel) || 0;
+    if (dub > 0) {
+      teile.push(t("story.treasure.ruleCoin", "Jede Dublone zählt ×{n}").replace("{n}", dub) +
+        (deckel ? " " + t("story.treasure.ruleMax", "(höchstens {max})").replace("{max}", dub * deckel) : ""));
+    }
+    const extra = belohnungsTeile({ ok: true, dublonen: 0, skillpunkte: Number(p.skillpunkte) || 0, titel: p.titel && p.titel.text ? p.titel.text : null });
+    if (extra.length) {
+      teile.push(t("story.treasure.ruleExtra", "ab {ab} zusätzlich {extra}").replace("{ab}", Math.max(1, Number(p.extra_ab) || 1)).replace("{extra}", extra.join(" · ")));
+    }
+    return teile.join(" · ");
+  }
+
+  /* Fuer Ansagen vorab: "+150 Dublonen" bzw. "" ohne Belohnung. */
+  function preisText(schl, beute) {
+    return belohnungsTeile(preisFuer(schl, beute)).join(" · ");
   }
 
   /* ------------------------------------------------------
@@ -1086,7 +1155,7 @@
     }
     const wetter = function (text, von, farbe) {
       /* Die Belohnung wurde eine Szene vorher abgeholt (oder jetzt). */
-      const p = lauf.belohnung || belohnungAbholen(id, "wetter", 0, vorschau);
+      const p = lauf.belohnung || (hatPreis(st) ? belohnungAbholen(id, "wetter", 0, vorschau, st) : Promise.resolve(null));
       p.then(function (erg) { banderole(text + belohnungsText(erg), von, farbe, false); });
     };
 
@@ -1127,11 +1196,11 @@
 
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
     if (st === "hacked" && n === 7) {
-      const p = belohnungAbholen(id, "hacked", 0, vorschau);
+      const p = hatPreis("hacked") ? belohnungAbholen(id, "hacked", 0, vorschau) : Promise.resolve(null);
       spaeter(function () {
         p.then(function (erg) {
-          const titel = t("story.hack.titleGot", "Titel „Firewall-Pirat“");
-          banderole(erg && erg.ok ? titel + belohnungsText(erg) : titel, "???", "#39ff14", true);
+          const teile = belohnungsTeile(erg);
+          if (teile.length) banderole(teile.join(" · ") + (erg.vorschau ? " (" + t("story.preview", "Vorschau") + ")" : ""), "???", "#39ff14", true);
         });
         konfetti();
       }, 1800);
@@ -1161,17 +1230,23 @@
 
     if (st === "disco" && n === 3 && !musikLaeuft) musikStart(musikUrl("disco"), 0);
     if (st === "disco" && n === 4) konfetti();
-    if (st === "disco" && n === 5) { musikAus(2400); banderole(t("story.disco.thanks", "Danke fürs Tanzen, Crew!"), "Ändii", "#f0c96a", false); }
+    if (st === "disco" && n === 5) {
+      musikAus(2400);
+      /* 36: Belohnung am Ende, wenn der Admin eine eingestellt hat. */
+      (hatPreis("disco") ? belohnungAbholen(id, "abschluss", 0, vorschau, "disco") : Promise.resolve(null)).then(function (erg) {
+        banderole(t("story.disco.thanks", "Danke fürs Tanzen, Crew!") + belohnungsText(erg), "Ändii", "#f0c96a", false);
+      });
+    }
 
-    if (st === "sturm" && n === 4) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau);
+    if (st === "sturm" && n === 4 && hatPreis(st)) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau, st);
     if (st === "sturm" && n === 5) wetter(t("story.storm.done", "Sturm überstanden"), "Ändii", "#42b8ff");
 
-    if (st === "nordlicht" && n === 4) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau);
+    if (st === "nordlicht" && n === 4 && hatPreis(st)) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau, st);
     if (st === "nordlicht" && n === 5) wetter(t("story.aurora.done", "Dein Wunsch wurde erhört"), t("story.aurora.from", "Nordlicht"), "#a66bff");
 
     if (st === "nebel" && n === 5) wetter(t("story.fog.done", "Der Fluch ist gebrochen"), "Ändii", "#e8d5a8");
 
-    if (st === "flut" && n === 4) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau);
+    if (st === "flut" && n === 4 && hatPreis(st)) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau, st);
     if (st === "flut" && n === 5) wetter(t("story.flood.done", "Treibgut geborgen"), "Ändii", "#5aa0e0");
   }
 
@@ -1248,6 +1323,16 @@
     if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
     if (st === "sturm" && !vorschau) nachregen = true;
     anzeigen();
+    /* 36: Riss und Systemausfall zahlen am Ende - nur wer bis hier
+       dabei war, und nur, wenn der Admin etwas eingestellt hat. */
+    if ((st === "riss" || st === "ende") && hatPreis(st)) {
+      belohnungAbholen(id, "abschluss", 0, vorschau, st).then(function (erg) {
+        const teile = belohnungsTeile(erg);
+        if (!teile.length) return;
+        const text = st === "riss" ? t("story.riss.reward", "Willkommen im Jahr 1720") : t("story.end.reward", "Ein Trostpflaster für die Crew");
+        banderole(text + belohnungsText(erg), st === "riss" ? "Ändii" : "???", st === "riss" ? "#e8d5a8" : "#39ff14", st === "ende");
+      });
+    }
   }
 
   function starten(st, id, ms, vorschau, endeMs) {
@@ -1366,6 +1451,7 @@
     if (!z) return;
     musikVersion = z.musik_version || null;
     musikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
+    if (z.story_preise && typeof z.story_preise === "object" && Object.keys(z.story_preise).length) preise = z.story_preise;
     letzteEpoche = z.jahr_1720_ab || null;
     epocheSetzen(letzteEpoche);
     const id = z.story_id || null;
@@ -1403,6 +1489,10 @@
     /* live-zuschauer.js: ein neues Event beendet den Nachregen. */
     nachregenAus: function () { if (nachregen) { nachregen = false; anzeigen(); } },
     musikUrl: musikUrl,
+    /* story-wetter.js: Betrag fuer die Karten ("+150 Dublonen" oder ""). */
+    preisText: function (st) { return preisText(st, 0); },
+    /* werbungsflut.js: "+150 Dublonen · +1 Skillpunkt" aus einer Antwort. */
+    belohnungsZeile: function (erg) { return belohnungsTeile(erg).join(" · "); },
     STORYS: Object.keys(STORYS),
   };
 })();

@@ -33,6 +33,15 @@
   const RUHIG = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
   function t(key, fallback) { return typeof window.t === "function" ? window.t(key, fallback) : fallback; }
   function T(key, de) { return t("story." + key, de); }
+  /* Satz mit Belohnung: "Eine Kiste treibt an Deck – +150 Dublonen."
+     Den Betrag stellt der Admin ein (Migration 36, live-storys.js);
+     ohne Belohnung bleibt nur der Satz. */
+  function mitBeute(satz, story) {
+    const beute = window.fhLiveStorys && window.fhLiveStorys.preisText ? window.fhLiveStorys.preisText(story) : "";
+    if (!beute) return satz;
+    const punkt = /\.$/.test(satz);
+    return satz.replace(/\.$/, "") + " – " + beute + (punkt ? "." : "");
+  }
 
   const STORYS = ["nebel", "sturm", "flut", "nordlicht"];
 
@@ -291,7 +300,7 @@
         if (!calm() && z.p.animate) z.p.animate([{ textShadow: "-3px 0 rgba(229,57,53,.7),3px 0 rgba(66,184,255,.9),0 0 40px #42b8ff" }, { textShadow: "0 0 40px #42b8ff,0 0 80px rgba(66,184,255,.5)" }, { textShadow: "2px 0 rgba(229,57,53,.6),-2px 0 rgba(66,184,255,.9),0 0 60px #42b8ff" }, { textShadow: "0 0 40px #42b8ff,0 0 80px rgba(66,184,255,.5)" }], { duration: 400, delay: 500, iterations: 4, easing: "steps(1,end)" });
       }
       if (n === 4) {
-        const k = karte({ top: "14%", rand: "#42b8ff", glow: "rgba(66,184,255,.3)", icon: IC.zap, iconColor: "#42b8ff", labelColor: "#42b8ff", label: T("storm.charged", "Aufgeladen"), text: T("storm.card", "Der Blitz hat die Schatzkiste aufgesprengt – +150 Dublonen.") });
+        const k = karte({ top: "14%", rand: "#42b8ff", glow: "rgba(66,184,255,.3)", icon: IC.zap, iconColor: "#42b8ff", labelColor: "#42b8ff", label: T("storm.charged", "Aufgeladen"), text: mitBeute(T("storm.card", "Der Blitz hat die Schatzkiste aufgesprengt."), "sturm") });
         F.card = k.box;
         if (!calm() && k.ic.animate) k.ic.animate([{ opacity: 1 }, { opacity: 1, offset: 0.49 }, { opacity: 0.35, offset: 0.5 }, { opacity: 0.35 }], { duration: 300, iterations: Infinity });
       }
@@ -372,7 +381,7 @@
         if (!calm()) z.letters.forEach(function (l, i) { if (l.animate) l.animate([{ translate: "0 0" }, { translate: "0 -6px" }, { translate: "0 0" }], { duration: 2400, delay: 900 + i * 90, iterations: Infinity, easing: "ease-in-out" }); });
       }
       if (n === 4) {
-        const k = karte({ top: "0px", rand: "rgba(90,160,224,.6)", glow: "rgba(90,160,224,.25)", icon: IC.gift, iconColor: "#55c878", labelColor: "#5aa0e0", label: T("flood.drift", "Treibgut"), text: T("flood.card", "Eine Kiste treibt an Deck – +150 Dublonen.") });
+        const k = karte({ top: "0px", rand: "rgba(90,160,224,.6)", glow: "rgba(90,160,224,.25)", icon: IC.gift, iconColor: "#55c878", labelColor: "#5aa0e0", label: T("flood.drift", "Treibgut"), text: mitBeute(T("flood.card", "Eine Kiste treibt an Deck."), "flut") });
         F.card = k.box;
       }
       if (n === 5) F.card = null;
@@ -474,7 +483,7 @@
       if (n === 4) {
         F.wish = { t0: performance.now(), x0: w * 0.82, y0: -10, x1: w / 2, y1: h * 0.42, burst: false };
         zeile(T("aurora.wish", "Wünsch dir was"), "calc(42% - 30px)", "clamp(26px,7vw,84px)", "var(--fh-fg)", "0 0 50px rgba(166,107,255,.65)", { delay: 1100, stagger: 45, dur: 1200, ls: ".06em", kf: [{ opacity: 0, filter: "blur(14px)", transform: "translateY(20px)" }, { opacity: 1, filter: "blur(0)", transform: "none" }] });
-        zeile(T("aurora.granted", "Ein Wunsch geht in Erfüllung – +150 Dublonen"), "calc(42% + 50px)", "16px", "var(--fh-fg)", "", { font: "var(--fh-font-sans, Inter), sans-serif", ls: ".01em", delay: 1900, stagger: 12, dur: 600 });
+        zeile(mitBeute(T("aurora.granted", "Ein Wunsch geht in Erfüllung"), "nordlicht"), "calc(42% + 50px)", "16px", "var(--fh-fg)", "", { font: "var(--fh-font-sans, Inter), sans-serif", ls: ".01em", delay: 1900, stagger: 12, dur: 600 });
       }
     },
     draw: function (ctx, w, h, t, n, u) {
