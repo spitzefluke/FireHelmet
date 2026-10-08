@@ -22,7 +22,7 @@
   "use strict";
 
   const ADRESSEN = {
-    admin: "scripts/core/admin-gateway.js?v=e959685d96",
+    admin: "scripts/core/admin-gateway.js?v=40780bec3b",
     riss: "scripts/liveevent/riss-film.js?v=c60d9cac41",
     wetter: "scripts/liveevent/story-wetter.js?v=d38bfcebe3"
   };

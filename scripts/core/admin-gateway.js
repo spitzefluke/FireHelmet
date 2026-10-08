@@ -1710,7 +1710,7 @@ async function buildGatewayTournamentHtml() {
       <p class="gateway-status-sub">Turnier <code>${escapeHtml(tournament.id)}</code> - Status: ${escapeHtml(tournament.status)}${tournament.paused ? " (pausiert)" : ""}</p>
       <p class="gateway-status-sub">${participants.length} Teilnehmer${tournament.bracket_size ? `, Bracket-Größe ${tournament.bracket_size}` : ""}${tournament.status === "active" ? `, ${openMatches} offene Matches` : ""}</p>
       ${actions.join(" ")}
-      ${buildGatewayTurnierFeinHtml(tournament, matches)}
+      ${buildGatewayTurnierFeinHtml(tournament, matches, participants)}
       <p id="gateway-tournament-status" class="wheel-status"></p>
     `;
   } catch (err) {
@@ -1773,13 +1773,15 @@ async function gatewaySetTournamentPaused(tournamentId, paused) {
    markiert. Von Hand an den Tabellen zu schrauben wuerde genau das
    vergessen.
 ------------------------------------------------------ */
-function buildGatewayTurnierFeinHtml(tournament, matches) {
+function buildGatewayTurnierFeinHtml(tournament, matches, participants) {
   const offen = (matches || []).filter((m) => m.status === "open");
+  const raus = new Set((participants || []).filter((p) => p.ausgeschlossen).map((p) => p.firebase_uid));
 
   const matchListe = offen.length
     ? offen.map((m) => `
         <p class="gateway-status-sub">
           Runde ${m.round}: <strong>${escapeHtml(m.player_1_nickname || "?")}</strong> gegen <strong>${escapeHtml(m.player_2_nickname || "?")}</strong>
+          ${raus.has(m.player_1_uid) && raus.has(m.player_2_uid) ? `<em>(beide ausgeschlossen – bitte von Hand entscheiden)</em>` : ""}
           <button type="button" class="code-button gateway-inline-btn" onclick="gatewayMatchEntscheiden(${m.id}, '${escapeHtml(m.player_1_uid || "")}')">${escapeHtml(m.player_1_nickname || "?")} gewinnt</button>
           <button type="button" class="code-button gateway-inline-btn" onclick="gatewayMatchEntscheiden(${m.id}, '${escapeHtml(m.player_2_uid || "")}')">${escapeHtml(m.player_2_nickname || "?")} gewinnt</button>
         </p>`).join("")
@@ -1793,6 +1795,9 @@ function buildGatewayTurnierFeinHtml(tournament, matches) {
       <h3 class="gateway-untertitel">Offene Matches von Hand entscheiden</h3>
       ${matchListe}
 
+      <h3 class="gateway-untertitel">Spieler ausschließen</h3>
+      ${buildGatewayTurnierAusschlussHtml(tournament, participants)}
+
       <h3 class="gateway-untertitel">Teilnehmer</h3>
       ${anmeldung ? `
         <div class="gateway-form-row">
@@ -1804,6 +1809,44 @@ function buildGatewayTurnierFeinHtml(tournament, matches) {
       ` : `<p class="gateway-preview-hint">Nachtragen und Entfernen gehen nur während der Anmeldung — sobald das Turnier läuft, steht der Baum und hätte keinen Platz mehr. Setz es dafür kurz mit „Fortschritt zurücksetzen“ auf Anmeldung.</p>`}
     </details>
   `;
+}
+
+/* Migration 37: Ein ausgeschlossener Spieler verliert jedes Match
+   automatisch an seinen Gegner - sichtbar, im Baum steht
+   "ausgeschlossen". Steht er gerade in einem offenen Match, ist es
+   sofort entschieden; sonst, sobald sein naechstes Match offen ist.
+   Sind beide ausgeschlossen, bleibt das Match offen (oben von Hand). */
+function buildGatewayTurnierAusschlussHtml(tournament, participants) {
+  const liste = participants || [];
+  if (!liste.length) return `<p class="gateway-status-sub">Noch keine Teilnehmer.</p>`;
+  const zeilen = liste.map((p) => {
+    const zustand = p.ausgeschlossen ? "ausgeschlossen" : p.eliminated ? "ausgeschieden" : "im Rennen";
+    return `
+      <p class="gateway-status-sub">
+        <strong>${escapeHtml(p.nickname || "?")}</strong> – ${zustand}
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayTeilnehmerAusschliessen('${escapeHtml(tournament.id)}', '${escapeHtml(p.firebase_uid)}', ${!p.ausgeschlossen})">${p.ausgeschlossen ? "Wieder zulassen" : "Ausschließen"}</button>
+      </p>`;
+  }).join("");
+  return `${zeilen}
+    <p class="gateway-preview-hint">Ausgeschlossene verlieren jedes Match automatisch an ihren Gegner; im Turnierbaum steht bei ihnen „ausgeschlossen“. „Wieder zulassen“ gilt nur für kommende Matches.</p>`;
+}
+
+async function gatewayTeilnehmerAusschliessen(tournamentId, uid, aus) {
+  const statusEl = document.getElementById("gateway-tournament-status");
+  if (aus && !window.confirm("Diesen Spieler von der Challenge ausschließen?\n\nSein offenes Match geht sofort an den Gegner, alle weiteren ebenfalls. Im Turnierbaum steht bei ihm „ausgeschlossen“.")) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_teilnehmer_ausschliessen", {
+      p_tournament_id: tournamentId, p_uid: uid, p_aus: !!aus,
+    });
+    if (error) throw error;
+    await renderGatewayPage();
+    const el = document.getElementById("gateway-tournament-status");
+    if (el) el.textContent = aus ? "✓ Ausgeschlossen" + (data > 0 ? " – " + data + " Match" + (data === 1 ? "" : "es") + " sofort entschieden." : ".") : "✓ Wieder zugelassen.";
+  } catch (err) {
+    console.error("Ausschließen fehlgeschlagen:", err);
+    const m = String((err && err.message) || err);
+    if (statusEl) statusEl.textContent = "⚠️ " + (/admin_teilnehmer_ausschliessen|function/i.test(m) ? m + " – ist Migration 37 eingespielt?" : m);
+  }
 }
 
 async function gatewayMatchEntscheiden(matchId, winnerUid) {

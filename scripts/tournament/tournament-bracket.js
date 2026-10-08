@@ -20,7 +20,9 @@ function formatTournamentScoreMs(scoreMs) {
   return typeof scoreMs === "number" ? `${scoreMs} ms` : "";
 }
 
-function renderTournamentPlayerSlot(uid, nickname, score, isWinner, matchComplete) {
+// ausgeschlossen (Migration 37): vom Admin ausgeschlossen - verliert
+// jedes Match automatisch; steht sichtbar am Namen.
+function renderTournamentPlayerSlot(uid, nickname, score, isWinner, matchComplete, ausgeschlossen) {
   const classes = ["tournament-match-player"];
   let nameHtml;
 
@@ -34,6 +36,11 @@ function renderTournamentPlayerSlot(uid, nickname, score, isWinner, matchComplet
     nameHtml = typeof escapeHtml === "function" ? escapeHtml(nickname || "?") : (nickname || "?");
     if (isWinner) classes.push("is-winner");
     else if (matchComplete) classes.push("is-loser");
+    if (ausgeschlossen) {
+      classes.push("is-ausgeschlossen");
+      const label = typeof t === "function" ? t("tournament.bracket.excluded", "ausgeschlossen") : "ausgeschlossen";
+      nameHtml += ` <span class="tournament-match-player-badge">${typeof escapeHtml === "function" ? escapeHtml(label) : label}</span>`;
+    }
   }
 
   const scoreHtml = typeof score === "number"
@@ -46,7 +53,8 @@ function renderTournamentPlayerSlot(uid, nickname, score, isWinner, matchComplet
   </div>`;
 }
 
-function renderTournamentMatchCard(match, myUid) {
+function renderTournamentMatchCard(match, myUid, ausgeschlossen) {
+  const aus = (uid) => !!ausgeschlossen && !!uid && ausgeschlossen.has(uid);
   const state = getTournamentMatchDisplayState(match);
   const isMine = !!myUid && (match.player_1_uid === myUid || match.player_2_uid === myUid);
   const classes = ["tournament-match-card", `is-${state}`];
@@ -57,9 +65,9 @@ function renderTournamentMatchCard(match, myUid) {
   const p2IsWinner = complete && match.winner_uid === match.player_2_uid;
 
   return `<div class="${classes.join(" ")}">
-    ${renderTournamentPlayerSlot(match.player_1_uid, match.player_1_nickname, match.player_1_score, p1IsWinner, complete)}
+    ${renderTournamentPlayerSlot(match.player_1_uid, match.player_1_nickname, match.player_1_score, p1IsWinner, complete, aus(match.player_1_uid))}
     <div class="tournament-match-divider">vs</div>
-    ${renderTournamentPlayerSlot(match.player_2_uid, match.player_2_nickname, match.player_2_score, p2IsWinner, complete)}
+    ${renderTournamentPlayerSlot(match.player_2_uid, match.player_2_nickname, match.player_2_score, p2IsWinner, complete, aus(match.player_2_uid))}
   </div>`;
 }
 
@@ -69,7 +77,9 @@ function renderTournamentMatchCard(match, myUid) {
 // myUid: optionale eigene UID, hebt das eigene Match/den eigenen
 // Champion-Eintrag visuell hervor (siehe UX-Anforderung "wo bin ich im
 // Turnier?").
-function renderTournamentBracket(tournament, matches, myUid) {
+// ausgeschlossen: optionales Set der UIDs, die der Admin ausgeschlossen
+// hat (Migration 37) - stehen im Baum mit Hinweis.
+function renderTournamentBracket(tournament, matches, myUid, ausgeschlossen) {
   if (!tournament || !Array.isArray(matches)) return "";
 
   const bracketSize = tournament.bracket_size;
@@ -82,7 +92,7 @@ function renderTournamentBracket(tournament, matches, myUid) {
       .filter((m) => m.round === round)
       .sort((a, b) => a.match_index - b.match_index);
 
-    const cardsHtml = roundMatches.map((m) => renderTournamentMatchCard(m, myUid)).join("");
+    const cardsHtml = roundMatches.map((m) => renderTournamentMatchCard(m, myUid, ausgeschlossen)).join("");
 
     columns.push(`
       <div class="tournament-round" data-round="${round}">
