@@ -1068,6 +1068,7 @@ const translations = {
     "tournament.round.round16": "Achtelfinale",
     "tournament.bracket.pending": "Wird ermittelt",
     "tournament.bracket.bye": "Freilos",
+    "tournament.bracket.excluded": "ausgeschlossen",
     "tournament.bracket.champion": "Champion",
 
     "tournament.reaction.introStatus": "Bereit für den Reaktionstest?",
@@ -1097,6 +1098,7 @@ const translations = {
     "tournament.page.pausedStatus": "⏸ Das Turnier ist aktuell pausiert.",
     "tournament.page.alreadyStartedNotJoined": "Das Turnier läuft bereits - diesmal konntest du nicht mehr beitreten.",
     "tournament.page.eliminatedStatus": "☠️ Du bist ausgeschieden. Verfolge weiter, wer die Cap gewinnt!",
+    "tournament.page.excludedStatus": "Du bist von dieser Challenge ausgeschlossen. Deine Matches gehen an deine Gegner.",
     "tournament.page.waitingNextRound": "Warte auf deine nächste Runde...",
     "tournament.page.alreadyPlayedWaiting": "Du hast bereits gespielt. Warte auf",
     "tournament.page.opponentLabel": "Dein Gegner",
@@ -2180,6 +2182,7 @@ const translations = {
     "tournament.round.round16": "Round of 16",
     "tournament.bracket.pending": "TBD",
     "tournament.bracket.bye": "Bye",
+    "tournament.bracket.excluded": "excluded",
     "tournament.bracket.champion": "Champion",
 
     "tournament.reaction.introStatus": "Ready for the reaction test?",
@@ -2209,6 +2212,7 @@ const translations = {
     "tournament.page.pausedStatus": "⏸ The tournament is currently paused.",
     "tournament.page.alreadyStartedNotJoined": "The tournament has already started - you couldn't join this time.",
     "tournament.page.eliminatedStatus": "☠️ You've been eliminated. Keep watching to see who wins the cap!",
+    "tournament.page.excludedStatus": "You've been excluded from this challenge. Your matches go to your opponents.",
     "tournament.page.waitingNextRound": "Waiting for your next round...",
     "tournament.page.alreadyPlayedWaiting": "You've already played. Waiting for",
     "tournament.page.opponentLabel": "Your opponent",

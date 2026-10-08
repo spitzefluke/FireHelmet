@@ -2307,6 +2307,27 @@
   text-decoration: line-through;
 }
 
+/* Vom Admin ausgeschlossen (Migration 37): kein Durchstreichen - der
+   Hinweis daneben sagt, warum. */
+.tournament-match-player.is-ausgeschlossen {
+  text-decoration: none;
+  opacity: .7;
+}
+
+.tournament-match-player-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--fh-danger) 60%, transparent);
+  border-radius: 999px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--fh-danger);
+}
+
 .tournament-match-player.is-pending,
 .tournament-match-player.is-bye {
   font-style: italic;

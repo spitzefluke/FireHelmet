@@ -182,7 +182,7 @@ function buildTournamentPageHtml({ uid, tournament, finished, matches, participa
   const prizeHtml = buildTournamentPrizeBannerHtml(prize);
   const statusHtml = buildTournamentStatusHtml({ uid, tournament, finished, matches, myParticipant });
   const bracketHtml = active && matches.length
-    ? `<div class="tournament-bracket-wrap">${renderTournamentBracket(active, matches, uid)}</div>`
+    ? `<div class="tournament-bracket-wrap">${renderTournamentBracket(active, matches, uid, new Set(participants.filter((p) => p.ausgeschlossen).map((p) => p.firebase_uid)))}</div>`
     : "";
 
   return `
@@ -255,8 +255,20 @@ function buildTournamentStatusHtml({ uid, tournament, finished, matches, myParti
   return buildTournamentActiveHtml(tournament, matches, uid, myParticipant);
 }
 
+/* Migration 37: vom Admin ausgeschlossen - gilt in jeder Phase. */
+function buildTournamentExcludedHtml(pausedNote) {
+  return `
+    <div class="tournament-status-card">
+      ${pausedNote || ""}
+      <p class="tournament-status-text is-negative">${escapeHtml(tt("tournament.page.excludedStatus", "Du bist von dieser Challenge ausgeschlossen. Deine Matches gehen an deine Gegner."))}</p>
+    </div>
+  `;
+}
+
 function buildTournamentRegistrationHtml(tournament, myParticipant) {
   const explanation = `<p class="tournament-explanation">${escapeHtml(tt("tournament.page.explanation", ""))}</p>`;
+
+  if (myParticipant && myParticipant.ausgeschlossen) return buildTournamentExcludedHtml("");
 
   if (myParticipant) {
     return `
@@ -295,6 +307,8 @@ function buildTournamentActiveHtml(tournament, matches, uid, myParticipant) {
       </div>
     `;
   }
+
+  if (myParticipant.ausgeschlossen) return buildTournamentExcludedHtml(pausedNote);
 
   if (myParticipant.eliminated) {
     return `
