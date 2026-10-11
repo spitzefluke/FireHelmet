@@ -7,6 +7,7 @@
      admin    scripts/core/admin-gateway.js   (nur der Admin-Bereich)
      riss     scripts/liveevent/riss-film.js  (nur die Story "Der Riss")
      wetter   scripts/liveevent/story-wetter.js (nur die Wetter-Storys)
+     herz     scripts/liveevent/herz-film.js  (nur "Zwei Hälften eines Herzens")
 
    Die Adressen stehen fest hier in ADRESSEN - nicht im HTML, damit
    keine Skriptadresse aus dem DOM gelesen wird (CodeQL: "DOM text
@@ -22,8 +23,9 @@
   "use strict";
 
   const ADRESSEN = {
-    admin: "scripts/core/admin-gateway.js?v=40780bec3b",
+    admin: "scripts/core/admin-gateway.js?v=a2169b9e98",
     riss: "scripts/liveevent/riss-film.js?v=c60d9cac41",
+    herz: "scripts/liveevent/herz-film.js?v=c6ba6293c5",
     wetter: "scripts/liveevent/story-wetter.js?v=d38bfcebe3"
   };
 

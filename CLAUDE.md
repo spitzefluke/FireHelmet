@@ -16,8 +16,8 @@ Datei, die du gerade anfasst.
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 118 `<script defer>`-Tags in fester
-Reihenfolge, davon 104 aus diesem Repo. Drei große Skripte, die fast niemand braucht
-(`admin-gateway.js`, `riss-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
+Reihenfolge, davon 104 aus diesem Repo. Vier große Skripte, die fast niemand braucht
+(`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
 meldet CodeQL das als hohe Sicherheitslücke. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
@@ -115,7 +115,7 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhStoryWetter` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+`window.fhHerzFilm`, `window.fhStoryWetter` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
 nach `fhNachladen(...)`. Was andere Dateien früher brauchen, gehört in die kleine
 Immer-geladen-Datei daneben (`admin-zugang.js`: `isAuthorizedAdmin`, `updateGatewayPage`).
 

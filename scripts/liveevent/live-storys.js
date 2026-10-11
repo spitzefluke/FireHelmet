@@ -84,6 +84,10 @@
        der Film selbst rechnet aus der Zeit, hier zaehlt nur, wo ein
        Zuschauer einsteigt und wann alles vorbei ist. */
     riss: { szenen: [18000, 22000, 35000, 25000, 25000, 25000, 18000, 27000, 20000, 35000, 32000, 18000] },
+    /* Migration 38: "Zwei Haelften eines Herzens" - Kurzfilm mit
+       Erzaehlerstimme aus herz-film.js; die zehn Szenen sind seine
+       Kapitel (zusammen 616 s, wie dort im Drehbuch). */
+    herz: { szenen: [62000, 60000, 58000, 60000, 52000, 66000, 58000, 68000, 58000, 74000] },
   };
   const ZEITEN_IN_SZENE = {};  // Summe der Dauer bis zum Beginn jeder Szene
   Object.keys(STORYS).forEach(function (st) {
@@ -1027,6 +1031,7 @@
   ------------------------------------------------------ */
   let audio = null, fadeUhr = null, musikLaeuft = false;
   const MUSIK_LAUT = 0.6;
+  let daempfung = 1;        // herz-film.js: leiser in den stillen Stellen (0..1)
 
   function musikUrl(st) {
     st = st || "disco";
@@ -1049,6 +1054,7 @@
     clearInterval(fadeUhr);
     if (audio.getAttribute("src") !== src) audio.src = src;
     audio.loop = true;
+    daempfung = 1;
     audio.volume = MUSIK_LAUT;
     const ab = Math.max(0, (abMs || 0) / 1000);
     const springen = function () {
@@ -1070,15 +1076,22 @@
      startet beim ersten Tippen irgendwo auf der Seite.
   ------------------------------------------------------ */
   let tonKnopf = null;
+  /* Was ausserdem auf das Tippen wartet (herz-film.js: die
+     Erzaehlerstimme) - laeuft IM Tippen, sonst zaehlt es nicht. */
+  const tonHelfer = [];
+  function tonFreigabe(fn) {
+    if (typeof fn === "function") tonHelfer.push(fn);
+    tonFreigabeZeigen(true);
+  }
   const IC_TON = '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>';
 
   function tonAbspielen() {
     if (!audio || !musikLaeuft) return;
     const p = audio.play();
-    if (p && p.then) p.then(tonFreigabeWeg).catch(function (e) { if (e && e.name === "NotAllowedError") tonFreigabeZeigen(); });
+    if (p && p.then) p.then(function () { if (!tonHelfer.length) tonFreigabeWeg(); }).catch(function (e) { if (e && e.name === "NotAllowedError") tonFreigabeZeigen(); });
   }
-  function tonFreigabeZeigen() {
-    if (tonKnopf || !musikLaeuft) return;
+  function tonFreigabeZeigen(auchOhneMusik) {
+    if (tonKnopf || (!musikLaeuft && !auchOhneMusik)) return;
     tonKnopf = document.createElement("button");
     tonKnopf.type = "button";
     tonKnopf.className = "fh-ton-an";
@@ -1099,7 +1112,15 @@
   function tonFreigeben() {
     tonFreigabeWeg();
     if (audio && musikLaeuft) audio.play().catch(function () { /* dann eben still */ });
+    tonHelfer.splice(0).forEach(function (fn) { try { fn(); } catch (e) { console.warn(e); } });
   }
+  /* herz-film.js: Musik in den stillen Stellen leiser (1 = normal).
+     Waehrend des Ausblendens am Ende nicht dazwischenfunken. */
+  function musikDaempfen(f) {
+    daempfung = Math.max(0, Math.min(1, Number(f)));
+    if (audio && musikLaeuft) audio.volume = MUSIK_LAUT * daempfung;
+  }
+
   /* Handy aus dem Hintergrund zurueck: laufende Musik wieder an. */
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden && musikLaeuft && audio && audio.paused) tonAbspielen();
@@ -1107,6 +1128,7 @@
 
   function musikAus(ms) {
     musikLaeuft = false;
+    tonHelfer.length = 0;
     tonFreigabeWeg();
     if (!audio) return;
     clearInterval(fadeUhr);
@@ -1192,6 +1214,17 @@
       /* riss-film.js (84 KB) wird erst jetzt nachgeladen. */
       if (window.fhRissFilm) rissStart();
       else if (window.fhNachladen) window.fhNachladen("riss").then(rissStart, function (e) { console.warn(e); });
+    }
+
+    /* Zwei Haelften eines Herzens (38): genauso, herz-film.js (67 KB). */
+    if (st === "herz" && !lauf.herzGestartet) {
+      lauf.herzGestartet = true;
+      const herzStart = function () {
+        if (!lauf || lauf.id !== id || lauf.story !== "herz" || !window.fhHerzFilm) return;
+        window.fhHerzFilm.start({ ab: ZEITEN_IN_SZENE.herz[lauf.n - 1] + imSzeneMs(), vorschau: vorschau });
+      };
+      if (window.fhHerzFilm) herzStart();
+      else if (window.fhNachladen) window.fhNachladen("herz").then(herzStart, function (e) { console.warn(e); });
     }
 
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
@@ -1319,18 +1352,21 @@
     if (musikLaeuft) musikAus(1500);
     if (window.fhStoryWetter) window.fhStoryWetter.ende();
     if (st === "riss" && window.fhRissFilm) window.fhRissFilm.ende();
+    if (st === "herz" && window.fhHerzFilm) window.fhHerzFilm.ende();
     if (st === "hacked") loecherSpawnen(id, vorschau);
     if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
     if (st === "sturm" && !vorschau) nachregen = true;
     anzeigen();
     /* 36: Riss und Systemausfall zahlen am Ende - nur wer bis hier
        dabei war, und nur, wenn der Admin etwas eingestellt hat. */
-    if ((st === "riss" || st === "ende") && hatPreis(st)) {
+    if ((st === "riss" || st === "ende" || st === "herz") && hatPreis(st)) {
       belohnungAbholen(id, "abschluss", 0, vorschau, st).then(function (erg) {
         const teile = belohnungsTeile(erg);
         if (!teile.length) return;
-        const text = st === "riss" ? t("story.riss.reward", "Willkommen im Jahr 1720") : t("story.end.reward", "Ein Trostpflaster für die Crew");
-        banderole(text + belohnungsText(erg), st === "riss" ? "Ändii" : "???", st === "riss" ? "#e8d5a8" : "#39ff14", st === "ende");
+        const text = st === "riss" ? t("story.riss.reward", "Willkommen im Jahr 1720")
+          : st === "herz" ? t("story.herz.reward", "Danke fürs Zuschauen")
+          : t("story.end.reward", "Ein Trostpflaster für die Crew");
+        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : "#39ff14", st === "ende");
       });
     }
   }
@@ -1362,6 +1398,7 @@
     if (window.fhWerbungsflut) window.fhWerbungsflut.weg();
     if (window.fhGegenhack) window.fhGegenhack.siegWeg();
     if (window.fhRissFilm) window.fhRissFilm.weg();
+    if (window.fhHerzFilm) window.fhHerzFilm.weg();
     if (window.fhStoryWetter) window.fhStoryWetter.weg();
     if (musikLaeuft) musikAus(0);
     lauf = null;
@@ -1493,6 +1530,9 @@
     preisText: function (st) { return preisText(st, 0); },
     /* werbungsflut.js: "+150 Dublonen · +1 Skillpunkt" aus einer Antwort. */
     belohnungsZeile: function (erg) { return belohnungsTeile(erg).join(" · "); },
+    /* herz-film.js: Erzaehlerstimme nach dem ersten Tippen, Musik leiser. */
+    tonFreigabe: tonFreigabe,
+    musikDaempfen: musikDaempfen,
     STORYS: Object.keys(STORYS),
   };
 })();
