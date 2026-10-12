@@ -84,6 +84,38 @@ const wheelSpecialAvatars = [
   { id: "shop-totenkopf", avatar: "💀", label: "Totenkopf" },
   { id: "shop-anker", avatar: "⚓", label: "Anker" },
 
+  // Neue Shop-Piraten (Bilder einzeln zugeschnitten aus den gelieferten Vorlagen).
+  { id: "shop-pirat-01", avatar: "scripts/avatare/shop-pirat-01.webp", label: "Strohhut-Pirat" },
+  { id: "shop-pirat-02", avatar: "scripts/avatare/shop-pirat-02.webp", label: "Rotschopf" },
+  { id: "shop-pirat-03", avatar: "scripts/avatare/shop-pirat-03.webp", label: "Brummbart" },
+  { id: "shop-pirat-04", avatar: "scripts/avatare/shop-pirat-04.webp", label: "Knochenwache" },
+  { id: "shop-pirat-05", avatar: "scripts/avatare/shop-pirat-05.webp", label: "Papagei" },
+  { id: "shop-pirat-06", avatar: "scripts/avatare/shop-pirat-06.webp", label: "Schattenklinge" },
+  { id: "shop-pirat-07", avatar: "scripts/avatare/shop-pirat-07.webp", label: "Freibeuterin" },
+  { id: "shop-pirat-08", avatar: "scripts/avatare/shop-pirat-08.webp", label: "Pixelkapitän" },
+  { id: "shop-pirat-09", avatar: "scripts/avatare/shop-pirat-09.webp", label: "Feuerschädel" },
+  { id: "shop-pirat-10", avatar: "scripts/avatare/shop-pirat-10.webp", label: "Sonnenpirat" },
+  { id: "shop-pirat-11", avatar: "scripts/avatare/shop-pirat-11.webp", label: "Strohhut-Abenteurer" },
+  { id: "shop-pirat-12", avatar: "scripts/avatare/shop-pirat-12.webp", label: "Rothaarige Kapitänin" },
+  { id: "shop-pirat-13", avatar: "scripts/avatare/shop-pirat-13.webp", label: "Goldzahn-Pirat" },
+  { id: "shop-pirat-14", avatar: "scripts/avatare/shop-pirat-14.webp", label: "Blaue Knochenwache" },
+  { id: "shop-pirat-15", avatar: "scripts/avatare/shop-pirat-15.webp", label: "Schwarzsegel-Kapitän" },
+  { id: "shop-pirat-16", avatar: "scripts/avatare/shop-pirat-16.webp", label: "Papagei-Scout" },
+  { id: "shop-pirat-17", avatar: "scripts/avatare/shop-pirat-17.webp", label: "Feuer-Pirat" },
+  { id: "shop-pirat-18", avatar: "scripts/avatare/shop-pirat-18.webp", label: "Glückspiratin" },
+  { id: "shop-pirat-19", avatar: "scripts/avatare/shop-pirat-19.webp", label: "Blockwelt-Pirat" },
+  { id: "shop-pirat-20", avatar: "scripts/avatare/shop-pirat-20.webp", label: "Nachtwache" },
+  { id: "shop-pirat-21", avatar: "scripts/avatare/shop-pirat-21.webp", label: "Klingenpirat" },
+  { id: "shop-pirat-22", avatar: "scripts/avatare/shop-pirat-22.webp", label: "Insel-Otter" },
+  { id: "shop-pirat-23", avatar: "scripts/avatare/shop-pirat-23.webp", label: "Flammenkapitänin" },
+  { id: "shop-pirat-24", avatar: "scripts/avatare/shop-pirat-24.webp", label: "Geistersteuerer" },
+  { id: "shop-pirat-25", avatar: "scripts/avatare/shop-pirat-25.webp", label: "Strohhut-Optimist" },
+  { id: "shop-pirat-26", avatar: "scripts/avatare/shop-pirat-26.webp", label: "Grinsender Seebär" },
+  { id: "shop-pirat-27", avatar: "scripts/avatare/shop-pirat-27.webp", label: "Silberhaar-Piratin" },
+  { id: "shop-pirat-28", avatar: "scripts/avatare/shop-pirat-28.webp", label: "Blockwelt-Abenteurer" },
+  { id: "shop-pirat-29", avatar: "scripts/avatare/shop-pirat-29.webp", label: "Pistolen-Kapitän" },
+  { id: "shop-pirat-30", avatar: "scripts/avatare/shop-pirat-30.webp", label: "Doppelklingen-Schädel" }
+
   // Eigene Beispiele:
   // { id: "legendaer", avatar: "scripts/avatare/legendaer.png", label: "Legendärer Pirat" },
 

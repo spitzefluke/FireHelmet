@@ -65,6 +65,8 @@
     { id: "frag", icon: IC.raster, titel: ["missionFrag", "Datenfragmente sichern"], text: ["missionFragText", "Fragmente fliegen über die Seite. Schnapp dir 8, bevor sie zerfallen."], tat: ["feedFrag", "hat 8 Datenfragmente gesichert"] },
     { id: "freq", icon: IC.welle, titel: ["missionFreq", "Gegensignal abstimmen"], text: ["missionFreqText", "Stimm Frequenz und Stärke auf das Signal von ??? ab."], tat: ["feedFreq", "hat das Gegensignal gefunden"] },
     { id: "code", icon: IC.schloss, titel: ["missionCode", "Zugangscode knacken"], text: ["missionCodeText", "Merk dir die Reihenfolge der Blöcke und gib sie zurück."], tat: ["feedCode", "hat einen Zugangscode geknackt"] },
+    { id: "rad", icon: IC.muenzen, titel: ["missionWheel", "Schatzrad drehen"], text: ["missionWheelText", "Dreh heute das Schatzrad. Ein gültiger Dreh zählt zusätzlich."], tat: ["feedWheel", "hat das Schatzrad gedreht"], pruefen: true },
+    { id: "boss", icon: IC.medaille, titel: ["missionBoss", "Community-Boss angreifen"], text: ["missionBossText", "Verursache heute Schaden am Community-Boss. Dein täglicher Treffer zählt."], tat: ["feedBoss", "hat dem Community-Boss Schaden zugefügt"], pruefen: true },
   ];
   const CODES = ["3F", "A7", "0C", "E1", "5B", "92", "D4", "68", "BF"];
 
@@ -333,12 +335,12 @@
         const z = aus('<div class="fh-gh-aufgabe" data-aufgabe="' + a.id + '">' +
           '<span class="fh-gh-aufgabe-icon">' + svg(a.icon, "") + '</span>' +
           '<div class="fh-gh-aufgabe-text"><p class="fh-gh-aufgabe-titel"></p><p class="fh-gh-aufgabe-sub"></p></div>' +
-          '<button type="button" class="fh-gh-knopf fh-gh-start">' + T("start", "Starten") + '</button>' +
+          '<button type="button" class="fh-gh-knopf fh-gh-start">' + T(a.pruefen ? "claimCheck" : "start", a.pruefen ? "Prüfen" : "Starten") + '</button>' +
           '<span class="fh-gh-fertig">' + svg(IC.haken, "") + '<span></span></span>' +
         '</div>');
         kaputtText(z.querySelector(".fh-gh-aufgabe-titel"), t("gegenhack." + a.titel[0], a.titel[1]));
         kaputtText(z.querySelector(".fh-gh-aufgabe-sub"), t("gegenhack." + a.text[0], a.text[1]));
-        z.querySelector(".fh-gh-start").addEventListener("click", function () { spielStarten(a.id); });
+        z.querySelector(".fh-gh-start").addEventListener("click", function () { if (a.pruefen) geschafft(a.id); else spielStarten(a.id); });
         return z;
       }));
     }
@@ -357,7 +359,7 @@
     const n = stand.meine.length;
     panel.querySelector(".fh-gh-beitrag").textContent = n
       ? t("gegenhack.yourShare", "Dein Beitrag:") + " +" + prozent(n * schritt)
-      : n + " / 3 " + t("gegenhack.done", "erledigt");
+      : n + " / " + AUFGABEN.length + " " + t("gegenhack.done", "erledigt");
   }
 
   function terminText(ms) {
@@ -676,7 +678,8 @@
       return;
     }
     if (erg === -1) { toast(t("gegenhack.overTitle", "Quest vorbei"), t("gegenhack.overText", "Diese Quest nimmt keine Beiträge mehr an."), IC.warnung); standLaden(); return; }
-    if (erg === 0) { toast(t("gegenhack.alreadyTitle", "Schon erledigt"), t("gegenhack.alreadyText", "Jede Aufgabe zählt einmal pro Pirat."), IC.haken); return; }
+    if (erg === 0) { toast(t("gegenhack.alreadyTitle", "Schon erledigt"), t("gegenhack.alreadyText", "Jede Aufgabe zählt einmal am Tag pro Pirat."), IC.haken); return; }
+    if (erg === -2) { toast(t("gegenhack.notYetTitle", "Noch nicht erfüllt"), t("gegenhack.notYetText", "Dreh heute zuerst das Schatzrad oder verursache Schaden am Community-Boss."), IC.uhr); return; }
     puls++;
     await standLaden();
     feedLaden();

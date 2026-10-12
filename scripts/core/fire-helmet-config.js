@@ -42,7 +42,7 @@ const FIRE_HELMET_CONFIG = {
   // alle ihre Artikel gezeigt.
   shopRotationSlotsPerType: {
     frame: 3,
-    avatar: 3,
+    avatar: 6,
   },
 
   // Seltenheitsstufen: Farbe, Glow-Farbe (für CSS-Variablen),

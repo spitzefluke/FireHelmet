@@ -14,6 +14,9 @@
 /* =====================================================
    SHOP
 ===================================================== */
+
+/* Intro-Effekte und große Karten-Glows dürfen die Seite nicht horizontal verschieben. */
+#shop { overflow-x: clip; }
 .shop-content {
   position: relative;
   max-width: 940px;
