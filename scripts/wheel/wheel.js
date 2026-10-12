@@ -945,49 +945,10 @@ function syncCodesToDatabase() {
   const nickname = localStorage.getItem("wheelNickname") || "";
   if (!nickname || !supabaseClient) return;
 
-  const totalCracked = getCrackedCodes().length;
-  const syncedCount = parseInt(localStorage.getItem("codesSyncedCount") || "0", 10);
-  const missing = totalCracked - syncedCount;
+  // Alte lokale Hashes beweisen nicht, dass der Code eingegeben wurde;
+  // sie werden deshalb nicht mehr blind in die serverseitige Rangliste kopiert.
+  void nickname;
 
-  if (missing <= 0) return;
-
-  wheelAuthReady.then(async (uid) => {
-    if (!uid) return;
-
-    try {
-      await ensureSupabasePlayerRow(uid, nickname);
-
-      const { data: current, error: readError } = await supabaseClient
-        .from("players")
-        .select("codes_cracked, rewards")
-        .eq("firebase_uid", uid)
-        .maybeSingle();
-      if (readError) throw readError;
-
-      const fields = {
-        nickname: nickname,
-        codes_cracked: (current && current.codes_cracked ? current.codes_cracked : 0) + missing,
-      };
-
-      // Aequivalent zu Firestores arrayUnion: dedupliziert von Hand,
-      // ungefaehrlich mehrfach aufzurufen.
-      const rewards = getCodeRewards();
-      if (rewards.length) {
-        const oldRewards = (current && current.rewards) || [];
-        fields.rewards = [...new Set([...oldRewards, ...rewards])];
-      }
-
-      // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
-      const { error: writeError } = await withSupabaseRlsColdStartRetry(() =>
-        supabaseClient.from("players").update(fields).eq("firebase_uid", uid)
-      );
-      if (writeError) throw writeError;
-
-      localStorage.setItem("codesSyncedCount", String(totalCracked));
-    } catch (err) {
-      console.error("Nachhol-Synchronisierung fehlgeschlagen:", err);
-    }
-  });
 }
 
 /* ------------------------------------------------------
@@ -1463,7 +1424,7 @@ function markCodeCrackedLocally(codeId, reward) {
   return true;
 }
 
-function recordCodeCrack(codeId, reward) {
+function recordCodeCrack(codeId, reward, codeValue) {
   if (!markCodeCrackedLocally(codeId, reward)) return false;
 
   const nickname = localStorage.getItem("wheelNickname") || "";
@@ -1475,26 +1436,8 @@ function recordCodeCrack(codeId, reward) {
       try {
         await ensureSupabasePlayerRow(uid, nickname);
 
-        const { data: current, error: readError } = await supabaseClient
-          .from("players")
-          .select("codes_cracked, rewards")
-          .eq("firebase_uid", uid)
-          .maybeSingle();
-        if (readError) throw readError;
-
-        const fields = {
-          nickname: nickname,
-          codes_cracked: (current && current.codes_cracked ? current.codes_cracked : 0) + 1,
-        };
-
-        if (reward) {
-          const oldRewards = (current && current.rewards) || [];
-          fields.rewards = oldRewards.includes(reward) ? oldRewards : [...oldRewards, reward];
-        }
-
-        // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
         const { error: writeError } = await withSupabaseRlsColdStartRetry(() =>
-          supabaseClient.from("players").update(fields).eq("firebase_uid", uid)
+          supabaseClient.rpc("record_code_crack", { p_code: codeValue })
         );
         if (writeError) throw writeError;
       } catch (err) {
@@ -1573,14 +1516,17 @@ async function redeemCurrencyCode(codeId, amount, avatarUnlockId) {
 
   const data = current || {};
   const redeemed = data.redeemed_currency_codes || {};
+  const freieKapazitaet = Math.max(0, 2000000 - Number(data.currency || 0));
+  const gutgeschrieben = Math.min(Number(amount) || 0, freieKapazitaet);
+  if (gutgeschrieben <= 0) throw new Error("wallet-full");
 
   if (redeemed[codeId]) {
     throw new Error("already-redeemed");
   }
 
   const fields = {
-    currency: (data.currency || 0) + amount,
-    total_currency_earned: (data.total_currency_earned || 0) + amount,
+    currency: (data.currency || 0) + gutgeschrieben,
+    total_currency_earned: (data.total_currency_earned || 0) + gutgeschrieben,
     codes_cracked: (data.codes_cracked || 0) + 1,
     // JSONB-Merge von Hand (kein Firestore-Dot-Pfad noetig): alle bereits
     // eingeloesten Codes bleiben erhalten, nur dieser eine kommt dazu. Die
@@ -1614,6 +1560,7 @@ async function redeemCurrencyCode(codeId, amount, avatarUnlockId) {
   if (fields.unlocked_avatars && typeof markAvatarUnlockedLocally === "function") {
     markAvatarUnlockedLocally(avatarUnlockId);
   }
+  return gutgeschrieben;
 }
 
 /* ------------------------------------------------------
