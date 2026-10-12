@@ -274,7 +274,7 @@ returns boolean
 language plpgsql
 security definer
 set search_path = pg_catalog
-as $
+as $$
 declare
   uid text := app.firebase_uid();
   neu integer;
