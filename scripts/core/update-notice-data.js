@@ -13,7 +13,7 @@
 
 const updateNoticeConfig = {
   title: "🆕 Neuigkeiten",
-  message: "🏅 NEU: Dave Awards! Im Menü findest du jetzt den Punkt 'Dave Awards' - führt dich direkt zur Dave Awards Seite.",
+  message: "🏴‍☠️ NEU: 30 Piraten-Avatare im Shop. Kaufe einzelne Porträts und wähle deinen Favoriten im Profil aus.",
 
   // Optional: Bild anzeigen (Pfad relativ zur index.html), sonst leer lassen
   image: "",
