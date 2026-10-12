@@ -12,6 +12,24 @@ alter table public.gegenhack_beitraege
   add constraint gegenhack_aufgabe_bekannt
   check (aufgabe in ('frag', 'freq', 'code', 'rad', 'boss'));
 
+/* Die Ranglisten-Zeile wird nach einem gespeicherten Boss-Treffer aktualisiert.
+   Damit kann die Quest den heutigen Angriff anhand des Zeitstempels prüfen. */
+create or replace function app.gegenhack_boss_schaden_zeitstempeln()
+returns trigger
+language plpgsql
+set search_path = public, app, pg_temp
+as $
+begin
+  new.updated_at := now();
+  return new;
+end
+$;
+
+drop trigger if exists community_boss_damage_updated_at on public.community_boss_damage;
+create trigger community_boss_damage_updated_at
+  before update on public.community_boss_damage
+  for each row execute function app.gegenhack_boss_schaden_zeitstempeln();
+
 create or replace function app.gegenhack_beitragen(p_quest text, p_aufgabe text) returns integer
 language plpgsql security definer set search_path = public, app, pg_temp
 as $$
