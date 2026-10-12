@@ -2164,9 +2164,44 @@ function gatewaySpielerKarte(sp) {
         <label>Name<br><input type="text" maxlength="30" class="code-input" id="gsp-nick-${id}" value="${escapeAttr(sp.nickname || "")}"></label>
       </div>
       <button type="button" class="code-button gateway-inline-btn" onclick="gatewaySpielerSpeichern('${id}')">Speichern</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gatewayCodesAbgleichen('${id}', ${Number(sp.codes_cracked) || 0})">Codes mit Einlösungen abgleichen</button>
       <button type="button" class="code-button gateway-inline-btn" onclick="gatewayNameSperren('${id}')">Namen sperren</button>
       <button type="button" class="code-button gateway-inline-btn" onclick="gatewayAccountSperren('${id}')">Spielzugriff sperren</button>
     </div>`;
+}
+
+async function gatewayCodesAbgleichen(uid, bisher) {
+  if (!supabaseClient) return;
+  const grund = window.prompt(
+    "Prüfgrund für den Abgleich mit dem serverseitigen Einlösungsprotokoll (wird protokolliert):",
+    ""
+  );
+  if (grund === null) return;
+  if (!grund.trim()) {
+    gatewaySpielerStatus("Bitte einen Prüfgrund eintragen.", true);
+    return;
+  }
+  if (!window.confirm(
+    "Der Ranglistenzähler dieses Kontos wird aus verifizierten Einlösungen neu berechnet. " +
+    "Der aktuelle Stand ist " + bisher + " Codes. Fortfahren?"
+  )) return;
+
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_codes_abgleichen", {
+      p_uid: uid,
+      p_reason: grund.trim(),
+    });
+    if (error) throw error;
+    const ergebnis = Array.isArray(data) ? data[0] : data;
+    gatewaySpielerStatus(
+      "Codes abgeglichen: " + (ergebnis?.count_before ?? bisher) + " → " +
+      (ergebnis?.count_after ?? "?") + " bestätigte Einlösungen. Prüfgrund protokolliert."
+    );
+    await gatewaySpielerSuchen();
+  } catch (err) {
+    console.error("Code-Abgleich fehlgeschlagen:", err);
+    gatewaySpielerStatus("Abgleich fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
 }
 
 async function gatewaySpielerSpeichern(uid) {
