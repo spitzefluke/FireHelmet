@@ -4876,6 +4876,12 @@ body.fh-story-wunsch .fh-stern.ist-frei .fh-stern-kern {
 .fh-riss.ist-hochkant .fh-riss-hinweis { display: block; }
 .fh-riss-weiter { position: absolute; right: 16px; bottom: 16px; height: 36px; padding: 0 14px; border: 1px solid rgba(232,237,244,.18); border-radius: 8px; background: rgba(5,7,11,.55); color: var(--fh-muted-fg); font: 500 12px/1 var(--fh-font-display); letter-spacing: .14em; text-transform: uppercase; cursor: pointer; opacity: .55; transition: opacity .2s var(--fh-ease), color .2s var(--fh-ease); }
 .fh-riss-weiter:hover, .fh-riss-weiter:focus-visible { opacity: 1; color: var(--fh-gold-bright); }
+/* "Zwei Hälften eines Herzens" (herz-film.js) nutzt die Bühne des
+   Risses; dazu zwei Knöpfe unten rechts: Stimme an/aus, Überspringen. */
+.fh-herz { background: #07080e; }
+.fh-herz-leiste { position: absolute; right: 16px; bottom: 16px; display: flex; gap: 8px; }
+.fh-herz-leiste .fh-herz-knopf { position: static; }
+.fh-herz-knopf[aria-pressed="true"] { color: var(--fh-fg); }
 @keyframes fhRissRein { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fhRissRaus { from { opacity: 1; } to { opacity: 0; } }
 /* Sterne im Hintergrund des Films: funkeln per CSS statt per Bild aus

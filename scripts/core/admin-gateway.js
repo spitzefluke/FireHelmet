@@ -347,6 +347,7 @@ const GW_STORYS = [
   ["disco", "Disco-Party", "Endlos, bis du sie beendest · Musik ab der Tanzfläche (ohne eigene Datei: music/disco.mp3)", "gold"],
   ["ende", "Systemausfall", "12 s · beendet das Event – die Seite bleibt für alle gehackt, bis die nächste Story startet oder du wiederherstellst", "rot"],
   ["werbung", "Werbungsflut", "bis 1 min · ??? spamt 32 Fenster mit 6 Secrets", "neon"],
+  ["herz", "Zwei Hälften eines Herzens", "10:16 min · Kurzfilm in zehn Kapiteln mit Erzählerstimme (Sprachausgabe des Browsers, Deutsch oder Englisch je nach Seite): Leistungsdruck, Angst, Mobbing, eine erste Liebe – und ein kleines Licht. Musik („Patient Pulse“) unten unter „Musik je Story“ hochladen", "violett"],
   ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – danach ist die ganze Seite für alle im 1720-Design, bis du oben zurückschaltest", "violett"],
 ];
 /* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
@@ -467,6 +468,7 @@ const GW_PREISE = [
   ["werbung", "Werbungsflut (auch Gegenhack-Niederlage)", "neon", "Secret", "je gefundenem Secret, höchstens 6"],
   ["disco", "Disco-Party", "gold", null, "am Ende"],
   ["riss", "Der Riss", "violett", null, "am Ende des Films"],
+  ["herz", "Zwei Hälften eines Herzens", "violett", null, "am Ende des Films"],
   ["ende", "Systemausfall", "rot", null, "am Ende"],
 ];
 let gwPreise = {};

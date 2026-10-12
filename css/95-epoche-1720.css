@@ -103,7 +103,7 @@ html.fh-1720 .nebula {
 }
 
 /* ---- Der Farbfilter fuer alles Uebrige ---- */
-html.fh-1720 body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an),
+html.fh-1720 body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an),
 html.fh-1720 dialog[open] {
   filter: invert(1) hue-rotate(180deg) sepia(.45) saturate(.9);
 }
