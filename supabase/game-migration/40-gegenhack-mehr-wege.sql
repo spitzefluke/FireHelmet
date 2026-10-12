@@ -18,12 +18,12 @@ create or replace function app.gegenhack_boss_schaden_zeitstempeln()
 returns trigger
 language plpgsql
 set search_path = public, app, pg_temp
-as $
+as $$
 begin
   new.updated_at := now();
   return new;
 end
-$;
+$$;
 
 drop trigger if exists community_boss_damage_updated_at on public.community_boss_damage;
 create trigger community_boss_damage_updated_at
