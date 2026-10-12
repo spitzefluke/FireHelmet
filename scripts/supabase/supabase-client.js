@@ -201,3 +201,87 @@ if (
       "Spieler-/Statistik-Funktionen bleiben bis dahin einfach leer, der Rest der Seite ist davon nicht betroffen."
   );
 }
+
+
+/* ------------------------------------------------------
+   ADMIN-KONTOSPERRE - Datenbankstatus in aktiver Sitzung anzeigen
+   Die Datenbank blockiert Schreibzugriffe unabhaengig von diesem
+   Hinweis. Die Abfrage dient dazu, gesperrte Spieler sofort aus dem
+   Spiel zu nehmen und ihnen den Sperrgrund sowie den Supportweg zu
+   zeigen. Die Sitzung bleibt fuer eine moegliche Pruefung erhalten.
+------------------------------------------------------ */
+(function kontoSperreInitialisieren() {
+  if (!supabaseClient) return;
+
+  let supportGeoeffnet = false;
+  let letzteSperre = null;
+
+  function sperrHinweisAnzeigen(grund) {
+    if (document.getElementById("fh-account-suspension")) return;
+    const overlay = document.createElement("div");
+    overlay.id = "fh-account-suspension";
+    overlay.setAttribute("role", "alertdialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "fh-account-suspension-title");
+    Object.assign(overlay.style, {
+      position: "fixed", inset: "0", zIndex: "2147483000", display: "grid",
+      placeItems: "center", padding: "24px", background: "rgba(2, 5, 3, .96)",
+      color: "#d9ffd0", fontFamily: "Inter, sans-serif"
+    });
+
+    const panel = document.createElement("section");
+    Object.assign(panel.style, {
+      width: "min(100%, 520px)", padding: "28px", border: "1px solid #69d83c",
+      borderRadius: "16px", background: "#0b160b", boxShadow: "0 0 35px #39c51a55"
+    });
+    const title = document.createElement("h1");
+    title.id = "fh-account-suspension-title";
+    title.textContent = "Spielzugriff vorläufig gesperrt";
+    const text = document.createElement("p");
+    text.textContent = "Grund: " + (grund || "Dein Konto ist vorübergehend gesperrt. Bitte wende dich an den Support.");
+    const action = document.createElement("button");
+    action.type = "button";
+    action.textContent = "Sperre prüfen lassen";
+    action.className = "code-button";
+    action.addEventListener("click", function () {
+      supportGeoeffnet = true;
+      overlay.remove();
+      if (typeof changePage === "function") changePage("support");
+      const feld = document.getElementById("support-report-message");
+      if (feld) feld.focus();
+    });
+    panel.append(title, text, action);
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    action.focus();
+  }
+
+  async function sperrstatusPruefen() {
+    if (supportGeoeffnet || !supabaseClient) return;
+    try {
+      const { data, error } = await supabaseClient.rpc("mein_kontosperrstatus");
+      if (error) return;
+      const status = Array.isArray(data) ? data[0] : data;
+      if (!status || !status.gesperrt) {
+        letzteSperre = null;
+        return;
+      }
+      const grund = status.grund || "Dein Konto wurde durch die Sicherheitsprüfung vorläufig gesperrt.";
+      if (letzteSperre !== grund) {
+        letzteSperre = grund;
+        sperrHinweisAnzeigen(grund);
+      }
+    } catch (err) {
+      console.warn("Kontosperrstatus konnte nicht geladen werden:", err);
+    }
+  }
+
+  wheelAuthReady.then(function (uid) {
+    if (!uid) return;
+    sperrstatusPruefen();
+    window.setInterval(sperrstatusPruefen, 60000);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) sperrstatusPruefen();
+    });
+  });
+})();

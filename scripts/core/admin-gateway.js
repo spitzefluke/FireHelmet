@@ -1648,6 +1648,7 @@ async function renderGatewayPage() {
   gwZeige(gwAktiv.gruppe);
 
   ladeGatewayStatusbrett();
+  gatewaySperrenLaden();
   ladeGatewayBoss();
   ladeGatewayCaps();
   ladeGatewaySupport();
@@ -1979,11 +1980,130 @@ function buildGatewaySpielerHtml() {
     <p id="gateway-spieler-status" class="wheel-status"></p>
 
     <details class="gateway-details">
+      <summary>Gesperrte Spielkonten</summary>
+      <p class="gateway-status-sub">Eine Sperre blockiert Spielaktionen direkt in der Datenbank. Support-Meldungen bleiben möglich.</p>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gatewaySperrenLaden()">Sperrliste laden</button>
+      <div id="gateway-sperren-liste"></div>
+    </details>
+
+    <details class="gateway-details">
       <summary>Gesperrte Namen</summary>
       <button type="button" class="code-button gateway-inline-btn" onclick="gatewayGesperrteNamen()">Liste laden</button>
       <div id="gateway-namen-liste"></div>
     </details>
   `;
+}
+
+async function gatewaySperrenLaden() {
+  const liste = document.getElementById("gateway-sperren-liste");
+  if (!liste || !supabaseClient) return;
+  liste.replaceChildren();
+  const ladehinweis = document.createElement("p");
+  ladehinweis.className = "gateway-status-sub";
+  ladehinweis.textContent = "Lade Sperren …";
+  liste.appendChild(ladehinweis);
+
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_account_suspensions");
+    if (error) throw error;
+    liste.replaceChildren();
+    if (!data || !data.length) {
+      const leer = document.createElement("p");
+      leer.className = "gateway-status-sub";
+      leer.textContent = "Keine aktiven Sperren.";
+      liste.appendChild(leer);
+      return;
+    }
+
+    data.forEach((sperre) => {
+      const zeile = document.createElement("div");
+      zeile.className = "gateway-spieler-karte";
+      const titel = document.createElement("p");
+      titel.className = "gateway-spieler-kopf";
+      const name = document.createElement("strong");
+      name.textContent = sperre.nickname || "(ohne Namen)";
+      const marke = document.createElement("span");
+      marke.className = "gateway-spieler-marken";
+      marke.textContent = sperre.source === "anti-cheat" ? "Anti-Cheat-Prüfung" : "Manuelle Sperre";
+      titel.append(name, marke);
+
+      const id = document.createElement("p");
+      id.className = "gateway-status-sub";
+      const code = document.createElement("code");
+      code.textContent = sperre.account_uid;
+      id.appendChild(code);
+
+      const grund = document.createElement("p");
+      grund.className = "gateway-status-sub";
+      grund.textContent = "Grund: " + String(sperre.reason || "—") +
+        " · seit " + (sperre.created_at ? String(sperre.created_at).slice(0, 16).replace("T", " ") : "unbekannt") +
+        (sperre.created_by ? " · von " + sperre.created_by : "");
+
+      const entsperren = document.createElement("button");
+      entsperren.type = "button";
+      entsperren.className = "code-button gateway-inline-btn";
+      entsperren.textContent = "Nach Prüfung entsperren";
+      entsperren.addEventListener("click", () => gatewayAccountEntsperren(sperre.account_uid));
+
+      zeile.append(titel, id, grund, entsperren);
+      liste.appendChild(zeile);
+    });
+  } catch (err) {
+    console.error("Sperrliste konnte nicht geladen werden:", err);
+    liste.replaceChildren();
+    const fehler = document.createElement("p");
+    fehler.className = "wheel-status";
+    fehler.textContent = "Sperrliste konnte nicht geladen werden: " + ((err && err.message) || err);
+    liste.appendChild(fehler);
+  }
+}
+
+async function gatewayAccountSperren(uid) {
+  if (!supabaseClient) return;
+  const grund = window.prompt("Pflichtgrund für die vorläufige Spielersperre (wird protokolliert):", "");
+  if (grund === null) return;
+  if (!grund.trim()) {
+    gatewaySpielerStatus("Bitte einen Grund eintragen.", true);
+    return;
+  }
+  if (!window.confirm("Spielzugriff dieser Person jetzt sperren? Aktive Spielaktionen werden serverseitig blockiert.")) return;
+
+  try {
+    const { error } = await supabaseClient.rpc("admin_account_suspend", {
+      p_uid: uid,
+      p_reason: grund.trim(),
+    });
+    if (error) throw error;
+    gatewaySpielerStatus("Spielzugriff gesperrt. Grund und Aktion wurden protokolliert.");
+    await Promise.all([gatewaySperrenLaden(), gatewaySpielerSuchen()]);
+  } catch (err) {
+    console.error("Spieler sperren fehlgeschlagen:", err);
+    gatewaySpielerStatus("Sperre fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gatewayAccountEntsperren(uid) {
+  if (!supabaseClient) return;
+  const grund = window.prompt("Pflichtgrund für die Entsperrung nach manueller Prüfung (wird protokolliert):", "");
+  if (grund === null) return;
+  if (!grund.trim()) {
+    gatewaySpielerStatus("Bitte den Prüfgrund eintragen.", true);
+    return;
+  }
+  if (!window.confirm("Spielzugriff nach der Prüfung wieder freigeben?")) return;
+
+  try {
+    const { error } = await supabaseClient.rpc("admin_account_unsuspend", {
+      p_uid: uid,
+      p_reason: grund.trim(),
+    });
+    if (error) throw error;
+    gatewaySpielerStatus("Sperre aufgehoben. Die Prüfung und Entsperrung wurden protokolliert.");
+    await Promise.all([gatewaySperrenLaden(), gatewaySpielerSuchen()]);
+  } catch (err) {
+    console.error("Spieler entsperren fehlgeschlagen:", err);
+    gatewaySpielerStatus("Entsperren fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
 }
 
 function gatewaySpielerStatus(text, istFehler) {
@@ -2044,8 +2164,44 @@ function gatewaySpielerKarte(sp) {
         <label>Name<br><input type="text" maxlength="30" class="code-input" id="gsp-nick-${id}" value="${escapeAttr(sp.nickname || "")}"></label>
       </div>
       <button type="button" class="code-button gateway-inline-btn" onclick="gatewaySpielerSpeichern('${id}')">Speichern</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gatewayCodesAbgleichen('${id}', ${Number(sp.codes_cracked) || 0})">Codes mit Einlösungen abgleichen</button>
       <button type="button" class="code-button gateway-inline-btn" onclick="gatewayNameSperren('${id}')">Namen sperren</button>
+      <button type="button" class="code-button gateway-inline-btn" onclick="gatewayAccountSperren('${id}')">Spielzugriff sperren</button>
     </div>`;
+}
+
+async function gatewayCodesAbgleichen(uid, bisher) {
+  if (!supabaseClient) return;
+  const grund = window.prompt(
+    "Prüfgrund für den Abgleich mit dem serverseitigen Einlösungsprotokoll (wird protokolliert):",
+    ""
+  );
+  if (grund === null) return;
+  if (!grund.trim()) {
+    gatewaySpielerStatus("Bitte einen Prüfgrund eintragen.", true);
+    return;
+  }
+  if (!window.confirm(
+    "Der Ranglistenzähler dieses Kontos wird aus verifizierten Einlösungen neu berechnet. " +
+    "Der aktuelle Stand ist " + bisher + " Codes. Fortfahren?"
+  )) return;
+
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_codes_abgleichen", {
+      p_uid: uid,
+      p_reason: grund.trim(),
+    });
+    if (error) throw error;
+    const ergebnis = Array.isArray(data) ? data[0] : data;
+    gatewaySpielerStatus(
+      "Codes abgeglichen: " + (ergebnis?.count_before ?? bisher) + " → " +
+      (ergebnis?.count_after ?? "?") + " bestätigte Einlösungen. Prüfgrund protokolliert."
+    );
+    await gatewaySpielerSuchen();
+  } catch (err) {
+    console.error("Code-Abgleich fehlgeschlagen:", err);
+    gatewaySpielerStatus("Abgleich fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
 }
 
 async function gatewaySpielerSpeichern(uid) {
