@@ -796,8 +796,9 @@ async function checkCode() {
         return;
       }
 
+      let creditedAmount;
       try {
-        await redeemCurrencyCode(codeId, match.currencyReward, match.avatarUnlockSecure || null);
+        creditedAmount = await redeemCurrencyCode(codeId, match.currencyReward, match.avatarUnlockSecure || null);
       } catch (err) {
         if (err.message === "already-redeemed") {
           if (typeof markCodeCrackedLocally === "function") {
@@ -808,7 +809,9 @@ async function checkCode() {
           console.warn("Code konnte nicht eingelöst werden:", err);
           messageEl.classList.remove("code-success");
           messageEl.classList.add("code-error");
-          messageEl.textContent = "⚠️ Das hat nicht geklappt, bitte versuch's gleich nochmal.";
+          messageEl.textContent = err.message === "wallet-full"
+            ? "⚠️ Dein Dublonen-Konto hat bereits das Limit von 2.000.000 erreicht."
+            : "⚠️ Das hat nicht geklappt, bitte versuch's gleich nochmal.";
         }
         return;
       }
@@ -821,7 +824,9 @@ async function checkCode() {
         markCodeCrackedLocally(codeId, match.reward || null);
       }
 
-      messageEl.textContent = match.message;
+      messageEl.textContent = creditedAmount < match.currencyReward
+        ? `${match.message} (Es wurden ${creditedAmount} Dublonen gutgeschrieben; das Kontolimit hat den Rest begrenzt.)`
+        : match.message;
 
       if (typeof addCodeHistoryEntry === "function") {
         addCodeHistoryEntry(enteredCode, match.message);
@@ -831,7 +836,7 @@ async function checkCode() {
         refreshShopCurrencyDisplay();
       }
       if (typeof showCurrencyToast === "function") {
-        showCurrencyToast(match.currencyReward);
+        showCurrencyToast(creditedAmount);
       }
       if (typeof triggerCodeSuccessEffect === "function") {
         triggerCodeSuccessEffect();

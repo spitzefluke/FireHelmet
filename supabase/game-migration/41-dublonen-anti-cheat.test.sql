@@ -30,18 +30,13 @@ begin
   end if;
   raise notice 'PASS - Tagesgutschriften sind auf 30.000 begrenzt';
 
-  blockiert := false;
-  begin
-    update public.players set currency = 2000001 where firebase_uid = uid_tag;
-  exception when others then
-    blockiert := sqlerrm = 'dublonen-kontolimit';
-  end;
+  update public.players set currency = 2000001 where firebase_uid = uid_tag;
 
   select currency into stand from public.players where firebase_uid = uid_tag;
-  if not blockiert or stand <> 30000 then
-    raise exception 'FAIL: Kontolimit blockiert die Ueberschreitung nicht';
+  if stand <> 30000 or not app.dublonen_konto_gesperrt(uid_tag) then
+    raise exception 'FAIL: Kontolimit verwirft die Aenderung oder markiert die Sperre nicht';
   end if;
-  raise notice 'PASS - neue Erhoehungen ueber 2.000.000 werden blockiert';
+  raise notice 'PASS - Kontolimit verwirft Erhoehung und markiert Konto zur Pruefung';
 
   if has_table_privilege('anon', 'private.dublonen_tageskonto', 'select')
      or has_table_privilege('authenticated', 'private.dublonen_tageskonto', 'select') then

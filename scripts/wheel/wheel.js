@@ -1573,14 +1573,17 @@ async function redeemCurrencyCode(codeId, amount, avatarUnlockId) {
 
   const data = current || {};
   const redeemed = data.redeemed_currency_codes || {};
+  const freieKapazitaet = Math.max(0, 2000000 - Number(data.currency || 0));
+  const gutgeschrieben = Math.min(Number(amount) || 0, freieKapazitaet);
+  if (gutgeschrieben <= 0) throw new Error("wallet-full");
 
   if (redeemed[codeId]) {
     throw new Error("already-redeemed");
   }
 
   const fields = {
-    currency: (data.currency || 0) + amount,
-    total_currency_earned: (data.total_currency_earned || 0) + amount,
+    currency: (data.currency || 0) + gutgeschrieben,
+    total_currency_earned: (data.total_currency_earned || 0) + gutgeschrieben,
     codes_cracked: (data.codes_cracked || 0) + 1,
     // JSONB-Merge von Hand (kein Firestore-Dot-Pfad noetig): alle bereits
     // eingeloesten Codes bleiben erhalten, nur dieser eine kommt dazu. Die
@@ -1614,6 +1617,7 @@ async function redeemCurrencyCode(codeId, amount, avatarUnlockId) {
   if (fields.unlocked_avatars && typeof markAvatarUnlockedLocally === "function") {
     markAvatarUnlockedLocally(avatarUnlockId);
   }
+  return gutgeschrieben;
 }
 
 /* ------------------------------------------------------
