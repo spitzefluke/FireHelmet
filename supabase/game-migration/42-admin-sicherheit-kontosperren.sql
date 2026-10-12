@@ -305,3 +305,145 @@ create policy site_meta_write_admin
   on public.site_meta for all to authenticated
   using (app.is_admin())
   with check (app.is_admin());
+
+
+/* Ranglisten-Codezaehler nur anhand des serverseitigen Einloesungs-
+   protokolls korrigieren. Der Admin kann keine freie Zahl setzen. */
+create table if not exists private.account_code_audit (
+  id bigint generated always as identity primary key,
+  account_uid text not null,
+  reason text not null check (char_length(reason) between 1 and 500),
+  count_before integer not null,
+  count_after integer not null,
+  recorded_redemptions integer not null,
+  performed_by text not null,
+  created_at timestamptz not null default now()
+);
+alter table private.account_code_audit enable row level security;
+alter table private.account_code_audit force row level security;
+revoke all on table private.account_code_audit from public, anon, authenticated;
+
+/* Den Anti-Cheat-Trigger nur fuer den Admin-RPC durchlassen, wenn der
+   neue Wert exakt der Zahl protokollierter Einloesungen entspricht. */
+create or replace function app.ranglisten_code_schuetzen()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog
+as $$
+declare
+  claim_uid text;
+  belegte_einloesungen integer;
+begin
+  if app.is_admin()
+     and current_setting('app.admin_code_reconcile', true) = 'on' then
+    select count(*)::integer into belegte_einloesungen
+      from private.ranglisten_code_einloesungen
+     where firebase_uid = old.firebase_uid;
+    if new.codes_cracked = belegte_einloesungen then
+      return new;
+    end if;
+    return null;
+  end if;
+
+  if new.codes_cracked = old.codes_cracked then
+    return new;
+  end if;
+
+  if new.codes_cracked = old.codes_cracked + 1
+     and new.redeemed_currency_codes is distinct from old.redeemed_currency_codes
+     and app.valid_code_redemption(
+       old.firebase_uid, new.redeemed_currency_codes, new.currency,
+       new.last_wheel_spin_at, new.last_spielothek_play_at
+     ) then
+    return new;
+  end if;
+
+  if new.codes_cracked = old.codes_cracked + 1 then
+    select c.firebase_uid into claim_uid
+      from private.ranglisten_code_einloesungen c
+     where c.firebase_uid = old.firebase_uid and c.pending
+     order by c.eingeloest_am
+     limit 1
+     for update;
+
+    if claim_uid is not null then
+      update private.ranglisten_code_einloesungen
+         set pending = false
+       where firebase_uid = old.firebase_uid
+         and code_sha256 = (
+           select c.code_sha256 from private.ranglisten_code_einloesungen c
+            where c.firebase_uid = old.firebase_uid and c.pending
+            order by c.eingeloest_am limit 1
+         );
+      return new;
+    end if;
+  end if;
+
+  insert into private.dublonen_kontosperren (firebase_uid, grund)
+  values (old.firebase_uid, 'ranglisten-codezaehler-manipulationsverdacht')
+  on conflict (firebase_uid) do nothing;
+  return null;
+end
+$$;
+revoke all on function app.ranglisten_code_schuetzen() from public, anon, authenticated;
+
+create or replace function app.admin_codes_abgleichen(p_uid text, p_reason text)
+returns table (count_before integer, count_after integer, recorded_redemptions integer)
+language plpgsql
+security definer
+set search_path = pg_catalog
+as $$
+declare
+  v_uid text;
+  v_before integer;
+  v_verified integer;
+  v_reason text := btrim(coalesce(p_reason, ''));
+begin
+  if not app.is_admin() then
+    raise exception 'not-admin';
+  end if;
+  if p_uid is null or p_uid !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    raise exception 'spieler-id-ungueltig';
+  end if;
+  v_uid := lower(p_uid);
+  if char_length(v_reason) not between 1 and 500 then
+    raise exception 'pruefgrund-erforderlich';
+  end if;
+
+  select p.codes_cracked into v_before
+    from public.players p
+   where p.firebase_uid = v_uid
+   for update;
+  if not found then
+    raise exception 'spieler-nicht-gefunden';
+  end if;
+
+  select count(*)::integer into v_verified
+    from private.ranglisten_code_einloesungen
+   where firebase_uid = v_uid;
+
+  perform set_config('app.admin_code_reconcile', 'on', true);
+  update public.players set codes_cracked = v_verified where firebase_uid = v_uid;
+  perform set_config('app.admin_code_reconcile', 'off', true);
+
+  insert into private.account_code_audit
+    (account_uid, reason, count_before, count_after, recorded_redemptions, performed_by)
+  values
+    (v_uid, v_reason, v_before, v_verified, v_verified,
+     coalesce(auth.jwt() ->> 'email', 'admin'));
+
+  return query select v_before, v_verified, v_verified;
+end
+$$;
+revoke all on function app.admin_codes_abgleichen(text, text) from public, anon;
+grant execute on function app.admin_codes_abgleichen(text, text) to authenticated;
+
+create or replace function public.admin_codes_abgleichen(p_uid text, p_reason text)
+returns table (count_before integer, count_after integer, recorded_redemptions integer)
+language sql
+security invoker
+set search_path = pg_catalog, app
+as $$ select * from app.admin_codes_abgleichen(p_uid, p_reason) $$;
+revoke all on function public.admin_codes_abgleichen(text, text) from public, anon;
+grant execute on function public.admin_codes_abgleichen(text, text) to authenticated;
