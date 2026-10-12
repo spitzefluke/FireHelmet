@@ -308,7 +308,7 @@ const translations = {
     "gegenhack.feedBoss": "hat dem Community-Boss Schaden zugefügt",
     "gegenhack.claimCheck": "Prüfen",
     "gegenhack.notYetTitle": "Noch nicht erfüllt",
-    "gegenhack.notYetText": "Dreh heute zuerst das Schatzrad oder verursache Schaden am Community-Boss"
+    "gegenhack.notYetText": "Dreh heute zuerst das Schatzrad oder verursache Schaden am Community-Boss",
     "werbung.close": "Schließen",
     "werbung.hud": "??? spamt dein Schiff",
     "werbung.secrets": "Secrets",
@@ -1442,7 +1442,7 @@ const translations = {
     "gegenhack.feedBoss": "dealt damage to the community boss",
     "gegenhack.claimCheck": "Check",
     "gegenhack.notYetTitle": "Not completed yet",
-    "gegenhack.notYetText": "Spin the treasure wheel or deal damage to the community boss today"
+    "gegenhack.notYetText": "Spin the treasure wheel or deal damage to the community boss today",
     "werbung.close": "Close",
     "werbung.hud": "??? is spamming your ship",
     "werbung.secrets": "Secrets",

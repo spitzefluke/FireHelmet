@@ -114,7 +114,7 @@ const wheelSpecialAvatars = [
   { id: "shop-pirat-27", avatar: "scripts/avatare/shop-pirat-27.webp", label: "Silberhaar-Piratin" },
   { id: "shop-pirat-28", avatar: "scripts/avatare/shop-pirat-28.webp", label: "Blockwelt-Abenteurer" },
   { id: "shop-pirat-29", avatar: "scripts/avatare/shop-pirat-29.webp", label: "Pistolen-Kapitän" },
-  { id: "shop-pirat-30", avatar: "scripts/avatare/shop-pirat-30.webp", label: "Doppelklingen-Schädel" }
+  { id: "shop-pirat-30", avatar: "scripts/avatare/shop-pirat-30.webp", label: "Doppelklingen-Schädel" },
 
   // Eigene Beispiele:
   // { id: "legendaer", avatar: "scripts/avatare/legendaer.png", label: "Legendärer Pirat" },
