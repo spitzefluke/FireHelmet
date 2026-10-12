@@ -945,49 +945,10 @@ function syncCodesToDatabase() {
   const nickname = localStorage.getItem("wheelNickname") || "";
   if (!nickname || !supabaseClient) return;
 
-  const totalCracked = getCrackedCodes().length;
-  const syncedCount = parseInt(localStorage.getItem("codesSyncedCount") || "0", 10);
-  const missing = totalCracked - syncedCount;
+  // Alte lokale Hashes beweisen nicht, dass der Code eingegeben wurde;
+  // sie werden deshalb nicht mehr blind in die serverseitige Rangliste kopiert.
+  void nickname;
 
-  if (missing <= 0) return;
-
-  wheelAuthReady.then(async (uid) => {
-    if (!uid) return;
-
-    try {
-      await ensureSupabasePlayerRow(uid, nickname);
-
-      const { data: current, error: readError } = await supabaseClient
-        .from("players")
-        .select("codes_cracked, rewards")
-        .eq("firebase_uid", uid)
-        .maybeSingle();
-      if (readError) throw readError;
-
-      const fields = {
-        nickname: nickname,
-        codes_cracked: (current && current.codes_cracked ? current.codes_cracked : 0) + missing,
-      };
-
-      // Aequivalent zu Firestores arrayUnion: dedupliziert von Hand,
-      // ungefaehrlich mehrfach aufzurufen.
-      const rewards = getCodeRewards();
-      if (rewards.length) {
-        const oldRewards = (current && current.rewards) || [];
-        fields.rewards = [...new Set([...oldRewards, ...rewards])];
-      }
-
-      // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
-      const { error: writeError } = await withSupabaseRlsColdStartRetry(() =>
-        supabaseClient.from("players").update(fields).eq("firebase_uid", uid)
-      );
-      if (writeError) throw writeError;
-
-      localStorage.setItem("codesSyncedCount", String(totalCracked));
-    } catch (err) {
-      console.error("Nachhol-Synchronisierung fehlgeschlagen:", err);
-    }
-  });
 }
 
 /* ------------------------------------------------------
@@ -1463,7 +1424,7 @@ function markCodeCrackedLocally(codeId, reward) {
   return true;
 }
 
-function recordCodeCrack(codeId, reward) {
+function recordCodeCrack(codeId, reward, codeValue) {
   if (!markCodeCrackedLocally(codeId, reward)) return false;
 
   const nickname = localStorage.getItem("wheelNickname") || "";
@@ -1475,26 +1436,8 @@ function recordCodeCrack(codeId, reward) {
       try {
         await ensureSupabasePlayerRow(uid, nickname);
 
-        const { data: current, error: readError } = await supabaseClient
-          .from("players")
-          .select("codes_cracked, rewards")
-          .eq("firebase_uid", uid)
-          .maybeSingle();
-        if (readError) throw readError;
-
-        const fields = {
-          nickname: nickname,
-          codes_cracked: (current && current.codes_cracked ? current.codes_cracked : 0) + 1,
-        };
-
-        if (reward) {
-          const oldRewards = (current && current.rewards) || [];
-          fields.rewards = oldRewards.includes(reward) ? oldRewards : [...oldRewards, reward];
-        }
-
-        // withSupabaseRlsColdStartRetry(): siehe Kommentar in supabase-client.js
         const { error: writeError } = await withSupabaseRlsColdStartRetry(() =>
-          supabaseClient.from("players").update(fields).eq("firebase_uid", uid)
+          supabaseClient.rpc("record_code_crack", { p_code: codeValue })
         );
         if (writeError) throw writeError;
       } catch (err) {

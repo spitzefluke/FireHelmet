@@ -870,7 +870,7 @@ async function checkCode() {
       }
 
       if (typeof recordCodeCrack === "function") {
-        recordCodeCrack(codeId, match.reward || null);
+        recordCodeCrack(codeId, match.reward || null, enteredCode);
       }
 
       if (match.avatarUnlock && typeof unlockAvatar === "function") {
