@@ -83,14 +83,22 @@ begin
     'players',
     'player_progression',
     'race_progress',
+    'spielothek_rounds',
     'community_boss',
     'community_boss_damage',
+    'community_boss_attacks',
     'boss_attack_state',
     'tournament_participants',
     'tournament_matches',
+    'pass_cap_state',
+    'pass_cap_grants',
+    'player_identity_codes',
+    'player_identity_versuche',
+    'site_ratings',
     'live_grant_einloesungen',
     'giveaway_entries',
     'live_abstimmungen',
+    'live_stimmen',
     'gegenhack_beitraege',
     'spieler_event_titel',
     'spieler_abzeichen',
@@ -121,6 +129,7 @@ begin
   if p_uid is null or p_uid !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
     raise exception 'spieler-id-ungueltig';
   end if;
+  p_uid := lower(p_uid);
   if p_uid = auth.uid()::text then
     raise exception 'selbstsperre-nicht-erlaubt';
   end if;
@@ -161,6 +170,7 @@ begin
   if p_uid is null or p_uid !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
     raise exception 'spieler-id-ungueltig';
   end if;
+  p_uid := lower(p_uid);
   if char_length(grund) not between 1 and 500 then
     raise exception 'pruefgrund-erforderlich';
   end if;
