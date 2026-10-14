@@ -139,6 +139,9 @@ function renderShopGrid(options) {
       </section>
     `;
   }).join("");
+
+  /* Das Mystery Gift hat eigene Regeln (scripts/shop/mystery-gift.js). */
+  if (window.fhMysteryGift) window.fhMysteryGift.zeigen();
 }
 
 /* Eine einzelne Artikelkarte. */

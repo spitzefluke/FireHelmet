@@ -696,3 +696,110 @@ tr.row-frame {
   }
 }
 
+
+/* ======================================================
+   MYSTERY GIFT (scripts/shop/mystery-gift.js, Migration 44)
+   Ausserhalb des Angebots eine ruhige, gedimmte Zeile; im
+   Angebot eine leuchtende Karte mit langsam kreisendem Rand.
+====================================================== */
+.fh-mystery {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 16px;
+  margin: 8px 0 26px;
+  padding: 16px 18px;
+  border: 1px dashed var(--fh-border-strong);
+  border-radius: var(--fh-radius);
+  background: var(--fh-surface);
+  color: var(--fh-muted-fg);
+}
+
+.fh-mystery[hidden] { display: none; }
+
+.fh-mystery-symbol {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-muted);
+  color: var(--fh-muted-fg);
+}
+.fh-mystery-symbol svg { width: 28px; height: 28px; }
+
+.fh-mystery-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0 0 4px;
+}
+.fh-mystery-name {
+  font-family: var(--fh-font-display);
+  font-size: 20px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--fh-fg);
+}
+.fh-mystery-seltenheit {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fh-fire);
+}
+.fh-mystery-satz { margin: 0; font-size: 14px; line-height: 1.5; }
+.fh-mystery-status { margin: 6px 0 0; min-height: 1.2em; font-size: 13px; color: var(--fh-gold-bright); }
+.fh-mystery-status.ist-fehler { color: var(--fh-danger); }
+
+/* ---- im Angebot ---- */
+.fh-mystery.ist-angebot {
+  grid-template-columns: auto 1fr auto;
+  padding: 22px 24px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--fh-surface-2), var(--fh-surface-2)) padding-box,
+    conic-gradient(from var(--fh-mystery-winkel, 0deg), var(--fh-fire), var(--fh-gold-bright), var(--fh-fire-deep), var(--fh-gold), var(--fh-fire)) border-box;
+  box-shadow: var(--fh-glow-fire), var(--fh-shadow-sm);
+  color: var(--fh-fg);
+  animation: fhMysteryRand 6s linear infinite;
+}
+.fh-mystery.ist-angebot .fh-mystery-symbol {
+  width: 64px;
+  height: 64px;
+  background: radial-gradient(circle at 50% 40%, rgba(240,201,106,.28), transparent 70%), var(--fh-muted);
+  color: var(--fh-gold-bright);
+  animation: fhMysteryWippen 2.8s var(--fh-ease) infinite;
+}
+.fh-mystery.ist-angebot .fh-mystery-symbol svg { width: 36px; height: 36px; }
+.fh-mystery.ist-angebot .fh-mystery-name { font-size: 26px; color: var(--fh-gold-bright); text-shadow: var(--fh-glow-gold); }
+.fh-mystery-zeit { margin: 8px 0 0; font-size: 13px; color: var(--fh-muted-fg); }
+.fh-mystery-rest { font-family: var(--fh-mono); color: var(--fh-fire); }
+
+.fh-mystery-aktion { display: flex; flex-direction: column; align-items: flex-end; }
+.fh-mystery-knopf { white-space: nowrap; }
+.fh-mystery-aktion .fh-mystery-status { text-align: right; max-width: 260px; }
+
+@property --fh-mystery-winkel {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes fhMysteryRand { to { --fh-mystery-winkel: 360deg; } }
+@keyframes fhMysteryWippen {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-4px) rotate(-4deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-mystery.ist-angebot,
+  .fh-mystery.ist-angebot .fh-mystery-symbol { animation: none; }
+}
+
+@media (max-width: 640px) {
+  .fh-mystery.ist-angebot { grid-template-columns: auto 1fr; padding: 18px; }
+  .fh-mystery-aktion { grid-column: 1 / -1; align-items: stretch; }
+  .fh-mystery-aktion .fh-mystery-status { text-align: left; max-width: none; }
+}
