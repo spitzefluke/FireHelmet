@@ -241,6 +241,10 @@
         if (typeof window.fhSkillNeuLaden === "function") window.fhSkillNeuLaden();
         /* War es ein Event-Titel, kuendigt event-titel.js ihn an. */
         if (window.fhEventTitel) window.fhEventTitel.nachGeschenk();
+        /* Waren es Piratenpass-XP (Migration 44) und steht der Pass
+           gerade offen, die Stufen sofort neu zeichnen. */
+        const pass = document.getElementById("streamraetsel");   // der Pass steht auf dieser Seite
+        if (pass && pass.classList.contains("active-page") && typeof renderPassPage === "function") renderPassPage();
       }
     } catch (err) { console.warn("Grant konnte nicht eingeloest werden:", err); }
   }

@@ -324,8 +324,22 @@ function buildGatewayLiveGeschenkeHtml() {
       </label>
       <button type="button" class="gw-live-knopf ist-alle" onclick="gwLiveGrant('skillpunkte')">Skillpunkte an alle</button>
     </div>
+    <div class="gw-live-nachricht">
+      <label class="gw-feld-label">Piratenpass-XP (1–5000)
+        <input type="number" id="gw-live-passxp" class="gw-feld" min="1" max="5000" value="250">
+      </label>
+      <button type="button" class="gw-live-knopf ist-alle" onclick="gwPassXpAnAlle()">Pass-XP an alle</button>
+    </div>
     <p id="gw-geschenk-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <p class="gateway-status-sub">Jeder anwesende Spieler bekommt es genau einmal. Der Betrag wird server-seitig verrechnet.</p>
+    <div class="gw-live-nachricht">
+      <input type="text" id="gw-passxp-suche" class="gw-feld gw-feld-breit" placeholder="Pass-XP gezielt: Spielername suchen" aria-label="Spieler für Pass-XP suchen" autocomplete="off"
+             onkeydown="if (event.key === 'Enter') gwPassXpSpielerSuchen()">
+      <button type="button" class="gw-live-knopf" onclick="gwPassXpSpielerSuchen()">Suchen</button>
+    </div>
+    <div id="gw-passxp-treffer" class="gw-titel-treffer"></div>
+    <p id="gw-passxp-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <p class="gateway-status-sub">Pass-XP gehen in die laufende Saison. Ein Spieler, der noch in keiner Saison steckt, beginnt beim vergebenen Betrag.</p>
   `;
 }
 
@@ -1425,6 +1439,80 @@ async function gwLiveGrant(art) {
   }
 }
 
+/* ------------------------------------------------------
+   PIRATENPASS-XP VERTEILEN (Migration 44)
+   An alle ueber einen Live-Grant, an einzelne direkt. Die Saison
+   folgt im Browser aus dem Datum (getCurrentPirateSeason) und geht
+   mit; die Datenbank deckelt auf 1 bis 5000 je Vergabe.
+------------------------------------------------------ */
+function gwPassXpEingabe(statusId) {
+  const pass = typeof getCurrentPirateSeason === "function" ? getCurrentPirateSeason() : null;
+  if (!pass) { gwLiveStatus(statusId, "Gerade läuft keine Piratenpass-Saison – Pass-XP hätten kein Ziel.", true); return null; }
+  const xp = parseInt((document.getElementById("gw-live-passxp") || {}).value, 10) || 0;
+  if (xp < 1 || xp > 5000) { gwLiveStatus(statusId, "Pass-XP zwischen 1 und 5000.", true); return null; }
+  return { xp: xp, passId: pass.passId, name: pass.name };
+}
+
+async function gwPassXpAnAlle() {
+  const e = gwPassXpEingabe("gw-geschenk-status");
+  if (!e || !supabaseClient) return;
+  gwLiveStatus("gw-geschenk-status", "Verteile ...", false);
+  try {
+    const { error } = await supabaseClient.rpc("admin_pass_xp_an_alle", { p_xp: e.xp, p_pass_id: e.passId });
+    if (error) throw error;
+    gwLiveStatus("gw-geschenk-status", `✓ ${e.xp} Pass-XP (${e.name}) an alle verteilt`, false);
+  } catch (err) {
+    console.error("Pass-XP an alle fehlgeschlagen:", err);
+    gwLiveStatus("gw-geschenk-status", "Verteilen fehlgeschlagen: " + ((err && err.message) || err) + " – ist Migration 44 eingespielt?", true);
+  }
+}
+
+async function gwPassXpSpielerSuchen() {
+  const suche = ((document.getElementById("gw-passxp-suche") || {}).value || "").trim();
+  const liste = document.getElementById("gw-passxp-treffer");
+  if (!liste || !supabaseClient) return;
+  if (!suche) { gwLiveStatus("gw-passxp-status", "Erst einen Namen eingeben.", true); return; }
+  liste.replaceChildren();
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_spieler_suchen", { p_suche: suche });
+    if (error) throw error;
+    if (!data || !data.length) { gwLiveStatus("gw-passxp-status", "Niemand gefunden.", true); return; }
+    gwLiveStatus("gw-passxp-status", data.length + " Treffer", false);
+    data.forEach((sp) => {
+      const zeile = document.createElement("div");
+      zeile.className = "gw-titel-treffer-zeile";
+      const name = document.createElement("span");
+      name.className = "gw-titel-treffer-name";
+      name.textContent = sp.nickname || "(ohne Namen)";
+      const id = document.createElement("code");
+      id.textContent = String(sp.firebase_uid).slice(0, 8);
+      const knopf = document.createElement("button");
+      knopf.type = "button";
+      knopf.className = "gw-live-knopf";
+      knopf.textContent = "Pass-XP geben";
+      knopf.addEventListener("click", () => gwPassXpAnSpieler(sp.firebase_uid, sp.nickname || ""));
+      zeile.append(name, id, knopf);
+      liste.appendChild(zeile);
+    });
+  } catch (err) {
+    console.error("Spielersuche fehlgeschlagen:", err);
+    gwLiveStatus("gw-passxp-status", "Suche fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwPassXpAnSpieler(uid, name) {
+  const e = gwPassXpEingabe("gw-passxp-status");
+  if (!e || !supabaseClient) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_pass_xp_an_spieler", { p_uid: uid, p_xp: e.xp, p_pass_id: e.passId });
+    if (error) throw error;
+    gwLiveStatus("gw-passxp-status", `✓ ${e.xp} Pass-XP an ${name || uid} vergeben`, false);
+  } catch (err) {
+    console.error("Pass-XP an Spieler fehlgeschlagen:", err);
+    gwLiveStatus("gw-passxp-status", "Vergeben fehlgeschlagen: " + ((err && err.message) || err) + " – ist Migration 44 eingespielt?", true);
+  }
+}
+
 async function saveGatewayFeatureFlag(name, on) {
   if (!supabaseClient) return;
   const flags = Object.assign({}, (typeof siteConfig !== "undefined" && siteConfig.featureFlags) || {});
@@ -1499,6 +1587,7 @@ const GW_MENUE = [
   { id: "community", titel: "Community",
     icon: GW_SVG('<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>'),
     teile: [
+      { id: "mystery", kurz: "Mystery Gift", titel: "Mystery-Gift-Käufe" },
       { id: "support", kurz: "Support", titel: "Support-Meldungen" },
       { id: "caps", kurz: "Cap-Zusagen", titel: "Cap-Zusagen" },
       { id: "verlosung", kurz: "Verlosung", titel: "Verlosung" },
@@ -1606,6 +1695,7 @@ async function renderGatewayPage() {
 
   const inhalte = {
     uebersicht: `
+      <div id="gateway-mystery-hinweis"></div>
       <div id="gateway-statusbrett">Lade Zahlen ...</div>
       ${buildGatewayStatusHtml()}`,
     live: buildGatewayLiveSteuerungHtml(),
@@ -1634,6 +1724,7 @@ async function renderGatewayPage() {
     codes: buildGatewayCodesHtml(),
     spieler: buildGatewaySpielerHtml(),
     identitaet: buildGatewayIdentitaetHtml(),
+    mystery: `<div id="gateway-mystery">Lade Käufe ...</div>`,
     support: `<div id="gateway-support">Lade Meldungen ...</div>`,
     caps: `<div id="gateway-caps">Lade Caps ...</div>`,
     verlosung: `<div id="gateway-verlosung">Lade Verlosung ...</div>`,
@@ -1652,6 +1743,8 @@ async function renderGatewayPage() {
   ladeGatewayBoss();
   ladeGatewayCaps();
   ladeGatewaySupport();
+  ladeGatewayMystery();
+  gwMysteryBeobachten();
   ladeGatewayVerlosung();
   ladeGatewayAngriffMarker();
   gwCodeListeLaden();
@@ -2403,6 +2496,72 @@ async function gatewayCapZurueck(uid) {
    Supabase-Dashboard heran.
 ------------------------------------------------------ */
 let gatewaySupportNurOffene = true;
+
+/* ------------------------------------------------------
+   MYSTERY GIFT - KAEUFE (Migration 44)
+   Jeder Kauf aus dem Shop landet hier. Offene oben; "Erledigt",
+   sobald das Geschenk uebergeben ist. Offene Kaeufe stehen zusaetzlich
+   als Hinweis ganz oben in der Uebersicht.
+------------------------------------------------------ */
+async function ladeGatewayMystery() {
+  const ziel = document.getElementById("gateway-mystery");
+  const hinweis = document.getElementById("gateway-mystery-hinweis");
+  if (!ziel || !supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_mystery_gift_kaeufe");
+    if (error) throw error;
+    const kaeufe = data || [];
+    const offen = kaeufe.filter((k) => !k.erledigt_am).length;
+
+    if (hinweis) {
+      hinweis.innerHTML = offen
+        ? `<button type="button" class="gw-mystery-hinweis" onclick="gwZeige('community', 'mystery')">🎁 ${offen} ${offen === 1 ? "offener Mystery-Gift-Kauf" : "offene Mystery-Gift-Käufe"} – ansehen</button>`
+        : "";
+    }
+
+    if (!kaeufe.length) {
+      ziel.innerHTML = `<p class="gateway-status-sub">Noch niemand hat das Mystery Gift gekauft. Es steht in etwa jeder zwanzigsten Stunde im Shop und kostet 100.000 Dublonen.</p>`;
+      return;
+    }
+    ziel.innerHTML = `<p class="gateway-status-sub">${offen} offen · ${kaeufe.length - offen} erledigt</p>` + kaeufe.map((k) => `
+      <div class="gateway-meldung${k.erledigt_am ? " ist-erledigt" : ""}">
+        <p class="gateway-status-sub">
+          🎁 <strong>${escapeHtml(k.spielername || "ohne Namen")}</strong>
+          · <code>${escapeHtml(String(k.firebase_uid).slice(0, 8))}</code>
+          · ${escapeHtml(new Date(k.gekauft_am).toLocaleString("de-DE"))}
+          · ${Number(k.preis).toLocaleString("de-DE")} 💰
+          ${k.erledigt_am ? " · erledigt " + escapeHtml(new Date(k.erledigt_am).toLocaleDateString("de-DE")) : ""}
+        </p>
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayMysteryErledigt(${Number(k.id)}, ${!k.erledigt_am})">${k.erledigt_am ? "Wieder öffnen" : "Erledigt"}</button>
+      </div>`).join("");
+  } catch (err) {
+    console.error("Mystery-Gift-Käufe konnten nicht geladen werden:", err);
+    ziel.innerHTML = `<p class="wheel-status">⚠️ Käufe konnten nicht geladen werden. Ist Migration 44 eingespielt?</p>`;
+  }
+}
+
+/* Solange der Admin-Bereich offen ist, jede Minute nachsehen - ein
+   Kauf soll auftauchen, ohne dass man neu laden muss. */
+let gwMysteryUhr = null;
+function gwMysteryBeobachten() {
+  if (gwMysteryUhr) return;
+  gwMysteryUhr = setInterval(function () {
+    const seite = document.getElementById("gateway-content");
+    if (!seite || !document.getElementById("gateway-mystery")) { clearInterval(gwMysteryUhr); gwMysteryUhr = null; return; }
+    if (!document.hidden) ladeGatewayMystery();
+  }, 60000);
+}
+
+async function gatewayMysteryErledigt(id, erledigt) {
+  if (!supabaseClient) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_mystery_gift_erledigt", { p_id: id, p_erledigt: erledigt });
+    if (error) throw error;
+  } catch (err) {
+    console.error("Mystery-Gift-Kauf konnte nicht umgestellt werden:", err);
+  }
+  ladeGatewayMystery();
+}
 
 async function ladeGatewaySupport() {
   const ziel = document.getElementById("gateway-support");
