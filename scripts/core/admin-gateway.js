@@ -363,6 +363,7 @@ const GW_STORYS = [
   ["werbung", "Werbungsflut", "bis 1 min · ??? spamt 32 Fenster mit 6 Secrets", "neon"],
   ["herz", "Zwei Hälften eines Herzens", "10:16 min · Kurzfilm in zehn Kapiteln mit Erzählerstimme (Sprachausgabe des Browsers, Deutsch oder Englisch je nach Seite): Leistungsdruck, Angst, Mobbing, eine erste Liebe – und ein kleines Licht. Musik („Patient Pulse“) unten unter „Musik je Story“ hochladen", "violett"],
   ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – danach ist die ganze Seite für alle im 1720-Design, bis du oben zurückschaltest", "violett"],
+  ["zeit", "Zeitmaschine 2100", "5 min · Film: Auf dem Pergament zeichnet sich eine Zeitmaschine auf, Sprung durchs Zeittunnel, die Erde bricht auseinander, Menschen gegen Aliens – danach ist die ganze Seite für alle im All-Design (Jahr 2100), bis du oben zurückschaltest", "kalt"],
 ];
 /* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
    stehen darum nicht in der Liste - hier nur ihre Namen fuer die
@@ -405,11 +406,13 @@ function buildGatewayStorysHtml() {
 }
 
 /* ------------------------------------------------------
-   LIVE-EVENT: EPOCHE 1720 (Migration 35, css/95-epoche-1720.css)
+   LIVE-EVENT: EPOCHEN 1720 UND 2100 (Migration 35/46,
+   css/95-epoche-1720.css, css/96-epoche-2100.css)
    ---------------------------------------------------
-   Nach dem Riss sieht die Seite fuer alle aus wie im Jahr 1720 -
-   von selbst zum Filmende. Hier geht es zurueck ins Heute, oder
-   ohne Film sofort nach 1720. "Vorschau" schaltet nur diesen Browser.
+   Nach dem Riss sieht die Seite fuer alle aus wie im Jahr 1720,
+   nach der Zeitmaschine wie im Jahr 2100 - von selbst zum Filmende.
+   Hier geht es zurueck ins Heute, oder ohne Film sofort in eine der
+   beiden Epochen. "Vorschau" schaltet nur diesen Browser.
 ------------------------------------------------------ */
 function buildGatewayEpocheHtml() {
   return `
@@ -418,42 +421,57 @@ function buildGatewayEpocheHtml() {
       <div class="gw-story-lage-knoepfe">
         <button type="button" class="gw-live-knopf" onclick="gwEpocheSetzen('2026')">Zurück ins Jahr 2026</button>
         <button type="button" class="gw-live-knopf" onclick="gwEpocheSetzen('1720')">1720 jetzt für alle</button>
-        <button type="button" class="gw-live-knopf" onclick="gwEpocheVorschau()">Vorschau 1720 (nur hier)</button>
+        <button type="button" class="gw-live-knopf" onclick="gwEpocheVorschau(1720)">Vorschau 1720 (nur hier)</button>
+        <button type="button" class="gw-live-knopf" onclick="gwEpocheSetzen('2100')">2100 jetzt für alle</button>
+        <button type="button" class="gw-live-knopf" onclick="gwEpocheVorschau(2100)">Vorschau 2100 (nur hier)</button>
       </div>
     </div>
     <p id="gw-epoche-status" class="gw-live-status" role="status" aria-live="polite"></p>
   `;
 }
 
-function gwEpocheZeigen(ab) {
+/* ab1720/ab2100: die Zeitmarken aus live_event. Es gilt die zuletzt
+   erreichte (wie in live-storys.js). */
+function gwEpocheZeigen(ab1720, ab2100) {
   const el = document.getElementById("gw-epoche-jetzt");
   if (!el) return;
-  const zeit = ab ? Date.parse(ab) : NaN;
-  if (!isFinite(zeit)) el.textContent = "Epoche: Jahr 2026 (normal).";
-  else if (zeit > Date.now()) el.textContent = "Epoche: Der Riss läuft – um " + new Date(zeit).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) + " Uhr wird die Seite für alle zum Jahr 1720.";
-  else el.textContent = "Epoche: Jahr 1720 – alle sehen das Pergament-Design, bis du zurückschaltest.";
+  const jetzt = Date.now();
+  const marken = [[1720, ab1720 ? Date.parse(ab1720) : NaN], [2100, ab2100 ? Date.parse(ab2100) : NaN]];
+  let jahr = 2026, beste = -Infinity, kommt = null;
+  marken.forEach(([j, z]) => {
+    if (!isFinite(z)) return;
+    if (z <= jetzt && z > beste) { beste = z; jahr = j; }
+    if (z > jetzt && (!kommt || z < kommt[1])) kommt = [j, z];
+  });
+  const uhr = (z) => new Date(z).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  if (kommt) el.textContent = "Epoche: " + (kommt[0] === 2100 ? "Die Zeitmaschine" : "Der Riss") + " läuft – um " + uhr(kommt[1]) + " Uhr wird die Seite für alle zum Jahr " + kommt[0] + ".";
+  else if (jahr === 2100) el.textContent = "Epoche: Jahr 2100 – alle sehen das All-Design, bis du zurückschaltest.";
+  else if (jahr === 1720) el.textContent = "Epoche: Jahr 1720 – alle sehen das Pergament-Design, bis du zurückschaltest.";
+  else el.textContent = "Epoche: Jahr 2026 (normal).";
 }
 
 async function gwEpocheSetzen(jahr) {
   if (!supabaseClient) return;
-  if (jahr === "1720" && !confirm("Die Seite jetzt für alle ins Jahr 1720 schalten – ohne den Film?")) return;
+  if (jahr !== "2026" && !confirm("Die Seite jetzt für alle ins Jahr " + jahr + " schalten – ohne den Film?")) return;
   try {
     const { data, error } = await supabaseClient.rpc("admin_epoche", { p_jahr: jahr });
     if (error) throw error;
     if (window.fhEpoche) window.fhEpoche.vorschau(null);
-    gwEpocheZeigen(data);
-    gwLiveStatus("gw-epoche-status", jahr === "1720" ? "✓ Alle sehen jetzt das Jahr 1720." : "✓ Zurück im Jahr 2026 – für alle.", false);
+    gwEpocheZeigen(jahr === "1720" ? data : null, jahr === "2100" ? data : null);
+    gwLiveStatus("gw-epoche-status", jahr === "2026" ? "✓ Zurück im Jahr 2026 – für alle." : "✓ Alle sehen jetzt das Jahr " + jahr + ".", false);
   } catch (err) {
     console.error("Epoche umschalten fehlgeschlagen:", err);
-    gwLiveStatus("gw-epoche-status", "Umschalten fehlgeschlagen: " + ((err && err.message) || err) + " – ist Migration 35 eingespielt?", true);
+    gwLiveStatus("gw-epoche-status", "Umschalten fehlgeschlagen: " + ((err && err.message) || err) + " – " + (jahr === "2100" ? "ist Migration 46 eingespielt?" : "ist Migration 35 eingespielt?"), true);
   }
 }
 
-function gwEpocheVorschau() {
+/* Vorschau 1720 oder 2100 nur in diesem Browser; derselbe Knopf
+   nochmal beendet sie. */
+function gwEpocheVorschau(jahr) {
   if (!window.fhEpoche) return;
-  const an = window.fhEpoche.jahr() !== 1720;
-  window.fhEpoche.vorschau(an ? true : null);
-  gwLiveStatus("gw-epoche-status", an ? "Vorschau: Jahr 1720 – nur bei dir. Nochmal drücken beendet die Vorschau." : "Vorschau beendet – wieder wie bei allen.", false);
+  const an = window.fhEpoche.vorschauJahr ? window.fhEpoche.vorschauJahr() !== jahr : window.fhEpoche.jahr() !== jahr;
+  window.fhEpoche.vorschau(an ? jahr : null);
+  gwLiveStatus("gw-epoche-status", an ? "Vorschau: Jahr " + jahr + " – nur bei dir. Nochmal drücken beendet die Vorschau." : "Vorschau beendet – wieder wie bei allen.", false);
 }
 
 /* ------------------------------------------------------
@@ -483,6 +501,7 @@ const GW_PREISE = [
   ["disco", "Disco-Party", "gold", null, "am Ende"],
   ["riss", "Der Riss", "violett", null, "am Ende des Films"],
   ["herz", "Zwei Hälften eines Herzens", "violett", null, "am Ende des Films"],
+  ["zeit", "Zeitmaschine 2100", "kalt", null, "am Ende des Films"],
   ["ende", "Systemausfall", "rot", null, "am Ende"],
 ];
 let gwPreise = {};
@@ -1089,7 +1108,7 @@ async function gwStoryLageLaden() {
     else if (z.story === "disco" && !z.story_ende_at) ziel.textContent = "Disco läuft seit " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC) – „Disco / Schatzregen beenden“ lässt sie ausklingen.";
     else if (z.story === "schatz" && !z.story_ende_at) ziel.textContent = "Schatzregen läuft seit " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC) – „Disco / Schatzregen beenden“ stoppt den Regen, dann gibt es die Beute.";
     else ziel.textContent = "Zuletzt gestartet: " + gwStoryName(z.story) + " um " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC).";
-    gwEpocheZeigen(z.jahr_1720_ab || null);
+    gwEpocheZeigen(z.jahr_1720_ab || null, z.jahr_2100_ab || null);
     gwMusikVersionAlt = z.musik_version || null;
     gwMusikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
     gwMusikStandZeigen();

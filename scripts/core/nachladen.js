@@ -8,6 +8,7 @@
      riss     scripts/liveevent/riss-film.js  (nur die Story "Der Riss")
      wetter   scripts/liveevent/story-wetter.js (nur die Wetter-Storys)
      herz     scripts/liveevent/herz-film.js  (nur "Zwei Hälften eines Herzens")
+     zeit     scripts/liveevent/zeit-film.js  (nur "Zeitmaschine 2100")
 
    Die Adressen stehen fest hier in ADRESSEN - nicht im HTML, damit
    keine Skriptadresse aus dem DOM gelesen wird (CodeQL: "DOM text
@@ -26,6 +27,7 @@
     admin: "scripts/core/admin-gateway.js?v=42-admin-security",
     riss: "scripts/liveevent/riss-film.js?v=c60d9cac41",
     herz: "scripts/liveevent/herz-film.js?v=c6ba6293c5",
+    zeit: "scripts/liveevent/zeit-film.js?v=8a4f71898d",
     wetter: "scripts/liveevent/story-wetter.js?v=d38bfcebe3"
   };
 

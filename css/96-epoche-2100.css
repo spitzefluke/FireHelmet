@@ -1,0 +1,204 @@
+/* =====================================================
+   EPOCHE 2100 - DIE SEITE IM ALL (Migration 46)
+   -----------------------------------------------------
+   Der Film "Zeitmaschine 2100" (scripts/liveevent/zeit-film.js)
+   endet im All, die Erde ist gespalten, im Hintergrund tobt die
+   Schlacht. Danach sieht die ganze Website so aus. Ein- und
+   ausgeschaltet wird nur die Klasse html.fh-2100 (wie html.fh-1720,
+   live-storys.js).
+
+   WIE ES GEBAUT IST
+   Die Seite ist schon dunkel, deshalb kein Umdrehen wie bei 1720.
+   Ein Farbfilter dreht nur den Farbton: aus Gold und Feuer werden
+   Cyan und Violett. Bilder, Videos und Canvas werden zurueckgedreht.
+   Leiste und Kopfzeile sind von Hand gestaltet: Glasflaechen mit
+   Leuchtkante. Der Hintergrund bekommt Nebel, die gespaltene Erde
+   als Glut am linken Rand und ferne Laserblitze.
+   Farben aus dem Schlussbild des Films (UI in zeitmaschine-2100.jsx).
+
+   Ein neues festes Live-Element direkt an body, das nicht umgefaerbt
+   werden soll, gehoert in die :not(...)-Liste unten - und in die
+   gleiche Liste in 95-epoche-1720.css.
+===================================================== */
+
+html.fh-2100 {
+  --fh-2100-all: #03040c;
+  --fh-2100-glas: rgba(12,16,42,.62);
+  --fh-2100-kante: rgba(150,190,255,.28);
+  --fh-2100-cyan: #7fe0ff;
+  --fh-2100-violett: #a98bff;
+  --fh-2100-text: #dfe8ff;
+  --fh-2100-text-weich: rgba(190,210,255,.7);
+  --fh-2100-glut: #ff6a1a;
+  --fh-radius-sm: 8px;
+  --fh-radius: 12px;
+  --fh-radius-lg: 16px;
+}
+
+/* ---- Weltall ---- */
+html.fh-2100 body {
+  background:
+    radial-gradient(40% 35% at 30% 40%, rgba(90,60,200,.28), transparent 70%),
+    radial-gradient(35% 30% at 75% 60%, rgba(30,140,180,.18), transparent 70%),
+    radial-gradient(30% 25% at 85% 20%, rgba(170,60,160,.16), transparent 70%),
+    var(--fh-2100-all) fixed;
+  background-color: var(--fh-2100-all);
+}
+
+/* Glut der gespaltenen Erde links unten und dunkle Raender -
+   unter Leiste und Kopfzeile, faengt keine Klicks. */
+html.fh-2100 body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--fh-z-sidebar) - 2);
+  pointer-events: none;
+  background:
+    radial-gradient(22% 30% at 4% 88%, rgba(255,106,26,.16), transparent 70%),
+    radial-gradient(130% 110% at 50% 50%, transparent 60%, rgba(0,0,8,.55));
+}
+
+/* Ferne Laserblitze der Schlacht. Ohne Animation bleibt opacity 0 -
+   kein stehender Strich. */
+html.fh-2100 body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--fh-z-sidebar) - 1);
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(115deg, transparent 49.9%, rgba(111,211,255,.5) 50%, transparent 50.1%) 70% 30% / 220px 90px no-repeat,
+    linear-gradient(65deg, transparent 49.9%, rgba(157,255,106,.45) 50%, transparent 50.1%) 82% 55% / 180px 70px no-repeat;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.fh-2100 body::after { animation: fh-2100-laser 7s steps(1) infinite; }
+}
+
+@keyframes fh-2100-laser {
+  0%, 100% { opacity: 0; }
+  12% { opacity: .9; }
+  14% { opacity: 0; }
+  58% { opacity: .7; }
+  60% { opacity: 0; }
+}
+
+/* Sterne und Nebel bleiben - und leuchten etwas staerker. */
+html.fh-2100 .stars,
+html.fh-2100 .stars2 { opacity: 1; }
+html.fh-2100 .nebula { opacity: .9; filter: hue-rotate(40deg); }
+
+/* ---- Farbfilter: Gold wird Cyan ---- */
+html.fh-2100 body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an),
+html.fh-2100 dialog[open] {
+  filter: hue-rotate(165deg) saturate(1.1);
+}
+
+html.fh-2100 body > :not(#fh-sidebar):not(#fh-topbar) :is(img, video, canvas, iframe),
+html.fh-2100 dialog[open] :is(img, video, canvas, iframe) {
+  filter: hue-rotate(-165deg) saturate(.91);
+}
+
+/* ---- Leiste: Glas mit Leuchtkante ---- */
+html.fh-2100 .fh-sidebar {
+  background: var(--fh-2100-glas);
+  border-right: 1px solid var(--fh-2100-kante);
+  box-shadow: 0 0 40px rgba(80,120,255,.14), inset -1px 0 0 rgba(255,255,255,.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html.fh-2100 .fh-sidebar-flame {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #bfeaff, #3a6bff 60%, #1a1060);
+  box-shadow: 0 0 18px rgba(90,160,255,.7);
+  color: #fff;
+}
+
+html.fh-2100 .fh-sidebar-title,
+html.fh-2100 .fh-sidebar-subtitle,
+html.fh-2100 .fh-sidebar-footer,
+html.fh-2100 .fh-sidebar-footer-wrap {
+  color: var(--fh-2100-text);
+}
+
+html.fh-2100 .fh-sidebar-nav .fh-nav-item {
+  color: var(--fh-2100-text-weich);
+  background: transparent;
+  border-radius: var(--fh-radius);
+}
+
+html.fh-2100 .fh-sidebar-nav .fh-nav-item:hover,
+html.fh-2100 .fh-sidebar-nav .fh-nav-item:focus-visible {
+  color: var(--fh-2100-text);
+  background: rgba(127,224,255,.08);
+  outline-color: var(--fh-2100-cyan);
+}
+
+html.fh-2100 .fh-sidebar-nav .fh-nav-item.fh-nav-active {
+  color: #fff;
+  background: rgba(127,224,255,.12);
+  box-shadow: inset 0 0 0 1px rgba(127,224,255,.45);
+}
+
+html.fh-2100 .fh-sidebar-nav .fh-nav-item.fh-nav-active::before {
+  background: linear-gradient(180deg, var(--fh-2100-cyan), var(--fh-2100-violett));
+  box-shadow: 0 0 10px var(--fh-2100-cyan);
+}
+
+html.fh-2100 .fh-sidebar-nav .fh-nav-section-label {
+  background: linear-gradient(90deg, transparent, rgba(127,224,255,.45), transparent);
+}
+
+/* ---- Kopfzeile: Glas ---- */
+html.fh-2100 .fh-topbar {
+  background: linear-gradient(180deg, rgba(12,16,42,.78), rgba(12,16,42,.35));
+  border-bottom: 1px solid var(--fh-2100-kante);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--fh-2100-text);
+}
+
+html.fh-2100 .fh-topbar .fh-qs-trigger {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(150,190,255,.35);
+  border-radius: 999px;
+  color: var(--fh-2100-text-weich);
+  box-shadow: none;
+}
+
+html.fh-2100 .fh-topbar .fh-qs-trigger kbd {
+  background: transparent;
+  border: 1px solid rgba(150,190,255,.35);
+  color: var(--fh-2100-text-weich);
+}
+
+html.fh-2100 .fh-topbar-btn,
+html.fh-2100 .fh-topbar-lang,
+html.fh-2100 .fh-topbar-coins {
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--fh-2100-kante);
+  border-radius: var(--fh-radius);
+  color: var(--fh-2100-text);
+  box-shadow: none;
+}
+
+html.fh-2100 .fh-topbar-btn:hover,
+html.fh-2100 .fh-topbar-lang:hover {
+  border-color: var(--fh-2100-cyan);
+  background: rgba(127,224,255,.08);
+  box-shadow: 0 0 14px rgba(127,224,255,.3);
+}
+
+html.fh-2100 .fh-topbar-coins .ph { color: var(--fh-2100-cyan); }
+
+html.fh-2100 .fh-page-title {
+  text-shadow: 0 0 24px rgba(127,224,255,.35);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.fh-2100-wechsel body > * {
+    transition: filter .9s var(--fh-ease), background-color .9s var(--fh-ease);
+  }
+}

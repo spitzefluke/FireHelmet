@@ -16,8 +16,8 @@ Datei, die du gerade anfasst.
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 118 `<script defer>`-Tags in fester
-Reihenfolge, davon 104 aus diesem Repo. Vier große Skripte, die fast niemand braucht
-(`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
+Reihenfolge, davon 104 aus diesem Repo. Fünf große Skripte, die fast niemand braucht
+(`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
 meldet CodeQL das als hohe Sicherheitslücke. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
@@ -115,13 +115,13 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhHerzFilm`, `window.fhStoryWetter` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhStoryWetter` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
 nach `fhNachladen(...)`. Was andere Dateien früher brauchen, gehört in die kleine
 Immer-geladen-Datei daneben (`admin-zugang.js`: `isAuthorizedAdmin`, `updateGatewayPage`).
 
 ### CSS
 
-Zwölf Dateien in fester Ladereihenfolge, `css/00-basis.css` bis `css/95-epoche-1720.css`. Die
+Dreizehn Dateien in fester Ladereihenfolge, `css/00-basis.css` bis `css/96-epoche-2100.css`. Die
 Nummer ist die Kaskade: Späteres überschreibt Früheres. Die Design-Tokens (`--fh-gold`,
 `--fh-surface`, `--fh-ease`, …) stehen in `00-basis.css` unter `:root`. **Neue Farben und
 Kurven aus den Tokens nehmen**, nicht als Rohwert schreiben.
@@ -132,6 +132,11 @@ dafür nichts Eigenes. Nur wer ein neues festes Element direkt an `body` hängt,
 umgefärbt werden soll (ein Live-Effekt), trägt es dort in die `:not(...)`-Liste ein. Und:
 `position: fixed` im Inhalt landet unter 1720 am Rand von `#fh-main` statt am
 Bildschirmrand – feste Hinweise an `body` hängen.
+
+`96-epoche-2100.css` gilt genauso unter `html.fh-2100` (nach der Zeitmaschine, Migration 46)
+und hat eine eigene `:not(...)`-Liste – ein neues Live-Element gehört in **beide** Listen.
+Welche Epoche gilt, entscheidet die zuletzt erreichte Zeitmarke (`jahr_1720_ab`,
+`jahr_2100_ab`), siehe `live-storys.js`.
 
 ### Datenbank und Anmeldung
 
