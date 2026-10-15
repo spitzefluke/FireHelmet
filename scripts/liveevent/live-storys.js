@@ -88,6 +88,10 @@
        Erzaehlerstimme aus herz-film.js; die zehn Szenen sind seine
        Kapitel (zusammen 616 s, wie dort im Drehbuch). */
     herz: { szenen: [62000, 60000, 58000, 60000, 52000, 66000, 58000, 68000, 58000, 74000] },
+    /* Migration 46: "Zeitmaschine 2100" - der 5-Minuten-Film aus
+       zeit-film.js, seine neun Szenen (OM_SCENES im Entwurf). Zum
+       Filmende gilt die Epoche 2100 (jahr_2100_ab). */
+    zeit: { szenen: [30000, 30000, 20000, 30000, 40000, 35000, 25000, 50000, 40000] },
   };
   const ZEITEN_IN_SZENE = {};  // Summe der Dauer bis zum Beginn jeder Szene
   Object.keys(STORYS).forEach(function (st) {
@@ -1227,6 +1231,17 @@
       else if (window.fhNachladen) window.fhNachladen("herz").then(herzStart, function (e) { console.warn(e); });
     }
 
+    /* Zeitmaschine 2100 (46): genauso, zeit-film.js (53 KB). */
+    if (st === "zeit" && !lauf.zeitGestartet) {
+      lauf.zeitGestartet = true;
+      const zeitStart = function () {
+        if (!lauf || lauf.id !== id || lauf.story !== "zeit" || !window.fhZeitFilm) return;
+        window.fhZeitFilm.start({ ab: ZEITEN_IN_SZENE.zeit[lauf.n - 1] + imSzeneMs(), vorschau: vorschau });
+      };
+      if (window.fhZeitFilm) zeitStart();
+      else if (window.fhNachladen) window.fhNachladen("zeit").then(zeitStart, function (e) { console.warn(e); });
+    }
+
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
     if (st === "hacked" && n === 7) {
       const p = hatPreis("hacked") ? belohnungAbholen(id, "hacked", 0, vorschau) : Promise.resolve(null);
@@ -1353,20 +1368,22 @@
     if (window.fhStoryWetter) window.fhStoryWetter.ende();
     if (st === "riss" && window.fhRissFilm) window.fhRissFilm.ende();
     if (st === "herz" && window.fhHerzFilm) window.fhHerzFilm.ende();
+    if (st === "zeit" && window.fhZeitFilm) window.fhZeitFilm.ende();
     if (st === "hacked") loecherSpawnen(id, vorschau);
     if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
     if (st === "sturm" && !vorschau) nachregen = true;
     anzeigen();
     /* 36: Riss und Systemausfall zahlen am Ende - nur wer bis hier
        dabei war, und nur, wenn der Admin etwas eingestellt hat. */
-    if ((st === "riss" || st === "ende" || st === "herz") && hatPreis(st)) {
+    if ((st === "riss" || st === "ende" || st === "herz" || st === "zeit") && hatPreis(st)) {
       belohnungAbholen(id, "abschluss", 0, vorschau, st).then(function (erg) {
         const teile = belohnungsTeile(erg);
         if (!teile.length) return;
         const text = st === "riss" ? t("story.riss.reward", "Willkommen im Jahr 1720")
           : st === "herz" ? t("story.herz.reward", "Danke fürs Zuschauen")
+          : st === "zeit" ? t("story.zeit.reward", "Willkommen im Jahr 2100")
           : t("story.end.reward", "Ein Trostpflaster für die Crew");
-        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : "#39ff14", st === "ende");
+        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : st === "zeit" ? "#7fe0ff" : "#39ff14", st === "ende");
       });
     }
   }
@@ -1399,6 +1416,7 @@
     if (window.fhGegenhack) window.fhGegenhack.siegWeg();
     if (window.fhRissFilm) window.fhRissFilm.weg();
     if (window.fhHerzFilm) window.fhHerzFilm.weg();
+    if (window.fhZeitFilm) window.fhZeitFilm.weg();
     if (window.fhStoryWetter) window.fhStoryWetter.weg();
     if (musikLaeuft) musikAus(0);
     lauf = null;
@@ -1434,49 +1452,77 @@
     document.head.appendChild(l);
   }
 
-  function epocheAn(an) {
+  /* EPOCHE 2100 (Migration 46): dasselbe mit live_event.jahr_2100_ab
+     und html.fh-2100 (css/96-epoche-2100.css). Beide Spalten sind
+     Zeitmarken; es gilt die zuletzt ERREICHTE, keine erreicht = 2026.
+     So bringt ein neuer Riss die Seite aus 2100 nach 1720 zurueck und
+     eine neue Zeitmaschine aus 1720 nach 2100. */
+  function epocheAn(jahr) {
     const h = document.documentElement;
-    if (h.classList.contains("fh-1720") === an) return;
-    if (an) {
-      epocheSchrift();
+    const jetzt = h.classList.contains("fh-2100") ? 2100 : h.classList.contains("fh-1720") ? 1720 : 2026;
+    if (jetzt === jahr) return;
+    if (jahr !== 2026) {
+      if (jahr === 1720) epocheSchrift();
       /* Fest positionierte Hinweise im Inhalt an den body haengen -
          der Farbfilter auf #fh-main wuerde sie sonst an dessen Rand
          statt an den Bildschirmrand setzen. */
       document.querySelectorAll("#fh-main .currency-toast").forEach(function (el) { document.body.appendChild(el); });
     }
-    h.classList.add("fh-1720-wechsel");
-    h.classList.toggle("fh-1720", an);
-    setTimeout(function () { h.classList.remove("fh-1720-wechsel"); }, 1200);
-    try { localStorage.setItem("fhEpoche", an ? "1720" : "2026"); } catch (e) { /* Privatmodus */ }
-    document.dispatchEvent(new CustomEvent("fh:epoche", { detail: { jahr: an ? 1720 : 2026 } }));
+    const wechsel = jahr === 2100 || jetzt === 2100 ? "fh-2100-wechsel" : "fh-1720-wechsel";
+    h.classList.add(wechsel);
+    h.classList.toggle("fh-1720", jahr === 1720);
+    h.classList.toggle("fh-2100", jahr === 2100);
+    setTimeout(function () { h.classList.remove(wechsel); }, 1200);
+    try { localStorage.setItem("fhEpoche", String(jahr)); } catch (e) { /* Privatmodus */ }
+    document.dispatchEvent(new CustomEvent("fh:epoche", { detail: { jahr: jahr } }));
   }
 
-  function epocheSetzen(ab) {
+  /* Welches Jahr gilt zum Zeitpunkt "jetzt" (ms)? */
+  function epocheZu(marken, jetzt) {
+    let jahr = 2026, beste = -Infinity;
+    marken.forEach(function (m) {
+      if (isFinite(m.zeit) && m.zeit <= jetzt && m.zeit > beste) { beste = m.zeit; jahr = m.jahr; }
+    });
+    return jahr;
+  }
+
+  function epocheSetzen(ab1720, ab2100) {
     clearTimeout(epocheUhr);
     if (epocheVorschau !== null) return;
-    const zeit = ab ? Date.parse(ab) : NaN;
-    if (!isFinite(zeit)) { epocheAn(false); return; }
-    const rest = zeit - Date.now();
-    if (rest <= 0) { epocheAn(true); return; }
-    epocheAn(false);
-    /* Der Riss laeuft noch: genau zum Filmende umschalten. */
-    epocheUhr = setTimeout(function () { epocheAn(true); }, Math.min(rest, 2147483000));
+    const marken = [
+      { jahr: 1720, zeit: ab1720 ? Date.parse(ab1720) : NaN },
+      { jahr: 2100, zeit: ab2100 ? Date.parse(ab2100) : NaN },
+    ];
+    const jetzt = Date.now();
+    epocheAn(epocheZu(marken, jetzt));
+    /* Ein Film laeuft noch: genau zum naechsten Filmende umschalten. */
+    const naechste = marken.reduce(function (m, x) { return isFinite(x.zeit) && x.zeit > jetzt ? Math.min(m, x.zeit) : m; }, Infinity);
+    if (naechste === Infinity) return;
+    epocheUhr = setTimeout(function () { epocheSetzen(ab1720, ab2100); }, Math.min(naechste - jetzt + 50, 2147483000));
   }
 
   /* Schon beim Laden der letzte bekannte Stand - die echte Zeile aus
      der Datenbank kommt ein paar hundert Millisekunden spaeter. */
-  try { if (localStorage.getItem("fhEpoche") === "1720") epocheAn(true); } catch (e) { /* egal */ }
+  try {
+    const gemerkt = localStorage.getItem("fhEpoche");
+    if (gemerkt === "1720" || gemerkt === "2100") epocheAn(Number(gemerkt));
+  } catch (e) { /* egal */ }
 
   window.fhEpoche = {
-    /* Admin-Vorschau: true/false nur hier, null = wieder wie bei allen. */
-    vorschau: function (an) {
-      epocheVorschau = an === null || an === undefined ? null : !!an;
+    /* Admin-Vorschau nur hier: 1720 oder 2100 (true = 1720), null = wieder wie bei allen. */
+    vorschau: function (jahr) {
+      epocheVorschau = jahr === null || jahr === undefined ? null : jahr === 2100 ? 2100 : 1720;
       if (epocheVorschau !== null) { clearTimeout(epocheUhr); epocheAn(epocheVorschau); }
-      else epocheSetzen(letzteEpoche);
+      else epocheSetzen(letzteEpoche, letzteEpoche2100);
     },
-    jahr: function () { return document.documentElement.classList.contains("fh-1720") ? 1720 : 2026; },
+    jahr: function () {
+      const h = document.documentElement;
+      return h.classList.contains("fh-2100") ? 2100 : h.classList.contains("fh-1720") ? 1720 : 2026;
+    },
+    vorschauJahr: function () { return epocheVorschau; },
   };
   let letzteEpoche = null;
+  let letzteEpoche2100 = null;
 
   /* ------------------------------------------------------
      VON live-event.js: die Zustandszeile
@@ -1490,7 +1536,8 @@
     musikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
     if (z.story_preise && typeof z.story_preise === "object" && Object.keys(z.story_preise).length) preise = z.story_preise;
     letzteEpoche = z.jahr_1720_ab || null;
-    epocheSetzen(letzteEpoche);
+    letzteEpoche2100 = z.jahr_2100_ab || null;
+    epocheSetzen(letzteEpoche, letzteEpoche2100);
     const id = z.story_id || null;
     if (id !== aktuelleId) {
       aktuelleId = id;
