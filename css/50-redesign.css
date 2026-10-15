@@ -1835,3 +1835,46 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 }
 .gw-mystery-hinweis:hover,
 .gw-mystery-hinweis:focus-visible { background: rgba(255,106,42,.22); }
+
+/* ======================================================
+   RECHTSSEITEN (Impressum, Datenschutz) + Fußzeile
+====================================================== */
+.fh-legal-body {
+  max-width: 760px;
+  margin: 0 auto;
+  color: var(--fh-fg);
+  line-height: 1.7;
+}
+.fh-legal-body h2 {
+  font-family: var(--fh-font-display);
+  font-size: 20px;
+  letter-spacing: .02em;
+  color: var(--fh-gold-bright);
+  margin: 28px 0 8px;
+}
+.fh-legal-body h2:first-child { margin-top: 0; }
+.fh-legal-body p { margin: 0 0 14px; color: var(--fh-muted-fg); }
+.fh-legal-body a { color: var(--fh-cold); text-decoration: underline; word-break: break-word; }
+.fh-legal-stand { font-size: 13px; opacity: .7; margin-top: 24px; }
+
+.fh-legal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  border-top: 1px solid var(--fh-border);
+  background: var(--fh-bg-secondary);
+}
+.fh-legal-footer a {
+  color: var(--fh-muted-fg);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--fh-dauer) var(--fh-ease);
+}
+.fh-legal-footer a:hover,
+.fh-legal-footer a:focus-visible { color: var(--fh-gold-bright); }
+

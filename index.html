@@ -41,9 +41,11 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon/favicon-192.png">
   <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Selbst gehostete Schriften (Inter, Oswald) statt Google Fonts -
+       keine Besucher-IP mehr zu Google (DSGVO). Siehe assets/fonts/fonts.css. -->
+  <link rel="preload" href="assets/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/oswald-600.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/fonts/fonts.css?v=30b127fbf4">
   <!-- Phosphor-Icons fuer die Icon-Rail (Entwurf 1c). Als eigenes
        Stylesheet VOR style.css, damit dortige Regeln gewinnen. -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
@@ -62,7 +64,7 @@
   <link rel="stylesheet" href="css/20-spiele.css?v=2970bf6bc5">
   <link rel="stylesheet" href="css/30-events.css?v=f3e2d20018">
   <link rel="stylesheet" href="css/40-shop.css?v=1af16124ab">
-  <link rel="stylesheet" href="css/50-redesign.css?v=15d6594ff4">
+  <link rel="stylesheet" href="css/50-redesign.css?v=421b42fbcc">
   <link rel="stylesheet" href="css/60-fortschritt.css?v=f65476ab66">
   <link rel="stylesheet" href="css/65-startseite.css?v=e6eb9160d1">
   <link rel="stylesheet" href="css/70-entwurf-1c.css?v=3a8f14a3ad">
@@ -1565,7 +1567,163 @@
       </div>
     </section>
 
+    <!-- ============================================================
+         IMPRESSUM / KONTAKT
+         Private, nicht-kommerzielle Website (Entscheidung des Betreibers):
+         keine Namen und keine Anschrift, Kontakt per E-Mail. Wird die Seite
+         geschaeftsmaessig betrieben, gilt § 5 DDG mit ladungsfaehiger
+         Anschrift - dann hier ergaenzen.
+    ============================================================ -->
+    <section id="impressum" class="page">
+      <div class="page-content fh-legal">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="legal.imprintKicker">Rechtliches</p>
+          <h1 class="fh-page-title" data-i18n="legal.imprintTitle">Impressum</h1>
+          <p class="fh-page-lead" data-i18n="legal.imprintLead">Private, nicht-kommerzielle Fan-Website.</p>
+        </div>
+
+        <div class="fh-legal-body">
+          <h2>Betreiber</h2>
+          <p>Stream Help – ein privates, nicht-kommerzielles Fan-Projekt rund um die Piratensaga
+             „FireHelmet“.</p>
+
+          <h2>Kontakt</h2>
+          <p>E-Mail: spitzefluke@gmail.com</p>
+
+          <h2>Haftung für Inhalte</h2>
+          <p>Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen
+             Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 DDG sind wir
+             als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde
+             Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige
+             Tätigkeit hinweisen. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von
+             Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt.</p>
+
+          <h2>Haftung für Links</h2>
+          <p>Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen
+             Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen.
+             Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der
+             Seiten verantwortlich. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links
+             umgehend entfernen.</p>
+
+          <h2>Urheberrecht</h2>
+          <p>Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen
+             dem deutschen Urheberrecht. „FireHelmet“ ist ein Fan-/Community-Projekt rund um die Saga
+             von Streamer Ändii. Marken- und Urheberrechte Dritter werden beachtet; sollte dennoch eine
+             Verletzung vorliegen, bitten wir um einen Hinweis an die oben genannte E-Mail-Adresse.</p>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         DATENSCHUTZERKLÄRUNG
+         Aus dem tatsaechlichen Technik-Stack geschrieben. Rechtlich
+         pruefen lassen (kein Ersatz fuer Rechtsberatung).
+    ============================================================ -->
+    <section id="datenschutz" class="page">
+      <div class="page-content fh-legal">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="legal.privacyKicker">Rechtliches</p>
+          <h1 class="fh-page-title" data-i18n="legal.privacyTitle">Datenschutzerklärung</h1>
+          <p class="fh-page-lead" data-i18n="legal.privacyLead">Wie diese Seite mit personenbezogenen Daten umgeht.</p>
+        </div>
+
+
+        <div class="fh-legal-body">
+          <h2>1. Verantwortlicher</h2>
+          <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist der Betreiber des
+             privaten Projekts „Stream Help“.<br>E-Mail: spitzefluke@gmail.com</p>
+
+          <h2>2. Grundsätzliches</h2>
+          <p>Diese Website ist ein Fan-/Community-Projekt zur Piratensaga „FireHelmet“. Sie lässt sich
+             ohne Anmeldung nutzen. Personenbezogene Daten werden nur verarbeitet, soweit das für den
+             Betrieb der Seite und ihrer Funktionen technisch nötig ist. Rechtsgrundlagen sind
+             Art. 6 Abs. 1 lit. b DSGVO (Nutzung der Funktionen) und lit. f DSGVO (berechtigtes Interesse
+             am sicheren, funktionsfähigen Betrieb).</p>
+
+          <h2>3. Hosting (GitHub Pages)</h2>
+          <p>Die Seite wird über <strong>GitHub Pages</strong> der GitHub, Inc. (88 Colin P. Kelly Jr.
+             Street, San Francisco, CA 94107, USA) bereitgestellt. Beim Aufruf überträgt dein Browser
+             technisch notwendige Daten (u. a. IP-Adresse, Datum/Uhrzeit, aufgerufene Datei, Browsertyp)
+             an GitHub, die diese in Server-Logfiles verarbeiten. Für Übermittlungen in die USA stützt
+             sich GitHub auf den EU-US Data Privacy Framework bzw. Standardvertragsklauseln. Weitere
+             Infos: <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">GitHub-Datenschutzerklärung</a>.</p>
+
+          <h2>4. Lokaler Speicher im Browser</h2>
+          <p>Zum Speichern deines Spielfortschritts (z. B. gewählter Name, freigeschaltete Inhalte,
+             Spracheinstellung) nutzt die Seite den lokalen Speicher deines Browsers
+             („localStorage“). Diese Daten bleiben auf deinem Gerät, werden nicht an uns zu Werbe- oder
+             Analysezwecken übertragen und lassen sich jederzeit über die Einstellungen deines Browsers
+             löschen. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO sowie § 25 Abs. 2 TDDDG (technisch
+             erforderliche Speicherung).</p>
+
+          <h2>5. Spieldaten (Supabase)</h2>
+          <p>Spielfortschritt, Bestenlisten und ähnliche Funktionen laufen über <strong>Supabase</strong>
+             (Supabase, Inc., 970 Toa Payoh North, Singapur / EU-Hosting). Dabei wird beim ersten Besuch
+             anonym eine zufällige Kennung vergeben; gespeichert werden der von dir gewählte Anzeigename
+             und dein Spielfortschritt. Eine Verbindung zu deiner echten Identität entsteht nur, wenn du
+             dich freiwillig anmeldest (siehe Punkt 6). Rechtsgrundlage: Art. 6 Abs. 1 lit. b und f DSGVO.</p>
+
+          <h2>6. Anmeldung über Twitch, Discord oder Google (optional)</h2>
+          <p>Du kannst dich freiwillig über Twitch, Discord oder Google anmelden, um deinen Fortschritt
+             zu sichern. Dabei werden von dem gewählten Anbieter ein verifizierter Anzeigename und ein
+             Profilbild an uns übermittelt und mit deinem Spielkonto verknüpft. Es werden keine Passwörter
+             übertragen. Für die Verarbeitung durch den jeweiligen Anbieter gelten dessen
+             Datenschutzbestimmungen (<a href="https://www.twitch.tv/p/legal/privacy-notice/" target="_blank" rel="noopener noreferrer">Twitch</a>,
+             <a href="https://discord.com/privacy" target="_blank" rel="noopener noreferrer">Discord</a>,
+             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google</a>).
+             Rechtsgrundlage: Art. 6 Abs. 1 lit. a und b DSGVO. Die Anmeldung ist optional; ohne sie
+             spielst du als Gast weiter.</p>
+
+          <h2>7. Spam- und Missbrauchsschutz (Cloudflare Turnstile)</h2>
+          <p>Zum Schutz vor automatisiertem Missbrauch kann beim Anmelden ein „Turnstile“-Prüfdienst der
+             Cloudflare, Inc. (101 Townsend St, San Francisco, CA 94107, USA) geladen werden. Er prüft im
+             Hintergrund, ob die Anfrage von einem Menschen stammt, und verarbeitet dabei technische Daten
+             (u. a. IP-Adresse). Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (Schutz vor Missbrauch).
+             <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Datenschutz bei Cloudflare</a>.</p>
+
+          <h2>8. Auslieferung von Skripten und Symbolen (CDN)</h2>
+          <p>Für Animationen und Symbole werden einzelne Programmbibliotheken über die Content-Delivery-
+             Netzwerke <strong>jsDelivr</strong> und <strong>unpkg</strong> geladen. Dabei wird deine
+             IP-Adresse technisch an den jeweiligen Anbieter übertragen. Rechtsgrundlage:
+             Art. 6 Abs. 1 lit. f DSGVO (effiziente, sichere Bereitstellung der Seite).</p>
+
+          <h2>9. Schriftarten</h2>
+          <p>Die verwendeten Schriftarten (Inter, Oswald) werden <strong>lokal von dieser Website
+             ausgeliefert</strong>. Es besteht dabei keine Verbindung zu Google-Servern, es werden
+             insbesondere keine Daten an Google übertragen.</p>
+
+          <h2>10. Cookies</h2>
+          <p>Diese Seite setzt <strong>keine Tracking- oder Werbe-Cookies</strong> und bindet keine
+             Analyse-Dienste ein. Verwendet werden ausschließlich technisch notwendige Speichermechanismen
+             (siehe Punkte 4–7), etwa um deine Anmeldung aufrechtzuerhalten. Deshalb ist kein
+             Einwilligungsbanner erforderlich.</p>
+
+          <h2>11. Deine Rechte</h2>
+          <p>Du hast im Rahmen der gesetzlichen Vorgaben das Recht auf Auskunft (Art. 15 DSGVO),
+             Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18),
+             Datenübertragbarkeit (Art. 20) sowie Widerspruch (Art. 21). Eine erteilte Einwilligung
+             kannst du jederzeit mit Wirkung für die Zukunft widerrufen. Wende dich dafür an die unter
+             Punkt 1 genannte E-Mail-Adresse. Dein Spielkonto kannst du zudem in den Einstellungen der Seite
+             selbst löschen.</p>
+
+          <h2>12. Beschwerderecht</h2>
+          <p>Dir steht ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde zu, insbesondere in dem
+             Mitgliedstaat deines Aufenthaltsorts oder des Orts des mutmaßlichen Verstoßes.</p>
+
+          <p class="fh-legal-stand">Stand: dieser Text wird bei Änderungen der eingesetzten Dienste aktualisiert.</p>
+        </div>
+      </div>
+    </section>
+
   </main>
+
+  <!-- Rechts-Fußzeile: von jeder Seite erreichbar -->
+  <footer class="fh-legal-footer">
+    <a href="#" onclick="changePage('impressum');return false;" data-i18n="legal.imprintTitle">Impressum</a>
+    <span aria-hidden="true">·</span>
+    <a href="#" onclick="changePage('datenschutz');return false;" data-i18n="legal.privacyTitle">Datenschutzerklärung</a>
+  </footer>
 
   <!-- Supabase (Anmeldung UND Spieler-Datenbank, siehe supabase/game-migration/README.md - Firebase wurde komplett entfernt,
        nachdem sich die Firebase<->Supabase-Bruecke ("Third-Party Auth") auf dem echten Projekt als nicht zuverlaessig erwiesen hat).
@@ -1667,7 +1825,7 @@
   <script src="scripts/core/share.js?v=afae2a5ba3" defer></script>
   <script src="scripts/core/fire-helmet-config.js?v=5beaa7a1a9" defer></script>
   <script src="scripts/core/nachladen.js?v=3bfc0112b8" defer></script>
-  <script src="scripts/core/i18n.js?v=0de1b4e87d" defer></script>
+  <script src="scripts/core/i18n.js?v=82dbc87297" defer></script>
   <script src="scripts/core/audiobook-link.js?v=5ab730a9b0" defer></script>
   <script src="scripts/core/update-notice-data.js?v=158096cddf" defer></script>
   <script src="scripts/core/update-notice.js?v=15d517ed67" defer></script>
