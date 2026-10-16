@@ -6,6 +6,12 @@
    SEITENWECHSEL
 ------------------------------------------------------ */
 function changePage(pageID) {
+  // Vom Admin abgeschaltete Seite (seiten-sperre.js): Besucher landen
+  // auf der Startseite, der Admin sieht sie weiter als Vorschau.
+  if (typeof fhSeiteGesperrt === "function" && fhSeiteGesperrt(pageID)) {
+    pageID = "home";
+  }
+
   // VOR dem Umschalten merken, wo der Fokus war: sobald die alte Seite
   // auf display:none geht, setzt der Browser den Fokus von selbst auf
   // <body> zurueck - danach liesse sich nicht mehr feststellen, ob der
