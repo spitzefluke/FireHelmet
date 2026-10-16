@@ -19,10 +19,18 @@
    Zeichnen uebergeben wird - so folgen Schuesse den schwebenden
    Schiffen.
 
+   GROSSSCHIFFE IM HINTERGRUND: Alle 18 bis 40 Sekunden zieht ein
+   riesiges Schiff langsam und gedaempft hinter dem Gefecht vorbei -
+   Schlachtkreuzer und Traeger der Erdflotte von links, Mutterschiffe
+   des Schwarms von rechts (Formen aus scripts/hangar/schiffe.js, voll
+   ausgebaut). Hoechstens zwei zugleich, mit Positionslichtern. Bei
+   "Bewegung reduzieren" keine.
+
    API (window.fhSchlachtFx):
      schuss(von, nach, { typ, seite, stark, beimTreffer })
      explosion(x, y, seite, groesse)
      zeichnen(ctx, pos, jetzt)
+     hintergrund(ctx, breite, hoehe, jetzt, dpr, ruhig)
      leeren()
      WAFFEN
 ====================================================== */
@@ -285,5 +293,63 @@
     ctx.restore();
   }
 
-  window.fhSchlachtFx = { schuss: schuss, explosion: explosion, zeichnen: zeichnen, leeren: leeren, WAFFEN: WAFFEN };
+  /* ------------------------------------------------------
+     GROSSSCHIFFE IM HINTERGRUND
+  ------------------------------------------------------ */
+  const GROSS_TYPEN = { menschen: ["kreuzer", "traeger", "kreuzer", "fregatte"], aliens: ["brutschiff", "weber", "brutschiff", "stachel"] };
+  const GROSS_STUFEN = { leben: 5, schaden: 5, spezial: 0 };
+  let grosse = [];
+  let naechstesGross = 0;
+
+  function grossesSchiff(b, h, jetzt) {
+    const seite = Math.random() < 0.5 ? "menschen" : "aliens";
+    const liste = GROSS_TYPEN[seite];
+    /* Breite auf 64er-Stufen: so bleiben die Sprites im Zwischenspeicher wenige. */
+    const breite = Math.round(Math.max(240, Math.min(980, Math.min(b, h * 1.6) * (0.5 + Math.random() * 0.35))) / 64) * 64;
+    return {
+      seite: seite,
+      typ: liste[Math.floor(Math.random() * liste.length)],
+      breite: breite,
+      y: h * (0.18 + Math.random() * 0.64),
+      t0: jetzt,
+      dauer: 30000 + Math.random() * 18000,
+      alpha: 0.22 + Math.random() * 0.14,
+      phase: Math.random() * 6.283,
+    };
+  }
+
+  function hintergrund(ctx, b, h, jetzt, dpr, ruhig) {
+    if (ruhig || !window.fhSchiffe) { grosse = []; return; }
+    if (!naechstesGross) naechstesGross = jetzt + 3000 + Math.random() * 5000;
+    if (jetzt >= naechstesGross && grosse.length < 2) {
+      grosse.push(grossesSchiff(b, h, jetzt));
+      naechstesGross = jetzt + 18000 + Math.random() * 22000;
+    }
+    grosse = grosse.filter(function (g) { return jetzt - g.t0 < g.dauer; });
+    grosse.forEach(function (g) {
+      const f = (jetzt - g.t0) / g.dauer;
+      const weg = b + g.breite * 1.2;
+      const x = g.seite === "menschen" ? -g.breite * 0.6 + f * weg : b + g.breite * 0.6 - f * weg;
+      const y = g.y + Math.sin(jetzt * 0.00025 + g.phase) * 10;
+      const ein = Math.min(1, f / 0.08, (1 - f) / 0.08);
+      ctx.save();
+      window.fhSchiffe.zeichnen(ctx, {
+        typ: g.typ, seite: g.seite, stufen: GROSS_STUFEN, x: x, y: y,
+        winkel: g.seite === "menschen" ? 0 : Math.PI, breite: g.breite, dpr: dpr,
+        zeit: jetzt, phase: g.phase, treffer: 0, ruhig: false, alpha: g.alpha * ein,
+      });
+      /* Positionslichter: rot/gruen blinkend an Bug und Heck. */
+      const blink = Math.sin(jetzt * 0.004 + g.phase) > 0.6 ? 1 : 0.15;
+      const r = Math.max(2, g.breite / 160);
+      const vorn = g.seite === "menschen" ? 1 : -1;
+      ctx.globalAlpha = Math.min(1, g.alpha * 2.4) * ein * blink;
+      ctx.fillStyle = "#ff5a5a";
+      ctx.beginPath(); ctx.arc(x + vorn * g.breite * 0.44, y - g.breite * 0.05, r, 0, 6.283); ctx.fill();
+      ctx.fillStyle = "#7dff9a";
+      ctx.beginPath(); ctx.arc(x - vorn * g.breite * 0.42, y + g.breite * 0.06, r, 0, 6.283); ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  window.fhSchlachtFx = { schuss: schuss, explosion: explosion, zeichnen: zeichnen, hintergrund: hintergrund, leeren: leeren, WAFFEN: WAFFEN };
 })();

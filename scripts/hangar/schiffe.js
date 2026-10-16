@@ -22,7 +22,8 @@
 
    API (window.fhSchiffe):
      zeichnen(ctx, o)   o = { typ, seite, stufen, x, y, winkel, breite,
-                              dpr, zeit, phase, treffer (0..1), ruhig }
+                              dpr, zeit, phase, treffer (0..1), ruhig,
+                              alpha (Grund-Deckkraft, Standard 1) }
      bild(typ, seite, stufen, breiteCss)  -> <canvas> (Hangar)
      stufenAus(einheit) -> { leben, schaden, spezial } aus Kampfwerten
      motorPunkte(typ)   -> Triebwerke (fuer Effekte)
@@ -469,6 +470,7 @@
     const skala = o.breite / 260;
     const sp = sprite(o.typ, o.seite, st, o.breite * dpr);
     const zeit = o.zeit || 0, phase = o.phase || 0;
+    const A = o.alpha == null ? 1 : o.alpha;   // Grund-Deckkraft (Grossschiffe im Hintergrund)
 
     ctx.save();
     ctx.translate(o.x, o.y);
@@ -478,9 +480,9 @@
     if (st.spezial > 0) {
       const puls = o.ruhig ? 0.5 : 0.5 + 0.5 * Math.sin(zeit * 0.003 + phase);
       const r = 120 * skala * (1 + 0.05 * st.spezial);
-      ctx.globalAlpha = Math.min(0.55, 0.12 + 0.07 * st.spezial) * (0.7 + 0.3 * puls);
+      ctx.globalAlpha = A * (Math.min(0.55, 0.12 + 0.07 * st.spezial) * (0.7 + 0.3 * puls));
       ctx.drawImage(glimmen(F.akzent, F.licht), -r, -r * 0.75, r * 2, r * 1.5);
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = A;
     }
 
     /* Triebwerksflammen hinter dem Rumpf */
@@ -488,24 +490,24 @@
     motorPunkte(o.typ).forEach(function (m, i) {
       const flacker = o.ruhig ? 1 : 0.8 + 0.35 * Math.abs(Math.sin(zeit * 0.025 + phase * 3 + i * 1.7));
       const lang = m.r * 5 * flacker * skala, hoch = m.r * 2.4 * skala;
-      ctx.globalAlpha = 0.9;
+      ctx.globalAlpha = A * (0.9);
       ctx.drawImage(flamme, m.x * skala - lang * 1.35, m.y * skala - hoch / 2, lang * 1.6, hoch);
     });
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = A;
 
     ctx.drawImage(sp, -sp.width / dpr / 2, -sp.height / dpr / 2, sp.width / dpr, sp.height / dpr);
 
     /* Treffer: Schildblase (Menschen) bzw. Membran-Zucken (Aliens) */
     if (o.treffer > 0) {
-      ctx.globalAlpha = o.treffer;
+      ctx.globalAlpha = A * (o.treffer);
       if (o.seite === "menschen") {
         ctx.strokeStyle = F.akzent; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.ellipse(0, 0, 135 * skala, 92 * skala, 0, 0, 6.283); ctx.stroke();
-        ctx.globalAlpha = o.treffer * 0.18; ctx.fillStyle = F.akzent; ctx.fill();
+        ctx.globalAlpha = A * (o.treffer * 0.18); ctx.fillStyle = F.akzent; ctx.fill();
       } else {
         ctx.drawImage(glimmen(F.akzent, "#ffffff"), -110 * skala, -80 * skala, 220 * skala, 160 * skala);
       }
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = A;
     }
     ctx.restore();
   }
