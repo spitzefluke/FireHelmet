@@ -260,7 +260,8 @@ function renderRarityLegend() {
 ------------------------------------------------------ */
 function shopPreis(item) {
   const rabatt = typeof fhSkillBonus === "function" ? fhSkillBonus("shoprabatt") : 0;
-  return rabatt > 0 ? Math.max(1, Math.round(item.price * (1 - rabatt))) : item.price;
+  /* Negativ = Aufschlag (Aliens in der Epoche 2100, seiten.js). */
+  return rabatt !== 0 ? Math.max(1, Math.round(item.price * (1 - rabatt))) : item.price;
 }
 
 function shopPreisHtml(item) {
