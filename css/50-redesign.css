@@ -2120,6 +2120,18 @@ html.fh-2100 #race > .race-ruht {
 }
 @keyframes sl-puls { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 .sl-uhr { font-family: var(--fh-font-display); font-size: 28px; font-variant-numeric: tabular-nums; }
+/* Rundensiege der endlosen Schlacht (Migration 50): Menschen : Aliens. */
+.sl-punkte {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--fh-border);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--fh-cold) 22%, transparent), color-mix(in srgb, var(--fh-violett) 22%, transparent));
+  font-family: var(--fh-font-display);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.sl-punkte:empty { display: none; }
 .sl-feld {
   position: relative;
   border-radius: var(--fh-radius-lg);

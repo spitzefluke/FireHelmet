@@ -11,6 +11,10 @@
    Als Admin handelt der Test mit der Adresse, die app.is_admin()
    selbst nennt (aus der Funktionsdefinition gelesen).
    Erwartet: acht Zeilen, alle "PASS".
+
+   NACH MIGRATION 50 (endlose Schlacht in Runden, Typwechsel frei)
+   schlagen T4 bis T7 hier absichtlich fehl - sie pruefen das alte
+   Verhalten von 49. Dann gilt 50-endlose-schlacht.test.sql.
 ====================================================== */
 do $$
 declare

@@ -1,10 +1,14 @@
 /* ======================================================
-   LIVE-STERNENSCHLACHT (Migration 49)
+   LIVE-STERNENSCHLACHT (Migrationen 49 und 50)
    ---------------------------------------------------
    Seite #sternenschlacht, nur im Jahr 2100 in der Navigation.
    Der Admin startet die Schlacht; die Datenbank haelt fest, wer
-   mitkaempft, und rechnet den Stand (schlacht_stand). Der Browser
-   zeigt nur:
+   mitkaempft, und rechnet den Stand (schlacht_stand). Seit 50 laeuft
+   sie endlos in Runden, bis der Admin sie beendet: Faellt eine Seite
+   auf 0, gibt es einen Rundensieg, und die Datenbank stellt beide
+   Flotten neu auf (neue Spieler, Hangar-Ausbauten, Spezial wieder
+   frei). Eine leere Seite fuellt eine Uebungsflotte ("ki-..."). Der
+   Browser zeigt nur:
 
    - das Schlachtfeld (Canvas): Menschenschiffe links, Alienschiffe
      rechts, Laserfeuer, Explosionen, die eigene Einheit markiert.
@@ -12,8 +16,9 @@
      fliegt als Pulk mit. Mit sinkendem Leben einer Seite
      verschwinden ihre Schiffe nach und nach.
    - Ziel antippen: Gegner anklicken -> schlacht_ziel (alle 5 s).
-   - Spezialangriff: einmal je Schlacht -> schlacht_spezial.
-   - das Prozentbanner unten: Anteil am verbliebenen Leben.
+   - Spezialangriff: einmal je Runde -> schlacht_spezial.
+   - das Prozentbanner unten: Anteil am verbliebenen Leben der
+     laufenden Runde; oben Rundennummer und Rundensiege.
    - am Ende das Siegerbanner und die Ruhmeshalle.
 
    Alle 3 s holt der Browser den Stand und die neuen Aktionen (fuer
@@ -43,7 +48,7 @@
 
   let schlacht = null;       // Zeile aus sternenschlacht
   let einheiten = [];        // Zeilen aus sternenschlacht_einheiten
-  let einheitenFuer = null;  // ID der Schlacht, zu der einheiten gehoeren
+  let einheitenFuer = null;  // "ID:Runde", zu der einheiten gehoeren
   let stand = null;          // Antwort von schlacht_stand
   let meineUid = null;
   let letzteAktion = 0;      // hoechste gesehene Aktions-ID
@@ -70,32 +75,68 @@
     });
   }
 
+  function istKi(uid) { return String(uid || "").indexOf("ki-") === 0; }
+
+  /* Beginn der laufenden Runde (Schlachten aus 49: der Start). */
+  function rundeStart() {
+    return (schlacht && (schlacht.runde_at || schlacht.start_at)) || new Date().toISOString();
+  }
+
+  function seitenName(seite) {
+    return seite === "menschen" ? t("seiten.menschen.name", "Die Erdflotte") : t("seiten.aliens.name", "Der Schwarm");
+  }
+
+  /* Neue Runde: wer hat die letzte gewonnen? */
+  function rundeGemeldet() {
+    const lr = stand && stand.letzte_runde;
+    if (!lr || !seiteOffen()) return;
+    const text = lr.sieger === "unentschieden"
+      ? t("schlacht.rundeRemis", "Runde {n}: unentschieden.").replace("{n}", lr.nr)
+      : t("schlacht.rundeSieg", "Runde {n} geht an {seite}!").replace("{n}", lr.nr).replace("{seite}", seitenName(lr.sieger).replace(/^(Die|Der|The) /, function (m) { return m.toLowerCase(); }));
+    status(text + " " + t("schlacht.rundeNeu", "Die Flotten formieren sich neu."), false);
+    ["menschen", "aliens"].forEach(function (s2) {
+      effekte.push({ art: "welle", seite: s2, wirkung: "heilung", t0: performance.now(), farbe: "#55c878" });
+    });
+  }
+
   async function laden() {
     if (!dbDa()) return;
     try {
       if (typeof wheelAuthReady !== "undefined") meineUid = await wheelAuthReady;
       const s = await letzteSchlacht();
       schlacht = s || null;
-      /* Einheiten je Schlacht einmal laden - nicht an schlacht haengen,
-         das setzt auch die Hinweis-Pruefung (hinweisPruefen). */
-      if (schlacht && einheitenFuer !== schlacht.id) {
+      /* Erst der Stand: schlacht_stand wechselt die Runde, wenn eine
+         Seite bei 0 ist - danach gelten Runde und Aufstellung neu. */
+      if (schlacht) stand = await q(function () { return supabaseClient.rpc("schlacht_stand", { p_id: schlacht.id }); });
+      if (stand && stand.ok && schlacht && stand.id === schlacht.id) {
+        if (stand.status === "vorbei" && schlacht.status === "laeuft") schlacht.status = "vorbei";
+        if (stand.ende_at) schlacht.ende_at = stand.ende_at;
+        if (stand.runde) { schlacht.runde = stand.runde; schlacht.runde_at = stand.runde_at; }
+      }
+      /* Einheiten je Schlacht und Runde einmal laden - nicht an
+         schlacht haengen, das setzt auch die Hinweis-Pruefung
+         (hinweisPruefen). */
+      const schluessel = schlacht ? schlacht.id + ":" + (schlacht.runde || 1) : null;
+      if (schlacht && einheitenFuer !== schluessel) {
         const id = schlacht.id;
-        einheiten = await q(function () {
+        const neueRunde = einheitenFuer && einheitenFuer.split(":")[0] === String(id);
+        einheiten = (await q(function () {
           return supabaseClient.from("sternenschlacht_einheiten")
             .select("firebase_uid, nickname, seite, typ, leben, schaden, spezial_at").eq("schlacht_id", id);
-        }) || [];
-        einheitenFuer = id;   // erst nach dem Erfolg - sonst beim naechsten Takt neu versuchen
-        letzteAktion = 0;
+        }) || []).map(function (e) {
+          return istKi(e.firebase_uid) ? Object.assign({}, e, { nickname: t("schlacht.ki", "Übungsflotte") }) : e;
+        });
+        einheitenFuer = schluessel;   // erst nach dem Erfolg - sonst beim naechsten Takt neu versuchen
+        if (!neueRunde) letzteAktion = 0;
         effekte = [];
         ziel = null;
         const ich = einheiten.find(function (e) { return e.firebase_uid === meineUid; });
-        spezialGenutzt = !!(ich && ich.spezial_at);
+        spezialGenutzt = !!(ich && ich.spezial_at && Date.parse(ich.spezial_at) >= Date.parse(rundeStart()));
         layoutBauen();
+        if (neueRunde) rundeGemeldet();
       }
-      if (schlacht) stand = await q(function () { return supabaseClient.rpc("schlacht_stand", { p_id: schlacht.id }); });
-      if (stand && stand.status === "vorbei" && schlacht.status === "laeuft") schlacht.status = "vorbei";
       if (!schlacht || schlacht.status !== "laeuft" || !ruhm.length) ruhm = await q(function () {
-        return supabaseClient.from("sternenschlacht").select("id, start_at, sieger, endstand_menschen, ruhm")
+        return supabaseClient.from("sternenschlacht").select("id, start_at, sieger, endstand_menschen, ruhm, endlos, punkte_menschen, punkte_aliens")
           .eq("status", "vorbei").order("id", { ascending: false }).limit(12);
       }) || [];
     } catch (err) {
@@ -315,10 +356,11 @@
   const GRUENDE = {
     "keine-schlacht": ["schlacht.fehler.keine", "Gerade läuft keine Schlacht."],
     "vorbei": ["schlacht.fehler.vorbei", "Die Schlacht ist vorbei."],
-    "nicht-dabei": ["schlacht.fehler.dabei", "Du kämpfst diesmal nicht mit – wähle eine Seite für die nächste Schlacht."],
+    "nicht-dabei": ["schlacht.fehler.dabei", "Du kämpfst noch nicht mit – wähle eine Seite, dann bist du ab der nächsten Runde dabei."],
+    "naechste-runde": ["schlacht.fehler.runde", "Du steigst in der nächsten Runde ein."],
     "zu-schnell": ["schlacht.fehler.schnell", "Deine Waffen laden noch."],
     "falsches-ziel": ["schlacht.fehler.ziel", "Wähle ein gegnerisches Schiff."],
-    "schon": ["schlacht.fehler.schon", "Dein Spezialangriff ist schon verbraucht."],
+    "schon": ["schlacht.fehler.schon", "Dein Spezialangriff ist in dieser Runde schon verbraucht."],
     "laedt": ["schlacht.fehler.laedt", "Dein Spezialangriff lädt noch."],
     "gesperrt": ["schlacht.fehler.gesperrt", "Dein Konto ist gesperrt."],
   };
@@ -393,6 +435,7 @@
 
   function restZeit() {
     if (!schlacht) return "";
+    if (!schlacht.ende_at) return t("schlacht.runde", "Runde") + " " + (schlacht.runde || 1);
     const ms = Math.max(0, Date.parse(schlacht.ende_at) - Date.now());
     return String(Math.floor(ms / 60000)).padStart(2, "0") + ":" + String(Math.floor(ms % 60000 / 1000)).padStart(2, "0");
   }
@@ -412,13 +455,19 @@
   function knoepfeAuffrischen() {
     const uhr = document.getElementById("schlacht-uhr");
     if (uhr && schlacht && schlacht.status === "laeuft") uhr.textContent = restZeit();
+    const punkte = document.getElementById("schlacht-punkte");
+    if (punkte && stand && stand.ok && stand.endlos) {
+      const pm = stand.punkte_menschen || 0, pa = stand.punkte_aliens || 0;
+      punkte.textContent = pm + " : " + pa;
+      punkte.setAttribute("aria-label", t("schlacht.rundensiege", "Rundensiege") + ": " + t("seiten.menschen.volk", "Menschen") + " " + pm + ", " + t("seiten.aliens.volk", "Aliens") + " " + pa);
+    }
     const k = document.getElementById("schlacht-spezial");
     if (!k) return;
     const ich = einheiten.find(function (e) { return e.firebase_uid === meineUid; });
     if (!ich) { k.hidden = true; return; }
     k.hidden = false;
     const warten = ich.seite === "menschen" ? 60000 : 30000;
-    const ab = Date.parse(schlacht.start_at) + warten;
+    const ab = Date.parse(rundeStart()) + warten;
     const name = t("hangar.typ." + ich.typ + ".spezial", (HANGAR_TYPEN[ich.typ] || {}).spezial || "Spezial");
     if (spezialGenutzt) { k.disabled = true; k.textContent = name + " · " + t("schlacht.verbraucht", "verbraucht"); }
     else if (Date.now() < ab) { k.disabled = true; k.textContent = name + " · " + Math.ceil((ab - Date.now()) / 1000) + " s"; }
@@ -441,7 +490,7 @@
       const sieger = r.sieger === "menschen" ? t("seiten.menschen.name", "Die Erdflotte") : r.sieger === "aliens" ? t("seiten.aliens.name", "Der Schwarm") : t("schlacht.unentschieden", "Unentschieden");
       const kopf = el("div", "sl-ruhm-kopf");
       kopf.append(el("span", "sl-ruhm-datum", datum), el("strong", "sl-ruhm-sieger", sieger),
-        el("span", "sl-ruhm-stand", standText(r.endstand_menschen)));
+        el("span", "sl-ruhm-stand", r.endlos ? rundenText(r.punkte_menschen, r.punkte_aliens) : standText(r.endstand_menschen)));
       li.appendChild(kopf);
       const helden = el("p", "sl-ruhm-helden");
       ["menschen", "aliens"].forEach(function (s) {
@@ -482,7 +531,10 @@
     const uhr = el("span", "sl-uhr");
     uhr.id = "schlacht-uhr";
     uhr.textContent = restZeit();
-    kopf.append(el("span", "sl-live", t("schlacht.live", "Live")), uhr);
+    const punkte = el("span", "sl-punkte");
+    punkte.id = "schlacht-punkte";
+    punkte.title = t("schlacht.rundensiege", "Rundensiege");
+    kopf.append(el("span", "sl-live", t("schlacht.live", "Live")), punkte, uhr);
     const feld = el("div", "sl-feld");
     canvas = el("canvas", "sl-canvas");
     canvas.setAttribute("role", "img");
@@ -513,7 +565,7 @@
     st.setAttribute("aria-live", "polite");
 
     if (!einheiten.some(function (e) { return e.firebase_uid === meineUid; })) {
-      st.textContent = angemeldet() ? t("schlacht.fehler.dabei", "Du kämpfst diesmal nicht mit – wähle eine Seite für die nächste Schlacht.") : t("schlacht.anmelden", "Melde dich an, um mitzukämpfen.");
+      st.textContent = angemeldet() ? t("schlacht.fehler.dabei", "Du kämpfst noch nicht mit – wähle eine Seite, dann bist du ab der nächsten Runde dabei.") : t("schlacht.anmelden", "Melde dich an, um mitzukämpfen.");
     }
 
     ziel2.append(kopf, feld, banner, steuer, st);
@@ -531,6 +583,11 @@
     return m + " % : " + (100 - m) + " %";
   }
 
+  /* "2 : 1 Runden" - Rundensiege einer endlosen Schlacht. */
+  function rundenText(pm, pa) {
+    return (pm || 0) + " : " + (pa || 0) + " " + t("schlacht.runden", "Runden");
+  }
+
   function hinweisBox(titel, text) {
     const b = el("div", "sl-hinweis");
     b.append(el("h2", "sl-hinweis-titel", titel), el("p", "sl-hinweis-text", text));
@@ -544,7 +601,7 @@
     b.append(
       el("p", "sl-sieger-kicker", t("schlacht.ende", "Die Schlacht ist geschlagen")),
       el("h2", "sl-sieger-titel", name ? name + " " + t("schlacht.siegt", "siegt!") : t("schlacht.unentschieden", "Unentschieden")),
-      el("p", "sl-sieger-stand", standText(stand.prozent_menschen))
+      el("p", "sl-sieger-stand", stand.endlos ? rundenText(stand.punkte_menschen, stand.punkte_aliens) : standText(stand.prozent_menschen))
     );
     if (!RUHIG.matches) {
       const funken = el("div", "sl-funken");
@@ -595,7 +652,8 @@
      Schlacht laeuft. Alle 30 s ein leichter Blick in die Tabelle. */
   function hinweisAuffrischen() {
     let h = document.getElementById("fh-schlacht-hinweis");
-    const zeigen = ist2100() && schlacht && schlacht.status === "laeuft" && Date.parse(schlacht.ende_at) > Date.now() && !seiteOffen();
+    const zeigen = ist2100() && schlacht && schlacht.status === "laeuft"
+      && (!schlacht.ende_at || Date.parse(schlacht.ende_at) > Date.now()) && !seiteOffen();
     if (!zeigen) { if (h) h.remove(); return; }
     if (h) return;
     h = el("div", "fh-schlacht-hinweis");
