@@ -64,7 +64,7 @@
   <link rel="stylesheet" href="css/20-spiele.css?v=2970bf6bc5">
   <link rel="stylesheet" href="css/30-events.css?v=f3e2d20018">
   <link rel="stylesheet" href="css/40-shop.css?v=1af16124ab">
-  <link rel="stylesheet" href="css/50-redesign.css?v=88981446ee">
+  <link rel="stylesheet" href="css/50-redesign.css?v=84f04fd844">
   <link rel="stylesheet" href="css/60-fortschritt.css?v=f65476ab66">
   <link rel="stylesheet" href="css/65-startseite.css?v=e6eb9160d1">
   <link rel="stylesheet" href="css/70-entwurf-1c.css?v=3a8f14a3ad">
@@ -74,7 +74,7 @@
   <link rel="stylesheet" href="css/80-interaktion.css?v=f333fbccb6">
   <link rel="stylesheet" href="css/90-typografie.css?v=73aff913ba">
   <link rel="stylesheet" href="css/95-epoche-1720.css?v=a6e44053a9">
-  <link rel="stylesheet" href="css/96-epoche-2100.css?v=d9f9177fa4">
+  <link rel="stylesheet" href="css/96-epoche-2100.css?v=0e81acdc54">
 </head>
 <body>
 
@@ -223,6 +223,8 @@
       <a class="fh-nav-item" tabindex="0" data-page="tournament" onclick="changePage('tournament')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-crown-simple"></i></span><span class="fh-nav-label" data-i18n="menu.tournament">THE CHALLENGE</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="race" onclick="changePage('race')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-flag-checkered"></i></span><span class="fh-nav-label" data-i18n="menu.race">Wochenrennen</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="community-boss" onclick="changePage('community-boss')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-skull"></i></span><span class="fh-nav-label" data-i18n="menu.communityBoss">Community-Boss</span></a>
+      <!-- Nur sichtbar im Jahr 2100 (scripts/hangar/hangar.js) -->
+      <a class="fh-nav-item fh-flag-aus" tabindex="0" data-page="hangar" onclick="changePage('hangar')"><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></span><span class="fh-nav-label" data-i18n="menu.hangar">Hangar</span></a>
       <!-- Nur sichtbar, solange eine Gegenhack-Quest laeuft (scripts/liveevent/gegenhack.js) -->
       <a class="fh-nav-item fh-flag-aus" tabindex="0" data-page="gegenhack" onclick="changePage('gegenhack')"><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"/><path d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5"/><circle cx="12" cy="9" r="2"/><path d="M16.2 4.8c2 2 2.26 5.11.8 7.47"/><path d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1"/><path d="M9.5 18h5"/><path d="m8 22 4-11 4 11"/></svg></span><span class="fh-nav-label" data-i18n="menu.gegenhack">Gegenhack</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-question"></i></span><span class="fh-nav-label" data-i18n="menu.streamraetselShort">???</span></a>
@@ -1399,6 +1401,19 @@
     <!-- =====================
          COMMUNITY-QUEST GEGENHACK (scripts/liveevent/gegenhack.js)
     ===================== -->
+    <!-- Hangar im Jahr 2100 (Migration 48): Einheitentyp und Ausbau,
+         aufgebaut von scripts/hangar/hangar.js. -->
+    <section id="hangar" class="page">
+      <div class="page-content hg-seite">
+        <header class="hg-kopf">
+          <p class="hg-oberzeile" data-i18n="hangar.kicker">Jahr 2100</p>
+          <h1 class="fh-page-title" data-i18n="hangar.titel">Hangar</h1>
+          <p class="hg-lead" data-i18n="hangar.lead">Wähle deine Einheit und rüste sie für die Sternenschlacht auf.</p>
+        </header>
+        <div id="hangar-inhalt"></div>
+      </div>
+    </section>
+
     <section id="gegenhack" class="page">
       <div class="page-content fh-gh-seite">
         <div id="gegenhack-inhalt"></div>
@@ -1833,7 +1848,7 @@
   <script src="scripts/core/share.js?v=afae2a5ba3" defer></script>
   <script src="scripts/core/fire-helmet-config.js?v=5beaa7a1a9" defer></script>
   <script src="scripts/core/nachladen.js?v=dfdd0a8710" defer></script>
-  <script src="scripts/core/i18n.js?v=208109bca2" defer></script>
+  <script src="scripts/core/i18n.js?v=d37784dabf" defer></script>
   <script src="scripts/core/audiobook-link.js?v=5ab730a9b0" defer></script>
   <script src="scripts/core/update-notice-data.js?v=158096cddf" defer></script>
   <script src="scripts/core/update-notice.js?v=15d517ed67" defer></script>
@@ -1912,11 +1927,13 @@
   <script src="scripts/streamraetsel/streamraetsel.js?v=46de70f427" defer></script>
   <script src="scripts/skilltree/skilltree-data.js?v=cacda48de0" defer></script>
   <script src="scripts/skilltree/skilltree.js?v=e4ac131da9" defer></script>
+  <script src="scripts/hangar/hangar-data.js?v=7d1666121f" defer></script>
+  <script src="scripts/hangar/hangar.js?v=e465b5b38c" defer></script>
   <script src="scripts/seiten/seiten.js?v=f44617a279" defer></script>
   <script src="scripts/core/admin-zugang.js?v=676fb09072" defer></script>
   <script src="scripts/support/support.js?v=ffbe30a325" defer></script>
   <script src="scripts/rating/rating.js?v=a06c7d42b8" defer></script>
-  <script src="scripts/core/main.js?v=e3b56dedff" defer></script>
+  <script src="scripts/core/main.js?v=bb80018a6a" defer></script>
   <script src="scripts/codes/code-button-effect.js?v=12af905b26" defer></script>
   <script src="scripts/codes/code-ambient-fx.js?v=61b476b1dd" defer></script>
   <script src="scripts/codes/code-history.js?v=2530fa82ec" defer></script>
