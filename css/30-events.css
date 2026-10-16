@@ -4923,3 +4923,115 @@ body.fh-story-wunsch .fh-stern.ist-frei .fh-stern-kern {
 }
 @keyframes fhTonAn { 0%, 100% { box-shadow: 0 0 24px -6px var(--fh-gold); } 50% { box-shadow: 0 0 34px -2px var(--fh-gold-bright); } }
 @media (prefers-reduced-motion: reduce) { .fh-ton-an { animation: none; } }
+
+/* =====================================================
+   NORDLICHT: WUNSCHSTERNE (scripts/liveevent/nordlicht-wunsch.js,
+   Migration 52). Haengt an body, steht in den :not-Listen von 95/96.
+   Liegt ueber dem Nordlicht (9996) und den Story-Texten, unter der
+   Banderole (10004). Die Sterne schweben unter "Wuensch dir was".
+===================================================== */
+.fh-wunsch {
+  position: fixed;
+  inset: 0;
+  z-index: 10002;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 0 16px calc(9vh + env(safe-area-inset-bottom));
+  pointer-events: none;
+  color: var(--fh-fg);
+  font-family: var(--fh-font-sans);
+  background: linear-gradient(180deg, transparent 45%, rgba(5, 7, 11, .55) 100%);
+  transition: opacity var(--fh-dauer-lang) var(--fh-ease);
+}
+.fh-wunsch.ist-aus { opacity: 0; }
+.fh-wunsch-kopf { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.fh-wunsch-kicker { margin: 0; font-family: var(--fh-font-display); font-size: clamp(20px, 3.2vw, 30px); letter-spacing: .04em; text-shadow: 0 0 24px color-mix(in srgb, var(--fh-violett) 70%, transparent); }
+.fh-wunsch-tipp { margin: 0; font-size: 14px; color: var(--fh-muted-fg); }
+.fh-wunsch-sterne { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; max-width: 760px; }
+.fh-wunsch-stern {
+  pointer-events: auto;
+  width: 160px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 16px 12px 14px;
+  border-radius: var(--fh-radius);
+  border: 1px solid color-mix(in srgb, var(--fh-violett) 45%, transparent);
+  background:
+    radial-gradient(90% 70% at 50% 20%, color-mix(in srgb, var(--fh-success) 18%, transparent), transparent 70%),
+    color-mix(in srgb, var(--fh-bg) 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--fh-violett) 30%, transparent);
+  transition: transform var(--fh-dauer) var(--fh-ease), box-shadow var(--fh-dauer) var(--fh-ease), opacity var(--fh-dauer-lang) var(--fh-ease), border-color var(--fh-dauer) var(--fh-ease);
+}
+.fh-wunsch-stern:hover, .fh-wunsch-stern:focus-visible {
+  outline: none;
+  border-color: var(--fh-success);
+  box-shadow: 0 0 34px color-mix(in srgb, var(--fh-success) 45%, transparent), 0 0 60px color-mix(in srgb, var(--fh-violett) 35%, transparent);
+  transform: translateY(-4px) scale(1.03);
+}
+.fh-wunsch-stern:disabled { opacity: .35; cursor: default; transform: none; }
+.fh-wunsch-kreis {
+  width: 56px; height: 56px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: var(--fh-gold-bright);
+  background: radial-gradient(circle, color-mix(in srgb, var(--fh-gold-bright) 30%, transparent), transparent 70%);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--fh-gold-bright) 60%, transparent));
+}
+.fh-wunsch-kreis svg { width: 30px; height: 30px; }
+.fh-wunsch-stern.ist-skillpunkt .fh-wunsch-kreis { color: var(--fh-success); }
+.fh-wunsch-stern.ist-pass_xp .fh-wunsch-kreis { color: var(--fh-cold); }
+.fh-wunsch-stern.ist-titel .fh-wunsch-kreis { color: var(--fh-violett); }
+.fh-wunsch-name { font-weight: 700; font-size: 15px; line-height: 1.2; text-align: center; }
+.fh-wunsch-sub { font-size: 12px; color: var(--fh-muted-fg); text-align: center; }
+.fh-wunsch.ist-waehlend .fh-wunsch-stern:not(.ist-gewaehlt),
+.fh-wunsch.ist-erfuellt .fh-wunsch-stern:not(.ist-gewaehlt) { opacity: .2; pointer-events: none; }
+.fh-wunsch-stern.ist-gewaehlt {
+  border-color: var(--fh-gold-bright);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--fh-gold-bright) 55%, transparent), 0 0 90px color-mix(in srgb, var(--fh-success) 35%, transparent);
+  transform: scale(1.08);
+}
+.fh-wunsch-status { margin: 0; min-height: 1.4em; font-weight: 600; text-align: center; text-shadow: 0 2px 12px rgba(0, 0, 0, .8); }
+.fh-wunsch-status.ist-fehler { color: var(--fh-danger); }
+.fh-wunsch-zu {
+  pointer-events: auto;
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top));
+  right: 16px;
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--fh-border);
+  background: color-mix(in srgb, var(--fh-bg) 60%, transparent);
+  color: inherit;
+  cursor: pointer;
+}
+.fh-wunsch-zu svg { width: 20px; height: 20px; }
+.fh-wunsch-zu:hover, .fh-wunsch-zu:focus-visible { border-color: var(--fh-violett); outline: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .fh-wunsch:not(.ist-ruhig) .fh-wunsch-stern {
+    animation: fh-wunsch-herein .9s var(--fh-ease) calc(var(--i) * 140ms) both, fh-wunsch-schweben 4.2s ease-in-out calc(1s + var(--i) * 300ms) infinite;
+  }
+  .fh-wunsch:not(.ist-ruhig) .fh-wunsch-stern:hover,
+  .fh-wunsch:not(.ist-ruhig) .fh-wunsch-stern.ist-gewaehlt { animation-play-state: paused; }
+}
+/* Nur der Anfang: mit "both" haelt ein "to" seine Werte fest und
+   ueberdeckt danach Abblenden (.ist-waehlend) und Hover. */
+@keyframes fh-wunsch-herein {
+  from { opacity: 0; transform: translateY(40px) scale(.8); filter: blur(6px); }
+}
+@keyframes fh-wunsch-schweben {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+@media (max-width: 560px) {
+  .fh-wunsch-stern { width: calc(50% - 8px); }
+}

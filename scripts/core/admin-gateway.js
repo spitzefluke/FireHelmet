@@ -421,7 +421,7 @@ const GW_STORYS = [
   ["schatz", "Schatzregen", "Endlos, bis du ihn beendest · Zuschauer fangen Münzen", "gold"],
   ["hacked", "Hacked", "32 s · Unbekannter gegen Dave, danach 6 Hintertüren zum Schließen", "neon"],
   ["sturm", "Sturm", "12,4 s · Blitz und Einschlag", "kalt"],
-  ["nordlicht", "Nordlicht", "17 s · Sternschnuppen und ein Wunsch", "violett"],
+  ["nordlicht", "Nordlicht", "17 s · Sternschnuppen und ein Wunsch – jeder wählt einen Wunschstern: 500 Dublonen, 1 Skillpunkt, 250 Pass-XP oder einen Nordlicht-Titel (Migration 52)", "violett"],
   ["nebel", "Geisterschiff", "14 s · Nebel und ein Fluch", "papier"],
   ["flut", "Sturmflut", "13,6 s · Land unter und Treibgut", "wasser"],
   ["disco", "Disco-Party", "Endlos, bis du sie beendest · Musik ab der Tanzfläche (ohne eigene Datei: music/disco.mp3)", "gold"],
@@ -685,7 +685,6 @@ function gwEpocheVorschau(jahr) {
 const GW_PREISE = [
   // [schluessel, name, ton, stueck (null = pauschal), wann]
   ["sturm", "Sturm", "kalt", null, "nach dem Einschlag"],
-  ["nordlicht", "Nordlicht", "violett", null, "wenn der Wunsch erhört ist"],
   ["nebel", "Geisterschiff", "papier", null, "wenn der Fluch gebrochen ist"],
   ["flut", "Sturmflut", "wasser", null, "für das Treibgut"],
   ["hacked", "Hacked", "neon", null, "wenn Dave gewinnt"],

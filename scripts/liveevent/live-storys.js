@@ -1303,7 +1303,20 @@
     if (st === "sturm" && n === 4 && hatPreis(st)) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau, st);
     if (st === "sturm" && n === 5) wetter(t("story.storm.done", "Sturm überstanden"), "Ändii", "#42b8ff");
 
-    if (st === "nordlicht" && n === 4 && hatPreis(st)) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau, st);
+    /* 52: Beim Nordlicht wuenscht sich jeder selbst etwas (Wunschsterne,
+       nordlicht-wunsch.js). Fehlt Migration 52, gilt die alte
+       Pauschal-Belohnung aus 36. */
+    if (st === "nordlicht" && n === 4) {
+      const ersatz = function () {
+        if (!hatPreis(st)) return;
+        belohnungAbholen(id, "wetter", 0, vorschau, st).then(function (erg) {
+          const teile = belohnungsTeile(erg);
+          if (teile.length) banderole(t("story.aurora.granted", "Ein Wunsch geht in Erfüllung") + belohnungsText(erg), t("story.aurora.from", "Nordlicht"), "#a66bff", false);
+        });
+      };
+      if (window.fhNordlichtWunsch) window.fhNordlichtWunsch.zeigen({ storyId: id, vorschau: vorschau }).then(function (ok) { if (!ok) ersatz(); });
+      else ersatz();
+    }
     if (st === "nordlicht" && n === 5) wetter(t("story.aurora.done", "Dein Wunsch wurde erhört"), t("story.aurora.from", "Nordlicht"), "#a66bff");
 
     if (st === "nebel" && n === 5) wetter(t("story.fog.done", "Der Fluch ist gebrochen"), "Ändii", "#e8d5a8");
