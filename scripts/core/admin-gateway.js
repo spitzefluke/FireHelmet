@@ -421,7 +421,7 @@ const GW_STORYS = [
   ["schatz", "Schatzregen", "Endlos, bis du ihn beendest · Zuschauer fangen Münzen", "gold"],
   ["hacked", "Hacked", "32 s · Unbekannter gegen Dave, danach 6 Hintertüren zum Schließen", "neon"],
   ["sturm", "Sturm", "12,4 s · Blitz und Einschlag", "kalt"],
-  ["nordlicht", "Nordlicht", "17 s · Sternschnuppen und ein Wunsch", "violett"],
+  ["nordlicht", "Nordlicht", "17 s · Sternschnuppen und ein Wunsch – jeder wählt einen Wunschstern: 500 Dublonen, 1 Skillpunkt, 250 Pass-XP oder einen Nordlicht-Titel (Migration 52)", "violett"],
   ["nebel", "Geisterschiff", "14 s · Nebel und ein Fluch", "papier"],
   ["flut", "Sturmflut", "13,6 s · Land unter und Treibgut", "wasser"],
   ["disco", "Disco-Party", "Endlos, bis du sie beendest · Musik ab der Tanzfläche (ohne eigene Datei: music/disco.mp3)", "gold"],
@@ -430,6 +430,7 @@ const GW_STORYS = [
   ["herz", "Zwei Hälften eines Herzens", "10:16 min · Kurzfilm in zehn Kapiteln mit Erzählerstimme (Sprachausgabe des Browsers, Deutsch oder Englisch je nach Seite): Leistungsdruck, Angst, Mobbing, eine erste Liebe – und ein kleines Licht. Musik („Patient Pulse“) unten unter „Musik je Story“ hochladen", "violett"],
   ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – danach ist die ganze Seite für alle im 1720-Design, bis du oben zurückschaltest", "violett"],
   ["zeit", "Zeitmaschine 2100", "5 min · Film: Auf dem Pergament zeichnet sich eine Zeitmaschine auf, Sprung durchs Zeittunnel, die Erde bricht auseinander, Menschen gegen Aliens – danach ist die ganze Seite für alle im All-Design (Jahr 2100), bis du oben zurückschaltest", "kalt"],
+  ["nukes", "Hundert Atombomben gegen eine Mücke", "3 min · Film: Eine Mücke weckt Kapitän Ändii um 03:12 Uhr. Hand, Pfanne, Kanone – daneben. Dann der Notfallknopf und hundert Atombomben, bis die Erde zerbricht. Musik unten unter „Musik je Story“ hochladen (Migration 51)", "gold"],
 ];
 /* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
    stehen darum nicht in der Liste - hier nur ihre Namen fuer die
@@ -684,7 +685,6 @@ function gwEpocheVorschau(jahr) {
 const GW_PREISE = [
   // [schluessel, name, ton, stueck (null = pauschal), wann]
   ["sturm", "Sturm", "kalt", null, "nach dem Einschlag"],
-  ["nordlicht", "Nordlicht", "violett", null, "wenn der Wunsch erhört ist"],
   ["nebel", "Geisterschiff", "papier", null, "wenn der Fluch gebrochen ist"],
   ["flut", "Sturmflut", "wasser", null, "für das Treibgut"],
   ["hacked", "Hacked", "neon", null, "wenn Dave gewinnt"],
@@ -695,6 +695,7 @@ const GW_PREISE = [
   ["riss", "Der Riss", "violett", null, "am Ende des Films"],
   ["herz", "Zwei Hälften eines Herzens", "violett", null, "am Ende des Films"],
   ["zeit", "Zeitmaschine 2100", "kalt", null, "am Ende des Films"],
+  ["nukes", "Hundert Atombomben", "gold", null, "am Ende des Films"],
   ["ende", "Systemausfall", "rot", null, "am Ende"],
 ];
 let gwPreise = {};
@@ -806,7 +807,10 @@ async function gwPreisSpeichern(id) {
    Tanzflaeche und ohne eigene Datei music/disco.mp3.
 ------------------------------------------------------ */
 const GW_MUSIK_STORYS = GW_STORYS.map(([id, name, , ton]) => [id, name, ton])
-  .concat([["gegenhack_sieg", "Gegenhack: Sieg", "neon"], ["gegenhack_niederlage", "Gegenhack: Niederlage", "rot"]]);
+  .concat([["gegenhack_sieg", "Gegenhack: Sieg", "neon"], ["gegenhack_niederlage", "Gegenhack: Niederlage", "rot"],
+    /* Sternenschlacht (scripts/schlacht/schlacht-klang.js): ohne Datei
+       spielt die Schlacht ihre im Browser erzeugte Synth-Musik. */
+    ["schlacht", "Sternenschlacht", "neon"]]);
 let gwMusikVersionen = {};
 let gwMusikVersionAlt = null;  // live_event.musik_version aus 29 (Disco)
 
@@ -838,7 +842,9 @@ function gwMusikStandZeigen() {
     if (!el) return;
     const v = gwMusikVersion(id);
     if (v) el.textContent = "Eigene Datei (Version " + v + ")";
-    else el.textContent = id === "disco" ? "Standard: music/disco.mp3" : "Keine Musik – die Story läuft still";
+    else el.textContent = id === "disco" ? "Standard: music/disco.mp3"
+      : id === "schlacht" ? "Keine Datei – es läuft die erzeugte Synth-Musik"
+      : "Keine Musik – die Story läuft still";
   });
 }
 
@@ -1394,6 +1400,7 @@ async function gwMusikHochladen(id, feld) {
     const { error: e2 } = await supabaseClient.rpc("admin_story_musik", { p_story: id, p_version: version });
     if (e2) throw e2;
     gwLiveStatus("gw-musik-status", "✓ „" + datei.name + "“ ist jetzt die Musik für " + gwMusikName(id) + ".", false);
+    if (id === "schlacht") window.dispatchEvent(new CustomEvent("fhSchlachtMusikNeu"));
     gwStoryLageLaden();
   } catch (err) {
     console.error("Musik hochladen fehlgeschlagen:", err);
@@ -1411,7 +1418,10 @@ async function gwMusikEntfernen(id) {
     if (e2) throw e2;
     gwLiveStatus("gw-musik-status", id === "disco"
       ? "✓ Eigene Disco-Musik entfernt – es läuft wieder music/disco.mp3."
-      : "✓ Musik für " + gwMusikName(id) + " entfernt – die Story läuft wieder still.", false);
+      : id === "schlacht"
+        ? "✓ Eigene Schlacht-Musik entfernt – es läuft wieder die erzeugte Synth-Musik."
+        : "✓ Musik für " + gwMusikName(id) + " entfernt – die Story läuft wieder still.", false);
+    if (id === "schlacht") window.dispatchEvent(new CustomEvent("fhSchlachtMusikNeu"));
     gwStoryLageLaden();
   } catch (err) {
     gwLiveStatus("gw-musik-status", "Entfernen fehlgeschlagen: " + ((err && err.message) || err), true);

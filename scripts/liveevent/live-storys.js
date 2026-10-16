@@ -92,6 +92,9 @@
        zeit-film.js, seine neun Szenen (OM_SCENES im Entwurf). Zum
        Filmende gilt die Epoche 2100 (jahr_2100_ab). */
     zeit: { szenen: [30000, 30000, 20000, 30000, 40000, 35000, 25000, 50000, 40000] },
+    /* Migration 51: "Hundert Atombomben gegen eine Muecke" - der
+       3-Minuten-Film aus nukes-film.js, sechs Szenen zu je 30 s. */
+    nukes: { szenen: [30000, 30000, 30000, 30000, 30000, 30000] },
   };
   const ZEITEN_IN_SZENE = {};  // Summe der Dauer bis zum Beginn jeder Szene
   Object.keys(STORYS).forEach(function (st) {
@@ -1242,6 +1245,17 @@
       else if (window.fhNachladen) window.fhNachladen("zeit").then(zeitStart, function (e) { console.warn(e); });
     }
 
+    /* Hundert Atombomben (51): genauso, nukes-film.js (66 KB). */
+    if (st === "nukes" && !lauf.nukesGestartet) {
+      lauf.nukesGestartet = true;
+      const nukesStart = function () {
+        if (!lauf || lauf.id !== id || lauf.story !== "nukes" || !window.fhNukesFilm) return;
+        window.fhNukesFilm.start({ ab: ZEITEN_IN_SZENE.nukes[lauf.n - 1] + imSzeneMs(), vorschau: vorschau });
+      };
+      if (window.fhNukesFilm) nukesStart();
+      else if (window.fhNachladen) window.fhNachladen("nukes").then(nukesStart, function (e) { console.warn(e); });
+    }
+
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
     if (st === "hacked" && n === 7) {
       const p = hatPreis("hacked") ? belohnungAbholen(id, "hacked", 0, vorschau) : Promise.resolve(null);
@@ -1289,7 +1303,20 @@
     if (st === "sturm" && n === 4 && hatPreis(st)) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau, st);
     if (st === "sturm" && n === 5) wetter(t("story.storm.done", "Sturm überstanden"), "Ändii", "#42b8ff");
 
-    if (st === "nordlicht" && n === 4 && hatPreis(st)) lauf.belohnung = belohnungAbholen(id, "wetter", 0, vorschau, st);
+    /* 52: Beim Nordlicht wuenscht sich jeder selbst etwas (Wunschsterne,
+       nordlicht-wunsch.js). Fehlt Migration 52, gilt die alte
+       Pauschal-Belohnung aus 36. */
+    if (st === "nordlicht" && n === 4) {
+      const ersatz = function () {
+        if (!hatPreis(st)) return;
+        belohnungAbholen(id, "wetter", 0, vorschau, st).then(function (erg) {
+          const teile = belohnungsTeile(erg);
+          if (teile.length) banderole(t("story.aurora.granted", "Ein Wunsch geht in Erfüllung") + belohnungsText(erg), t("story.aurora.from", "Nordlicht"), "#a66bff", false);
+        });
+      };
+      if (window.fhNordlichtWunsch) window.fhNordlichtWunsch.zeigen({ storyId: id, vorschau: vorschau }).then(function (ok) { if (!ok) ersatz(); });
+      else ersatz();
+    }
     if (st === "nordlicht" && n === 5) wetter(t("story.aurora.done", "Dein Wunsch wurde erhört"), t("story.aurora.from", "Nordlicht"), "#a66bff");
 
     if (st === "nebel" && n === 5) wetter(t("story.fog.done", "Der Fluch ist gebrochen"), "Ändii", "#e8d5a8");
@@ -1369,21 +1396,23 @@
     if (st === "riss" && window.fhRissFilm) window.fhRissFilm.ende();
     if (st === "herz" && window.fhHerzFilm) window.fhHerzFilm.ende();
     if (st === "zeit" && window.fhZeitFilm) window.fhZeitFilm.ende();
+    if (st === "nukes" && window.fhNukesFilm) window.fhNukesFilm.ende();
     if (st === "hacked") loecherSpawnen(id, vorschau);
     if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
     if (st === "sturm" && !vorschau) nachregen = true;
     anzeigen();
     /* 36: Riss und Systemausfall zahlen am Ende - nur wer bis hier
        dabei war, und nur, wenn der Admin etwas eingestellt hat. */
-    if ((st === "riss" || st === "ende" || st === "herz" || st === "zeit") && hatPreis(st)) {
+    if ((st === "riss" || st === "ende" || st === "herz" || st === "zeit" || st === "nukes") && hatPreis(st)) {
       belohnungAbholen(id, "abschluss", 0, vorschau, st).then(function (erg) {
         const teile = belohnungsTeile(erg);
         if (!teile.length) return;
         const text = st === "riss" ? t("story.riss.reward", "Willkommen im Jahr 1720")
           : st === "herz" ? t("story.herz.reward", "Danke fürs Zuschauen")
           : st === "zeit" ? t("story.zeit.reward", "Willkommen im Jahr 2100")
+          : st === "nukes" ? t("story.nukes.reward", "Bsss. Die Mücke lässt grüßen")
           : t("story.end.reward", "Ein Trostpflaster für die Crew");
-        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : st === "zeit" ? "#7fe0ff" : "#39ff14", st === "ende");
+        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : st === "zeit" ? "#7fe0ff" : st === "nukes" ? "#f0c96a" : "#39ff14", st === "ende");
       });
     }
   }
@@ -1417,6 +1446,7 @@
     if (window.fhRissFilm) window.fhRissFilm.weg();
     if (window.fhHerzFilm) window.fhHerzFilm.weg();
     if (window.fhZeitFilm) window.fhZeitFilm.weg();
+    if (window.fhNukesFilm) window.fhNukesFilm.weg();
     if (window.fhStoryWetter) window.fhStoryWetter.weg();
     if (musikLaeuft) musikAus(0);
     lauf = null;

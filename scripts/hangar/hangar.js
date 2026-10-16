@@ -37,10 +37,17 @@
     return e;
   }
 
-  function schiff(id, klasse) {
+  /* Bild des Schiffs mit sichtbarem Ausbau (scripts/hangar/schiffe.js:
+     Panzerplatten, Geschuetze/Dornen, Aura). Ohne schiffe.js der
+     einfache Umriss aus hangar-data.js. */
+  function schiff(id, klasse, st) {
     const s = el("span", "hg-schiff " + (klasse || "") + " ist-" + HANGAR_TYPEN[id].seite);
-    /* fester Text aus hangar-data.js, keine Nutzerdaten */
-    s.innerHTML = '<svg viewBox="-130 -80 260 160" aria-hidden="true">' + HANGAR_TYPEN[id].form + "</svg>";
+    if (window.fhSchiffe) {
+      s.appendChild(window.fhSchiffe.bild(id, HANGAR_TYPEN[id].seite, st || {}, klasse === "ist-gross" ? 420 : 132));
+    } else {
+      /* fester Text aus hangar-data.js, keine Nutzerdaten */
+      s.innerHTML = '<svg viewBox="-130 -80 260 160" aria-hidden="true">' + HANGAR_TYPEN[id].form + "</svg>";
+    }
     return s;
   }
 
@@ -118,22 +125,22 @@
     const typen = el("div", "hg-typen");
     typen.setAttribute("role", "radiogroup");
     typen.setAttribute("aria-label", t("hangar.typen", "Einheitentyp"));
+    const st = stufen();
     HANGAR_REIHENFOLGE[seite].forEach(function (id) {
       const b = el("button", "hg-typ" + (id === typId ? " ist-aktiv" : ""));
       b.type = "button";
       b.setAttribute("role", "radio");
       b.setAttribute("aria-checked", id === typId ? "true" : "false");
-      b.append(schiff(id), el("span", "hg-typ-name", typText(id, "name")), el("span", "hg-typ-rolle", typText(id, "rolle")));
+      b.append(schiff(id, "", st), el("span", "hg-typ-name", typText(id, "name")), el("span", "hg-typ-rolle", typText(id, "rolle")));
       b.addEventListener("click", function () { if (id !== typId) typWaehlen(id); });
       typen.appendChild(b);
     });
 
     /* Einheit im Detail */
-    const st = stufen();
     const w = hangarWerte(typId, st, seite);
     const detail = el("div", "hg-detail ist-" + seite);
     const buehne = el("div", "hg-buehne");
-    buehne.appendChild(schiff(typId, "ist-gross"));
+    buehne.appendChild(schiff(typId, "ist-gross", st));
     if (w.anzahl > 1) buehne.appendChild(el("span", "hg-anzahl", "×" + w.anzahl));
     const info = el("div", "hg-info");
     info.append(

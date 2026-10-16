@@ -90,7 +90,7 @@ html.fh-2100 .stars2 { opacity: 1; }
 html.fh-2100 .nebula { opacity: .9; filter: hue-rotate(40deg); }
 
 /* ---- Farbfilter: Gold wird Cyan ---- */
-html.fh-2100 body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an),
+html.fh-2100 body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an),
 html.fh-2100 dialog[open] {
   filter: hue-rotate(165deg) saturate(1.1);
 }
@@ -212,9 +212,13 @@ html.fh-2100 #sternenschlacht .sl-seite {
   filter: hue-rotate(-165deg) saturate(.91);
 }
 
-/* Das Schlachtfeld-Canvas ist mit der Seite schon zurueckgedreht -
-   die Bilder-Regel oben wuerde es ein zweites Mal drehen. Zwei IDs,
-   damit diese Regel die Bilder-Regel (auch zwei IDs) schlaegt. */
-html.fh-2100 body > #fh-main #sternenschlacht .sl-canvas {
+/* Die Schiffsbilder im Hangar sind Canvas: Die Bilder-Regel oben
+   wuerde sie ein zweites Mal zurueckdrehen (die Seite ist es schon).
+   Das Schlachtfeld laeuft im Vollbild (#fh-schlacht-buehne an body),
+   steht in der :not-Liste und bekommt gar keinen Filter - auch die
+   Bilder-Regel darf es nicht treffen. Zwei IDs und zwei Klassen,
+   damit beides die Bilder-Regel (zwei IDs, eine Klasse) schlaegt. */
+html.fh-2100 body > #fh-main #hangar .hg-schiff canvas,
+html.fh-2100 body > #fh-schlacht-buehne #schlacht-inhalt canvas.sl-canvas {
   filter: none;
 }
