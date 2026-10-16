@@ -2030,9 +2030,10 @@ html.fh-2100 #race > .race-ruht {
 .hg-typ-name { font-weight: 600; }
 .hg-typ-rolle { font-size: 12px; color: var(--fh-muted-fg); text-align: center; }
 
-.hg-schiff { display: block; width: 96px; height: 60px; }
+.hg-schiff { display: block; width: 104px; aspect-ratio: 3 / 2; }
 .hg-schiff svg { width: 100%; height: 100%; overflow: visible; }
-.hg-schiff.ist-gross { width: min(360px, 100%); height: auto; aspect-ratio: 13 / 8; }
+.hg-schiff canvas { display: block; width: 100%; height: 100%; }
+.hg-schiff.ist-gross { width: min(420px, 100%); height: auto; aspect-ratio: 3 / 2; }
 .hg-schiff .hg-rumpf { fill: #8996a6; stroke: #e6eef6; stroke-width: 1.5; }
 .hg-schiff .hg-deck { fill: #3e4a58; stroke: #dfe7f0; stroke-width: 1; }
 .hg-schiff .hg-antrieb { fill: var(--fh-cold); filter: drop-shadow(0 0 6px var(--fh-cold)); }
@@ -2105,24 +2106,87 @@ html.fh-2100 #race > .race-ruht {
 
 /* =====================================================
    LIVE-STERNENSCHLACHT (scripts/schlacht/schlacht.js)
-   Schlachtfeld als Canvas, darunter das Prozentbanner (Menschen
-   kalt-blau links, Aliens violett rechts) und die Steuerung.
-   Siegerbanner mit Funken, Ruhmeshalle als Liste.
-   #fh-schlacht-hinweis haengt an body (in den :not-Listen von 95/96).
+   Vollbild-Buehne (#fh-schlacht-buehne an body, in den :not-Listen
+   von 95/96 - kein Farbfilter): Kopf mit Runde, Rundensiegen, Ton
+   und Schliessen; darunter das Schlachtfeld als Canvas, unten das
+   Prozentbanner (Menschen kalt-blau links, Aliens violett rechts)
+   und die Steuerung. Ohne laufende Schlacht: Hinweis, Siegerbanner
+   mit Funken, Ruhmeshalle - dann scrollt der Inhalt.
+   #fh-schlacht-hinweis haengt ebenfalls an body.
 ===================================================== */
 .sl-seite { max-width: 1100px; margin: 0 auto; display: grid; gap: 18px; }
-#schlacht-inhalt { display: grid; gap: 14px; }
-.sl-kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+html.fh-schlacht-offen, html.fh-schlacht-offen body { overflow: hidden; }
+.sl-buehne {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--fh-z-overlay) - 1);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  color: var(--fh-fg);
+  background:
+    radial-gradient(45% 60% at 18% 55%, color-mix(in srgb, var(--fh-cold) 16%, transparent), transparent 70%),
+    radial-gradient(45% 60% at 82% 45%, color-mix(in srgb, var(--fh-violett) 18%, transparent), transparent 70%),
+    #03040c;
+}
+.sl-buehne[hidden] { display: none; }
+.sl-buehne-kopf {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--fh-cold) 18%, transparent);
+  background: linear-gradient(180deg, rgba(3, 4, 12, .9), rgba(3, 4, 12, .55));
+}
+.sl-buehne-titel { display: grid; min-width: 0; line-height: 1.05; }
+.sl-buehne-kicker { font-size: 11px; letter-spacing: .25em; text-transform: uppercase; color: var(--fh-cold); }
+.sl-buehne-titel h2 { margin: 0; font-family: var(--fh-font-display); font-size: clamp(18px, 2.6vw, 26px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sl-buehne-lage { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.sl-rund-knopf {
+  flex: none;
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--fh-border);
+  background: rgba(255, 255, 255, .04);
+  color: inherit;
+  cursor: pointer;
+  transition: background .2s var(--fh-ease), border-color .2s var(--fh-ease);
+}
+.sl-rund-knopf svg { width: 20px; height: 20px; }
+.sl-rund-knopf:hover, .sl-rund-knopf:focus-visible { background: color-mix(in srgb, var(--fh-cold) 22%, transparent); border-color: var(--fh-cold); outline: none; }
+.sl-ton[aria-pressed="false"] { opacity: .6; }
+.sl-buehne-inhalt {
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 16px calc(20px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+.sl-buehne-inhalt.ist-feld {
+  max-width: none;
+  overflow: hidden;
+  padding: 0 0 calc(12px + env(safe-area-inset-bottom));
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: stretch;
+}
+.sl-fuss { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 16px; display: grid; gap: 10px; }
+@media (max-width: 560px) {
+  .sl-buehne-titel { display: none; }
+  .sl-buehne-lage { margin-left: 0; margin-right: auto; }
+}
 .sl-live { display: inline-flex; align-items: center; gap: 8px; font-family: var(--fh-font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--fh-danger); }
 .sl-live::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--fh-danger); box-shadow: 0 0 10px var(--fh-danger); }
 @media (prefers-reduced-motion: no-preference) {
   .sl-live::before { animation: sl-puls 1.4s ease-in-out infinite; }
 }
 @keyframes sl-puls { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
-.sl-uhr { font-family: var(--fh-font-display); font-size: 28px; font-variant-numeric: tabular-nums; }
+.sl-uhr { font-family: var(--fh-font-display); font-size: 22px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* Rundensiege der endlosen Schlacht (Migration 50): Menschen : Aliens. */
 .sl-punkte {
-  margin-left: auto;
   padding: 4px 12px;
   border-radius: 999px;
   border: 1px solid var(--fh-border);
@@ -2132,17 +2196,8 @@ html.fh-2100 #race > .race-ruht {
   font-variant-numeric: tabular-nums;
 }
 .sl-punkte:empty { display: none; }
-.sl-feld {
-  position: relative;
-  border-radius: var(--fh-radius-lg);
-  overflow: hidden;
-  border: 1px solid var(--fh-border);
-  background:
-    radial-gradient(40% 50% at 25% 50%, color-mix(in srgb, var(--fh-cold) 14%, transparent), transparent 70%),
-    radial-gradient(40% 50% at 75% 50%, color-mix(in srgb, var(--fh-violett) 16%, transparent), transparent 70%),
-    #03040c;
-}
-.sl-canvas { display: block; width: 100%; height: clamp(300px, 52vh, 520px); cursor: crosshair; }
+.sl-feld { position: relative; min-height: 0; overflow: hidden; }
+.sl-canvas { display: block; width: 100%; height: 100%; cursor: crosshair; touch-action: manipulation; }
 .sl-banner {
   display: flex;
   height: 44px;

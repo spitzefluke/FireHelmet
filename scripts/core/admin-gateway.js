@@ -806,7 +806,10 @@ async function gwPreisSpeichern(id) {
    Tanzflaeche und ohne eigene Datei music/disco.mp3.
 ------------------------------------------------------ */
 const GW_MUSIK_STORYS = GW_STORYS.map(([id, name, , ton]) => [id, name, ton])
-  .concat([["gegenhack_sieg", "Gegenhack: Sieg", "neon"], ["gegenhack_niederlage", "Gegenhack: Niederlage", "rot"]]);
+  .concat([["gegenhack_sieg", "Gegenhack: Sieg", "neon"], ["gegenhack_niederlage", "Gegenhack: Niederlage", "rot"],
+    /* Sternenschlacht (scripts/schlacht/schlacht-klang.js): ohne Datei
+       spielt die Schlacht ihre im Browser erzeugte Synth-Musik. */
+    ["schlacht", "Sternenschlacht", "neon"]]);
 let gwMusikVersionen = {};
 let gwMusikVersionAlt = null;  // live_event.musik_version aus 29 (Disco)
 
@@ -838,7 +841,9 @@ function gwMusikStandZeigen() {
     if (!el) return;
     const v = gwMusikVersion(id);
     if (v) el.textContent = "Eigene Datei (Version " + v + ")";
-    else el.textContent = id === "disco" ? "Standard: music/disco.mp3" : "Keine Musik – die Story läuft still";
+    else el.textContent = id === "disco" ? "Standard: music/disco.mp3"
+      : id === "schlacht" ? "Keine Datei – es läuft die erzeugte Synth-Musik"
+      : "Keine Musik – die Story läuft still";
   });
 }
 
@@ -1394,6 +1399,7 @@ async function gwMusikHochladen(id, feld) {
     const { error: e2 } = await supabaseClient.rpc("admin_story_musik", { p_story: id, p_version: version });
     if (e2) throw e2;
     gwLiveStatus("gw-musik-status", "✓ „" + datei.name + "“ ist jetzt die Musik für " + gwMusikName(id) + ".", false);
+    if (id === "schlacht") window.dispatchEvent(new CustomEvent("fhSchlachtMusikNeu"));
     gwStoryLageLaden();
   } catch (err) {
     console.error("Musik hochladen fehlgeschlagen:", err);
@@ -1411,7 +1417,10 @@ async function gwMusikEntfernen(id) {
     if (e2) throw e2;
     gwLiveStatus("gw-musik-status", id === "disco"
       ? "✓ Eigene Disco-Musik entfernt – es läuft wieder music/disco.mp3."
-      : "✓ Musik für " + gwMusikName(id) + " entfernt – die Story läuft wieder still.", false);
+      : id === "schlacht"
+        ? "✓ Eigene Schlacht-Musik entfernt – es läuft wieder die erzeugte Synth-Musik."
+        : "✓ Musik für " + gwMusikName(id) + " entfernt – die Story läuft wieder still.", false);
+    if (id === "schlacht") window.dispatchEvent(new CustomEvent("fhSchlachtMusikNeu"));
     gwStoryLageLaden();
   } catch (err) {
     gwLiveStatus("gw-musik-status", "Entfernen fehlgeschlagen: " + ((err && err.message) || err), true);
