@@ -1992,3 +1992,113 @@ html.fh-2100 #race > .race-ruht {
 .race-ruht-symbol { width: 44px; height: 44px; color: var(--fh-gold); }
 .race-ruht-titel { margin: 0; font-family: var(--fh-font-display); font-size: 28px; }
 .race-ruht-text { margin: 0; color: var(--fh-muted-fg); }
+
+/* =====================================================
+   HANGAR IM JAHR 2100 (scripts/hangar/hangar.js)
+   Oben die vier Typen der eigenen Seite, darunter die gewaehlte
+   Einheit gross mit ihren drei Werten und dem Ausbau.
+   Menschen kalt-blau, Aliens violett mit gruenem Kern - wie im Film.
+===================================================== */
+.hg-seite { max-width: 1040px; margin: 0 auto; display: grid; gap: 20px; }
+.hg-kopf { display: grid; gap: 6px; }
+.hg-oberzeile { margin: 0; font-family: var(--fh-font-display); letter-spacing: .3em; text-transform: uppercase; font-size: 12px; color: var(--fh-cold); }
+.hg-lead { margin: 0; color: var(--fh-muted-fg); }
+#hangar-inhalt { display: grid; gap: 18px; }
+
+.hg-hinweis { display: grid; gap: 10px; justify-items: start; padding: 28px; border-radius: var(--fh-radius-lg); border: 1px solid var(--fh-border); background: var(--fh-surface); }
+.hg-hinweis-titel { margin: 0; font-family: var(--fh-font-display); font-size: 24px; }
+.hg-hinweis-text { margin: 0; color: var(--fh-muted-fg); }
+
+.hg-typen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.hg-typ {
+  font: inherit;
+  color: var(--fh-fg);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 14px 10px;
+  border-radius: var(--fh-radius);
+  border: 1px solid var(--fh-border);
+  background: var(--fh-surface);
+  cursor: pointer;
+  transition: border-color .2s var(--fh-ease), background .2s var(--fh-ease), transform .2s var(--fh-ease);
+}
+.hg-typ:hover,
+.hg-typ:focus-visible { border-color: var(--fh-border-strong); transform: translateY(-2px); outline: none; }
+.hg-typ.ist-aktiv { border-color: var(--fh-cold); background: color-mix(in srgb, var(--fh-cold) 10%, var(--fh-surface)); box-shadow: 0 0 22px color-mix(in srgb, var(--fh-cold) 22%, transparent); }
+.hg-typen:has(.ist-aliens) .hg-typ.ist-aktiv { border-color: var(--fh-violett); background: color-mix(in srgb, var(--fh-violett) 10%, var(--fh-surface)); box-shadow: 0 0 22px color-mix(in srgb, var(--fh-violett) 22%, transparent); }
+.hg-typ-name { font-weight: 600; }
+.hg-typ-rolle { font-size: 12px; color: var(--fh-muted-fg); text-align: center; }
+
+.hg-schiff { display: block; width: 96px; height: 60px; }
+.hg-schiff svg { width: 100%; height: 100%; overflow: visible; }
+.hg-schiff.ist-gross { width: min(360px, 100%); height: auto; aspect-ratio: 13 / 8; }
+.hg-schiff .hg-rumpf { fill: #8996a6; stroke: #e6eef6; stroke-width: 1.5; }
+.hg-schiff .hg-deck { fill: #3e4a58; stroke: #dfe7f0; stroke-width: 1; }
+.hg-schiff .hg-antrieb { fill: var(--fh-cold); filter: drop-shadow(0 0 6px var(--fh-cold)); }
+.hg-schiff .hg-linie { fill: none; stroke: #dfe7f0; stroke-width: 2; stroke-linecap: round; opacity: .6; }
+.hg-schiff.ist-aliens .hg-rumpf { fill: #3a2462; stroke: #b06cff; }
+.hg-schiff.ist-aliens .hg-deck { fill: #22143e; stroke: #9d7bff; }
+.hg-schiff.ist-aliens .hg-linie { stroke: #6b3fa8; opacity: 1; stroke-width: 4; }
+.hg-schiff .hg-kern { fill: #8dff8a; filter: drop-shadow(0 0 6px #6bff7a); }
+
+.hg-detail {
+  --akzent: var(--fh-cold);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 24px;
+  align-items: center;
+  padding: 24px;
+  border-radius: var(--fh-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--akzent) 35%, transparent);
+  background: radial-gradient(80% 90% at 25% 50%, color-mix(in srgb, var(--akzent) 14%, transparent), transparent 70%), var(--fh-surface);
+}
+.hg-detail.ist-aliens { --akzent: var(--fh-violett); }
+.hg-buehne { position: relative; display: grid; place-items: center; min-height: 200px; }
+@media (prefers-reduced-motion: no-preference) {
+  .hg-buehne .hg-schiff { animation: hg-schweben 6s ease-in-out infinite; }
+}
+@keyframes hg-schweben { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.hg-anzahl { position: absolute; right: 8%; bottom: 8%; font-family: var(--fh-font-display); font-size: 28px; color: var(--akzent); }
+.hg-info { display: grid; gap: 10px; }
+.hg-kicker { margin: 0; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--akzent); }
+.hg-name { margin: 0; font-family: var(--fh-font-display); font-size: 34px; line-height: 1; }
+.hg-rolle { margin: 0; color: var(--fh-muted-fg); }
+.hg-werte { display: grid; gap: 12px; margin-top: 6px; }
+.hg-wert { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "kopf knopf" "punkte knopf"; gap: 6px 14px; align-items: center; }
+.hg-wert-kopf { grid-area: kopf; display: flex; justify-content: space-between; gap: 10px; }
+.hg-wert-name { color: var(--fh-muted-fg); }
+.hg-wert-zahl { font-weight: 700; font-variant-numeric: tabular-nums; }
+.hg-punkte { grid-area: punkte; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.hg-punkt { height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--akzent) 16%, transparent); }
+.hg-punkt.ist-an { background: var(--akzent); box-shadow: 0 0 8px color-mix(in srgb, var(--akzent) 60%, transparent); }
+.hg-ausbau,
+.hg-knopf {
+  grid-area: knopf;
+  font: inherit;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--akzent, var(--fh-cold));
+  color: var(--fh-fg);
+  background: color-mix(in srgb, var(--akzent, var(--fh-cold)) 18%, transparent);
+  cursor: pointer;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.hg-ausbau:hover:not(:disabled),
+.hg-ausbau:focus-visible,
+.hg-knopf:hover { background: color-mix(in srgb, var(--akzent, var(--fh-cold)) 34%, transparent); outline: none; }
+.hg-ausbau.ist-frage { background: var(--akzent); color: var(--fh-bg); }
+.hg-ausbau:disabled { opacity: .55; cursor: default; }
+.hg-spezial { margin: 4px 0 0; color: var(--fh-muted-fg); }
+.hg-spezial strong { color: var(--fh-fg); }
+.hg-status { margin: 0; min-height: 1.4em; color: var(--fh-muted-fg); }
+.hg-status.ist-fehler { color: var(--fh-danger); }
+@media (max-width: 760px) {
+  .hg-typen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hg-detail { grid-template-columns: 1fr; padding: 18px; }
+  .hg-buehne { min-height: 150px; }
+  .hg-wert { grid-template-columns: 1fr; grid-template-areas: "kopf" "punkte" "knopf"; }
+  .hg-ausbau { justify-self: start; }
+}

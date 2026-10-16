@@ -202,3 +202,11 @@ html.fh-2100 .fh-page-title {
     transition: filter .9s var(--fh-ease), background-color .9s var(--fh-ease);
   }
 }
+
+/* Der Hangar (scripts/hangar/hangar.js) gibt es nur in 2100 und ist
+   schon in den Farben des Films gestaltet (kalt-blau, violett, gruener
+   Kern). Der Farbfilter oben wuerde sie nach Orange drehen - darum
+   hier zurueckdrehen, wie bei Bildern. */
+html.fh-2100 #hangar .hg-seite {
+  filter: hue-rotate(-165deg) saturate(.91);
+}

@@ -437,10 +437,28 @@ function buildGatewayEpocheHtml() {
           <option value="aliens">Aliens (Schwarm)</option>
         </select>
         <button type="button" class="gw-live-knopf" onclick="gwSeiteSetzen()">Seite setzen</button>
+        <button type="button" class="gw-live-knopf" onclick="gwHangarZuruecksetzen()">Hangar zurücksetzen</button>
       </div>
     </div>
     <p id="gw-seite-status" class="gw-live-status" role="status" aria-live="polite"></p>
   `;
+}
+
+/* Einheit und Ausbauten eines Spielers loeschen (Migration 48) -
+   bezahlte Dublonen gibt es dabei NICHT zurueck. */
+async function gwHangarZuruecksetzen() {
+  if (!supabaseClient) return;
+  const uid = (document.getElementById("gw-seite-uid")?.value || "").trim();
+  if (!uid) { gwLiveStatus("gw-seite-status", "Bitte eine UID eintragen.", true); return; }
+  if (!confirm("Einheit und alle Ausbauten dieses Spielers löschen? Die bezahlten Dublonen gibt es nicht zurück.")) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_hangar_zuruecksetzen", { p_uid: uid });
+    if (error) throw error;
+    gwLiveStatus("gw-seite-status", data ? "✓ Hangar zurückgesetzt." : "Dieser Spieler hatte noch keine Einheit.", !data);
+  } catch (err) {
+    console.error("Hangar zuruecksetzen fehlgeschlagen:", err);
+    gwLiveStatus("gw-seite-status", "Zurücksetzen fehlgeschlagen: " + ((err && err.message) || err) + " – ist Migration 48 eingespielt?", true);
+  }
 }
 
 /* Seite eines Spielers setzen oder zuruecksetzen (admin_seite_setzen). */

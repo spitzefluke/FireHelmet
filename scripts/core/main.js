@@ -56,6 +56,9 @@ function changePage(pageID) {
   if (typeof updateGegenhackPage === "function") {
     updateGegenhackPage(pageID);
   }
+  if (typeof updateHangarPage === "function") {
+    updateHangarPage(pageID);
+  }
 
   if (typeof updateCodeAmbientPage === "function") {
     updateCodeAmbientPage(pageID);
