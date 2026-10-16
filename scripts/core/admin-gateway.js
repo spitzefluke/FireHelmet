@@ -218,6 +218,72 @@ async function toggleGatewaySpielothekGame(gameId, disabled) {
   }
 }
 
+/* ------------------------------------------------------
+   SEITEN EIN-/AUSSCHALTEN (scripts/core/seiten-sperre.js)
+   Die Liste kommt aus der Navigation selbst - jede neue Seite mit
+   Nav-Eintrag taucht hier von allein auf. Start, Gateway, Impressum
+   und Datenschutz lassen sich nicht abschalten. Abgeschaltete Seiten
+   siehst nur du (gedimmt, roter Punkt).
+------------------------------------------------------ */
+function gwSeitenListe() {
+  const nie = window.fhSeitenNieAus || ["home", "gateway", "impressum", "datenschutz"];
+  const gesehen = new Set();
+  const liste = [];
+  document.querySelectorAll(".fh-sidebar-nav .fh-nav-item[data-page]").forEach((a) => {
+    const id = a.getAttribute("data-page");
+    if (!id || gesehen.has(id) || nie.includes(id) || !document.getElementById(id)) return;
+    gesehen.add(id);
+    const name = (a.querySelector(".fh-nav-label")?.textContent || id).trim();
+    liste.push({ id, name });
+  });
+  return liste;
+}
+
+function buildGatewaySeitenHtml() {
+  const aus = Array.isArray(siteConfig.disabledPageIds) ? siteConfig.disabledPageIds : [];
+  const seiten = gwSeitenListe();
+  const anzahlAus = seiten.filter((s) => aus.includes(s.id)).length;
+  const zeilen = seiten
+    .map((s) => `
+        <label class="gateway-chapter-row">
+          <input type="checkbox" ${aus.includes(s.id) ? "" : "checked"} onchange="toggleGatewaySeite('${escapeHtml(s.id)}', !this.checked)">
+          <span>${escapeHtml(s.name)}${aus.includes(s.id) ? " <small>(aus – nur du siehst sie)</small>" : ""}</span>
+        </label>`)
+    .join("");
+  return `
+    <p class="gateway-status-sub">Haken weg = Seite für Besucher abgeschaltet: kein Menüeintrag, keine Links, wer sie trotzdem aufruft, landet auf der Startseite. Du siehst sie weiter, gedimmt mit rotem Punkt. Start, Admin, Impressum und Datenschutz bleiben immer an. Gerade aus: ${anzahlAus} von ${seiten.length}.</p>
+    <div class="gw-story-lage-knoepfe">
+      <button type="button" class="gw-live-knopf" onclick="gwAlleSeiten(true)">Alle ausschalten</button>
+      <button type="button" class="gw-live-knopf" onclick="gwAlleSeiten(false)">Alle einschalten</button>
+    </div>
+    <div class="gateway-chapter-list">${zeilen}</div>
+    <p id="gw-seiten-status" class="gw-live-status" role="status" aria-live="polite"></p>
+  `;
+}
+
+async function gwSeitenSpeichern(next, meldung) {
+  if (!supabaseClient) return;
+  try {
+    await patchSupabaseSiteConfig({ disabledPageIds: next });
+    if (typeof fhSeitenSperreAnwenden === "function") fhSeitenSperreAnwenden();
+    await renderGatewayPage();
+    gwLiveStatus("gw-seiten-status", meldung, false);
+  } catch (err) {
+    console.error("Seiten konnten nicht umgeschaltet werden:", err);
+    gwLiveStatus("gw-seiten-status", "Speichern fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function toggleGatewaySeite(seiteId, aus) {
+  const vorher = Array.isArray(siteConfig.disabledPageIds) ? siteConfig.disabledPageIds : [];
+  const ohne = vorher.filter((id) => id !== seiteId);
+  await gwSeitenSpeichern(aus ? [...ohne, seiteId] : ohne, aus ? "✓ Seite abgeschaltet." : "✓ Seite wieder an.");
+}
+
+async function gwAlleSeiten(aus) {
+  if (aus && !confirm("Alle Seiten außer Start, Admin, Impressum und Datenschutz für Besucher abschalten?")) return;
+  await gwSeitenSpeichern(aus ? gwSeitenListe().map((s) => s.id) : [], aus ? "✓ Alle Seiten abgeschaltet." : "✓ Alle Seiten wieder an.");
+}
 
 function buildGatewayChapterListHtml() {
   const locked = Array.isArray(siteConfig.lockedChapterIds) ? siteConfig.lockedChapterIds : [];
@@ -436,19 +502,20 @@ function buildGatewayEpocheHtml() {
           <option value="menschen">Menschen (Erdflotte)</option>
           <option value="aliens">Aliens (Schwarm)</option>
         </select>
+        <button type="button" class="gw-live-knopf" onclick="gwEigeneUid()">Meine UID</button>
         <button type="button" class="gw-live-knopf" onclick="gwSeiteSetzen()">Seite setzen</button>
         <button type="button" class="gw-live-knopf" onclick="gwHangarZuruecksetzen()">Hangar zurücksetzen</button>
       </div>
     </div>
     <p id="gw-seite-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <div class="gw-story-lage">
-      <p id="gw-schlacht-jetzt" class="gw-story-jetzt">Sternenschlacht (Jahr 2100, Migration 49): Stand wird geladen …</p>
+      <p id="gw-schlacht-jetzt" class="gw-story-jetzt">Sternenschlacht (Migration 50): Stand wird geladen …</p>
+      <p class="gateway-status-sub">Läuft endlos in Runden, bis du sie beendest. Das Tempo bestimmt, wie lange eine Runde etwa dauert. Zum Testen außerhalb von 2100: „Vorschau 2100“, selbst eine Seite wählen, dann starten – die leere Seite übernimmt eine Übungsflotte.</p>
       <div class="gw-story-lage-knoepfe">
-        <select id="gw-schlacht-dauer" class="gw-feld" aria-label="Dauer der Schlacht">
-          <option value="5">5 Minuten</option>
-          <option value="10" selected>10 Minuten</option>
-          <option value="15">15 Minuten</option>
-          <option value="20">20 Minuten</option>
+        <select id="gw-schlacht-dauer" class="gw-feld" aria-label="Tempo einer Runde">
+          <option value="5">Schnell (Runde ≈ 5 min)</option>
+          <option value="10" selected>Normal (Runde ≈ 10 min)</option>
+          <option value="20">Langsam (Runde ≈ 20 min)</option>
         </select>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtStarten()">Sternenschlacht starten</button>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtBeenden()">Schlacht beenden</button>
@@ -459,29 +526,31 @@ function buildGatewayEpocheHtml() {
 }
 
 /* ------------------------------------------------------
-   STERNENSCHLACHT (Migration 49)
-   Alle Spieler mit Seite kaempfen mit; die Datenbank haelt beim
-   Start ihre Einheiten fest und rechnet den Stand.
+   STERNENSCHLACHT (Migrationen 49 und 50)
+   Alle Spieler mit Seite kaempfen mit; die Datenbank stellt zu jeder
+   Runde die Einheiten auf und rechnet den Stand. Seit 50 endlos, bis
+   der Admin beendet; der Admin darf auch ausserhalb von 2100 starten.
 ------------------------------------------------------ */
 async function gwSchlachtZeigen() {
   const el = document.getElementById("gw-schlacht-jetzt");
   if (!el || !supabaseClient) return;
   try {
-    const { data, error } = await supabaseClient.from("sternenschlacht").select("id, status, ende_at, sieger, endstand_menschen, anzahl_menschen, anzahl_aliens")
+    const { data, error } = await supabaseClient.from("sternenschlacht").select("id, status, ende_at, sieger, endstand_menschen, anzahl_menschen, anzahl_aliens, endlos, runde, punkte_menschen, punkte_aliens")
       .order("id", { ascending: false }).limit(1).maybeSingle();
     if (error) throw error;
     if (!data) el.textContent = "Sternenschlacht: noch keine geschlagen.";
+    else if (data.status === "laeuft" && data.endlos) el.textContent = "Sternenschlacht läuft endlos – Runde " + data.runde + ", Rundensiege Menschen " + data.punkte_menschen + " : " + data.punkte_aliens + " Aliens (" + data.anzahl_menschen + " gegen " + data.anzahl_aliens + " Schiffe).";
     else if (data.status === "laeuft") el.textContent = "Sternenschlacht läuft bis " + new Date(data.ende_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) + " Uhr – " + data.anzahl_menschen + " Menschen gegen " + data.anzahl_aliens + " Aliens.";
-    else el.textContent = "Letzte Sternenschlacht: " + (data.sieger === "menschen" ? "Menschen" : data.sieger === "aliens" ? "Aliens" : "unentschieden") + " (" + Math.round(data.endstand_menschen) + " % : " + (100 - Math.round(data.endstand_menschen)) + " %).";
+    else el.textContent = "Letzte Sternenschlacht: " + (data.sieger === "menschen" ? "Menschen" : data.sieger === "aliens" ? "Aliens" : "unentschieden") + (data.endlos ? " (Runden " + data.punkte_menschen + " : " + data.punkte_aliens + ")." : " (" + Math.round(data.endstand_menschen) + " % : " + (100 - Math.round(data.endstand_menschen)) + " %).");
   } catch (err) {
-    el.textContent = "Sternenschlacht: Stand nicht lesbar – ist Migration 49 eingespielt?";
+    el.textContent = "Sternenschlacht: Stand nicht lesbar – sind Migration 49 und 50 eingespielt?";
   }
 }
 
 async function gwSchlachtStarten() {
   if (!supabaseClient) return;
   const minuten = Number(document.getElementById("gw-schlacht-dauer")?.value || 10);
-  if (!confirm("Sternenschlacht für " + minuten + " Minuten starten? Alle Spieler mit Seite kämpfen mit.")) return;
+  if (!confirm("Sternenschlacht starten? Sie läuft endlos in Runden, bis du sie beendest. Alle Spieler mit Seite kämpfen mit.")) return;
   try {
     const { error } = await supabaseClient.rpc("admin_schlacht_starten", { p_minuten: minuten });
     if (error) throw error;
@@ -490,14 +559,14 @@ async function gwSchlachtStarten() {
   } catch (err) {
     console.error("Schlacht starten fehlgeschlagen:", err);
     const m = (err && err.message) || String(err);
-    const grund = /nicht-2100/.test(m) ? "Erst ins Jahr 2100 schalten." : /schlacht-laeuft/.test(m) ? "Es läuft schon eine Schlacht." : /zu-wenige/.test(m) ? "Beide Seiten brauchen mindestens einen Spieler." : m + " – ist Migration 49 eingespielt?";
+    const grund = /nicht-2100/.test(m) ? "Migration 50 fehlt noch – erst sie startet auch außerhalb von 2100." : /schlacht-laeuft/.test(m) ? "Es läuft schon eine Schlacht." : /zu-wenige/.test(m) ? "Noch niemand hat eine Seite gewählt – wähle selbst eine (Vorschau 2100)." : m + " – sind Migration 49 und 50 eingespielt?";
     gwLiveStatus("gw-schlacht-status", "Start fehlgeschlagen: " + grund, true);
   }
 }
 
 async function gwSchlachtBeenden() {
   if (!supabaseClient) return;
-  if (!confirm("Die laufende Sternenschlacht jetzt beenden? Es zählt der aktuelle Stand.")) return;
+  if (!confirm("Die laufende Sternenschlacht jetzt beenden? Es siegt, wer mehr Runden gewonnen hat – bei Gleichstand der aktuelle Stand.")) return;
   try {
     const { data, error } = await supabaseClient.rpc("admin_schlacht_beenden");
     if (error) throw error;
@@ -527,6 +596,17 @@ async function gwHangarZuruecksetzen() {
 }
 
 /* Seite eines Spielers setzen oder zuruecksetzen (admin_seite_setzen). */
+/* Fuer den eigenen Test: die eigene UID ins Feld - dann laesst sich
+   die eigene Seite zuruecksetzen und neu waehlen. */
+async function gwEigeneUid() {
+  const feld = document.getElementById("gw-seite-uid");
+  if (!feld) return;
+  try {
+    feld.value = (typeof wheelAuthReady !== "undefined" && (await wheelAuthReady)) || "";
+  } catch (e) { feld.value = ""; }
+  if (!feld.value) gwLiveStatus("gw-seite-status", "Deine UID ist gerade nicht lesbar.", true);
+}
+
 async function gwSeiteSetzen() {
   if (!supabaseClient) return;
   const uid = (document.getElementById("gw-seite-uid")?.value || "").trim();
@@ -1695,6 +1775,7 @@ const GW_MENUE = [
     teile: [
       { id: "countdown", kurz: "Countdown", titel: "Countdown" },
       { id: "kapitel", kurz: "Kapitel", titel: "Kapitel aktivieren/deaktivieren" },
+      { id: "seiten", kurz: "Seiten", titel: "Seiten ein-/ausschalten" },
       { id: "band", kurz: "Ankündigung", titel: "Ankündigung & Wartung" },
     ] },
   { id: "spiele", titel: "Spiele",
@@ -1848,6 +1929,7 @@ async function renderGatewayPage() {
       <button type="button" class="code-button" onclick="saveGatewayCountdowns()">Countdown speichern</button>
       <p id="gateway-save-status" class="wheel-status"></p>`,
     kapitel: `<div class="gateway-chapter-list">${buildGatewayChapterListHtml()}</div>`,
+    seiten: buildGatewaySeitenHtml(),
     band: buildGatewayBandHtml(),
     spielothek: buildGatewaySpielothekHtml(),
     turnier: `<div id="gateway-tournament-sub">Lade Turnierstatus...</div>`,

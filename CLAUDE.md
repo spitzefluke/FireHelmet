@@ -15,8 +15,8 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 123 `<script defer>`-Tags in fester
-Reihenfolge, davon 109 aus diesem Repo. Fünf große Skripte, die fast niemand braucht
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 124 `<script defer>`-Tags in fester
+Reihenfolge, davon 110 aus diesem Repo. Fünf große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
@@ -95,6 +95,12 @@ in `scripts/core/main.js` schaltet `.active-page` um und ruft danach die `update
 jedes Bereichs auf. **Eine neue Seite muss sich dort eintragen**, sonst wird sie nie
 aufgefrischt. Der Wechsel selbst ist eine CSS-Transition auf `.page` (350 ms, `--fh-ease`) —
 diese Animation nicht zusätzlich per JS bespielen.
+
+Der Admin kann jede Seite außer Start, Gateway, Impressum und Datenschutz abschalten
+(`siteConfig.disabledPageIds`, `scripts/core/seiten-sperre.js`). Die Liste im Gateway
+entsteht aus den Nav-Einträgen mit `data-page` – eine neue Seite braucht dafür nichts
+Eigenes. Die Sperre nutzt die Klasse `fh-seite-aus`, **nicht** `fh-flag-aus` (die schaltet
+das Jahr 2100 für Hangar & Co.); beide dürfen sich nicht gegenseitig aufheben.
 
 ### Skripte
 

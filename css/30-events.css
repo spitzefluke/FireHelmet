@@ -2380,6 +2380,22 @@ img, svg, video, canvas {
    nicht schlaegt (siehe Notiz in css/20-spiele.css). */
 .fh-flag-aus { display: none !important; }
 
+/* Vom Admin abgeschaltete Seiten (scripts/core/seiten-sperre.js):
+   fuer Besucher weg, fuer den Admin gedimmt mit rotem Punkt. */
+.fh-seite-aus { display: none !important; }
+.fh-seite-vorschau { opacity: .55; }
+.fh-nav-item.fh-seite-vorschau { position: relative; }
+.fh-nav-item.fh-seite-vorschau::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fh-danger);
+}
+
 /* Admin-Vorschau: der Nav-Eintrag ist sichtbar, obwohl das Flag
    noch aus ist - dezent markiert, damit klar ist "sieht nur ich". */
 .fh-nav-item.fh-flag-vorschau { position: relative; }

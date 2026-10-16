@@ -40,6 +40,7 @@ let siteConfig = {
   shipEventUnlockDate: null, // ISO-String oder null = Fallback aus FIRE_HELMET_CONFIG
   lockedChapterIds: [], // Kapitel-IDs (siehe stories-data.js), die (noch) gesperrt sind
   disabledGameIds: [], // Spielothek-Spiele-IDs (siehe spielothek-data.js), die der Admin deaktiviert hat
+  disabledPageIds: [], // Seiten-IDs (<section id>), die der Admin abgeschaltet hat (siehe scripts/core/seiten-sperre.js)
 
   // Kapitel-IDs (beide Sprachvarianten), die automatisch aus
 
@@ -85,6 +86,7 @@ function applySiteConfigSnapshot(data) {
     shipEventUnlockDate: typeof data.shipEventUnlockDate === "string" ? data.shipEventUnlockDate : null,
     lockedChapterIds: Array.isArray(data.lockedChapterIds) ? data.lockedChapterIds : [],
     disabledGameIds: Array.isArray(data.disabledGameIds) ? data.disabledGameIds : [],
+    disabledPageIds: Array.isArray(data.disabledPageIds) ? data.disabledPageIds.filter((id) => typeof id === "string") : [],
     ankuendigung: typeof data.ankuendigung === "string" ? data.ankuendigung : "",
     wartung: data.wartung === true,
     wartungText: typeof data.wartungText === "string" ? data.wartungText : "",
