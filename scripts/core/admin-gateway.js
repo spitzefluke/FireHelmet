@@ -427,7 +427,37 @@ function buildGatewayEpocheHtml() {
       </div>
     </div>
     <p id="gw-epoche-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <div class="gw-story-lage">
+      <p class="gw-story-jetzt">Seite eines Spielers (Jahr 2100, Migration 47) – die Wahl ist für Spieler endgültig, nur hier lässt sie sich ändern oder zurücksetzen.</p>
+      <div class="gw-story-lage-knoepfe">
+        <input type="text" id="gw-seite-uid" class="gw-feld gw-feld-breit" maxlength="64" placeholder="UID des Spielers" aria-label="UID des Spielers">
+        <select id="gw-seite-wahl" class="gw-feld" aria-label="Neue Seite">
+          <option value="">keine (neu wählen lassen)</option>
+          <option value="menschen">Menschen (Erdflotte)</option>
+          <option value="aliens">Aliens (Schwarm)</option>
+        </select>
+        <button type="button" class="gw-live-knopf" onclick="gwSeiteSetzen()">Seite setzen</button>
+      </div>
+    </div>
+    <p id="gw-seite-status" class="gw-live-status" role="status" aria-live="polite"></p>
   `;
+}
+
+/* Seite eines Spielers setzen oder zuruecksetzen (admin_seite_setzen). */
+async function gwSeiteSetzen() {
+  if (!supabaseClient) return;
+  const uid = (document.getElementById("gw-seite-uid")?.value || "").trim();
+  const seite = document.getElementById("gw-seite-wahl")?.value || "";
+  if (!uid) { gwLiveStatus("gw-seite-status", "Bitte eine UID eintragen.", true); return; }
+  try {
+    const { error } = await supabaseClient.rpc("admin_seite_setzen", { p_uid: uid, p_seite: seite || null });
+    if (error) throw error;
+    gwLiveStatus("gw-seite-status", seite ? "✓ Seite gesetzt: " + (seite === "aliens" ? "Aliens" : "Menschen") + "." : "✓ Seite zurückgesetzt – der Spieler wählt neu.", false);
+  } catch (err) {
+    console.error("Seite setzen fehlgeschlagen:", err);
+    const m = (err && err.message) || String(err);
+    gwLiveStatus("gw-seite-status", /spieler-unbekannt/.test(m) ? "Keinen Spieler mit dieser UID gefunden." : "Setzen fehlgeschlagen: " + m + " – ist Migration 47 eingespielt?", true);
+  }
 }
 
 /* ab1720/ab2100: die Zeitmarken aus live_event. Es gilt die zuletzt

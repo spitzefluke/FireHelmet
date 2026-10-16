@@ -1878,3 +1878,117 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 .fh-legal-footer a:hover,
 .fh-legal-footer a:focus-visible { color: var(--fh-gold-bright); }
 
+
+/* =====================================================
+   SEITENWAHL IN DER EPOCHE 2100 (scripts/seiten/seiten.js)
+   Vollbild ueber der Seite: zwei Karten, Menschen (kalt-blau)
+   und Aliens (violett/neon), jeweils Vor- und Nachteile.
+   #fh-seitenwahl haengt an body und steht in den :not-Listen von
+   95 und 96 - der Epochen-Farbfilter faerbt es nicht um.
+===================================================== */
+.fh-seiten {
+  position: fixed;
+  inset: 0;
+  z-index: var(--fh-z-overlay);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+  background: radial-gradient(120% 90% at 50% 40%, rgba(20,24,60,.88), rgba(2,3,10,.96));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--fh-fg);
+  animation: fh-seiten-rein .5s var(--fh-ease) both;
+}
+@keyframes fh-seiten-rein { from { opacity: 0; } to { opacity: 1; } }
+.fh-seiten-innen { width: min(1040px, 100%); display: grid; gap: 24px; }
+.fh-seiten-titelblock { text-align: center; display: grid; gap: 8px; }
+.fh-seiten-kicker { margin: 0; font-family: var(--fh-font-display); letter-spacing: .3em; text-transform: uppercase; font-size: 12px; color: var(--fh-cold); }
+.fh-seiten-titel { margin: 0; font-family: var(--fh-font-display); font-size: clamp(28px, 5vw, 44px); line-height: 1.05; }
+.fh-seiten-lead { margin: 0 auto; max-width: 60ch; color: var(--fh-muted-fg); }
+.fh-seiten-karten { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.fh-seiten-karte {
+  --akzent: var(--fh-cold);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  border-radius: var(--fh-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--akzent) 40%, transparent);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--akzent) 12%, var(--fh-surface)), var(--fh-surface) 60%);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--akzent) 14%, transparent);
+  transition: transform .25s var(--fh-ease), box-shadow .25s var(--fh-ease);
+}
+.fh-seiten-karte.ist-aliens { --akzent: var(--fh-violett); }
+.fh-seiten-karte:hover { transform: translateY(-2px); box-shadow: 0 0 56px color-mix(in srgb, var(--akzent) 26%, transparent); }
+.fh-seiten-kopf { display: flex; align-items: center; gap: 14px; }
+.fh-seiten-symbol {
+  flex: none;
+  width: 52px; height: 52px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: var(--akzent);
+  background: color-mix(in srgb, var(--akzent) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--akzent) 45%, transparent);
+}
+.fh-seiten-symbol svg { width: 26px; height: 26px; }
+.fh-seiten-volk { margin: 0; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--akzent); }
+.fh-seiten-name { margin: 2px 0 0; font-family: var(--fh-font-display); font-size: 26px; }
+.fh-seiten-satz { margin: 0; color: var(--fh-muted-fg); }
+.fh-seiten-ueber { margin: 6px 0 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--fh-muted-fg); }
+.fh-seiten-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fh-seiten-liste li { display: flex; gap: 8px; align-items: baseline; line-height: 1.4; }
+.fh-seiten-zeichen { flex: none; width: 1.1em; font-weight: 700; text-align: center; }
+.fh-seiten-liste.ist-vor .fh-seiten-zeichen { color: var(--fh-success); }
+.fh-seiten-liste.ist-nach .fh-seiten-zeichen { color: var(--fh-danger); }
+.fh-seiten-aktion { margin-top: auto; padding-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.fh-seiten-knopf {
+  font: inherit;
+  font-weight: 600;
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--akzent);
+  color: var(--fh-fg);
+  background: color-mix(in srgb, var(--akzent) 22%, transparent);
+  cursor: pointer;
+  transition: background .2s var(--fh-ease), box-shadow .2s var(--fh-ease);
+}
+.fh-seiten-knopf:hover,
+.fh-seiten-knopf:focus-visible { background: color-mix(in srgb, var(--akzent) 38%, transparent); box-shadow: 0 0 18px color-mix(in srgb, var(--akzent) 45%, transparent); outline: none; }
+.fh-seiten-knopf.ist-ja { background: var(--akzent); color: var(--fh-bg); }
+.fh-seiten-frage { margin: 0; width: 100%; color: var(--fh-fg); }
+.fh-seiten-zurueck,
+.fh-seiten-spaeter { font: inherit; background: none; border: 0; padding: 6px 4px; color: var(--fh-muted-fg); text-decoration: underline; cursor: pointer; }
+.fh-seiten-zurueck:hover,
+.fh-seiten-spaeter:hover { color: var(--fh-fg); }
+.fh-seiten-fuss { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.fh-seiten-status { margin: 0; min-height: 1.4em; color: var(--fh-muted-fg); }
+.fh-seiten-status.ist-fehler { color: var(--fh-danger); }
+@media (max-width: 720px) {
+  .fh-seiten { place-items: start center; }
+  .fh-seiten-karten { grid-template-columns: 1fr; }
+  .fh-seiten-karte { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fh-seiten, .fh-seiten-karte { animation: none; transition: none; }
+}
+
+/* Wochenrennen in der Epoche 2100: statt der Rennbahn nur der
+   Hinweis (race.js schreibt dann nichts). */
+.race-ruht { display: none; }
+html.fh-2100 #race > :not(.race-ruht) { display: none; }
+html.fh-2100 #race > .race-ruht {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  max-width: 560px;
+  margin: 12vh auto 0;
+  padding: 32px 24px;
+  text-align: center;
+  border-radius: var(--fh-radius-lg);
+  border: 1px solid var(--fh-border);
+  background: var(--fh-surface);
+}
+.race-ruht-symbol { width: 44px; height: 44px; color: var(--fh-gold); }
+.race-ruht-titel { margin: 0; font-family: var(--fh-font-display); font-size: 28px; }
+.race-ruht-text { margin: 0; color: var(--fh-muted-fg); }

@@ -15,8 +15,8 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 118 `<script defer>`-Tags in fester
-Reihenfolge, davon 104 aus diesem Repo. Fünf große Skripte, die fast niemand braucht
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 120 `<script defer>`-Tags in fester
+Reihenfolge, davon 106 aus diesem Repo. Fünf große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,

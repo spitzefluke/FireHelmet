@@ -412,7 +412,16 @@ function getLocalRaceProgress() {
   return parseInt(localStorage.getItem("raceProgress") || "0", 10);
 }
 
+/* Zeitmaschine 2100 (Migration 47): solange die Epoche 2100 gilt,
+   ruht das Wochenrennen - die Flotten sind im All. Die Datenbank
+   nimmt dann ohnehin keinen Fortschritt an; hier wird gar nicht erst
+   geschrieben, und die Rennseite zeigt nur den Hinweis (#race-ruht). */
+function raceRuht() {
+  return !!(window.fhEpoche && window.fhEpoche.jahr() === 2100);
+}
+
 function addRaceProgress(amount) {
+  if (raceRuht()) return;
   /* Skill-Baum "Rueckenwind": +% auf den Fortschritt, aber nie ueber
      den Deckel von +15 je Schritt (race_progress_update_own in
      03-race-boss.sql) - sonst lehnte die Datenbank den ganzen Schritt
@@ -1359,7 +1368,7 @@ function claimDailyRaceBonus() {
   const today = todayStr();
   const lastClaim = localStorage.getItem("raceDailyBonusDate");
 
-  if (!nickname || lastClaim === today) {
+  if (!nickname || lastClaim === today || raceRuht()) {
     refreshRaceDailyStatus();
     return;
   }
@@ -1446,7 +1455,7 @@ function drawRaceTrack() {
 }
 
 function updateRacePage(pageID) {
-  if (pageID !== "race") {
+  if (pageID !== "race" || raceRuht()) {
     stopRaceCountdown();
     stopRaceTrail();
     return;
@@ -1460,3 +1469,10 @@ function updateRacePage(pageID) {
   loadLastWeekWinner();
   startRaceCountdown();
 }
+
+/* Epoche wechselt, waehrend die Rennseite offen ist: neu aufbauen
+   (zurueck aus 2100) oder anhalten (nach 2100). */
+document.addEventListener("fh:epoche", function () {
+  const seite = document.getElementById("race");
+  if (seite && seite.classList.contains("active-page")) updateRacePage("race");
+});
