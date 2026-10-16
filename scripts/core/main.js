@@ -59,6 +59,9 @@ function changePage(pageID) {
   if (typeof updateHangarPage === "function") {
     updateHangarPage(pageID);
   }
+  if (typeof updateSternenschlachtPage === "function") {
+    updateSternenschlachtPage(pageID);
+  }
 
   if (typeof updateCodeAmbientPage === "function") {
     updateCodeAmbientPage(pageID);

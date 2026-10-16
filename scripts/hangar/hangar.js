@@ -196,6 +196,7 @@
     "zu-wenig": ["hangar.fehler.wenig", "Dafür reichen deine Dublonen nicht."],
     "max": ["hangar.fehler.max", "Dieser Wert ist schon ganz ausgebaut."],
     "gesperrt": ["hangar.fehler.gesperrt", "Dein Konto ist gesperrt."],
+    "schlacht": ["hangar.fehler.schlacht", "Während der Sternenschlacht lässt sich der Typ nicht wechseln."],
   };
   function fehlerText(grund) {
     const g = GRUENDE[grund];

@@ -441,7 +441,72 @@ function buildGatewayEpocheHtml() {
       </div>
     </div>
     <p id="gw-seite-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <div class="gw-story-lage">
+      <p id="gw-schlacht-jetzt" class="gw-story-jetzt">Sternenschlacht (Jahr 2100, Migration 49): Stand wird geladen …</p>
+      <div class="gw-story-lage-knoepfe">
+        <select id="gw-schlacht-dauer" class="gw-feld" aria-label="Dauer der Schlacht">
+          <option value="5">5 Minuten</option>
+          <option value="10" selected>10 Minuten</option>
+          <option value="15">15 Minuten</option>
+          <option value="20">20 Minuten</option>
+        </select>
+        <button type="button" class="gw-live-knopf" onclick="gwSchlachtStarten()">Sternenschlacht starten</button>
+        <button type="button" class="gw-live-knopf" onclick="gwSchlachtBeenden()">Schlacht beenden</button>
+      </div>
+    </div>
+    <p id="gw-schlacht-status" class="gw-live-status" role="status" aria-live="polite"></p>
   `;
+}
+
+/* ------------------------------------------------------
+   STERNENSCHLACHT (Migration 49)
+   Alle Spieler mit Seite kaempfen mit; die Datenbank haelt beim
+   Start ihre Einheiten fest und rechnet den Stand.
+------------------------------------------------------ */
+async function gwSchlachtZeigen() {
+  const el = document.getElementById("gw-schlacht-jetzt");
+  if (!el || !supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from("sternenschlacht").select("id, status, ende_at, sieger, endstand_menschen, anzahl_menschen, anzahl_aliens")
+      .order("id", { ascending: false }).limit(1).maybeSingle();
+    if (error) throw error;
+    if (!data) el.textContent = "Sternenschlacht: noch keine geschlagen.";
+    else if (data.status === "laeuft") el.textContent = "Sternenschlacht läuft bis " + new Date(data.ende_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) + " Uhr – " + data.anzahl_menschen + " Menschen gegen " + data.anzahl_aliens + " Aliens.";
+    else el.textContent = "Letzte Sternenschlacht: " + (data.sieger === "menschen" ? "Menschen" : data.sieger === "aliens" ? "Aliens" : "unentschieden") + " (" + Math.round(data.endstand_menschen) + " % : " + (100 - Math.round(data.endstand_menschen)) + " %).";
+  } catch (err) {
+    el.textContent = "Sternenschlacht: Stand nicht lesbar – ist Migration 49 eingespielt?";
+  }
+}
+
+async function gwSchlachtStarten() {
+  if (!supabaseClient) return;
+  const minuten = Number(document.getElementById("gw-schlacht-dauer")?.value || 10);
+  if (!confirm("Sternenschlacht für " + minuten + " Minuten starten? Alle Spieler mit Seite kämpfen mit.")) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_schlacht_starten", { p_minuten: minuten });
+    if (error) throw error;
+    gwLiveStatus("gw-schlacht-status", "✓ Die Sternenschlacht läuft.", false);
+    gwSchlachtZeigen();
+  } catch (err) {
+    console.error("Schlacht starten fehlgeschlagen:", err);
+    const m = (err && err.message) || String(err);
+    const grund = /nicht-2100/.test(m) ? "Erst ins Jahr 2100 schalten." : /schlacht-laeuft/.test(m) ? "Es läuft schon eine Schlacht." : /zu-wenige/.test(m) ? "Beide Seiten brauchen mindestens einen Spieler." : m + " – ist Migration 49 eingespielt?";
+    gwLiveStatus("gw-schlacht-status", "Start fehlgeschlagen: " + grund, true);
+  }
+}
+
+async function gwSchlachtBeenden() {
+  if (!supabaseClient) return;
+  if (!confirm("Die laufende Sternenschlacht jetzt beenden? Es zählt der aktuelle Stand.")) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_schlacht_beenden");
+    if (error) throw error;
+    gwLiveStatus("gw-schlacht-status", data ? "✓ Schlacht beendet." : "Es lief keine Schlacht.", !data);
+    gwSchlachtZeigen();
+  } catch (err) {
+    console.error("Schlacht beenden fehlgeschlagen:", err);
+    gwLiveStatus("gw-schlacht-status", "Beenden fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
 }
 
 /* Einheit und Ausbauten eines Spielers loeschen (Migration 48) -
@@ -1157,6 +1222,7 @@ async function gwStoryLageLaden() {
     else if (z.story === "schatz" && !z.story_ende_at) ziel.textContent = "Schatzregen läuft seit " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC) – „Disco / Schatzregen beenden“ stoppt den Regen, dann gibt es die Beute.";
     else ziel.textContent = "Zuletzt gestartet: " + gwStoryName(z.story) + " um " + String(z.story_at || "").slice(11, 16) + " Uhr (UTC).";
     gwEpocheZeigen(z.jahr_1720_ab || null, z.jahr_2100_ab || null);
+    gwSchlachtZeigen();
     gwMusikVersionAlt = z.musik_version || null;
     gwMusikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
     gwMusikStandZeigen();
