@@ -2102,3 +2102,139 @@ html.fh-2100 #race > .race-ruht {
   .hg-wert { grid-template-columns: 1fr; grid-template-areas: "kopf" "punkte" "knopf"; }
   .hg-ausbau { justify-self: start; }
 }
+
+/* =====================================================
+   LIVE-STERNENSCHLACHT (scripts/schlacht/schlacht.js)
+   Schlachtfeld als Canvas, darunter das Prozentbanner (Menschen
+   kalt-blau links, Aliens violett rechts) und die Steuerung.
+   Siegerbanner mit Funken, Ruhmeshalle als Liste.
+   #fh-schlacht-hinweis haengt an body (in den :not-Listen von 95/96).
+===================================================== */
+.sl-seite { max-width: 1100px; margin: 0 auto; display: grid; gap: 18px; }
+#schlacht-inhalt { display: grid; gap: 14px; }
+.sl-kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sl-live { display: inline-flex; align-items: center; gap: 8px; font-family: var(--fh-font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--fh-danger); }
+.sl-live::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--fh-danger); box-shadow: 0 0 10px var(--fh-danger); }
+@media (prefers-reduced-motion: no-preference) {
+  .sl-live::before { animation: sl-puls 1.4s ease-in-out infinite; }
+}
+@keyframes sl-puls { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.sl-uhr { font-family: var(--fh-font-display); font-size: 28px; font-variant-numeric: tabular-nums; }
+.sl-feld {
+  position: relative;
+  border-radius: var(--fh-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--fh-border);
+  background:
+    radial-gradient(40% 50% at 25% 50%, color-mix(in srgb, var(--fh-cold) 14%, transparent), transparent 70%),
+    radial-gradient(40% 50% at 75% 50%, color-mix(in srgb, var(--fh-violett) 16%, transparent), transparent 70%),
+    #03040c;
+}
+.sl-canvas { display: block; width: 100%; height: clamp(300px, 52vh, 520px); cursor: crosshair; }
+.sl-banner {
+  display: flex;
+  height: 44px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--fh-border);
+  font-weight: 700;
+}
+.sl-banner-m, .sl-banner-a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  min-width: 0;
+  white-space: nowrap;
+  transition: width 1.2s var(--fh-ease);
+}
+.sl-banner-m { justify-content: flex-start; background: linear-gradient(90deg, color-mix(in srgb, var(--fh-cold) 70%, #000), var(--fh-cold)); color: #03101c; width: 50%; }
+.sl-banner-a { justify-content: flex-end; background: linear-gradient(90deg, var(--fh-violett), color-mix(in srgb, var(--fh-violett) 60%, #000)); color: #fff; width: 50%; }
+.sl-banner-name { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
+.sl-banner-zahl-m, .sl-banner-zahl-a { font-variant-numeric: tabular-nums; }
+.sl-steuer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.sl-ziel-info { margin: 0; color: var(--fh-muted-fg); }
+.sl-spezial {
+  font: inherit; font-weight: 700;
+  padding: 11px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--fh-gold);
+  background: color-mix(in srgb, var(--fh-gold) 20%, transparent);
+  color: var(--fh-fg);
+  cursor: pointer;
+}
+.sl-spezial:not(:disabled):hover, .sl-spezial:focus-visible { background: var(--fh-gold); color: var(--fh-bg); outline: none; }
+.sl-spezial:disabled { opacity: .55; cursor: default; }
+.sl-status { margin: 0; min-height: 1.4em; color: var(--fh-muted-fg); }
+.sl-status.ist-fehler { color: var(--fh-danger); }
+
+.sl-hinweis { display: grid; gap: 8px; padding: 28px; border-radius: var(--fh-radius-lg); border: 1px solid var(--fh-border); background: var(--fh-surface); }
+.sl-hinweis-titel { margin: 0; font-family: var(--fh-font-display); font-size: 24px; }
+.sl-hinweis-text { margin: 0; color: var(--fh-muted-fg); }
+
+.sl-sieger {
+  --akzent: var(--fh-gold);
+  position: relative;
+  overflow: hidden;
+  display: grid; justify-items: center; gap: 6px;
+  padding: 40px 20px;
+  text-align: center;
+  border-radius: var(--fh-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--akzent) 50%, transparent);
+  background: radial-gradient(70% 90% at 50% 30%, color-mix(in srgb, var(--akzent) 22%, transparent), transparent 70%), var(--fh-surface);
+}
+.sl-sieger.ist-menschen { --akzent: var(--fh-cold); }
+.sl-sieger.ist-aliens { --akzent: var(--fh-violett); }
+.sl-sieger-kicker { margin: 0; letter-spacing: .25em; text-transform: uppercase; font-size: 12px; color: var(--akzent); }
+.sl-sieger-titel { margin: 0; font-family: var(--fh-font-display); font-size: clamp(30px, 6vw, 52px); }
+.sl-sieger-stand { margin: 0; font-size: 20px; font-variant-numeric: tabular-nums; color: var(--fh-muted-fg); }
+.sl-funken { position: absolute; inset: 0; pointer-events: none; }
+.sl-funken span {
+  position: absolute; left: var(--x); bottom: -10px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--akzent);
+  box-shadow: 0 0 10px var(--akzent);
+  opacity: 0;
+  animation: sl-funke 2.4s var(--fh-ease) var(--d) infinite both;
+}
+@keyframes sl-funke {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(-260px) scale(.4); opacity: 0; }
+}
+
+.sl-ruhm { display: grid; gap: 10px; }
+.sl-ruhm-titel { margin: 0; font-family: var(--fh-font-display); font-size: 24px; }
+.sl-leer { margin: 0; color: var(--fh-muted-fg); }
+.sl-ruhm-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.sl-ruhm-eintrag { display: grid; gap: 6px; padding: 12px 16px; border-radius: var(--fh-radius); border: 1px solid var(--fh-border); background: var(--fh-surface); border-left: 4px solid var(--fh-gold); }
+.sl-ruhm-eintrag.ist-menschen { border-left-color: var(--fh-cold); }
+.sl-ruhm-eintrag.ist-aliens { border-left-color: var(--fh-violett); }
+.sl-ruhm-kopf { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+.sl-ruhm-datum { color: var(--fh-muted-fg); font-variant-numeric: tabular-nums; }
+.sl-ruhm-stand { margin-left: auto; font-variant-numeric: tabular-nums; }
+.sl-ruhm-helden { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.sl-held { font-size: 13px; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--fh-cold) 16%, transparent); }
+.sl-held.ist-aliens { background: color-mix(in srgb, var(--fh-violett) 18%, transparent); }
+
+.fh-schlacht-hinweis {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: var(--fh-z-toast);
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--fh-2100-kante, var(--fh-border));
+  background: var(--fh-2100-glas, var(--fh-surface));
+  color: var(--fh-2100-text, var(--fh-fg));
+  box-shadow: 0 0 24px rgba(80,120,255,.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.fh-schlacht-hinweis-punkt { width: 9px; height: 9px; border-radius: 50%; background: var(--fh-danger); box-shadow: 0 0 10px var(--fh-danger); }
+.fh-schlacht-hinweis-knopf { font: inherit; font-weight: 700; padding: 7px 14px; border-radius: 999px; border: 0; background: var(--fh-2100-cyan, var(--fh-cold)); color: var(--fh-bg); cursor: pointer; }
+@media (max-width: 760px) {
+  .fh-schlacht-hinweis { left: 16px; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); justify-content: space-between; }
+  .sl-banner-name { display: none; }
+}
