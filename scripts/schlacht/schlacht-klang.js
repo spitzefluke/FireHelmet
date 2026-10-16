@@ -16,12 +16,15 @@
    Soundeffekte je Waffe (wie schlacht-fx.js), gedrosselt, damit
    Dauerfeuer nicht zum Rauschen wird.
 
-   Startet beim Oeffnen der Schlachtseite (der Klick dorthin erlaubt
-   dem Browser den Ton), stoppt beim Verlassen. Ein/Aus wird im
-   Browser gemerkt (localStorage "fhSchlachtTon").
+   Laeuft auf der Schlachtseite UND im Hangar: Jede Seite meldet sich
+   mit start(wer) an und mit stop(wer) ab; die Musik spielt, solange
+   eine angemeldet ist - beim Wechsel Hangar <-> Schlacht laeuft sie
+   ohne Neustart weiter. Der Klick auf die Seite erlaubt dem Browser
+   den Ton. Ein/Aus wird im Browser gemerkt (localStorage
+   "fhSchlachtTon") und gilt fuer beide Seiten.
 
    API (window.fhSchlachtKlang):
-     start(), stop(), setzeAn(bool), istAn(), spannung(0..1),
+     start(wer), stop(wer), setzeAn(bool), istAn(), spannung(0..1),
      akzent("runde" | "spezial" | "sieg"), sfx(art, laut)
 ====================================================== */
 
@@ -43,6 +46,7 @@
   let ctx = null, master = null, musikBus = null, sfxBus = null, rauschen = null;
   let an = (function () { try { return localStorage.getItem(SPEICHER) !== "aus"; } catch (e) { return true; } })();
   let laeuft = false;
+  const besitzer = new Set();   // Seiten, die gerade Musik wollen ("schlacht", "hangar")
   let planer = null, naechste = 0, schritt = 0;
   let spannungZiel = 0, spannungJetzt = 0;
   let mp3 = null, mp3Url = null, mp3Gesucht = false, mp3Uhr = null;
@@ -252,9 +256,12 @@
     if (ctx && ctx.state === "suspended" && laeuft && an) ctx.resume();
   }
 
-  function start() {
+  function start(wer) {
+    besitzer.add(wer || "schlacht");
+    const schonDa = laeuft && (planer || (mp3 && !mp3.paused));
     laeuft = true;
     if (!an) return;
+    if (schonDa) { if (ctx && ctx.state === "suspended") ctx.resume(); return; }
     if (!kontext()) return;
     if (ctx.state === "suspended") ctx.resume().catch(function () { /* wartet auf Klick */ });
     /* Ohne frischen Klick bleibt der Kontext stumm - der erste Tipp
@@ -264,7 +271,15 @@
     musikStarten();
   }
 
-  function stop() {
+  /* Erst einen Augenblick spaeter wirklich stoppen: beim Seitenwechsel
+     meldet sich die alte Seite ab, bevor die neue sich anmeldet
+     (Hangar -> Schlacht) - die Musik soll dann durchlaufen. */
+  function stop(wer) {
+    besitzer.delete(wer || "schlacht");
+    setTimeout(function () { if (!besitzer.size && laeuft) aus(); }, 0);
+  }
+
+  function aus() {
     laeuft = false;
     musikStoppen();
     if (ctx) {
@@ -277,7 +292,7 @@
     an = !!wert;
     try { localStorage.setItem(SPEICHER, an ? "an" : "aus"); } catch (e) { /* egal */ }
     if (!an) { musikStoppen(); masterAuf(0, 0.3); }
-    else if (laeuft) start();
+    else if (laeuft) { laeuft = false; start(besitzer.values().next().value); }
   }
 
   function spannung(wert) {

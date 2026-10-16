@@ -283,8 +283,42 @@
     return !!(s && s.classList.contains("active-page"));
   }
 
+  /* Musik: die Schlachtmusik (schlacht-klang.js) laeuft auch im Hangar,
+     ruhig (ohne Spannung). Ein/Aus gilt fuer Hangar und Schlacht. */
+  const SVG_TON = function (pfade) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + pfade + "</svg>";
+  };
+  /* lucide (ISC): volume-2, volume-x */
+  const LAUTSPRECHER = '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/>';
+  const TON_AN = SVG_TON(LAUTSPRECHER + '<path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>');
+  const TON_AUS = SVG_TON(LAUTSPRECHER + '<line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>');
+  function klang() { return window.fhSchlachtKlang || null; }
+
+  function tonKnopf() {
+    const kopf = document.querySelector("#hangar .hg-kopf");
+    if (!kopf || !klang()) return;
+    let k = document.getElementById("hangar-ton");
+    if (!k) {
+      k = el("button", "hg-ton");
+      k.type = "button";
+      k.id = "hangar-ton";
+      k.addEventListener("click", function () { klang().setzeAn(!klang().istAn()); tonKnopf(); });
+      kopf.appendChild(k);
+    }
+    const an = klang().istAn();
+    k.innerHTML = an ? TON_AN : TON_AUS;   // festes SVG
+    k.setAttribute("aria-pressed", an ? "true" : "false");
+    k.setAttribute("aria-label", an ? t("schlacht.tonAus", "Ton ausschalten") : t("schlacht.tonAn", "Ton einschalten"));
+    k.title = k.getAttribute("aria-label");
+  }
+
   window.updateHangarPage = function (pageID) {
-    if (pageID !== "hangar") return;
+    if (pageID !== "hangar") {
+      if (klang()) klang().stop("hangar");
+      return;
+    }
+    if (klang() && ist2100()) { klang().start("hangar"); klang().spannung(0); }
+    tonKnopf();
     zeichnen();
     Promise.resolve(window.fhSeite ? window.fhSeite.laden() : null)
       .then(laden)

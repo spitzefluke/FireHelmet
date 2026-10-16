@@ -320,6 +320,8 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, feldB, feldH);
     sterne(jetzt);
+    /* Grossschiffe ziehen hinter dem Gefecht vorbei (schlacht-fx.js). */
+    if (fx() && fx().hintergrund) fx().hintergrund(ctx, feldB, feldH, jetzt, dpr, RUHIG.matches);
 
     const laeuft = schlacht && schlacht.status === "laeuft";
     const lebende = layout.filter(lebendig);
@@ -660,7 +662,7 @@
     document.addEventListener("keydown", tasten);
     const zu = b.querySelector(".sl-zu");
     if (zu) zu.focus({ preventScroll: true });
-    if (klang()) klang().start();
+    if (klang()) klang().start("schlacht");
     tonKnopf();
   }
 
@@ -671,7 +673,7 @@
     document.documentElement.classList.remove("fh-schlacht-offen");
     document.removeEventListener("keydown", tasten);
     cancelAnimationFrame(bild); bild = 0;
-    if (klang()) klang().stop();
+    if (klang()) klang().stop("schlacht");
   }
 
   function tasten(ev) { if (ev.key === "Escape") verlassen(); }

@@ -2000,7 +2000,22 @@ html.fh-2100 #race > .race-ruht {
    Menschen kalt-blau, Aliens violett mit gruenem Kern - wie im Film.
 ===================================================== */
 .hg-seite { max-width: 1040px; margin: 0 auto; display: grid; gap: 20px; }
-.hg-kopf { display: grid; gap: 6px; }
+.hg-kopf { display: grid; gap: 6px; position: relative; padding-right: 56px; }
+/* Ton der Schlachtmusik im Hangar (hangar.js) - wie der Knopf der Schlacht. */
+.hg-ton {
+  position: absolute; top: 0; right: 0;
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--fh-border);
+  background: rgba(255, 255, 255, .04);
+  color: var(--fh-fg);
+  cursor: pointer;
+  transition: background var(--fh-dauer) var(--fh-ease), border-color var(--fh-dauer) var(--fh-ease);
+}
+.hg-ton svg { width: 20px; height: 20px; }
+.hg-ton:hover, .hg-ton:focus-visible { background: color-mix(in srgb, var(--fh-cold) 22%, transparent); border-color: var(--fh-cold); outline: none; }
+.hg-ton[aria-pressed="false"] { opacity: .6; }
 .hg-oberzeile { margin: 0; font-family: var(--fh-font-display); letter-spacing: .3em; text-transform: uppercase; font-size: 12px; color: var(--fh-cold); }
 .hg-lead { margin: 0; color: var(--fh-muted-fg); }
 #hangar-inhalt { display: grid; gap: 18px; }
