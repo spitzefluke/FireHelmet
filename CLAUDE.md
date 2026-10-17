@@ -171,6 +171,16 @@ abrechnet. Wer eine Regel ändert, ändert sie in der Tabelle, nicht im Browser.
 erst mit der Freigabe `schlachtOrte` (Live-Event → Freigaben, Migration 56); vorher sieht nur
 der Admin die Orte über `fhSchlachtOrte.vorschau()` („Kampforte ansehen“).
 
+Seit 57 gibt es sechs **Parteien** (Menschen, Aliens, Piraten, Maschinen, Kristall, Geister) mit je
+vier Schiffstypen; Werte und Spezialangriffe stehen in `schlacht_parteien` und `schlacht_typen`,
+nicht mehr in Fallunterscheidungen. Mit der Freigabe `schlachtParteien` wählt der Admin beim Start
+zwei Parteien, und die Schlacht beginnt mit einer Sammelphase (`schlacht_wahl`,
+`schlacht_partei_waehlen()`). Intern bleiben die Slots `menschen` (links) und `aliens` (rechts) –
+welche Partei darin kämpft, sagen `partei_links`/`partei_rechts` und `sternenschlacht_einheiten.partei`.
+Im Browser ist `seite` bei `fhSchiffe.zeichnen()` immer die **Partei**; ein neuer Typ braucht
+Einträge in `hangar-data.js`, `schiffe.js` (Form), `schlacht-fx.js` (Waffe), `i18n.js` und
+`schlacht_typen`.
+
 ### Datenbank und Anmeldung
 
 Supabase ist die einzige Datenbank **und** die einzige Anmeldung (Firebase ist vollständig

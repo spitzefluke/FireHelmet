@@ -15,9 +15,8 @@
    NACH MIGRATION 50 (endlose Schlacht in Runden, Typwechsel frei)
    schlagen T4 bis T7 hier absichtlich fehl - sie pruefen das alte
    Verhalten von 49. Dann gilt 50-endlose-schlacht.test.sql.
-   NACH Migration 55 bricht der Test ab: admin_schlacht_starten hat
-   dort den zweiten Parameter p_ort bekommen, die Fassung mit nur
-   (integer) gibt es nicht mehr. Massgeblich sind dann 50 und 55.
+   T8 sucht admin_schlacht_starten nach Namen, nicht nach Signatur -
+   die Funktion hat in 55 und 57 neue Parameter bekommen.
 ====================================================== */
 do $$
 declare
@@ -138,7 +137,8 @@ begin
     and has_function_privilege('anon', 'public.schlacht_ziel(text)', 'execute') = false
     and has_function_privilege('authenticated', 'public.schlacht_ziel(text)', 'execute') = true
     and has_function_privilege('authenticated', 'app.schlacht_abschliessen(bigint)', 'execute') = false
-    and has_function_privilege('anon', 'public.admin_schlacht_starten(integer)', 'execute') = false;
+    and has_function_privilege('anon', (select p.oid from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                              where n.nspname = 'public' and p.proname = 'admin_schlacht_starten'), 'execute') = false;
   ausgabe := ausgabe || case when ok = true then 'PASS' else 'FAIL' end || '  T8 Rechte' || E'\n';
 
   raise notice '%', ausgabe;

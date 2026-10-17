@@ -38,6 +38,16 @@
    Start-Animation laeuft einmal je Schlacht und Geraet; ueber die
    Orts-Plakette im Kopf laesst sie sich wiederholen.
 
+   PARTEIEN (Migration 57): Mit der Freigabe "schlachtParteien" waehlt
+   der Admin beim Start zwei von sechs Parteien. Dann beginnt die
+   Schlacht mit einer SAMMELPHASE: statt des Schlachtfelds die Wahl von
+   Partei und Schiffstyp (schlacht_partei_waehlen) mit Countdown bis
+   beginn_at. Danach stellt die Datenbank die Flotten auf. Waehrend
+   des Kampfs oeffnet "Partei & Schiff" dieselbe Wahl als Tafel ueber
+   dem Feld (gilt ab der naechsten Runde). Intern bleiben die Slots
+   "menschen" (links) und "aliens" (rechts); Namen, Farben und Schiffe
+   kommen von partei_links/partei_rechts bzw. der Partei der Einheit.
+
    Alle 3 s holt der Browser den Stand und die neuen Aktionen (fuer
    die Treffer-Effekte); die Datenbank bleibt massgeblich.
 
@@ -93,6 +103,11 @@
   let zeitVersatz = 0;       // Serverzeit minus Geraetezeit in ms
   let ereignisRunde = null, ereignisK = 0;
   const INTRO_SPEICHER = "fhSchlachtIntro";
+  let meineStufen = null;    // Hangar-Stufen fuer die Wahl-Karten (57)
+  let wahlLaeuft = false;
+  let wahlOffen = false;     // Wahl-Tafel ueber dem Feld (Kampfphase)
+  let lobbyUhr = null;
+  let startAngestossen = null;
 
   /* ------------------------------------------------------
      DATEN
@@ -116,9 +131,19 @@
     return (schlacht && (schlacht.runde_at || schlacht.start_at)) || new Date().toISOString();
   }
 
-  function seitenName(seite) {
-    return seite === "menschen" ? t("seiten.menschen.name", "Die Erdflotte") : t("seiten.aliens.name", "Der Schwarm");
+  /* PARTEIEN (57): Slot -> Partei, Namen und Farben. */
+  function parteiVon(slot) {
+    if (slot === "menschen") return (schlacht && schlacht.partei_links) || "menschen";
+    return (schlacht && schlacht.partei_rechts) || "aliens";
   }
+  function parteiName(p) { return typeof schlachtParteiText === "function" ? schlachtParteiText(p, "name") : p; }
+  function parteiVolk(p) { return typeof schlachtParteiText === "function" ? schlachtParteiText(p, "volk") : p; }
+  function parteiFarbe(p) { return window.fhSchiffe && window.fhSchiffe.farbe ? window.fhSchiffe.farbe(p).akzent : "#f0c96a"; }
+  function seitenName(seite) { return parteiName(parteiVon(seite)); }
+  /* "Die Erdflotte" -> "die Erdflotte" mitten im Satz */
+  function klein(name) { return name.replace(/^(Die|Der|Das|The) /, function (m) { return m.toLowerCase(); }); }
+  function mitWahl() { return !!(schlacht && schlacht.mit_wahl); }
+  function sammelphase() { return !!(schlacht && schlacht.status === "laeuft" && schlacht.mit_wahl && schlacht.aufgestellt === false); }
 
   /* Neue Runde: wer hat die letzte gewonnen? */
   function rundeGemeldet() {
@@ -126,7 +151,7 @@
     if (!lr || !seiteOffen()) return;
     const text = lr.sieger === "unentschieden"
       ? t("schlacht.rundeRemis", "Runde {n}: unentschieden.").replace("{n}", lr.nr)
-      : t("schlacht.rundeSieg", "Runde {n} geht an {seite}!").replace("{n}", lr.nr).replace("{seite}", seitenName(lr.sieger).replace(/^(Die|Der|The) /, function (m) { return m.toLowerCase(); }));
+      : t("schlacht.rundeSieg", "Runde {n} geht an {seite}!").replace("{n}", lr.nr).replace("{seite}", klein(seitenName(lr.sieger)));
     status(text + " " + t("schlacht.rundeNeu", "Die Flotten formieren sich neu."), false);
     ["menschen", "aliens"].forEach(function (s2) {
       wellen.push({ seite: s2, wirkung: "heilung", t0: performance.now(), farbe: "#55c878" });
@@ -154,17 +179,22 @@
         if (stand.status === "vorbei" && schlacht.status === "laeuft") schlacht.status = "vorbei";
         if (stand.ende_at) schlacht.ende_at = stand.ende_at;
         if (stand.runde) { schlacht.runde = stand.runde; schlacht.runde_at = stand.runde_at; }
+        if (stand.phase) schlacht.aufgestellt = stand.phase === "kampf";
       }
+      if (fx() && fx().parteien) fx().parteien(parteiVon("menschen"), parteiVon("aliens"));
+      if (mitWahl() && !meineStufen && meineUid) await stufenLaden();
       /* Einheiten je Schlacht und Runde einmal laden - nicht an
          schlacht haengen, das setzt auch die Hinweis-Pruefung
          (hinweisPruefen). */
-      const schluessel = schlacht ? schlacht.id + ":" + (schlacht.runde || 1) : null;
+      const schluessel = schlacht ? schlacht.id + ":" + (schlacht.runde || 1) + ":" + (sammelphase() ? "s" : "k") : null;
       if (schlacht && einheitenFuer !== schluessel) {
         const id = schlacht.id;
-        const neueRunde = einheitenFuer && einheitenFuer.split(":")[0] === String(id);
+        const alt = einheitenFuer ? einheitenFuer.split(":") : [];
+        const neueRunde = alt[0] === String(id) && alt[1] !== String(schlacht.runde || 1);
         einheiten = (await q(function () {
           return supabaseClient.from("sternenschlacht_einheiten")
-            .select("firebase_uid, nickname, seite, typ, leben, schaden, spezial, spezial_at").eq("schlacht_id", id);
+            .select(mitWahl() ? "firebase_uid, nickname, seite, partei, typ, leben, schaden, spezial, spezial_at"
+              : "firebase_uid, nickname, seite, typ, leben, schaden, spezial, spezial_at").eq("schlacht_id", id);
         }) || []).map(function (e) {
           return istKi(e.firebase_uid) ? Object.assign({}, e, { nickname: t("schlacht.ki", "Übungsflotte") }) : e;
         });
@@ -180,11 +210,23 @@
         if (neueRunde) rundeGemeldet();
       }
       if (!schlacht || schlacht.status !== "laeuft" || !ruhm.length) ruhm = await q(function () {
-        return supabaseClient.from("sternenschlacht").select("id, start_at, sieger, endstand_menschen, ruhm, endlos, punkte_menschen, punkte_aliens")
+        return supabaseClient.from("sternenschlacht").select("*")
           .eq("status", "vorbei").order("id", { ascending: false }).limit(12);
       }) || [];
     } catch (err) {
       console.warn("Sternenschlacht: Laden fehlgeschlagen:", err);
+    }
+  }
+
+  /* Hangar-Stufen fuer die Wahl-Karten (gelten fuer jeden Typ). */
+  async function stufenLaden() {
+    try {
+      const h = await q(function () {
+        return supabaseClient.from("hangar_einheiten").select("stufe_leben, stufe_schaden, stufe_spezial").eq("firebase_uid", meineUid).maybeSingle();
+      });
+      meineStufen = { leben: h ? h.stufe_leben : 0, schaden: h ? h.stufe_schaden : 0, spezial: h ? h.stufe_spezial : 0 };
+    } catch (err) {
+      meineStufen = { leben: 0, schaden: 0, spezial: 0 };
     }
   }
 
@@ -232,7 +274,7 @@
         const h1 = hash(e.firebase_uid), h2 = hash(e.firebase_uid + "y");
         const stufen = istKi(e.firebase_uid) || !window.fhSchiffe ? { leben: 0, schaden: 0, spezial: 0 } : window.fhSchiffe.stufenAus(e);
         layout.push({
-          e: e, seite: seite, i: i, anzahl: liste.length,
+          e: e, seite: seite, partei: e.partei || parteiVon(seite), i: i, anzahl: liste.length,
           tiefe: h1, quer: h2,
           g: 0.8 + 0.4 * Math.sqrt(e.leben / max),
           phase: h1 * 6.28,
@@ -292,7 +334,7 @@
 
   function schussVon(von, nach, stark) {
     if (!fx() || !von || !nach) return;
-    fx().schuss(von, nach, { typ: von.e.typ, seite: von.seite, stark: stark, beimTreffer: beimTreffer });
+    fx().schuss(von, nach, { typ: von.e.typ, seite: von.partei, stark: stark, beimTreffer: beimTreffer });
     if (klang() && (stark || Math.random() < 0.3)) klang().sfx(fx().WAFFEN[von.e.typ] || "laser", stark);
   }
 
@@ -301,7 +343,7 @@
     const nach = a.ziel_uid ? findeUid(a.ziel_uid) : null;
     if (a.art === "ziel" && von && nach) schussVon(von, nach, true);
     if (a.art === "spezial") {
-      wellen.push({ seite: a.betroffen, wirkung: a.wirkung, t0: performance.now(), farbe: a.seite === "menschen" ? "#6fd3ff" : "#9dff6a" });
+      wellen.push({ seite: a.betroffen, wirkung: a.wirkung, t0: performance.now(), farbe: parteiFarbe(parteiVon(a.seite)) });
       if (klang()) klang().akzent("spezial");
     }
   }
@@ -318,7 +360,8 @@
       const von = lebende[Math.floor(Math.random() * lebende.length)];
       const eigene = lebende.filter(function (p) { return p.seite === von.seite && p !== von; });
       const gegner = lebende.filter(function (p) { return p.seite !== von.seite; });
-      const pool = von.e.typ === "traeger" && eigene.length ? eigene : gegner;
+      const heilt = fx() && fx().WAFFEN[von.e.typ] === "reparatur";   // Traeger, Schmuggler, Fabrik, Monolith
+      const pool = heilt && eigene.length ? eigene : gegner;
       if (!pool.length) continue;
       schussVon(von, pool[Math.floor(Math.random() * pool.length)], false);
     }
@@ -346,7 +389,7 @@
     layout.forEach(function (p) { if (seiten[0] === "beide" || seiten.indexOf(p.seite) >= 0) p.trefferT = jetzt; });
     if (klang()) klang().akzent("ereignis");
     const wen = seiten.length > 1 || seiten[0] === "beide" ? t("schlacht.ereignis.beide", "beide Flotten")
-      : seitenName(seiten[0]).replace(/^(Die|Der|The) /, function (m) { return m.toLowerCase(); });
+      : klein(seitenName(seiten[0]));
     status(t("schlacht.ereignis.text", "{e} trifft {wen}!").replace("{e}", orte().ereignisName(o.ort_id)).replace("{wen}", wen), false);
   }
 
@@ -385,7 +428,7 @@
       layout.forEach(function (p) {
         if (lebendVorher.has(p.e.firebase_uid) && !jetztLebend.has(p.e.firebase_uid)) {
           const P = pos(p, jetzt);
-          if (fx()) fx().explosion(P.x, P.y, p.seite, schiffBreite(p) * 0.35);
+          if (fx()) fx().explosion(P.x, P.y, p.partei, schiffBreite(p) * 0.35);
           if (klang()) klang().sfx("explosion");
         }
       });
@@ -401,7 +444,7 @@
       const treffer = p.trefferT ? Math.max(0, 1 - (jetzt - p.trefferT) / 380) : 0;
       if (window.fhSchiffe) {
         window.fhSchiffe.zeichnen(ctx, {
-          typ: p.e.typ, seite: p.seite, stufen: p.stufen, x: P.x, y: P.y, winkel: P.winkel,
+          typ: p.e.typ, seite: p.partei, stufen: p.stufen, x: P.x, y: P.y, winkel: P.winkel,
           breite: breite, dpr: dpr, zeit: jetzt, phase: p.phase, treffer: treffer, ruhig: RUHIG.matches,
         });
       }
@@ -489,6 +532,11 @@
     "schon": ["schlacht.fehler.schon", "Dein Spezialangriff ist in dieser Runde schon verbraucht."],
     "laedt": ["schlacht.fehler.laedt", "Dein Spezialangriff lädt noch."],
     "gesperrt": ["schlacht.fehler.gesperrt", "Dein Konto ist gesperrt."],
+    "sammeln": ["schlacht.fehler.sammeln", "Die Schlacht beginnt gleich – du bist dabei."],
+    "keine-wahl": ["schlacht.fehler.keineWahl", "Wähle zuerst Partei und Schiff."],
+    "falsche-partei": ["schlacht.fehler.partei", "Diese Partei kämpft hier nicht mit."],
+    "falscher-typ": ["schlacht.fehler.typ", "Dieses Schiff gehört nicht zu der Partei."],
+    "partei-fest": ["schlacht.fehler.parteiFest", "Du kämpfst in dieser Schlacht schon für die andere Seite – das Schiff darfst du wechseln."],
   };
   function status(text, istFehler) {
     const s = document.getElementById("schlacht-status");
@@ -581,7 +629,7 @@
     const gm = Math.round(pm);   // ganze Prozent, die zusammen 100 ergeben
     b.querySelector(".sl-banner-zahl-m").textContent = gm + " %";
     b.querySelector(".sl-banner-zahl-a").textContent = (100 - gm) + " %";
-    b.setAttribute("aria-label", t("seiten.menschen.volk", "Menschen") + " " + gm + " %, " + t("seiten.aliens.volk", "Aliens") + " " + (100 - gm) + " %");
+    b.setAttribute("aria-label", parteiVolk(parteiVon("menschen")) + " " + gm + " %, " + parteiVolk(parteiVon("aliens")) + " " + (100 - gm) + " %");
     /* Musik: Spannung, sobald eine Seite unter 25 % ihres Lebens faellt. */
     const rm = stand.menschen ? Number(stand.menschen.rest) : 1, ra = stand.aliens ? Number(stand.aliens.rest) : 1;
     const knapp = Math.min(rm, ra);
@@ -595,14 +643,17 @@
     if (punkte && stand && stand.ok && stand.endlos) {
       const pm = stand.punkte_menschen || 0, pa = stand.punkte_aliens || 0;
       punkte.textContent = pm + " : " + pa;
-      punkte.setAttribute("aria-label", t("schlacht.rundensiege", "Rundensiege") + ": " + t("seiten.menschen.volk", "Menschen") + " " + pm + ", " + t("seiten.aliens.volk", "Aliens") + " " + pa);
+      punkte.setAttribute("aria-label", t("schlacht.rundensiege", "Rundensiege") + ": " + parteiVolk(parteiVon("menschen")) + " " + pm + ", " + parteiVolk(parteiVon("aliens")) + " " + pa);
     }
     const k = document.getElementById("schlacht-spezial");
     if (!k) return;
     const ich = einheiten.find(function (e) { return e.firebase_uid === meineUid; });
     if (!ich) { k.hidden = true; return; }
     k.hidden = false;
-    const warten = ich.seite === "menschen" ? 60000 : 30000;
+    /* Ladezeit je Partei (57) mal Ort (55) - wie app.schlacht_spezial. */
+    const P = typeof SCHLACHT_PARTEIEN !== "undefined" ? SCHLACHT_PARTEIEN[ich.partei || parteiVon(ich.seite)] : null;
+    const laden2 = ortZeile && ortZeile.laden ? Number(ortZeile.laden) : 1;
+    const warten = Math.round((P ? P.laden : (ich.seite === "menschen" ? 60 : 30)) * laden2) * 1000;
     const ab = Date.parse(rundeStart()) + warten;
     const name = t("hangar.typ." + ich.typ + ".spezial", (HANGAR_TYPEN[ich.typ] || {}).spezial || "Spezial");
     if (spezialGenutzt) { k.disabled = true; k.textContent = name + " · " + t("schlacht.verbraucht", "verbraucht"); }
@@ -622,8 +673,11 @@
     const liste = el("ol", "sl-ruhm-liste");
     ruhm.forEach(function (r) {
       const li = el("li", "sl-ruhm-eintrag ist-" + (r.sieger || "unentschieden"));
+      const pl = r.partei_links || "menschen", pr = r.partei_rechts || "aliens";
+      const siegerPartei = r.sieger === "menschen" ? pl : r.sieger === "aliens" ? pr : null;
+      if (siegerPartei) li.dataset.partei = siegerPartei;
       const datum = new Date(r.start_at).toLocaleDateString(typeof getCurrentLang === "function" && getCurrentLang() === "en" ? "en-GB" : "de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
-      const sieger = r.sieger === "menschen" ? t("seiten.menschen.name", "Die Erdflotte") : r.sieger === "aliens" ? t("seiten.aliens.name", "Der Schwarm") : t("schlacht.unentschieden", "Unentschieden");
+      const sieger = siegerPartei ? parteiName(siegerPartei) : t("schlacht.unentschieden", "Unentschieden");
       const kopf = el("div", "sl-ruhm-kopf");
       kopf.append(el("span", "sl-ruhm-datum", datum), el("strong", "sl-ruhm-sieger", sieger),
         el("span", "sl-ruhm-stand", r.endlos ? rundenText(r.punkte_menschen, r.punkte_aliens) : standText(r.endstand_menschen)));
@@ -632,6 +686,7 @@
       ["menschen", "aliens"].forEach(function (s) {
         ((r.ruhm && r.ruhm[s]) || []).forEach(function (hd) {
           const span = el("span", "sl-held ist-" + s);
+          span.dataset.partei = s === "menschen" ? pl : pr;
           span.textContent = (hd.nickname || "?") + " · " + Math.round(hd.schaden);
           helden.appendChild(span);
         });
@@ -729,6 +784,7 @@
     document.documentElement.classList.remove("fh-schlacht-offen");
     document.removeEventListener("keydown", tasten);
     cancelAnimationFrame(bild); bild = 0;
+    clearInterval(lobbyUhr); lobbyUhr = null;
     if (orte()) orte().introAbbrechen();
     if (klang()) klang().stop("schlacht");
   }
@@ -794,7 +850,8 @@
     function seite(sx) {
       return layout.filter(function (p) { return p.seite === sx; }).map(function (p) { return { typ: p.e.typ, stufen: p.stufen }; });
     }
-    orte().intro(b, { ortId: ortZeile.ort_id, ort: ortZeile, menschen: seite("menschen"), aliens: seite("aliens"), runde: schlacht.runde || 1, klang: klang() })
+    orte().intro(b, { ortId: ortZeile.ort_id, ort: ortZeile, menschen: seite("menschen"), aliens: seite("aliens"), runde: schlacht.runde || 1, klang: klang(),
+      links: parteiVon("menschen"), rechts: parteiVon("aliens") })
       .then(function () { const zu = b.querySelector(".sl-zu"); if (zu && !b.hidden) zu.focus({ preventScroll: true }); });
   }
 
@@ -807,6 +864,7 @@
     ziel2.classList.remove("ist-feld");
     canvas = ctx = null;
     cancelAnimationFrame(bild); bild = 0;
+    clearInterval(lobbyUhr); lobbyUhr = null;
 
     if (!ist2100()) {
       lageZeigen(false);
@@ -825,12 +883,19 @@
       return;
     }
 
+    if (sammelphase()) {
+      lageZeigen(true);
+      lobbyZeigen(ziel2);
+      return;
+    }
+
     lageZeigen(true);
     ziel2.classList.add("ist-feld");
     const feld = el("div", "sl-feld");
     canvas = el("canvas", "sl-canvas");
     canvas.setAttribute("role", "img");
-    canvas.setAttribute("aria-label", t("schlacht.feldAria", "Schlachtfeld: Menschen links, Aliens rechts"));
+    canvas.setAttribute("aria-label", t("schlacht.feldAriaP", "Schlachtfeld: {l} links, {r} rechts")
+      .replace("{l}", parteiVolk(parteiVon("menschen"))).replace("{r}", parteiVolk(parteiVon("aliens"))));
     canvas.addEventListener("click", klickAufFeld);
     feld.appendChild(canvas);
 
@@ -839,8 +904,10 @@
     banner.id = "schlacht-banner";
     banner.setAttribute("role", "img");
     const m = el("div", "sl-banner-m"), a = el("div", "sl-banner-a");
-    m.append(el("span", "sl-banner-name", t("seiten.menschen.volk", "Menschen")), el("span", "sl-banner-zahl-m"));
-    a.append(el("span", "sl-banner-zahl-a"), el("span", "sl-banner-name", t("seiten.aliens.volk", "Aliens")));
+    m.dataset.partei = parteiVon("menschen");
+    a.dataset.partei = parteiVon("aliens");
+    m.append(el("span", "sl-banner-name", parteiVolk(parteiVon("menschen"))), el("span", "sl-banner-zahl-m"));
+    a.append(el("span", "sl-banner-zahl-a"), el("span", "sl-banner-name", parteiVolk(parteiVon("aliens"))));
     banner.append(m, a);
 
     const steuer = el("div", "sl-steuer");
@@ -852,17 +919,37 @@
     sp.hidden = true;
     sp.addEventListener("click", spezial);
     steuer.append(info, sp);
+    if (mitWahl()) {
+      /* Partei und Schiff fuer die naechste Runde (57) */
+      const dabei = einheiten.some(function (e) { return e.firebase_uid === meineUid; });
+      const wk = el("button", "sl-wahl-knopf", dabei ? t("schlacht.wahl.wechseln", "Schiff wechseln") : t("schlacht.wahl.knopf", "Partei & Schiff wählen"));
+      wk.type = "button";
+      wk.id = "schlacht-wahl-knopf";
+      wk.setAttribute("aria-expanded", "false");
+      wk.addEventListener("click", function () { wahlTafelZeigen(!wahlOffen); });
+      steuer.appendChild(wk);
+    }
     const st = el("p", "sl-status");
     st.id = "schlacht-status";
     st.setAttribute("role", "status");
     st.setAttribute("aria-live", "polite");
 
     if (!einheiten.some(function (e) { return e.firebase_uid === meineUid; })) {
-      st.textContent = angemeldet() ? t("schlacht.fehler.dabei", "Du kämpfst noch nicht mit – wähle eine Seite, dann bist du ab der nächsten Runde dabei.") : t("schlacht.anmelden", "Melde dich an, um mitzukämpfen.");
+      st.textContent = !angemeldet() ? t("schlacht.anmelden", "Melde dich an, um mitzukämpfen.")
+        : mitWahl() && stand && stand.meine_wahl ? t("schlacht.fehler.runde", "Du steigst in der nächsten Runde ein.")
+        : mitWahl() ? t("schlacht.wahl.spaeter", "Wähle Partei und Schiff – ab der nächsten Runde bist du dabei.")
+        : t("schlacht.fehler.dabei", "Du kämpfst noch nicht mit – wähle eine Seite, dann bist du ab der nächsten Runde dabei.");
     }
 
     fuss.append(banner, steuer, st);
     ziel2.append(feld, fuss);
+    if (mitWahl()) {
+      const ueber = el("div", "sl-wahl-ueber");
+      ueber.id = "schlacht-wahl-ueber";
+      ueber.hidden = true;
+      feld.appendChild(ueber);
+      wahlOffen = false;
+    }
     ctx = canvas.getContext("2d");
     canvasEinpassen();
     bannerAuffrischen();
@@ -892,7 +979,9 @@
   function siegerBanner() {
     const s = stand.sieger;
     const b = el("div", "sl-sieger ist-" + (s || "unentschieden"));
-    const name = s === "menschen" ? t("seiten.menschen.name", "Die Erdflotte") : s === "aliens" ? t("seiten.aliens.name", "Der Schwarm") : null;
+    const sp = s === "menschen" ? (stand.partei_links || "menschen") : s === "aliens" ? (stand.partei_rechts || "aliens") : null;
+    if (sp) b.dataset.partei = sp;
+    const name = sp ? parteiName(sp) : null;
     b.append(
       el("p", "sl-sieger-kicker", t("schlacht.ende", "Die Schlacht ist geschlagen")),
       el("h2", "sl-sieger-titel", name ? name + " " + t("schlacht.siegt", "siegt!") : t("schlacht.unentschieden", "Unentschieden")),
@@ -913,16 +1002,186 @@
   }
 
   /* ------------------------------------------------------
+     SAMMELPHASE UND WAHL (Migration 57)
+  ------------------------------------------------------ */
+  function serverJetzt() { return Date.now() + zeitVersatz; }
+
+  function countdownText() {
+    const ms = Math.max(0, Date.parse(schlacht.beginn_at || schlacht.runde_at) - serverJetzt());
+    const sek = Math.ceil(ms / 1000);
+    return String(Math.floor(sek / 60)).padStart(2, "0") + ":" + String(sek % 60).padStart(2, "0");
+  }
+
+  function lobbyZeigen(ziel2) {
+    const box = el("section", "sl-lobby");
+    box.setAttribute("aria-labelledby", "sl-lobby-titel");
+    const kopf = el("div", "sl-lobby-kopf");
+    const titel = el("h2", "sl-lobby-titel", t("schlacht.wahl.titel", "Die Flotten sammeln sich"));
+    titel.id = "sl-lobby-titel";
+    const uhr = el("p", "sl-lobby-uhr");
+    uhr.id = "schlacht-countdown";
+    uhr.setAttribute("aria-live", "off");
+    kopf.append(
+      el("p", "sl-lobby-kicker", t("schlacht.wahl.kicker", "Wähle deine Seite für diese Schlacht")),
+      titel,
+      uhr,
+      el("p", "sl-lobby-text", t("schlacht.wahl.text", "Wähle eine Partei und eines ihrer Schiffe. Deine Hangar-Ausbauten gelten für jedes Schiff."))
+    );
+    const tafel = el("div", "sl-wahl");
+    tafel.id = "schlacht-wahl";
+    const st = el("p", "sl-status");
+    st.id = "schlacht-status";
+    st.setAttribute("role", "status");
+    st.setAttribute("aria-live", "polite");
+    if (!angemeldet()) st.textContent = t("schlacht.anmelden", "Melde dich an, um mitzukämpfen.");
+    box.append(kopf, tafel, st);
+    ziel2.appendChild(box);
+    wahlAuffrischen();
+    lobbyTakt();
+    lobbyUhr = setInterval(lobbyTakt, 250);
+  }
+
+  /* Countdown; bei 0 einmal den Stand holen - dort stellt die
+     Datenbank die Flotten auf (schlacht_sammeln_beenden). */
+  function lobbyTakt() {
+    if (!sammelphase() || !seiteOffen()) { clearInterval(lobbyUhr); lobbyUhr = null; return; }
+    const text = countdownText();
+    const u = document.getElementById("schlacht-countdown");
+    if (u) u.textContent = t("schlacht.wahl.start", "Start in") + " " + text;
+    const kopfUhr = document.getElementById("schlacht-uhr");
+    if (kopfUhr) kopfUhr.textContent = text;
+    if (text === "00:00" && startAngestossen !== schlacht.id) {
+      startAngestossen = schlacht.id;
+      tick();
+    }
+  }
+
+  /* Die Wahl-Tafel: zwei Parteien mit je vier Schiffen. In der
+     Sammelphase in der Seite, im Kampf ueber dem Feld. */
+  function wahlTafelZeigen(an) {
+    const ueber = document.getElementById("schlacht-wahl-ueber");
+    const knopf = document.getElementById("schlacht-wahl-knopf");
+    if (!ueber) return;
+    wahlOffen = !!an;
+    ueber.hidden = !wahlOffen;
+    if (knopf) knopf.setAttribute("aria-expanded", wahlOffen ? "true" : "false");
+    if (!wahlOffen) return;
+    ueber.replaceChildren();
+    const kopf = el("div", "sl-wahl-ueber-kopf");
+    kopf.appendChild(el("h3", "sl-wahl-ueber-titel", t("schlacht.wahl.naechste", "Für die nächste Runde")));
+    const zu = el("button", "sl-rund-knopf");
+    zu.type = "button";
+    zu.setAttribute("aria-label", t("schlacht.wahl.zu", "Wahl schließen"));
+    zu.innerHTML = SYM_ZU;   // festes SVG
+    zu.addEventListener("click", function () { wahlTafelZeigen(false); if (knopf) knopf.focus({ preventScroll: true }); });
+    kopf.appendChild(zu);
+    const tafel = el("div", "sl-wahl");
+    tafel.id = "schlacht-wahl";
+    ueber.append(kopf, tafel);
+    wahlAuffrischen();
+  }
+
+  function wahlAuffrischen() {
+    const tafel = document.getElementById("schlacht-wahl");
+    if (!tafel || !schlacht) return;
+    const meine = stand && stand.meine_wahl;
+    const ich = einheiten.find(function (e) { return e.firebase_uid === meineUid; });
+    const fest = ich ? (ich.partei || parteiVon(ich.seite)) : null;
+    const zahlen = (stand && stand.wahl) || {};
+    tafel.replaceChildren();
+    ["menschen", "aliens"].forEach(function (slot) {
+      const partei = parteiVon(slot);
+      const spalte = el("section", "sl-wahl-partei");
+      spalte.dataset.partei = partei;
+      const gesperrt = !!(fest && fest !== partei);
+      spalte.classList.toggle("ist-gesperrt", gesperrt);
+      const kopf = el("div", "sl-wahl-partei-kopf");
+      const n = slot === "menschen" ? zahlen.links : zahlen.rechts;
+      kopf.append(
+        el("h3", "sl-wahl-partei-name", parteiName(partei)),
+        el("p", "sl-wahl-partei-text", typeof schlachtParteiText === "function" ? schlachtParteiText(partei, "text") : ""),
+        el("p", "sl-wahl-partei-zahl", (n || 0) + " " + t("schlacht.wahl.kaempfer", "Kämpfer"))
+      );
+      const typen = el("div", "sl-wahl-typen");
+      typen.setAttribute("role", "group");
+      typen.setAttribute("aria-label", parteiName(partei));
+      (HANGAR_REIHENFOLGE[partei] || []).forEach(function (typ) {
+        typen.appendChild(wahlKarte(partei, typ, !!(meine && meine.partei === partei && meine.typ === typ), gesperrt));
+      });
+      spalte.append(kopf, typen);
+      tafel.appendChild(spalte);
+    });
+  }
+
+  function wahlKarte(partei, typ, aktiv, gesperrt) {
+    const T = HANGAR_TYPEN[typ];
+    const st = meineStufen || { leben: 0, schaden: 0, spezial: 0 };
+    const w = hangarWerte(typ, st, partei);
+    const b = el("button", "sl-wahl-typ" + (aktiv ? " ist-aktiv" : ""));
+    b.type = "button";
+    b.setAttribute("aria-pressed", aktiv ? "true" : "false");
+    b.disabled = gesperrt;
+    const bildBox = el("span", "sl-wahl-bild");
+    if (window.fhSchiffe) bildBox.appendChild(window.fhSchiffe.bild(typ, partei, st, 116));
+    const name = t("hangar.typ." + typ + ".name", T.name);
+    const werte = el("span", "sl-wahl-werte",
+      t("hangar.wert.leben", "Leben") + " " + Math.round(w.leben * w.anzahl) + " · " + t("schlacht.wahl.schaden", "Schaden") + " " + Math.round(w.schaden * w.anzahl * 10) / 10);
+    b.append(
+      bildBox,
+      el("span", "sl-wahl-name", name + (w.anzahl > 1 ? " ×" + w.anzahl : "")),
+      el("span", "sl-wahl-rolle", t("hangar.typ." + typ + ".rolle", T.rolle)),
+      werte,
+      el("span", "sl-wahl-spezial", t("hangar.typ." + typ + ".spezial", T.spezial) + ": " + t("hangar.typ." + typ + ".spezialText", T.spezialText))
+    );
+    b.addEventListener("click", function () { if (!aktiv) waehlen(partei, typ); });
+    return b;
+  }
+
+  async function waehlen(partei, typ) {
+    if (wahlLaeuft || !dbDa()) return;
+    wahlLaeuft = true;
+    try {
+      const erg = await rpc("schlacht_partei_waehlen", { p_partei: partei, p_typ: typ });
+      if (!erg) return;
+      if (erg.ok) {
+        const vorher = stand && stand.meine_wahl;
+        stand = Object.assign({}, stand || {}, { meine_wahl: { partei: partei, typ: typ } });
+        /* Zaehler sofort anpassen - der naechste Takt holt die echten. */
+        if (stand.wahl && (!vorher || vorher.partei !== partei)) {
+          const w2 = Object.assign({}, stand.wahl);
+          const slot = partei === parteiVon("menschen") ? "links" : "rechts";
+          w2[slot] = (w2[slot] || 0) + 1;
+          if (vorher) { const alt = slot === "links" ? "rechts" : "links"; w2[alt] = Math.max(0, (w2[alt] || 0) - 1); }
+          stand.wahl = w2;
+        }
+        wahlAuffrischen();
+        if (klang() && fx()) klang().sfx(fx().WAFFEN[typ] || "laser", true);
+        const name = t("hangar.typ." + typ + ".name", HANGAR_TYPEN[typ].name);
+        status((erg.ab === "start" ? t("schlacht.wahl.ok", "{typ} für {partei} – du bist beim Start dabei.")
+          : t("schlacht.wahl.okRunde", "{typ} für {partei} – ab der nächsten Runde.")).replace("{typ}", name).replace("{partei}", klein(parteiName(partei))), false);
+      } else {
+        fehler(erg.grund);
+      }
+    } catch (err) {
+      console.warn("Sternenschlacht: Wahl fehlgeschlagen:", err);
+      fehler(null);
+    } finally {
+      wahlLaeuft = false;
+    }
+  }
+
+  /* ------------------------------------------------------
      TAKT, SEITE, HINWEIS
   ------------------------------------------------------ */
   async function tick() {
-    const vorher = schlacht ? schlacht.status : null, vorherId = schlacht ? schlacht.id : null;
+    const vorher = schlacht ? schlacht.status : null, vorherId = schlacht ? schlacht.id : null, vorherSammeln = sammelphase();
     await laden();
     await aktionenHolen();
-    const wechsel = !schlacht || schlacht.status !== vorher || schlacht.id !== vorherId;
+    const wechsel = !schlacht || schlacht.status !== vorher || schlacht.id !== vorherId || sammelphase() !== vorherSammeln;
     if (seiteOffen()) {
-      if (wechsel || !canvas) aufbauen();
-      else bannerAuffrischen();
+      if (sammelphase()) { if (wechsel || !document.getElementById("schlacht-wahl")) aufbauen(); else wahlAuffrischen(); }
+      else if (wechsel || !canvas) aufbauen();
+      else { bannerAuffrischen(); if (wahlOffen) wahlAuffrischen(); }
     }
     hinweisAuffrischen();
   }
@@ -958,14 +1217,15 @@
     const zeigen = ist2100() && schlacht && schlacht.status === "laeuft"
       && (!schlacht.ende_at || Date.parse(schlacht.ende_at) > Date.now()) && !seiteOffen();
     if (!zeigen) { if (h) h.remove(); return; }
-    if (h) return;
+    const text = sammelphase() ? t("schlacht.hinweisWahl", "Die Flotten sammeln sich – wähle deine Partei!") : t("schlacht.hinweis", "Sternenschlacht läuft!");
+    if (h) { const tx = h.querySelector(".fh-schlacht-hinweis-text"); if (tx && tx.textContent !== text) tx.textContent = text; return; }
     h = el("div", "fh-schlacht-hinweis");
     h.id = "fh-schlacht-hinweis";
     h.setAttribute("role", "status");
     const k = el("button", "fh-schlacht-hinweis-knopf", t("schlacht.hinweisKnopf", "Jetzt mitkämpfen"));
     k.type = "button";
     k.addEventListener("click", function () { if (typeof changePage === "function") changePage("sternenschlacht"); });
-    h.append(el("span", "fh-schlacht-hinweis-punkt"), el("span", "fh-schlacht-hinweis-text", t("schlacht.hinweis", "Sternenschlacht läuft!")), k);
+    h.append(el("span", "fh-schlacht-hinweis-punkt"), el("span", "fh-schlacht-hinweis-text", text), k);
     document.body.appendChild(h);
   }
 

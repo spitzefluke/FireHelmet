@@ -2637,3 +2637,146 @@ html.fh-schlacht-offen, html.fh-schlacht-offen body { overflow: hidden; }
 /* Das Banner "Sternenschlacht laeuft!" gehoert nicht ueber die
    Vorschau oder die Buehne selbst. */
 html.fh-schlacht-offen #fh-schlacht-hinweis { display: none; }
+
+/* =====================================================
+   STERNENSCHLACHT: PARTEIEN (Migration 57)
+   ---------------------------------------------------
+   Jede Partei bringt ihre Akzentfarbe als --partei mit (data-partei).
+   Sammelphase: .sl-lobby mit der Wahl-Tafel .sl-wahl (zwei Parteien,
+   je vier Schiffe). Im Kampf liegt dieselbe Tafel in .sl-wahl-ueber
+   ueber dem Feld.
+===================================================== */
+[data-partei="menschen"] { --partei: var(--fh-cold); --partei-text: #03101c; }
+[data-partei="aliens"] { --partei: var(--fh-violett); --partei-text: #fff; }
+[data-partei="piraten"] { --partei: var(--fh-fire); --partei-text: #1a0a02; }
+[data-partei="maschinen"] { --partei: var(--fh-danger); --partei-text: #fff; }
+[data-partei="kristall"] { --partei: var(--fh-kristall); --partei-text: #2a0620; }
+[data-partei="geister"] { --partei: var(--fh-geist); --partei-text: #021a12; }
+
+.sl-banner-m[data-partei] { background: linear-gradient(90deg, color-mix(in srgb, var(--partei) 70%, #000), var(--partei)); color: var(--partei-text); }
+.sl-banner-a[data-partei] { background: linear-gradient(90deg, var(--partei), color-mix(in srgb, var(--partei) 60%, #000)); color: #fff; }
+.sl-sieger[data-partei] { --akzent: var(--partei); }
+.sl-ruhm-eintrag[data-partei] { border-left-color: var(--partei); }
+.sl-held[data-partei] { background: color-mix(in srgb, var(--partei) 18%, transparent); }
+.sl-intro-seite[data-partei] { color: var(--partei); text-shadow: 0 0 18px color-mix(in srgb, var(--partei) 70%, transparent); }
+
+.sl-lobby { display: grid; gap: 18px; }
+.sl-lobby-kopf { display: grid; gap: 6px; justify-items: center; text-align: center; }
+.sl-lobby-kicker { margin: 0; font-size: 11px; letter-spacing: .25em; text-transform: uppercase; color: var(--fh-gold-bright); }
+.sl-lobby-titel { margin: 0; font-family: var(--fh-font-display); font-size: clamp(26px, 5vw, 44px); line-height: 1.05; }
+.sl-lobby-uhr {
+  margin: 4px 0 0;
+  padding: 4px 18px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--fh-gold) 60%, transparent);
+  background: color-mix(in srgb, var(--fh-gold) 12%, transparent);
+  color: var(--fh-gold-bright);
+  font-family: var(--fh-font-display);
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .06em;
+}
+.sl-lobby-text { margin: 0; max-width: 60ch; color: var(--fh-muted-fg); }
+
+.sl-wahl { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.sl-wahl-partei {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--fh-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--partei) 38%, var(--fh-border));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--partei) 14%, var(--fh-surface)), var(--fh-surface) 62%);
+  transition: opacity var(--fh-dauer) var(--fh-ease);
+}
+.sl-wahl-partei.ist-gesperrt { opacity: .45; }
+.sl-wahl-partei-kopf { display: grid; gap: 2px; }
+.sl-wahl-partei-name { margin: 0; font-family: var(--fh-font-display); font-size: 22px; color: var(--partei); }
+.sl-wahl-partei-text { margin: 0; font-size: 13px; color: var(--fh-muted-fg); }
+.sl-wahl-partei-zahl { margin: 4px 0 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--fh-fg); }
+.sl-wahl-typen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.sl-wahl-typ {
+  display: grid;
+  gap: 3px;
+  align-content: start;
+  min-width: 0;
+  padding: 10px;
+  border-radius: var(--fh-radius);
+  border: 1px solid var(--fh-border);
+  background: rgba(255, 255, 255, .03);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--fh-dauer) var(--fh-ease), background var(--fh-dauer) var(--fh-ease), transform var(--fh-dauer) var(--fh-ease), box-shadow var(--fh-dauer) var(--fh-ease);
+}
+.sl-wahl-typ:not(:disabled):hover, .sl-wahl-typ:focus-visible {
+  border-color: var(--partei);
+  background: color-mix(in srgb, var(--partei) 10%, transparent);
+  transform: translateY(-2px);
+  outline: none;
+}
+.sl-wahl-typ.ist-aktiv {
+  border-color: var(--partei);
+  background: color-mix(in srgb, var(--partei) 16%, transparent);
+  box-shadow: 0 0 0 1px var(--partei), 0 0 24px color-mix(in srgb, var(--partei) 30%, transparent);
+}
+.sl-wahl-typ:disabled { cursor: not-allowed; }
+.sl-wahl-bild canvas { display: block; width: 100%; max-width: 116px; height: auto; margin: 0 auto; }
+.sl-wahl-name { font-weight: 700; }
+.sl-wahl-typ.ist-aktiv .sl-wahl-name { color: var(--partei); }
+.sl-wahl-rolle, .sl-wahl-spezial { font-size: 12px; color: var(--fh-muted-fg); }
+.sl-wahl-werte { font-size: 12px; font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) {
+  .sl-wahl { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Wahl waehrend des Kampfs: Knopf in der Steuerung, Tafel ueber dem Feld */
+.sl-wahl-knopf {
+  font: inherit; font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--fh-border-strong);
+  background: rgba(255, 255, 255, .04);
+  color: var(--fh-fg);
+  cursor: pointer;
+}
+.sl-wahl-knopf:hover, .sl-wahl-knopf:focus-visible, .sl-wahl-knopf[aria-expanded="true"] { border-color: var(--fh-gold-bright); outline: none; }
+.sl-wahl-ueber {
+  position: absolute;
+  inset: 8px;
+  z-index: 2;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  overflow-y: auto;
+  padding: 14px;
+  border-radius: var(--fh-radius-lg);
+  border: 1px solid var(--fh-border-strong);
+  background: rgba(3, 4, 12, .92);
+}
+.sl-wahl-ueber[hidden] { display: none; }
+.sl-wahl-ueber-kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sl-wahl-ueber-titel { margin: 0; font-family: var(--fh-font-display); font-size: 20px; }
+
+/* Hangar: die Schiffe der anderen Parteien (nur mit Freigabe) */
+.hg-parteien { display: grid; gap: 14px; margin-top: 8px; }
+.hg-parteien-titel { margin: 0; font-family: var(--fh-font-display); font-size: 22px; }
+.hg-parteien-text { margin: 0; color: var(--fh-muted-fg); }
+.hg-parteien-liste { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.hg-partei {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: var(--fh-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--partei) 35%, var(--fh-border));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--partei) 12%, var(--fh-surface)), var(--fh-surface) 65%);
+}
+.hg-partei-name { margin: 0; font-family: var(--fh-font-display); font-size: 18px; color: var(--partei); }
+.hg-partei-text { margin: 0; font-size: 12px; color: var(--fh-muted-fg); }
+.hg-partei-typen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.hg-partei-typ { display: grid; justify-items: center; gap: 2px; min-width: 0; font-size: 12px; text-align: center; }
+.hg-partei-typ .hg-schiff canvas { display: block; width: 100%; max-width: 110px; height: auto; }
+.hg-partei-typ-name { font-weight: 700; }
+.hg-partei-typ-werte { color: var(--fh-muted-fg); font-variant-numeric: tabular-nums; }

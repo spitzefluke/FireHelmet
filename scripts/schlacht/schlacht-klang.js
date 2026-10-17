@@ -366,6 +366,18 @@
         break;
       }
       case "brut": [1200, 1420, 1650].forEach(function (f, k) { ton("sine", f, t + k * 0.05, 0.05, 0.04 * L, sfxBus); }); break;
+      /* Parteien (57) */
+      case "breitseite": [0, 0.08, 0.16].forEach(function (d) { geraeusch(t + d, 0.18, 0.07 * L, sfxBus, "lowpass", 700, 120); ton("sine", 90, t + d, 0.16, 0.08 * L, sfxBus); }); break;
+      case "rail": { const o = ton("sawtooth", 2600, t, 0.12, 0.04 * L, sfxBus, { hz: 5000 }); o.frequency.exponentialRampToValueAtTime(200, t + 0.12); ton("sine", 60, t, 0.2, 0.1 * L, sfxBus); break; }
+      case "splitter": [2400, 3100, 2750].forEach(function (f, k) { ton("triangle", f, t + k * 0.03, 0.06, 0.03 * L, sfxBus); }); break;
+      case "schall": {
+        const o = ton("sine", 320, t, 0.4, 0.05 * L, sfxBus);
+        o.frequency.exponentialRampToValueAtTime(760, t + 0.36);
+        const lfo = ctx.createOscillator(), tief = ctx.createGain();
+        lfo.frequency.value = 9; tief.gain.value = 40;
+        lfo.connect(tief); tief.connect(o.frequency); lfo.start(t); lfo.stop(t + 0.42);
+        break;
+      }
       case "explosion":
         geraeusch(t, 0.7, 0.22 * L, sfxBus, "lowpass", 1400, 160);
         { const o = ton("sine", 75, t, 0.4, 0.3 * L, sfxBus); o.frequency.exponentialRampToValueAtTime(30, t + 0.4); }

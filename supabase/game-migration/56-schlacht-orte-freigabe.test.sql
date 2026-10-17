@@ -57,7 +57,8 @@ begin
   /* T4: die Hilfsfunktion ist nur intern. */
   ok := has_function_privilege('authenticated', 'app.schlacht_orte_frei()', 'execute') = false
     and has_function_privilege('anon', 'app.schlacht_orte_frei()', 'execute') = false
-    and has_function_privilege('authenticated', 'public.admin_schlacht_starten(integer, text)', 'execute') = true;
+    and has_function_privilege('authenticated', (select p.oid from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                              where n.nspname = 'public' and p.proname = 'admin_schlacht_starten'), 'execute') = true;
   ausgabe := ausgabe || case when ok = true then 'PASS' else 'FAIL' end || '  T4 Rechte' || E'\n';
 
   raise notice '%', ausgabe;

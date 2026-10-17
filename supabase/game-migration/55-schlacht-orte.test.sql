@@ -128,7 +128,8 @@ begin
     and has_table_privilege('authenticated', 'public.schlacht_orte', 'insert') = false
     and has_table_privilege('authenticated', 'public.schlacht_orte', 'update') = false
     and has_function_privilege('authenticated', 'app.schlacht_ort(bigint)', 'execute') = false
-    and has_function_privilege('anon', 'public.admin_schlacht_starten(integer, text)', 'execute') = false;
+    and has_function_privilege('anon', (select p.oid from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                              where n.nspname = 'public' and p.proname = 'admin_schlacht_starten'), 'execute') = false;
   ausgabe := ausgabe || case when ok = true then 'PASS' else 'FAIL' end || '  T7 Rechte' || E'\n';
 
   raise notice '%', ausgabe;

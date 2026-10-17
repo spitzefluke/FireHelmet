@@ -14,6 +14,16 @@
      weber      netz       Netzfaden, am Ziel ein Netz
      brutschiff brut       drei Mini-Drohnen schwaermen aus
 
+   Parteien aus Migration 57:
+     kaper laser, brigant doppel, galeone breitseite (drei Kugeln),
+     schmuggler reparatur; sonde puls, waechter strahl, zerstoerer
+     rail (Sofortstrahl), fabrik reparatur; splitter splitter (drei
+     Kristallspitzen), prisma strahl, resonator schall (Schallboegen),
+     monolith reparatur; irrlicht puls, phantom laser, banshee schall,
+     totenschiff breitseite.
+   Farben, Treffer und Explosionen richten sich nach der PARTEI des
+   Schiffs (layout-Objekt: partei, sonst seite).
+
    Ziele und Schuetzen sind Objekte aus dem Layout von schlacht.js;
    ihre Position liefert die Funktion pos(objekt, jetzt), die beim
    Zeichnen uebergeben wird - so folgen Schuesse den schwebenden
@@ -24,7 +34,8 @@
    Schlachtkreuzer und Traeger der Erdflotte von links, Mutterschiffe
    des Schwarms von rechts (Formen aus scripts/hangar/schiffe.js, voll
    ausgebaut). Hoechstens zwei zugleich, mit Positionslichtern. Bei
-   "Bewegung reduzieren" keine.
+   "Bewegung reduzieren" keine. Mit anderen Parteien (57) kommen ihre
+   Grossschiffe - parteien(links, rechts) setzt sie.
 
    API (window.fhSchlachtFx):
      schuss(von, nach, { typ, seite, stark, beimTreffer })
@@ -32,6 +43,7 @@
      zeichnen(ctx, pos, jetzt)
      hintergrund(ctx, breite, hoehe, jetzt, dpr, ruhig)
      leeren()
+     parteien(links, rechts)
      WAFFEN
 ====================================================== */
 
@@ -41,12 +53,30 @@
   const WAFFEN = {
     jaeger: "laser", fregatte: "doppel", kreuzer: "strahl", traeger: "reparatur",
     drohne: "puls", stachel: "plasma", weber: "netz", brutschiff: "brut",
+    kaper: "laser", brigant: "doppel", galeone: "breitseite", schmuggler: "reparatur",
+    sonde: "puls", waechter: "strahl", zerstoerer: "rail", fabrik: "reparatur",
+    splitter: "splitter", prisma: "strahl", resonator: "schall", monolith: "reparatur",
+    irrlicht: "puls", phantom: "laser", banshee: "schall", totenschiff: "breitseite",
   };
-  const DAUER = { laser: 260, doppel: 320, strahl: 380, reparatur: 650, puls: 420, plasma: 760, netz: 700, brut: 950 };
+  const DAUER = {
+    laser: 260, doppel: 320, strahl: 380, reparatur: 650, puls: 420, plasma: 760, netz: 700, brut: 950,
+    breitseite: 620, rail: 300, splitter: 360, schall: 640,
+  };
   const FARBE = {
     menschen: { schuss: "#8fe3ff", kern: "#ffffff", glut: "rgba(111,211,255,.35)" },
     aliens: { schuss: "#a6ff6e", kern: "#f0ffe0", glut: "rgba(157,255,106,.35)" },
+    piraten: { schuss: "#ffb36a", kern: "#fff3dc", glut: "rgba(255,138,61,.35)" },
+    maschinen: { schuss: "#ff6a5a", kern: "#ffe9e4", glut: "rgba(255,59,59,.35)" },
+    kristall: { schuss: "#ff9ae4", kern: "#ffffff", glut: "rgba(255,122,217,.35)" },
+    geister: { schuss: "#7dffd2", kern: "#f0fff8", glut: "rgba(93,255,200,.35)" },
   };
+  /* Explosionsglut je Partei (r,g,b) */
+  const GLUT = {
+    menschen: "255,190,120", aliens: "190,255,140", piraten: "255,170,90",
+    maschinen: "255,110,90", kristall: "255,170,235", geister: "150,255,215",
+  };
+  function partei(obj) { return (obj && (obj.partei || obj.seite)) || "menschen"; }
+  function stilVon(p) { return window.fhSchiffe && window.fhSchiffe.stil ? window.fhSchiffe.stil(p) : (p === "aliens" ? "organisch" : "metall"); }
   const HEIL = "#55e08a";
   const MAX_SCHUESSE = 160;
 
@@ -60,7 +90,7 @@
     const art = WAFFEN[o.typ] || "laser";
     if (schuesse.length >= MAX_SCHUESSE) schuesse.shift();
     schuesse.push({
-      art: art, von: von, nach: nach, seite: o.seite || "menschen", stark: !!o.stark,
+      art: art, von: von, nach: nach, seite: o.seite || partei(von), stark: !!o.stark,
       t0: performance.now(), dauer: DAUER[art] * (o.stark ? 1.15 : 1),
       beimTreffer: o.beimTreffer || null, getroffen: false,
       bogen: (Math.random() - 0.5) * 2, versatz: Math.random() * 6.283,
@@ -163,8 +193,12 @@
 
   function treffer(s, B) {
     s.getroffen = true;
-    funken.push({ x: B.x, y: B.y, t0: performance.now(), art: s.art === "reparatur" ? "heil" : (s.nach.seite === "menschen" ? "schild" : "splash"), stark: s.stark });
-    if (s.art === "plasma") explosion(B.x, B.y, s.seite, s.stark ? 26 : 18);
+    const zp = partei(s.nach), sl = stilVon(zp);
+    funken.push({
+      x: B.x, y: B.y, t0: performance.now(), stark: s.stark, farbe: (FARBE[zp] || FARBE.menschen).schuss,
+      art: s.art === "reparatur" ? "heil" : sl === "metall" ? "schild" : sl === "kristall" ? "facette" : "splash",
+    });
+    if (s.art === "plasma" || (s.art === "breitseite" && s.stark)) explosion(B.x, B.y, s.seite, s.stark ? 26 : 18);
     if (funken.length > 80) funken.shift();
     if (typeof s.beimTreffer === "function") {
       try { s.beimTreffer(s.nach, s.art); } catch (e) { /* nur Optik */ }
@@ -224,6 +258,54 @@
           miniDrohne(ctx, x, y, Math.atan2(dy, dx), F.schuss);
         }
         break;
+      case "breitseite":
+        /* drei Kanonenkugeln kurz nacheinander, leicht gestreut */
+        for (let k = 0; k < 3; k++) {
+          const g = Math.max(0, Math.min(1, (f - k * 0.1) / 0.8));
+          if (g <= 0 || g >= 1) continue;
+          const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || 1;
+          const quer = (k - 1) * 7 + Math.sin(Math.PI * g) * d * 0.05 * (s.bogen < 0 ? -1 : 1);
+          kugel(ctx, A.x + dx * g - dy / d * quer, A.y + dy * g + dx / d * quer, 2.8 * dick, F.glut, F.schuss);
+        }
+        break;
+      case "rail": {
+        /* Sofortstrahl: blitzt ueber die ganze Strecke und verglueht */
+        const aus = 1 - f;
+        ctx.lineCap = "round";
+        ctx.globalAlpha = 0.35 * aus; ctx.strokeStyle = F.schuss; ctx.lineWidth = 7 * dick;
+        ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+        ctx.globalAlpha = aus; ctx.strokeStyle = F.kern; ctx.lineWidth = 1.6 * dick;
+        ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+        ctx.globalAlpha = 1;
+        break;
+      }
+      case "splitter": {
+        /* drei Kristallspitzen, gefaechert, treffen zusammen */
+        const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || 1, w = Math.atan2(dy, dx);
+        for (let k = -1; k <= 1; k++) {
+          const quer = k * 14 * Math.sin(Math.PI * f);
+          const x = A.x + dx * f - dy / d * quer, y = A.y + dy * f + dx / d * quer;
+          ctx.save(); ctx.translate(x, y); ctx.rotate(w);
+          ctx.fillStyle = F.schuss; ctx.globalAlpha = 0.9;
+          ctx.beginPath(); ctx.moveTo(7 * dick, 0); ctx.lineTo(0, -2.4 * dick); ctx.lineTo(-6 * dick, 0); ctx.lineTo(0, 2.4 * dick); ctx.closePath(); ctx.fill();
+          ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+        break;
+      }
+      case "schall": {
+        /* Schallboegen wandern zum Ziel und werden groesser */
+        const dx = B.x - A.x, dy = B.y - A.y, w = Math.atan2(dy, dx);
+        ctx.strokeStyle = F.schuss; ctx.lineWidth = 2 * dick;
+        for (let k = 0; k < 3; k++) {
+          const g = f - k * 0.12;
+          if (g <= 0 || g >= 1) continue;
+          ctx.globalAlpha = 0.85 * (1 - g * 0.6);
+          ctx.beginPath(); ctx.arc(A.x + dx * g, A.y + dy * g, 6 + g * 14, w - 0.9, w + 0.9); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        break;
+      }
     }
   }
 
@@ -234,8 +316,16 @@
       const r = (k.stark ? 22 : 14) * (0.4 + f);
       ctx.globalAlpha = 1 - f;
       if (k.art === "schild") {
-        ctx.strokeStyle = "#8fe3ff"; ctx.lineWidth = 2;
+        ctx.strokeStyle = k.farbe || "#8fe3ff"; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(k.x, k.y, r, 0, 6.283); ctx.stroke();
+      } else if (k.art === "facette") {
+        ctx.strokeStyle = k.farbe; ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i <= 6; i++) {
+          const w = i * 1.047;
+          if (i === 0) ctx.moveTo(k.x + Math.cos(w) * r, k.y + Math.sin(w) * r); else ctx.lineTo(k.x + Math.cos(w) * r, k.y + Math.sin(w) * r);
+        }
+        ctx.stroke();
       } else if (k.art === "heil") {
         ctx.fillStyle = HEIL;
         for (let i = 0; i < 3; i++) {
@@ -243,7 +333,7 @@
           ctx.fillRect(px - 3, py - 1, 6, 2); ctx.fillRect(px - 1, py - 3, 2, 6);
         }
       } else {
-        ctx.fillStyle = "#c8ff9a";
+        ctx.fillStyle = k.farbe || "#c8ff9a";
         for (let i = 0; i < 6; i++) {
           const w = i * 1.047 + k.t0;
           ctx.beginPath(); ctx.arc(k.x + Math.cos(w) * r, k.y + Math.sin(w) * r, 1.8, 0, 6.283); ctx.fill();
@@ -257,7 +347,7 @@
     explosionen = explosionen.filter(function (e) { return jetzt - e.t0 < 1000; });
     explosionen.forEach(function (e) {
       const f = (jetzt - e.t0) / 1000, s = f;
-      const farbe = e.seite === "menschen" ? "255,190,120" : "190,255,140";
+      const farbe = GLUT[e.seite] || GLUT.menschen;
       /* Blitz */
       if (f < 0.25) {
         ctx.globalAlpha = 1 - f / 0.25;
@@ -296,18 +386,30 @@
   /* ------------------------------------------------------
      GROSSSCHIFFE IM HINTERGRUND
   ------------------------------------------------------ */
-  const GROSS_TYPEN = { menschen: ["kreuzer", "traeger", "kreuzer", "fregatte"], aliens: ["brutschiff", "weber", "brutschiff", "stachel"] };
+  const GROSS_TYPEN = {
+    menschen: ["kreuzer", "traeger", "kreuzer", "fregatte"], aliens: ["brutschiff", "weber", "brutschiff", "stachel"],
+    piraten: ["galeone", "brigant", "galeone", "schmuggler"], maschinen: ["zerstoerer", "fabrik", "waechter", "zerstoerer"],
+    kristall: ["monolith", "prisma", "monolith", "resonator"], geister: ["totenschiff", "phantom", "totenschiff", "banshee"],
+  };
+  /* Welche Partei links bzw. rechts kaempft (schlacht.js setzt das). */
+  let grossLinks = "menschen", grossRechts = "aliens";
+  function parteien(links, rechts) {
+    grossLinks = GROSS_TYPEN[links] ? links : "menschen";
+    grossRechts = GROSS_TYPEN[rechts] ? rechts : "aliens";
+  }
   const GROSS_STUFEN = { leben: 5, schaden: 5, spezial: 0 };
   let grosse = [];
   let naechstesGross = 0;
 
   function grossesSchiff(b, h, jetzt) {
-    const seite = Math.random() < 0.5 ? "menschen" : "aliens";
-    const liste = GROSS_TYPEN[seite];
+    const seite = Math.random() < 0.5 ? "menschen" : "aliens";   // Slot: links bzw. rechts
+    const partei2 = seite === "menschen" ? grossLinks : grossRechts;
+    const liste = GROSS_TYPEN[partei2];
     /* Breite auf 64er-Stufen: so bleiben die Sprites im Zwischenspeicher wenige. */
     const breite = Math.round(Math.max(240, Math.min(980, Math.min(b, h * 1.6) * (0.5 + Math.random() * 0.35))) / 64) * 64;
     return {
       seite: seite,
+      partei: partei2,
       typ: liste[Math.floor(Math.random() * liste.length)],
       breite: breite,
       y: h * (0.18 + Math.random() * 0.64),
@@ -334,7 +436,7 @@
       const ein = Math.min(1, f / 0.08, (1 - f) / 0.08);
       ctx.save();
       window.fhSchiffe.zeichnen(ctx, {
-        typ: g.typ, seite: g.seite, stufen: GROSS_STUFEN, x: x, y: y,
+        typ: g.typ, seite: g.partei, stufen: GROSS_STUFEN, x: x, y: y,
         winkel: g.seite === "menschen" ? 0 : Math.PI, breite: g.breite, dpr: dpr,
         zeit: jetzt, phase: g.phase, treffer: 0, ruhig: false, alpha: g.alpha * ein,
       });
@@ -351,5 +453,5 @@
     });
   }
 
-  window.fhSchlachtFx = { schuss: schuss, explosion: explosion, zeichnen: zeichnen, hintergrund: hintergrund, leeren: leeren, WAFFEN: WAFFEN };
+  window.fhSchlachtFx = { schuss: schuss, explosion: explosion, zeichnen: zeichnen, hintergrund: hintergrund, leeren: leeren, parteien: parteien, WAFFEN: WAFFEN };
 })();
