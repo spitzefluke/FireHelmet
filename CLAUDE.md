@@ -167,7 +167,9 @@ Die Schlacht (`scripts/schlacht/`) rechnet allein die Datenbank (Migrationen 49,
 Browser zeigt nur. Seit 55 spielt jede Schlacht an einem **Kampfort** (`schlacht_orte`) mit
 eigenen Faktoren und Ereignissen im festen Takt – `schlacht-orte.js` zeichnet Hintergrund,
 Ereignisse und die Start-Animation zu denselben Zeitpunkten, die `app.schlacht_leben()`
-abrechnet. Wer eine Regel ändert, ändert sie in der Tabelle, nicht im Browser.
+abrechnet. Wer eine Regel ändert, ändert sie in der Tabelle, nicht im Browser. Ausgelost wird
+erst mit der Freigabe `schlachtOrte` (Live-Event → Freigaben, Migration 56); vorher sieht nur
+der Admin die Orte über `fhSchlachtOrte.vorschau()` („Kampforte ansehen“).
 
 ### Datenbank und Anmeldung
 
