@@ -219,6 +219,7 @@ html.fh-2100 #sternenschlacht .sl-seite {
    Bilder-Regel darf es nicht treffen. Zwei IDs und zwei Klassen,
    damit beides die Bilder-Regel (zwei IDs, eine Klasse) schlaegt. */
 html.fh-2100 body > #fh-main #hangar .hg-schiff canvas,
-html.fh-2100 body > #fh-schlacht-buehne #schlacht-inhalt canvas.sl-canvas {
+html.fh-2100 body > #fh-schlacht-buehne #schlacht-inhalt canvas.sl-canvas,
+html.fh-2100 body > #fh-schlacht-buehne #sl-intro-canvas.sl-intro-canvas {
   filter: none;
 }

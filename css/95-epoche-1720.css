@@ -117,7 +117,8 @@ html.fh-1720 dialog[open] :is(img, video, canvas, iframe) {
 
 /* Das Schlachtfeld (Vollbild an body) ist vom Farbfilter ausgenommen -
    also auch von dieser Gegendrehung (zwei IDs, zwei Klassen). */
-html.fh-1720 body > #fh-schlacht-buehne #schlacht-inhalt canvas.sl-canvas {
+html.fh-1720 body > #fh-schlacht-buehne #schlacht-inhalt canvas.sl-canvas,
+html.fh-1720 body > #fh-schlacht-buehne #sl-intro-canvas.sl-intro-canvas {
   filter: none;
 }
 
