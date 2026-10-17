@@ -285,6 +285,50 @@ async function gwAlleSeiten(aus) {
   await gwSeitenSpeichern(aus ? gwSeitenListe().map((s) => s.id) : [], aus ? "✓ Alle Seiten abgeschaltet." : "✓ Alle Seiten wieder an.");
 }
 
+/* ------------------------------------------------------
+   PIRATENPASS #2 FREISCHALTEN (Migration 53)
+   Ein Klick setzt siteConfig.pass2Ab auf JETZT: Ab dann laeuft
+   Pass 2 auf der "???"-Seite 61 Tage und loest Pass 1 ab. Die
+   Datenbank liest denselben Zeitpunkt (app.pass2_start) und gibt
+   erst danach Belohnungen heraus. Zurueckziehen setzt ihn auf null -
+   bereits Abgeholtes bleibt, Pass 1 kommt aber NICHT zurueck, weil
+   die Spieler schon auf season2 gewechselt sind.
+------------------------------------------------------ */
+function buildGatewayPass2Html() {
+  const ab = siteConfig.pass2Ab ? new Date(siteConfig.pass2Ab) : null;
+  const gueltig = ab && !isNaN(ab.getTime());
+  const ende = gueltig ? new Date(ab.getTime() + 61 * 86400000) : null;
+  const lage = !gueltig
+    ? "Noch nicht freigeschaltet. Auf „???“ läuft Pass 1."
+    : `Freigeschaltet seit ${escapeHtml(ab.toLocaleString("de-DE"))}, läuft bis ${escapeHtml(ende.toLocaleString("de-DE"))}.`;
+  return `
+    <p class="gateway-status-sub">${lage}</p>
+    <p class="gateway-status-sub">Pass 2 „Die Seekarte“: 50 Stufen, zwei Spuren (Matrose für alle, Kapitän für 950 Dublonen). Mit der Freigabe endet Pass 1, die Pass-XP starten bei 0. Die Skillpunkte aus Pass 1 bleiben erhalten. Braucht Migration 53.</p>
+    <div class="gw-story-lage-knoepfe">
+      ${gueltig
+        ? `<button type="button" class="gw-live-knopf" onclick="gwPass2Setzen(false)">Freigabe zurückziehen</button>`
+        : `<button type="button" class="gw-live-knopf" onclick="gwPass2Setzen(true)">Pass 2 jetzt freischalten</button>`}
+      ${gueltig ? "" : `<button type="button" class="gw-live-knopf" onclick="window.fhPass2 && window.fhPass2.vorschau(true)">Vorschau ansehen</button>`}
+    </div>
+    <p id="gw-pass2-status" class="gw-live-status" role="status" aria-live="polite"></p>
+  `;
+}
+
+async function gwPass2Setzen(an) {
+  if (!supabaseClient) return;
+  if (an && !confirm("Piratenpass #2 jetzt freischalten? Pass 1 endet damit für alle.")) return;
+  if (!an && !confirm("Freigabe zurückziehen? Pass 2 verschwindet von „???“; Pass 1 kommt nicht zurück.")) return;
+  try {
+    await patchSupabaseSiteConfig({ pass2Ab: an ? new Date().toISOString() : null });
+    if (typeof renderPassPage === "function") renderPassPage();
+    await renderGatewayPage();
+    gwLiveStatus("gw-pass2-status", an ? "✓ Pass 2 läuft." : "✓ Freigabe zurückgezogen.", false);
+  } catch (err) {
+    console.error("Pass 2 konnte nicht umgeschaltet werden:", err);
+    gwLiveStatus("gw-pass2-status", "Speichern fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
 function buildGatewayChapterListHtml() {
   const locked = Array.isArray(siteConfig.lockedChapterIds) ? siteConfig.lockedChapterIds : [];
   return getChapterGroupsForGateway()
@@ -1786,6 +1830,7 @@ const GW_MENUE = [
       { id: "countdown", kurz: "Countdown", titel: "Countdown" },
       { id: "kapitel", kurz: "Kapitel", titel: "Kapitel aktivieren/deaktivieren" },
       { id: "seiten", kurz: "Seiten", titel: "Seiten ein-/ausschalten" },
+      { id: "pass2", kurz: "Piratenpass 2", titel: "Piratenpass #2 freischalten" },
       { id: "band", kurz: "Ankündigung", titel: "Ankündigung & Wartung" },
     ] },
   { id: "spiele", titel: "Spiele",
@@ -1940,6 +1985,7 @@ async function renderGatewayPage() {
       <p id="gateway-save-status" class="wheel-status"></p>`,
     kapitel: `<div class="gateway-chapter-list">${buildGatewayChapterListHtml()}</div>`,
     seiten: buildGatewaySeitenHtml(),
+    pass2: buildGatewayPass2Html(),
     band: buildGatewayBandHtml(),
     spielothek: buildGatewaySpielothekHtml(),
     turnier: `<div id="gateway-tournament-sub">Lade Turnierstatus...</div>`,

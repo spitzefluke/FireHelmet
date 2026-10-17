@@ -136,4 +136,11 @@ const wheelSpecialAvatars = [
   { id: "pass-s1-tier-10-schmuggler", avatar: "🎭", label: "Schmuggler (Piratenpass Stufe 10)" },
   { id: "pass-s1-tier-25-nebelkoenigin", avatar: "🫧", label: "Nebelkönigin (Piratenpass Stufe 25, 3 Tage)", isTemporary: true },
   { id: "pass-s1-tier-30-sturmlaeufer", avatar: "🌊", label: "Sturmläufer (Piratenpass Stufe 30)" },
+  // Piratenpass #2 "Die Seekarte" - vergeben vom Server (public.pass_belohnungen,
+  // Migration 53), freigeschaltet in scripts/piratenpass/pass2.js.
+  { id: "pass-s2-knochenflagge", avatar: "assets/piratenpass/s2/knochenflagge.svg", label: "Flagge: Gekreuzte Knochen (Piratenpass 2, Stufe 40)" },
+  { id: "pass-s2-moewenschrei", avatar: "assets/piratenpass/s2/moewenschrei.svg", label: "Schaluppe „Möwenschrei“ (Piratenpass 2, Kapitän 10)" },
+  { id: "pass-s2-geisterpapagei", avatar: "assets/piratenpass/s2/geisterpapagei.svg", label: "Geisterpapagei (Piratenpass 2, Kapitän 20, 7 Tage)", isTemporary: true },
+  { id: "pass-s2-rote-lilie", avatar: "assets/piratenpass/s2/rote-lilie.svg", label: "Brigg „Rote Lilie“ (Piratenpass 2, Kapitän 30)" },
+  { id: "pass-s2-schwarze-witwe", avatar: "assets/piratenpass/s2/schwarze-witwe.svg", label: "Galeone „Schwarze Witwe“ (Piratenpass 2, Kapitän 50)" },
 ];

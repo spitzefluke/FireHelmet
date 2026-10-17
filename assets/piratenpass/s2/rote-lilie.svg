@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Brigg Rote Lilie">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="30%" r="75%"><stop offset="0" stop-color="#3a1416"/><stop offset="1" stop-color="#120708"/></radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="62" fill="url(#g)" stroke="#c9a227" stroke-width="4"/>
+  <path d="M12 94c12-6 20 4 32-1s20-5 32 0 18 4 30-1c4-1 8 0 10 2v4a52 52 0 0 1-104 0z" fill="#2a1a10"/>
+  <path d="M22 84h84l-10 12H34z" fill="#5a3d22" stroke="#2a1a0c" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M48 22v62M80 26v58" stroke="#2a1a0c" stroke-width="3" stroke-linecap="round"/>
+  <path d="M34 34h28c2 10 2 18 0 26H34c-2-8-2-16 0-26zM36 64h24c2 6 2 12 0 16H36c-2-4-2-10 0-16z" fill="#8b1e1e" stroke="#2a1a0c" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M68 38h24c2 9 2 16 0 22H68c-2-6-2-13 0-22zM70 64h20c2 5 2 10 0 14H70c-2-4-2-9 0-14z" fill="#a52828" stroke="#2a1a0c" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M48 22l12 4-12 4zM80 26l10 3-10 3z" fill="#c9a227"/>
+  <path d="M48 42c-3 4-3 8 0 12 3-4 3-8 0-12zm-6 6c0 4 2 7 6 7-1-4-3-6-6-7zm12 0c-3 1-5 3-6 7 4 0 6-3 6-7z" fill="#f0d27a"/>
+</svg>

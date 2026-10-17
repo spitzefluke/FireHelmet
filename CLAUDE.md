@@ -15,8 +15,8 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 128 `<script defer>`-Tags in fester
-Reihenfolge, davon 114 aus diesem Repo. Sechs große Skripte, die fast niemand braucht
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 129 `<script defer>`-Tags in fester
+Reihenfolge, davon 115 aus diesem Repo. Sechs große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
@@ -143,6 +143,16 @@ Bildschirmrand – feste Hinweise an `body` hängen.
 und hat eine eigene `:not(...)`-Liste – ein neues Live-Element gehört in **beide** Listen.
 Welche Epoche gilt, entscheidet die zuletzt erreichte Zeitmarke (`jahr_1720_ab`,
 `jahr_2100_ab`), siehe `live-storys.js`.
+
+### Piratenpass
+
+Die Saisons stehen in `PIRATE_PASSES` (`scripts/core/progression-data.js`). Pass 1 rechnet
+seine Belohnungen im Browser (`piratenpass.js`, `schatzkarte.js`). **Pass 2 („Die Seekarte“,
+`scripts/piratenpass/pass2.js`) nicht:** Belohnungen, Stand und Abholen liegen in der Datenbank
+(`pass_belohnungen`, `pass_stand()`, `pass_belohnung_holen()`, Migration 53). Er startet, wenn
+der Admin ihn freischaltet (`siteConfig.pass2Ab`), und beendet damit Pass 1. Eine neue Saison
+braucht ihre `pass_id` im Constraint `progression_pass_id_valid` und in
+`app.pass_saison_aktuell()`, sonst lehnt die Datenbank den Wechsel ab.
 
 ### Datenbank und Anmeldung
 

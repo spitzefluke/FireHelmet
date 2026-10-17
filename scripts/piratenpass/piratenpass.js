@@ -144,6 +144,22 @@ async function renderPassPage() {
   const active = typeof getCurrentPirateSeason === "function" ? getCurrentPirateSeason() : null;
   const pass = active || (typeof getLatestEndedPirateSeason === "function" ? getLatestEndedPirateSeason() : null);
 
+  // Pass 2 ("Die Seekarte") hat eine eigene Darstellung und holt
+  // seine Belohnungen beim Server ab - siehe scripts/piratenpass/pass2.js.
+  if (pass && pass.seekarte && window.fhPass2) {
+    window.fhPass2.zeigen(container, { pass, aktiv: !!active });
+    return;
+  }
+  // Admin-Vorschau vor der Freigabe (Knopf im Admin-Panel unter
+  // "Piratenpass 2"). Der Server verweigert dabei Abholen und Kauf.
+  if (window.fhPass2 && window.fhPass2.vorschauAktiv()) {
+    const zweiter = PIRATE_PASSES.find((p) => p.seekarte);
+    if (zweiter) {
+      window.fhPass2.zeigen(container, { pass: zweiter, aktiv: false, vorschau: true });
+      return;
+    }
+  }
+
   if (!pass) {
     const next = typeof getNextPirateSeason === "function" ? getNextPirateSeason() : null;
     const daysUntil = next ? Math.max(0, Math.ceil((resolvePassDates(next).start.getTime() - Date.now()) / 86400000)) : null;

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Schaluppe Möwenschrei">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="30%" r="75%"><stop offset="0" stop-color="#1d3a44"/><stop offset="1" stop-color="#0b161b"/></radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="62" fill="url(#g)" stroke="#c9a227" stroke-width="4"/>
+  <path d="M14 92c10-5 18 5 28 0s18-5 28 0 18 5 28 0 12-4 16-2v18a52 52 0 0 1-100 0z" fill="#12303a"/>
+  <path d="M30 84h66l-9 12H40z" fill="#5a3d22" stroke="#2a1a0c" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M63 26v58" stroke="#2a1a0c" stroke-width="3" stroke-linecap="round"/>
+  <path d="M65 30c16 10 22 30 20 48H65z" fill="#e8d5a8" stroke="#2a1a0c" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M61 36c-10 8-16 24-16 40h16z" fill="#d6c08f" stroke="#2a1a0c" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M63 26l12 4-12 4z" fill="#c9a227"/>
+  <path d="M86 30c3-4 7-4 9 0 2-4 6-4 9 0" fill="none" stroke="#ecdcb0" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M98 44c2-3 5-3 6 0 2-3 5-3 6 0" fill="none" stroke="#a8916a" stroke-width="2" stroke-linecap="round"/>
+</svg>

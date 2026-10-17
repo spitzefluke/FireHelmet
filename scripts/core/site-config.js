@@ -41,6 +41,7 @@ let siteConfig = {
   lockedChapterIds: [], // Kapitel-IDs (siehe stories-data.js), die (noch) gesperrt sind
   disabledGameIds: [], // Spielothek-Spiele-IDs (siehe spielothek-data.js), die der Admin deaktiviert hat
   disabledPageIds: [], // Seiten-IDs (<section id>), die der Admin abgeschaltet hat (siehe scripts/core/seiten-sperre.js)
+  pass2Ab: null, // ISO-String: ab wann Piratenpass #2 laeuft (Admin "Pass 2 freischalten", Migration 53), null = noch nicht
 
   // Kapitel-IDs (beide Sprachvarianten), die automatisch aus
 
@@ -87,6 +88,7 @@ function applySiteConfigSnapshot(data) {
     lockedChapterIds: Array.isArray(data.lockedChapterIds) ? data.lockedChapterIds : [],
     disabledGameIds: Array.isArray(data.disabledGameIds) ? data.disabledGameIds : [],
     disabledPageIds: Array.isArray(data.disabledPageIds) ? data.disabledPageIds.filter((id) => typeof id === "string") : [],
+    pass2Ab: typeof data.pass2Ab === "string" && data.pass2Ab ? data.pass2Ab : null,
     ankuendigung: typeof data.ankuendigung === "string" ? data.ankuendigung : "",
     wartung: data.wartung === true,
     wartungText: typeof data.wartungText === "string" ? data.wartungText : "",
