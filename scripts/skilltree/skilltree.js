@@ -24,7 +24,7 @@
   const SCHMAL = window.matchMedia ? window.matchMedia("(max-width: 700px)") : { matches: false };
   const RUHIG = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
-  let cache = { nodes: null, unlocked: [], passXp: 0, bonus: 0, geladen: false };
+  let cache = { nodes: null, unlocked: [], passXp: 0, bonus: 0, frueher: 0, geladen: false };
   let auswahl = null;   // gewaehlter Stern
   let neu = null;       // gerade freigeschaltet -> Aufflammen
   let beschaeftigt = false;
@@ -98,11 +98,14 @@
       const nodes = {};
       (knotenAntwort.data || []).forEach(function (n) { nodes[n.node_id] = n; });
 
-      let unlocked = [], passXp = 0, bonus = 0;
+      let unlocked = [], passXp = 0, bonus = 0, frueher = 0;
       if (uid) {
         const progAntwort = await withSupabaseRlsColdStartRetry(function () {
           return supabaseClient.from("player_progression")
-            .select("pass_xp, bonus_skill_points, unlocked_skills")
+            /* "*" statt fester Spalten: fruehere_pass_stufen gibt es
+               erst mit Migration 53 - eine feste Liste liesse den ganzen
+               Baum scheitern, solange sie nicht eingespielt ist. */
+            .select("*")
             .eq("firebase_uid", uid).maybeSingle();
         });
         if (progAntwort.error) throw progAntwort.error;
@@ -110,8 +113,9 @@
         unlocked = Array.isArray(p.unlocked_skills) ? p.unlocked_skills : [];
         passXp = p.pass_xp || 0;
         bonus = p.bonus_skill_points || 0;
+        frueher = p.fruehere_pass_stufen || 0;
       }
-      cache = { nodes: nodes, unlocked: unlocked, passXp: passXp, bonus: bonus, geladen: true };
+      cache = { nodes: nodes, unlocked: unlocked, passXp: passXp, bonus: bonus, frueher: frueher, geladen: true };
       window.dispatchEvent(new CustomEvent("fhSkillsGeaendert"));
       return true;
     } catch (err) {
@@ -125,7 +129,9 @@
     cache.unlocked.forEach(function (id) { const n = cache.nodes[id]; if (n) summe += n.kosten || 0; });
     return summe;
   }
-  function verfuegbar() { return Math.max(0, skillLevel(cache.passXp) + cache.bonus - ausgegeben()); }
+  /* frueher: Passstufen aus abgelaufenen Saisons (Migration 53) -
+     dieselbe Rechnung wie app.skill_freischalten(). */
+  function verfuegbar() { return Math.max(0, skillLevel(cache.passXp) + cache.bonus + (cache.frueher || 0) - ausgegeben()); }
 
   function fehlendeVoraussetzungen(id) {
     const n = cache.nodes[id];

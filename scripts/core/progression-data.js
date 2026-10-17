@@ -192,17 +192,25 @@ const PIRATE_PASSES = [
     durationDays: 61, // ~2 Monate
     levels: 50,
     rewards: buildSeason1PassRewards(),
+    // Endet vorzeitig, sobald Pass 2 freigeschaltet ist (resolvePassDates).
+    abgeloestVon: "season2",
   },
 
-  // Naechste Saison einfach hier ergaenzen, z.B.:
-  // {
-  //   passId: "season2",
-  //   name: "Piratenpass #2",
-  //   startDate: "2026-10-19T00:00:00", // normales ISO-Datum
-  //   durationDays: 61,
-  //   levels: 50,
-  //   rewards: buildSeason2PassRewards(),
-  // },
+  /* Pass 2 "Die Seekarte": startet erst, wenn der Admin ihn
+     freischaltet (siteConfig.pass2Ab, Migration 53). Seine
+     Belohnungen stehen NICHT hier, sondern in der Datenbank
+     (public.pass_belohnungen) - abgeholt wird nur ueber den Server,
+     siehe scripts/piratenpass/pass2.js. "seekarte" schaltet dort
+     die Darstellung um. */
+  {
+    passId: "season2",
+    name: "Piratenpass #2",
+    startDate: "@pass2-freigabe",
+    durationDays: 61,
+    levels: 50,
+    rewards: {},
+    seekarte: true,
+  },
 ];
 
 /* ------------------------------------------------------

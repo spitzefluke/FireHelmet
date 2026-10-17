@@ -2920,3 +2920,348 @@
     min-height: 0;
   }
 }
+
+/* =====================================================
+   PIRATENPASS #2: DIE SEEKARTE (scripts/piratenpass/pass2.js)
+   ---------------------------------------------------
+   Nach dem Entwurf "Piratenpass.dc.html": dunkle See, Pergament-
+   Karten, Holzrahmen, Gold fuer Erreichtes, Blutrot fuer die
+   Kapitaensspur. Alle Farben aus den --fh-seekarte-*-Tokens
+   (00-basis.css). Wie Pass 1 nur innerhalb von #streamraetsel-content.
+===================================================== */
+.streamraetsel-unlocked:has(.p2-wrap) {
+  width: 100%;
+  max-width: 1280px;
+  text-align: left;
+}
+
+.p2-wrap {
+  --p2-gutter: clamp(16px, 4vw, 48px);
+  font-family: var(--fh-font-fell);
+  color: var(--fh-seekarte-papier-hell);
+  background: radial-gradient(ellipse at 50% -10%, var(--fh-seekarte-see-hell) 0%, var(--fh-seekarte-see) 60%);
+  border: 2px solid var(--fh-seekarte-holz);
+  border-radius: var(--fh-radius-sm);
+  overflow: hidden;
+  padding-bottom: 40px;
+  text-align: left;
+}
+
+/* 00-basis.css setzt Inter per "*" auf JEDES Element - Vererbung
+   allein reicht deshalb nicht. Die Klassen unten (Pirata One usw.)
+   stehen spaeter und gewinnen bei gleicher Gewichtung. */
+.p2-wrap,
+.p2-wrap * { font-family: var(--fh-font-fell); }
+.p2-ico { width: 1em; height: 1em; flex-shrink: 0; }
+
+.p2-laedt,
+.p2-fehler {
+  margin: 0;
+  padding: 48px var(--p2-gutter);
+  text-align: center;
+  font-style: italic;
+}
+.p2-fehler { margin: 32px var(--p2-gutter) 0; display: grid; gap: 14px; justify-items: center; }
+
+.p2-vorschau-band {
+  margin: 0;
+  padding: 10px var(--p2-gutter);
+  background: var(--fh-seekarte-blut);
+  border-bottom: 1px solid var(--fh-seekarte-gold);
+  color: var(--fh-seekarte-gold-licht);
+  font-size: 15px;
+}
+
+/* ---- Kopf ---- */
+.p2-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px var(--p2-gutter);
+  border-bottom: 2px solid var(--fh-seekarte-holz);
+  background: var(--fh-seekarte-rinde);
+}
+.p2-marke { display: flex; align-items: center; gap: 14px; }
+.p2-siegel {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--fh-seekarte-gold);
+  display: grid; place-items: center;
+  color: var(--fh-seekarte-gold);
+  font-size: 24px;
+}
+.p2-marke-text { display: flex; flex-direction: column; }
+.p2-name { font-family: var(--fh-font-piraten); font-size: 30px; line-height: 1; letter-spacing: 1px; }
+.p2-saison { font-family: var(--fh-font-fell-sc); font-size: 14px; color: var(--fh-seekarte-sand); }
+.p2-kopf-rechts { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.p2-rest { font-style: italic; color: var(--fh-seekarte-sand); font-size: 15px; }
+.p2-geld {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--fh-seekarte-holz);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--fh-seekarte-rinde) 70%, var(--fh-seekarte-holz));
+}
+.p2-geld-punkt { width: 10px; height: 10px; border-radius: 50%; background: var(--fh-seekarte-gold); box-shadow: 0 0 8px var(--fh-seekarte-gold); }
+.p2-geld-wert { font-family: var(--fh-font-piraten); font-size: 20px; }
+.p2-geld-name { color: var(--fh-seekarte-sand); font-size: 14px; }
+
+/* ---- Oben: Stufe + Kapitaenspass ---- */
+.p2-oben {
+  padding: 32px var(--p2-gutter) 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+.p2-pergament {
+  background: var(--fh-paper);
+  color: var(--fh-seekarte-tinte);
+  border-radius: 6px;
+  box-shadow: inset 0 0 60px rgba(120, 80, 30, .45), 0 10px 30px rgba(0, 0, 0, .5);
+}
+.p2-held { padding: 24px 28px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.p2-medaillon {
+  width: 116px; height: 116px;
+  border-radius: 50%;
+  background: var(--fh-seekarte-tinte);
+  border: 4px solid var(--fh-seekarte-gold);
+  box-shadow: 0 0 0 4px var(--fh-seekarte-tinte);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.p2-medaillon-wort { font-family: var(--fh-font-fell-sc); font-size: 13px; color: var(--fh-seekarte-gold); margin-bottom: 4px; }
+.p2-medaillon-zahl { font-family: var(--fh-font-piraten); font-size: 52px; line-height: .9; color: var(--fh-seekarte-papier-hell); }
+.p2-held-rumpf { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 10px; }
+.p2-rang { font-family: var(--fh-font-piraten); font-size: 32px; line-height: 1; }
+.p2-balken {
+  height: 18px;
+  border-radius: 9px;
+  background: var(--fh-seekarte-tinte);
+  border: 2px solid var(--fh-seekarte-holz);
+  overflow: hidden;
+}
+.p2-balken-fuell {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fh-seekarte-gold-alt), var(--fh-seekarte-gold-hell));
+  transition: width .4s var(--fh-ease);
+}
+.p2-held-zeile { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font-size: 15px; color: var(--fh-seekarte-holz); }
+.p2-nowrap { white-space: nowrap; }
+.p2-kursiv { font-style: italic; }
+.p2-hinweis { margin: 0; font-size: 14px; font-style: italic; color: var(--fh-seekarte-holz); text-wrap: pretty; }
+.p2-held-knoepfe { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.p2-meldung { margin: 0; min-height: 1.2em; font-size: 15px; color: var(--fh-seekarte-blut-rand); }
+.p2-meldung:empty { min-height: 0; }
+
+.p2-knopf {
+  font-family: var(--fh-font-piraten);
+  font-size: 19px;
+  padding: 8px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color var(--fh-dauer) var(--fh-ease), transform var(--fh-dauer-kurz) var(--fh-ease), box-shadow var(--fh-dauer-kurz) var(--fh-ease);
+}
+.p2-knopf:disabled { opacity: .5; cursor: not-allowed; }
+.p2-knopf:focus-visible,
+.p2-knopf-klein:focus-visible,
+.p2-punkt:focus-visible,
+.p2-zelle:focus-visible,
+.p2-spur-fahrt:focus-visible { outline: 2px solid var(--fh-seekarte-gold-licht); outline-offset: 2px; }
+.p2-knopf-dunkel { border: 2px solid var(--fh-seekarte-tinte); background: var(--fh-seekarte-tinte); color: var(--fh-seekarte-papier-hell); }
+.p2-knopf-dunkel:not(:disabled):hover { background: var(--fh-seekarte-holz-hover); }
+.p2-knopf-gold {
+  align-self: flex-start;
+  font-size: 22px;
+  padding: 10px 22px;
+  border: none;
+  background: var(--fh-seekarte-gold);
+  color: var(--fh-seekarte-tinte);
+  box-shadow: 0 4px 0 var(--fh-seekarte-gold-tief);
+}
+.p2-knopf-gold:not(:disabled):hover { background: var(--fh-seekarte-gold-hell); }
+.p2-knopf-gold:not(:disabled):active { transform: translateY(2px); box-shadow: 0 2px 0 var(--fh-seekarte-gold-tief); }
+.p2-knopf-gold.ist-scharf { background: var(--fh-seekarte-gold-licht); box-shadow: 0 4px 0 var(--fh-seekarte-gold-tief), 0 0 0 3px var(--fh-seekarte-blut-rand); }
+
+.p2-kapitaen {
+  background: linear-gradient(160deg, var(--fh-seekarte-blut), var(--fh-seekarte-blut-nacht));
+  border: 2px solid var(--fh-seekarte-gold);
+  border-radius: 6px;
+  padding: 24px 28px;
+  display: flex; flex-direction: column; gap: 12px; justify-content: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+}
+.p2-kapitaen-ober { font-family: var(--fh-font-fell-sc); font-size: 14px; color: var(--fh-seekarte-gold); letter-spacing: 2px; }
+.p2-kapitaen-titel { font-family: var(--fh-font-piraten); font-size: 30px; line-height: 1.05; }
+.p2-kapitaen-text { font-size: 16px; color: var(--fh-seekarte-papier-matt); text-wrap: pretty; }
+
+/* ---- Die Seekarte ---- */
+.p2-abschnitt { padding: 24px var(--p2-gutter) 0; }
+.p2-abschnitt-kopf { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.p2-ueberschrift { margin: 0; font-family: var(--fh-font-piraten); font-weight: 400; font-size: 28px; color: var(--fh-seekarte-papier-hell); }
+.p2-sprung { display: flex; gap: 8px; flex-wrap: wrap; }
+.p2-knopf-klein {
+  font-family: var(--fh-font-fell-sc);
+  font-size: 15px;
+  padding: 6px 12px;
+  border: 1px solid var(--fh-seekarte-holz);
+  background: color-mix(in srgb, var(--fh-seekarte-rinde) 70%, var(--fh-seekarte-holz));
+  color: var(--fh-seekarte-papier-hell);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color var(--fh-dauer) var(--fh-ease);
+}
+.p2-knopf-klein:hover { border-color: var(--fh-seekarte-gold); }
+
+.p2-karte {
+  display: flex;
+  border: 2px solid var(--fh-seekarte-holz);
+  border-radius: 6px;
+  background: var(--fh-seekarte-wasser);
+  overflow: hidden;
+}
+.p2-spuren {
+  flex-shrink: 0;
+  width: 92px;
+  display: flex; flex-direction: column;
+  border-right: 2px solid var(--fh-seekarte-holz);
+  background: var(--fh-seekarte-rinde);
+}
+.p2-spuren-kopf { height: 56px; }
+.p2-spur {
+  height: 150px;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 10px;
+  border-top: 1px solid var(--fh-seekarte-holz-dunkel);
+}
+.p2-spur-name { font-family: var(--fh-font-piraten); font-size: 20px; }
+.p2-spur-unter { font-size: 13px; color: var(--fh-seekarte-sand); }
+.p2-spur-kapitaen { background: var(--fh-seekarte-blut-tief); }
+.p2-spur-kapitaen .p2-spur-name { color: var(--fh-seekarte-gold-hell); }
+.p2-spur-kapitaen .p2-spur-unter { color: var(--fh-seekarte-papier-matt); }
+
+.p2-spur-fahrt { flex: 1; overflow-x: auto; scrollbar-color: var(--fh-seekarte-holz) var(--fh-seekarte-see); }
+.p2-spur-fahrt::-webkit-scrollbar { height: 10px; }
+.p2-spur-fahrt::-webkit-scrollbar-thumb { background: var(--fh-seekarte-holz); border-radius: 5px; }
+.p2-spur-fahrt::-webkit-scrollbar-track { background: var(--fh-seekarte-see); }
+.p2-reihe { display: flex; width: max-content; }
+
+.p2-stufe {
+  width: 132px;
+  display: flex; flex-direction: column;
+  border-right: 1px dashed var(--fh-seekarte-holz-dunkel);
+  transition: background-color var(--fh-dauer) var(--fh-ease);
+}
+.p2-stufe.ist-gewaehlt { background: rgba(236, 220, 176, .06); }
+.p2-stufe.ist-aktuell { background: rgba(201, 162, 39, .12); }
+.p2-stufe-kopf { height: 56px; display: flex; align-items: center; justify-content: center; position: relative; }
+.p2-linie { position: absolute; left: 0; right: 0; top: 50%; height: 4px; margin-top: -2px; background: var(--fh-seekarte-holz-dunkel); }
+.p2-stufe.ist-erreicht .p2-linie { background: var(--fh-seekarte-gold); }
+.p2-punkt {
+  position: relative;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  padding: 0;
+  font-family: var(--fh-font-piraten);
+  font-size: 18px;
+  background: var(--fh-seekarte-wasser);
+  color: var(--fh-seekarte-asche-dunkel);
+  border: 2px solid var(--fh-seekarte-holz-dunkel);
+  cursor: pointer;
+}
+.p2-stufe.ist-meilenstein .p2-punkt { width: 44px; height: 44px; border-color: var(--fh-seekarte-gold-tief); }
+.p2-stufe.ist-erreicht .p2-punkt { background: var(--fh-seekarte-tinte); color: var(--fh-seekarte-gold-hell); border-color: var(--fh-seekarte-gold); }
+.p2-stufe.ist-aktuell .p2-punkt {
+  background: var(--fh-seekarte-gold);
+  color: var(--fh-seekarte-tinte);
+  box-shadow: 0 0 0 4px rgba(201, 162, 39, .25), 0 0 18px rgba(224, 185, 60, .6);
+}
+
+.p2-feld { height: 150px; padding: 10px 8px; border-top: 1px solid var(--fh-seekarte-holz-dunkel); }
+.p2-feld-kapitaen { background: rgba(60, 10, 10, .35); }
+.p2-zelle {
+  width: 100%; height: 100%;
+  border-radius: 5px;
+  padding: 10px 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  gap: 4px;
+  text-align: center;
+  cursor: pointer;
+  border: 2px solid var(--fh-seekarte-holz-dunkel);
+  transition: transform .15s var(--fh-ease);
+}
+.p2-zelle:hover { transform: translateY(-2px); }
+.p2-zelle-symbol { font-size: 30px; line-height: 1; display: grid; place-items: center; height: 34px; }
+.p2-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; display: block; }
+.p2-avatar-gross { width: 52px; height: 52px; }
+.p2-zelle-name {
+  font-size: 14px;
+  line-height: 1.15;
+  text-wrap: balance;
+  hyphens: auto;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.p2-zelle-status { font-family: var(--fh-font-fell-sc); font-size: 12px; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 4px; }
+.p2-zelle-status .p2-ico { width: 12px; height: 12px; }
+
+.p2-zelle.ist-bereit { background: var(--fh-paper); color: var(--fh-seekarte-tinte); border-color: var(--fh-seekarte-gold-hell); }
+.p2-zelle-kapitaen.ist-bereit { background: var(--fh-seekarte-blut-hell); color: var(--fh-seekarte-gold-licht); }
+.p2-zelle.ist-zu { background: var(--fh-seekarte-schiefer); color: var(--fh-seekarte-asche); opacity: .7; }
+.p2-zelle-kapitaen.ist-zu { background: var(--fh-seekarte-blut-tief); }
+.p2-zelle.ist-geholt { background: var(--fh-seekarte-moos); color: var(--fh-seekarte-moos-hell); border-color: var(--fh-seekarte-moos-rand); opacity: .75; }
+.p2-zelle.ist-meilenstein.ist-bereit { border-color: var(--fh-seekarte-gold-funke); box-shadow: 0 0 14px rgba(255, 216, 96, .35); }
+.p2-zelle.ist-meilenstein.ist-zu { border-color: var(--fh-seekarte-gold-tief); }
+.p2-zelle.ist-bereit .p2-zelle-status { animation: p2-glimmen 1.8s var(--fh-ease) infinite; }
+@keyframes p2-glimmen { 50% { opacity: .55; } }
+
+/* ---- Logbuch ---- */
+.p2-logbuch {
+  padding: 20px 24px;
+  box-shadow: inset 0 0 50px rgba(120, 80, 30, .4);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 20px;
+  align-items: center;
+}
+.p2-log-kopf { display: flex; flex-direction: column; gap: 4px; }
+.p2-log-ober { font-family: var(--fh-font-fell-sc); font-size: 14px; color: var(--fh-seekarte-tinte-hell); letter-spacing: 1px; }
+.p2-log-titel { font-family: var(--fh-font-piraten); font-size: 30px; line-height: 1; }
+.p2-log-bedarf { font-style: italic; font-size: 16px; color: var(--fh-seekarte-holz); }
+.p2-log-eintrag { display: flex; gap: 14px; align-items: center; }
+.p2-log-symbol {
+  font-size: 30px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--fh-seekarte-holz);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.p2-log-kapitaen .p2-log-symbol { border-color: var(--fh-seekarte-blut-rand); background: var(--fh-seekarte-blut-tief); color: var(--fh-seekarte-gold-hell); }
+.p2-log-text { display: flex; flex-direction: column; min-width: 0; }
+.p2-log-spur { font-size: 13px; color: var(--fh-seekarte-tinte-hell); }
+.p2-log-kapitaen .p2-log-spur { color: var(--fh-seekarte-blut-rand); }
+.p2-log-name { font-size: 18px; overflow-wrap: anywhere; }
+.p2-log-status { font-size: 13px; color: var(--fh-seekarte-tinte-hell); }
+
+@media (prefers-reduced-motion: reduce) {
+  .p2-zelle, .p2-balken-fuell { transition: none; }
+  .p2-zelle:hover { transform: none; }
+  .p2-zelle.ist-bereit .p2-zelle-status { animation: none; }
+}
+
+@media (max-width: 560px) {
+  .p2-held, .p2-kapitaen { padding: 20px; }
+  .p2-medaillon { width: 92px; height: 92px; }
+  .p2-medaillon-zahl { font-size: 42px; }
+  .p2-spuren { width: 74px; }
+  .p2-spur-name { font-size: 17px; }
+}

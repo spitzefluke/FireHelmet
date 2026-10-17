@@ -285,6 +285,42 @@ body.loaded {
   --fh-paper: #e8d5a8;
   --fh-red-deep: #7c1f1c;
 
+  /* ---- Piratenpass #2 "Die Seekarte" (scripts/piratenpass/pass2.js,
+     Entwurf Piratenpass.dc.html): Holz, Tinte, Gold und Blutrot einer
+     alten Seekarte. Das Pergament selbst ist --fh-paper. ---- */
+  --fh-seekarte-see: #0b161b;
+  --fh-seekarte-see-hell: #1d3a44;
+  --fh-seekarte-wasser: #0f1a1f;
+  --fh-seekarte-rinde: #120d08;
+  --fh-seekarte-holz: #5a3d22;
+  --fh-seekarte-holz-dunkel: #3a2815;
+  --fh-seekarte-tinte: #2a1a0c;
+  --fh-seekarte-sand: #a8916a;
+  --fh-seekarte-papier-hell: #ecdcb0;
+  --fh-seekarte-gold: #c9a227;
+  --fh-seekarte-gold-hell: #e0b93c;
+  --fh-seekarte-gold-licht: #f0d27a;
+  --fh-seekarte-gold-tief: #7a5f10;
+  --fh-seekarte-blut: #3a0f0f;
+  --fh-seekarte-blut-hell: #5a1414;
+  --fh-seekarte-blut-rand: #8b1e1e;
+  --fh-seekarte-blut-tief: #2a0b0b;
+  --fh-seekarte-blut-nacht: #1a0707;
+  --fh-seekarte-holz-hover: #4a2e15;
+  --fh-seekarte-papier-matt: #d6c08f;
+  --fh-seekarte-tinte-hell: #7a5a2a;
+  --fh-seekarte-gold-funke: #ffd860;
+  --fh-seekarte-gold-alt: #8a6a12;
+  --fh-seekarte-moos: #1a2a22;
+  --fh-seekarte-moos-hell: #8fa88f;
+  --fh-seekarte-moos-rand: #2f4a3a;
+  --fh-seekarte-schiefer: #1a1c1e;
+  --fh-seekarte-asche: #8a7a5a;
+  --fh-seekarte-asche-dunkel: #6a5a3a;
+  --fh-font-piraten: 'Pirata One', var(--fh-font-display);
+  --fh-font-fell: 'IM Fell English', Georgia, 'Times New Roman', serif;
+  --fh-font-fell-sc: 'IM Fell English SC', 'IM Fell English', Georgia, serif;
+
   /* War ein zweiter, eigenstaendiger :root-Block direkt vor der
      COMMUNITY-BOSS-Sektion - inhaltlich hierher gehoerend, ins
      Haupt-Token-Set zusammengefuehrt (rein kosmetische Aufraeumung,

@@ -50,19 +50,40 @@ function getLevelProgress(xp) {
    Datumsquelle. endDate wird immer aus startDate + durationDays
    berechnet, nie separat gespeichert.
 ------------------------------------------------------ */
+/* "@pass2-freigabe": Zeitpunkt, den der Admin mit "Pass 2
+   freischalten" setzt (siteConfig.pass2Ab). Fehlt er, ist der Pass
+   noch nicht eingeplant - resolvePassDates() gibt dann null zurueck
+   und alle Suchfunktionen unten uebergehen ihn. */
+function resolvePassStart(pass) {
+  if (pass.startDate === "@streamraetsel-unlock" && typeof getStreamRaetselUnlockDate === "function") {
+    return getStreamRaetselUnlockDate();
+  }
+  if (pass.startDate === "@pass2-freigabe") {
+    const ab = typeof siteConfig !== "undefined" ? siteConfig.pass2Ab : null;
+    const start = ab ? new Date(ab) : null;
+    return start && !isNaN(start.getTime()) ? start : null;
+  }
+  return new Date(pass.startDate);
+}
+
 function resolvePassDates(pass) {
-  const start = pass.startDate === "@streamraetsel-unlock" && typeof getStreamRaetselUnlockDate === "function"
-    ? getStreamRaetselUnlockDate()
-    : new Date(pass.startDate);
-  const end = new Date(start.getTime() + pass.durationDays * 86400000);
+  const start = resolvePassStart(pass);
+  if (!start) return null;
+  let end = new Date(start.getTime() + pass.durationDays * 86400000);
+  // Abgeloest: endet, sobald der Nachfolger beginnt.
+  const nachfolger = pass.abgeloestVon ? PIRATE_PASSES.find((p) => p.passId === pass.abgeloestVon) : null;
+  const nachfolgerStart = nachfolger ? resolvePassStart(nachfolger) : null;
+  if (nachfolgerStart && nachfolgerStart.getTime() < end.getTime()) {
+    end = new Date(Math.max(start.getTime(), nachfolgerStart.getTime()));
+  }
   return { start, end };
 }
 
 function getCurrentPirateSeason() {
   const now = Date.now();
   return PIRATE_PASSES.find((pass) => {
-    const { start, end } = resolvePassDates(pass);
-    return now >= start.getTime() && now < end.getTime();
+    const d = resolvePassDates(pass);
+    return d && now >= d.start.getTime() && now < d.end.getTime();
   }) || null;
 }
 
@@ -71,10 +92,10 @@ function getNextPirateSeason() {
   let next = null;
   let nextStartMs = null;
   PIRATE_PASSES.forEach((pass) => {
-    const { start } = resolvePassDates(pass);
-    if (start.getTime() > now && (nextStartMs === null || start.getTime() < nextStartMs)) {
+    const d = resolvePassDates(pass);
+    if (d && d.start.getTime() > now && (nextStartMs === null || d.start.getTime() < nextStartMs)) {
       next = pass;
-      nextStartMs = start.getTime();
+      nextStartMs = d.start.getTime();
     }
   });
   return next;
@@ -85,10 +106,10 @@ function getLatestEndedPirateSeason() {
   let latest = null;
   let latestEndMs = null;
   PIRATE_PASSES.forEach((pass) => {
-    const { end } = resolvePassDates(pass);
-    if (end.getTime() <= now && (latestEndMs === null || end.getTime() > latestEndMs)) {
+    const d = resolvePassDates(pass);
+    if (d && d.end.getTime() <= now && (latestEndMs === null || d.end.getTime() > latestEndMs)) {
       latest = pass;
-      latestEndMs = end.getTime();
+      latestEndMs = d.end.getTime();
     }
   });
   return latest;
