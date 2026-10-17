@@ -9,7 +9,14 @@
      kristall   Kristall-Konklave (Eis und Rosa, Facetten)
      geist      Geisterflotte (durchscheinend, Irrlichter)
    "seite" ist ueberall die PARTEI (Migration 57) - fuer Menschen und
-   Aliens wie bisher.
+   Aliens wie bisher. Dazu das Mutterschiff (Partei "boss", 59).
+
+   AUSRUESTUNG (Migration 58), o.ausruestung = { waffe, module: [] }:
+     Sonderwaffe sichtbar auf dem Rumpf (Plasmakanone, Raketenkapseln,
+     Tesla-Spule, Lichtlanze), Verbundpanzer als Plattenkante,
+     Zielcomputer als Radarschuessel, Reaktor als Glutring - alles im
+     Sprite. Deflektorschild (Schimmer) und Nachbrenner (lange
+     Flammen) kommen je Bild dazu.
 
    AUSBAU SICHTBAR (Stufen 0..5 wie im Hangar)
      leben   -> Platten / Chitinschuppen / Kristalle / Runen
@@ -29,7 +36,7 @@
      zeichnen(ctx, o)   o = { typ, seite, stufen, x, y, winkel, breite,
                               dpr, zeit, phase, treffer (0..1), ruhig,
                               alpha (Grund-Deckkraft, Standard 1) }
-     bild(typ, seite, stufen, breiteCss)  -> <canvas> (Hangar)
+     bild(typ, seite, stufen, breiteCss, ausruestung?)  -> <canvas> (Hangar)
      stufenAus(einheit) -> { leben, schaden, spezial } aus Kampfwerten
      motorPunkte(typ)   -> Triebwerke (fuer Effekte)
      farbe(seite)       -> Palette der Partei (hell, akzent, licht, ...)
@@ -82,11 +89,19 @@
         akzent: token("--fh-geist", "#5dffc8"), licht: "#eafff8", panzer: "#1d4a42", waffe: "#a8ffe0", tief: "#061614",
         flamme: "#5dffc8", flammeKern: "#f0fff8", segel: "#7fbfae",
       },
+      boss: {
+        hell: "#6a2a3a", mitte: "#2e0f1a", dunkel: "#0b0306", kante: "#ff7a5a",
+        akzent: "#ff3b6b", licht: "#ffd0c0", panzer: "#3e1622", waffe: "#ffb0a0", tief: "#060103",
+        flamme: "#ff5a3a", flammeKern: "#ffe0d0",
+      },
     };
     return farbenCache;
   }
 
-  const STILE = { menschen: "metall", aliens: "organisch", piraten: "metall", maschinen: "metall", kristall: "kristall", geister: "geist" };
+  const STILE = { menschen: "metall", aliens: "organisch", piraten: "metall", maschinen: "metall", kristall: "kristall", geister: "geist", boss: "metall" };
+  /* Farben der Sonderwaffen - bewusst unabhaengig von der Partei,
+     damit man die Waffe auf jedem Schiff erkennt. */
+  const WAFFEN_FARBE = { plasma: "#5ff3ff", raketen: "#ff9d3d", tesla: "#9fc8ff", lanze: "#fff07a" };
   function stil(seite) { return STILE[seite] || "metall"; }
 
   /* ------------------------------------------------------
@@ -608,6 +623,43 @@
       waffen: [[60, -31], [60, 31], [-40, -38], [-40, 38], [100, 0]],
       panzer: [[20, -36], [20, 36], [-60, -39], [-60, 39], [80, 0]],
     },
+    /* ===== BOSS: MUTTERSCHIFF (59) ===== */
+    mutterschiff: {
+      rumpf: function (c) { pfad(c, [130, 0, 74, -32, 24, -70, -60, -78, -118, -52, -130, -22, -104, 0, -130, 22, -118, 52, -60, 78, 24, 70, 74, 32]); },
+      vorher: function (c, F) {
+        /* Hangar-Fluegel und Dornen */
+        flaeche(c, F.mitte, [24, -70, 4, -94, -54, -98, -60, -78]);
+        flaeche(c, F.mitte, spiegel([24, -70, 4, -94, -54, -98, -60, -78]));
+        [[-20, -76, -6, -96], [-40, -78, -30, -100], [40, -56, 62, -74]].forEach(function (d) {
+          linie(c, F.kante, 3, [[d[0], d[1]], [d[2], d[3]]], .7);
+          linie(c, F.kante, 3, [[d[0], -d[1]], [d[2], -d[3]]], .7);
+        });
+      },
+      details: function (c, F) {
+        flaeche(c, F.tief, [112, 0, 60, -14, -96, -12, -96, 12, 60, 14]);
+        c.fillStyle = F.panzer; rundRechteck(c, -46, -22, 70, 44, 6); c.fill();
+        c.strokeStyle = F.kante; c.lineWidth = 1.4; c.globalAlpha = .7; c.stroke(); c.globalAlpha = 1;
+        /* Hangarbuchten mit Glut */
+        const buchten = [];
+        for (let x = -90; x <= 50; x += 20) buchten.push([x, -46], [x, 46]);
+        punktReihe(c, F.akzent, buchten, 2.6);
+        linie(c, F.akzent, 2, [[-100, -30], [60, -24]], .5);
+        linie(c, F.akzent, 2, [[-100, 30], [60, 24]], .5);
+        kern(c, F, -74, 0, 24);
+        kern(c, F, 100, 0, 11);
+        kern(c, F, -10, 0, 9);
+        /* Geschuetztuerme */
+        [[44, -40], [44, 40], [-14, -58], [-14, 58], [74, -18], [74, 18]].forEach(function (p) {
+          linie(c, F.waffe, 3.5, [[p[0], p[1]], [p[0] + 18, p[1]]]);
+          c.fillStyle = F.panzer; c.beginPath(); c.arc(p[0], p[1], 7, 0, 6.283); c.fill();
+          c.strokeStyle = F.kante; c.lineWidth = 1.2; c.stroke();
+          punktReihe(c, F.akzent, [p], 2.2);
+        });
+      },
+      motoren: [{ x: -124, y: -40, r: 12 }, { x: -108, y: 0, r: 14 }, { x: -124, y: 40, r: 12 }],
+      waffen: [[60, -40], [60, 40], [-30, -60], [-30, 60], [110, 0]],
+      panzer: [[0, -50], [0, 50], [-80, -50], [-80, 50], [40, 0]],
+    },
   };
 
   /* ------------------------------------------------------
@@ -759,7 +811,66 @@
     }
   }
 
-  function schiffMalen(c, typ, seite, stufen) {
+  /* Sonderwaffe und Module (58) auf den Rumpf - nach dem Ausbau. */
+  function ausruestungMalen(c, T, F, aus) {
+    if (!aus) return;
+    const mod = aus.module || [];
+    if (mod.indexOf("panzer") >= 0) {
+      c.save();
+      c.setLineDash([12, 7]); c.strokeStyle = F.panzer; c.lineWidth = 5; c.globalAlpha = .9;
+      T.rumpf(c); c.stroke();
+      c.setLineDash([]); c.strokeStyle = F.kante; c.lineWidth = 1; c.globalAlpha = .6;
+      T.rumpf(c); c.stroke();
+      c.restore();
+    }
+    if (mod.indexOf("reaktor") >= 0) {
+      bogen(c, "#ffb347", 3, -14, 0, 11, 0, 6.283, .9);
+      kern(c, { licht: "#fff2c0", akzent: "#ffb347" }, -14, 0, 9);
+    }
+    if (mod.indexOf("zielcomputer") >= 0) {
+      c.save();
+      c.fillStyle = F.waffe; c.strokeStyle = F.tief; c.lineWidth = 1.2;
+      c.beginPath(); c.ellipse(-34, -14, 7, 4, -.5, 0, 6.283); c.fill(); c.stroke();
+      linie(c, F.waffe, 1.4, [[-34, -14], [-26, -24]]);
+      punktReihe(c, "#ff4040", [[-26, -24]], 1.8);
+      c.restore();
+    }
+    const fa = WAFFEN_FARBE[aus.waffe];
+    if (!fa) return;
+    /* Gross genug, dass man die Waffe auf jedem Schiff erkennt. */
+    const x = 0, y = 0;
+    c.save();
+    c.translate(10, 0);
+    c.scale(1.7, 1.7);
+    if (aus.waffe === "plasma") {
+      c.fillStyle = F.panzer; rundRechteck(c, x - 18, y - 6, 40, 12, 4); c.fill();
+      c.strokeStyle = fa; c.lineWidth = 1.4; c.stroke();
+      linie(c, fa, 1.4, [[x - 10, y - 6], [x - 10, y + 6]], .8);
+      linie(c, fa, 1.4, [[x, y - 6], [x, y + 6]], .8);
+      kern(c, { licht: "#ffffff", akzent: fa }, x + 24, y, 9);
+    } else if (aus.waffe === "raketen") {
+      [-1, 1].forEach(function (sg) {
+        c.fillStyle = F.panzer; rundRechteck(c, x - 14, y + sg * 14 - 5, 30, 10, 3); c.fill();
+        c.strokeStyle = F.kante; c.lineWidth = 1; c.stroke();
+        punktReihe(c, fa, [[x + 18, y + sg * 14 - 2.5], [x + 18, y + sg * 14 + 2.5]], 2.2);
+      });
+    } else if (aus.waffe === "tesla") {
+      c.strokeStyle = fa; c.lineWidth = 2;
+      [0, 7, 14].forEach(function (d) { c.beginPath(); c.ellipse(x - 6 + d, y, 3, 10 - d * 0.3, 0, 0, 6.283); c.stroke(); });
+      kern(c, { licht: "#ffffff", akzent: fa }, x + 16, y, 8);
+      linie(c, fa, 1.2, [[x + 16, y], [x + 24, y - 8], [x + 30, y - 2]], .9);
+      linie(c, fa, 1.2, [[x + 16, y], [x + 26, y + 7]], .9);
+    } else if (aus.waffe === "lanze") {
+      c.shadowColor = fa; c.shadowBlur = 10;
+      c.fillStyle = fa; pfad(c, [x - 16, y - 3, x + 52, y - 1.2, x + 62, y, x + 52, y + 1.2, x - 16, y + 3]); c.fill();
+      c.shadowBlur = 0;
+      c.fillStyle = F.panzer; rundRechteck(c, x - 20, y - 7, 16, 14, 3); c.fill();
+      c.strokeStyle = fa; c.lineWidth = 1.2; c.stroke();
+    }
+    c.restore();
+  }
+
+  function schiffMalen(c, typ, seite, stufen, aus) {
     const T = TYPEN[typ];
     if (!T) return;
     const F = farben()[seite] || farben().menschen;
@@ -772,6 +883,7 @@
       T.details(c, F);
       panzerMalen(c, T, F, sl, st.leben || 0);
       waffenMalen(c, T, F, sl, st.schaden || 0);
+      ausruestungMalen(c, T, F, aus);
     };
     if (T.paar) {
       T.paar.forEach(function (p) {
@@ -801,10 +913,11 @@
   const sprites = new Map();
   const glimm = {};
 
-  function sprite(typ, seite, stufen, pxBreite) {
+  function sprite(typ, seite, stufen, pxBreite, aus) {
     const st = stufen || {};
     const px = Math.max(24, Math.round(pxBreite / 8) * 8);
-    const key = typ + "|" + seite + "|" + (st.leben || 0) + "|" + (st.schaden || 0) + "|" + px;
+    const key = typ + "|" + seite + "|" + (st.leben || 0) + "|" + (st.schaden || 0) + "|" + px
+      + (aus ? "|" + (aus.waffe || "") + "|" + (aus.module || []).join(",") : "");
     let s = sprites.get(key);
     if (s) return s;
     const skala = px / 260;
@@ -814,7 +927,7 @@
     const c = s.getContext("2d");
     c.translate(s.width / 2, s.height / 2);
     c.scale(skala, skala);
-    schiffMalen(c, typ, seite, st);
+    schiffMalen(c, typ, seite, st, aus);
     if (sprites.size > 400) sprites.clear();
     sprites.set(key, s);
     return s;
@@ -845,7 +958,9 @@
     const st = o.stufen || {};
     const dpr = o.dpr || 1;
     const skala = o.breite / 260;
-    const sp = sprite(o.typ, o.seite, st, o.breite * dpr);
+    const aus = o.ausruestung || null;
+    const mod = (aus && aus.module) || [];
+    const sp = sprite(o.typ, o.seite, st, o.breite * dpr, aus);
     const zeit = o.zeit || 0, phase = o.phase || 0;
     const A = o.alpha == null ? 1 : o.alpha;   // Grund-Deckkraft (Grossschiffe im Hintergrund)
 
@@ -864,15 +979,25 @@
 
     /* Triebwerksflammen hinter dem Rumpf */
     const flamme = glimmen(F.flamme, F.flammeKern);
+    const nachbrenner = mod.indexOf("nachbrenner") >= 0 ? 1.7 : 1;   // Modul (58): lange Flammen
     motorPunkte(o.typ).forEach(function (m, i) {
       const flacker = o.ruhig ? 1 : 0.8 + 0.35 * Math.abs(Math.sin(zeit * 0.025 + phase * 3 + i * 1.7));
-      const lang = m.r * 5 * flacker * skala, hoch = m.r * 2.4 * skala;
+      const lang = m.r * 5 * flacker * skala * nachbrenner, hoch = m.r * 2.4 * skala;
       ctx.globalAlpha = A * (0.9);
       ctx.drawImage(flamme, m.x * skala - lang * 1.35, m.y * skala - hoch / 2, lang * 1.6, hoch);
     });
     ctx.globalAlpha = A;
 
     ctx.drawImage(sp, -sp.width / dpr / 2, -sp.height / dpr / 2, sp.width / dpr, sp.height / dpr);
+
+    /* Deflektorschild (58): ein feiner Schimmer um das Schiff */
+    if (mod.indexOf("schild") >= 0) {
+      const puls = o.ruhig ? 0.5 : 0.5 + 0.5 * Math.sin(zeit * 0.004 + phase);
+      ctx.globalAlpha = A * (0.25 + 0.2 * puls);
+      ctx.strokeStyle = "#8fe3ff"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 128 * skala, 86 * skala, 0, 0, 6.283); ctx.stroke();
+      ctx.globalAlpha = A;
+    }
 
     /* Treffer: Schildblase (Metall), Facettenblitz (Kristall) bzw.
        Membran-Zucken (Aliens, Geister) */
@@ -901,7 +1026,7 @@
   }
 
   /* Standbild fuer den Hangar (Flamme und Aura ruhend). */
-  function bild(typ, seite, stufen, breiteCss) {
+  function bild(typ, seite, stufen, breiteCss, ausruestung) {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const b = breiteCss, h = Math.round(breiteCss * BOX_H / BOX_B);
     const c = document.createElement("canvas");
@@ -910,7 +1035,7 @@
     c.setAttribute("aria-hidden", "true");
     const ctx = c.getContext("2d");
     ctx.scale(dpr, dpr);
-    zeichnen(ctx, { typ: typ, seite: seite, stufen: stufen, x: b / 2, y: h / 2, winkel: 0, breite: b * 260 / BOX_B, dpr: dpr, zeit: 0, ruhig: true });
+    zeichnen(ctx, { typ: typ, seite: seite, stufen: stufen, x: b / 2, y: h / 2, winkel: 0, breite: b * 260 / BOX_B, dpr: dpr, zeit: 0, ruhig: true, ausruestung: ausruestung || null });
     return c;
   }
 
@@ -937,6 +1062,7 @@
     motorPunkte: motorPunkte,
     farbe: function (seite) { return farben()[seite] || farben().menschen; },
     stil: stil,
+    WAFFEN_FARBE: WAFFEN_FARBE,
     TYPEN: Object.keys(TYPEN),
   };
 })();

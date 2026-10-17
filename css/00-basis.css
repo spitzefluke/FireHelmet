@@ -212,6 +212,13 @@ body.loaded {
   /* Parteien der Sternenschlacht (Migration 57), neben cold/violett/fire/danger. */
   --fh-kristall: #ff7ad9;
   --fh-geist: #5dffc8;
+  /* Sonderwaffen und Mutterschiff (Migrationen 58/59), wie in schiffe.js. */
+  --fh-waffe-plasma: #5ff3ff;
+  --fh-waffe-raketen: #ff9d3d;
+  --fh-waffe-tesla: #9fc8ff;
+  --fh-waffe-lanze: #fff07a;
+  --fh-boss: #ff5a8c;
+  --fh-boss-hell: #ff9aa8;
   --fh-neon: #39ff14;
   /* Abstufungen fuer die gekaperte Konsole (Gegenhack, Werbungsflut). */
   --fh-neon-hell: #8fff7a;

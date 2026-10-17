@@ -16,6 +16,13 @@
    Parteien - mit den eigenen Ausbaustufen, denn die gelten fuer jeden
    Typ. Gewaehlt wird ein solches Schiff erst in der Sammelphase einer
    Schlacht (schlacht.js), nicht hier.
+
+   AUSRUESTUNG (Migration 58): Mit der Freigabe "hangarAusruestung"
+   kommen unter die Einheit der Schiffs-Rang (Erfahrung aus
+   Schlachten), eine Sonderwaffe und zwei Modulplaetze. Kaufen
+   (hangar_teil_kaufen, zweiter Klick bestaetigt) und Anlegen
+   (hangar_teil_anlegen) nur ueber die Datenbank. Waffe und Module
+   sieht man am Schiff (schiffe.js).
 ====================================================== */
 
 (function () {
@@ -32,6 +39,7 @@
   let geladen = false;
   let beschaeftigt = false;
   let bestaetigen = null;    // { wert, bis }
+  let ausruestung = null;    // Antwort von hangar_ausruestung (58) oder null
   let bestaetigenUhr = null;
 
   function typText(id, feld) { return t("hangar.typ." + id + "." + feld, HANGAR_TYPEN[id][feld]); }
@@ -46,10 +54,19 @@
   /* Bild des Schiffs mit sichtbarem Ausbau (scripts/hangar/schiffe.js:
      Panzerplatten, Geschuetze/Dornen, Aura). Ohne schiffe.js der
      einfache Umriss aus hangar-data.js. */
-  function schiff(id, klasse, st) {
+  function ausruestungFrei() {
+    return typeof window.fhFeatureSichtbar === "function" && window.fhFeatureSichtbar("hangarAusruestung");
+  }
+  /* Angelegte Waffe und Module fuer das Schiffsbild. */
+  function aussehen() {
+    if (!ausruestung || !ausruestungFrei()) return null;
+    return { waffe: ausruestung.waffe, module: [ausruestung.modul1, ausruestung.modul2].filter(Boolean) };
+  }
+
+  function schiff(id, klasse, st, aus) {
     const s = el("span", "hg-schiff " + (klasse || "") + " ist-" + HANGAR_TYPEN[id].seite);
     if (window.fhSchiffe) {
-      s.appendChild(window.fhSchiffe.bild(id, HANGAR_TYPEN[id].seite, st || {}, klasse === "ist-gross" ? 420 : 132));
+      s.appendChild(window.fhSchiffe.bild(id, HANGAR_TYPEN[id].seite, st || {}, klasse === "ist-gross" ? 420 : 132, aus || null));
     } else {
       /* fester Text aus hangar-data.js, keine Nutzerdaten */
       s.innerHTML = '<svg viewBox="-130 -80 260 160" aria-hidden="true">' + HANGAR_TYPEN[id].form + "</svg>";
@@ -80,6 +97,10 @@
       if (error) throw error;
       einheit = data || null;
       geladen = true;
+      if (ausruestungFrei()) {
+        const a = await withSupabaseRlsColdStartRetry(function () { return supabaseClient.rpc("hangar_ausruestung"); });
+        ausruestung = a.error ? null : a.data;   // ohne Migration 58: nichts zeigen
+      }
     } catch (err) {
       console.warn("Hangar: Laden fehlgeschlagen:", err);
     }
@@ -137,7 +158,7 @@
       b.type = "button";
       b.setAttribute("role", "radio");
       b.setAttribute("aria-checked", id === typId ? "true" : "false");
-      b.append(schiff(id, "", st), el("span", "hg-typ-name", typText(id, "name")), el("span", "hg-typ-rolle", typText(id, "rolle")));
+      b.append(schiff(id, "", st, aussehen()), el("span", "hg-typ-name", typText(id, "name")), el("span", "hg-typ-rolle", typText(id, "rolle")));
       b.addEventListener("click", function () { if (id !== typId) typWaehlen(id); });
       typen.appendChild(b);
     });
@@ -146,7 +167,7 @@
     const w = hangarWerte(typId, st, seite);
     const detail = el("div", "hg-detail ist-" + seite);
     const buehne = el("div", "hg-buehne");
-    buehne.appendChild(schiff(typId, "ist-gross", st));
+    buehne.appendChild(schiff(typId, "ist-gross", st, aussehen()));
     if (w.anzahl > 1) buehne.appendChild(el("span", "hg-anzahl", "×" + w.anzahl));
     const info = el("div", "hg-info");
     info.append(
@@ -174,7 +195,167 @@
     st2.setAttribute("aria-live", "polite");
 
     ziel.append(typen, detail, st2);
+    if (ausruestung && ausruestungFrei()) ziel.appendChild(ausruestungBox());
     if (typeof window.fhFeatureSichtbar === "function" && window.fhFeatureSichtbar("schlachtParteien")) ziel.appendChild(parteienBox(st));
+  }
+
+  /* ------------------------------------------------------
+     AUSRUESTUNG (Migration 58)
+  ------------------------------------------------------ */
+  function teilText(id, feld) { return t("hangar.teil." + id + "." + feld, HANGAR_TEILE[id][feld]); }
+  function rangName(r) { return t("hangar.rang." + r, SCHIFF_RAENGE[r].name); }
+
+  /* Rangabzeichen: je Rang ein Winkel, Rekrut ein Ring (lucide-Stil). */
+  function rangAbzeichen(r) {
+    let pfade = "";
+    if (!r) pfade = '<circle cx="12" cy="12" r="5"/>';
+    for (let i = 0; i < r; i++) {
+      const y = 19 - i * 3.6;
+      pfade += '<path d="M5 ' + y + ' l7 -4.5 l7 4.5"/>';
+    }
+    const s = el("span", "hg-rang-abzeichen");
+    s.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + pfade + "</svg>";   // feste Zahl, keine Nutzerdaten
+    return s;
+  }
+
+  function ausruestungBox() {
+    const a = ausruestung;
+    const box = el("section", "hg-aus");
+    box.setAttribute("aria-labelledby", "hg-aus-titel");
+    const titel = el("h2", "hg-aus-titel", t("hangar.aus.titel", "Ausrüstung"));
+    titel.id = "hg-aus-titel";
+    box.appendChild(titel);
+
+    /* Rang */
+    const r = a.rang || 0;
+    const naechste = SCHIFF_RAENGE[r + 1];
+    const rang = el("div", "hg-rang");
+    rang.dataset.rang = r;
+    const kopf = el("div", "hg-rang-kopf");
+    kopf.append(rangAbzeichen(r), el("div", "hg-rang-text"));
+    kopf.lastChild.append(
+      el("p", "hg-rang-name", rangName(r)),
+      el("p", "hg-rang-bonus", r ? t("hangar.rang.bonus", "+{p} % Leben und Schaden in der Schlacht").replace("{p}", r * 2) : t("hangar.rang.start", "Sammle Erfahrung in Sternenschlachten."))
+    );
+    const balken = el("div", "hg-rang-balken");
+    balken.setAttribute("role", "progressbar");
+    balken.setAttribute("aria-valuemin", "0");
+    const von = SCHIFF_RAENGE[r].xp, bis = naechste ? naechste.xp : SCHIFF_RAENGE[r].xp;
+    balken.setAttribute("aria-valuemax", String(bis));
+    balken.setAttribute("aria-valuenow", String(a.xp || 0));
+    const fuell = el("span", "hg-rang-fuellung");
+    fuell.style.width = (naechste ? Math.max(0, Math.min(100, ((a.xp || 0) - von) / (bis - von) * 100)) : 100) + "%";
+    balken.appendChild(fuell);
+    const zahlen = el("p", "hg-rang-zahlen",
+      zahl(a.xp || 0) + " XP" + (naechste ? " · " + t("hangar.rang.naechster", "{rang} ab {xp} XP").replace("{rang}", rangName(r + 1)).replace("{xp}", zahl(naechste.xp)) : "")
+      + " · " + t("hangar.rang.schlachten", "{n} Schlachten, {s} Siege").replace("{n}", a.schlachten || 0).replace("{s}", a.siege || 0));
+    rang.append(kopf, balken, zahlen);
+    box.appendChild(rang);
+
+    /* Sonderwaffe und Module */
+    const besitz = a.besitz || [];
+    function gruppe(art, ueber, text) {
+      const g = el("div", "hg-aus-gruppe");
+      g.append(el("h3", "hg-aus-gruppe-titel", ueber), el("p", "hg-aus-gruppe-text", text));
+      const liste = el("div", "hg-aus-liste");
+      HANGAR_TEIL_REIHE[art].forEach(function (id) { liste.appendChild(teilKarte(id, besitz.indexOf(id) >= 0)); });
+      g.appendChild(liste);
+      return g;
+    }
+    box.append(
+      gruppe("waffe", t("hangar.aus.waffe", "Sonderwaffe"), t("hangar.aus.waffeText", "Eine Waffe je Schiff – sichtbar am Rumpf, wirkt auf deinen Zielschuss.")),
+      gruppe("modul", t("hangar.aus.module", "Module"), t("hangar.aus.moduleText", "Zwei Plätze. Gilt ab der nächsten Aufstellung einer Schlacht."))
+    );
+    return box;
+  }
+
+  function teilKarte(id, gekauft) {
+    const T = HANGAR_TEILE[id];
+    const a = ausruestung;
+    const k = el("article", "hg-teil" + (gekauft ? " ist-gekauft" : ""));
+    k.dataset.teil = id;
+    const platz = T.art === "waffe" ? (a.waffe === id ? "waffe" : null) : a.modul1 === id ? "modul1" : a.modul2 === id ? "modul2" : null;
+    if (platz) k.classList.add("ist-angelegt");
+    k.append(el("h4", "hg-teil-name", teilText(id, "name")), el("p", "hg-teil-text", teilText(id, "text")));
+    const knoepfe = el("div", "hg-teil-knoepfe");
+    function knopf(text, fn, extra) {
+      const b = el("button", "hg-teil-knopf" + (extra ? " " + extra : ""), text);
+      b.type = "button";
+      b.addEventListener("click", fn);
+      knoepfe.appendChild(b);
+      return b;
+    }
+    if (!gekauft) {
+      const frage = bestaetigen && bestaetigen.wert === "teil:" + id && bestaetigen.bis > Date.now();
+      knopf((frage ? t("hangar.wirklich", "Wirklich kaufen?") + " " : t("hangar.aus.kaufen", "Kaufen") + " · ") + zahl(T.preis),
+        function () { teilKaufen(id); }, frage ? "ist-frage" : "");
+    } else if (platz) {
+      k.appendChild(el("p", "hg-teil-platz", platz === "waffe" ? t("hangar.aus.angelegt", "Angelegt")
+        : t("hangar.aus.inPlatz", "In Platz {n}").replace("{n}", platz === "modul1" ? "1" : "2")));
+      knopf(t("hangar.aus.ablegen", "Ablegen"), function () { teilAnlegen(platz, null); });
+    } else if (T.art === "waffe") {
+      knopf(t("hangar.aus.anlegen", "Anlegen"), function () { teilAnlegen("waffe", id); });
+    } else {
+      knopf(t("hangar.aus.platz", "Platz {n}").replace("{n}", "1"), function () { teilAnlegen("modul1", id); });
+      knopf(t("hangar.aus.platz", "Platz {n}").replace("{n}", "2"), function () { teilAnlegen("modul2", id); });
+    }
+    k.appendChild(knoepfe);
+    return k;
+  }
+
+  async function teilKaufen(id) {
+    if (beschaeftigt || !dbDa()) return;
+    const w = "teil:" + id;
+    if (!bestaetigen || bestaetigen.wert !== w || bestaetigen.bis < Date.now()) {
+      bestaetigen = { wert: w, bis: Date.now() + 5000 };
+      clearTimeout(bestaetigenUhr);
+      bestaetigenUhr = setTimeout(function () { bestaetigen = null; zeichnen(); }, 5100);
+      zeichnen();
+      return;
+    }
+    bestaetigen = null;
+    clearTimeout(bestaetigenUhr);
+    beschaeftigt = true;
+    try {
+      const data = await rpc("hangar_teil_kaufen", { p_teil: id });
+      if (data && data.ok) {
+        ausruestung = Object.assign({}, ausruestung, data.ausruestung);
+        zeichnen();
+        status(t("hangar.aus.gekauft", "✓ Gekauft: {teil}").replace("{teil}", teilText(id, "name")), false);
+        if (typeof refreshShopCurrencyDisplay === "function") refreshShopCurrencyDisplay();
+        return;
+      }
+      zeichnen();
+      status(fehlerText(data && data.grund), true);
+    } catch (err) {
+      console.warn("Hangar: Kauf fehlgeschlagen:", err);
+      zeichnen();
+      status(fehlerText(null), true);
+    } finally {
+      beschaeftigt = false;
+    }
+  }
+
+  async function teilAnlegen(platz, id) {
+    if (beschaeftigt || !dbDa()) return;
+    beschaeftigt = true;
+    try {
+      const data = await rpc("hangar_teil_anlegen", { p_platz: platz, p_teil: id });
+      if (data && data.ok) {
+        ausruestung = Object.assign({}, ausruestung, data.ausruestung);
+        zeichnen();
+        status(id ? t("hangar.aus.angelegtOk", "✓ Angelegt – gilt ab der nächsten Aufstellung.") : t("hangar.aus.abgelegt", "Abgelegt."), false);
+        return;
+      }
+      zeichnen();
+      status(fehlerText(data && data.grund), true);
+    } catch (err) {
+      console.warn("Hangar: Anlegen fehlgeschlagen:", err);
+      zeichnen();
+      status(fehlerText(null), true);
+    } finally {
+      beschaeftigt = false;
+    }
   }
 
   function parteienBox(st) {
@@ -238,6 +419,11 @@
     "max": ["hangar.fehler.max", "Dieser Wert ist schon ganz ausgebaut."],
     "gesperrt": ["hangar.fehler.gesperrt", "Dein Konto ist gesperrt."],
     "schlacht": ["hangar.fehler.schlacht", "Während der Sternenschlacht lässt sich der Typ nicht wechseln."],
+    "nicht-frei": ["hangar.fehler.nichtFrei", "Die Ausrüstung ist noch nicht freigegeben."],
+    "schon": ["hangar.fehler.schon", "Das hast du schon."],
+    "nicht-gekauft": ["hangar.fehler.nichtGekauft", "Kauf das Teil zuerst."],
+    "doppelt": ["hangar.fehler.doppelt", "Dieses Modul steckt schon im anderen Platz."],
+    "falscher-platz": ["hangar.fehler.platz", "Das passt nicht in diesen Platz."],
   };
   function fehlerText(grund) {
     const g = GRUENDE[grund];
@@ -361,6 +547,6 @@
 
   document.addEventListener("fh:epoche", function () { navAnpassen(); if (seiteOffen()) zeichnen(); });
   document.addEventListener("fh:seite", function () { if (seiteOffen()) window.updateHangarPage("hangar"); });
-  window.addEventListener("fhFlagsUpdated", function () { if (seiteOffen()) zeichnen(); });
+  window.addEventListener("fhFlagsUpdated", function () { if (seiteOffen()) laden().then(function () { if (seiteOffen()) zeichnen(); }); });
   navAnpassen();
 })();

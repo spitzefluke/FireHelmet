@@ -15,8 +15,8 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 130 `<script defer>`-Tags in fester
-Reihenfolge, davon 116 aus diesem Repo. Sechs große Skripte, die fast niemand braucht
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 131 `<script defer>`-Tags in fester
+Reihenfolge, davon 117 aus diesem Repo. Sechs große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
@@ -180,6 +180,16 @@ welche Partei darin kämpft, sagen `partei_links`/`partei_rechts` und `sternensc
 Im Browser ist `seite` bei `fhSchiffe.zeichnen()` immer die **Partei**; ein neuer Typ braucht
 Einträge in `hangar-data.js`, `schiffe.js` (Form), `schlacht-fx.js` (Waffe), `i18n.js` und
 `schlacht_typen`.
+
+Seit 58/59 gibt es **Ausrüstung** (Sonderwaffen, zwei Module, Schiffs-Rang aus Erfahrung;
+`hangar_teile`, `hangar_besitz`, `schiff_rang`), **Bewegen und Hülle** und das
+**Boss-Mutterschiff** (`modus = 'boss'`, `admin_boss_starten()`), jeweils hinter einer Freigabe
+(`hangarAusruestung`, `schlachtBewegung`, `schlachtBoss`). Was beim Start einer Schlacht
+freigegeben war, hält ein Trigger in `mit_ausruestung` / `mit_bewegung` fest – eine laufende
+Schlacht ändert ihre Regeln nicht. Die Browser-Seite dieser Regeln (Positionen, Hülle,
+Boss-Takt) steht in `schlacht-kampf.js` und muss zu `app.schlacht_huelle()`,
+`app.schlacht_bewegen()` und `app.schlacht_leben()` passen. Neue Tabellen mit Spielerbezug
+räumt hier der Trigger `hangar_konto_aufraeumen` ab.
 
 ### Datenbank und Anmeldung
 

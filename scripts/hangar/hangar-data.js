@@ -15,6 +15,9 @@
    Preise der naechsten Stufe: wie app.hangar_preis() in 48.
    Texte: i18n.js hangar.typ.<id>.*
 
+   AUSRUESTUNG (Migration 58): Sonderwaffen, Module und Schiffs-Rang
+   unten (HANGAR_TEILE, SCHIFF_RAENGE).
+
    PARTEIEN (Migration 57): Mit der Freigabe "schlachtParteien"
    kommen vier Parteien mit je vier Typen dazu. Ihre Zahlen stehen in
    public.schlacht_parteien und public.schlacht_typen - hier dieselben.
@@ -48,6 +51,37 @@ const SCHLACHT_PARTEIEN = {
   geister: { name: "Die Geisterflotte", volk: "Geister", farbe: "--fh-geist", laden: 35, text: "Wenig Leben, sehr viel Schaden." },
 };
 const SCHLACHT_PARTEI_REIHE = ["menschen", "aliens", "piraten", "maschinen", "kristall", "geister"];
+/* Boss-Schlacht (Migration 59): alle Spieler als Allianz gegen das Mutterschiff. */
+SCHLACHT_PARTEIEN.allianz = { name: "Die Allianz", volk: "Allianz", farbe: "--fh-gold-bright", laden: 45, text: "Alle Parteien gemeinsam gegen das Mutterschiff." };
+SCHLACHT_PARTEIEN.boss = { name: "Das Mutterschiff", volk: "Mutterschiff", farbe: "--fh-danger", laden: 60, text: "Ein Koloss mit drei Phasen, Salven und Schild." };
+
+/* Hangar-Ausruestung (Migration 58) - dieselben Zahlen wie
+   public.hangar_teile. Texte: i18n.js hangar.teil.<id>.* */
+const HANGAR_TEILE = {
+  plasma: { art: "waffe", preis: 15000, name: "Plasmakanone", text: "Zielschuss +15 %" },
+  raketen: { art: "waffe", preis: 20000, name: "Raketenwerfer", text: "Zielschuss +10 %, Fokusfeuer bis +80 %" },
+  tesla: { art: "waffe", preis: 30000, name: "Tesla-Spule", text: "Zielschuss springt mit 50 % auf ein zweites Ziel über" },
+  lanze: { art: "waffe", preis: 30000, name: "Lichtlanze", text: "Zielschuss +35 %, lädt aber 8 statt 5 s" },
+  panzer: { art: "modul", preis: 12000, name: "Verbundpanzer", text: "Leben +15 %" },
+  schild: { art: "modul", preis: 12000, name: "Deflektorschild", text: "Erhaltener Zielschuss −20 %" },
+  nachbrenner: { art: "modul", preis: 10000, name: "Nachbrenner", text: "Schneller bewegen, Ausweichen −40 % statt −25 %" },
+  zielcomputer: { art: "modul", preis: 15000, name: "Zielcomputer", text: "Zielschuss 1 s schneller" },
+  reaktor: { art: "modul", preis: 18000, name: "Überladereaktor", text: "Spezialangriff lädt 25 % schneller" },
+};
+const HANGAR_TEIL_REIHE = {
+  waffe: ["plasma", "raketen", "tesla", "lanze"],
+  modul: ["panzer", "schild", "nachbrenner", "zielcomputer", "reaktor"],
+};
+/* Schiffs-Rang (58): ab xp, je Stufe +2 % Leben und Schaden. */
+const SCHIFF_RAENGE = [
+  { xp: 0, name: "Rekrut" }, { xp: 100, name: "Kadett" }, { xp: 300, name: "Leutnant" },
+  { xp: 700, name: "Kommandant" }, { xp: 1500, name: "Kapitän" }, { xp: 3000, name: "Admiral" },
+];
+function schiffRang(xp) {
+  let r = 0;
+  SCHIFF_RAENGE.forEach(function (x, i) { if ((xp || 0) >= x.xp) r = i; });
+  return r;
+}
 
 /* Umrisse im Stil der Schiffe aus dem Film "Zeitmaschine 2100"
    (viewBox -130 -80 260 160). Keine Symbole, sondern Bilder der

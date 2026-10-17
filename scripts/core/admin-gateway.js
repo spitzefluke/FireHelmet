@@ -437,6 +437,9 @@ const GATEWAY_FEATURE_FLAGS = [
   { key: "skillTree", label: "Skill-Baum", hinweis: "Der Fertigkeitsbaum mit Skillpunkten." },
   { key: "schlachtOrte", label: "Kampforte der Sternenschlacht", hinweis: "Ab der nächsten gestarteten Schlacht spielt jede an einem ausgelosten Ort mit eigenen Regeln und Start-Animation (Migration 56). Eine laufende Schlacht bleibt, wie sie ist. Vorschau: Sternenschlacht → „Kampforte ansehen“." },
   { key: "schlachtParteien", label: "Weitere Parteien der Sternenschlacht", hinweis: "Piraten-Armada, Maschinen-Kollektiv, Kristall-Konklave und Geisterflotte (Migration 57). Beim Start wählst du zwei Parteien; jeder Spieler wählt in der Sammelphase eine davon und ein Schiff. Gilt ab der nächsten gestarteten Schlacht. Vorschau: „Kampforte ansehen“ → „Parteien“." },
+  { key: "hangarAusruestung", label: "Hangar: Sonderwaffen, Module, Schiffs-Rang", hinweis: "Im Hangar kaufen und anlegen die Spieler Sonderwaffen (sichtbar am Schiff) und zwei Module; aus Schlachten gibt es Erfahrung für den Rang (Migrationen 58/59). Wirkt ab der nächsten gestarteten Schlacht. Du selbst kannst vorher schon kaufen." },
+  { key: "schlachtBewegung", label: "Sternenschlacht: Bewegen und Hülle", hinweis: "Spieler steuern ihr Schiff in der eigenen Hälfte (vorn trifft härter, Ausweichen schützt); jedes Schiff hat eine eigene Hülle und fällt bei 0 für 45 s aus (Migration 59). Gilt ab der nächsten gestarteten Schlacht." },
+  { key: "schlachtBoss", label: "Sternenschlacht: Boss-Mutterschiff", hinweis: "Schaltet „Boss-Mutterschiff starten“ frei: alle Spieler gemeinsam gegen ein Mutterschiff mit drei Phasen, Salven und Schild (Migration 59)." },
 ];
 
 /* Aufgeteilt in drei Teile des Menues (Steuerung, Geschenke,
@@ -638,7 +641,7 @@ function buildGatewayEpocheHtml() {
     <p id="gw-seite-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <div class="gw-story-lage">
       <p id="gw-schlacht-jetzt" class="gw-story-jetzt">Sternenschlacht (Migration 50): Stand wird geladen …</p>
-      <p class="gateway-status-sub">Läuft endlos in Runden, bis du sie beendest. Das Tempo bestimmt, wie lange eine Runde etwa dauert. Kampforte (Migrationen 55/56): Ausgelost wird erst, wenn du sie unter Live-Event → Freigaben freischaltest; einen gewählten Ort nutzt der Start immer. „Kampforte ansehen“ zeigt dir alle vorab. Parteien (Migration 57): Mit der Freigabe „Weitere Parteien“ wählst du zwei der sechs Parteien; die Schlacht beginnt dann mit einer Sammelphase, in der jeder Spieler Partei und Schiff wählt. Ohne Freigabe kämpfen Menschen gegen Aliens wie bisher. Zum Testen außerhalb von 2100: „Vorschau 2100“, selbst eine Seite wählen, dann starten – die leere Seite übernimmt eine Übungsflotte.</p>
+      <p class="gateway-status-sub">Läuft endlos in Runden, bis du sie beendest. Das Tempo bestimmt, wie lange eine Runde etwa dauert. Kampforte (Migrationen 55/56): Ausgelost wird erst, wenn du sie unter Live-Event → Freigaben freischaltest; einen gewählten Ort nutzt der Start immer. „Kampforte ansehen“ zeigt dir alle vorab. Parteien (Migration 57): Mit der Freigabe „Weitere Parteien“ wählst du zwei der sechs Parteien; die Schlacht beginnt dann mit einer Sammelphase, in der jeder Spieler Partei und Schiff wählt. Ohne Freigabe kämpfen Menschen gegen Aliens wie bisher. Boss-Mutterschiff (Migration 59, Freigabe „Boss-Mutterschiff“): alle gegen einen Koloss, Tempo, Ort und Sammelzeit wie oben; die Stärke bestimmt sein Leben. Zum Testen außerhalb von 2100: „Vorschau 2100“, selbst eine Seite wählen, dann starten – die leere Seite übernimmt eine Übungsflotte.</p>
       <div class="gw-story-lage-knoepfe">
         <select id="gw-schlacht-dauer" class="gw-feld" aria-label="Tempo einer Runde">
           <option value="5">Schnell (Runde ≈ 5 min)</option>
@@ -664,6 +667,13 @@ function buildGatewayEpocheHtml() {
           <option value="300">Sammeln 5 min</option>
         </select>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtStarten()">Sternenschlacht starten</button>
+        <select id="gw-boss-staerke" class="gw-feld" aria-label="Stärke des Mutterschiffs">
+          <option value="2">Boss leicht</option>
+          <option value="3" selected>Boss normal</option>
+          <option value="5">Boss schwer</option>
+          <option value="8">Boss Albtraum</option>
+        </select>
+        <button type="button" class="gw-live-knopf" onclick="gwBossStarten()">Boss-Mutterschiff starten</button>
         <button type="button" class="gw-live-knopf" onclick="window.fhSchlachtOrte && window.fhSchlachtOrte.vorschau(document.getElementById('gw-schlacht-ort')?.value || null)">Kampforte ansehen</button>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtBeenden()">Schlacht beenden</button>
       </div>
@@ -695,6 +705,9 @@ async function gwSchlachtZeigen() {
       .order("id", { ascending: false }).limit(1).maybeSingle();
     if (error) throw error;
     if (!data) el.textContent = "Sternenschlacht: noch keine geschlagen.";
+    else if (data.status === "laeuft" && data.modus === "boss") el.textContent = (data.aufgestellt === false ? "Boss-Schlacht: Die Allianz sammelt sich bis " + new Date(data.beginn_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " Uhr."
+      : "Boss-Schlacht läuft – Runde " + data.runde + ", Mutterschiff Phase " + data.boss_phase + ", Leben zu Rundenbeginn " + Math.round(100 * (data.boss_rest || 0) / (data.boss_max || 1)) + " % (" + data.anzahl_menschen + " Schiffe in der Allianz).")
+      + (data.ort && window.fhSchlachtOrte ? " Ort: " + window.fhSchlachtOrte.name(data.ort) + "." : "");
     else if (data.status === "laeuft" && data.mit_wahl && data.aufgestellt === false) el.textContent = "Sternenschlacht: Sammelphase – " + gwParteiName(data.partei_links) + " gegen " + gwParteiName(data.partei_rechts) + ", Start um " + new Date(data.beginn_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " Uhr." + (data.ort && window.fhSchlachtOrte ? " Ort: " + window.fhSchlachtOrte.name(data.ort) + "." : "");
     else if (data.status === "laeuft" && data.endlos) el.textContent = "Sternenschlacht läuft endlos – Runde " + data.runde + ", Rundensiege " + gwParteiName(data.partei_links || "menschen") + " " + data.punkte_menschen + " : " + data.punkte_aliens + " " + gwParteiName(data.partei_rechts || "aliens") + " (" + data.anzahl_menschen + " gegen " + data.anzahl_aliens + " Schiffe)." + (data.ort && window.fhSchlachtOrte ? " Ort: " + window.fhSchlachtOrte.name(data.ort) + "." : "");
     else if (data.status === "laeuft") el.textContent = "Sternenschlacht läuft bis " + new Date(data.ende_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) + " Uhr – " + data.anzahl_menschen + " Menschen gegen " + data.anzahl_aliens + " Aliens.";
@@ -738,6 +751,30 @@ async function gwSchlachtStarten() {
       : /parteien-gesperrt/.test(m) ? "Weitere Parteien sind noch nicht freigegeben (Live-Event → Freigaben)."
       : /parteien-gleich/.test(m) ? "Wähle zwei verschiedene Parteien."
       : /partei-unbekannt|p_links|p_rechts|p_sammeln/.test(m) ? "Parteien gibt es erst mit Migration 57." : m + " – sind Migration 49 und 50 eingespielt?";
+    gwLiveStatus("gw-schlacht-status", "Start fehlgeschlagen: " + grund, true);
+  }
+}
+
+/* Boss-Mutterschiff (Migration 59). */
+async function gwBossStarten() {
+  if (!supabaseClient) return;
+  const minuten = Number(document.getElementById("gw-schlacht-dauer")?.value || 10);
+  const ort = document.getElementById("gw-schlacht-ort")?.value || null;
+  const sammeln = Number(document.getElementById("gw-schlacht-sammeln")?.value || 90);
+  const staerke = Number(document.getElementById("gw-boss-staerke")?.value || 3);
+  if (!confirm("Boss-Mutterschiff starten? Erst sammelt sich die Allianz (" + Math.round(sammeln / 60 * 10) / 10 + " min), dann kämpfen alle gemeinsam gegen das Mutterschiff – bis es fällt oder du beendest.")) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_boss_starten", { p_minuten: minuten, p_ort: ort, p_sammeln_sek: sammeln, p_staerke: staerke });
+    if (error) throw error;
+    gwLiveStatus("gw-schlacht-status", "✓ Das Mutterschiff naht – die Allianz sammelt sich.", false);
+    gwSchlachtZeigen();
+  } catch (err) {
+    console.error("Boss starten fehlgeschlagen:", err);
+    const m = (err && err.message) || String(err);
+    const grund = /boss-gesperrt/.test(m) ? "Erst unter Live-Event → Freigaben „Boss-Mutterschiff“ einschalten."
+      : /schlacht-laeuft/.test(m) ? "Es läuft schon eine Schlacht."
+      : /ort-unbekannt/.test(m) ? "Unbekannter Ort."
+      : /admin_boss_starten|function/.test(m) ? "Das Mutterschiff gibt es erst mit Migration 59." : m;
     gwLiveStatus("gw-schlacht-status", "Start fehlgeschlagen: " + grund, true);
   }
 }
