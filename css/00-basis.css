@@ -209,6 +209,9 @@ body.loaded {
   --fh-cold: #42b8ff;
   /* Fuer die Event-Titel (Regenbogen, "hacked"), css/30-events.css. */
   --fh-violett: #a66bff;
+  /* Parteien der Sternenschlacht (Migration 57), neben cold/violett/fire/danger. */
+  --fh-kristall: #ff7ad9;
+  --fh-geist: #5dffc8;
   --fh-neon: #39ff14;
   /* Abstufungen fuer die gekaperte Konsole (Gegenhack, Werbungsflut). */
   --fh-neon-hell: #8fff7a;

@@ -10,6 +10,12 @@
    Ausbau braucht einen zweiten Klick - die Preise sind hoch.
 
    Die Zahlen (Grundwerte, Preise) stehen in hangar-data.js.
+
+   PARTEIEN (Migration 57): Mit der Freigabe "schlachtParteien" zeigt
+   der Hangar unter der eigenen Einheit die Schiffe der vier neuen
+   Parteien - mit den eigenen Ausbaustufen, denn die gelten fuer jeden
+   Typ. Gewaehlt wird ein solches Schiff erst in der Sammelphase einer
+   Schlacht (schlacht.js), nicht hier.
 ====================================================== */
 
 (function () {
@@ -168,6 +174,34 @@
     st2.setAttribute("aria-live", "polite");
 
     ziel.append(typen, detail, st2);
+    if (typeof window.fhFeatureSichtbar === "function" && window.fhFeatureSichtbar("schlachtParteien")) ziel.appendChild(parteienBox(st));
+  }
+
+  function parteienBox(st) {
+    const box = el("section", "hg-parteien");
+    box.append(
+      el("h2", "hg-parteien-titel", t("hangar.parteien.titel", "Weitere Parteien")),
+      el("p", "hg-parteien-text", t("hangar.parteien.text", "In einer Sternenschlacht mit Parteiwahl fliegst du auch für sie – deine Ausbauten gelten für jedes Schiff."))
+    );
+    const liste = el("div", "hg-parteien-liste");
+    ["piraten", "maschinen", "kristall", "geister"].forEach(function (p) {
+      const karte = el("article", "hg-partei");
+      karte.dataset.partei = p;
+      karte.append(el("h3", "hg-partei-name", schlachtParteiText(p, "name")), el("p", "hg-partei-text", schlachtParteiText(p, "text")));
+      const typen = el("div", "hg-partei-typen");
+      HANGAR_REIHENFOLGE[p].forEach(function (id) {
+        const w = hangarWerte(id, st, p);
+        const z = el("div", "hg-partei-typ");
+        z.title = typText(id, "spezial") + ": " + typText(id, "spezialText");
+        z.append(schiff(id, "", st), el("span", "hg-partei-typ-name", typText(id, "name") + (w.anzahl > 1 ? " ×" + w.anzahl : "")),
+          el("span", "hg-partei-typ-werte", zahl(w.leben * w.anzahl) + " · " + zahl(Math.round(w.schaden * w.anzahl * 10) / 10)));
+        typen.appendChild(z);
+      });
+      karte.appendChild(typen);
+      liste.appendChild(karte);
+    });
+    box.appendChild(liste);
+    return box;
   }
 
   function wertZeile(wert, name, anzeige, stufe) {
@@ -327,5 +361,6 @@
 
   document.addEventListener("fh:epoche", function () { navAnpassen(); if (seiteOffen()) zeichnen(); });
   document.addEventListener("fh:seite", function () { if (seiteOffen()) window.updateHangarPage("hangar"); });
+  window.addEventListener("fhFlagsUpdated", function () { if (seiteOffen()) zeichnen(); });
   navAnpassen();
 })();

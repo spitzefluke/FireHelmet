@@ -436,6 +436,7 @@ function buildGatewayChapterListHtml() {
 const GATEWAY_FEATURE_FLAGS = [
   { key: "skillTree", label: "Skill-Baum", hinweis: "Der Fertigkeitsbaum mit Skillpunkten." },
   { key: "schlachtOrte", label: "Kampforte der Sternenschlacht", hinweis: "Ab der nächsten gestarteten Schlacht spielt jede an einem ausgelosten Ort mit eigenen Regeln und Start-Animation (Migration 56). Eine laufende Schlacht bleibt, wie sie ist. Vorschau: Sternenschlacht → „Kampforte ansehen“." },
+  { key: "schlachtParteien", label: "Weitere Parteien der Sternenschlacht", hinweis: "Piraten-Armada, Maschinen-Kollektiv, Kristall-Konklave und Geisterflotte (Migration 57). Beim Start wählst du zwei Parteien; jeder Spieler wählt in der Sammelphase eine davon und ein Schiff. Gilt ab der nächsten gestarteten Schlacht. Vorschau: „Kampforte ansehen“ → „Parteien“." },
 ];
 
 /* Aufgeteilt in drei Teile des Menues (Steuerung, Geschenke,
@@ -637,7 +638,7 @@ function buildGatewayEpocheHtml() {
     <p id="gw-seite-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <div class="gw-story-lage">
       <p id="gw-schlacht-jetzt" class="gw-story-jetzt">Sternenschlacht (Migration 50): Stand wird geladen …</p>
-      <p class="gateway-status-sub">Läuft endlos in Runden, bis du sie beendest. Das Tempo bestimmt, wie lange eine Runde etwa dauert. Kampforte (Migrationen 55/56): Ausgelost wird erst, wenn du sie unter Live-Event → Freigaben freischaltest; einen gewählten Ort nutzt der Start immer. „Kampforte ansehen“ zeigt dir alle vorab. Zum Testen außerhalb von 2100: „Vorschau 2100“, selbst eine Seite wählen, dann starten – die leere Seite übernimmt eine Übungsflotte.</p>
+      <p class="gateway-status-sub">Läuft endlos in Runden, bis du sie beendest. Das Tempo bestimmt, wie lange eine Runde etwa dauert. Kampforte (Migrationen 55/56): Ausgelost wird erst, wenn du sie unter Live-Event → Freigaben freischaltest; einen gewählten Ort nutzt der Start immer. „Kampforte ansehen“ zeigt dir alle vorab. Parteien (Migration 57): Mit der Freigabe „Weitere Parteien“ wählst du zwei der sechs Parteien; die Schlacht beginnt dann mit einer Sammelphase, in der jeder Spieler Partei und Schiff wählt. Ohne Freigabe kämpfen Menschen gegen Aliens wie bisher. Zum Testen außerhalb von 2100: „Vorschau 2100“, selbst eine Seite wählen, dann starten – die leere Seite übernimmt eine Übungsflotte.</p>
       <div class="gw-story-lage-knoepfe">
         <select id="gw-schlacht-dauer" class="gw-feld" aria-label="Tempo einer Runde">
           <option value="5">Schnell (Runde ≈ 5 min)</option>
@@ -654,6 +655,14 @@ function buildGatewayEpocheHtml() {
           <option value="eisring">Eisringe von Kryos</option>
           <option value="wurmloch">Wurmloch-Schlund Ixion</option>
         </select>
+        <select id="gw-schlacht-links" class="gw-feld" aria-label="Partei links">${gwParteiOptionen("menschen")}</select>
+        <select id="gw-schlacht-rechts" class="gw-feld" aria-label="Partei rechts">${gwParteiOptionen("aliens")}</select>
+        <select id="gw-schlacht-sammeln" class="gw-feld" aria-label="Sammelphase">
+          <option value="60">Sammeln 1 min</option>
+          <option value="90" selected>Sammeln 1,5 min</option>
+          <option value="180">Sammeln 3 min</option>
+          <option value="300">Sammeln 5 min</option>
+        </select>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtStarten()">Sternenschlacht starten</button>
         <button type="button" class="gw-live-knopf" onclick="window.fhSchlachtOrte && window.fhSchlachtOrte.vorschau(document.getElementById('gw-schlacht-ort')?.value || null)">Kampforte ansehen</button>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtBeenden()">Schlacht beenden</button>
@@ -661,6 +670,14 @@ function buildGatewayEpocheHtml() {
     </div>
     <p id="gw-schlacht-status" class="gw-live-status" role="status" aria-live="polite"></p>
   `;
+}
+
+/* Auswahl der sechs Parteien (Migration 57; Namen aus hangar-data.js). */
+function gwParteiOptionen(vorwahl) {
+  const reihe = typeof SCHLACHT_PARTEI_REIHE !== "undefined" ? SCHLACHT_PARTEI_REIHE : ["menschen", "aliens"];
+  /* feste Texte aus hangar-data.js bzw. i18n.js, keine Nutzerdaten */
+  return reihe.map((p) => '<option value="' + p + '"' + (p === vorwahl ? " selected" : "") + ">" +
+    (typeof schlachtParteiText === "function" ? schlachtParteiText(p, "name") : p) + "</option>").join("");
 }
 
 /* ------------------------------------------------------
@@ -678,7 +695,8 @@ async function gwSchlachtZeigen() {
       .order("id", { ascending: false }).limit(1).maybeSingle();
     if (error) throw error;
     if (!data) el.textContent = "Sternenschlacht: noch keine geschlagen.";
-    else if (data.status === "laeuft" && data.endlos) el.textContent = "Sternenschlacht läuft endlos – Runde " + data.runde + ", Rundensiege Menschen " + data.punkte_menschen + " : " + data.punkte_aliens + " Aliens (" + data.anzahl_menschen + " gegen " + data.anzahl_aliens + " Schiffe)." + (data.ort && window.fhSchlachtOrte ? " Ort: " + window.fhSchlachtOrte.name(data.ort) + "." : "");
+    else if (data.status === "laeuft" && data.mit_wahl && data.aufgestellt === false) el.textContent = "Sternenschlacht: Sammelphase – " + gwParteiName(data.partei_links) + " gegen " + gwParteiName(data.partei_rechts) + ", Start um " + new Date(data.beginn_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " Uhr." + (data.ort && window.fhSchlachtOrte ? " Ort: " + window.fhSchlachtOrte.name(data.ort) + "." : "");
+    else if (data.status === "laeuft" && data.endlos) el.textContent = "Sternenschlacht läuft endlos – Runde " + data.runde + ", Rundensiege " + gwParteiName(data.partei_links || "menschen") + " " + data.punkte_menschen + " : " + data.punkte_aliens + " " + gwParteiName(data.partei_rechts || "aliens") + " (" + data.anzahl_menschen + " gegen " + data.anzahl_aliens + " Schiffe)." + (data.ort && window.fhSchlachtOrte ? " Ort: " + window.fhSchlachtOrte.name(data.ort) + "." : "");
     else if (data.status === "laeuft") el.textContent = "Sternenschlacht läuft bis " + new Date(data.ende_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) + " Uhr – " + data.anzahl_menschen + " Menschen gegen " + data.anzahl_aliens + " Aliens.";
     else el.textContent = "Letzte Sternenschlacht: " + (data.sieger === "menschen" ? "Menschen" : data.sieger === "aliens" ? "Aliens" : "unentschieden") + (data.endlos ? " (Runden " + data.punkte_menschen + " : " + data.punkte_aliens + ")." : " (" + Math.round(data.endstand_menschen) + " % : " + (100 - Math.round(data.endstand_menschen)) + " %).");
   } catch (err) {
@@ -686,23 +704,40 @@ async function gwSchlachtZeigen() {
   }
 }
 
+function gwParteiName(p) {
+  return typeof schlachtParteiText === "function" ? schlachtParteiText(p, "volk") : p;
+}
+
 async function gwSchlachtStarten() {
   if (!supabaseClient) return;
   const minuten = Number(document.getElementById("gw-schlacht-dauer")?.value || 10);
   const ort = document.getElementById("gw-schlacht-ort")?.value || null;
-  if (!confirm("Sternenschlacht starten? Sie läuft endlos in Runden, bis du sie beendest. Alle Spieler mit Seite kämpfen mit.")) return;
+  const links = document.getElementById("gw-schlacht-links")?.value || "menschen";
+  const rechts = document.getElementById("gw-schlacht-rechts")?.value || "aliens";
+  const sammeln = Number(document.getElementById("gw-schlacht-sammeln")?.value || 90);
+  const parteienFrei = !!(typeof siteConfig !== "undefined" && siteConfig.featureFlags && siteConfig.featureFlags.schlachtParteien === true);
+  const mitParteien = parteienFrei || links !== "menschen" || rechts !== "aliens";
+  if (links === rechts) { gwLiveStatus("gw-schlacht-status", "Wähle zwei verschiedene Parteien.", true); return; }
+  if (!confirm(parteienFrei
+    ? "Sternenschlacht starten: " + gwParteiName(links) + " gegen " + gwParteiName(rechts) + "? Zuerst sammeln sich die Flotten (" + Math.round(sammeln / 60 * 10) / 10 + " min) – jeder Spieler wählt Partei und Schiff. Danach läuft sie endlos in Runden, bis du sie beendest."
+    : "Sternenschlacht starten? Sie läuft endlos in Runden, bis du sie beendest. Alle Spieler mit Seite kämpfen mit.")) return;
   try {
     /* p_ort nur mitschicken, wenn gewaehlt - so laeuft der Start auch
-       noch ohne Migration 55 (dann ohne Ort). */
+       noch ohne Migration 55 (dann ohne Ort). Parteien genauso erst
+       mit Migration 57. */
     const args = ort ? { p_minuten: minuten, p_ort: ort } : { p_minuten: minuten };
+    if (mitParteien) Object.assign(args, { p_links: links, p_rechts: rechts, p_sammeln_sek: sammeln });
     const { error } = await supabaseClient.rpc("admin_schlacht_starten", args);
     if (error) throw error;
-    gwLiveStatus("gw-schlacht-status", "✓ Die Sternenschlacht läuft.", false);
+    gwLiveStatus("gw-schlacht-status", parteienFrei ? "✓ Die Flotten sammeln sich." : "✓ Die Sternenschlacht läuft.", false);
     gwSchlachtZeigen();
   } catch (err) {
     console.error("Schlacht starten fehlgeschlagen:", err);
     const m = (err && err.message) || String(err);
-    const grund = /nicht-2100/.test(m) ? "Migration 50 fehlt noch – erst sie startet auch außerhalb von 2100." : /schlacht-laeuft/.test(m) ? "Es läuft schon eine Schlacht." : /zu-wenige/.test(m) ? "Noch niemand hat eine Seite gewählt – wähle selbst eine (Vorschau 2100)." : /ort-unbekannt|p_ort/.test(m) ? "Kampforte gibt es erst mit Migration 55." : m + " – sind Migration 49 und 50 eingespielt?";
+    const grund = /nicht-2100/.test(m) ? "Migration 50 fehlt noch – erst sie startet auch außerhalb von 2100." : /schlacht-laeuft/.test(m) ? "Es läuft schon eine Schlacht." : /zu-wenige/.test(m) ? "Noch niemand hat eine Seite gewählt – wähle selbst eine (Vorschau 2100)." : /ort-unbekannt|p_ort/.test(m) ? "Kampforte gibt es erst mit Migration 55."
+      : /parteien-gesperrt/.test(m) ? "Weitere Parteien sind noch nicht freigegeben (Live-Event → Freigaben)."
+      : /parteien-gleich/.test(m) ? "Wähle zwei verschiedene Parteien."
+      : /partei-unbekannt|p_links|p_rechts|p_sammeln/.test(m) ? "Parteien gibt es erst mit Migration 57." : m + " – sind Migration 49 und 50 eingespielt?";
     gwLiveStatus("gw-schlacht-status", "Start fehlgeschlagen: " + grund, true);
   }
 }

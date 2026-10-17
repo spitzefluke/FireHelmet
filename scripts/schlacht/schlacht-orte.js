@@ -33,7 +33,10 @@
      wackeln(jetzt) -> { x, y }              - Erschuetterung
      regeln(ortZeile) -> [Text]              - Regeln als Saetze
      name(ortId), gegend(ortId), ereignisName(ortId)
-     intro(buehne, { ortId, ort, menschen, aliens, runde, klang }) -> Promise
+     intro(buehne, { ortId, ort, menschen, aliens, runde, klang,
+                     links, rechts }) -> Promise
+       links/rechts: Parteien (Migration 57), Standard menschen/aliens;
+       "menschen"/"aliens" bleiben die Slots links/rechts.
      introLaeuft(), introAbbrechen()
      leeren()
      vorschau(ortId)                         - Admin: alle Orte ansehen
@@ -52,6 +55,10 @@
   "use strict";
 
   function t(key, fallback) { return typeof window.t === "function" ? window.t(key, fallback) : fallback; }
+  /* Name einer Partei (hangar-data.js, Migration 57) */
+  function parteiName(p) {
+    return typeof schlachtParteiText === "function" ? schlachtParteiText(p, "name") : (p === "aliens" ? t("seiten.aliens.name", "Der Schwarm") : t("seiten.menschen.name", "Die Erdflotte"));
+  }
   const RUHIG = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
   /* Gleichbleibende Zufallszahlen je Ort und Zweck (mulberry32). */
@@ -604,10 +611,13 @@
       });
       ortBox.appendChild(liste);
       const vs = el("div", "sl-intro-vs");
+      const pl = o.links || "menschen", pr = o.rechts || "aliens";
       const vm = el("div", "sl-intro-seite ist-menschen");
-      vm.append(el("span", "sl-intro-volk", t("seiten.menschen.name", "Die Erdflotte")), el("strong", null, String((o.menschen || []).length)));
+      vm.dataset.partei = pl;
+      vm.append(el("span", "sl-intro-volk", parteiName(pl)), el("strong", null, String((o.menschen || []).length)));
       const va = el("div", "sl-intro-seite ist-aliens");
-      va.append(el("span", "sl-intro-volk", t("seiten.aliens.name", "Der Schwarm")), el("strong", null, String((o.aliens || []).length)));
+      va.dataset.partei = pr;
+      va.append(el("span", "sl-intro-volk", parteiName(pr)), el("strong", null, String((o.aliens || []).length)));
       vs.append(vm, el("span", "sl-intro-gegen", "VS"), va);
       const zahl = el("div", "sl-intro-zahl");
       zahl.setAttribute("aria-hidden", "true");
@@ -670,13 +680,17 @@
           const zielX = seite === "menschen" ? B * s.x : B * (1 - s.x);
           const startX = seite === "menschen" ? -B * 0.3 : B * 1.3;
           const x = startX + (zielX - startX) * e, y = H * s.y;
+          const partei = seite === "menschen" ? pl : pr;
           if (lq < 1) {
-            g.strokeStyle = seite === "menschen" ? "rgba(143,227,255," + (0.8 * (1 - lq)) + ")" : "rgba(166,255,110," + (0.8 * (1 - lq)) + ")";
+            g.save();
+            g.globalAlpha = 0.8 * (1 - lq);
+            g.strokeStyle = window.fhSchiffe.farbe(partei).akzent;
             g.lineWidth = 3;
             g.beginPath(); g.moveTo(x, y); g.lineTo(startX + (x - startX) * 0.2, y); g.stroke();
+            g.restore();
           }
           window.fhSchiffe.zeichnen(g, {
-            typ: s.typ, seite: seite, stufen: s.stufen, x: x, y: y, winkel: seite === "menschen" ? 0 : Math.PI,
+            typ: s.typ, seite: partei, stufen: s.stufen, x: x, y: y, winkel: seite === "menschen" ? 0 : Math.PI,
             breite: s.breite, dpr: D, zeit: jetzt, phase: s.d, treffer: 0, ruhig: false,
           });
           if (lq >= 1 && !s.blitz) s.blitz = jetzt;   // Ankunftsblitz einmal
@@ -798,8 +812,9 @@
     return zeilen;
   }
 
-  function demoFlotte(seite) {
-    const typen = seite === "menschen" ? ["jaeger", "fregatte", "kreuzer", "traeger"] : ["drohne", "stachel", "weber", "brutschiff"];
+  function demoFlotte(partei) {
+    const typen = typeof HANGAR_REIHENFOLGE !== "undefined" && HANGAR_REIHENFOLGE[partei]
+      ? HANGAR_REIHENFOLGE[partei] : ["jaeger", "fregatte", "kreuzer", "traeger"];
     const liste = [];
     for (let i = 0; i < 9; i++) {
       liste.push({ typ: typen[i % 4], stufen: { leben: i % 4, schaden: (i * 2) % 5, spezial: i % 3 } });
@@ -813,7 +828,11 @@
     const k = window.fhSchlachtKlang || null;
     let aktiv = ORTE.indexOf(startId) >= 0 ? startId : ORTE[0];
     let zeilen = null;
-    const fM = demoFlotte("menschen"), fA = demoFlotte("aliens");
+    /* Parteien (Migration 57): Paare zum Durchschalten. */
+    const PAARE = [["menschen", "aliens"], ["piraten", "maschinen"], ["kristall", "geister"],
+      ["menschen", "geister"], ["piraten", "aliens"], ["maschinen", "kristall"]];
+    let paar = 0;
+    let fM = demoFlotte("menschen"), fA = demoFlotte("aliens");
 
     const box = el("div", "sl-vorschau");
     box.id = "fh-orte-vorschau";
@@ -846,7 +865,18 @@
     einflug.type = "button";
     const ausloesen = el("button", "sl-vorschau-knopf", t("schlacht.vorschau.ereignis", "Ereignis auslösen"));
     ausloesen.type = "button";
-    knoepfe.append(einflug, ausloesen);
+    const parteiKnopf = el("button", "sl-vorschau-knopf");
+    parteiKnopf.type = "button";
+    function parteiText() {
+      parteiKnopf.textContent = t("schlacht.vorschau.parteien", "Parteien") + ": " + parteiName(PAARE[paar][0]) + " · " + parteiName(PAARE[paar][1]);
+    }
+    parteiText();
+    parteiKnopf.addEventListener("click", function () {
+      paar = (paar + 1) % PAARE.length;
+      fM = demoFlotte(PAARE[paar][0]); fA = demoFlotte(PAARE[paar][1]);
+      parteiText();
+    });
+    knoepfe.append(einflug, ausloesen, parteiKnopf);
     const hinweis = el("p", "sl-vorschau-hinweis", t("schlacht.vorschau.hinweis", "Nur für dich. Spieler sehen die Orte erst, wenn du sie unter Live-Event → Freigaben freischaltest."));
     fuss.append(info, knoepfe, hinweis);
     box.append(kopf, feld, fuss);
@@ -923,7 +953,7 @@
         }
         const ruhig = RUHIG.matches;
         window.fhSchiffe.zeichnen(g, {
-          typ: s2.typ, seite: seite, stufen: s2.stufen, x: x + (ruhig ? 0 : Math.sin(jetzt / 900 + i) * 4),
+          typ: s2.typ, seite: PAARE[paar][seite === "menschen" ? 0 : 1], stufen: s2.stufen, x: x + (ruhig ? 0 : Math.sin(jetzt / 900 + i) * 4),
           y: y + (ruhig ? 0 : Math.cos(jetzt / 1100 + i) * 5),
           winkel: hoch ? (seite === "menschen" ? -Math.PI / 2 : Math.PI / 2) : (seite === "menschen" ? 0 : Math.PI),
           breite: Math.max(40, Math.min(B, H) * 0.1), dpr: D, zeit: jetzt, phase: i * 300, treffer: 0, ruhig: ruhig,
@@ -968,7 +998,7 @@
 
     zu.addEventListener("click", schliessen);
     einflug.addEventListener("click", function () {
-      introStarten(box, { ortId: aktiv, ort: zeilen && zeilen[aktiv], menschen: fM, aliens: fA, runde: 1, klang: k })
+      introStarten(box, { ortId: aktiv, ort: zeilen && zeilen[aktiv], menschen: fM, aliens: fA, runde: 1, klang: k, links: PAARE[paar][0], rechts: PAARE[paar][1] })
         .then(function () { if (vorschauOffen) einflug.focus({ preventScroll: true }); });
     });
     ausloesen.addEventListener("click", ereignisZeigen);

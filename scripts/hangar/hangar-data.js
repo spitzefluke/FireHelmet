@@ -14,6 +14,12 @@
 
    Preise der naechsten Stufe: wie app.hangar_preis() in 48.
    Texte: i18n.js hangar.typ.<id>.*
+
+   PARTEIEN (Migration 57): Mit der Freigabe "schlachtParteien"
+   kommen vier Parteien mit je vier Typen dazu. Ihre Zahlen stehen in
+   public.schlacht_parteien und public.schlacht_typen - hier dieselben.
+   "seite" eines Typs ist seine Partei; "anzahl" 2 fliegt doppelt.
+   Die Hangar-Stufen gelten fuer jeden Typ jeder Partei.
 ====================================================== */
 
 const HANGAR_PREISE = [1000, 3000, 8000, 20000, 50000];
@@ -22,7 +28,26 @@ const HANGAR_MAX_STUFE = 5;
 const HANGAR_SEITEN_MOD = {
   menschen: { leben: 1.25, schaden: 0.85 },
   aliens: { leben: 0.80, schaden: 1.30 },
+  piraten: { leben: 1.00, schaden: 1.10 },
+  maschinen: { leben: 1.20, schaden: 0.95 },
+  kristall: { leben: 0.95, schaden: 1.15 },
+  geister: { leben: 0.85, schaden: 1.25 },
 };
+
+/* Die sechs Parteien der Sternenschlacht (Migration 57).
+   laden: Sekunden bis zum Spezialangriff je Runde.
+   farbe: Akzent aus den Design-Tokens.
+   Texte: i18n.js schlacht.partei.<id>.* (Menschen und Aliens:
+   seiten.<id>.*). */
+const SCHLACHT_PARTEIEN = {
+  menschen: { name: "Die Erdflotte", volk: "Menschen", farbe: "--fh-cold", laden: 60, text: "Viel Leben, regenerieren, kämpfen in Formation." },
+  aliens: { name: "Der Schwarm", volk: "Aliens", farbe: "--fh-violett", laden: 30, text: "Wenig Leben, viel Schaden, schneller Spezialangriff." },
+  piraten: { name: "Die Piraten-Armada", volk: "Piraten", farbe: "--fh-fire", laden: 45, text: "Ausgewogen, harte Breitseiten." },
+  maschinen: { name: "Das Maschinen-Kollektiv", volk: "Maschinen", farbe: "--fh-danger", laden: 50, text: "Sehr zäh, schwere Kanonen, langsam geladen." },
+  kristall: { name: "Die Kristall-Konklave", volk: "Kristalle", farbe: "--fh-kristall", laden: 40, text: "Scharf und zerbrechlich, schwächt den Gegner." },
+  geister: { name: "Die Geisterflotte", volk: "Geister", farbe: "--fh-geist", laden: 35, text: "Wenig Leben, sehr viel Schaden." },
+};
+const SCHLACHT_PARTEI_REIHE = ["menschen", "aliens", "piraten", "maschinen", "kristall", "geister"];
 
 /* Umrisse im Stil der Schiffe aus dem Film "Zeitmaschine 2100"
    (viewBox -130 -80 260 160). Keine Symbole, sondern Bilder der
@@ -53,7 +78,7 @@ const HANGAR_TYPEN = {
     form: '<path d="M112 -12 L70 -42 L-100 -42 L-114 -20 L-114 20 L-100 42 L70 42 L112 12Z" class="hg-rumpf"/><path d="M-80 -14 H60 M-80 0 H60 M-80 14 H60" class="hg-linie"/><circle cx="84" cy="0" r="9" class="hg-antrieb"/>',
   },
   drohne: {
-    seite: "aliens", leben: 50, schaden: 9,
+    seite: "aliens", leben: 50, schaden: 9, anzahl: 2,
     name: "Drohne", rolle: "Schwach, aber doppelt",
     spezial: "Schwarmangriff", spezialText: "Sofort 250 Schaden am Ziel",
     form: '<path d="M60 0 L0 -40 L-54 0 L0 40Z" class="hg-rumpf"/><circle cx="0" cy="0" r="10" class="hg-kern"/>',
@@ -76,11 +101,115 @@ const HANGAR_TYPEN = {
     spezial: "Brut", spezialText: "30 s lang zusätzliches Dauerfeuer",
     form: '<ellipse cx="0" cy="8" rx="118" ry="38" class="hg-rumpf"/><ellipse cx="0" cy="-22" rx="46" ry="24" class="hg-deck"/><circle cx="-60" cy="22" r="6" class="hg-kern"/><circle cx="0" cy="30" r="6" class="hg-kern"/><circle cx="60" cy="22" r="6" class="hg-kern"/>',
   },
+  /* ---- Piraten-Armada (57) ---- */
+  kaper: {
+    seite: "piraten", leben: 75, schaden: 15,
+    name: "Kaperschiff", rolle: "Schnell, entert",
+    spezial: "Enterhaken", spezialText: "Sofort 320 Schaden am Ziel",
+    form: '<path d="M78 0 L40 -14 L-30 -20 L-52 -10 L-52 10 L-30 20 L40 14Z" class="hg-rumpf"/><path d="M-10 -20 L10 -58 L-40 -24Z" class="hg-deck"/>',
+  },
+  brigant: {
+    seite: "piraten", leben: 115, schaden: 11,
+    name: "Brigant", rolle: "Ausgewogen",
+    spezial: "Rauchwand", spezialText: "Gegner 15 s lang −35 % Schaden",
+    form: '<path d="M100 0 L60 -20 L-60 -26 L-96 -12 L-96 12 L-60 26 L60 20Z" class="hg-rumpf"/><path d="M20 -24 L30 -66 L-10 -26Z M-40 -26 L-30 -62 L-70 -24Z" class="hg-deck"/>',
+  },
+  galeone: {
+    seite: "piraten", leben: 190, schaden: 8,
+    name: "Galeone", rolle: "Schwer bewaffnet, zäh",
+    spezial: "Breitseite", spezialText: "Sofort 480 Schaden am Ziel",
+    form: '<path d="M118 0 L80 -30 L-80 -40 L-118 -30 L-118 30 L-80 40 L80 30Z" class="hg-rumpf"/><rect x="-116" y="-24" width="34" height="48" rx="4" class="hg-deck"/><path d="M-60 -34 H70 M-60 34 H70" class="hg-linie"/>',
+  },
+  schmuggler: {
+    seite: "piraten", leben: 105, schaden: 6,
+    name: "Schmuggler", rolle: "Schwach, bringt Nachschub",
+    spezial: "Beuteladung", spezialText: "Heilt die eigene Seite um 380 Leben",
+    form: '<path d="M100 -10 L70 -40 L-96 -40 L-110 -24 L-110 24 L-96 40 L70 40 L100 10Z" class="hg-rumpf"/><rect x="-80" y="-28" width="40" height="24" class="hg-deck"/><rect x="-30" y="4" width="40" height="24" class="hg-deck"/>',
+  },
+  /* ---- Maschinen-Kollektiv (57) ---- */
+  sonde: {
+    seite: "maschinen", leben: 45, schaden: 10, anzahl: 2,
+    name: "Sonde", rolle: "Schwach, aber doppelt",
+    spezial: "Überladung", spezialText: "Sofort 220 Schaden am Ziel",
+    form: '<path d="M40 0 L20 -34 L-20 -34 L-40 0 L-20 34 L20 34Z" class="hg-rumpf"/><circle cx="0" cy="0" r="10" class="hg-kern"/>',
+  },
+  waechter: {
+    seite: "maschinen", leben: 150, schaden: 8,
+    name: "Wächter", rolle: "Schildgenerator",
+    spezial: "Energieschild", spezialText: "Gegner 20 s lang −45 % Schaden",
+    form: '<path d="M70 -30 L30 -70 L-30 -70 L-70 -30 L-70 30 L-30 70 L30 70 L70 30Z" class="hg-rumpf"/><circle cx="0" cy="0" r="26" class="hg-deck"/>',
+  },
+  zerstoerer: {
+    seite: "maschinen", leben: 170, schaden: 10,
+    name: "Zerstörer", rolle: "Langsam, gewaltige Kanone",
+    spezial: "Railgun", spezialText: "Sofort 500 Schaden am Ziel",
+    form: '<path d="M124 -6 L124 6 L40 34 L-100 40 L-120 20 L-120 -20 L-100 -40 L40 -34Z" class="hg-rumpf"/><rect x="-60" y="-6" width="180" height="12" class="hg-deck"/>',
+  },
+  fabrik: {
+    seite: "maschinen", leben: 120, schaden: 5,
+    name: "Fabrik", rolle: "Repariert die Flotte",
+    spezial: "Nanoschwarm", spezialText: "Heilt die eigene Seite um 420 Leben",
+    form: '<rect x="-100" y="-46" width="190" height="92" rx="6" class="hg-rumpf"/><rect x="-70" y="-30" width="50" height="60" class="hg-deck"/><rect x="0" y="-30" width="50" height="60" class="hg-deck"/>',
+  },
+  /* ---- Kristall-Konklave (57) ---- */
+  splitter: {
+    seite: "kristall", leben: 65, schaden: 17,
+    name: "Splitter", rolle: "Zerbrechlich, scharf",
+    spezial: "Kristallregen", spezialText: "Sofort 420 Schaden am Ziel",
+    form: '<path d="M96 0 L10 -20 L-64 -10 L-44 0 L-64 10 L10 20Z" class="hg-rumpf"/><path d="M96 0 L-44 0" class="hg-linie"/>',
+  },
+  prisma: {
+    seite: "kristall", leben: 110, schaden: 9,
+    name: "Prisma", rolle: "Bricht feindliches Feuer",
+    spezial: "Lichtbrechung", spezialText: "Gegner 20 s lang −40 % Schaden",
+    form: '<path d="M90 0 L0 -56 L-80 0 L0 56Z" class="hg-rumpf"/><path d="M90 0 L0 -20 L-80 0 L0 20Z" class="hg-deck"/>',
+  },
+  resonator: {
+    seite: "kristall", leben: 120, schaden: 8,
+    name: "Resonator", rolle: "Schwächt Gegner",
+    spezial: "Resonanz", spezialText: "Gegner nehmen 25 s lang +30 % Schaden",
+    form: '<path d="M44 0 L22 -38 L-22 -38 L-44 0 L-22 38 L22 38Z" class="hg-rumpf"/><circle cx="0" cy="0" r="64" class="hg-linie" fill="none"/>',
+  },
+  monolith: {
+    seite: "kristall", leben: 160, schaden: 6,
+    name: "Monolith", rolle: "Massiv, heilt",
+    spezial: "Kristallquelle", spezialText: "Heilt die eigene Seite um 360 Leben",
+    form: '<path d="M116 0 L90 -30 L-90 -30 L-116 0 L-90 30 L90 30Z" class="hg-rumpf"/><path d="M-90 0 H90" class="hg-linie"/>',
+  },
+  /* ---- Geisterflotte (57) ---- */
+  irrlicht: {
+    seite: "geister", leben: 55, schaden: 14,
+    name: "Irrlicht", rolle: "Flink und flüchtig",
+    spezial: "Seelenfeuer", spezialText: "Sofort 280 Schaden am Ziel",
+    form: '<path d="M60 0 C60 -30 20 -34 0 -24 C-30 -10 -80 -6 -110 0 C-80 6 -30 10 0 24 C20 34 60 30 60 0Z" class="hg-rumpf"/><circle cx="30" cy="0" r="12" class="hg-kern"/>',
+  },
+  phantom: {
+    seite: "geister", leben: 100, schaden: 12,
+    name: "Phantom", rolle: "Kaum zu treffen",
+    spezial: "Nebelschleier", spezialText: "Gegner 15 s lang −50 % Schaden",
+    form: '<path d="M100 0 L30 -30 L-60 -44 L-80 -24 L-100 -30 L-90 0 L-100 30 L-80 24 L-60 44 L30 30Z" class="hg-rumpf"/>',
+  },
+  banshee: {
+    seite: "geister", leben: 105, schaden: 9,
+    name: "Banshee", rolle: "Lähmt mit ihrem Schrei",
+    spezial: "Totenschrei", spezialText: "Gegner nehmen 25 s lang +35 % Schaden",
+    form: '<path d="M60 0 C20 -70 -80 -70 -100 -40 C-60 -30 -40 -14 -40 0 C-40 14 -60 30 -100 40 C-80 70 20 70 60 0Z" class="hg-rumpf"/><circle cx="10" cy="0" r="12" class="hg-kern"/>',
+  },
+  totenschiff: {
+    seite: "geister", leben: 180, schaden: 9,
+    name: "Totenschiff", rolle: "Verflucht und schwer",
+    spezial: "Fluch der Tiefe", spezialText: "Sofort 520 Schaden am Ziel",
+    form: '<path d="M118 0 L80 -30 L-80 -40 L-118 -30 L-118 30 L-80 40 L80 30Z" class="hg-rumpf"/><path d="M-60 -36 V36 M-20 -38 V38 M20 -36 V36 M60 -32 V32" class="hg-linie"/>',
+  },
 };
 
 const HANGAR_REIHENFOLGE = {
   menschen: ["jaeger", "fregatte", "kreuzer", "traeger"],
   aliens: ["drohne", "stachel", "weber", "brutschiff"],
+  piraten: ["kaper", "brigant", "galeone", "schmuggler"],
+  maschinen: ["sonde", "waechter", "zerstoerer", "fabrik"],
+  kristall: ["splitter", "prisma", "resonator", "monolith"],
+  geister: ["irrlicht", "phantom", "banshee", "totenschiff"],
 };
 
 /* Kampfwerte einer Einheit: { leben, schaden, spezial (Faktor), anzahl }. */
@@ -93,6 +222,15 @@ function hangarWerte(typId, stufen, seite) {
     leben: Math.round(typ.leben * (1 + 0.2 * (s.leben || 0)) * mod.leben),
     schaden: Math.round(typ.schaden * (1 + 0.2 * (s.schaden || 0)) * mod.schaden * 10) / 10,
     spezial: 1 + 0.25 * (s.spezial || 0),
-    anzahl: typId === "drohne" ? 2 : 1,
+    anzahl: typ.anzahl || 1,
   };
+}
+
+/* Name, Volk und Kurztext einer Partei in der aktuellen Sprache.
+   Menschen und Aliens behalten ihre Texte aus seiten.<id>.* */
+function schlachtParteiText(partei, feld) {
+  const P = SCHLACHT_PARTEIEN[partei] || SCHLACHT_PARTEIEN.menschen;
+  const alt = (partei === "menschen" || partei === "aliens") && feld !== "text";
+  const key = (alt ? "seiten." : "schlacht.partei.") + (SCHLACHT_PARTEIEN[partei] ? partei : "menschen") + "." + feld;
+  return typeof window.t === "function" ? window.t(key, P[feld]) : P[feld];
 }
