@@ -142,5 +142,4 @@ const wheelSpecialAvatars = [
   { id: "pass-s2-moewenschrei", avatar: "assets/piratenpass/s2/moewenschrei.svg", label: "Schaluppe „Möwenschrei“ (Piratenpass 2, Kapitän 10)" },
   { id: "pass-s2-geisterpapagei", avatar: "assets/piratenpass/s2/geisterpapagei.svg", label: "Geisterpapagei (Piratenpass 2, Kapitän 20, 7 Tage)", isTemporary: true },
   { id: "pass-s2-rote-lilie", avatar: "assets/piratenpass/s2/rote-lilie.svg", label: "Brigg „Rote Lilie“ (Piratenpass 2, Kapitän 30)" },
-  { id: "pass-s2-schwarze-witwe", avatar: "assets/piratenpass/s2/schwarze-witwe.svg", label: "Galeone „Schwarze Witwe“ (Piratenpass 2, Kapitän 50)" },
 ];

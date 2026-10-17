@@ -317,6 +317,8 @@ body.loaded {
   --fh-seekarte-schiefer: #1a1c1e;
   --fh-seekarte-asche: #8a7a5a;
   --fh-seekarte-asche-dunkel: #6a5a3a;
+  /* Diamanten (Migration 54): kuehles Eisblau neben dem Gold. */
+  --fh-seekarte-diamant: #8fd8e8;
   --fh-font-piraten: 'Pirata One', var(--fh-font-display);
   --fh-font-fell: 'IM Fell English', Georgia, 'Times New Roman', serif;
   --fh-font-fell-sc: 'IM Fell English SC', 'IM Fell English', Georgia, serif;

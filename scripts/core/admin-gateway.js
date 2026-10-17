@@ -303,7 +303,7 @@ function buildGatewayPass2Html() {
     : `Freigeschaltet seit ${escapeHtml(ab.toLocaleString("de-DE"))}, läuft bis ${escapeHtml(ende.toLocaleString("de-DE"))}.`;
   return `
     <p class="gateway-status-sub">${lage}</p>
-    <p class="gateway-status-sub">Pass 2 „Die Seekarte“: 50 Stufen, zwei Spuren (Matrose für alle, Kapitän für 950 Dublonen). Mit der Freigabe endet Pass 1, die Pass-XP starten bei 0. Die Skillpunkte aus Pass 1 bleiben erhalten. Braucht Migration 53.</p>
+    <p class="gateway-status-sub">Pass 2 „Die Seekarte“: 50 Stufen, zwei Spuren (Matrose für alle, Kapitän für 100 Diamanten). Endbelohnung der Kapitänsspur: ein Tanz nach Wahl für 500 V-Bucks – die Zusagen stehen unter Community → Tanz-Zusagen. Mit der Freigabe endet Pass 1, die Pass-XP starten bei 0. Die Skillpunkte aus Pass 1 bleiben erhalten. Braucht Migrationen 53 und 54.</p>
     <div class="gw-story-lage-knoepfe">
       ${gueltig
         ? `<button type="button" class="gw-live-knopf" onclick="gwPass2Setzen(false)">Freigabe zurückziehen</button>`
@@ -311,7 +311,88 @@ function buildGatewayPass2Html() {
       ${gueltig ? "" : `<button type="button" class="gw-live-knopf" onclick="window.fhPass2 && window.fhPass2.vorschau(true)">Vorschau ansehen</button>`}
     </div>
     <p id="gw-pass2-status" class="gw-live-status" role="status" aria-live="polite"></p>
+
+    <p class="gateway-status-sub"><strong>Diamanten verteilen.</strong> Diamanten gibt es nur von dir – Spieler können sie sich nicht selbst gutschreiben. Der Kapitänspass kostet 100. Eine negative Zahl zieht ab (nie unter 0).</p>
+    <div class="gw-live-nachricht">
+      <label class="gw-feld-label">Diamanten (1–10000)
+        <input type="number" id="gw-dia-alle" class="gw-feld" min="1" max="10000" value="100">
+      </label>
+      <button type="button" class="gw-live-knopf ist-alle" onclick="gwDiamantenAnAlle()">An alle Spieler</button>
+    </div>
+    <div class="gw-live-nachricht">
+      <label class="gw-feld-label">Gezielt (−100000 bis 100000)
+        <input type="number" id="gw-dia-einzeln" class="gw-feld" min="-100000" max="100000" value="100">
+      </label>
+      <input type="text" id="gw-dia-suche" class="gw-feld gw-feld-breit" placeholder="Spielername suchen" aria-label="Spieler für Diamanten suchen" autocomplete="off"
+             onkeydown="if (event.key === 'Enter') gwDiamantenSuchen()">
+      <button type="button" class="gw-live-knopf" onclick="gwDiamantenSuchen()">Suchen</button>
+    </div>
+    <div id="gw-dia-treffer" class="gw-titel-treffer"></div>
+    <p id="gw-dia-status" class="gw-live-status" role="status" aria-live="polite"></p>
   `;
+}
+
+/* Diamanten (Migration 54): nur ueber die beiden Admin-RPCs. */
+async function gwDiamantenAnAlle() {
+  if (!supabaseClient) return;
+  const n = parseInt((document.getElementById("gw-dia-alle") || {}).value, 10) || 0;
+  if (n < 1 || n > 10000) { gwLiveStatus("gw-dia-status", "Zwischen 1 und 10000 Diamanten.", true); return; }
+  if (!confirm(`${n} Diamanten an ALLE Spieler verteilen?`)) return;
+  gwLiveStatus("gw-dia-status", "Verteile ...", false);
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_diamanten_an_alle", { p_anzahl: n });
+    if (error) throw error;
+    gwLiveStatus("gw-dia-status", `✓ ${n} Diamanten an ${data} Spieler verteilt.`, false);
+  } catch (err) {
+    console.error("Diamanten an alle fehlgeschlagen:", err);
+    gwLiveStatus("gw-dia-status", "Verteilen fehlgeschlagen: " + ((err && err.message) || err) + " – ist Migration 54 eingespielt?", true);
+  }
+}
+
+async function gwDiamantenSuchen() {
+  const suche = ((document.getElementById("gw-dia-suche") || {}).value || "").trim();
+  const liste = document.getElementById("gw-dia-treffer");
+  if (!liste || !supabaseClient) return;
+  if (!suche) { gwLiveStatus("gw-dia-status", "Erst einen Namen eingeben.", true); return; }
+  liste.replaceChildren();
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_spieler_suchen", { p_suche: suche });
+    if (error) throw error;
+    if (!data || !data.length) { gwLiveStatus("gw-dia-status", "Niemand gefunden.", true); return; }
+    gwLiveStatus("gw-dia-status", data.length + " Treffer", false);
+    data.forEach((sp) => {
+      const zeile = document.createElement("div");
+      zeile.className = "gw-titel-treffer-zeile";
+      const name = document.createElement("span");
+      name.className = "gw-titel-treffer-name";
+      name.textContent = sp.nickname || "(ohne Namen)";
+      const id = document.createElement("code");
+      id.textContent = String(sp.firebase_uid).slice(0, 8);
+      const knopf = document.createElement("button");
+      knopf.type = "button";
+      knopf.className = "gw-live-knopf";
+      knopf.textContent = "Diamanten buchen";
+      knopf.addEventListener("click", () => gwDiamantenAnSpieler(sp.firebase_uid, sp.nickname || ""));
+      zeile.append(name, id, knopf);
+      liste.appendChild(zeile);
+    });
+  } catch (err) {
+    console.error("Spielersuche fehlgeschlagen:", err);
+    gwLiveStatus("gw-dia-status", "Suche fehlgeschlagen: " + ((err && err.message) || err), true);
+  }
+}
+
+async function gwDiamantenAnSpieler(uid, name) {
+  const n = parseInt((document.getElementById("gw-dia-einzeln") || {}).value, 10) || 0;
+  if (!n || n < -100000 || n > 100000) { gwLiveStatus("gw-dia-status", "Zahl zwischen −100000 und 100000, nicht 0.", true); return; }
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_diamanten_geben", { p_uid: uid, p_anzahl: n });
+    if (error) throw error;
+    gwLiveStatus("gw-dia-status", `✓ ${name || "Spieler"}: ${n > 0 ? "+" : ""}${n} Diamanten, jetzt ${data}.`, false);
+  } catch (err) {
+    console.error("Diamanten buchen fehlgeschlagen:", err);
+    gwLiveStatus("gw-dia-status", "Buchen fehlgeschlagen: " + ((err && err.message) || err) + " – ist Migration 54 eingespielt?", true);
+  }
 }
 
 async function gwPass2Setzen(an) {
@@ -1859,6 +1940,7 @@ const GW_MENUE = [
       { id: "mystery", kurz: "Mystery Gift", titel: "Mystery-Gift-Käufe" },
       { id: "support", kurz: "Support", titel: "Support-Meldungen" },
       { id: "caps", kurz: "Cap-Zusagen", titel: "Cap-Zusagen" },
+      { id: "tanz", kurz: "Tanz-Zusagen", titel: "Tanz-Zusagen (Piratenpass 2)" },
       { id: "verlosung", kurz: "Verlosung", titel: "Verlosung" },
     ] },
 ];
@@ -1998,6 +2080,7 @@ async function renderGatewayPage() {
     mystery: `<div id="gateway-mystery">Lade Käufe ...</div>`,
     support: `<div id="gateway-support">Lade Meldungen ...</div>`,
     caps: `<div id="gateway-caps">Lade Caps ...</div>`,
+    tanz: `<div id="gateway-tanz">Lade Tanz-Zusagen ...</div>`,
     verlosung: `<div id="gateway-verlosung">Lade Verlosung ...</div>`,
   };
 
@@ -2013,6 +2096,7 @@ async function renderGatewayPage() {
   gatewaySperrenLaden();
   ladeGatewayBoss();
   ladeGatewayCaps();
+  ladeGatewayTanz();
   ladeGatewaySupport();
   ladeGatewayMystery();
   gwMysteryBeobachten();
@@ -2756,6 +2840,57 @@ async function gatewayCapZurueck(uid) {
   } catch (err) {
     console.error("Cap zurücknehmen fehlgeschlagen:", err);
     const el = document.getElementById("gateway-cap-status");
+    if (el) el.textContent = "⚠️ " + (err.message || err);
+  }
+}
+
+/* ------------------------------------------------------
+   TANZ-ZUSAGEN (Migration 54)
+   Endbelohnung der Kapitaensspur in Piratenpass 2: ein Tanz nach
+   Wahl fuer 500 V-Bucks. Der Spieler nennt Epic-Name und Tanz; nach
+   "Verschenkt" loescht der Server den Epic-Namen wieder.
+------------------------------------------------------ */
+async function ladeGatewayTanz() {
+  const ziel = document.getElementById("gateway-tanz");
+  if (!ziel || !supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_tanz_zusagen");
+    if (error) throw error;
+    const zusagen = data || [];
+    const offen = zusagen.filter((z) => !z.erledigt_am).length;
+    const liste = zusagen.length
+      ? zusagen.map((z) => `
+          <p class="gateway-status-sub">
+            <strong>${escapeHtml(z.nickname || "?")}</strong>
+            ${z.erledigt_am
+              ? `– verschenkt am ${escapeHtml(String(z.erledigt_am).slice(0, 10))}: ${escapeHtml(z.tanz)}`
+              : `– Epic: <code>${escapeHtml(z.epic_name || "?")}</code> · Tanz: <strong>${escapeHtml(z.tanz)}</strong> (${escapeHtml(String(z.vbucks))} V-Bucks) · seit ${escapeHtml(String(z.angefragt_am).slice(0, 10))}
+                 <button type="button" class="code-button gateway-inline-btn" data-tanz-uid="${escapeHtml(z.uid)}" data-tanz-pass="${escapeHtml(z.pass_id)}">Verschenkt</button>`}
+          </p>`).join("")
+      : `<p class="gateway-status-sub">Noch niemand hat den Tanz angefordert.</p>`;
+    ziel.innerHTML = `
+      <p class="gateway-status-sub"><strong>${offen} offen</strong>, ${zusagen.length - offen} verschenkt.</p>
+      ${liste}
+      <p id="gateway-tanz-status" class="wheel-status"></p>
+    `;
+    ziel.querySelectorAll("[data-tanz-uid]").forEach((knopf) => {
+      knopf.addEventListener("click", () => gwTanzErledigt(knopf.dataset.tanzUid, knopf.dataset.tanzPass));
+    });
+  } catch (err) {
+    console.error("Tanz-Zusagen konnten nicht geladen werden:", err);
+    ziel.innerHTML = `<p class="wheel-status">⚠️ Tanz-Zusagen konnten nicht geladen werden – ist Migration 54 eingespielt?</p>`;
+  }
+}
+
+async function gwTanzErledigt(uid, passId) {
+  if (!confirm("Als verschenkt abhaken? Der Epic-Name wird dabei gelöscht.")) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_tanz_erledigt", { p_uid: uid, p_pass_id: passId });
+    if (error) throw error;
+    ladeGatewayTanz();
+  } catch (err) {
+    console.error("Tanz abhaken fehlgeschlagen:", err);
+    const el = document.getElementById("gateway-tanz-status");
     if (el) el.textContent = "⚠️ " + (err.message || err);
   }
 }

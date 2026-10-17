@@ -3006,6 +3006,8 @@
 }
 .p2-geld-punkt { width: 10px; height: 10px; border-radius: 50%; background: var(--fh-seekarte-gold); box-shadow: 0 0 8px var(--fh-seekarte-gold); }
 .p2-geld-wert { font-family: var(--fh-font-piraten); font-size: 20px; }
+.p2-geld-symbol { display: grid; place-items: center; color: var(--fh-seekarte-diamant); font-size: 16px; }
+.p2-geld-diamant { border-color: color-mix(in srgb, var(--fh-seekarte-diamant) 40%, var(--fh-seekarte-holz)); }
 .p2-geld-name { color: var(--fh-seekarte-sand); font-size: 14px; }
 
 /* ---- Oben: Stufe + Kapitaenspass ---- */
@@ -3096,6 +3098,7 @@
 .p2-kapitaen-ober { font-family: var(--fh-font-fell-sc); font-size: 14px; color: var(--fh-seekarte-gold); letter-spacing: 2px; }
 .p2-kapitaen-titel { font-family: var(--fh-font-piraten); font-size: 30px; line-height: 1.05; }
 .p2-kapitaen-text { font-size: 16px; color: var(--fh-seekarte-papier-matt); text-wrap: pretty; }
+.p2-kapitaen-fuss { font-size: 14px; font-style: italic; color: var(--fh-seekarte-sand); }
 
 /* ---- Die Seekarte ---- */
 .p2-abschnitt { padding: 24px var(--p2-gutter) 0; }
@@ -3251,6 +3254,23 @@
 .p2-log-kapitaen .p2-log-spur { color: var(--fh-seekarte-blut-rand); }
 .p2-log-name { font-size: 18px; overflow-wrap: anywhere; }
 .p2-log-status { font-size: 13px; color: var(--fh-seekarte-tinte-hell); }
+
+/* ---- Tanz-Formular (Kapitaen Stufe 50) ---- */
+.p2-tanz { padding: 20px 24px; display: grid; gap: 12px; max-width: 640px; }
+.p2-tanz .p2-log-titel { margin: 0; font-weight: 400; }
+.p2-tanz-text { margin: 0; font-size: 16px; text-wrap: pretty; }
+.p2-tanz-feld { display: grid; gap: 4px; font-size: 14px; color: var(--fh-seekarte-tinte-hell); }
+.p2-tanz-feld input {
+  font-size: 18px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 2px solid var(--fh-seekarte-holz);
+  background: color-mix(in srgb, var(--fh-paper) 80%, white);
+  color: var(--fh-seekarte-tinte);
+}
+.p2-tanz-feld input:focus-visible { outline: 2px solid var(--fh-seekarte-gold); outline-offset: 1px; }
+.p2-tanz-klein { margin: 0; font-size: 13px; font-style: italic; color: var(--fh-seekarte-tinte-hell); }
+.p2-tanz .p2-knopf-klein { color: var(--fh-seekarte-papier-hell); }
 
 @media (prefers-reduced-motion: reduce) {
   .p2-zelle, .p2-balken-fuell { transition: none; }

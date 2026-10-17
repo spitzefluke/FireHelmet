@@ -6,6 +6,10 @@
    site_config) steht in einem inneren Block, der mit einer Ausnahme
    endet - Postgres rollt ihn zurueck.
    Erwartet: zehn Zeilen, alle "PASS".
+   NACH Migration 54 schlagen T6 bis T9 erwartungsgemaess fehl: Der
+   Kapitaenspass kostet dann 100 Diamanten statt 950 Dublonen, und
+   Kapitaen-Stufe 50 ist der Tanz statt Galeone, Titel und Dublonen.
+   Massgeblich ist dann 54-diamanten-tanz.test.sql.
 ====================================================== */
 do $$
 declare
