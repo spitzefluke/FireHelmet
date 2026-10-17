@@ -154,6 +154,13 @@ der Admin ihn freischaltet (`siteConfig.pass2Ab`), und beendet damit Pass 1. Ein
 braucht ihre `pass_id` im Constraint `progression_pass_id_valid` und in
 `app.pass_saison_aktuell()`, sonst lehnt die Datenbank den Wechsel ab.
 
+**Diamanten** (Migration 54) sind eine zweite Währung, die nur der Admin verteilt. Sie liegen in
+`diamanten_konto`, nicht in `players` – dort dürfte der Browser per RLS schreiben. Der
+Kapitänspass von Pass 2 kostet 100 Diamanten; die Kapitänsstufe 50 ist ein Tanz für 500 V-Bucks,
+den der Spieler mit Epic-Namen über `pass_tanz_holen()` anfordert (Admin: Community →
+Tanz-Zusagen). Neue Tabellen mit Spielerbezug räumt der Trigger `pass2_konto_aufraeumen` auf
+`players` mit ab – `mein_konto_loeschen()` (18) kennt sie nicht.
+
 ### Datenbank und Anmeldung
 
 Supabase ist die einzige Datenbank **und** die einzige Anmeldung (Firebase ist vollständig

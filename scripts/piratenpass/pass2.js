@@ -12,8 +12,11 @@
    Browser hier die Belohnungen NICHT selbst: pass_stand() liefert
    Belohnungen, Stand und Abgeholtes, pass_belohnung_holen() /
    pass_alle_holen() schreiben gut, pass_kapitaen_kaufen() bucht den
-   Kapitaenspass ab (alles Migration 53). Der Browser rechnet nur
-   noch, was er anzeigt.
+   Kapitaenspass ab (Migration 53). Seit Migration 54 kostet er 100
+   Diamanten (eine Waehrung, die nur der Admin verteilt), und die
+   Kapitaensstufe 50 ist ein Tanz nach Wahl fuer 500 V-Bucks - der
+   laeuft ueber ein eigenes Formular (pass_tanz_holen) mit Epic-Name.
+   Der Browser rechnet nur noch, was er anzeigt.
 ====================================================== */
 (function () {
   "use strict";
@@ -34,6 +37,8 @@
     schloss: SVG('<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'),
     haken: SVG('<path d="M20 6 9 17l-5-5"/>'),
     krone: SVG('<path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/>'),
+    diamant: SVG('<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>'),
+    tanz: SVG('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'),
     anker: SVG('<path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/>'),
   };
 
@@ -49,6 +54,7 @@
     wahl: null,         // gewaehlte Stufe im Logbuch
     beschaeftigt: false,
     kaufBereit: false,  // erster Klick auf "anheuern" scharf gemacht
+    tanzOffen: false,   // Tanz-Formular sichtbar
     meldung: "",
     pass: null,
     aktiv: false,
@@ -128,7 +134,7 @@
   function avatarName(id) {
     const key = "pass2.av." + id;
     const fallback = { "pass-s2-knochenflagge": "Flagge: Gekreuzte Knochen", "pass-s2-moewenschrei": "Schaluppe „Möwenschrei“",
-      "pass-s2-geisterpapagei": "Geisterpapagei", "pass-s2-rote-lilie": "Brigg „Rote Lilie“", "pass-s2-schwarze-witwe": "Galeone „Schwarze Witwe“" }[id] || id;
+      "pass-s2-geisterpapagei": "Geisterpapagei", "pass-s2-rote-lilie": "Brigg „Rote Lilie“" }[id] || id;
     return tx(key, fallback);
   }
   function avatarBild(id) {
@@ -137,6 +143,7 @@
   }
   function teile(b) {
     const t = [];
+    if (b.tanz_vbucks) t.push(txf("pass2.tanzName", "Tanz nach Wahl ({v} V-Bucks)", { v: zahl(b.tanz_vbucks) }));
     if (b.avatar_id) t.push(avatarName(b.avatar_id) + (b.avatar_tage ? " (" + txf("pass2.tage", "{n} Tage", { n: b.avatar_tage }) + ")" : ""));
     if (b.titel_text) t.push(txf("pass2.titel", "Titel: {t}", { t: b.titel_text }));
     if (b.dublonen) t.push(txf("pass2.dublonen", "{n} Dublonen", { n: zahl(b.dublonen) }));
@@ -146,6 +153,7 @@
   }
   function symbol(b, gross) {
     if (!b) return ICON.anker;
+    if (b.tanz_vbucks) return ICON.tanz;
     if (b.avatar_id) {
       const bild = avatarBild(b.avatar_id);
       if (bild) return '<img class="p2-avatar' + (gross ? " p2-avatar-gross" : "") + '" src="' + esc(bild) + '" alt="" loading="lazy" decoding="async">';
@@ -164,7 +172,12 @@
     const istGeholt = geholt(n, spur);
     const ohnePass = spur === "kapitaen" && !istKapitaen();
     let art = "bereit", status = tx("pass2.einsammeln", "Einsammeln!");
-    if (istGeholt) { art = "geholt"; status = tx("pass2.gepluendert", "Geplündert"); }
+    if (istGeholt) {
+      art = "geholt";
+      const tanz = b && b.tanz_vbucks && zustand.stand && zustand.stand.tanz;
+      status = tanz ? (tanz.erledigt ? tx("pass2.tanzVerschenkt", "Verschenkt") : tx("pass2.tanzZugesagt", "Zugesagt"))
+        : tx("pass2.gepluendert", "Geplündert");
+    }
     else if (!erreicht) { art = "zu"; status = txf("pass2.stufeN", "Stufe {n}", { n: n }); }
     else if (ohnePass) { art = "zu"; status = tx("pass2.kapitaenspass", "Kapitänspass"); }
     else if (!offen()) { art = "zu"; status = zustand.vorschau ? tx("pass2.vorschau", "Vorschau") : tx("pass2.vorbei", "Vorbei"); }
@@ -184,13 +197,16 @@
       : (!zustand.aktiv || tage === null) ? tx("pass2.vorbeiKopf", "Die Saison ist vorüber")
       : tage === 1 ? tx("pass2.restEins", "Die Flut kehrt morgen") : txf("pass2.rest", "Die Flut kehrt in {n} Tagen", { n: tage });
     const dub = zustand.stand ? zahl(zustand.stand.dublonen) : "–";
+    const dia = zustand.stand ? zahl(zustand.stand.diamanten) : "–";
     return '<header class="p2-kopf">' +
       '<div class="p2-marke"><span class="p2-siegel">' + ICON.schaedel + "</span>" +
         '<div class="p2-marke-text"><span class="p2-name">' + esc(tx("pass2.name", "Piratenpass")) + "</span>" +
         '<span class="p2-saison">' + esc(tx("pass2.saison", "Saison II · Die Verfluchte See")) + "</span></div></div>" +
       '<div class="p2-kopf-rechts"><span class="p2-rest">' + esc(rest) + "</span>" +
         '<div class="p2-geld"><span class="p2-geld-punkt" aria-hidden="true"></span><span class="p2-geld-wert">' + esc(dub) +
-        '</span><span class="p2-geld-name">' + esc(tx("pass2.dublonenWort", "Dublonen")) + "</span></div></div>" +
+        '</span><span class="p2-geld-name">' + esc(tx("pass2.dublonenWort", "Dublonen")) + "</span></div>" +
+        '<div class="p2-geld p2-geld-diamant"><span class="p2-geld-symbol">' + ICON.diamant + '</span><span class="p2-geld-wert">' + esc(dia) +
+        '</span><span class="p2-geld-name">' + esc(tx("pass2.diamantenWort", "Diamanten")) + "</span></div></div>" +
       "</header>";
   }
 
@@ -217,7 +233,8 @@
   }
 
   function kapitaenHtml() {
-    const preis = zahl((zustand.stand && zustand.stand.preis) || 950);
+    const preis = zahl((zustand.stand && zustand.stand.preis) || 100);
+    const inDiamanten = !zustand.stand || zustand.stand.waehrung !== "dublonen";
     if (istKapitaen()) {
       return '<div class="p2-kapitaen">' +
         '<span class="p2-kapitaen-ober">' + esc(tx("pass2.kapitaenspass", "Kapitänspass")) + "</span>" +
@@ -226,14 +243,16 @@
         "</div>";
     }
     const kaufbar = offen() && !zustand.beschaeftigt;
+    const einheit = inDiamanten ? tx("pass2.diamantenWort", "Diamanten") : tx("pass2.dublonenWort", "Dublonen");
     const knopf = zustand.kaufBereit
-      ? txf("pass2.kaufenSicher", "Wirklich? {p} Dublonen zahlen", { p: preis })
-      : txf("pass2.kaufen", "Für {p} Dublonen anheuern", { p: preis });
+      ? txf("pass2.kaufenSicher", "Wirklich? {p} {w} zahlen", { p: preis, w: einheit })
+      : txf("pass2.kaufen", "Für {p} {w} anheuern", { p: preis, w: einheit });
     return '<div class="p2-kapitaen">' +
       '<span class="p2-kapitaen-ober">' + esc(tx("pass2.kapitaenspass", "Kapitänspass")) + "</span>" +
       '<span class="p2-kapitaen-titel">' + esc(tx("pass2.kapitaenNeinTitel", "Hisst die goldene Flagge")) + "</span>" +
-      '<span class="p2-kapitaen-text">' + esc(tx("pass2.kapitaenNeinText", "50 zusätzliche Belohnungen, darunter die Galeone „Schwarze Witwe“ und der Titel „Schrecken der Meere“.")) + "</span>" +
+      '<span class="p2-kapitaen-text">' + esc(tx("pass2.kapitaenNeinText", "50 zusätzliche Belohnungen – auf Stufe 50 ein Tanz deiner Wahl im Wert von 500 V-Bucks.")) + "</span>" +
       '<button type="button" class="p2-knopf p2-knopf-gold' + (zustand.kaufBereit ? " ist-scharf" : "") + '" data-p2-aktion="kaufen"' + (kaufbar ? "" : " disabled") + ">" + esc(knopf) + "</button>" +
+      (inDiamanten ? '<span class="p2-kapitaen-fuss">' + esc(tx("pass2.diamantenHerkunft", "Diamanten gibt es nur vom Admin – zum Beispiel im Stream.")) + "</span>" : "") +
       "</div>";
   }
 
@@ -298,11 +317,33 @@
       "</div></section>";
   }
 
+  /* Formular fuer die Endbelohnung der Kapitaensspur. Epic-Name und
+     Wunsch-Tanz gehen nur an den Admin; der Epic-Name wird geloescht,
+     sobald der Tanz verschenkt ist (Datenschutzerklaerung Punkt 5). */
+  function tanzHtml() {
+    if (!zustand.tanzOffen) return "";
+    return '<section class="p2-abschnitt"><form class="p2-pergament p2-tanz" data-p2-tanz-form>' +
+      '<h2 class="p2-log-titel">' + esc(tx("pass2.tanzTitel", "Dein Tanz für 500 V-Bucks")) + "</h2>" +
+      '<p class="p2-tanz-text">' + esc(tx("pass2.tanzText", "Such dir in Fortnite einen Tanz im Wert von 500 V-Bucks aus. Der Tanz wird dir über Epic geschenkt – dafür brauchen wir deinen Epic-Namen.")) + "</p>" +
+      '<label class="p2-tanz-feld"><span>' + esc(tx("pass2.tanzEpic", "Epic-Name")) + '</span><input type="text" name="epic" required minlength="3" maxlength="32" autocomplete="off" spellcheck="false"></label>' +
+      '<label class="p2-tanz-feld"><span>' + esc(tx("pass2.tanzWunsch", "Welcher Tanz?")) + '</span><input type="text" name="tanz" required minlength="2" maxlength="60" autocomplete="off"></label>' +
+      '<p class="p2-tanz-klein">' + esc(tx("pass2.tanzDatenschutz", "Nur der Admin sieht deinen Epic-Namen. Er wird gelöscht, sobald der Tanz verschenkt ist.")) + "</p>" +
+      '<div class="p2-held-knoepfe"><button type="submit" class="p2-knopf p2-knopf-dunkel"' + (zustand.beschaeftigt ? " disabled" : "") + ">" + esc(tx("pass2.tanzSenden", "Tanz anfordern")) + "</button>" +
+      '<button type="button" class="p2-knopf-klein" data-p2-aktion="tanz-zu">' + esc(tx("pass2.tanzAbbrechen", "Abbrechen")) + "</button></div>" +
+      "</form></section>";
+  }
+
   function zeichnen() {
     const container = document.getElementById("streamraetsel-content");
     if (!container || !zustand.pass) return;
     if (!container.__p2) {
       container.addEventListener("click", klick);
+      container.addEventListener("submit", function (ev) {
+        const form = ev.target.closest("[data-p2-tanz-form]");
+        if (!form) return;
+        ev.preventDefault();
+        tanzSenden(form);
+      });
       container.__p2 = true;
     }
     if (zustand.laedt && !zustand.stand) {
@@ -320,8 +361,8 @@
     let holbar = 0;
     for (let n = 1; n <= 50; n++) {
       zellen[n] = { matrose: zelle(n, "matrose"), kapitaen: zelle(n, "kapitaen") };
-      if (zellen[n].matrose.holbar) holbar++;
-      if (zellen[n].kapitaen.holbar) holbar++;
+      if (zellen[n].matrose.holbar && !zellen[n].matrose.b.tanz_vbucks) holbar++;
+      if (zellen[n].kapitaen.holbar && !zellen[n].kapitaen.b.tanz_vbucks) holbar++;
     }
 
     const altFahrt = container.querySelector(".p2-spur-fahrt");
@@ -333,6 +374,7 @@
       '<section class="p2-oben">' + heldHtml(holbar) + kapitaenHtml() + "</section>" +
       karteHtml(zellen) +
       logbuchHtml(zellen) +
+      tanzHtml() +
       "</div>";
 
     const fahrt = container.querySelector(".p2-spur-fahrt");
@@ -368,7 +410,12 @@
       "zu-frueh": tx("pass2.grund.zuFrueh", "Diese Stufe hast du noch nicht erreicht."),
       "kein-kapitaen": tx("pass2.grund.keinKapitaen", "Dafür brauchst du den Kapitänspass."),
       "schon": tx("pass2.grund.schon", "Schon geplündert."),
-      "zu-wenig": tx("pass2.grund.zuWenig", "Dafür reichen deine Dublonen nicht."),
+      "zu-wenig": zustand.stand && zustand.stand.waehrung === "dublonen"
+        ? tx("pass2.grund.zuWenig", "Dafür reichen deine Dublonen nicht.")
+        : tx("pass2.grund.zuWenigDiamanten", "Dafür reichen deine Diamanten nicht. Diamanten gibt es nur vom Admin."),
+      "epic-name": tx("pass2.grund.epicName", "Der Epic-Name muss 3 bis 32 Zeichen lang sein."),
+      "tanz-name": tx("pass2.grund.tanzName", "Schreib dazu, welchen Tanz du möchtest."),
+      "tanz-formular": tx("pass2.grund.tanzFormular", "Für den Tanz brauchen wir deinen Epic-Namen."),
       "gesperrt": tx("pass2.grund.gesperrt", "Dein Konto ist gesperrt."),
     };
     return texte[grund] || tx("pass2.grund.fehler", "Das hat nicht geklappt. Versuch es gleich noch einmal.");
@@ -444,6 +491,32 @@
     await laden();
   }
 
+  async function tanzSenden(form) {
+    if (zustand.beschaeftigt || !hatDb()) return;
+    const epic = (form.elements.epic.value || "").trim();
+    const wahl = (form.elements.tanz.value || "").trim();
+    zustand.beschaeftigt = true;
+    try {
+      const e = await rufe("pass_tanz_holen", { p_pass_id: PASS_ID, p_epic_name: epic, p_tanz: wahl });
+      if (e.ok) {
+        zustand.tanzOffen = false;
+        zustand.meldung = txf("pass2.tanzDanke", "Zugesagt: „{t}“ kommt als Geschenk über Epic.", { t: e.tanz });
+      } else {
+        zustand.meldung = grundText(e.grund);
+      }
+    } catch (err) {
+      console.warn("Tanz anfordern fehlgeschlagen:", err);
+      zustand.meldung = grundText("fehler");
+    }
+    zustand.beschaeftigt = false;
+    await laden();
+    if (zustand.tanzOffen) {
+      // Eingaben behalten, damit ein Tippfehler nicht alles loescht.
+      const neu = document.querySelector("#streamraetsel-content [data-p2-tanz-form]");
+      if (neu) { neu.elements.epic.value = epic; neu.elements.tanz.value = wahl; }
+    }
+  }
+
   async function kaufen() {
     if (zustand.beschaeftigt || !hatDb()) return;
     if (!zustand.kaufBereit) {
@@ -482,7 +555,13 @@
       const teil = ziel.dataset.p2Zelle.split(":");
       const n = Number(teil[0]), spur = teil[1];
       const z = zelle(n, spur);
-      if (z.holbar) holen(n, spur);
+      if (z.holbar && z.b.tanz_vbucks) {
+        zustand.wahl = n;
+        zustand.tanzOffen = true;
+        zeichnen();
+        const feld = document.querySelector("#streamraetsel-content [data-p2-tanz-form] input");
+        if (feld) { feld.scrollIntoView({ block: "center" }); feld.focus({ preventScroll: true }); }
+      } else if (z.holbar) holen(n, spur);
       else { zustand.wahl = n; zeichnen(); }
       return;
     }
@@ -492,6 +571,7 @@
     else if (aktion === "aktuell") springe(Math.max(1, stufe()));
     else if (aktion === "schatz") springe(50);
     else if (aktion === "neu") { zustand.fehler = false; laden(); }
+    else if (aktion === "tanz-zu") { zustand.tanzOffen = false; zeichnen(); }
   }
 
   window.fhPass2 = {
