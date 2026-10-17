@@ -11,6 +11,9 @@
    Als Admin handelt der Test mit der Adresse, die app.is_admin()
    selbst nennt (aus der Funktionsdefinition gelesen).
    Erwartet: neun Zeilen, alle "PASS".
+   NACH Migration 55 kann T6 fehlschlagen: Der Start lost dann einen
+   Kampfort aus, und der aendert Dauerfeuer und Ereignisse (z. B.
+   Schwarzes Loch 1,25-fach). Die Ort-Regeln prueft 55-schlacht-orte.test.sql.
 ====================================================== */
 do $$
 declare

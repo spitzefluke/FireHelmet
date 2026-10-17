@@ -636,12 +636,22 @@ function buildGatewayEpocheHtml() {
     <p id="gw-seite-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <div class="gw-story-lage">
       <p id="gw-schlacht-jetzt" class="gw-story-jetzt">Sternenschlacht (Migration 50): Stand wird geladen …</p>
-      <p class="gateway-status-sub">Läuft endlos in Runden, bis du sie beendest. Das Tempo bestimmt, wie lange eine Runde etwa dauert. Zum Testen außerhalb von 2100: „Vorschau 2100“, selbst eine Seite wählen, dann starten – die leere Seite übernimmt eine Übungsflotte.</p>
+      <p class="gateway-status-sub">Läuft endlos in Runden, bis du sie beendest. Das Tempo bestimmt, wie lange eine Runde etwa dauert. Jede Schlacht spielt an einem Kampfort mit eigenen Regeln (Migration 55) – ausgelost oder von dir gewählt. Zum Testen außerhalb von 2100: „Vorschau 2100“, selbst eine Seite wählen, dann starten – die leere Seite übernimmt eine Übungsflotte.</p>
       <div class="gw-story-lage-knoepfe">
         <select id="gw-schlacht-dauer" class="gw-feld" aria-label="Tempo einer Runde">
           <option value="5">Schnell (Runde ≈ 5 min)</option>
           <option value="10" selected>Normal (Runde ≈ 10 min)</option>
           <option value="20">Langsam (Runde ≈ 20 min)</option>
+        </select>
+        <select id="gw-schlacht-ort" class="gw-feld" aria-label="Kampfort">
+          <option value="" selected>Ort auslosen</option>
+          <option value="asteroiden">Kepler-Asteroidengürtel</option>
+          <option value="schwarzes_loch">Ereignishorizont Sagitta (Schwarzes Loch)</option>
+          <option value="station">Wrack der Orbis-Station</option>
+          <option value="nebel">Ionennebel von Vesh</option>
+          <option value="sonne">Korona von Helion (Sonne)</option>
+          <option value="eisring">Eisringe von Kryos</option>
+          <option value="wurmloch">Wurmloch-Schlund Ixion</option>
         </select>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtStarten()">Sternenschlacht starten</button>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtBeenden()">Schlacht beenden</button>
@@ -661,11 +671,12 @@ async function gwSchlachtZeigen() {
   const el = document.getElementById("gw-schlacht-jetzt");
   if (!el || !supabaseClient) return;
   try {
-    const { data, error } = await supabaseClient.from("sternenschlacht").select("id, status, ende_at, sieger, endstand_menschen, anzahl_menschen, anzahl_aliens, endlos, runde, punkte_menschen, punkte_aliens")
+    /* "*": die Spalte ort gibt es erst mit Migration 55. */
+    const { data, error } = await supabaseClient.from("sternenschlacht").select("*")
       .order("id", { ascending: false }).limit(1).maybeSingle();
     if (error) throw error;
     if (!data) el.textContent = "Sternenschlacht: noch keine geschlagen.";
-    else if (data.status === "laeuft" && data.endlos) el.textContent = "Sternenschlacht läuft endlos – Runde " + data.runde + ", Rundensiege Menschen " + data.punkte_menschen + " : " + data.punkte_aliens + " Aliens (" + data.anzahl_menschen + " gegen " + data.anzahl_aliens + " Schiffe).";
+    else if (data.status === "laeuft" && data.endlos) el.textContent = "Sternenschlacht läuft endlos – Runde " + data.runde + ", Rundensiege Menschen " + data.punkte_menschen + " : " + data.punkte_aliens + " Aliens (" + data.anzahl_menschen + " gegen " + data.anzahl_aliens + " Schiffe)." + (data.ort && window.fhSchlachtOrte ? " Ort: " + window.fhSchlachtOrte.name(data.ort) + "." : "");
     else if (data.status === "laeuft") el.textContent = "Sternenschlacht läuft bis " + new Date(data.ende_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) + " Uhr – " + data.anzahl_menschen + " Menschen gegen " + data.anzahl_aliens + " Aliens.";
     else el.textContent = "Letzte Sternenschlacht: " + (data.sieger === "menschen" ? "Menschen" : data.sieger === "aliens" ? "Aliens" : "unentschieden") + (data.endlos ? " (Runden " + data.punkte_menschen + " : " + data.punkte_aliens + ")." : " (" + Math.round(data.endstand_menschen) + " % : " + (100 - Math.round(data.endstand_menschen)) + " %).");
   } catch (err) {
@@ -676,16 +687,20 @@ async function gwSchlachtZeigen() {
 async function gwSchlachtStarten() {
   if (!supabaseClient) return;
   const minuten = Number(document.getElementById("gw-schlacht-dauer")?.value || 10);
+  const ort = document.getElementById("gw-schlacht-ort")?.value || null;
   if (!confirm("Sternenschlacht starten? Sie läuft endlos in Runden, bis du sie beendest. Alle Spieler mit Seite kämpfen mit.")) return;
   try {
-    const { error } = await supabaseClient.rpc("admin_schlacht_starten", { p_minuten: minuten });
+    /* p_ort nur mitschicken, wenn gewaehlt - so laeuft der Start auch
+       noch ohne Migration 55 (dann ohne Ort). */
+    const args = ort ? { p_minuten: minuten, p_ort: ort } : { p_minuten: minuten };
+    const { error } = await supabaseClient.rpc("admin_schlacht_starten", args);
     if (error) throw error;
     gwLiveStatus("gw-schlacht-status", "✓ Die Sternenschlacht läuft.", false);
     gwSchlachtZeigen();
   } catch (err) {
     console.error("Schlacht starten fehlgeschlagen:", err);
     const m = (err && err.message) || String(err);
-    const grund = /nicht-2100/.test(m) ? "Migration 50 fehlt noch – erst sie startet auch außerhalb von 2100." : /schlacht-laeuft/.test(m) ? "Es läuft schon eine Schlacht." : /zu-wenige/.test(m) ? "Noch niemand hat eine Seite gewählt – wähle selbst eine (Vorschau 2100)." : m + " – sind Migration 49 und 50 eingespielt?";
+    const grund = /nicht-2100/.test(m) ? "Migration 50 fehlt noch – erst sie startet auch außerhalb von 2100." : /schlacht-laeuft/.test(m) ? "Es läuft schon eine Schlacht." : /zu-wenige/.test(m) ? "Noch niemand hat eine Seite gewählt – wähle selbst eine (Vorschau 2100)." : /ort-unbekannt|p_ort/.test(m) ? "Kampforte gibt es erst mit Migration 55." : m + " – sind Migration 49 und 50 eingespielt?";
     gwLiveStatus("gw-schlacht-status", "Start fehlgeschlagen: " + grund, true);
   }
 }

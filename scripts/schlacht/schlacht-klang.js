@@ -25,7 +25,10 @@
 
    API (window.fhSchlachtKlang):
      start(wer), stop(wer), setzeAn(bool), istAn(), spannung(0..1),
-     akzent("runde" | "spezial" | "sieg"), sfx(art, laut)
+     akzent("runde" | "spezial" | "sieg" | "sprung" | "ort" | "zaehlen"
+            | "feuer" | "ereignis"), sfx(art, laut)
+     (sprung bis feuer: Start-Animation in schlacht-orte.js;
+      ereignis: Ereignis eines Kampforts)
 ====================================================== */
 
 (function () {
@@ -311,6 +314,25 @@
     } else if (art === "spezial") {
       geraeusch(t, 0.6, 0.22, sfxBus, "bandpass", 400, 4200, 3);
       ton("sine", 90, t, 0.5, 0.35, sfxBus, { hz: 400 });
+    } else if (art === "sprung") {
+      /* Hyperraumsprung (schlacht-orte.js): ansteigendes Rauschen und Heulen. */
+      geraeusch(t, 1.6, 0.16, sfxBus, "bandpass", 300, 3800, 2);
+      const o = ton("sawtooth", 55, t, 1.6, 0.07, sfxBus, { hz: 900, bis: 4000 });
+      o.frequency.exponentialRampToValueAtTime(440, t + 1.5);
+    } else if (art === "ort") {
+      geraeusch(t, 1.4, 0.22, sfxBus, "lowpass", 1800, 120);
+      ton("sine", 48, t, 1.4, 0.3, sfxBus, { hz: 300 });
+      [45, 52, 57].forEach(function (n) { ton("sawtooth", hz(n), t + 0.05, 1.3, 0.035, sfxBus, { hz: 1400 }); });
+    } else if (art === "zaehlen") {
+      ton("square", hz(81), t, 0.12, 0.06, sfxBus, { hz: 3000 });
+      ton("sine", 70, t, 0.25, 0.18, sfxBus);
+    } else if (art === "feuer") {
+      geraeusch(t, 1.1, 0.25, sfxBus, "lowpass", 2400, 140);
+      ton("sine", 60, t, 0.8, 0.35, sfxBus, { hz: 500 });
+      [57, 64, 69, 76].forEach(function (n, k) { ton("sawtooth", hz(n), t + k * 0.03, 0.6, 0.045, sfxBus, { hz: 3200 }); });
+    } else if (art === "ereignis") {
+      geraeusch(t, 0.9, 0.2, sfxBus, "lowpass", 900, 90);
+      { const o = ton("sine", 90, t, 0.7, 0.3, sfxBus); o.frequency.exponentialRampToValueAtTime(28, t + 0.7); }
     } else if (art === "sieg") {
       [[57, 64, 69], [60, 67, 72]].forEach(function (ak, k) {
         ak.forEach(function (n) { ton("sawtooth", hz(n), t + k * 0.35, 0.9, 0.06, sfxBus, { hz: 2600 }); });

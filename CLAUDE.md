@@ -15,8 +15,8 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 129 `<script defer>`-Tags in fester
-Reihenfolge, davon 115 aus diesem Repo. Sechs große Skripte, die fast niemand braucht
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 130 `<script defer>`-Tags in fester
+Reihenfolge, davon 116 aus diesem Repo. Sechs große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
@@ -160,6 +160,14 @@ Kapitänspass von Pass 2 kostet 100 Diamanten; die Kapitänsstufe 50 ist ein Tan
 den der Spieler mit Epic-Namen über `pass_tanz_holen()` anfordert (Admin: Community →
 Tanz-Zusagen). Neue Tabellen mit Spielerbezug räumt der Trigger `pass2_konto_aufraeumen` auf
 `players` mit ab – `mein_konto_loeschen()` (18) kennt sie nicht.
+
+### Sternenschlacht
+
+Die Schlacht (`scripts/schlacht/`) rechnet allein die Datenbank (Migrationen 49, 50, 55); der
+Browser zeigt nur. Seit 55 spielt jede Schlacht an einem **Kampfort** (`schlacht_orte`) mit
+eigenen Faktoren und Ereignissen im festen Takt – `schlacht-orte.js` zeichnet Hintergrund,
+Ereignisse und die Start-Animation zu denselben Zeitpunkten, die `app.schlacht_leben()`
+abrechnet. Wer eine Regel ändert, ändert sie in der Tabelle, nicht im Browser.
 
 ### Datenbank und Anmeldung
 

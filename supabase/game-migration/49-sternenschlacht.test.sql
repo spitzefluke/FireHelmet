@@ -15,6 +15,9 @@
    NACH MIGRATION 50 (endlose Schlacht in Runden, Typwechsel frei)
    schlagen T4 bis T7 hier absichtlich fehl - sie pruefen das alte
    Verhalten von 49. Dann gilt 50-endlose-schlacht.test.sql.
+   NACH Migration 55 bricht der Test ab: admin_schlacht_starten hat
+   dort den zweiten Parameter p_ort bekommen, die Fassung mit nur
+   (integer) gibt es nicht mehr. Massgeblich sind dann 50 und 55.
 ====================================================== */
 do $$
 declare

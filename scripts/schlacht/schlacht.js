@@ -30,6 +30,14 @@
    - am Ende das Siegerbanner und die Ruhmeshalle.
    Musik und Klang: schlacht-klang.js (startet beim Oeffnen).
 
+   KAMPFORT (Migration 55): Jede Schlacht spielt an einem Ort mit
+   eigenen Regeln (public.schlacht_orte). Hintergrund, Ereignisse und
+   die Start-Animation zeichnet schlacht-orte.js. Die Ereignisse
+   erscheinen zu denselben Zeitpunkten, an denen die Datenbank sie
+   abrechnet (alle ereignis_sek ab Rundenbeginn, nach Serverzeit). Die
+   Start-Animation laeuft einmal je Schlacht und Geraet; ueber die
+   Orts-Plakette im Kopf laesst sie sich wiederholen.
+
    Alle 3 s holt der Browser den Stand und die neuen Aktionen (fuer
    die Treffer-Effekte); die Datenbank bleibt massgeblich.
 
@@ -50,6 +58,7 @@
   function angemeldet() { try { return !!localStorage.getItem("wheelNickname"); } catch (e) { return false; } }
   function klang() { return window.fhSchlachtKlang || null; }
   function fx() { return window.fhSchlachtFx || null; }
+  function orte() { return window.fhSchlachtOrte || null; }
   const RUHIG = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
   const ZEIGEN_JE_SEITE = 60;
@@ -80,6 +89,10 @@
   let schussKonto = 0, letztesBild = 0;
   let vorherigeSeite = "home";
   let siegGespielt = null;
+  let ortZeile = null;       // Zeile aus schlacht_orte (Migration 55)
+  let zeitVersatz = 0;       // Serverzeit minus Geraetezeit in ms
+  let ereignisRunde = null, ereignisK = 0;
+  const INTRO_SPEICHER = "fhSchlachtIntro";
 
   /* ------------------------------------------------------
      DATEN
@@ -130,6 +143,13 @@
       /* Erst der Stand: schlacht_stand wechselt die Runde, wenn eine
          Seite bei 0 ist - danach gelten Runde und Aufstellung neu. */
       if (schlacht) stand = await q(function () { return supabaseClient.rpc("schlacht_stand", { p_id: schlacht.id }); });
+      if (stand && stand.jetzt) zeitVersatz = Date.parse(stand.jetzt) - Date.now();
+      if (schlacht && schlacht.ort && (!ortZeile || ortZeile.ort_id !== schlacht.ort)) {
+        const ort = schlacht.ort;
+        ortZeile = await q(function () { return supabaseClient.from("schlacht_orte").select("*").eq("ort_id", ort).maybeSingle(); }) || null;
+      } else if (schlacht && !schlacht.ort) {
+        ortZeile = null;
+      }
       if (stand && stand.ok && schlacht && stand.id === schlacht.id) {
         if (stand.status === "vorbei" && schlacht.status === "laeuft") schlacht.status = "vorbei";
         if (stand.ende_at) schlacht.ende_at = stand.ende_at;
@@ -152,6 +172,7 @@
         if (!neueRunde) letzteAktion = 0;
         wellen = [];
         if (fx()) fx().leeren();
+        if (orte()) orte().leeren();
         ziel = null;
         const ich = einheiten.find(function (e) { return e.firebase_uid === meineUid; });
         spezialGenutzt = !!(ich && ich.spezial_at && Date.parse(ich.spezial_at) >= Date.parse(rundeStart()));
@@ -304,6 +325,31 @@
     if (schussKonto > 3) schussKonto = 0;
   }
 
+  /* Ereignis des Orts: zu denselben Zeitpunkten wie in der Datenbank
+     (app.schlacht_leben, Migration 55). Beim ersten Bild einer Runde
+     wird nur gezaehlt, nicht nachgeholt. */
+  function ereignissePruefen() {
+    const o = ortZeile;
+    if (!o || !o.ereignis_sek || !(Number(o.ereignis_anteil) > 0) || !orte()) return;
+    const runde = schlacht.runde || 1;
+    const sek = (Date.now() + zeitVersatz - Date.parse(rundeStart())) / 1000;
+    const k = Math.max(0, Math.floor(sek / o.ereignis_sek));
+    const schluessel = schlacht.id + ":" + runde;
+    if (ereignisRunde !== schluessel) { ereignisRunde = schluessel; ereignisK = k; return; }
+    if (k <= ereignisK) return;
+    ereignisK = k;
+    let seiten;
+    if (o.ereignis_art === "beide") seiten = o.ort_id === "sonne" || o.ort_id === "schwarzes_loch" ? ["beide"] : ["menschen", "aliens"];
+    else seiten = [(k + runde) % 2 === 0 ? "menschen" : "aliens"];
+    seiten.forEach(function (sx) { orte().ereignis(o.ort_id, sx); });
+    const jetzt = performance.now();
+    layout.forEach(function (p) { if (seiten[0] === "beide" || seiten.indexOf(p.seite) >= 0) p.trefferT = jetzt; });
+    if (klang()) klang().akzent("ereignis");
+    const wen = seiten.length > 1 || seiten[0] === "beide" ? t("schlacht.ereignis.beide", "beide Flotten")
+      : seitenName(seiten[0]).replace(/^(Die|Der|The) /, function (m) { return m.toLowerCase(); });
+    status(t("schlacht.ereignis.text", "{e} trifft {wen}!").replace("{e}", orte().ereignisName(o.ort_id)).replace("{wen}", wen), false);
+  }
+
   function sterne(jetzt) {
     for (let i = 0; i < 120; i++) {
       const sx = hash("s" + i) * feldB, sy = hash("t" + i) * feldH;
@@ -319,11 +365,18 @@
     letztesBild = jetzt;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, feldB, feldH);
-    sterne(jetzt);
+    /* Der Kampfort (schlacht-orte.js); ohne Ort der Sternenhimmel. */
+    const mitOrt = ortZeile && orte() && orte().hintergrund(ctx, feldB, feldH, jetzt, dpr, ortZeile.ort_id, RUHIG.matches);
+    if (!mitOrt) sterne(jetzt);
     /* Grossschiffe ziehen hinter dem Gefecht vorbei (schlacht-fx.js). */
     if (fx() && fx().hintergrund) fx().hintergrund(ctx, feldB, feldH, jetzt, dpr, RUHIG.matches);
 
     const laeuft = schlacht && schlacht.status === "laeuft";
+    if (laeuft) ereignissePruefen();
+    /* Erschuetterung bei einem Ereignis - alles ausser dem Hintergrund. */
+    const w = orte() ? orte().wackeln(jetzt) : { x: 0, y: 0 };
+    ctx.save();
+    ctx.translate(w.x, w.y);
     const lebende = layout.filter(lebendig);
 
     /* Ausgefallene Schiffe explodieren. */
@@ -383,6 +436,9 @@
       ctx.beginPath(); ctx.arc(cx, cy, 40 + f * Math.max(feldB, feldH) * 0.3, 0, 6.283); ctx.stroke();
       ctx.globalAlpha = 1;
     });
+
+    if (orte()) orte().zeichneEreignisse(ctx, feldB, feldH, jetzt, hochkant());
+    ctx.restore();
   }
 
   function schleife(jetzt) {
@@ -673,10 +729,11 @@
     document.documentElement.classList.remove("fh-schlacht-offen");
     document.removeEventListener("keydown", tasten);
     cancelAnimationFrame(bild); bild = 0;
+    if (orte()) orte().introAbbrechen();
     if (klang()) klang().stop("schlacht");
   }
 
-  function tasten(ev) { if (ev.key === "Escape") verlassen(); }
+  function tasten(ev) { if (ev.key === "Escape" && !(orte() && orte().introLaeuft())) verlassen(); }
 
   function verlassen() {
     const ziel2 = vorherigeSeite && vorherigeSeite !== "sternenschlacht" ? vorherigeSeite : "home";
@@ -696,6 +753,49 @@
     uhr.id = "schlacht-uhr";
     uhr.textContent = restZeit();
     lage.append(el("span", "sl-live", t("schlacht.live", "Live")), punkte, uhr);
+    if (ortZeile && orte()) lage.appendChild(ortPlakette());
+  }
+
+  /* Ortsname im Kopf; ein Klick zeigt die Regeln und bietet die
+     Start-Animation noch einmal an. */
+  function ortPlakette() {
+    const wrap = el("div", "sl-ort");
+    const knopf = el("button", "sl-ort-knopf", orte().name(ortZeile.ort_id));
+    knopf.type = "button";
+    knopf.setAttribute("aria-expanded", "false");
+    const tafel = el("div", "sl-ort-tafel");
+    tafel.hidden = true;
+    tafel.id = "schlacht-ort-tafel";
+    knopf.setAttribute("aria-controls", tafel.id);
+    tafel.append(el("p", "sl-ort-name", orte().name(ortZeile.ort_id)), el("p", "sl-ort-gegend", orte().gegend(ortZeile.ort_id)));
+    const liste = el("ul", "sl-ort-regeln");
+    orte().regeln(ortZeile).forEach(function (r2) { liste.appendChild(el("li", null, r2)); });
+    const nochmal = el("button", "sl-ort-nochmal", t("schlacht.intro.nochmal", "Einflug noch einmal ansehen"));
+    nochmal.type = "button";
+    nochmal.addEventListener("click", function () { tafel.hidden = true; knopf.setAttribute("aria-expanded", "false"); introZeigen(true); });
+    tafel.append(liste, nochmal);
+    knopf.addEventListener("click", function () {
+      tafel.hidden = !tafel.hidden;
+      knopf.setAttribute("aria-expanded", tafel.hidden ? "false" : "true");
+    });
+    wrap.append(knopf, tafel);
+    return wrap;
+  }
+
+  /* Start-Animation: einmal je Schlacht und Geraet (oder auf Wunsch). */
+  function introZeigen(erzwingen) {
+    const b = document.getElementById("fh-schlacht-buehne");
+    if (!b || b.hidden || !orte() || !ortZeile || !schlacht || schlacht.status !== "laeuft") return;
+    if (orte().introLaeuft()) return;
+    let gesehen = null;
+    try { gesehen = localStorage.getItem(INTRO_SPEICHER); } catch (e) { /* privater Modus */ }
+    if (!erzwingen && gesehen === String(schlacht.id)) return;
+    try { localStorage.setItem(INTRO_SPEICHER, String(schlacht.id)); } catch (e) { /* egal */ }
+    function seite(sx) {
+      return layout.filter(function (p) { return p.seite === sx; }).map(function (p) { return { typ: p.e.typ, stufen: p.stufen }; });
+    }
+    orte().intro(b, { ortId: ortZeile.ort_id, ort: ortZeile, menschen: seite("menschen"), aliens: seite("aliens"), runde: schlacht.runde || 1, klang: klang() })
+      .then(function () { const zu = b.querySelector(".sl-zu"); if (zu && !b.hidden) zu.focus({ preventScroll: true }); });
   }
 
   function aufbauen() {
@@ -769,6 +869,7 @@
     knoepfeAuffrischen();
     letztesBild = 0;
     bild = requestAnimationFrame(schleife);
+    introZeigen(false);
   }
 
   /* "58 % : 42 %" - ganze Prozent, die zusammen 100 ergeben. */
