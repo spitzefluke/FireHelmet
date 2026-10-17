@@ -2780,3 +2780,135 @@ html.fh-schlacht-offen #fh-schlacht-hinweis { display: none; }
 .hg-partei-typ .hg-schiff canvas { display: block; width: 100%; max-width: 110px; height: auto; }
 .hg-partei-typ-name { font-weight: 700; }
 .hg-partei-typ-werte { color: var(--fh-muted-fg); font-variant-numeric: tabular-nums; }
+
+/* =====================================================
+   HANGAR-AUSRUESTUNG UND BOSS (Migrationen 58/59)
+   ---------------------------------------------------
+   .hg-aus: Rang, Sonderwaffe, Module im Hangar.
+   .sl-boss: Lebensleiste des Mutterschiffs ueber dem Feld.
+===================================================== */
+[data-partei="allianz"] { --partei: var(--fh-gold-bright); --partei-text: #1a1204; }
+[data-partei="boss"] { --partei: var(--fh-danger); --partei-text: #fff; }
+
+.hg-aus { display: grid; gap: 16px; margin-top: 6px; }
+.hg-aus-titel { margin: 0; font-family: var(--fh-font-display); font-size: 22px; }
+.hg-rang {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--fh-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--fh-gold) 40%, var(--fh-border));
+  background: linear-gradient(140deg, color-mix(in srgb, var(--fh-gold) 12%, var(--fh-surface)), var(--fh-surface) 70%);
+}
+.hg-rang-kopf { display: flex; align-items: center; gap: 14px; }
+.hg-rang-abzeichen {
+  flex: none;
+  width: 52px; height: 52px;
+  display: grid; place-items: center;
+  border-radius: 14px;
+  color: var(--fh-gold-bright);
+  background: color-mix(in srgb, var(--fh-gold) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fh-gold) 50%, transparent);
+  box-shadow: var(--fh-glow-gold);
+}
+.hg-rang-abzeichen svg { width: 34px; height: 34px; }
+.hg-rang-text { display: grid; gap: 2px; min-width: 0; }
+.hg-rang-name { margin: 0; font-family: var(--fh-font-display); font-size: 22px; color: var(--fh-gold-bright); }
+.hg-rang-bonus, .hg-rang-zahlen { margin: 0; font-size: 13px; color: var(--fh-muted-fg); font-variant-numeric: tabular-nums; }
+.hg-rang-balken { height: 8px; border-radius: 4px; overflow: hidden; background: color-mix(in srgb, var(--fh-gold) 14%, transparent); }
+.hg-rang-fuellung { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--fh-gold), var(--fh-gold-bright)); box-shadow: var(--fh-glow-gold); }
+.hg-aus-gruppe { display: grid; gap: 8px; }
+.hg-aus-gruppe-titel { margin: 0; font-family: var(--fh-font-display); font-size: 18px; }
+.hg-aus-gruppe-text { margin: 0; font-size: 13px; color: var(--fh-muted-fg); }
+.hg-aus-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.hg-teil {
+  --akzent: var(--fh-cold);
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 12px;
+  border-radius: var(--fh-radius);
+  border: 1px solid var(--fh-border);
+  background: var(--fh-surface);
+  transition: border-color var(--fh-dauer) var(--fh-ease), box-shadow var(--fh-dauer) var(--fh-ease);
+}
+.hg-teil[data-teil="plasma"] { --akzent: var(--fh-waffe-plasma); }
+.hg-teil[data-teil="raketen"] { --akzent: var(--fh-waffe-raketen); }
+.hg-teil[data-teil="tesla"] { --akzent: var(--fh-waffe-tesla); }
+.hg-teil[data-teil="lanze"] { --akzent: var(--fh-waffe-lanze); }
+.hg-teil.ist-gekauft { border-color: color-mix(in srgb, var(--akzent) 40%, var(--fh-border)); }
+.hg-teil.ist-angelegt { border-color: var(--akzent); box-shadow: 0 0 0 1px var(--akzent), 0 0 20px color-mix(in srgb, var(--akzent) 25%, transparent); }
+.hg-teil-name { margin: 0; font-size: 15px; }
+.hg-teil.ist-angelegt .hg-teil-name { color: var(--akzent); }
+.hg-teil-text { margin: 0; font-size: 12px; color: var(--fh-muted-fg); }
+.hg-teil-platz { margin: 0; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--akzent); }
+.hg-teil-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.hg-teil-knopf {
+  font: inherit; font-size: 13px; font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--akzent);
+  color: var(--fh-fg);
+  background: color-mix(in srgb, var(--akzent) 14%, transparent);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.hg-teil-knopf:hover, .hg-teil-knopf:focus-visible { background: color-mix(in srgb, var(--akzent) 30%, transparent); outline: none; }
+.hg-teil-knopf.ist-frage { background: var(--akzent); color: var(--fh-bg); }
+
+/* Boss: Lebensleiste ueber dem Feld */
+.sl-boss {
+  position: absolute;
+  top: 10px; left: 50%;
+  z-index: 1;
+  width: min(560px, calc(100% - 24px));
+  transform: translateX(-50%);
+  display: grid;
+  gap: 5px;
+  padding: 8px 12px;
+  border-radius: var(--fh-radius);
+  border: 1px solid color-mix(in srgb, var(--fh-danger) 50%, transparent);
+  background: rgba(10, 2, 6, .72);
+  pointer-events: none;
+}
+.sl-boss-kopf { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.sl-boss-name { font-family: var(--fh-font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--fh-boss-hell); }
+.sl-boss-phase, .sl-boss-schild {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  border: 1px solid color-mix(in srgb, var(--fh-danger) 60%, transparent);
+  color: var(--fh-fg);
+}
+.sl-boss-schild { border-color: var(--fh-boss-hell); background: color-mix(in srgb, var(--fh-boss) 22%, transparent); }
+.sl-boss-schild[hidden] { display: none; }
+.sl-boss-zahl { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; }
+.sl-boss-balken { height: 10px; border-radius: 5px; overflow: hidden; background: rgba(255, 255, 255, .08); }
+.sl-boss-fuellung {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, var(--fh-danger), var(--fh-boss));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--fh-danger) 70%, transparent);
+  transition: width 1.2s var(--fh-ease);
+}
+.sl-boss[data-phase="3"] .sl-boss-fuellung { background: linear-gradient(90deg, var(--fh-fire-deep), var(--fh-fire)); }
+
+/* Boss: Wahl einer Partei mit Chips (eine Spalte) */
+.sl-wahl.ist-boss { grid-template-columns: minmax(0, 1fr); max-width: 760px; width: 100%; margin: 0 auto; }
+.sl-wahl.ist-boss .sl-wahl-typen { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sl-wahl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.sl-wahl-chip {
+  font: inherit; font-size: 13px; font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--partei) 50%, var(--fh-border));
+  background: transparent;
+  color: var(--partei);
+  cursor: pointer;
+}
+.sl-wahl-chip[aria-pressed="true"] { background: var(--partei); color: var(--partei-text); border-color: var(--partei); }
+.sl-wahl-chip:focus-visible { outline: 2px solid var(--partei); outline-offset: 2px; }
+@media (max-width: 760px) {
+  .sl-wahl.ist-boss .sl-wahl-typen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -24,6 +24,12 @@
    Farben, Treffer und Explosionen richten sich nach der PARTEI des
    Schiffs (layout-Objekt: partei, sonst seite).
 
+   SONDERWAFFEN (Migration 58): Der Zielschuss (stark) eines Schiffs
+   mit Sonderwaffe sieht anders aus - Plasmakanone: grosse Plasmakugel,
+   Raketenwerfer: drei Raketen mit Rauchspur, Tesla-Spule: Blitz,
+   Lichtlanze: gleissender Strahl. o.art erzwingt eine Waffe (Boss-
+   Salven, Tesla-Uebersprung).
+
    Ziele und Schuetzen sind Objekte aus dem Layout von schlacht.js;
    ihre Position liefert die Funktion pos(objekt, jetzt), die beim
    Zeichnen uebergeben wird - so folgen Schuesse den schwebenden
@@ -38,7 +44,7 @@
    Grossschiffe - parteien(links, rechts) setzt sie.
 
    API (window.fhSchlachtFx):
-     schuss(von, nach, { typ, seite, stark, beimTreffer })
+     schuss(von, nach, { typ, seite, stark, beimTreffer, waffe?, art? })
      explosion(x, y, seite, groesse)
      zeichnen(ctx, pos, jetzt)
      hintergrund(ctx, breite, hoehe, jetzt, dpr, ruhig)
@@ -57,10 +63,15 @@
     sonde: "puls", waechter: "strahl", zerstoerer: "rail", fabrik: "reparatur",
     splitter: "splitter", prisma: "strahl", resonator: "schall", monolith: "reparatur",
     irrlicht: "puls", phantom: "laser", banshee: "schall", totenschiff: "breitseite",
+    mutterschiff: "strahl",
   };
+  /* Zielschuss mit Sonderwaffe (58) */
+  const SONDER = { plasma: "plasmaball", raketen: "raketen", tesla: "blitz", lanze: "lanze" };
+  const SONDER_FARBE = { plasmaball: "#5ff3ff", raketen: "#ff9d3d", blitz: "#9fc8ff", lanze: "#fff07a" };
   const DAUER = {
     laser: 260, doppel: 320, strahl: 380, reparatur: 650, puls: 420, plasma: 760, netz: 700, brut: 950,
     breitseite: 620, rail: 300, splitter: 360, schall: 640,
+    plasmaball: 420, raketen: 720, blitz: 260, lanze: 340,
   };
   const FARBE = {
     menschen: { schuss: "#8fe3ff", kern: "#ffffff", glut: "rgba(111,211,255,.35)" },
@@ -69,11 +80,12 @@
     maschinen: { schuss: "#ff6a5a", kern: "#ffe9e4", glut: "rgba(255,59,59,.35)" },
     kristall: { schuss: "#ff9ae4", kern: "#ffffff", glut: "rgba(255,122,217,.35)" },
     geister: { schuss: "#7dffd2", kern: "#f0fff8", glut: "rgba(93,255,200,.35)" },
+    boss: { schuss: "#ff5a7a", kern: "#ffe0e6", glut: "rgba(255,59,107,.4)" },
   };
   /* Explosionsglut je Partei (r,g,b) */
   const GLUT = {
     menschen: "255,190,120", aliens: "190,255,140", piraten: "255,170,90",
-    maschinen: "255,110,90", kristall: "255,170,235", geister: "150,255,215",
+    maschinen: "255,110,90", kristall: "255,170,235", geister: "150,255,215", boss: "255,90,120",
   };
   function partei(obj) { return (obj && (obj.partei || obj.seite)) || "menschen"; }
   function stilVon(p) { return window.fhSchiffe && window.fhSchiffe.stil ? window.fhSchiffe.stil(p) : (p === "aliens" ? "organisch" : "metall"); }
@@ -87,7 +99,7 @@
   function schuss(von, nach, o) {
     if (!von || !nach) return;
     o = o || {};
-    const art = WAFFEN[o.typ] || "laser";
+    const art = o.art || (o.stark && SONDER[o.waffe]) || WAFFEN[o.typ] || "laser";
     if (schuesse.length >= MAX_SCHUESSE) schuesse.shift();
     schuesse.push({
       art: art, von: von, nach: nach, seite: o.seite || partei(von), stark: !!o.stark,
@@ -198,7 +210,7 @@
       x: B.x, y: B.y, t0: performance.now(), stark: s.stark, farbe: (FARBE[zp] || FARBE.menschen).schuss,
       art: s.art === "reparatur" ? "heil" : sl === "metall" ? "schild" : sl === "kristall" ? "facette" : "splash",
     });
-    if (s.art === "plasma" || (s.art === "breitseite" && s.stark)) explosion(B.x, B.y, s.seite, s.stark ? 26 : 18);
+    if (s.art === "plasma" || s.art === "plasmaball" || s.art === "raketen" || (s.art === "breitseite" && s.stark)) explosion(B.x, B.y, s.seite, s.stark ? 26 : 18);
     if (funken.length > 80) funken.shift();
     if (typeof s.beimTreffer === "function") {
       try { s.beimTreffer(s.nach, s.art); } catch (e) { /* nur Optik */ }
@@ -290,6 +302,69 @@
           ctx.beginPath(); ctx.moveTo(7 * dick, 0); ctx.lineTo(0, -2.4 * dick); ctx.lineTo(-6 * dick, 0); ctx.lineTo(0, 2.4 * dick); ctx.closePath(); ctx.fill();
           ctx.restore();
         }
+        ctx.globalAlpha = 1;
+        break;
+      }
+      case "plasmaball": {
+        const fa = SONDER_FARBE.plasmaball;
+        const x = A.x + (B.x - A.x) * f, y = A.y + (B.y - A.y) * f;
+        for (let k = 1; k <= 4; k++) {
+          const g = Math.max(0, f - k * 0.04);
+          kugel(ctx, A.x + (B.x - A.x) * g, A.y + (B.y - A.y) * g, 4 - k * 0.7, fa, fa);
+        }
+        kugel(ctx, x, y, 6.5, fa, "#ffffff");
+        break;
+      }
+      case "raketen": {
+        const fa = SONDER_FARBE.raketen;
+        const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || 1, w = Math.atan2(dy, dx);
+        for (let k = 0; k < 3; k++) {
+          const g = Math.max(0, Math.min(1, (f - k * 0.07) / 0.86));
+          if (g <= 0) continue;
+          const kurve = Math.sin(Math.PI * g) * 34 * (k - 1);
+          const x = A.x + dx * g - dy / d * kurve, y = A.y + dy * g + dx / d * kurve;
+          /* Rauchspur */
+          ctx.fillStyle = "rgba(200,200,210,.35)";
+          for (let r = 1; r <= 5; r++) {
+            const gg = Math.max(0, g - r * 0.035), kk = Math.sin(Math.PI * gg) * 34 * (k - 1);
+            ctx.beginPath(); ctx.arc(A.x + dx * gg - dy / d * kk, A.y + dy * gg + dx / d * kk, 1.4 + r * 0.5, 0, 6.283); ctx.fill();
+          }
+          ctx.save(); ctx.translate(x, y); ctx.rotate(w + Math.cos(Math.PI * g) * 0.4 * (k - 1));
+          ctx.fillStyle = "#d8dde4"; ctx.fillRect(-6, -1.6, 10, 3.2);
+          ctx.fillStyle = fa; ctx.beginPath(); ctx.arc(-7, 0, 2.2, 0, 6.283); ctx.fill();
+          ctx.restore();
+        }
+        break;
+      }
+      case "blitz": {
+        /* Zackiger Blitz, flackert, neu gewuerfelt je Bild */
+        const fa = SONDER_FARBE.blitz;
+        const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || 1;
+        ctx.globalAlpha = (1 - f) * (0.7 + 0.3 * Math.random());
+        [[fa, 5, 0.35], ["#ffffff", 1.8, 1]].forEach(function (lage) {
+          ctx.strokeStyle = lage[0]; ctx.lineWidth = lage[1] * dick; ctx.globalAlpha = (1 - f) * lage[2];
+          ctx.beginPath(); ctx.moveTo(A.x, A.y);
+          const n = 9;
+          for (let i = 1; i < n; i++) {
+            const g = i / n, z = (Math.sin(i * 12.9898 + s.versatz * 7 + Math.floor(jetzt / 50)) * 0.5) * 22;
+            ctx.lineTo(A.x + dx * g - dy / d * z, A.y + dy * g + dx / d * z);
+          }
+          ctx.lineTo(B.x, B.y); ctx.stroke();
+        });
+        ctx.globalAlpha = 1;
+        break;
+      }
+      case "lanze": {
+        const fa = SONDER_FARBE.lanze;
+        const an = Math.min(1, f / 0.12), aus = 1 - Math.max(0, (f - 0.35) / 0.65);
+        const ex = A.x + (B.x - A.x) * an, ey = A.y + (B.y - A.y) * an;
+        ctx.lineCap = "round";
+        ctx.globalAlpha = 0.35 * aus; ctx.strokeStyle = fa; ctx.lineWidth = 14 * dick;
+        ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(ex, ey); ctx.stroke();
+        ctx.globalAlpha = 0.8 * aus; ctx.lineWidth = 5 * dick;
+        ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(ex, ey); ctx.stroke();
+        ctx.globalAlpha = aus; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.8 * dick;
+        ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(ex, ey); ctx.stroke();
         ctx.globalAlpha = 1;
         break;
       }
