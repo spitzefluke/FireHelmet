@@ -36,6 +36,16 @@
      intro(buehne, { ortId, ort, menschen, aliens, runde, klang }) -> Promise
      introLaeuft(), introAbbrechen()
      leeren()
+     vorschau(ortId)                         - Admin: alle Orte ansehen
+
+   VORSCHAU (Admin, Migration 56): Die Orte kommen erst, wenn der Admin
+   sie unter "Live-Event -> Freigaben" freischaltet. Vorher kann er sie
+   hier ansehen - Vollbild (#fh-orte-vorschau an body, in den :not-
+   Listen von 95 und 96) mit Reitern fuer alle Orte, zwei
+   Uebungsflotten, den Regeln, "Einflug abspielen" und "Ereignis
+   ausloesen". Reine Anzeige: nichts davon erreicht die Datenbank.
+   Die Werte kommen aus public.schlacht_orte; fehlt Migration 55 noch,
+   aus STANDARD unten (dieselben Zahlen).
 ====================================================== */
 
 (function () {
@@ -758,6 +768,222 @@
     });
   }
 
+  /* ------------------------------------------------------
+     VORSCHAU FUER DEN ADMIN
+  ------------------------------------------------------ */
+  /* Dieselben Zahlen wie in 55-schlacht-orte.sql - nur fuer die
+     Vorschau, falls die Tabelle (noch) nicht lesbar ist. */
+  const STANDARD = {
+    asteroiden:     { dauerfeuer: 1,    ziel: 1,   wendig: 1.25, spezial: 1,    heilung: 1,   schild: 1,   laden: 1,   ereignis_sek: 40,   ereignis_anteil: 0.02,  ereignis_art: "abwechselnd" },
+    schwarzes_loch: { dauerfeuer: 1.25, ziel: 1,   wendig: 1,    spezial: 1.35, heilung: 0.7, schild: 1,   laden: 1,   ereignis_sek: 60,   ereignis_anteil: 0.015, ereignis_art: "beide" },
+    station:        { dauerfeuer: 1,    ziel: 0.8, wendig: 1,    spezial: 1,    heilung: 1.5, schild: 1.3, laden: 1,   ereignis_sek: 50,   ereignis_anteil: 0.025, ereignis_art: "abwechselnd" },
+    nebel:          { dauerfeuer: 1,    ziel: 0.7, wendig: 1,    spezial: 1.2,  heilung: 1,   schild: 1,   laden: 1,   ereignis_sek: 30,   ereignis_anteil: 0.015, ereignis_art: "abwechselnd" },
+    sonne:          { dauerfeuer: 1.15, ziel: 1,   wendig: 1,    spezial: 1,    heilung: 1.2, schild: 0.7, laden: 1,   ereignis_sek: 45,   ereignis_anteil: 0.03,  ereignis_art: "beide" },
+    eisring:        { dauerfeuer: 0.85, ziel: 1.1, wendig: 1,    spezial: 1,    heilung: 1,   schild: 1.5, laden: 1,   ereignis_sek: 70,   ereignis_anteil: 0.01,  ereignis_art: "abwechselnd" },
+    wurmloch:       { dauerfeuer: 1,    ziel: 1,   wendig: 1,    spezial: 1.1,  heilung: 1,   schild: 1,   laden: 0.5, ereignis_sek: null, ereignis_anteil: 0,     ereignis_art: "beide" },
+  };
+  const DEMO_TAKT = 6000;   // in der Vorschau alle 6 s ein Ereignis
+
+  let vorschauOffen = null;   // { schliessen }
+
+  async function ortZeilen() {
+    const zeilen = {};
+    ORTE.forEach(function (id) { zeilen[id] = Object.assign({ ort_id: id }, STANDARD[id]); });
+    try {
+      if (typeof supabaseClient !== "undefined" && supabaseClient) {
+        const a = await withSupabaseRlsColdStartRetry(function () { return supabaseClient.from("schlacht_orte").select("*"); });
+        if (!a.error && Array.isArray(a.data)) a.data.forEach(function (z) { if (zeilen[z.ort_id]) zeilen[z.ort_id] = z; });
+      }
+    } catch (e) { /* ohne Migration 55: Standardwerte */ }
+    return zeilen;
+  }
+
+  function demoFlotte(seite) {
+    const typen = seite === "menschen" ? ["jaeger", "fregatte", "kreuzer", "traeger"] : ["drohne", "stachel", "weber", "brutschiff"];
+    const liste = [];
+    for (let i = 0; i < 9; i++) {
+      liste.push({ typ: typen[i % 4], stufen: { leben: i % 4, schaden: (i * 2) % 5, spezial: i % 3 } });
+    }
+    return liste;
+  }
+
+  function vorschau(startId) {
+    if (vorschauOffen) vorschauOffen.schliessen();
+    const vorher = document.activeElement;
+    const k = window.fhSchlachtKlang || null;
+    let aktiv = ORTE.indexOf(startId) >= 0 ? startId : ORTE[0];
+    let zeilen = null;
+    const fM = demoFlotte("menschen"), fA = demoFlotte("aliens");
+
+    const box = el("div", "sl-vorschau");
+    box.id = "fh-orte-vorschau";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    box.setAttribute("aria-labelledby", "sl-vorschau-titel");
+
+    const kopf = el("div", "sl-vorschau-kopf");
+    const titel = el("h2", "sl-vorschau-titel", t("schlacht.vorschau.titel", "Kampforte · Vorschau"));
+    titel.id = "sl-vorschau-titel";
+    const reiter = el("div", "sl-vorschau-reiter");
+    reiter.setAttribute("role", "tablist");
+    reiter.setAttribute("aria-label", t("schlacht.vorschau.orte", "Kampforte"));
+    const zu = el("button", "sl-rund-knopf sl-vorschau-zu");
+    zu.type = "button";
+    zu.setAttribute("aria-label", t("schlacht.vorschau.schliessen", "Vorschau schließen"));
+    zu.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+    kopf.append(titel, reiter, zu);
+
+    const feld = el("div", "sl-vorschau-feld");
+    const cv = el("canvas", "sl-vorschau-canvas");
+    cv.id = "sl-vorschau-canvas";   // fuer die Filter-Ausnahme in 95/96
+    cv.setAttribute("role", "img");
+    feld.appendChild(cv);
+
+    const fuss = el("div", "sl-vorschau-fuss");
+    const info = el("div", "sl-vorschau-info");
+    const knoepfe = el("div", "sl-vorschau-knoepfe");
+    const einflug = el("button", "sl-vorschau-knopf", t("schlacht.vorschau.einflug", "Einflug abspielen"));
+    einflug.type = "button";
+    const ausloesen = el("button", "sl-vorschau-knopf", t("schlacht.vorschau.ereignis", "Ereignis auslösen"));
+    ausloesen.type = "button";
+    knoepfe.append(einflug, ausloesen);
+    const hinweis = el("p", "sl-vorschau-hinweis", t("schlacht.vorschau.hinweis", "Nur für dich. Spieler sehen die Orte erst, wenn du sie unter Live-Event → Freigaben freischaltest."));
+    fuss.append(info, knoepfe, hinweis);
+    box.append(kopf, feld, fuss);
+    document.body.appendChild(box);
+    document.documentElement.classList.add("fh-schlacht-offen");
+    if (k) k.start("vorschau");
+
+    const g = cv.getContext("2d");
+    let B = 1, H = 1, D = 1;
+    function einpassen() {
+      const rr = feld.getBoundingClientRect();
+      D = Math.min(2, window.devicePixelRatio || 1);
+      B = Math.max(1, rr.width); H = Math.max(1, rr.height);
+      cv.width = Math.round(B * D); cv.height = Math.round(H * D);
+    }
+
+    function reiterBauen() {
+      reiter.replaceChildren();
+      ORTE.forEach(function (id) {
+        const b2 = el("button", "sl-vorschau-reiter-knopf", name(id));
+        b2.type = "button";
+        b2.setAttribute("role", "tab");
+        b2.setAttribute("aria-selected", id === aktiv ? "true" : "false");
+        b2.addEventListener("click", function () { waehlen(id); });
+        reiter.appendChild(b2);
+        if (id === aktiv) requestAnimationFrame(function () { b2.scrollIntoView({ block: "nearest", inline: "center" }); });
+      });
+    }
+
+    function infoBauen() {
+      info.replaceChildren();
+      info.append(el("p", "sl-ort-name", name(aktiv)), el("p", "sl-ort-gegend", gegend(aktiv)));
+      const liste = el("ul", "sl-ort-regeln");
+      regeln(zeilen && zeilen[aktiv]).forEach(function (x) { liste.appendChild(el("li", null, x)); });
+      info.appendChild(liste);
+      ausloesen.disabled = !DAUER[aktiv];
+      cv.setAttribute("aria-label", name(aktiv));
+    }
+
+    let naechstesDemo = performance.now() + 2500, demoSeite = "menschen";
+    function waehlen(id) {
+      aktiv = id;
+      leeren();
+      naechstesDemo = performance.now() + 2500;
+      reiterBauen();
+      infoBauen();
+    }
+
+    function ereignisZeigen() {
+      if (!DAUER[aktiv]) return;
+      const z = zeilen && zeilen[aktiv];
+      if (z && z.ereignis_art === "beide") {
+        if (aktiv === "sonne" || aktiv === "schwarzes_loch") ereignis(aktiv, "beide");
+        else { ereignis(aktiv, "menschen"); ereignis(aktiv, "aliens"); }
+      } else {
+        ereignis(aktiv, demoSeite);
+        demoSeite = demoSeite === "menschen" ? "aliens" : "menschen";
+      }
+      if (k) k.akzent("ereignis");
+    }
+
+    function flotteZeichnen(liste, seite, jetzt) {
+      if (!window.fhSchiffe) return;
+      const hoch = H > B * 1.1;
+      liste.forEach(function (s2, i) {
+        const r2 = zufall(seite + "v" + i);
+        let x, y;
+        if (hoch) {
+          x = B * (0.12 + (i % 5) * 0.19) + (r2() - 0.5) * 20;
+          y = seite === "menschen" ? H * (0.72 + Math.floor(i / 5) * 0.12) : H * (0.28 - Math.floor(i / 5) * 0.12);
+        } else {
+          x = seite === "menschen" ? B * (0.08 + Math.floor(i / 3) * 0.1) : B * (0.92 - Math.floor(i / 3) * 0.1);
+          y = H * (0.25 + (i % 3) * 0.25) + (r2() - 0.5) * 30;
+        }
+        const ruhig = RUHIG.matches;
+        window.fhSchiffe.zeichnen(g, {
+          typ: s2.typ, seite: seite, stufen: s2.stufen, x: x + (ruhig ? 0 : Math.sin(jetzt / 900 + i) * 4),
+          y: y + (ruhig ? 0 : Math.cos(jetzt / 1100 + i) * 5),
+          winkel: hoch ? (seite === "menschen" ? -Math.PI / 2 : Math.PI / 2) : (seite === "menschen" ? 0 : Math.PI),
+          breite: Math.max(40, Math.min(B, H) * 0.1), dpr: D, zeit: jetzt, phase: i * 300, treffer: 0, ruhig: ruhig,
+        });
+      });
+    }
+
+    let raf = 0;
+    function bild(jetzt) {
+      raf = requestAnimationFrame(bild);
+      if (intro) return;   // die Start-Animation zeichnet selbst
+      g.setTransform(D, 0, 0, D, 0, 0);
+      g.clearRect(0, 0, B, H);
+      hintergrund(g, B, H, jetzt, D, aktiv, RUHIG.matches);
+      if (DAUER[aktiv] && !RUHIG.matches && jetzt >= naechstesDemo) { naechstesDemo = jetzt + DEMO_TAKT; ereignisZeigen(); }
+      const w = wackeln(jetzt);
+      g.save();
+      g.translate(w.x, w.y);
+      flotteZeichnen(fM, "menschen", jetzt);
+      flotteZeichnen(fA, "aliens", jetzt);
+      zeichneEreignisse(g, B, H, jetzt, H > B * 1.1);
+      g.restore();
+    }
+
+    function taste(ev) {
+      if (ev.key === "Escape" && !intro) { ev.preventDefault(); schliessen(); }
+    }
+    function schliessen() {
+      cancelAnimationFrame(raf);
+      if (intro) intro.abbrechen();
+      window.removeEventListener("resize", einpassen);
+      document.removeEventListener("keydown", taste);
+      box.remove();
+      leeren();
+      if (!document.getElementById("fh-schlacht-buehne") || document.getElementById("fh-schlacht-buehne").hidden) {
+        document.documentElement.classList.remove("fh-schlacht-offen");
+      }
+      if (k) k.stop("vorschau");
+      vorschauOffen = null;
+      if (vorher && vorher.focus) vorher.focus({ preventScroll: true });
+    }
+
+    zu.addEventListener("click", schliessen);
+    einflug.addEventListener("click", function () {
+      introStarten(box, { ortId: aktiv, ort: zeilen && zeilen[aktiv], menschen: fM, aliens: fA, runde: 1, klang: k })
+        .then(function () { if (vorschauOffen) einflug.focus({ preventScroll: true }); });
+    });
+    ausloesen.addEventListener("click", ereignisZeigen);
+    window.addEventListener("resize", einpassen);
+    document.addEventListener("keydown", taste);
+    vorschauOffen = { schliessen: schliessen };
+
+    reiterBauen();
+    infoBauen();
+    einpassen();
+    zu.focus({ preventScroll: true });
+    raf = requestAnimationFrame(bild);
+    ortZeilen().then(function (z) { zeilen = z; if (vorschauOffen) infoBauen(); });
+  }
+
   window.fhSchlachtOrte = {
     ORTE: ORTE,
     hintergrund: hintergrund,
@@ -770,5 +996,6 @@
     introLaeuft: introLaeuft,
     introAbbrechen: introAbbrechen,
     leeren: leeren,
+    vorschau: vorschau,
   };
 })();

@@ -435,6 +435,7 @@ function buildGatewayChapterListHtml() {
 ------------------------------------------------------ */
 const GATEWAY_FEATURE_FLAGS = [
   { key: "skillTree", label: "Skill-Baum", hinweis: "Der Fertigkeitsbaum mit Skillpunkten." },
+  { key: "schlachtOrte", label: "Kampforte der Sternenschlacht", hinweis: "Ab der nächsten gestarteten Schlacht spielt jede an einem ausgelosten Ort mit eigenen Regeln und Start-Animation (Migration 56). Eine laufende Schlacht bleibt, wie sie ist. Vorschau: Sternenschlacht → „Kampforte ansehen“." },
 ];
 
 /* Aufgeteilt in drei Teile des Menues (Steuerung, Geschenke,
@@ -636,7 +637,7 @@ function buildGatewayEpocheHtml() {
     <p id="gw-seite-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <div class="gw-story-lage">
       <p id="gw-schlacht-jetzt" class="gw-story-jetzt">Sternenschlacht (Migration 50): Stand wird geladen …</p>
-      <p class="gateway-status-sub">Läuft endlos in Runden, bis du sie beendest. Das Tempo bestimmt, wie lange eine Runde etwa dauert. Jede Schlacht spielt an einem Kampfort mit eigenen Regeln (Migration 55) – ausgelost oder von dir gewählt. Zum Testen außerhalb von 2100: „Vorschau 2100“, selbst eine Seite wählen, dann starten – die leere Seite übernimmt eine Übungsflotte.</p>
+      <p class="gateway-status-sub">Läuft endlos in Runden, bis du sie beendest. Das Tempo bestimmt, wie lange eine Runde etwa dauert. Kampforte (Migrationen 55/56): Ausgelost wird erst, wenn du sie unter Live-Event → Freigaben freischaltest; einen gewählten Ort nutzt der Start immer. „Kampforte ansehen“ zeigt dir alle vorab. Zum Testen außerhalb von 2100: „Vorschau 2100“, selbst eine Seite wählen, dann starten – die leere Seite übernimmt eine Übungsflotte.</p>
       <div class="gw-story-lage-knoepfe">
         <select id="gw-schlacht-dauer" class="gw-feld" aria-label="Tempo einer Runde">
           <option value="5">Schnell (Runde ≈ 5 min)</option>
@@ -644,7 +645,7 @@ function buildGatewayEpocheHtml() {
           <option value="20">Langsam (Runde ≈ 20 min)</option>
         </select>
         <select id="gw-schlacht-ort" class="gw-feld" aria-label="Kampfort">
-          <option value="" selected>Ort auslosen</option>
+          <option value="" selected>Ort auslosen (nur mit Freigabe „Kampforte“, sonst ohne Ort)</option>
           <option value="asteroiden">Kepler-Asteroidengürtel</option>
           <option value="schwarzes_loch">Ereignishorizont Sagitta (Schwarzes Loch)</option>
           <option value="station">Wrack der Orbis-Station</option>
@@ -654,6 +655,7 @@ function buildGatewayEpocheHtml() {
           <option value="wurmloch">Wurmloch-Schlund Ixion</option>
         </select>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtStarten()">Sternenschlacht starten</button>
+        <button type="button" class="gw-live-knopf" onclick="window.fhSchlachtOrte && window.fhSchlachtOrte.vorschau(document.getElementById('gw-schlacht-ort')?.value || null)">Kampforte ansehen</button>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtBeenden()">Schlacht beenden</button>
       </div>
     </div>

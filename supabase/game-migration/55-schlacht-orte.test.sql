@@ -32,6 +32,10 @@ begin
     update public.sternenschlacht set status = 'vorbei' where status = 'laeuft';
     update public.players set seite = null where seite is not null;
     update public.live_event set jahr_1720_ab = now() - interval '2 hours', jahr_2100_ab = now() - interval '1 hour' where id = 1;
+    /* Seit 56 lost der Start nur mit Freigabe aus - fuer T1 an (vor 56 wirkungslos). */
+    insert into public.site_config (id, data) values ('main', '{}'::jsonb) on conflict (id) do nothing;
+    update public.site_config set data = jsonb_set(jsonb_set(coalesce(data, '{}'::jsonb), '{featureFlags}',
+           coalesce(data -> 'featureFlags', '{}'::jsonb)), '{featureFlags,schlachtOrte}', 'true'::jsonb) where id = 'main';
     insert into public.players (firebase_uid, nickname, seite) values (ad, 'OrtAdmin', 'menschen');
     perform set_config('request.jwt.claims',
       '{"sub":"' || ad || '","role":"authenticated","email":"' || admin || '"}', true);
