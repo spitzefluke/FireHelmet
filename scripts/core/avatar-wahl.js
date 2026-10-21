@@ -65,6 +65,8 @@ async function fhAvatarWahlSpeichern() {
   if (typeof savePlayerData === "function") savePlayerData({});
   if (typeof refreshPlayerCard === "function") refreshPlayerCard();
   if (typeof renderAvatarPicker === "function") renderAvatarPicker();
+  /* Der Spind (scripts/spind/spind.js) zeichnet seine Vorschau neu. */
+  window.dispatchEvent(new CustomEvent("fhAvatarGewaehlt"));
 
   fhAvatarWahlSchliessen();
 }

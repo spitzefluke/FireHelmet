@@ -68,6 +68,12 @@ function changePage(pageID) {
   if (typeof updateSternenschlachtPage === "function") {
     updateSternenschlachtPage(pageID);
   }
+  if (typeof updateSpindPage === "function") {
+    updateSpindPage(pageID);
+  }
+  if (typeof updateGluecksminePage === "function") {
+    updateGluecksminePage(pageID);
+  }
 
   if (typeof updateCodeAmbientPage === "function") {
     updateCodeAmbientPage(pageID);

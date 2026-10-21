@@ -27,6 +27,11 @@
 
 const HANGAR_PREISE = [1000, 3000, 8000, 20000, 50000];
 const HANGAR_MAX_STUFE = 5;
+/* Glücksmine (Migration 61): Stufen 6 bis 10 nur mit Erz, wie
+   app.hangar_erz_preis; Schiffssysteme je 0..5, 1 500 x 2^Stufe Erz. */
+const HANGAR_ERZ_PREISE = [2000, 4000, 8000, 15000, 25000];
+const HANGAR_ERZ_MAX = 10;
+const SCHIFF_SYSTEME = ["panzer", "geschuetz"];
 
 const HANGAR_SEITEN_MOD = {
   menschen: { leben: 1.25, schaden: 0.85 },

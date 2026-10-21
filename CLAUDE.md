@@ -15,8 +15,8 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 131 `<script defer>`-Tags in fester
-Reihenfolge, davon 117 aus diesem Repo. Sechs große Skripte, die fast niemand braucht
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 134 `<script defer>`-Tags in fester
+Reihenfolge, davon 120 aus diesem Repo. Sechs große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
@@ -90,7 +90,7 @@ Zwei Hinweise, die beim Eintragen dieser Liste aufgefallen sind und die noch off
 
 ### Seiten
 
-`index.html` enthält alle 22 Seiten als `<section id="…" class="page">`. `changePage(pageID)`
+`index.html` enthält alle 28 Seiten als `<section id="…" class="page">`. `changePage(pageID)`
 in `scripts/core/main.js` schaltet `.active-page` um und ruft danach die `update…Page(pageID)`
 jedes Bereichs auf. **Eine neue Seite muss sich dort eintragen**, sonst wird sie nie
 aufgefrischt. Der Wechsel selbst ist eine CSS-Transition auf `.page` (350 ms, `--fh-ease`) —
@@ -190,6 +190,34 @@ Schlacht ändert ihre Regeln nicht. Die Browser-Seite dieser Regeln (Positionen,
 Boss-Takt) steht in `schlacht-kampf.js` und muss zu `app.schlacht_huelle()`,
 `app.schlacht_bewegen()` und `app.schlacht_leben()` passen. Neue Tabellen mit Spielerbezug
 räumt hier der Trigger `hangar_konto_aufraeumen` ab.
+
+Seit 62 gibt es die **Front** (Freigabe `schlachtFront`, nicht im Boss-Modus): Alle
+`front_takt_sek` Sekunden (Standard 10) rechnet `app.schlacht_front_takt()` einen Takt –
+Frontlinie (`front_wert`, −100..100) verschieben, Druckschaden, bei ±100 ein Durchbruch, dazu
+ein Ereignis aus `app.front_ereignis()` und Kampfpunkte. Spieler wählen eine Haltung
+(`schlacht_haltung()`) und geben Kampfpunkte für Vorstoß, Bollwerk und Reparatur aus
+(`schlacht_front_verbessern()`). Ist eine Seite deutlich kleiner, bekommt sie beim Start einen
+**Ausgleich** (`ausgleich_links`/`_rechts`) auf Leben und Schaden. Die Regler stehen in
+`schlacht_regler` (Admin: Sternenschlacht → Front, `admin_front_einstellen()`); der Start
+übernimmt sie in die Schlacht. Die Browser-Seite steht in `schlacht-front.js` – sie zeigt nur
+und lädt neu, wenn ein Takt fällig ist.
+
+### Spind und Glücksmine
+
+Der **Spind** (Migration 60, Freigabe `spind`, `scripts/spind/spind.js`) bündelt Titel, Avatar
+und Rahmen, Namensfarbe, Banner und Spruch. Namensfarben und Banner kauft man mit Dublonen
+(`spind_teile`, `spind_teil_kaufen()`); getragen wird über `spind_tragen()`. Was jemand trägt,
+liest jeder über `spind_je_spieler()` – `fhProfil.namensKlasse(uid)` färbt damit Namen in
+Bestenlisten, `fhProfil.zeigen(uid)` öffnet die Profilkarte. Der getragene Titel gewinnt in
+`app.event_titel_je_spieler()` vor dem neuesten.
+
+Die **Glücksmine** (Migration 61, Freigabe `gluecksmine`, `scripts/mine/gluecksmine.js`)
+bringt **Erz**, eine dritte Währung in `mine_stand`. Gehackt wird über `mine_hacken()`
+(serverseitig gedrosselt, Goldadern und Edelsteine würfelt die Datenbank), der Bohrer füllt
+die Lore auch ohne Spieler (`mine_abholen()`), Geräte steigen über `mine_verbessern()`. Erz
+bezahlt Hangar-Stufen über 5 (`hangar_ausbauen_erz()`, bis 10) und die Schiffssysteme
+Panzerung und Geschütz (`schiff_system_ausbauen()`). Neue Tabellen mit Spielerbezug räumen
+die Trigger `spind_konto_aufraeumen` und `mine_konto_aufraeumen` ab.
 
 ### Datenbank und Anmeldung
 

@@ -1730,6 +1730,19 @@ function rowFrameClass(frameStyle) {
   return frameStyle ? `row-frame row-frame-${frameStyle}` : "";
 }
 
+/* Name in der Rangliste: mit Spind-Namensfarbe; ein Klick oeffnet die
+   Profilkarte (scripts/spind/spind.js). Ohne Spind wie bisher. */
+function spielerNameHtml(player) {
+  const name = escapeHtml(player.nickname || "Unbekannt");
+  if (!window.fhProfil || !player.uid) return name;
+  const farbe = window.fhProfil.namensKlasse(player.uid);
+  return `<button type="button" class="fh-name-knopf ${farbe}" data-profil="${escapeAttr(player.uid)}">${name}</button>`;
+}
+document.addEventListener("click", (ev) => {
+  const k = ev.target.closest && ev.target.closest("[data-profil]");
+  if (k && window.fhProfil) window.fhProfil.zeigen(k.getAttribute("data-profil"));
+});
+
 function buildLeaderboardRow(player, rank, isOwnRow) {
   const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
   const frameStyle = frameStyleFromId(player.equippedFrame);
@@ -1753,7 +1766,7 @@ function buildLeaderboardRow(player, rank, isOwnRow) {
   return `
     <tr class="${classes.join(" ")}">
       <td class="leaderboard-rank">${medal}</td>
-      <td class="leaderboard-name">${crownHtml}${avatarHtml}${escapeHtml(player.nickname || "Unbekannt")}${isOwnRow ? ' <span class="leaderboard-you-tag">(Du)</span>' : ""}${window.fhLiveZuschauer ? window.fhLiveZuschauer.chipHtml(player.eventAbzeichen) : ""}${eventTitelHtml(player.eventTitel, "leaderboard-eventtitel")}${leaderboardTitelHtml(player.auszeichnung, "leaderboard-titel")}</td>
+      <td class="leaderboard-name">${crownHtml}${avatarHtml}${spielerNameHtml(player)}${isOwnRow ? ' <span class="leaderboard-you-tag">(Du)</span>' : ""}${window.fhLiveZuschauer ? window.fhLiveZuschauer.chipHtml(player.eventAbzeichen) : ""}${eventTitelHtml(player.eventTitel, "leaderboard-eventtitel")}${leaderboardTitelHtml(player.auszeichnung, "leaderboard-titel")}</td>
       <td class="leaderboard-codes">${player.codesCracked} 🔑</td>
       <td class="leaderboard-rewards">${renderRewardBadges(player.rewards)}</td>
     </tr>
@@ -1774,7 +1787,7 @@ function buildLeaderboardPodiumEntry(player, rank) {
     <div class="fh-podium-col fh-podium-rank-${rank} ${rowFrameClass(frameStyle)}${istLegende(player.auszeichnung) ? " fh-podium-legende" : ""}">
       ${crownHtml}
       ${wrapAvatarWithFrame(`<div class="fh-podium-avatar">${avatarHtml}</div>`, frameStyle)}
-      <p class="fh-podium-name">${escapeHtml(player.nickname || "Unbekannt")}</p>
+      <p class="fh-podium-name">${spielerNameHtml(player)}</p>
       ${player.eventTitel ? eventTitelHtml(player.eventTitel, "fh-podium-eventtitel") : leaderboardTitelHtml(player.auszeichnung, "fh-podium-titel", true)}
       <p class="fh-podium-score">${player.codesCracked || 0} 🔑</p>
       <div class="fh-podium-pedestal">${rank}</div>
@@ -1829,6 +1842,8 @@ function loadLeaderboard() {
     window.fhEventTitel ? window.fhEventTitel.laden() : Promise.resolve(new Map()),
     // Event-Abzeichen ("war_dabei"-Chip), scripts/liveevent/live-zuschauer.js
     window.fhLiveZuschauer ? window.fhLiveZuschauer.abzeichenJeSpieler() : Promise.resolve(new Map()),
+    // Namensfarben aus dem Spind (scripts/spind/spind.js, Migration 60)
+    window.fhProfil ? window.fhProfil.namenLaden() : Promise.resolve(new Map()),
   ])
     .then(([{ data: rows, error }, ownUid, capWinnerUids, auszeichnungen, eventTitel, eventAbzeichen]) => {
       if (error) throw error;

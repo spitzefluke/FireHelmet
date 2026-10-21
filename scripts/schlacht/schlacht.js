@@ -60,6 +60,11 @@
    denselben Zeiten, die app.schlacht_leben abrechnet. Die Rechnung
    dazu steht in schlacht-kampf.js.
 
+   FRONT (Migration 62, Freigabe "schlachtFront"): Leiste, Haltung,
+   Kampfpunkte und die Frontlinie auf dem Feld stehen in
+   schlacht-front.js; hier nur das Einhaengen. Ist ein Takt faellig,
+   holt tick() sofort den neuen Stand.
+
    Alle 3 s holt der Browser den Stand und die neuen Aktionen (fuer
    die Treffer-Effekte); die Datenbank bleibt massgeblich.
 
@@ -162,6 +167,7 @@
   function sammelphase() { return !!(schlacht && schlacht.status === "laeuft" && schlacht.mit_wahl && schlacht.aufgestellt === false); }
   /* 58/59 */
   function kampf() { return window.fhSchlachtKampf || null; }
+  function front() { return window.fhSchlachtFront || null; }
   function mitBewegung() { return !!(schlacht && schlacht.mit_bewegung && kampf()); }
   function mitAusruestung() { return !!(schlacht && schlacht.mit_ausruestung); }
   function bossModus() { return !!(schlacht && schlacht.modus === "boss"); }
@@ -532,6 +538,7 @@
     }
     lebendVorher = jetztLebend;
 
+    if (front() && front().aktiv(stand)) front().bild(ctx, feldB, feldH, hochkant(), jetzt, RUHIG.matches);
     if (laeuft && mitBewegung()) bewegungSchritt(dt);
     if (laeuft && bossModus()) bossPruefen(lebende);
     if (laeuft) dauerfeuer(lebende, dt);
@@ -597,6 +604,7 @@
     bild = requestAnimationFrame(schleife);
     zeichnen(jetzt);
     knoepfeAuffrischen();
+    if (front() && front().aktiv(stand)) front().takt(jetzt);
   }
 
   function canvasEinpassen() {
@@ -750,6 +758,9 @@
     "falscher-typ": ["schlacht.fehler.typ", "Dieses Schiff gehört nicht zu der Partei."],
     "partei-fest": ["schlacht.fehler.parteiFest", "Du kämpfst in dieser Schlacht schon für die andere Seite – das Schiff darfst du wechseln."],
     "zerstoert": ["schlacht.fehler.zerstoert", "Dein Schiff ist zerstört – warte auf den Notsprung."],
+    "zu-wenig-kp": ["schlacht.fehler.kp", "Dafür reichen deine Kampfpunkte noch nicht."],
+    "max": ["schlacht.fehler.max", "Schon ganz ausgebaut."],
+    "keine-front": ["schlacht.fehler.front", "In dieser Schlacht gibt es keine Front."],
   };
   function status(text, istFehler) {
     const s = document.getElementById("schlacht-status");
@@ -1103,7 +1114,7 @@
     const ziel2 = document.getElementById("schlacht-inhalt");
     if (!ziel2) return;
     ziel2.replaceChildren();
-    ziel2.classList.remove("ist-feld");
+    ziel2.classList.remove("ist-feld", "ist-front");
     canvas = ctx = null;
     cancelAnimationFrame(bild); bild = 0;
     clearInterval(lobbyUhr); lobbyUhr = null;
@@ -1198,6 +1209,16 @@
     }
 
     fuss.append(banner, steuer, st);
+    if (front() && front().aktiv(stand)) {
+      front().bauen(fuss, {
+        rpc: rpc, status: status, fehler: fehler, klang: klang, serverJetzt: serverJetzt,
+        parteiName: function (slot) { return parteiVolk(parteiVon(slot)); },
+        parteiFarbe: function (slot) { return parteiFarbe(parteiVon(slot)); },
+        neuLaden: function () { if (seiteOffen()) tick(); },
+      });
+      front().auffrischen(stand);
+      ziel2.classList.add("ist-front");
+    }
     ziel2.append(feld, fuss);
     if (mitWahl()) {
       const ueber = el("div", "sl-wahl-ueber");
@@ -1484,7 +1505,11 @@
     if (seiteOffen()) {
       if (sammelphase()) { if (wechsel || !document.getElementById("schlacht-wahl")) aufbauen(); else wahlAuffrischen(); }
       else if (wechsel || !canvas) aufbauen();
-      else { bannerAuffrischen(); if (wahlOffen) wahlAuffrischen(); }
+      else {
+        bannerAuffrischen();
+        if (wahlOffen) wahlAuffrischen();
+        if (front()) { if (front().aktiv(stand) && !document.getElementById("schlacht-front")) aufbauen(); else front().auffrischen(stand); }
+      }
     }
     hinweisAuffrischen();
   }
