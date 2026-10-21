@@ -621,7 +621,11 @@ function renderPlayerCardHtml(data) {
      zwei Knoepfen darin: das Bild oeffnet die Avatarwahl, der Rest
      wie bisher den Levelpfad. Ein Knopf im Knopf ist in HTML nicht
      erlaubt, deshalb der Umbau. */
-  const avatarTitel = typeof t === "function" ? t("avatar.aendern", "Avatar ändern") : "Avatar ändern";
+  /* Mit Spind fuehrt das Bild dorthin (fhAvatarKlick, avatar-wahl.js). */
+  const zumSpind = typeof fhSpindStattAvatar === "function" && fhSpindStattAvatar();
+  const avatarTitel = typeof t === "function"
+    ? (zumSpind ? t("spind.oeffnen", "Spind öffnen") : t("avatar.aendern", "Avatar ändern"))
+    : (zumSpind ? "Spind öffnen" : "Avatar ändern");
 
   /* Titel und Abzeichen aus dem Skill-Baum (scripts/skilltree/). Nur
      der hoechste Titel, dazu alle Abzeichen. Die "Legende der sieben
@@ -650,7 +654,7 @@ function renderPlayerCardHtml(data) {
   return `
     <div class="fh-player-card${legendeKlasse}">
       <button type="button" class="fh-player-card-avatar fh-player-card-avatarknopf"
-              onclick="fhAvatarWahlOeffnen()"
+              onclick="fhAvatarKlick()"
               title="${avatarTitel}" aria-label="${avatarTitel}">
         ${avatarHtml}
         <span class="fh-player-card-stift" aria-hidden="true">✎</span>

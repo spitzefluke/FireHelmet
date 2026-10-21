@@ -42,6 +42,7 @@
   }
 
   let stand = null;          // Antwort von spind_stand
+  let fehlt = false;         // Migration 60 noch nicht eingespielt
   let teile = [];            // Zeilen aus spind_teile
   let namen = new Map();     // uid -> { namensfarbe, banner } (Rangliste)
   let beschaeftigt = false;
@@ -67,9 +68,11 @@
       ]);
       stand = ergebnisse[0];
       teile = ergebnisse[1] || [];
+      fehlt = false;
     } catch (err) {
       console.warn("Spind: Laden fehlgeschlagen:", err);
       stand = null;
+      fehlt = typeof fhMigrationFehlt === "function" && fhMigrationFehlt(err);
     }
   }
 
@@ -259,7 +262,16 @@
       return;
     }
     if (!stand) {
-      ziel.appendChild(el("p", "sp-hinweis", t("spind.nichtDa", "Der Spind ist gerade nicht erreichbar.")));
+      /* Auch ohne Spind bleibt der Avatar erreichbar - das Bild in der
+         Spielerkarte fuehrt ja hierher. */
+      const text = fehlt
+        ? fhMigrationFehltText(t("spind.fehlt", "Der Spind ist noch nicht eingerichtet."), 60)
+        : t("spind.nichtDa", "Der Spind ist gerade nicht erreichbar.");
+      ziel.appendChild(el("p", "sp-hinweis", text));
+      const avKnopf = el("button", "sp-knopf", t("spind.avatarWechseln", "Avatar wechseln"));
+      avKnopf.type = "button";
+      avKnopf.addEventListener("click", function () { if (typeof fhAvatarWahlOeffnen === "function") fhAvatarWahlOeffnen(); });
+      ziel.appendChild(avKnopf);
       return;
     }
 

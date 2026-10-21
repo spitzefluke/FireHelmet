@@ -82,7 +82,7 @@
       else stand = { gesperrt: d ? d.grund : "fehler" };
     } catch (err) {
       console.warn("Gluecksmine: Laden fehlgeschlagen:", err);
-      stand = { gesperrt: "fehler" };
+      stand = { gesperrt: typeof fhMigrationFehlt === "function" && fhMigrationFehlt(err) ? "fehlt" : "fehler" };
     }
   }
 
@@ -180,6 +180,7 @@
     "max": ["mine.fehler.max", "Schon ganz ausgebaut."],
   };
   function fehlerText(grund) {
+    if (grund === "fehlt") return fhMigrationFehltText(t("mine.fehler.fehlt", "Die Glücksmine ist noch nicht eingerichtet."), 61);
     const g = GRUENDE[grund];
     return g ? t(g[0], g[1]) : t("mine.fehler.allgemein", "Das hat nicht geklappt.");
   }

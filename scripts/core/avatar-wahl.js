@@ -115,3 +115,45 @@ function fhAvatarWahlOeffnen() {
   const ersterKnopf = fenster.querySelector(".fh-avatar-kasten button");
   if (ersterKnopf) ersterKnopf.focus();
 }
+
+/* Klick aufs eigene Bild in der Spielerkarte: Ist der Spind sichtbar
+   (freigegeben, oder der Admin sieht ihn als Vorschau), oeffnet sich
+   der Spind - die Avatarwahl steckt dort mit drin. Sonst wie bisher
+   gleich die Avatarwahl. Entschieden wird erst beim Klick, damit eine
+   spaeter geschaltete Freigabe sofort gilt. */
+function fhSpindStattAvatar() {
+  return typeof window.fhFeatureSichtbar === "function" && window.fhFeatureSichtbar("spind")
+    && typeof changePage === "function" && !!document.getElementById("spind");
+}
+
+function fhAvatarKlick() {
+  if (fhSpindStattAvatar()) changePage("spind");
+  else fhAvatarWahlOeffnen();
+}
+
+/* Die Spielerkarte entsteht oft vor den Freigaben - Beschriftung des
+   Bildes danach nachziehen. */
+window.addEventListener("fhFlagsUpdated", function () {
+  const text = fhSpindStattAvatar()
+    ? fhAvatarText("spind.oeffnen", "Spind öffnen")
+    : fhAvatarText("avatar.aendern", "Avatar ändern");
+  document.querySelectorAll(".fh-player-card:not(.fh-player-card-leer) .fh-player-card-avatarknopf").forEach(function (b) {
+    b.title = text;
+    b.setAttribute("aria-label", text);
+  });
+});
+
+/* Fehlt eine Migration noch, meldet PostgREST eine unbekannte Funktion
+   oder Tabelle. Spind und Mine sagen das dann deutlich statt "Das hat
+   nicht geklappt" - dem Admin mit der Nummer der Migration. */
+function fhMigrationFehlt(err) {
+  const code = err && err.code;
+  return code === "PGRST202" || code === "PGRST205" || code === "42883" || code === "42P01";
+}
+
+function fhMigrationFehltText(text, nummer) {
+  const admin = typeof window.fhViewerIstAdmin === "function" && window.fhViewerIstAdmin();
+  return admin
+    ? text + " " + fhAvatarText("admin.migrationFehlt", "Admin: Migration {n} ist in Supabase noch nicht eingespielt.").replace("{n}", nummer)
+    : text;
+}
