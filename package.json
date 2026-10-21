@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "shadcn": "^4.21.4"
+    "shadcn": "^4.21.5"
   },
   "dependencies": {
     "gsap": "^3.15.0",
