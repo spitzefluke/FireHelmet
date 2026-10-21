@@ -440,6 +440,9 @@ const GATEWAY_FEATURE_FLAGS = [
   { key: "hangarAusruestung", label: "Hangar: Sonderwaffen, Module, Schiffs-Rang", hinweis: "Im Hangar kaufen und anlegen die Spieler Sonderwaffen (sichtbar am Schiff) und zwei Module; aus Schlachten gibt es Erfahrung für den Rang (Migrationen 58/59). Wirkt ab der nächsten gestarteten Schlacht. Du selbst kannst vorher schon kaufen." },
   { key: "schlachtBewegung", label: "Sternenschlacht: Bewegen und Hülle", hinweis: "Spieler steuern ihr Schiff in der eigenen Hälfte (vorn trifft härter, Ausweichen schützt); jedes Schiff hat eine eigene Hülle und fällt bei 0 für 45 s aus (Migration 59). Gilt ab der nächsten gestarteten Schlacht." },
   { key: "schlachtBoss", label: "Sternenschlacht: Boss-Mutterschiff", hinweis: "Schaltet „Boss-Mutterschiff starten“ frei: alle Spieler gemeinsam gegen ein Mutterschiff mit drei Phasen, Salven und Schild (Migration 59)." },
+  { key: "schlachtFront", label: "Sternenschlacht: Front (alle 10 s passiert was)", hinweis: "Beide Seiten drängen um eine Front; jeder wählt Angriff oder Verteidigung, sammelt Kampfpunkte und verbessert sich im Kampf; die kleinere Seite bekommt einen Ausgleich (Migration 62). Gilt ab der nächsten gestarteten Schlacht; die Regler stehen unter Sternenschlacht." },
+  { key: "spind", label: "Spind", hinweis: "Neue Seite: Titel tragen, Avatar und Rahmen, Namensfarbe, Banner, Spruch; Profilkarte per Klick auf Namen in der Rangliste (Migration 60)." },
+  { key: "gluecksmine", label: "Glücksmine (Erz)", hinweis: "Neue Seite: Erz schürfen mit Spitzhacke, Bohrer, Lore und Grubenlampe. Mit Erz geht der Hangar bis Stufe 10, dazu Schiffssysteme (Migration 61)." },
 ];
 
 /* Aufgeteilt in drei Teile des Menues (Steuerung, Geschenke,
@@ -674,6 +677,30 @@ function buildGatewayEpocheHtml() {
           <option value="8">Boss Albtraum</option>
         </select>
         <button type="button" class="gw-live-knopf" onclick="gwBossStarten()">Boss-Mutterschiff starten</button>
+      </div>
+      <p class="gateway-status-sub">Front (Migration 62, Freigabe „Front“): Takt, Stärke des Drängens, Schaden beim Durchbruch und Ausgleich für die kleinere Seite. Gilt sofort für eine laufende Front-Schlacht und für alle weiteren.</p>
+      <div class="gw-story-lage-knoepfe">
+        <select id="gw-front-takt" class="gw-feld" aria-label="Takt der Front">
+          <option value="5">Takt 5 s</option>
+          <option value="10" selected>Takt 10 s</option>
+          <option value="15">Takt 15 s</option>
+          <option value="20">Takt 20 s</option>
+          <option value="30">Takt 30 s</option>
+        </select>
+        <select id="gw-front-staerke" class="gw-feld" aria-label="Stärke des Drängens">
+          <option value="0.5">Drängen sanft</option>
+          <option value="1" selected>Drängen normal</option>
+          <option value="1.5">Drängen stark</option>
+          <option value="2.5">Drängen wild</option>
+        </select>
+        <select id="gw-front-durchbruch" class="gw-feld" aria-label="Schaden beim Durchbruch">
+          <option value="0.02">Durchbruch 2 %</option>
+          <option value="0.05" selected>Durchbruch 5 %</option>
+          <option value="0.1">Durchbruch 10 %</option>
+          <option value="0.2">Durchbruch 20 %</option>
+        </select>
+        <label class="gw-check"><input type="checkbox" id="gw-front-ausgleich" checked> Ausgleich für die kleinere Seite</label>
+        <button type="button" class="gw-live-knopf" onclick="gwFrontEinstellen()">Front-Regler speichern</button>
         <button type="button" class="gw-live-knopf" onclick="window.fhSchlachtOrte && window.fhSchlachtOrte.vorschau(document.getElementById('gw-schlacht-ort')?.value || null)">Kampforte ansehen</button>
         <button type="button" class="gw-live-knopf" onclick="gwSchlachtBeenden()">Schlacht beenden</button>
       </div>
@@ -699,6 +726,7 @@ function gwParteiOptionen(vorwahl) {
 async function gwSchlachtZeigen() {
   const el = document.getElementById("gw-schlacht-jetzt");
   if (!el || !supabaseClient) return;
+  gwFrontLaden();
   try {
     /* "*": die Spalte ort gibt es erst mit Migration 55. */
     const { data, error } = await supabaseClient.from("sternenschlacht").select("*")
@@ -753,6 +781,41 @@ async function gwSchlachtStarten() {
       : /partei-unbekannt|p_links|p_rechts|p_sammeln/.test(m) ? "Parteien gibt es erst mit Migration 57." : m + " – sind Migration 49 und 50 eingespielt?";
     gwLiveStatus("gw-schlacht-status", "Start fehlgeschlagen: " + grund, true);
   }
+}
+
+/* Front-Regler (Migration 62). */
+async function gwFrontEinstellen() {
+  if (!supabaseClient) return;
+  const args = {
+    p_takt: Number(document.getElementById("gw-front-takt")?.value || 10),
+    p_staerke: Number(document.getElementById("gw-front-staerke")?.value || 1),
+    p_durchbruch: Number(document.getElementById("gw-front-durchbruch")?.value || 0.05),
+    p_ausgleich: !!document.getElementById("gw-front-ausgleich")?.checked,
+  };
+  try {
+    const { error } = await supabaseClient.rpc("admin_front_einstellen", args);
+    if (error) throw error;
+    gwLiveStatus("gw-schlacht-status", "✓ Front-Regler gespeichert: Takt " + args.p_takt + " s, Drängen ×" + String(args.p_staerke).replace(".", ",") + ", Durchbruch " + Math.round(args.p_durchbruch * 100) + " %, Ausgleich " + (args.p_ausgleich ? "an" : "aus") + ".", false);
+  } catch (err) {
+    console.error("Front-Regler fehlgeschlagen:", err);
+    const m = (err && err.message) || String(err);
+    gwLiveStatus("gw-schlacht-status", "Speichern fehlgeschlagen: " + (/admin_front_einstellen|function/.test(m) ? "Die Front gibt es erst mit Migration 62." : m), true);
+  }
+}
+
+/* Regler aus der Datenbank in die Auswahl uebernehmen. */
+async function gwFrontLaden() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from("schlacht_regler").select("*").eq("id", 1).maybeSingle();
+    if (error || !data) return;
+    const setze = (id, wert) => { const e = document.getElementById(id); if (e && [...e.options].some((o) => Number(o.value) === Number(wert))) e.value = String(wert); };
+    setze("gw-front-takt", data.takt_sek);
+    setze("gw-front-staerke", data.staerke);
+    setze("gw-front-durchbruch", data.durchbruch);
+    const a = document.getElementById("gw-front-ausgleich");
+    if (a) a.checked = data.ausgleich !== false;
+  } catch (err) { /* ohne Migration 62 bleiben die Vorgaben */ }
 }
 
 /* Boss-Mutterschiff (Migration 59). */

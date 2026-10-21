@@ -23,6 +23,11 @@
    (hangar_teil_kaufen, zweiter Klick bestaetigt) und Anlegen
    (hangar_teil_anlegen) nur ueber die Datenbank. Waffe und Module
    sieht man am Schiff (schiffe.js).
+
+   ERZ (Migration 61): Mit der Freigabe "gluecksmine" geht jeder Wert
+   nach Stufe 5 mit Erz aus der Glücksmine weiter bis Stufe 10
+   (hangar_ausbauen_erz), dazu die Schiffssysteme Panzerung und
+   Geschuetze (schiff_system_ausbauen, je +4 % in der Schlacht).
 ====================================================== */
 
 (function () {
@@ -40,6 +45,7 @@
   let beschaeftigt = false;
   let bestaetigen = null;    // { wert, bis }
   let ausruestung = null;    // Antwort von hangar_ausruestung (58) oder null
+  let erz = null;            // Erz aus der Glücksmine (61) oder null
   let bestaetigenUhr = null;
 
   function typText(id, feld) { return t("hangar.typ." + id + "." + feld, HANGAR_TYPEN[id][feld]); }
@@ -54,6 +60,9 @@
   /* Bild des Schiffs mit sichtbarem Ausbau (scripts/hangar/schiffe.js:
      Panzerplatten, Geschuetze/Dornen, Aura). Ohne schiffe.js der
      einfache Umriss aus hangar-data.js. */
+  function mineFrei() {
+    return typeof window.fhFeatureSichtbar === "function" && window.fhFeatureSichtbar("gluecksmine");
+  }
   function ausruestungFrei() {
     return typeof window.fhFeatureSichtbar === "function" && window.fhFeatureSichtbar("hangarAusruestung");
   }
@@ -92,7 +101,7 @@
       if (!uid) return;
       const { data, error } = await withSupabaseRlsColdStartRetry(function () {
         return supabaseClient.from("hangar_einheiten")
-          .select("typ, stufe_leben, stufe_schaden, stufe_spezial").eq("firebase_uid", uid).maybeSingle();
+          .select("*").eq("firebase_uid", uid).maybeSingle();
       });
       if (error) throw error;
       einheit = data || null;
@@ -100,6 +109,10 @@
       if (ausruestungFrei()) {
         const a = await withSupabaseRlsColdStartRetry(function () { return supabaseClient.rpc("hangar_ausruestung"); });
         ausruestung = a.error ? null : a.data;   // ohne Migration 58: nichts zeigen
+      }
+      if (mineFrei()) {
+        const m = await withSupabaseRlsColdStartRetry(function () { return supabaseClient.rpc("mine_stand_holen"); });
+        erz = !m.error && m.data && m.data.ok ? Number(m.data.erz) || 0 : null;   // ohne Migration 61: kein Erz
       }
     } catch (err) {
       console.warn("Hangar: Laden fehlgeschlagen:", err);
@@ -195,8 +208,78 @@
     st2.setAttribute("aria-live", "polite");
 
     ziel.append(typen, detail, st2);
+    if (erz != null) ziel.appendChild(systemeBox());
     if (ausruestung && ausruestungFrei()) ziel.appendChild(ausruestungBox());
     if (typeof window.fhFeatureSichtbar === "function" && window.fhFeatureSichtbar("schlachtParteien")) ziel.appendChild(parteienBox(st));
+  }
+
+  /* ------------------------------------------------------
+     ERZ: SCHIFFSSYSTEME UND STUFEN 6-10 (Migration 61)
+  ------------------------------------------------------ */
+  function systemeBox() {
+    const box = el("section", "hg-systeme");
+    const kopf = el("div", "hg-systeme-kopf");
+    kopf.append(el("h2", "hg-aus-titel", t("hangar.sys.titel", "Schiffssysteme")),
+      el("span", "hg-erz", t("hangar.sys.erz", "{n} Erz").replace("{n}", zahl(erz))));
+    box.append(kopf, el("p", "hg-aus-gruppe-text", t("hangar.sys.text", "Mit Erz aus der Glücksmine – je Stufe +4 % in jeder Sternenschlacht.")));
+    const liste = el("div", "hg-systeme-liste");
+    SCHIFF_SYSTEME.forEach(function (id) {
+      const stufe = einheit ? Number(einheit["sys_" + id]) || 0 : 0;
+      const k = el("article", "hg-system");
+      k.dataset.system = id;
+      k.append(el("h3", "hg-teil-name", t("hangar.sys." + id, id === "panzer" ? "Panzerung" : "Geschütze")),
+        el("p", "hg-teil-text", t("hangar.sys." + id + "Text", id === "panzer" ? "+4 % Leben je Stufe" : "+4 % Schaden je Stufe")));
+      const punkte = el("div", "hg-punkte ist-erz");
+      for (let i = 0; i < 5; i++) punkte.appendChild(el("span", "hg-punkt ist-erz" + (i < stufe ? " ist-an" : "")));
+      punkte.setAttribute("aria-label", t("hangar.stufe", "Stufe") + " " + stufe + "/5");
+      const b = el("button", "hg-ausbau ist-erz");
+      b.type = "button";
+      if (stufe >= 5) { b.disabled = true; b.textContent = t("hangar.max", "Maximal"); }
+      else {
+        const preis = 1500 * Math.pow(2, stufe);
+        const frage = bestaetigen && bestaetigen.wert === "sys:" + id && bestaetigen.bis > Date.now();
+        b.textContent = (frage ? t("hangar.wirklich", "Wirklich kaufen?") + " " : t("hangar.ausbauen", "Ausbauen") + " · ") + zahl(preis) + " " + t("mine.erz", "Erz");
+        b.classList.toggle("ist-frage", !!frage);
+        b.addEventListener("click", function () { erzAusbauen("sys:" + id, "schiff_system_ausbauen", { p_system: id }); });
+      }
+      k.append(punkte, b);
+      liste.appendChild(k);
+    });
+    box.appendChild(liste);
+    return box;
+  }
+
+  async function erzAusbauen(schluessel, name, args) {
+    if (beschaeftigt || !dbDa()) return;
+    if (!bestaetigen || bestaetigen.wert !== schluessel || bestaetigen.bis < Date.now()) {
+      bestaetigen = { wert: schluessel, bis: Date.now() + 5000 };
+      clearTimeout(bestaetigenUhr);
+      bestaetigenUhr = setTimeout(function () { bestaetigen = null; zeichnen(); }, 5100);
+      zeichnen();
+      return;
+    }
+    bestaetigen = null;
+    clearTimeout(bestaetigenUhr);
+    beschaeftigt = true;
+    try {
+      const data = await rpc(name, args);
+      if (data && data.ok) {
+        einheit = Object.assign({}, einheit, data.einheit);
+        erz = Number(data.erz) || 0;
+        if (window.fhMine) window.fhMine.setzen(erz);
+        zeichnen();
+        status(t("hangar.fertig", "✓ Ausgebaut!"), false);
+        return;
+      }
+      zeichnen();
+      status(fehlerText(data && data.grund), true);
+    } catch (err) {
+      console.warn("Hangar: Erz-Ausbau fehlgeschlagen:", err);
+      zeichnen();
+      status(fehlerText(null), true);
+    } finally {
+      beschaeftigt = false;
+    }
   }
 
   /* ------------------------------------------------------
@@ -389,12 +472,22 @@
     const z = el("div", "hg-wert");
     const kopf = el("div", "hg-wert-kopf");
     kopf.append(el("span", "hg-wert-name", name), el("span", "hg-wert-zahl", anzeige));
-    const punkte = el("div", "hg-punkte");
-    punkte.setAttribute("aria-label", t("hangar.stufe", "Stufe") + " " + stufe + "/" + HANGAR_MAX_STUFE);
-    for (let i = 0; i < HANGAR_MAX_STUFE; i++) punkte.appendChild(el("span", "hg-punkt" + (i < stufe ? " ist-an" : "")));
+    const mitErz = erz != null || stufe > HANGAR_MAX_STUFE;
+    const max = mitErz ? HANGAR_ERZ_MAX : HANGAR_MAX_STUFE;
+    const punkte = el("div", "hg-punkte" + (mitErz ? " ist-erz" : ""));
+    punkte.setAttribute("aria-label", t("hangar.stufe", "Stufe") + " " + stufe + "/" + max);
+    for (let i = 0; i < max; i++) punkte.appendChild(el("span", "hg-punkt" + (i < stufe ? " ist-an" : "") + (i >= HANGAR_MAX_STUFE ? " ist-erz" : "")));
     const knopf = el("button", "hg-ausbau");
     knopf.type = "button";
-    if (stufe >= HANGAR_MAX_STUFE) {
+    if (stufe >= HANGAR_MAX_STUFE && erz != null && stufe < HANGAR_ERZ_MAX) {
+      /* 61: weiter mit Erz */
+      const preis = HANGAR_ERZ_PREISE[stufe - HANGAR_MAX_STUFE];
+      const frage = bestaetigen && bestaetigen.wert === "erz:" + wert && bestaetigen.bis > Date.now();
+      knopf.classList.add("ist-erz");
+      knopf.textContent = (frage ? t("hangar.wirklich", "Wirklich kaufen?") + " " : t("hangar.ausbauen", "Ausbauen") + " · ") + zahl(preis) + " " + t("mine.erz", "Erz");
+      knopf.classList.toggle("ist-frage", !!frage);
+      knopf.addEventListener("click", function () { erzAusbauen("erz:" + wert, "hangar_ausbauen_erz", { p_wert: wert }); });
+    } else if (stufe >= HANGAR_MAX_STUFE) {
       knopf.disabled = true;
       knopf.textContent = t("hangar.max", "Maximal");
     } else {
@@ -424,6 +517,8 @@
     "nicht-gekauft": ["hangar.fehler.nichtGekauft", "Kauf das Teil zuerst."],
     "doppelt": ["hangar.fehler.doppelt", "Dieses Modul steckt schon im anderen Platz."],
     "falscher-platz": ["hangar.fehler.platz", "Das passt nicht in diesen Platz."],
+    "zu-wenig-erz": ["hangar.fehler.erz", "Dafür reicht dein Erz nicht – ab in die Glücksmine!"],
+    "erst-dublonen": ["hangar.fehler.erstDublonen", "Erst bis Stufe 5 mit Dublonen ausbauen."],
   };
   function fehlerText(grund) {
     const g = GRUENDE[grund];
