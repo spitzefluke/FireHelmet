@@ -213,7 +213,8 @@ Ein neuer Typ für Menschen oder Aliens braucht zusätzlich einen Eintrag im Con
 ### Spind und Glücksmine
 
 Der **Spind** (Migration 60, Freigabe `spind`, `scripts/spind/spind.js`) bündelt Titel, Avatar
-und Rahmen, Namensfarbe, Banner und Spruch. Namensfarben und Banner kauft man mit Dublonen
+und Rahmen, Namensfarbe, Banner und Spruch. Er hat **keinen Menüeintrag**: Man erreicht ihn nur
+über das eigene Bild in der Spielerkarte unten links (`fhAvatarKlick()` in `avatar-wahl.js`). Namensfarben und Banner kauft man mit Dublonen
 (`spind_teile`, `spind_teil_kaufen()`); getragen wird über `spind_tragen()`. Was jemand trägt,
 liest jeder über `spind_je_spieler()` – `fhProfil.namensKlasse(uid)` färbt damit Namen in
 Bestenlisten, `fhProfil.zeigen(uid)` öffnet die Profilkarte. Der getragene Titel gewinnt in
