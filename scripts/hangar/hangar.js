@@ -28,6 +28,11 @@
    nach Stufe 5 mit Erz aus der Glücksmine weiter bis Stufe 10
    (hangar_ausbauen_erz), dazu die Schiffssysteme Panzerung und
    Geschuetze (schiff_system_ausbauen, je +4 % in der Schlacht).
+
+   RAUMERZ (Migration 64): Mit der Freigabe "gluecksmine" kosten
+   Leben, Schaden und Spezial auf ALLEN Stufen 1..15 nur noch Raumerz
+   (hangar_ausbauen_raumerz) - Dublonen und Erz gehen dafuer nicht
+   mehr. Raumerz steckt in jedem 30. Block der Glücksmine.
 ====================================================== */
 
 (function () {
@@ -46,6 +51,7 @@
   let bestaetigen = null;    // { wert, bis }
   let ausruestung = null;    // Antwort von hangar_ausruestung (58) oder null
   let erz = null;            // Erz aus der Glücksmine (61) oder null
+  let raumerz = null;        // Raumerz (64) oder null - dann gilt nur Raumerz
   let bestaetigenUhr = null;
 
   function typText(id, feld) { return t("hangar.typ." + id + "." + feld, HANGAR_TYPEN[id][feld]); }
@@ -113,6 +119,7 @@
       if (mineFrei()) {
         const m = await withSupabaseRlsColdStartRetry(function () { return supabaseClient.rpc("mine_stand_holen"); });
         erz = !m.error && m.data && m.data.ok ? Number(m.data.erz) || 0 : null;   // ohne Migration 61: kein Erz
+        raumerz = erz != null && m.data.raumerz != null ? Number(m.data.raumerz) || 0 : null;   // ohne 64: alter Weg
       }
     } catch (err) {
       console.warn("Hangar: Laden fehlgeschlagen:", err);
@@ -190,6 +197,12 @@
     );
 
     const werte = el("div", "hg-werte");
+    if (raumerz != null) {
+      const konto = el("p", "hg-raumerz-konto");
+      konto.append(el("strong", "hg-raumerz", t("hangar.raumerz", "{n} Raumerz").replace("{n}", zahl(raumerz))),
+        document.createTextNode(" " + t("hangar.raumerzText", "– steckt in jedem 30. Block der Glücksmine")));
+      werte.appendChild(konto);
+    }
     [
       ["leben", t("hangar.wert.leben", "Leben"), zahl(w.leben)],
       ["schaden", t("hangar.wert.schaden", "Schaden je Sekunde"), zahl(w.schaden)],
@@ -265,8 +278,14 @@
       const data = await rpc(name, args);
       if (data && data.ok) {
         einheit = Object.assign({}, einheit, data.einheit);
-        erz = Number(data.erz) || 0;
-        if (window.fhMine) window.fhMine.setzen(erz);
+        if (data.erz != null) {
+          erz = Number(data.erz) || 0;
+          if (window.fhMine) window.fhMine.setzen(erz);
+        }
+        if (data.raumerz != null) {
+          raumerz = Number(data.raumerz) || 0;
+          if (window.fhMine && window.fhMine.raumerzSetzen) window.fhMine.raumerzSetzen(raumerz);
+        }
         zeichnen();
         status(t("hangar.fertig", "✓ Ausgebaut!"), false);
         return;
@@ -472,14 +491,29 @@
     const z = el("div", "hg-wert");
     const kopf = el("div", "hg-wert-kopf");
     kopf.append(el("span", "hg-wert-name", name), el("span", "hg-wert-zahl", anzeige));
-    const mitErz = erz != null || stufe > HANGAR_MAX_STUFE;
-    const max = mitErz ? HANGAR_ERZ_MAX : HANGAR_MAX_STUFE;
-    const punkte = el("div", "hg-punkte" + (mitErz ? " ist-erz" : ""));
+    const mitRaum = raumerz != null;
+    const mitErz = !mitRaum && (erz != null || stufe > HANGAR_MAX_STUFE);
+    const max = mitRaum || stufe > HANGAR_ERZ_MAX ? HANGAR_RAUMERZ_MAX : mitErz ? HANGAR_ERZ_MAX : HANGAR_MAX_STUFE;
+    const punkte = el("div", "hg-punkte" + (max === HANGAR_RAUMERZ_MAX ? " ist-raumerz" : mitErz ? " ist-erz" : ""));
     punkte.setAttribute("aria-label", t("hangar.stufe", "Stufe") + " " + stufe + "/" + max);
-    for (let i = 0; i < max; i++) punkte.appendChild(el("span", "hg-punkt" + (i < stufe ? " ist-an" : "") + (i >= HANGAR_MAX_STUFE ? " ist-erz" : "")));
+    for (let i = 0; i < max; i++) {
+      punkte.appendChild(el("span", "hg-punkt" + (i < stufe ? " ist-an" : "")
+        + (mitRaum ? " ist-raumerz" : i >= HANGAR_MAX_STUFE ? " ist-erz" : "")));
+    }
     const knopf = el("button", "hg-ausbau");
     knopf.type = "button";
-    if (stufe >= HANGAR_MAX_STUFE && erz != null && stufe < HANGAR_ERZ_MAX) {
+    if (mitRaum && stufe < HANGAR_RAUMERZ_MAX) {
+      /* 64: jede Stufe nur mit Raumerz */
+      const preis = HANGAR_RAUMERZ_PREISE[stufe];
+      const frage = bestaetigen && bestaetigen.wert === "raum:" + wert && bestaetigen.bis > Date.now();
+      knopf.classList.add("ist-raumerz");
+      knopf.textContent = (frage ? t("hangar.wirklich", "Wirklich kaufen?") + " " : t("hangar.ausbauen", "Ausbauen") + " · ") + zahl(preis) + " " + t("mine.raumerz", "Raumerz");
+      knopf.classList.toggle("ist-frage", !!frage);
+      knopf.addEventListener("click", function () { erzAusbauen("raum:" + wert, "hangar_ausbauen_raumerz", { p_wert: wert }); });
+    } else if (mitRaum) {
+      knopf.disabled = true;
+      knopf.textContent = t("hangar.max", "Maximal");
+    } else if (stufe >= HANGAR_MAX_STUFE && erz != null && stufe < HANGAR_ERZ_MAX) {
       /* 61: weiter mit Erz */
       const preis = HANGAR_ERZ_PREISE[stufe - HANGAR_MAX_STUFE];
       const frage = bestaetigen && bestaetigen.wert === "erz:" + wert && bestaetigen.bis > Date.now();
@@ -519,6 +553,8 @@
     "falscher-platz": ["hangar.fehler.platz", "Das passt nicht in diesen Platz."],
     "zu-wenig-erz": ["hangar.fehler.erz", "Dafür reicht dein Erz nicht – ab in die Glücksmine!"],
     "erst-dublonen": ["hangar.fehler.erstDublonen", "Erst bis Stufe 5 mit Dublonen ausbauen."],
+    "zu-wenig-raumerz": ["hangar.fehler.raumerz", "Dafür reicht dein Raumerz nicht – ab in die Glücksmine!"],
+    "nur-raumerz": ["hangar.fehler.nurRaumerz", "Ausbauen geht jetzt nur noch mit Raumerz."],
   };
   function fehlerText(grund) {
     const g = GRUENDE[grund];

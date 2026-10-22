@@ -1,5 +1,7 @@
 /* ======================================================
-   STERNENSCHLACHT: KAMPFORTE UND START-ANIMATION
+   STERNENSCHLACHT: KAMPFORTE UND START-ANIMATION (V2)
+   V2: Tiefe fuer alle Orte, neue Orte pulsar/friedhof/mondring,
+   Einflug mit Kamerafahrt, Partei-Formationen und Wappen.
    ---------------------------------------------------
    Reine Optik ohne Spielzustand. Welcher Ort gilt und was er im
    Kampf bewirkt, entscheidet die Datenbank (Migration 55,
@@ -86,6 +88,13 @@
   function name(id) { return TEXTE[id] ? t("schlacht.ort." + id + ".name", TEXTE[id][0]) : ""; }
   function gegend(id) { return TEXTE[id] ? t("schlacht.ort." + id + ".gegend", TEXTE[id][1]) : ""; }
   function ereignisName(id) { return TEXTE[id] && TEXTE[id][2] ? t("schlacht.ort." + id + ".ereignis", TEXTE[id][2]) : ""; }
+  /* V2: drei neue Orte (brauchen Zeilen in public.schlacht_orte) */
+  Object.assign(TEXTE, {
+    pulsar:   ["Pulsar Vela-9", "Ein toter Stern, der sich rasend schnell dreht", "Strahlenkegel"],
+    friedhof: ["Schiffsfriedhof Nekros", "Wracks einer vergessenen Schlacht", "Minenfeld"],
+    mondring: ["Ringe von Tethra", "Ein Mond zieht durch den Ring eines Gasriesen", "Mondschatten"],
+  });
+  ORTE.push("pulsar", "friedhof", "mondring");
 
   /* "+25 %" / "−30 %" */
   function prozent(f) {
@@ -394,6 +403,253 @@
     },
   };
 
+  /* ======================================================
+     V2: MEHR TIEFE FUER ALLE ORTE + DREI NEUE ORTE
+  ====================================================== */
+  function wolke(g, x, y, r, farbe, a) {
+    g.fillStyle = radial(g, x, y, r, [[0, farbe + a + ")"], [1, farbe + "0)"]]);
+    g.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  function kugel(g, x, y, r, stops, atmo) {
+    if (atmo) {
+      g.fillStyle = radial(g, x, y, r * 1.18, [[0.8, atmo + "0)"], [0.86, atmo + "0.5)"], [1, atmo + "0)"]]);
+      g.beginPath(); g.arc(x, y, r * 1.18, 0, 6.283); g.fill();
+    }
+    g.fillStyle = radial(g, x - r * 0.4, y - r * 0.45, r * 1.6, stops);
+    g.beginPath(); g.arc(x, y, r, 0, 6.283); g.fill();
+  }
+  function vignette(g, b, h, st) {
+    g.fillStyle = radial(g, b / 2, h / 2, Math.max(b, h) * 0.72, [[0.5, "rgba(0,0,0,0)"], [1, "rgba(0,0,0," + (st || 0.55) + ")"]]);
+    g.fillRect(0, 0, b, h);
+  }
+  function wrack(g, x, y, l, w, rot, rnd) {
+    g.save(); g.translate(x, y); g.rotate(rot);
+    g.beginPath();
+    g.moveTo(l * .5, 0); g.lineTo(l * .3, -w); g.lineTo(-l * .3, -w); g.lineTo(-l * .34, -w * .4);
+    g.lineTo(-l * .28, -w * .1); g.lineTo(-l * .38, w * .3); g.lineTo(-l * .32, w); g.lineTo(l * .3, w); g.closePath();
+    const gr = g.createLinearGradient(0, -w, 0, w); gr.addColorStop(0, "#22302b"); gr.addColorStop(1, "#070b0a");
+    g.fillStyle = gr; g.fill();
+    g.strokeStyle = "rgba(150,210,180,.28)"; g.lineWidth = 1.2; g.stroke();
+    g.strokeStyle = "rgba(0,0,0,.5)"; g.lineWidth = 2;
+    for (let k = -l * .25; k < l * .28; k += l * .06) { g.beginPath(); g.moveTo(k, -w); g.lineTo(k, w); g.stroke(); }
+    for (let i = 0; i < 14; i++) { g.fillStyle = "rgba(160,255,200," + (.15 + rnd() * .35) + ")"; g.fillRect(-l * .25 + rnd() * l * .5, (rnd() - .5) * w * 1.4, 2, 2); }
+    g.restore();
+  }
+
+  /* Zusaetzliche ruhende Ebenen fuer die sieben bisherigen Orte. */
+  const PLUS = {
+    asteroiden: function (g, b, h, rnd) {
+      const M = Math.max(b, h), m = Math.min(b, h);
+      wolke(g, b * .75, h * .3, M * .5, "rgba(180,110,60,", .12);
+      wolke(g, b * .2, h * .8, M * .4, "rgba(90,60,140,", .1);
+      kugel(g, b * .16, h * .2, m * .09, [[0, "#c98a5a"], [.5, "#6a3a22"], [1, "#120806"]], "rgba(255,170,110,");
+      fels(g, b * .03, h * .98, m * .17, .4, rnd, "#2a221c", "#08060a");
+      fels(g, b * .98, h * .04, m * .12, 1.2, rnd, "#2a221c", "#08060a");
+      g.strokeStyle = "rgba(255,190,140,.3)"; g.lineWidth = 2;
+      g.beginPath(); g.arc(b * .03, h * .98, m * .16, -1.4, -.3); g.stroke();
+      vignette(g, b, h, .5);
+    },
+    schwarzes_loch: function (g, b, h) {
+      const M = Math.max(b, h), m = Math.min(b, h);
+      wolke(g, b * .28, h * .32, M * .5, "rgba(140,60,200,", .16);
+      wolke(g, b * .74, h * .7, M * .45, "rgba(255,120,60,", .08);
+      g.fillStyle = radial(g, b / 2, h / 2, m * .32, [[.55, "rgba(255,200,150,0)"], [.78, "rgba(255,200,150,.07)"], [1, "rgba(255,200,150,0)"]]);
+      g.fillRect(0, 0, b, h);
+      vignette(g, b, h, .6);
+    },
+    station: function (g, b, h) {
+      const m = Math.min(b, h);
+      kugel(g, b * .1, h * 1.32, m * .78, [[0, "#8cc4f0"], [.35, "#2c5f9a"], [.75, "#0b1f3a"], [1, "#040a14"]], "rgba(120,190,255,");
+      wolke(g, b * .4, h * .3, Math.max(b, h) * .4, "rgba(60,120,200,", .08);
+      vignette(g, b, h, .5);
+    },
+    nebel: function (g, b, h, rnd) {
+      const M = Math.max(b, h);
+      for (let i = 0; i < 10; i++) wolke(g, rnd() * b, rnd() * h, M * (.06 + rnd() * .1), i % 2 ? "rgba(255,110,190," : "rgba(80,230,210,", .16 + rnd() * .1);
+      for (let i = 0; i < 4; i++) wolke(g, rnd() * b, rnd() * h, M * (.12 + rnd() * .12), "rgba(0,0,0,", .45);
+      vignette(g, b, h, .5);
+    },
+    sonne: function (g, b, h) {
+      const m = Math.min(b, h);
+      wolke(g, b * .5, h * 1.1, Math.max(b, h) * .6, "rgba(140,30,10,", .22);
+      g.fillStyle = "#070302"; g.beginPath(); g.arc(b * .84, h * .72, m * .07, 0, 6.283); g.fill();
+      g.strokeStyle = "rgba(255,170,90,.55)"; g.lineWidth = 2; g.beginPath(); g.arc(b * .84, h * .72, m * .07, Math.PI * 1.05, Math.PI * 1.75); g.stroke();
+      vignette(g, b, h, .45);
+    },
+    eisring: function (g, b, h) {
+      const m = Math.min(b, h);
+      kugel(g, b * .18, h * .22, m * .06, [[0, "#f4fbff"], [.5, "#8fb6d0"], [1, "#102030"]], "rgba(200,235,255,");
+      wolke(g, b * .9, h * .62, Math.max(b, h) * .3, "rgba(90,255,200,", .07);
+      wolke(g, b * .3, h * .5, Math.max(b, h) * .45, "rgba(60,110,200,", .07);
+      vignette(g, b, h, .5);
+    },
+    wurmloch: function (g, b, h, rnd) {
+      const gx = b * .16, gy = h * .24, R = Math.min(b, h) * .12;
+      wolke(g, gx, gy, R * 1.6, "rgba(200,190,255,", .14);
+      for (let i = 0; i < 360; i++) {
+        const arm = i % 2, tt = i / 360 * 9, a = tt + arm * Math.PI, rr = R * (tt / 9) + (rnd() - .5) * R * .12;
+        g.fillStyle = "rgba(220,215,255," + (.15 + rnd() * .4) + ")";
+        g.fillRect(gx + Math.cos(a) * rr, gy + Math.sin(a) * rr * .45, 1.2, 1.2);
+      }
+      wolke(g, b * .78, h * .76, Math.max(b, h) * .4, "rgba(120,80,255,", .09);
+      vignette(g, b, h, .55);
+    },
+  };
+  Object.keys(PLUS).forEach(function (id) {
+    const alt = RUHE[id];
+    RUHE[id] = function (g, b, h, rnd) { alt(g, b, h, rnd); PLUS[id](g, b, h, zufall("plus-" + id)); };
+  });
+
+  Object.assign(RUHE, {
+    pulsar: function (g, b, h, rnd) {
+      g.fillStyle = radial(g, b * .5, h * .45, Math.max(b, h) * .8, [[0, "#0c1430"], [.6, "#050818"], [1, "#020309"]]);
+      g.fillRect(0, 0, b, h);
+      sterne(g, b, h, rnd, 220, "#d6e6ff");
+      const cx = b * .5, cy = h * .45, R = Math.min(b, h) * .42;
+      for (let i = 0; i < 70; i++) {
+        const a = rnd() * 6.283, rr = R * (.8 + rnd() * .4);
+        wolke(g, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * .8, R * (.08 + rnd() * .14), i % 3 ? "rgba(80,200,255," : "rgba(230,90,200,", .05 + rnd() * .07);
+      }
+      vignette(g, b, h, .5);
+    },
+    friedhof: function (g, b, h, rnd) {
+      const M = Math.max(b, h), m = Math.min(b, h);
+      g.fillStyle = radial(g, b * .6, h * .3, M, [[0, "#13201c"], [1, "#030605"]]);
+      g.fillRect(0, 0, b, h);
+      sterne(g, b, h, rnd, 150, "#d4eadf");
+      wolke(g, b * .7, h * .35, M * .45, "rgba(70,140,110,", .1);
+      wolke(g, b * .15, h * .8, M * .35, "rgba(60,90,120,", .1);
+      wrack(g, b * .76, h * .2, m * 1.0, m * .09, -.22, rnd);
+      wrack(g, b * .14, h * .86, m * .62, m * .06, .35, rnd);
+      for (let i = 0; i < 70; i++) {
+        g.globalAlpha = .3 + rnd() * .5; g.fillStyle = rnd() < .5 ? "#24332e" : "#3a4a44";
+        g.fillRect(rnd() * b, rnd() * h, 1 + rnd() * 4, 1 + rnd() * 2);
+      }
+      g.globalAlpha = 1;
+      vignette(g, b, h, .55);
+    },
+    mondring: function (g, b, h, rnd) {
+      g.fillStyle = radial(g, b * .3, h * .2, Math.max(b, h), [[0, "#1a1428"], [1, "#04030a"]]);
+      g.fillRect(0, 0, b, h);
+      sterne(g, b, h, rnd, 190, "#fff0dc");
+      wolke(g, b * .2, h * .3, Math.max(b, h) * .4, "rgba(150,90,170,", .1);
+      const px = b * .72, py = h * 1.05, pr = Math.min(b, h) * .55, tilt = -.16;
+      function ring(von, bis) {
+        for (let k = 0; k < 22; k++) {
+          const f = 1.3 + k * .04;
+          g.beginPath(); g.ellipse(px, py, pr * f, pr * f * .24, tilt, von, bis);
+          g.lineWidth = pr * .03;
+          g.strokeStyle = "rgba(" + (k % 3 ? "235,205,160," : "200,160,120,") + (.05 + (k % 5) * .025) + ")";
+          g.stroke();
+        }
+      }
+      ring(Math.PI, 2 * Math.PI);
+      kugel(g, px, py, pr, [[0, "#f4dcaa"], [.35, "#c48c52"], [.75, "#5a3420"], [1, "#140a06"]], "rgba(255,210,150,");
+      g.save();
+      g.beginPath(); g.arc(px, py, pr, 0, 6.283); g.clip();
+      g.globalAlpha = .14;
+      for (let i = 0; i < 9; i++) { g.fillStyle = i % 2 ? "#fff2d8" : "#6a3a1e"; g.beginPath(); g.ellipse(px, py - pr + i * pr * .2, pr * 1.3, pr * .045, tilt, 0, 6.283); g.fill(); }
+      g.globalAlpha = .4; g.fillStyle = "#0a0604";
+      g.beginPath(); g.ellipse(px, py - pr * .1, pr * 1.4, pr * .06, tilt, 0, 6.283); g.fill();
+      g.restore();
+      ring(0, Math.PI);
+      vignette(g, b, h, .5);
+    },
+  });
+
+  Object.assign(BEWEGT, {
+    pulsar: function (g, b, h, z) {
+      const cx = b * .5, cy = h * .45, L = Math.hypot(b, h), w = z * .9;
+      g.save();
+      g.globalCompositeOperation = "lighter";
+      [0, Math.PI].forEach(function (off) {
+        const a = w + off;
+        const gr = g.createLinearGradient(cx, cy, cx + Math.cos(a) * L * .6, cy + Math.sin(a) * L * .33);
+        gr.addColorStop(0, "rgba(220,245,255,.55)"); gr.addColorStop(.4, "rgba(120,200,255,.16)"); gr.addColorStop(1, "rgba(80,160,255,0)");
+        g.fillStyle = gr;
+        g.beginPath(); g.moveTo(cx, cy);
+        g.lineTo(cx + Math.cos(a - .06) * L, cy + Math.sin(a - .06) * L * .55);
+        g.lineTo(cx + Math.cos(a + .06) * L, cy + Math.sin(a + .06) * L * .55);
+        g.closePath(); g.fill();
+      });
+      g.strokeStyle = "rgba(140,200,255,.12)"; g.lineWidth = 1;
+      for (let k = 1; k <= 4; k++) { g.beginPath(); g.ellipse(cx, cy, 30 * k, 12 * k, w * .15, 0, 6.283); g.stroke(); }
+      const puls = .8 + .2 * Math.sin(z * 30);
+      g.fillStyle = radial(g, cx, cy, 60, [[0, "rgba(255,255,255," + puls + ")"], [.15, "rgba(180,230,255,.8)"], [1, "rgba(80,160,255,0)"]]);
+      g.beginPath(); g.arc(cx, cy, 60, 0, 6.283); g.fill();
+      g.restore();
+    },
+    friedhof: function (g, b, h, z, rnd) {
+      for (let i = 0; i < 8; i++) {
+        const v = 4 + rnd() * 8, w = 20 + rnd() * 50, hh = 5 + rnd() * 12;
+        const x = ((rnd() * (b + 300) + z * v) % (b + 300)) - 150, y = h * (.15 + rnd() * .75);
+        g.save(); g.translate(x, y); g.rotate(z * .06 * (i % 2 ? 1 : -1) + i);
+        g.fillStyle = "#1a2622"; g.fillRect(-w / 2, -hh / 2, w, hh);
+        g.strokeStyle = "rgba(140,200,170,.35)"; g.lineWidth = 1; g.strokeRect(-w / 2, -hh / 2, w, hh);
+        g.restore();
+      }
+      for (let i = 0; i < 9; i++) {
+        const x = b * (.08 + rnd() * .84) + Math.sin(z * .2 + i) * 14, y = h * (.1 + rnd() * .8) + Math.cos(z * .17 + i) * 10;
+        g.fillStyle = "#2a2f2e"; g.beginPath(); g.arc(x, y, 5, 0, 6.283); g.fill();
+        g.strokeStyle = "#4a5552"; g.lineWidth = 1.5;
+        for (let k = 0; k < 6; k++) {
+          const a = k * 1.047 + z * .3;
+          g.beginPath(); g.moveTo(x + Math.cos(a) * 5, y + Math.sin(a) * 5); g.lineTo(x + Math.cos(a) * 9, y + Math.sin(a) * 9); g.stroke();
+        }
+        if (Math.sin(z * 3 + i * 1.7) > .7) {
+          g.fillStyle = radial(g, x, y, 14, [[0, "rgba(255,80,60,.95)"], [1, "rgba(255,40,30,0)"]]);
+          g.beginPath(); g.arc(x, y, 14, 0, 6.283); g.fill();
+        }
+      }
+      const tk = Math.floor(z / 1.7), ph = z / 1.7 - tk;
+      if (ph < .18) {
+        const r2 = zufall("fu" + tk), x = b * (.6 + r2() * .3), y = h * (.12 + r2() * .2);
+        g.fillStyle = radial(g, x, y, 40, [[0, "rgba(200,255,220," + (.8 * (1 - ph / .18)) + ")"], [1, "rgba(100,200,160,0)"]]);
+        g.beginPath(); g.arc(x, y, 40, 0, 6.283); g.fill();
+      }
+    },
+    mondring: function (g, b, h, z) {
+      const m = Math.min(b, h), q = (z % 90) / 90, mx = b * (-.1 + q * 1.2), my = h * .2 - Math.sin(q * 3.14) * h * .05, mr = m * .065;
+      g.fillStyle = radial(g, mx + b * .04, h * .8, m * .24, [[0, "rgba(0,0,0,.55)"], [1, "rgba(0,0,0,0)"]]);
+      g.beginPath(); g.ellipse(mx + b * .04, h * .8, m * .24, m * .1, -.1, 0, 6.283); g.fill();
+      kugel(g, mx, my, mr, [[0, "#e8e4dc"], [.5, "#8a857c"], [1, "#1a1814"]]);
+      g.fillStyle = "rgba(0,0,0,.18)";
+      [[-.3, -.2, .18], [.25, .1, .14], [-.05, .35, .1]].forEach(function (k) { g.beginPath(); g.arc(mx + k[0] * mr, my + k[1] * mr, k[2] * mr, 0, 6.283); g.fill(); });
+      const px = b * .72, py = h * 1.05, pr = m * .55;
+      for (let i = 0; i < 34; i++) {
+        const r = zufall("rg" + i), a = Math.PI + r() * Math.PI, f = 1.3 + r() * .85, fun = (Math.sin(z * (1 + r() * 2) + i) + 1) / 2;
+        const x = px + Math.cos(a) * pr * f, y = py + Math.sin(a) * pr * f * .24 - (x - px) * .16;
+        if (y < 0 || y > h) continue;
+        g.fillStyle = "rgba(255,240,210," + (fun * .7) + ")"; g.fillRect(x, y, 2, 2);
+      }
+    },
+  });
+
+  /* Vordergrund-Staub fuer jeden Ort - die Kamera wirkt tiefer. */
+  const STAUB = {
+    asteroiden: "255,200,150", schwarzes_loch: "220,180,255", station: "180,210,255", nebel: "255,170,220",
+    sonne: "255,190,110", eisring: "220,240,255", wurmloch: "190,200,255", pulsar: "170,230,255",
+    friedhof: "190,230,200", mondring: "255,230,190",
+  };
+  function staub(g, b, h, z, id) {
+    const f = STAUB[id] || "220,230,255";
+    for (let i = 0; i < 22; i++) {
+      const r = zufall("mo" + i), gross = i % 7 === 0, v = gross ? 22 + r() * 14 : 6 + r() * 12;
+      const x = ((r() * (b + 200) + z * v) % (b + 200)) - 100, y = r() * h + Math.sin(z * .3 + i) * 8;
+      if (gross) {
+        const rr = 10 + r() * 16;
+        g.fillStyle = radial(g, x, y, rr, [[0, "rgba(" + f + ",.07)"], [1, "rgba(" + f + ",0)"]]);
+        g.beginPath(); g.arc(x, y, rr, 0, 6.283); g.fill();
+      } else {
+        g.fillStyle = "rgba(" + f + "," + (.15 + r() * .35) + ")"; g.fillRect(x, y, 1.4, 1.4);
+      }
+    }
+  }
+  Object.keys(BEWEGT).forEach(function (id) {
+    const alt = BEWEGT[id];
+    BEWEGT[id] = function (g, b, h, z, rnd) { alt(g, b, h, z, rnd); staub(g, b, h, z, id); };
+  });
+
   function scheibe(g, cx, cy, R, z, von, bis) {
     /* Grundglut durchgehend, darueber wandernde helle Schlieren */
     for (let i = 0; i < 6; i++) {
@@ -422,7 +678,7 @@
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
       RUHE[ortId](g, b, h, zufall("ruhe-" + ortId));
       ruheCache.set(schluessel, f);
-      if (ruheCache.size > 4) ruheCache.delete(ruheCache.keys().next().value);
+      if (ruheCache.size > 24) ruheCache.delete(ruheCache.keys().next().value);
     }
     /* In der aktuellen Transformation - so wirkt auch der Zoom der
        Start-Animation. */
@@ -439,7 +695,7 @@
   ------------------------------------------------------ */
   let ereignisse = [];
   let wackelBis = 0, wackelStark = 0;
-  const DAUER = { asteroiden: 1300, schwarzes_loch: 1600, station: 1200, nebel: 900, sonne: 1700, eisring: 1300 };
+  const DAUER = { asteroiden: 1300, schwarzes_loch: 1600, station: 1200, nebel: 900, sonne: 1700, eisring: 1300, pulsar: 1300, friedhof: 1500, mondring: 1700 };
 
   function ereignis(ortId, seite) {
     if (!DAUER[ortId]) return;
@@ -546,6 +802,45 @@
         g.fillRect(0, y - band, b, band * 1.4);
         g.fillStyle = "rgba(255,120,40," + (0.14 * Math.sin(p * Math.PI)) + ")";
         g.fillRect(0, 0, b, h);
+      } else if (e.ort === "pulsar") {
+        const cx = b * .5, cy = h * .45, a = Math.atan2(m.y - cy, m.x - cx) + (p - .5) * 1.1, L = Math.hypot(b, h), st = Math.sin(p * Math.PI);
+        g.globalCompositeOperation = "lighter";
+        const gr = g.createLinearGradient(cx, cy, cx + Math.cos(a) * L * .7, cy + Math.sin(a) * L * .7);
+        gr.addColorStop(0, "rgba(255,255,255," + .9 * st + ")"); gr.addColorStop(.5, "rgba(140,210,255," + .5 * st + ")"); gr.addColorStop(1, "rgba(80,160,255,0)");
+        g.fillStyle = gr;
+        g.beginPath(); g.moveTo(cx, cy);
+        g.lineTo(cx + Math.cos(a - .14) * L, cy + Math.sin(a - .14) * L);
+        g.lineTo(cx + Math.cos(a + .14) * L, cy + Math.sin(a + .14) * L);
+        g.closePath(); g.fill();
+        g.fillStyle = radial(g, m.x, m.y, Math.max(b, h) * .3, [[0, "rgba(220,240,255," + .35 * st + ")"], [1, "rgba(120,180,255,0)"]]);
+        g.fillRect(0, 0, b, h);
+      } else if (e.ort === "friedhof") {
+        for (let i = 0; i < 7; i++) {
+          const r = zufall("mine" + e.t0 + i), x = m.x + (r() - .5) * b * .3, y = m.y + (r() - .5) * h * .5, d = .12 + i * .08;
+          if (p < d) {
+            g.fillStyle = Math.floor(p * 30) % 2 ? "rgba(255,70,60,1)" : "rgba(120,20,20,1)";
+            g.beginPath(); g.arc(x, y, 4, 0, 6.283); g.fill();
+            g.strokeStyle = "rgba(255,90,70,.6)"; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, 10, 0, 6.283); g.stroke();
+          } else {
+            const q = Math.min(1, (p - d) / .4);
+            if (q >= 1) continue;
+            const rr = 20 + q * 90;
+            g.fillStyle = radial(g, x, y, rr, [[0, "rgba(255,245,210," + (1 - q) + ")"], [.35, "rgba(255,150,60," + .8 * (1 - q) + ")"], [1, "rgba(160,40,10,0)"]]);
+            g.beginPath(); g.arc(x, y, rr, 0, 6.283); g.fill();
+            g.strokeStyle = "rgba(255,200,140," + (1 - q) + ")"; g.lineWidth = 3 * (1 - q) + .5;
+            g.beginPath(); g.arc(x, y, rr * 1.3, 0, 6.283); g.stroke();
+          }
+        }
+      } else if (e.ort === "mondring") {
+        const st = Math.sin(p * Math.PI), rr = Math.max(b, h) * (.25 + p * .35);
+        g.fillStyle = radial(g, m.x, m.y, rr, [[0, "rgba(2,3,10," + .75 * st + ")"], [.7, "rgba(4,6,18," + .55 * st + ")"], [1, "rgba(4,6,18,0)"]]);
+        g.fillRect(0, 0, b, h);
+        g.strokeStyle = "rgba(150,190,255," + .6 * st + ")"; g.lineWidth = 2;
+        g.beginPath(); g.arc(m.x, m.y, rr * .92, 0, 6.283); g.stroke();
+        for (let i = 0; i < 14; i++) {
+          const r = zufall("eis" + e.t0 + i), q = (p * 1.4 + r() * .4) % 1, x = m.x + (r() - .5) * 260, y = m.y - 220 + q * 360;
+          g.fillStyle = "rgba(240,220,190," + (1 - q) + ")"; g.fillRect(x, y, 3, 3);
+        }
       } else if (e.ort === "eisring") {
         for (let i = 0; i < 22; i++) {
           const r = zufall("s" + e.t0 + i), d = r() * 0.4;
@@ -584,46 +879,101 @@
     return e;
   }
 
+  /* V2-EINFLUG (9 s, dichter):
+       0,0 s  Hyperraum - Streifen in beiden Parteifarben
+       1,1 s  Weissblitz, Kamerafahrt ueber den Ort (Zoom + Schwenk), Name und Regeln
+       3,5 s  die Flotten fliegen in ihrer Partei-Formation ein
+       5,1 s  Wappen schlagen ein, VS
+       6,65 s Countdown 3 - 2 - 1 (je 0,55 s), 8,3 s "FEUER!"
+     Formation und Einflug je Partei:
+       menschen  Keil     synchroner Sprung mit Lichtspur
+       aliens    Schwarm  wellige Boegen, versetzt
+       piraten   Rudel    schiesst uebers Ziel hinaus, schaukelt
+       maschinen Raster   Spalte fuer Spalte, Scanlinie
+       kristall  Gitter   materialisiert am Platz, Prismenblitz
+       geister   Nebel    gleitet aus dem Dunst, Nachbilder */
+  const FORMATION = { menschen: "keil", aliens: "schwarm", piraten: "rudel", maschinen: "raster", kristall: "gitter", geister: "nebel", boss: "keil" };
+  const FORM_NAME = { keil: "Keilformation", schwarm: "Schwarmwolke", rudel: "Rudel", raster: "Raster", gitter: "Kristallgitter", nebel: "Nebelwand" };
+  /* Formationsname in der aktuellen Sprache (i18n.js schlacht.formation.*). */
+  function formName(art) { return t("schlacht.formation." + art, FORM_NAME[art] || ""); }
+  /* Wohin die Kamera zuerst schaut (Versatz von der Bildmitte). */
+  const KAMERA = {
+    asteroiden: [-0.17, 0.12], schwarzes_loch: [-0.1, 0.08], station: [0.17, -0.12], nebel: [-0.15, -0.1],
+    sonne: [0, -0.17], eisring: [0.17, 0.15], wurmloch: [0.06, 0], pulsar: [0.1, -0.05],
+    friedhof: [0.17, -0.12], mondring: [0.15, 0.15],
+  };
+  function css(e, s) { e.style.cssText = s; return e; }
+
+  function formation(partei, n) {
+    const art = FORMATION[partei] || "keil", r = zufall("form-" + partei), pos = [];
+    for (let i = 0; i < n; i++) {
+      let x, y;
+      if (art === "keil") { const k = Math.ceil(i / 2), sg = i % 2 ? -1 : 1; x = 0.36 - k * 0.05; y = 0.5 + sg * k * 0.085; }
+      else if (art === "schwarm") { const a = i * 2.4, rr = 0.03 + 0.13 * Math.sqrt(i / n); x = 0.24 + Math.cos(a) * rr * 0.8; y = 0.5 + Math.sin(a) * rr * 1.6; }
+      else if (art === "rudel") { x = 0.12 + r() * 0.24; y = 0.18 + (i / Math.max(1, n - 1)) * 0.64 + (r() - 0.5) * 0.08; }
+      else if (art === "raster") { const col = Math.floor(i / 3), row = i % 3; x = 0.34 - col * 0.085; y = 0.3 + row * 0.2; }
+      else if (art === "gitter") { if (i === 0) { x = 0.24; y = 0.5; } else { const a = (i - 1) / Math.max(1, n - 1) * 6.283; x = 0.24 + Math.cos(a) * 0.1; y = 0.5 + Math.sin(a) * 0.22; } }
+      else { x = 0.2 + (i % 2) * 0.08 + r() * 0.03; y = 0.14 + (i / Math.max(1, n - 1)) * 0.72; }
+      pos.push({ x: x, y: y });
+    }
+    return pos;
+  }
+
   function introStarten(buehneEl, o) {
     if (intro) intro.abbrechen();
     return new Promise(function (fertig) {
       const ruhig = RUHIG.matches;
-      const box = el("div", "sl-intro" + (ruhig ? " ist-ruhig" : ""));
+      const FS = window.fhSchiffe;
+      const pl = o.links || "menschen", pr = o.rechts || "aliens";
+      const fL = FS ? FS.farbe(pl) : { akzent: "#6fd3ff", licht: "#ffffff" };
+      const fR = FS ? FS.farbe(pr) : { akzent: "#9dff6a", licht: "#ffffff" };
+
+      const box = css(el("div", "sl-intro" + (ruhig ? " ist-ruhig" : "")),
+        "position:absolute;inset:0;z-index:5;overflow:hidden;background:#04050a;cursor:pointer;container-type:size;transition:opacity .45s ease;" +
+        "font-family:var(--fh-font-sans);color:var(--fh-text);user-select:none");
       box.setAttribute("role", "dialog");
       box.setAttribute("aria-modal", "true");
       box.setAttribute("aria-label", t("schlacht.intro.aria", "Die Schlacht beginnt"));
-      const cv = el("canvas", "sl-intro-canvas");
-      cv.id = "sl-intro-canvas";   // fuer die Filter-Ausnahme in 95/96
+      const cv = css(el("canvas", "sl-intro-canvas"), "position:absolute;inset:0;width:100%;height:100%;display:block");
+      cv.id = "sl-intro-canvas";
       cv.setAttribute("aria-hidden", "true");
 
-      const sprung = el("p", "sl-intro-sprung", t("schlacht.intro.sprung", "Sprung in den Einsatzraum"));
-      const ortBox = el("div", "sl-intro-ort");
-      ortBox.append(
-        el("p", "sl-intro-kicker", t("schlacht.intro.schauplatz", "Schauplatz")),
-        el("h2", "sl-intro-name", name(o.ortId)),
-        el("p", "sl-intro-gegend", gegend(o.ortId))
-      );
-      const liste = el("ul", "sl-intro-regeln");
-      regeln(o.ort).forEach(function (r, i) {
-        const li = el("li", null, r);
-        li.style.setProperty("--i", i);
+      const AUS = "opacity:0;transition:opacity .45s ease,transform .6s cubic-bezier(.2,.8,.2,1);";
+      const sprung = css(el("p", null, t("schlacht.intro.sprung", "Sprung in den Einsatzraum")),
+        "position:absolute;left:0;right:0;top:50%;margin:0;text-align:center;transform:translateY(-50%);font-size:max(12px,1.6cqh);letter-spacing:.4em;text-transform:uppercase;color:color-mix(in srgb,var(--fh-text) 82%,transparent);" + AUS);
+
+      const ortBox = css(el("div", "sl-intro-ort"), "position:absolute;left:5cqw;bottom:9cqh;max-width:min(560px,60cqw);padding-left:2cqw;" + AUS + "transform:translateX(-24px)");
+      const kante = css(el("span"), "position:absolute;left:0;top:0;bottom:0;width:1px;background:linear-gradient(transparent,var(--fh-nocturne),transparent)");
+      const liste = css(el("ul", "sl-intro-regeln"), "list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.7cqh");
+      const lis = regeln(o.ort).map(function (r, i) {
+        const li = css(el("li", null, r), "position:relative;padding-left:1.4em;font-size:max(12px,1.9cqh);opacity:0;transform:translateX(-10px);transition:opacity .35s ease " + (0.3 + i * 0.12) + "s,transform .35s ease " + (0.3 + i * 0.12) + "s");
+        li.prepend(css(el("span"), "position:absolute;left:0;top:.62em;width:.8em;height:1px;background:var(--fh-nocturne)"));
         liste.appendChild(li);
+        return li;
       });
-      ortBox.appendChild(liste);
-      const vs = el("div", "sl-intro-vs");
-      const pl = o.links || "menschen", pr = o.rechts || "aliens";
-      const vm = el("div", "sl-intro-seite ist-menschen");
-      vm.dataset.partei = pl;
-      vm.append(el("span", "sl-intro-volk", parteiName(pl)), el("strong", null, String((o.menschen || []).length)));
-      const va = el("div", "sl-intro-seite ist-aliens");
-      va.dataset.partei = pr;
-      va.append(el("span", "sl-intro-volk", parteiName(pr)), el("strong", null, String((o.aliens || []).length)));
-      vs.append(vm, el("span", "sl-intro-gegen", "VS"), va);
-      const zahl = el("div", "sl-intro-zahl");
+      ortBox.append(kante,
+        css(el("p", null, t("schlacht.intro.schauplatz", "Schauplatz")), "margin:0 0 .8cqh;font-size:max(11px,1.5cqh);letter-spacing:.24em;text-transform:uppercase;color:var(--fh-nocturne)"),
+        css(el("h2", "sl-intro-name", name(o.ortId)), "margin:0;font-family:var(--fh-font-sans);font-weight:500;font-size:max(24px,6.4cqh);line-height:1.05;letter-spacing:-.01em;text-wrap:balance"),
+        css(el("p", "sl-intro-gegend", gegend(o.ortId)), "margin:.8cqh 0 1.8cqh;font-size:max(13px,2.1cqh);color:color-mix(in srgb,var(--fh-text) 82%,transparent)"),
+        liste);
+
+      function seitenLabel(partei, F, n, x) {
+        const d = css(el("div", "sl-intro-seite"), "position:absolute;top:61cqh;left:" + x + "cqw;display:flex;flex-direction:column;align-items:center;gap:.7cqh;text-align:center;" + AUS + "transform:translate(-50%,12px)");
+        d.dataset.partei = partei;
+        d.append(
+          css(el("span", "sl-intro-volk", parteiName(partei)), "font-family:var(--fh-font-sans);font-weight:500;font-size:max(16px,3.6cqh);white-space:nowrap;color:" + F.licht + ";text-shadow:0 0 18px " + F.akzent),
+          css(el("span", null, n + " " + t("schlacht.intro.schiffe", "Schiffe") + " · " + formName(FORMATION[partei] || "keil")), "font-size:max(11px,1.6cqh);letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--fh-text) 82%,transparent)"));
+        return d;
+      }
+      const labL = seitenLabel(pl, fL, Math.min(9, (o.menschen || []).length), 30);
+      const labR = seitenLabel(pr, fR, Math.min(9, (o.aliens || []).length), 70);
+      const vs = css(el("span", "sl-intro-gegen", "VS"), "position:absolute;left:50%;top:42cqh;font-family:var(--fh-font-sans);font-weight:500;font-size:max(28px,9cqh);letter-spacing:.06em;" + AUS + "transform:translate(-50%,-50%) scale(1.8)");
+      const zahl = css(el("div", "sl-intro-zahl"), "position:absolute;left:50%;top:45%;font-family:var(--fh-font-sans);font-weight:500;font-size:max(48px,22cqh);line-height:1;white-space:nowrap;opacity:0;transform:translate(-50%,-50%);text-shadow:0 0 40px rgba(145,132,217,.6)");
       zahl.setAttribute("aria-hidden", "true");
-      const weiter = el("button", "sl-intro-weiter", t("schlacht.intro.weiter", "Überspringen"));
+      const weiter = css(el("button", "sl-intro-weiter", t("schlacht.intro.weiter", "Überspringen")),
+        "position:absolute;right:2.4cqw;bottom:2.4cqh;font:inherit;font-size:13px;padding:8px 14px;border-radius:var(--fh-radius-sm);border:1px solid var(--fh-nocturne);background:rgba(10,12,20,.45);color:var(--fh-text);cursor:pointer");
       weiter.type = "button";
-      box.append(cv, sprung, ortBox, vs, zahl, weiter);
+      box.append(cv, sprung, ortBox, labL, vs, labR, zahl, weiter);
       buehneEl.appendChild(box);
 
       const g = cv.getContext("2d");
@@ -640,64 +990,184 @@
       const k = o.klang;
       const stars = [];
       const sr = zufall("sprung");
-      for (let i = 0; i < 300; i++) stars.push({ a: sr() * 6.283, d: 0.02 + sr() * 0.98, v: 0.4 + sr() * 0.8 });
+      for (let i = 0; i < 420; i++) stars.push({ a: sr() * 6.283, d: 0.02 + sr() * 0.98, v: 0.4 + sr() * 0.8, f: i % 2 });
 
-      function flotte(liste2, seite) {
-        return (liste2 || []).slice(0, 7).map(function (e, i) {
-          const r = zufall(seite + i);
-          return { typ: e.typ, stufen: e.stufen, y: 0.24 + (i / 7) * 0.56 + (r() - 0.5) * 0.05, x: 0.12 + r() * 0.2, d: i * 90 + r() * 120, breite: 34 + r() * 26 };
+      const DAUER_ART = { keil: 650, schwarm: 1100, rudel: 850, raster: 620, gitter: 600, nebel: 1300 };
+      function flotte(liste2, partei) {
+        const art = FORMATION[partei] || "keil", L = (liste2 || []).slice(0, 9), P = formation(partei, L.length), r = zufall("d-" + partei);
+        return L.map(function (e, i) {
+          return {
+            typ: e.typ, stufen: e.stufen, x: P[i].x, y: P[i].y, i: i, art: art, dauer: DAUER_ART[art],
+            d: art === "keil" ? Math.ceil(i / 2) * 80 : art === "schwarm" ? r() * 800 : art === "rudel" ? r() * 380
+              : art === "raster" ? Math.floor(i / 3) * 300 : art === "gitter" ? i * 110 : i * 140,
+            rel: (i === 0 ? 0.13 : 0.1) * (0.85 + r() * 0.3),
+          };
         });
       }
-      const fM = flotte(o.menschen, "menschen"), fA = flotte(o.aliens, "aliens");
+      const fM = flotte(o.menschen, pl), fA = flotte(o.aliens, pr);
 
-      let raf = 0, zeiten = [];
+      let raf = 0;
+      const zeiten = [];
       const t0 = performance.now();
       const ENDE = ruhig ? 3600 : 9000;
-      let phase = "";
-
-      function setzePhase(p) {
-        if (phase === p) return;
-        phase = p;
-        box.dataset.phase = p;
-      }
-
       function plane(ms, fn) { zeiten.push(setTimeout(fn, ms)); }
-      if (!ruhig) {
-        if (k) k.akzent("sprung");
-        plane(1700, function () { if (k) k.akzent("ort"); });
-        [6200, 6900, 7600].forEach(function (ms, i) {
-          plane(ms, function () { zahl.textContent = String(3 - i); zahl.classList.remove("ist-tick"); void zahl.offsetWidth; zahl.classList.add("ist-tick"); if (k) k.akzent("zaehlen"); });
+      function zeige(e, an, aus) { e.style.opacity = an ? "1" : "0"; if (aus != null) e.style.transform = an ? aus[0] : aus[1]; }
+      function ziffer(text, feuer) {
+        zahl.textContent = text;
+        zahl.style.transition = "none";
+        zahl.style.opacity = "0";
+        zahl.style.color = feuer ? "#ffd45a" : "var(--fh-text)";
+        zahl.style.transform = "translate(-50%,-50%) scale(" + (feuer ? 2.2 : 1.8) + ")";
+        void zahl.offsetWidth;
+        zahl.style.transition = "transform .42s cubic-bezier(.16,1,.3,1), opacity .18s ease";
+        zahl.style.opacity = "1";
+        zahl.style.transform = "translate(-50%,-50%) scale(1)";
+        plane((performance.now() - t0) + (feuer ? 560 : 430), function () {
+          zahl.style.transition = "opacity .14s ease, transform .3s ease";
+          zahl.style.opacity = "0";
+          zahl.style.transform = "translate(-50%,-50%) scale(.85)";
         });
-        plane(8300, function () { zahl.textContent = t("schlacht.intro.feuer", "Feuer!"); zahl.classList.remove("ist-tick"); void zahl.offsetWidth; zahl.classList.add("ist-tick", "ist-feuer"); if (k) k.akzent("feuer"); });
+        if (k) k.akzent(feuer ? "feuer" : "zaehlen");
+      }
+      const ORT_AN = ["none", "translateX(-24px)"], LI_AN = ["none", "translateX(-10px)"];
+      const LAB_AN = ["translate(-50%,0)", "translate(-50%,12px)"], VS_AN = ["translate(-50%,-50%) scale(1)", "translate(-50%,-50%) scale(1.8)"];
+      if (ruhig) {
+        zeige(ortBox, true, ORT_AN); lis.forEach(function (li) { zeige(li, true, LI_AN); });
+        zeige(labL, true, LAB_AN); zeige(labR, true, LAB_AN);
+      } else {
+        if (k) k.akzent("sprung");
+        plane(60, function () { zeige(sprung, true); });
+        plane(900, function () { zeige(sprung, false); });
+        plane(1100, function () { if (k) k.akzent("ort"); });
+        plane(1500, function () { zeige(ortBox, true, ORT_AN); lis.forEach(function (li) { zeige(li, true, LI_AN); }); });
+        plane(3500, function () { zeige(ortBox, false, ORT_AN); });
+        plane(5200, function () { zeige(labL, true, LAB_AN); });
+        plane(5260, function () { zeige(vs, true, VS_AN); });
+        plane(5350, function () { zeige(labR, true, LAB_AN); });
+        plane(6500, function () { zeige(labL, false, LAB_AN); zeige(labR, false, LAB_AN); zeige(vs, false, VS_AN); });
+        [6650, 7200, 7750].forEach(function (ms, i) { plane(ms, function () { ziffer(String(3 - i), false); }); });
+        plane(8300, function () { ziffer(t("schlacht.intro.feuer", "Feuer!"), true); });
       }
 
-      function schiffe(liste2, seite, q, jetzt) {
-        if (!window.fhSchiffe) return;
+      function hyperraum(q) {
+        const speed = 0.2 + q * q * 4;
+        g.fillStyle = "rgba(3,4,10," + (0.28 + (1 - q) * 0.4) + ")";
+        g.fillRect(0, 0, B, H);
+        const cx = B / 2, cy = H / 2, M = Math.hypot(B, H) / 2;
+        stars.forEach(function (s) {
+          s.d += s.v * speed * 0.016;
+          if (s.d > 1) s.d -= 1;
+          const d0 = s.d * s.d * M, d1 = Math.min(M * 1.1, d0 + (6 + q * 190) * s.d);
+          g.globalAlpha = 0.25 + s.d * 0.75;
+          g.strokeStyle = s.d < 0.35 ? "#dfe8ff" : (s.f ? fL.akzent : fR.akzent);
+          g.lineWidth = 0.7 + s.d * 1.8;
+          g.beginPath();
+          g.moveTo(cx + Math.cos(s.a) * d0, cy + Math.sin(s.a) * d0);
+          g.lineTo(cx + Math.cos(s.a) * d1, cy + Math.sin(s.a) * d1);
+          g.stroke();
+        });
+        g.globalAlpha = 1;
+        g.fillStyle = radial(g, cx, cy, M * 0.4, [[0, "rgba(170,175,255," + (0.1 + q * 0.3) + ")"], [1, "rgba(40,60,160,0)"]]);
+        g.fillRect(0, 0, B, H);
+      }
+
+      function kamera(z) {
+        const p = Math.min(1, Math.max(0, (z - 1100) / 2600)), e = 1 - Math.pow(1 - p, 3);
+        let s = 1.55 - 0.4 * e;
+        if (z > 3700) s -= 0.09 * Math.min(1, (z - 3700) / 5300);
+        const K = KAMERA[o.ortId] || [0.15, -0.1], lim = (1 - 1 / s) / 2;
+        return {
+          s: s,
+          dx: Math.max(-lim, Math.min(lim, K[0] * (1 - e))),
+          dy: Math.max(-lim, Math.min(lim, K[1] * (1 - e))),
+        };
+      }
+
+      function schiffe(liste2, seite, zt, jetzt) {
+        if (!FS) return;
+        const partei = seite === "menschen" ? pl : pr, F = FS.farbe(partei), sg = seite === "menschen" ? 1 : -1;
         liste2.forEach(function (s) {
-          const lq = Math.max(0, Math.min(1, (q * 1800 - s.d) / 700));
+          const lq = Math.max(0, Math.min(1, (zt - s.d) / s.dauer));
           if (lq <= 0) return;
-          const e = 1 - Math.pow(1 - lq, 3);
-          const zielX = seite === "menschen" ? B * s.x : B * (1 - s.x);
-          const startX = seite === "menschen" ? -B * 0.3 : B * 1.3;
-          const x = startX + (zielX - startX) * e, y = H * s.y;
-          const partei = seite === "menschen" ? pl : pr;
-          if (lq < 1) {
-            g.save();
-            g.globalAlpha = 0.8 * (1 - lq);
-            g.strokeStyle = window.fhSchiffe.farbe(partei).akzent;
-            g.lineWidth = 3;
-            g.beginPath(); g.moveTo(x, y); g.lineTo(startX + (x - startX) * 0.2, y); g.stroke();
+          const zx = seite === "menschen" ? B * s.x : B * (1 - s.x), zy = H * s.y;
+          const startX = seite === "menschen" ? -B * 0.25 : B * 1.25;
+          const voll = Math.min(B, H) * s.rel;
+          let x = zx, y = zy, alpha = 1, breite = voll, winkel = seite === "menschen" ? 0 : Math.PI, spur = 0;
+          if (s.art === "keil") { const e = 1 - Math.pow(1 - lq, 5); x = startX + (zx - startX) * e; spur = 1 - lq; }
+          else if (s.art === "schwarm") {
+            const e = 1 - Math.pow(1 - lq, 3);
+            x = startX + (zx - startX) * e;
+            y = zy + Math.sin(lq * 7 + s.i) * H * 0.12 * (1 - e);
+            winkel += Math.cos(lq * 7 + s.i) * 0.5 * (1 - e) * sg;
+            spur = (1 - lq) * 0.6;
+          } else if (s.art === "rudel") {
+            const c1 = 1.9, c3 = c1 + 1, e = 1 + c3 * Math.pow(lq - 1, 3) + c1 * Math.pow(lq - 1, 2);
+            x = startX + (zx - startX) * e;
+            winkel += Math.sin(lq * 9 + s.i) * 0.18 * (1 - lq);
+            spur = (1 - lq) * 0.8;
+          } else if (s.art === "raster") { const e = 1 - (1 - lq) * (1 - lq); x = startX + (zx - startX) * e; spur = (1 - lq) * 0.5; }
+          else if (s.art === "gitter") { const e = 1 - Math.pow(1 - lq, 3); alpha = e; breite = voll * (0.5 + 0.5 * e); }
+          else { const e = 1 - Math.pow(1 - lq, 2); x = zx - sg * B * 0.08 * (1 - e); alpha = e * 0.95; }
+          if (lq >= 1) y += Math.sin(jetzt * 0.002 + s.i) * 3;
+
+          if (spur > 0.01) {
+            const lang = B * 0.28 * spur, gr = g.createLinearGradient(x, y, x - sg * lang, y);
+            gr.addColorStop(0, F.akzent); gr.addColorStop(1, F.akzent + "00");
+            g.save(); g.globalAlpha = 0.85 * spur + 0.15; g.strokeStyle = gr; g.lineWidth = Math.max(2, breite * 0.1); g.lineCap = "round";
+            g.beginPath(); g.moveTo(x, y); g.lineTo(x - sg * lang, y); g.stroke(); g.restore();
+          }
+          if (s.art === "gitter" && lq < 1) {
+            g.save(); g.globalAlpha = 1 - lq; g.lineWidth = 2;
+            for (let k2 = 0; k2 < 8; k2++) {
+              const a = k2 * 0.785 + s.i, l = breite * (0.4 + 1.3 * lq);
+              g.strokeStyle = k2 % 2 ? F.akzent : (F.zweit || F.licht);
+              g.beginPath(); g.moveTo(zx + Math.cos(a) * l * 0.3, zy + Math.sin(a) * l * 0.3); g.lineTo(zx + Math.cos(a) * l, zy + Math.sin(a) * l); g.stroke();
+            }
             g.restore();
           }
-          window.fhSchiffe.zeichnen(g, {
-            typ: s.typ, seite: partei, stufen: s.stufen, x: x, y: y, winkel: seite === "menschen" ? 0 : Math.PI,
-            breite: s.breite, dpr: D, zeit: jetzt, phase: s.d, treffer: 0, ruhig: false,
+          if (s.art === "nebel" && lq < 1) {
+            g.save(); g.globalAlpha = 0.5 * (1 - lq);
+            g.fillStyle = radial(g, x, y, voll * 1.2, [[0, F.akzent + "88"], [1, F.akzent + "00"]]);
+            g.beginPath(); g.arc(x, y, voll * 1.2, 0, 6.283); g.fill(); g.restore();
+          }
+          if (s.art === "raster" && lq > 0.6 && lq < 1) {
+            g.save(); g.globalAlpha = (1 - lq) * 2.5; g.strokeStyle = F.akzent; g.lineWidth = 1.5;
+            g.beginPath(); g.moveTo(zx, zy - voll * 0.6); g.lineTo(zx, zy + voll * 0.6); g.stroke(); g.restore();
+          }
+          FS.zeichnen(g, {
+            typ: s.typ, seite: partei, stufen: s.stufen, x: x, y: y, winkel: winkel, breite: breite,
+            dpr: D, zeit: jetzt, phase: s.d + s.i * 300, treffer: 0, ruhig: false, alpha: alpha,
           });
-          if (lq >= 1 && !s.blitz) s.blitz = jetzt;   // Ankunftsblitz einmal
-          if (s.blitz && jetzt - s.blitz < 300) {
-            const f = (jetzt - s.blitz) / 300;
-            g.fillStyle = "rgba(255,255,255," + (0.7 * (1 - f)) + ")";
-            g.beginPath(); g.arc(x, y, s.breite * (0.4 + f), 0, 6.283); g.fill();
+          if (lq >= 1 && !s.blitz) s.blitz = jetzt;
+          if (s.blitz && jetzt - s.blitz < 260) {
+            const f = (jetzt - s.blitz) / 260;
+            g.save(); g.globalAlpha = 0.7 * (1 - f); g.fillStyle = F.licht;
+            g.beginPath(); g.arc(x, y, voll * (0.3 + f * 0.7), 0, 6.283); g.fill(); g.restore();
+          }
+        });
+      }
+
+      function wappen(z, jetzt) {
+        if (!FS || !FS.emblem) return;
+        const aus = z > 6450 ? Math.max(0, 1 - (z - 6450) / 350) : 1;
+        [[pl, fL, 0.3, 5150], [pr, fR, 0.7, 5300]].forEach(function (w) {
+          const tt = z - w[3];
+          if (tt < 0) return;
+          const p = Math.min(1, tt / 360), e = 1 - Math.pow(1 - p, 4);
+          const r = Math.min(B, H) * 0.12, cx = B * w[2], cy = H * 0.42;
+          g.save();
+          g.globalAlpha = 0.22 * aus * e;
+          g.fillStyle = radial(g, cx, cy, Math.max(B, H) * 0.45, [[0, w[1].akzent], [1, w[1].akzent + "00"]]);
+          g.fillRect(0, 0, B, H);
+          g.restore();
+          g.save();
+          g.globalAlpha = Math.min(1, p * 2.5) * aus;
+          FS.emblem(g, w[0], cx, cy, r * (2.6 - 1.6 * e), jetzt);
+          g.restore();
+          const q = (tt - 360) / 600;
+          if (q > 0 && q < 1) {
+            g.save(); g.globalAlpha = (1 - q) * aus; g.strokeStyle = w[1].akzent; g.lineWidth = 6 * (1 - q) + 1;
+            g.beginPath(); g.arc(cx, cy, r * (1 + q * 2.4), 0, 6.283); g.stroke(); g.restore();
           }
         });
       }
@@ -706,58 +1176,41 @@
         const z = jetzt - t0;
         g.setTransform(D, 0, 0, D, 0, 0);
         if (ruhig) {
-          setzePhase("ort");
           hintergrund(g, B, H, jetzt, D, o.ortId, true);
-        } else if (z < 1700) {
-          setzePhase("sprung");
-          const q = z / 1700, speed = 0.15 + q * q * 3;
-          g.fillStyle = "rgba(2,4,12," + (0.35 + (1 - q) * 0.4) + ")";
-          g.fillRect(0, 0, B, H);
-          const cx = B / 2, cy = H / 2, M = Math.hypot(B, H) / 2;
-          stars.forEach(function (s) {
-            s.d += s.v * speed * 0.016;
-            if (s.d > 1) s.d -= 1;
-            const d0 = s.d * s.d * M, d1 = Math.min(M, d0 + (8 + q * 140) * s.d);
-            g.strokeStyle = "rgba(" + Math.round(170 + q * 80) + "," + Math.round(200 + q * 50) + ",255," + (0.3 + s.d * 0.7) + ")";
-            g.lineWidth = 0.8 + s.d * 1.6;
-            g.beginPath();
-            g.moveTo(cx + Math.cos(s.a) * d0, cy + Math.sin(s.a) * d0);
-            g.lineTo(cx + Math.cos(s.a) * d1, cy + Math.sin(s.a) * d1);
-            g.stroke();
-          });
-          g.fillStyle = radial(g, cx, cy, M * 0.4, [[0, "rgba(140,170,255," + (0.15 + q * 0.3) + ")"], [1, "rgba(40,60,160,0)"]]);
-          g.fillRect(0, 0, B, H);
+          schiffe(fM, "menschen", 99999, jetzt);
+          schiffe(fA, "aliens", 99999, jetzt);
+          wappen(6000, jetzt);
+        } else if (z < 1100) {
+          hyperraum(z / 1100);
         } else {
-          setzePhase(z < 4400 ? "ort" : z < 6200 ? "vs" : "zaehlen");
-          /* Ort mit langsamem Zoom */
-          const zoom = 1 + 0.22 * Math.max(0, 1 - (z - 1700) / 3200);
+          const kam = kamera(z);
           g.save();
-          g.translate(B / 2, H / 2); g.scale(zoom, zoom); g.translate(-B / 2, -H / 2);
+          g.translate(B / 2, H / 2); g.scale(kam.s, kam.s); g.translate(-(0.5 + kam.dx) * B, -(0.5 + kam.dy) * H);
           hintergrund(g, B, H, jetzt, D, o.ortId, false);
           g.restore();
-          if (z >= 4400) {
-            schiffe(fM, "menschen", (z - 4400) / 1800, jetzt);
-            schiffe(fA, "aliens", (z - 4400) / 1800, jetzt);
+          if (z >= 3500) {
+            schiffe(fM, "menschen", z - 3500, jetzt);
+            schiffe(fA, "aliens", z - 3500, jetzt);
           }
-          /* Schockwellen beim Countdown */
-          [6200, 6900, 7600, 8300].forEach(function (ms, i) {
+          if (z >= 5150 && z < 6800) wappen(z, jetzt);
+          [6650, 7200, 7750, 8300].forEach(function (ms, i) {
             const q = (z - ms) / 700;
             if (q < 0 || q > 1) return;
-            g.strokeStyle = i === 3 ? "rgba(255,200,120," + (1 - q) + ")" : "rgba(240,201,106," + (0.8 * (1 - q)) + ")";
-            g.lineWidth = (i === 3 ? 10 : 5) * (1 - q) + 1;
-            g.beginPath(); g.arc(B / 2, H / 2, 40 + q * Math.max(B, H) * (i === 3 ? 0.7 : 0.35), 0, 6.283); g.stroke();
+            const fe = i === 3;
+            g.save();
+            g.globalAlpha = (fe ? 1 : 0.8) * (1 - q);
+            g.strokeStyle = fe ? "#ffd45a" : (i % 2 ? fR.akzent : fL.akzent);
+            g.lineWidth = (fe ? 12 : 5) * (1 - q) + 1;
+            g.beginPath(); g.arc(B / 2, H * 0.45, 40 + q * Math.max(B, H) * (fe ? 0.75 : 0.35), 0, 6.283); g.stroke();
+            g.restore();
           });
-          /* Weissblitz nach dem Sprung */
-          if (z < 2100) {
-            g.fillStyle = "rgba(255,255,255," + Math.max(0, 1 - (z - 1700) / 400) + ")";
-            g.fillRect(0, 0, B, H);
-          }
-          /* Vignette */
-          g.fillStyle = radial(g, B / 2, H / 2, Math.max(B, H) * 0.75, [[0.55, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,.65)"]]);
+          if (z < 1500) { g.fillStyle = "rgba(255,255,255," + Math.max(0, 1 - (z - 1100) / 400) + ")"; g.fillRect(0, 0, B, H); }
+          if (z >= 8300 && z < 8500) { g.fillStyle = "rgba(255,240,210," + 0.35 * (1 - (z - 8300) / 200) + ")"; g.fillRect(0, 0, B, H); }
+          g.fillStyle = radial(g, B / 2, H / 2, Math.max(B, H) * 0.75, [[0.55, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,.6)"]]);
           g.fillRect(0, 0, B, H);
         }
         if (z >= ENDE) { beenden(); return; }
-        if (z >= ENDE - 500) box.classList.add("ist-aus");
+        if (z >= ENDE - 450) box.style.opacity = "0";
         raf = requestAnimationFrame(bild);
       }
 
@@ -796,6 +1249,11 @@
     eisring:        { dauerfeuer: 0.85, ziel: 1.1, wendig: 1,    spezial: 1,    heilung: 1,   schild: 1.5, laden: 1,   ereignis_sek: 70,   ereignis_anteil: 0.01,  ereignis_art: "abwechselnd" },
     wurmloch:       { dauerfeuer: 1,    ziel: 1,   wendig: 1,    spezial: 1.1,  heilung: 1,   schild: 1,   laden: 0.5, ereignis_sek: null, ereignis_anteil: 0,     ereignis_art: "beide" },
   };
+  Object.assign(STANDARD, {
+    pulsar:   { dauerfeuer: 1,   ziel: 0.85, wendig: 1,   spezial: 1.15, heilung: 1,    schild: 1,   laden: 1, ereignis_sek: 35, ereignis_anteil: 0.02,  ereignis_art: "abwechselnd" },
+    friedhof: { dauerfeuer: 1,   ziel: 1,    wendig: 0.9, spezial: 1,    heilung: 1.25, schild: 1.1, laden: 1, ereignis_sek: 45, ereignis_anteil: 0.025, ereignis_art: "abwechselnd" },
+    mondring: { dauerfeuer: 0.9, ziel: 1,    wendig: 1.2, spezial: 1,    heilung: 1,    schild: 1,   laden: 1, ereignis_sek: 55, ereignis_anteil: 0.015, ereignis_art: "abwechselnd" },
+  });
   const DEMO_TAKT = 6000;   // in der Vorschau alle 6 s ein Ereignis
 
   let vorschauOffen = null;   // { schliessen }
@@ -1027,5 +1485,9 @@
     introAbbrechen: introAbbrechen,
     leeren: leeren,
     vorschau: vorschau,
+    STANDARD: STANDARD,
+    FORMATION: FORMATION,
+    FORM_NAME: FORM_NAME,
+    formation: formation,   // V2: Positionen je Partei (0..1, linke Seite)
   };
 })();

@@ -50,7 +50,7 @@ begin
     end;
     sid := app.admin_schlacht_starten(10, 'nebel');
     select * into s from public.sternenschlacht where id = sid;
-    ok := abgelehnt = true and s.ort = 'nebel' and (select count(*) from public.schlacht_orte) = 7;
+    ok := abgelehnt = true and s.ort = 'nebel' and (select count(*) from public.schlacht_orte) >= 7;   -- 63: + 3
     perform app.admin_schlacht_beenden();
     sid := app.admin_schlacht_starten(10);
     ok := ok and (select ort from public.sternenschlacht where id = sid) in (select ort_id from public.schlacht_orte);

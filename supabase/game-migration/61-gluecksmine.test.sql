@@ -16,6 +16,10 @@ declare
   m       public.mine_stand;
   ertrag  bigint := 0;
   i       integer;
+  /* Seit 64 gibt es Bloecke statt Glueck je Schlag, und der Hangar
+     ueber Stufe 5 kostet Raumerz statt Erz - das prueft dann
+     64-raumerz.test.sql. */
+  seit64  boolean := to_regprocedure('app.hangar_ausbauen_raumerz(text)') is not null;
 begin
   perform set_config('role', 'postgres', true);
 
@@ -49,7 +53,8 @@ begin
       erg := app.mine_hacken(20);
     end loop;
     select * into m from public.mine_stand where firebase_uid = sp;
-    ok := m.goldadern between 250 and 500 and m.edelsteine between 15 and 80 and m.erz >= 3000 * 2;
+    ok := case when seit64 then m.goldadern > 0 and m.erz >= 3000 * 2
+               else m.goldadern between 250 and 500 and m.edelsteine between 15 and 80 and m.erz >= 3000 * 2 end;
     ausgabe := ausgabe || case when ok = true then 'PASS' else 'FAIL' end || '  T3 Goldadern und Edelsteine (Glueck)' || E'\n';
 
     /* T4: Bohrer und Lore - gedeckelt bei 2 + 2 x Lore Stunden. */
@@ -72,12 +77,17 @@ begin
        Schiffssysteme; Wirkung beim Aufstellen. */
     update public.mine_stand set erz = 100000 where firebase_uid = sp;
     insert into public.hangar_einheiten (firebase_uid, typ, stufe_leben) values (sp, 'jaeger', 4);
-    ok := app.hangar_ausbauen_erz('leben') ->> 'grund' = 'erst-dublonen';
-    update public.hangar_einheiten set stufe_leben = 5 where firebase_uid = sp;
-    erg := app.hangar_ausbauen_erz('leben');
-    ok := ok and (erg -> 'einheit' ->> 'stufe_leben')::int = 6 and (erg ->> 'erz')::bigint = 98000;
-    update public.hangar_einheiten set stufe_leben = 10 where firebase_uid = sp;
-    ok := ok and app.hangar_ausbauen_erz('leben') ->> 'grund' = 'max';
+    if seit64 then
+      update public.mine_stand set erz = 98000 where firebase_uid = sp;
+      ok := app.hangar_ausbauen_erz('leben') ->> 'grund' = 'nur-raumerz';
+    else
+      ok := app.hangar_ausbauen_erz('leben') ->> 'grund' = 'erst-dublonen';
+      update public.hangar_einheiten set stufe_leben = 5 where firebase_uid = sp;
+      erg := app.hangar_ausbauen_erz('leben');
+      ok := ok and (erg -> 'einheit' ->> 'stufe_leben')::int = 6 and (erg ->> 'erz')::bigint = 98000;
+      update public.hangar_einheiten set stufe_leben = 10 where firebase_uid = sp;
+      ok := ok and app.hangar_ausbauen_erz('leben') ->> 'grund' = 'max';
+    end if;
     erg := app.schiff_system_ausbauen('panzer');
     ok := ok and (erg -> 'einheit' ->> 'sys_panzer')::int = 1 and (erg ->> 'erz')::bigint = 98000 - 1500;
     erg := app.schiff_system_ausbauen('geschuetz');

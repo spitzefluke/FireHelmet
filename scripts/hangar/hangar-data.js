@@ -23,6 +23,9 @@
    public.schlacht_parteien und public.schlacht_typen - hier dieselben.
    "seite" eines Typs ist seine Partei; "anzahl" 2 fliegt doppelt.
    Die Hangar-Stufen gelten fuer jeden Typ jeder Partei.
+
+   DESIGN V2 (Migration 63): je Partei ein fuenfter, schwerer Typ
+   (schlachtschiff, koenigin, rammer, titan, kathedrale, leviathan).
 ====================================================== */
 
 const HANGAR_PREISE = [1000, 3000, 8000, 20000, 50000];
@@ -32,6 +35,10 @@ const HANGAR_MAX_STUFE = 5;
 const HANGAR_ERZ_PREISE = [2000, 4000, 8000, 15000, 25000];
 const HANGAR_ERZ_MAX = 10;
 const SCHIFF_SYSTEME = ["panzer", "geschuetz"];
+/* Raumerz (Migration 64): mit Freigabe der Glücksmine kosten ALLE
+   Stufen 1..15 Raumerz, wie app.hangar_raumerz_preis. */
+const HANGAR_RAUMERZ_PREISE = [1, 2, 3, 4, 5, 7, 9, 11, 14, 17, 20, 24, 28, 33, 40];
+const HANGAR_RAUMERZ_MAX = 15;
 
 const HANGAR_SEITEN_MOD = {
   menschen: { leben: 1.25, schaden: 0.85 },
@@ -240,15 +247,54 @@ const HANGAR_TYPEN = {
     spezial: "Fluch der Tiefe", spezialText: "Sofort 520 Schaden am Ziel",
     form: '<path d="M118 0 L80 -30 L-80 -40 L-118 -30 L-118 30 L-80 40 L80 30Z" class="hg-rumpf"/><path d="M-60 -36 V36 M-20 -38 V38 M20 -36 V36 M60 -32 V32" class="hg-linie"/>',
   },
+  /* ---- Fuenfter Typ je Partei (Design V2, Migration 63) ----
+     Schwere Grossschiffe: viel Leben, wenig Dauerfeuer, starker
+     Spezialangriff. Die Form hier ist nur der Ersatz ohne schiffe.js. */
+  schlachtschiff: {
+    seite: "menschen", leben: 250, schaden: 8,
+    name: "Schlachtschiff", rolle: "Schwer gepanzert, Hauptgeschütz",
+    spezial: "Hauptbatterie", spezialText: "Sofort 550 Schaden am Ziel",
+    form: '<path d="M124 0 L90 -24 L-70 -40 L-120 -24 L-120 24 L-70 40 L90 24Z" class="hg-rumpf"/><path d="M-60 0 H80" class="hg-linie"/><circle cx="30" cy="0" r="10" class="hg-kern"/>',
+  },
+  koenigin: {
+    seite: "aliens", leben: 200, schaden: 7,
+    name: "Königin", rolle: "Herz des Schwarms",
+    spezial: "Brutpflege", spezialText: "Heilt die eigene Seite um 450 Leben",
+    form: '<path d="M90 0 C70 -60 -40 -70 -110 -30 C-80 -10 -80 10 -110 30 C-40 70 70 60 90 0Z" class="hg-rumpf"/><circle cx="10" cy="0" r="16" class="hg-kern"/>',
+  },
+  rammer: {
+    seite: "piraten", leben: 165, schaden: 12,
+    name: "Rammer", rolle: "Bricht durch jede Linie",
+    spezial: "Rammstoß", spezialText: "Sofort 560 Schaden am Ziel",
+    form: '<path d="M124 0 L70 -26 L-90 -34 L-118 0 L-90 34 L70 26Z" class="hg-rumpf"/><path d="M124 0 L92 -14 L92 14Z" class="hg-deck"/>',
+  },
+  titan: {
+    seite: "maschinen", leben: 260, schaden: 7,
+    name: "Titan", rolle: "Wandelnde Festung",
+    spezial: "Bollwerkfeld", spezialText: "Gegner 25 s lang −45 % Schaden",
+    form: '<path d="M110 -20 L110 20 L60 50 L-80 50 L-120 20 L-120 -20 L-80 -50 L60 -50Z" class="hg-rumpf"/><path d="M-80 -24 H80 M-80 24 H80" class="hg-linie"/>',
+  },
+  kathedrale: {
+    seite: "kristall", leben: 210, schaden: 7,
+    name: "Kathedrale", rolle: "Lichtchor im Kristall",
+    spezial: "Lichtchor", spezialText: "Heilt die eigene Seite um 480 Leben",
+    form: '<path d="M120 0 L40 -60 L-60 -44 L-120 0 L-60 44 L40 60Z" class="hg-rumpf"/><path d="M120 0 L-120 0 M40 -60 L-60 44 M40 60 L-60 -44" class="hg-linie"/>',
+  },
+  leviathan: {
+    seite: "geister", leben: 230, schaden: 10,
+    name: "Leviathan", rolle: "Uralt und gewaltig",
+    spezial: "Seelensog", spezialText: "Gegner nehmen 25 s lang +40 % Schaden",
+    form: '<path d="M120 0 C90 -50 -20 -60 -120 -36 C-90 -12 -90 12 -120 36 C-20 60 90 50 120 0Z" class="hg-rumpf"/><circle cx="60" cy="0" r="12" class="hg-kern"/>',
+  },
 };
 
 const HANGAR_REIHENFOLGE = {
-  menschen: ["jaeger", "fregatte", "kreuzer", "traeger"],
-  aliens: ["drohne", "stachel", "weber", "brutschiff"],
-  piraten: ["kaper", "brigant", "galeone", "schmuggler"],
-  maschinen: ["sonde", "waechter", "zerstoerer", "fabrik"],
-  kristall: ["splitter", "prisma", "resonator", "monolith"],
-  geister: ["irrlicht", "phantom", "banshee", "totenschiff"],
+  menschen: ["jaeger", "fregatte", "kreuzer", "traeger", "schlachtschiff"],
+  aliens: ["drohne", "stachel", "weber", "brutschiff", "koenigin"],
+  piraten: ["kaper", "brigant", "galeone", "schmuggler", "rammer"],
+  maschinen: ["sonde", "waechter", "zerstoerer", "fabrik", "titan"],
+  kristall: ["splitter", "prisma", "resonator", "monolith", "kathedrale"],
+  geister: ["irrlicht", "phantom", "banshee", "totenschiff", "leviathan"],
 };
 
 /* Kampfwerte einer Einheit: { leben, schaden, spezial (Faktor), anzahl }. */
