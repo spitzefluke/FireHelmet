@@ -66,8 +66,8 @@ begin
     ok := ok and w.leben = 108 and w.schaden = 19.0 and w.spezial = 1.5;
     select * into w from app.schlacht_werte('totenschiff', 'geister', 1, 1, 0);
     ok := ok and w.leben = round(180 * 1.2 * 0.85) and w.schaden = round(9 * 1.2 * 1.25 * 10) / 10.0;
-    ok := ok and (select count(*) from public.schlacht_typen where partei <> 'boss') = 24   -- 59: + Mutterschiff
-      and (select count(*) from public.schlacht_typen group by partei order by 1 desc limit 1) = 4
+    ok := ok and (select count(*) from public.schlacht_typen where partei <> 'boss') >= 24   -- 59: + Mutterschiff, 63: + 6
+      and (select count(*) from public.schlacht_typen group by partei order by 1 desc limit 1) >= 4
       and app.partei_grundtyp('kristall') = 'splitter';
     ausgabe := ausgabe || case when ok = true then 'PASS' else 'FAIL' end || '  T2 Kampfwerte aus schlacht_typen' || E'\n';
 

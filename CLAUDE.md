@@ -202,6 +202,14 @@ ein Ereignis aus `app.front_ereignis()` und Kampfpunkte. Spieler wählen eine Ha
 übernimmt sie in die Schlacht. Die Browser-Seite steht in `schlacht-front.js` – sie zeigt nur
 und lädt neu, wenn ein Takt fällig ist.
 
+Seit 63 gilt das **Design V2** aus Claude Design („Schlacht Design“): `scripts/hangar/schiffe.js`
+und `scripts/schlacht/schlacht-orte.js` stammen von dort (Wappen, Bemalung, Formationen,
+Kamerafahrt im Einflug). Der Einflug stylt sich selbst mit Inline-Stilen aus den `--fh-*`-Tokens
+– dafür gibt es kein CSS mehr in `50-redesign.css`. Es gibt zehn Kampforte (neu: `pulsar`,
+`friedhof`, `mondring`) und je Partei **fünf** Typen; der fünfte ist ein schweres Großschiff.
+Ein neuer Typ für Menschen oder Aliens braucht zusätzlich einen Eintrag im Constraint
+`hangar_typ_bekannt`; `app.hangar_typ_passt()` liest seit 63 aus `schlacht_typen`.
+
 ### Spind und Glücksmine
 
 Der **Spind** (Migration 60, Freigabe `spind`, `scripts/spind/spind.js`) bündelt Titel, Avatar
@@ -213,11 +221,18 @@ Bestenlisten, `fhProfil.zeigen(uid)` öffnet die Profilkarte. Der getragene Tite
 
 Die **Glücksmine** (Migration 61, Freigabe `gluecksmine`, `scripts/mine/gluecksmine.js`)
 bringt **Erz**, eine dritte Währung in `mine_stand`. Gehackt wird über `mine_hacken()`
-(serverseitig gedrosselt, Goldadern und Edelsteine würfelt die Datenbank), der Bohrer füllt
-die Lore auch ohne Spieler (`mine_abholen()`), Geräte steigen über `mine_verbessern()`. Erz
-bezahlt Hangar-Stufen über 5 (`hangar_ausbauen_erz()`, bis 10) und die Schiffssysteme
-Panzerung und Geschütz (`schiff_system_ausbauen()`). Neue Tabellen mit Spielerbezug räumen
-die Trigger `spind_konto_aufraeumen` und `mine_konto_aufraeumen` ab.
+(serverseitig gedrosselt), der Bohrer füllt die Lore auch ohne Spieler (`mine_abholen()`),
+Geräte steigen über `mine_verbessern()`. Erz bezahlt die Schiffssysteme Panzerung und Geschütz
+(`schiff_system_ausbauen()`) und die Geräte.
+
+Seit 64 besteht die Mine aus **Blöcken mit Leben** (`block_art`, `block_leben`): Ein Hieb zieht
+so viel ab, wie die Spitzhacke Stufen hat; beim Zerbrechen würfelt `app.mine_neuer_block()` den
+nächsten – jeder 30. ist **Raumerz**. Mit der Freigabe `gluecksmine` kosten Leben, Schaden und
+Spezial im Hangar auf **allen Stufen 1..15 nur Raumerz** (`hangar_ausbauen_raumerz()`,
+Preise in `app.hangar_raumerz_preis()` und `HANGAR_RAUMERZ_PREISE`); `hangar_ausbauen()`
+(Dublonen) lehnt dann mit `nur-raumerz` ab, `hangar_ausbauen_erz()` (61) immer. Ohne Freigabe
+bleibt es bei Dublonen bis Stufe 5. Neue Tabellen mit Spielerbezug räumen die Trigger
+`spind_konto_aufraeumen` und `mine_konto_aufraeumen` ab.
 
 ### Datenbank und Anmeldung
 

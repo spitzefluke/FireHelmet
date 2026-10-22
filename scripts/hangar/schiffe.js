@@ -1,5 +1,9 @@
 /* ======================================================
-   SCHIFFE: GEMEINSAME GRAFIK FUER HANGAR UND STERNENSCHLACHT
+   SCHIFFE: GEMEINSAME GRAFIK FUER HANGAR UND STERNENSCHLACHT (V2)
+   V2: kraeftigere Parteifarben, Bemalung je Partei, bewegte Signatur
+   (Positionslichter, Puls, Scan, Funkeln, Laterne, Nachbilder),
+   Ausbau ab Stufe 3/5 als grosse Bauteile, Wachstum, Rang-Leuchten,
+   emblem() fuer Wappen.
    ---------------------------------------------------
    Reine Optik ohne Zustand. Jeder Einheitentyp hat eine eigene
    Silhouette im Neon-Vektor-Stil der Zeitmaschine 2100. Vier Stile:
@@ -58,40 +62,42 @@
   function farben() {
     if (farbenCache) return farbenCache;
     const kalt = token("--fh-cold", "#6fd3ff");
+    /* V2: kraeftigere, klar getrennte Parteifarben. akzent = Leuchtfarbe,
+       zweit = Gegenfarbe fuer Details, livree = Bemalung auf dem Rumpf. */
     farbenCache = {
       menschen: {
-        hell: "#c9d3df", mitte: "#7c899a", dunkel: "#29323e", kante: "#eaf4ff",
-        akzent: kalt, licht: "#c8f4ff", panzer: "#4a5666", waffe: "#dfe8f2", tief: "#18202a",
-        flamme: kalt, flammeKern: "#ffffff",
+        hell: "#e4ecf5", mitte: "#8a9bb0", dunkel: "#26313f", kante: "#f2f8ff",
+        akzent: "#3fb6ff", zweit: "#ffffff", livree: "#2f8fe0", licht: "#d4f1ff", panzer: "#51627a", waffe: "#e6eef7", tief: "#151c26",
+        flamme: "#3fb6ff", flammeKern: "#ffffff",
       },
       aliens: {
-        hell: "#8a5ad6", mitte: "#4a2a85", dunkel: "#1a0d30", kante: "#c993ff",
-        akzent: "#9dff6a", licht: "#e2ffc0", panzer: "#2c1850", waffe: "#b8ff8a", tief: "#12081f",
-        flamme: "#7dff8a", flammeKern: "#eaffd8",
+        hell: "#a45ae8", mitte: "#561f8f", dunkel: "#1a0830", kante: "#d79bff",
+        akzent: "#a6ff3a", zweit: "#ff4fd8", livree: "#a6ff3a", licht: "#eaffc8", panzer: "#3a1866", waffe: "#c4ff7a", tief: "#10051d",
+        flamme: "#8dff4a", flammeKern: "#f0ffd8",
       },
       piraten: {
-        hell: "#d9b77a", mitte: "#8a5a2b", dunkel: "#2e1a0c", kante: "#ffd98a",
-        akzent: token("--fh-fire", "#ff6a2a"), licht: "#ffe3b0", panzer: "#5a3a1c", waffe: "#e8c88a", tief: "#1e1108",
-        flamme: "#ff8a3d", flammeKern: "#fff1d0", segel: "#b8323a",
+        hell: "#e2bd7c", mitte: "#91592a", dunkel: "#2c170a", kante: "#ffd88a",
+        akzent: "#ff7a1a", zweit: "#ffd24a", livree: "#c8202f", licht: "#ffe6b8", panzer: "#5e3a1a", waffe: "#f0cf8e", tief: "#1b0f06",
+        flamme: "#ff8a2a", flammeKern: "#fff0cc", segel: "#c8202f",
       },
       maschinen: {
-        hell: "#a3acb4", mitte: "#4b535b", dunkel: "#15191d", kante: "#d0d8de",
-        akzent: "#ff3b3b", licht: "#ffc2b8", panzer: "#2c3238", waffe: "#c4ccd2", tief: "#0c0f12",
-        flamme: "#ff5a3a", flammeKern: "#ffe6dc",
+        hell: "#8e979f", mitte: "#3c434a", dunkel: "#0f1215", kante: "#c3cbd2",
+        akzent: "#ff2b2b", zweit: "#ff9a2b", livree: "#ff2b2b", licht: "#ffc4b8", panzer: "#262c32", waffe: "#b8c0c6", tief: "#08090b",
+        flamme: "#ff4a2a", flammeKern: "#ffe2d6",
       },
       kristall: {
-        hell: "#e6f7ff", mitte: "#8fc8e8", dunkel: "#24406a", kante: "#ffffff",
-        akzent: token("--fh-kristall", "#ff7ad9"), licht: "#ffe0f5", panzer: "#5d8fc4", waffe: "#ffd1f0", tief: "#162a4a",
-        flamme: "#ff8ae0", flammeKern: "#ffffff",
+        hell: "#f0faff", mitte: "#9ed2ef", dunkel: "#2a4876", kante: "#ffffff",
+        akzent: "#ff5fd2", zweit: "#5ff0ff", livree: "#5ff0ff", licht: "#ffe2f6", panzer: "#6a9ad0", waffe: "#ffd0f0", tief: "#162a4a",
+        flamme: "#ff7ae0", flammeKern: "#ffffff",
       },
       geister: {
-        hell: "#b8ffe8", mitte: "#3d8f7e", dunkel: "#0b2622", kante: "#d6fff4",
-        akzent: token("--fh-geist", "#5dffc8"), licht: "#eafff8", panzer: "#1d4a42", waffe: "#a8ffe0", tief: "#061614",
-        flamme: "#5dffc8", flammeKern: "#f0fff8", segel: "#7fbfae",
+        hell: "#b6ffe6", mitte: "#2f7f70", dunkel: "#071d1a", kante: "#d8fff3",
+        akzent: "#3dffbf", zweit: "#a0b8ff", livree: "#3dffbf", licht: "#eafff8", panzer: "#16423a", waffe: "#a4ffdc", tief: "#041210",
+        flamme: "#3dffbf", flammeKern: "#f0fff8", segel: "#6fb3a2",
       },
       boss: {
         hell: "#6a2a3a", mitte: "#2e0f1a", dunkel: "#0b0306", kante: "#ff7a5a",
-        akzent: "#ff3b6b", licht: "#ffd0c0", panzer: "#3e1622", waffe: "#ffb0a0", tief: "#060103",
+        akzent: "#ff3b6b", zweit: "#ffb0a0", livree: "#ff3b6b", licht: "#ffd0c0", panzer: "#3e1622", waffe: "#ffb0a0", tief: "#060103",
         flamme: "#ff5a3a", flammeKern: "#ffe0d0",
       },
     };
@@ -623,6 +629,147 @@
       waffen: [[60, -31], [60, 31], [-40, -38], [-40, 38], [100, 0]],
       panzer: [[20, -36], [20, 36], [-60, -39], [-60, 39], [80, 0]],
     },
+    /* ===== V2: FUENFTE SCHIFFE JE PARTEI ===== */
+    schlachtschiff: {
+      rumpf: function (c) { pfad(c, [130, 0, 100, -18, 40, -30, -60, -36, -110, -30, -124, -14, -124, 14, -110, 30, -60, 36, 40, 30, 100, 18]); },
+      details: function (c, F) {
+        linie(c, F.tief, 2.4, [[112, 0], [-112, 0]]);
+        c.fillStyle = F.panzer; rundRechteck(c, -54, -15, 42, 30, 4); c.fill();
+        c.strokeStyle = F.kante; c.lineWidth = 1.2; c.globalAlpha = .8; c.stroke(); c.globalAlpha = 1;
+        fenster(c, F, -26, 0, 8, 5);
+        [20, 62].forEach(function (x) {
+          linie(c, F.waffe, 3.5, [[x, -3.5], [x + 28, -3.5]]);
+          linie(c, F.waffe, 3.5, [[x, 3.5], [x + 28, 3.5]]);
+          c.fillStyle = F.panzer; c.beginPath(); c.arc(x, 0, 11, 0, 6.283); c.fill();
+          c.strokeStyle = F.kante; c.lineWidth = 1.2; c.stroke();
+          punktReihe(c, F.akzent, [[x, 0]], 2.6);
+        });
+        const reihe = [];
+        for (let x = -96; x <= 84; x += 14) reihe.push([x, -27], [x, 27]);
+        punktReihe(c, F.licht, reihe, 1.6);
+        linie(c, F.akzent, 2, [[126, 0], [104, 0]], .9);
+      },
+      motoren: [{ x: -126, y: -20, r: 10 }, { x: -126, y: 0, r: 10 }, { x: -126, y: 20, r: 10 }],
+      waffen: [[70, -24], [70, 24], [-20, -32], [-20, 32], [110, 0]],
+      panzer: [[30, -28], [30, 28], [-80, -32], [-80, 32], [90, 0]],
+    },
+    koenigin: {
+      rumpf: function (c) {
+        c.beginPath();
+        c.moveTo(110, 0);
+        c.bezierCurveTo(60, -70, -60, -80, -110, -56);
+        c.bezierCurveTo(-70, -30, -60, -12, -60, 0);
+        c.bezierCurveTo(-60, 12, -70, 30, -110, 56);
+        c.bezierCurveTo(-60, 80, 60, 70, 110, 0);
+        c.closePath();
+      },
+      vorher: function (c, F) {
+        [-40, -10, 20, 50].forEach(function (k) {
+          const p = [k - 8, -46, k + 4, -92, k + 10, -44];
+          flaeche(c, F.mitte, p); flaeche(c, F.mitte, spiegel(p));
+        });
+      },
+      details: function (c, F) {
+        ader(c, F, [[30, 0], [0, -40], [-90, -50]]);
+        ader(c, F, [[30, 0], [0, 40], [-90, 50]]);
+        ader(c, F, [[30, 0], [70, -20], [104, -4]]);
+        ader(c, F, [[30, 0], [70, 20], [104, 4]]);
+        [-1, 1].forEach(function (sg) {
+          c.fillStyle = F.panzer; c.beginPath(); c.ellipse(-78, sg * 40, 12, 7, sg * .4, 0, 6.283); c.fill();
+          c.strokeStyle = F.akzent; c.lineWidth = 1.2; c.globalAlpha = .7; c.stroke(); c.globalAlpha = 1;
+          kern(c, F, -20, sg * 32, 8);
+        });
+        kern(c, F, 30, 0, 17);
+      },
+      motoren: [{ x: -62, y: 0, r: 9 }],
+      waffen: [[80, -30], [80, 30], [0, -60], [0, 60], [112, 0]],
+      panzer: [[40, -50], [40, 50], [-40, -60], [-40, 60], [-10, 0]],
+    },
+    rammer: {
+      rumpf: function (c) { pfad(c, [128, 0, 96, -14, 70, -30, -70, -34, -108, -24, -116, 0, -108, 24, -70, 34, 70, 30, 96, 14]); },
+      vorher: function (c, F) { segel(c, F, [-10, -34, 10, -80, -50, -76, -56, -34], .9); },
+      details: function (c, F) {
+        flaeche(c, F.waffe, [96, -14, 142, 0, 96, 14]);
+        linie(c, F.kante, 1.2, [[96, -14], [142, 0], [96, 14]], .8);
+        bogen(c, F.waffe, 2.4, 132, -12, 8, .3, 2.4);
+        bogen(c, F.waffe, 2.4, 132, 12, 8, -2.4, -.3);
+        c.fillStyle = F.tief; rundRechteck(c, -70, -10, 150, 20, 4); c.fill();
+        const luken = [];
+        for (let x = -60; x <= 60; x += 15) luken.push([x, -31], [x, 31]);
+        punktReihe(c, F.akzent, luken, 2.2);
+        fenster(c, F, -100, 0, 7, 7);
+        c.save(); c.setLineDash([4, 3]); linie(c, F.waffe, 1.6, [[-70, -20], [80, -18]], .6); linie(c, F.waffe, 1.6, [[-70, 20], [80, 18]], .6); c.restore();
+      },
+      motoren: [{ x: -118, y: -14, r: 9 }, { x: -118, y: 14, r: 9 }],
+      waffen: [[50, -30], [50, 30], [-30, -33], [-30, 33], [90, 0]],
+      panzer: [[10, -32], [10, 32], [-60, -33], [-60, 33], [110, 0]],
+    },
+    titan: {
+      rumpf: function (c) { pfad(c, [110, -30, 110, 30, 70, 56, -70, 56, -118, 30, -118, -30, -70, -56, 70, -56]); },
+      vorher: function (c, F) {
+        [-1, 1].forEach(function (sg) {
+          c.fillStyle = F.mitte; rundRechteck(c, 20, sg > 0 ? 62 : -76, 100, 14, 3); c.fill();
+          c.strokeStyle = F.kante; c.lineWidth = 1; c.globalAlpha = .6; c.stroke(); c.globalAlpha = 1;
+          punktReihe(c, F.akzent, [[120, sg * 69]], 3.2);
+        });
+      },
+      details: function (c, F) {
+        const q = [];
+        for (let k = 0; k < 6; k++) q.push(-10 + Math.cos(k * 1.047) * 36, Math.sin(k * 1.047) * 36);
+        flaeche(c, F.tief, q);
+        bogen(c, F.akzent, 2.4, -10, 0, 46, 0, 6.283, .7);
+        kern(c, F, -10, 0, 22);
+        linie(c, F.tief, 1.6, [[-110, -40], [100, -40]], .8);
+        linie(c, F.tief, 1.6, [[-110, 40], [100, 40]], .8);
+        punktReihe(c, F.akzent, [[98, -16], [98, -5], [98, 5], [98, 16]], 2.4);
+      },
+      motoren: [{ x: -120, y: -30, r: 9 }, { x: -120, y: 0, r: 9 }, { x: -120, y: 30, r: 9 }],
+      waffen: [[80, -50], [80, 50], [-40, -56], [-40, 56], [112, 0]],
+      panzer: [[30, -56], [30, 56], [-90, -44], [-90, 44], [60, 0]],
+    },
+    kathedrale: {
+      rumpf: function (c) { pfad(c, [120, 0, 60, -26, 20, -70, -10, -30, -50, -60, -70, -24, -110, -14, -110, 14, -70, 24, -50, 60, -10, 30, 20, 70, 60, 26]); },
+      details: function (c, F) {
+        flaeche(c, F.hell, [120, 0, 60, -26, 20, -70, -10, -30, 10, 0], .3);
+        [[20, -70], [-50, -60], [20, 70], [-50, 60], [120, 0], [-110, 0]].forEach(function (p) { linie(c, F.licht, 1.1, [[10, 0], p], .5); });
+        linie(c, F.akzent, 2, [[-90, 0], [100, 0]], .6);
+        kern(c, F, 10, 0, 17);
+        kern(c, F, -60, 0, 9);
+        kern(c, F, 20, -56, 6); kern(c, F, 20, 56, 6);
+      },
+      motoren: [{ x: -112, y: -8, r: 7 }, { x: -112, y: 8, r: 7 }],
+      waffen: [[20, -66], [20, 66], [-50, -56], [-50, 56], [118, 0]],
+      panzer: [[40, -30], [40, 30], [-30, -30], [-30, 30], [80, 0]],
+    },
+    leviathan: {
+      rumpf: function (c) {
+        c.beginPath();
+        c.moveTo(124, 0);
+        c.bezierCurveTo(110, -30, 70, -36, 40, -28);
+        c.bezierCurveTo(0, -20, -40, -36, -80, -26);
+        c.bezierCurveTo(-110, -18, -126, -8, -134, 0);
+        c.bezierCurveTo(-126, 8, -110, 18, -80, 26);
+        c.bezierCurveTo(-40, 36, 0, 20, 40, 28);
+        c.bezierCurveTo(70, 36, 110, 30, 124, 0);
+        c.closePath();
+      },
+      details: function (c, F) {
+        for (let x = -70; x <= 30; x += 20) {
+          c.save(); c.strokeStyle = F.kante; c.lineWidth = 2; c.globalAlpha = .45;
+          c.beginPath(); c.moveTo(x - 6, -28); c.quadraticCurveTo(x + 8, 0, x - 6, 28); c.stroke(); c.restore();
+        }
+        linie(c, F.tief, 3, [[-120, 0], [80, 0]], .7);
+        [-1, 1].forEach(function (sg) {
+          c.fillStyle = F.tief; c.beginPath(); c.ellipse(90, sg * 11, 9, 5, sg * .3, 0, 6.283); c.fill();
+          kern(c, F, 90, sg * 11, 6);
+        });
+        linie(c, F.tief, 2, [[124, 0], [100, 4], [70, 2]], .8);
+        ader(c, F, [[60, 0], [0, -10], [-120, 0]]);
+      },
+      motoren: [{ x: -128, y: 0, r: 7 }],
+      waffen: [[70, -26], [70, 26], [0, -26], [0, 26], [124, 0]],
+      panzer: [[40, -24], [40, 24], [-40, -28], [-40, 28], [-90, 0]],
+    },
     /* ===== BOSS: MUTTERSCHIFF (59) ===== */
     mutterschiff: {
       rumpf: function (c) { pfad(c, [130, 0, 74, -32, 24, -70, -60, -78, -118, -52, -130, -22, -104, 0, -130, 22, -118, 52, -60, 78, 24, 70, 74, 32]); },
@@ -870,6 +1017,394 @@
     c.restore();
   }
 
+  /* ======================================================
+     V2: PARTEI-SIGNATUR, SICHTBARER AUSBAU, RANG, WAPPEN
+  ====================================================== */
+  function zz(saat) {
+    let a = 0;
+    for (let i = 0; i < saat.length; i++) a = Math.imul(a ^ saat.charCodeAt(i), 2654435761);
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      let x = Math.imul(a ^ (a >>> 15), 1 | a);
+      x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  /* Grobe Ausdehnung eines Typs aus seinen Ausbau-Punkten. */
+  function grenzen(T) {
+    if (T._g) return T._g;
+    let maxX = 40, maxY = 20, minX = -40;
+    T.waffen.concat(T.panzer).forEach(function (p) { maxX = Math.max(maxX, p[0]); maxY = Math.max(maxY, Math.abs(p[1])); });
+    T.motoren.forEach(function (m) { minX = Math.min(minX, m.x); });
+    T._g = { maxX: maxX, maxY: maxY, minX: minX };
+    return T._g;
+  }
+
+  /* Bemalung je Partei, in den Rumpf geschnitten - so erkennt man die
+     Partei auch an kleinen Schiffen. */
+  function signaturMalen(c, T, F, partei, typ) {
+    const G = grenzen(T), r = zz("sig" + typ + partei), lang = G.maxX - G.minX;
+    c.save();
+    T.rumpf(c); c.clip();
+    if (partei === "menschen") {
+      c.fillStyle = F.livree; c.globalAlpha = .9;
+      c.fillRect(G.minX, -G.maxY * .45 - 2, lang + 40, 4);
+      c.fillRect(G.minX, G.maxY * .45 - 2, lang + 40, 4);
+      c.fillStyle = F.zweit; c.globalAlpha = .95;
+      const x = G.maxX * .35;
+      pfad(c, [x + 14, 0, x, -12, x - 7, -12, x + 6, 0, x - 7, 12, x, 12]); c.fill();
+    } else if (partei === "aliens") {
+      c.strokeStyle = F.dunkel; c.lineWidth = 3; c.globalAlpha = .55;
+      for (let x = G.minX + 14; x < G.maxX; x += 16) { c.beginPath(); c.moveTo(x, -90); c.quadraticCurveTo(x + 10, 0, x, 90); c.stroke(); }
+      c.globalAlpha = 1; c.shadowBlur = 6;
+      for (let i = 0; i < 16; i++) {
+        const fa = i % 4 ? F.akzent : F.zweit;
+        c.fillStyle = fa; c.shadowColor = fa;
+        c.beginPath(); c.arc(G.minX + r() * lang, (r() - .5) * G.maxY * 1.6, 1.2 + r() * 2, 0, 6.283); c.fill();
+      }
+    } else if (partei === "piraten") {
+      c.strokeStyle = F.tief; c.lineWidth = 1; c.globalAlpha = .45;
+      for (let y = -90; y < 90; y += 9) { c.beginPath(); c.moveTo(-150, y); c.lineTo(150, y); c.stroke(); }
+      c.globalAlpha = .9; c.fillStyle = F.livree;
+      const sx0 = G.maxX * .2;
+      pfad(c, [sx0, -90, sx0 + 14, -90, sx0 - 6, 90, sx0 - 20, 90]); c.fill();
+      const sx = G.minX * .35;
+      c.globalAlpha = 1; c.fillStyle = F.licht;
+      c.beginPath(); c.arc(sx, -1, 6.5, 0, 6.283); c.fill(); c.fillRect(sx - 3.5, 3, 7, 5);
+      c.fillStyle = F.tief;
+      c.beginPath(); c.arc(sx - 2.4, -1.5, 1.7, 0, 6.283); c.arc(sx + 2.4, -1.5, 1.7, 0, 6.283); c.fill();
+    } else if (partei === "maschinen") {
+      c.strokeStyle = F.akzent; c.lineWidth = .9; c.globalAlpha = .22;
+      const s = 9, hh = s * 1.732;
+      for (let y = -100, row = 0; y < 100; y += hh / 2, row++) {
+        for (let x = -160 + (row % 2) * s * 1.5; x < 160; x += s * 3) {
+          c.beginPath();
+          for (let k = 0; k < 6; k++) c.lineTo(x + Math.cos(k * 1.047) * s, y + Math.sin(k * 1.047) * s);
+          c.closePath(); c.stroke();
+        }
+      }
+      c.globalAlpha = 1; c.fillStyle = F.akzent; c.shadowColor = F.akzent; c.shadowBlur = 8;
+      c.fillRect(G.maxX * .45, -2, 22, 4);
+    } else if (partei === "kristall") {
+      const gr = c.createLinearGradient(G.minX, -60, G.maxX, 60);
+      gr.addColorStop(0, F.akzent); gr.addColorStop(.5, "rgba(255,255,255,0)"); gr.addColorStop(1, F.zweit);
+      c.globalAlpha = .38; c.fillStyle = gr; c.fillRect(-160, -110, 320, 220);
+      c.strokeStyle = F.kante; c.lineWidth = 1; c.globalAlpha = .4;
+      for (let k = 0; k < 12; k++) { const a = k * .5236 + r() * .2; c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(a) * 170, Math.sin(a) * 170); c.stroke(); }
+    } else if (partei === "geister") {
+      c.strokeStyle = F.akzent; c.lineWidth = 2.5; c.globalAlpha = .28;
+      for (let i = 0; i < 5; i++) {
+        const y = (r() - .5) * G.maxY * 1.4;
+        c.beginPath(); c.moveTo(G.maxX, y); c.bezierCurveTo(G.maxX * .3, y - 20, G.minX * .3, y + 20, G.minX - 20, y + (r() - .5) * 30); c.stroke();
+      }
+      const gr = c.createRadialGradient(0, 0, 0, 0, 0, G.maxY * 1.3);
+      gr.addColorStop(0, "rgba(0,0,0,.45)"); gr.addColorStop(1, "rgba(0,0,0,0)");
+      c.globalAlpha = 1; c.fillStyle = gr; c.fillRect(-160, -110, 320, 220);
+    }
+    c.restore();
+    if (partei === "geister") {
+      /* Seelenfaeden hinter dem Heck */
+      c.save(); c.strokeStyle = F.akzent; c.lineWidth = 1.6; c.globalAlpha = .4; c.lineCap = "round";
+      for (let i = 0; i < 4; i++) {
+        const y = (i - 1.5) * G.maxY * .35;
+        c.beginPath(); c.moveTo(G.minX + 8, y); c.quadraticCurveTo(G.minX - 10, y + (i % 2 ? 10 : -10), G.minX - 24, y); c.stroke();
+      }
+      c.restore();
+    }
+  }
+
+  /* Ausbau ab Stufe 3 und 5 - grosse, neue Bauteile statt Kleinkram. */
+  function ausbauTeile(c, T, F, sl, st) {
+    const G = grenzen(T), L = st.leben || 0, S = st.schaden || 0;
+    if (L >= 3) [-1, 1].forEach(function (sg) {
+      const x = G.minX * .3, y = sg * (G.maxY + 13);
+      c.save();
+      if (sl === "metall") {
+        linie(c, F.mitte, 4, [[x, y - sg * 7], [x, y - sg * 16]]);
+        c.fillStyle = F.panzer; rundRechteck(c, x - 28, y - 6, 56, 12, 4); c.fill();
+        c.strokeStyle = F.kante; c.lineWidth = 1.4; c.stroke();
+        linie(c, F.livree || F.akzent, 2.4, [[x - 20, y], [x + 20, y]], .95);
+      } else if (sl === "organisch") {
+        c.fillStyle = F.panzer; c.beginPath(); c.ellipse(x, y, 30, 8, sg * .25, 0, 6.283); c.fill();
+        c.strokeStyle = F.kante; c.lineWidth = 1.4; c.stroke();
+        kern(c, F, x + 10, y, 6);
+      } else if (sl === "kristall") {
+        c.shadowColor = F.akzent; c.shadowBlur = 10;
+        flaeche(c, F.hell, [x + 30, y, x, y - 8, x - 22, y, x, y + 8], .95);
+        linie(c, F.zweit || F.licht, 1.2, [[x + 30, y], [x - 22, y]], .9);
+      } else {
+        bogen(c, F.akzent, 2, x, y, 10, 0, 6.283, .9);
+        bogen(c, F.akzent, 1.2, x, y, 16, 0, 6.283, .45);
+        kern(c, F, x, y, 6);
+      }
+      c.restore();
+    });
+    if (S >= 3) {
+      const x0 = G.maxX - 6;
+      c.save();
+      if (sl === "metall") {
+        c.fillStyle = F.waffe; rundRechteck(c, x0 - 8, -4, 46, 8, 2); c.fill();
+        c.fillStyle = F.panzer; rundRechteck(c, x0 - 14, -8, 18, 16, 3); c.fill();
+        punktReihe(c, F.akzent, [[x0 + 40, 0]], 3.2);
+      } else if (sl === "organisch") {
+        c.shadowColor = F.akzent; c.shadowBlur = 10; flaeche(c, F.waffe, [x0 - 6, -9, x0 + 44, 0, x0 - 6, 9]);
+      } else if (sl === "kristall") {
+        c.shadowColor = F.akzent; c.shadowBlur = 12; flaeche(c, F.licht, [x0 - 8, -5, x0 + 52, 0, x0 - 8, 5]);
+      } else kern(c, F, x0 + 18, 0, 12);
+      c.restore();
+    }
+    if (S >= 5) [-1, 1].forEach(function (sg) {
+      const x = G.minX * .55 + 20, y = sg * (G.maxY - 4);
+      c.save();
+      if (sl === "metall") {
+        linie(c, F.waffe, 4, [[x, y - 3], [x + 30, y - 3]]);
+        linie(c, F.waffe, 4, [[x, y + 3], [x + 30, y + 3]]);
+        c.fillStyle = F.panzer; c.beginPath(); c.arc(x, y, 10, 0, 6.283); c.fill();
+        c.strokeStyle = F.kante; c.lineWidth = 1.4; c.stroke();
+        punktReihe(c, F.akzent, [[x, y]], 3);
+      } else if (sl === "organisch") {
+        c.translate(x, y); c.rotate(sg * -.5); c.shadowColor = F.akzent; c.shadowBlur = 8;
+        flaeche(c, F.waffe, [-6, -6, 30, 0, -6, 6]);
+      } else if (sl === "kristall") {
+        c.translate(x, y); c.shadowColor = F.akzent; c.shadowBlur = 8;
+        [-.5, 0, .5].forEach(function (w) { c.save(); c.rotate(w + sg * .78); flaeche(c, F.waffe, [0, -4, 26, 0, 0, 4]); c.restore(); });
+      } else kern(c, F, x, y, 9);
+      c.restore();
+    });
+  }
+
+  /* V2: weitere Stufen-Bauteile - jede Stufe veraendert die Silhouette.
+     Leben 2: Panzergurt  ·  Leben 4: grosse Fluegel
+     Schaden 2: Seitenkanonen  ·  Schaden 4: Energieleitungen + grosser Kern */
+  function stufenTeile(c, T, F, sl, st) {
+    const G = grenzen(T), L = st.leben || 0, S = st.schaden || 0;
+    if (L >= 2) {
+      c.save();
+      T.rumpf(c); c.clip();
+      T.rumpf(c); c.strokeStyle = F.panzer; c.lineWidth = 6 + L * 2; c.globalAlpha = .85; c.lineJoin = "round"; c.stroke();
+      c.strokeStyle = F.livree || F.akzent; c.lineWidth = 1.5; c.globalAlpha = .9; c.setLineDash([8, 6]);
+      c.save(); c.scale(.86, .82); T.rumpf(c); c.stroke(); c.restore();
+      c.restore();
+    }
+    if (S >= 2) [-1, 1].forEach(function (sg) {
+      const x = G.maxX * .3, y = sg * G.maxY * .72;
+      c.save();
+      if (sl === "metall") {
+        linie(c, F.waffe, 3.5, [[x, y], [x + 26, y]]);
+        c.fillStyle = F.panzer; rundRechteck(c, x - 9, y - 6, 16, 12, 3); c.fill();
+        c.strokeStyle = F.kante; c.lineWidth = 1; c.stroke();
+      } else if (sl === "organisch") {
+        c.translate(x, y); c.rotate(sg * -.3); c.shadowColor = F.akzent; c.shadowBlur = 6;
+        flaeche(c, F.waffe, [-4, -5, 24, 0, -4, 5]);
+      } else if (sl === "kristall") {
+        c.shadowColor = F.akzent; c.shadowBlur = 8; flaeche(c, F.waffe, [x - 6, y - 4, x + 26, y, x - 6, y + 4]);
+      } else kern(c, F, x + 8, y, 7);
+      c.restore();
+    });
+    if (S >= 4) {
+      c.save(); c.shadowColor = F.akzent; c.shadowBlur = 10;
+      linie(c, F.akzent, 2.4, [[G.minX * .7, -G.maxY * .3], [G.maxX * .7, -G.maxY * .12]], .85);
+      linie(c, F.akzent, 2.4, [[G.minX * .7, G.maxY * .3], [G.maxX * .7, G.maxY * .12]], .85);
+      c.restore();
+      kern(c, F, 0, 0, 16 + S * 2);
+    }
+  }
+  function fluegelMalen(c, T, F, sl) {
+    const G = grenzen(T);
+    [-1, 1].forEach(function (sg) {
+      const x = G.minX * .45, y0 = sg * (G.maxY * .6), y1 = sg * (G.maxY + 34);
+      const p = [x + 46, y0, x - 6, y1, x - 30, y1 - sg * 4, x - 14, y0];
+      c.save();
+      if (sl === "organisch") {
+        flaeche(c, F.mitte, p, .85);
+        ader(c, F, [[x + 30, y0], [x - 4, (y0 + y1) / 2], [x - 20, y1]]);
+      } else if (sl === "kristall") {
+        c.shadowColor = F.akzent; c.shadowBlur = 10; flaeche(c, F.hell, p, .9);
+        linie(c, F.zweit || F.licht, 1.4, [[x + 40, y0], [x - 10, y1]], .9);
+      } else if (sl === "geist") {
+        flaeche(c, F.segel || F.mitte, p, .45);
+        linie(c, F.akzent, 1.4, [[x + 40, y0], [x - 6, y1]], .6);
+      } else {
+        flaeche(c, F.panzer, p);
+        c.strokeStyle = F.kante; c.lineWidth = 1.4; pfad(c, p); c.stroke();
+        linie(c, F.livree || F.akzent, 3, [[x + 30, y0 + sg * 4], [x - 4, y1 - sg * 4]], .95);
+      }
+      c.restore();
+    });
+  }
+
+  /* Stufe 5 Leben: eine zweite, groessere Panzerhuelle hinter dem Rumpf. */
+  function huelleMalen(c, T, F, sl) {
+    c.save();
+    c.scale(1.1, 1.16);
+    T.rumpf(c);
+    c.fillStyle = F.panzer; c.globalAlpha = .9; c.fill();
+    c.setLineDash(sl === "metall" ? [14, 5] : sl === "kristall" ? [6, 3] : []);
+    c.strokeStyle = F.livree || F.akzent; c.lineWidth = 3; c.shadowColor = F.akzent; c.shadowBlur = 10;
+    c.stroke();
+    c.restore();
+  }
+
+  /* Rang aus dem Schnitt der drei Ausbaustufen: ab 3 Bronze, 4 Silber, 5 Gold. */
+  const RANG_FARBE = { 1: "#d9925a", 2: "#d6e4f0", 3: "#ffd45a" };
+  function rang(st) {
+    const s = st || {}, m = ((s.leben || 0) + (s.schaden || 0) + (s.spezial || 0)) / 3;
+    return m >= 4.67 ? 3 : m >= 3.67 ? 2 : m >= 2.67 ? 1 : 0;
+  }
+
+  /* Wappen je Partei - fuer das VS der Start-Animation und Karten. */
+  function emblem(c, partei, x, y, r, zeit) {
+    const F = farben()[partei] || farben().menschen;
+    const a0 = c.globalAlpha;
+    c.save();
+    c.translate(x, y);
+    c.globalAlpha = a0 * .75;
+    c.drawImage(glimmen(F.akzent, F.licht), -r * 1.7, -r * 1.7, r * 3.4, r * 3.4);
+    c.globalAlpha = a0;
+    c.fillStyle = F.tief; c.beginPath(); c.arc(0, 0, r, 0, 6.283); c.fill();
+    c.lineWidth = r * .07; c.strokeStyle = F.akzent; c.shadowColor = F.akzent; c.shadowBlur = r * .3; c.stroke();
+    c.shadowBlur = 0; c.lineWidth = r * .02; c.strokeStyle = F.kante;
+    c.beginPath(); c.arc(0, 0, r * .84, 0, 6.283); c.stroke();
+    c.save();
+    c.rotate((zeit || 0) * .0004);
+    c.strokeStyle = F.livree || F.akzent; c.lineWidth = r * .045; c.lineCap = "round";
+    for (let k = 0; k < 12; k++) { c.rotate(.5236); c.beginPath(); c.moveTo(r * .89, 0); c.lineTo(r * .96, 0); c.stroke(); }
+    c.restore();
+    c.scale(r / 50, r / 50);
+    c.lineJoin = "round"; c.lineCap = "round";
+    if (partei === "aliens") {
+      c.fillStyle = F.akzent; c.shadowColor = F.akzent; c.shadowBlur = 10;
+      for (let k = 0; k < 3; k++) {
+        c.save(); c.rotate(k * 2.094);
+        c.beginPath(); c.moveTo(-6, -10); c.quadraticCurveTo(-16, -30, 6, -38); c.quadraticCurveTo(-2, -26, 7, -12); c.closePath(); c.fill();
+        c.restore();
+      }
+      c.shadowBlur = 0;
+      c.fillStyle = F.licht; c.beginPath(); c.ellipse(0, 0, 11, 7, 0, 0, 6.283); c.fill();
+      c.fillStyle = F.dunkel; c.beginPath(); c.ellipse(0, 0, 2.5, 6.5, 0, 0, 6.283); c.fill();
+    } else if (partei === "piraten") {
+      [-1, 1].forEach(function (sg) {
+        linie(c, F.waffe, 4, [[-26 * sg, 26], [26 * sg, -26]]);
+        linie(c, F.zweit, 4, [[-26 * sg - 6, 18], [-26 * sg + 8 * sg, 32]]);
+      });
+      c.fillStyle = F.licht; c.beginPath(); c.arc(0, -4, 16, 0, 6.283); c.fill();
+      rundRechteck(c, -9, 6, 18, 12, 3); c.fill();
+      c.fillStyle = F.segel; c.beginPath(); c.arc(0, -4, 16.5, Math.PI * 1.08, Math.PI * 1.92); c.closePath(); c.fill();
+      c.fillStyle = F.tief;
+      c.beginPath(); c.arc(-6, -3, 4.5, 0, 6.283); c.arc(6, -3, 4.5, 0, 6.283); c.fill();
+      pfad(c, [0, 2, -2.5, 7, 2.5, 7]); c.fill();
+      linie(c, F.tief, 1.4, [[-4, 12], [-4, 17]]); linie(c, F.tief, 1.4, [[0, 12], [0, 17]]); linie(c, F.tief, 1.4, [[4, 12], [4, 17]]);
+    } else if (partei === "maschinen") {
+      c.beginPath();
+      for (let k = 0; k < 32; k++) { const a = k / 32 * 6.283, rr = Math.floor(k / 2) % 2 ? 26 : 34; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+      c.closePath();
+      const gr = c.createLinearGradient(0, -34, 0, 34); gr.addColorStop(0, F.hell); gr.addColorStop(1, F.dunkel);
+      c.fillStyle = gr; c.fill(); c.strokeStyle = F.kante; c.lineWidth = 1.5; c.stroke();
+      c.fillStyle = F.dunkel; c.beginPath(); c.arc(0, 0, 15, 0, 6.283); c.fill();
+      c.fillStyle = F.akzent; c.shadowColor = F.akzent; c.shadowBlur = 14; c.beginPath(); c.arc(0, 0, 7, 0, 6.283); c.fill();
+      c.shadowBlur = 0; c.fillStyle = F.licht; c.beginPath(); c.arc(-2, -2, 2, 0, 6.283); c.fill();
+    } else if (partei === "kristall") {
+      const gr = c.createLinearGradient(-22, -36, 22, 36);
+      gr.addColorStop(0, F.hell); gr.addColorStop(.5, F.mitte); gr.addColorStop(1, F.dunkel);
+      c.fillStyle = gr; pfad(c, [0, -36, 22, -8, 0, 36, -22, -8]); c.fill();
+      c.strokeStyle = F.kante; c.lineWidth = 1.5; c.stroke();
+      linie(c, F.kante, 1, [[0, -36], [0, 36]], .6);
+      linie(c, F.kante, 1, [[-22, -8], [22, -8]], .6);
+      linie(c, F.kante, 1, [[-22, -8], [0, 36], [22, -8]], .35);
+      c.shadowBlur = 10;
+      c.shadowColor = F.akzent; flaeche(c, F.akzent, [-34, -2, -27, -18, -22, 6]);
+      c.shadowColor = F.zweit; flaeche(c, F.zweit, [34, -2, 27, -18, 22, 6]);
+    } else if (partei === "geister") {
+      const gr = c.createLinearGradient(0, -36, 0, 32);
+      gr.addColorStop(0, F.licht); gr.addColorStop(.5, F.akzent); gr.addColorStop(1, F.dunkel);
+      c.fillStyle = gr; c.shadowColor = F.akzent; c.shadowBlur = 14; c.globalAlpha = a0 * .92;
+      c.beginPath();
+      c.moveTo(0, -36);
+      c.bezierCurveTo(18, -18, 22, 8, 15, 22);
+      c.quadraticCurveTo(11, 34, 5, 25); c.quadraticCurveTo(0, 34, -5, 25); c.quadraticCurveTo(-11, 34, -15, 22);
+      c.bezierCurveTo(-22, 8, -18, -18, 0, -36);
+      c.fill();
+      c.globalAlpha = a0; c.shadowBlur = 0; c.fillStyle = F.tief;
+      c.beginPath(); c.ellipse(-6, -2, 3.5, 5, 0, 0, 6.283); c.ellipse(6, -2, 3.5, 5, 0, 0, 6.283); c.fill();
+    } else {
+      const gr = c.createLinearGradient(0, -32, 0, 34); gr.addColorStop(0, F.hell); gr.addColorStop(1, F.dunkel);
+      c.fillStyle = gr; pfad(c, [0, -32, 26, -22, 22, 12, 0, 32, -22, 12, -26, -22]); c.fill();
+      c.strokeStyle = F.kante; c.lineWidth = 2; c.stroke();
+      c.fillStyle = F.livree || F.akzent; pfad(c, [-15, 8, 0, -8, 15, 8, 15, 17, 0, 1, -15, 17]); c.fill();
+      c.fillStyle = F.zweit || F.licht; c.beginPath();
+      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * .6283, rr = k % 2 ? 2.4 : 6; c.lineTo(Math.cos(a) * rr, -18 + Math.sin(a) * rr); }
+      c.closePath(); c.fill();
+    }
+    c.restore();
+  }
+
+  /* V2: Material fuer jeden Rumpf - Licht von oben links, Innenschatten,
+     Naehte und Aufbauten (Metall), Membranflecken (organisch),
+     Brechungsflaechen (Kristall), Spektralstreifen (Geist). */
+  function veredeln(c, T, F, sl, typ) {
+    const G = grenzen(T), r = zz("ved" + typ), breit = G.maxX - G.minX;
+    c.save();
+    T.rumpf(c); c.clip();
+    const gr = c.createLinearGradient(-40, -90, 40, 90);
+    gr.addColorStop(0, "rgba(255,255,255,.2)"); gr.addColorStop(.35, "rgba(255,255,255,0)");
+    gr.addColorStop(.65, "rgba(0,0,0,0)"); gr.addColorStop(1, "rgba(0,0,0,.5)");
+    c.fillStyle = gr; c.fillRect(-170, -125, 340, 250);
+    c.save(); T.rumpf(c); c.strokeStyle = "rgba(0,0,0,.4)"; c.lineWidth = 14; c.lineJoin = "round"; c.stroke(); c.restore();
+    if (sl === "metall") {
+      c.strokeStyle = F.tief; c.globalAlpha = .55; c.lineWidth = 1;
+      for (let x = G.minX + 18; x < G.maxX - 10; x += 22 + r() * 10) { c.beginPath(); c.moveTo(x, -100); c.lineTo(x + 6, 100); c.stroke(); }
+      c.globalAlpha = .75;
+      for (let i = 0; i < 16; i++) {
+        const x = G.minX + r() * breit, y = (r() - .5) * G.maxY * 1.6;
+        c.fillStyle = r() < .5 ? F.panzer : F.dunkel; c.fillRect(x, y, 3 + r() * 8, 2 + r() * 3);
+      }
+      c.globalAlpha = .4; c.strokeStyle = F.kante; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(G.minX + 10, -G.maxY * .6); c.lineTo(G.maxX * .8, -G.maxY * .22); c.stroke();
+    } else if (sl === "organisch") {
+      for (let i = 0; i < 12; i++) {
+        const x = G.minX + r() * breit, y = (r() - .5) * G.maxY * 1.5, rr = 6 + r() * 14;
+        const g2 = c.createRadialGradient(x, y, 0, x, y, rr);
+        g2.addColorStop(0, "rgba(0,0,0,.35)"); g2.addColorStop(1, "rgba(0,0,0,0)");
+        c.fillStyle = g2; c.fillRect(x - rr, y - rr, rr * 2, rr * 2);
+      }
+      const g3 = c.createRadialGradient(0, 0, 0, 0, 0, 90);
+      g3.addColorStop(0, F.akzent); g3.addColorStop(1, F.akzent + "00");
+      c.globalAlpha = .22; c.fillStyle = g3; c.fillRect(-170, -125, 340, 250);
+    } else if (sl === "kristall") {
+      for (let i = 0; i < 7; i++) {
+        const x = G.minX + r() * breit, y = (r() - .5) * G.maxY * 1.4;
+        c.globalAlpha = .12 + r() * .14; c.fillStyle = i % 2 ? F.hell : (F.zweit || F.licht);
+        pfad(c, [x, y, x + 20 + r() * 30, y - 10 - r() * 20, x + 10 + r() * 20, y + 14 + r() * 14]); c.fill();
+      }
+    } else if (sl === "geist") {
+      c.globalAlpha = .16; c.strokeStyle = F.licht; c.lineWidth = 1;
+      for (let y = -96; y < 96; y += 6) { c.beginPath(); c.moveTo(-170, y); c.lineTo(170, y); c.stroke(); }
+    }
+    c.restore();
+    c.save();
+    T.rumpf(c); c.strokeStyle = F.kante; c.lineWidth = 1.2; c.globalAlpha = .8; c.lineJoin = "round"; c.stroke();
+    c.restore();
+  }
+
+  /* V2: sichtbare Duesen mit gluehender Oeffnung statt nur Flammen. */
+  function duesenMalen(c, T, F, sl) {
+    T.motoren.forEach(function (m) {
+      c.save();
+      if (sl === "metall") {
+        c.fillStyle = F.dunkel; rundRechteck(c, m.x - 2, m.y - m.r, m.r * 1.4, m.r * 2, m.r * .4); c.fill();
+        c.strokeStyle = F.kante; c.lineWidth = 1; c.globalAlpha = .7; c.stroke(); c.globalAlpha = 1;
+      } else if (sl === "organisch") {
+        c.fillStyle = F.panzer; c.beginPath(); c.ellipse(m.x + 2, m.y, m.r * .8, m.r * 1.05, 0, 0, 6.283); c.fill();
+      } else if (sl === "kristall") {
+        flaeche(c, F.mitte, [m.x + m.r, m.y - m.r, m.x - m.r * .4, m.y, m.x + m.r, m.y + m.r]);
+      }
+      const g = c.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r);
+      g.addColorStop(0, F.flammeKern); g.addColorStop(.5, F.flamme); g.addColorStop(1, F.flamme + "00");
+      c.fillStyle = g; c.beginPath(); c.ellipse(m.x, m.y, m.r * .55, m.r * .9, 0, 0, 6.283); c.fill();
+      c.restore();
+    });
+  }
+
   function schiffMalen(c, typ, seite, stufen, aus) {
     const T = TYPEN[typ];
     if (!T) return;
@@ -877,13 +1412,24 @@
     const sl = stil(seite);
     const st = stufen || {};
     const kante = 2.2 + 0.35 * (st.leben || 0);
+    /* V2: das Schiff waechst mit dem Ausbau (bis +30 %). */
+    const wachs = 1 + 0.03 * ((st.leben || 0) + (st.schaden || 0));
     const einzeln = function () {
+      c.save(); c.scale(wachs, wachs);
       if (T.vorher) T.vorher(c, F);
+      if ((st.leben || 0) >= 4) fluegelMalen(c, T, F, sl);
+      if ((st.leben || 0) >= 5) huelleMalen(c, T, F, sl);
       rumpfMalen(c, T, F, sl, kante);
+      veredeln(c, T, F, sl, typ);
+      duesenMalen(c, T, F, sl);
       T.details(c, F);
+      signaturMalen(c, T, F, seite, typ);
       panzerMalen(c, T, F, sl, st.leben || 0);
       waffenMalen(c, T, F, sl, st.schaden || 0);
+      ausbauTeile(c, T, F, sl, st);
+      stufenTeile(c, T, F, sl, st);
       ausruestungMalen(c, T, F, aus);
+      c.restore();
     };
     if (T.paar) {
       T.paar.forEach(function (p) {
@@ -909,7 +1455,7 @@
   /* ------------------------------------------------------
      SPRITES
   ------------------------------------------------------ */
-  const BOX_B = 300, BOX_H = 200;   // Rand fuer Leuchten um 260 x 160
+  const BOX_B = 440, BOX_H = 320;   // V2: Platz fuer Wachstum und Ausleger   // Rand fuer Leuchten um 260 x 160
   const sprites = new Map();
   const glimm = {};
 
@@ -968,6 +1514,19 @@
     ctx.translate(o.x, o.y);
     ctx.rotate(o.winkel || 0);
 
+    /* V2: Rang-Leuchten ab Stufe 3 (Bronze, Silber, Gold) */
+    const rg = rang(st), wz = 1 + .03 * ((st.leben || 0) + (st.schaden || 0));
+    if (rg) {
+      const fa = RANG_FARBE[rg], puls = o.ruhig ? .7 : .7 + .3 * Math.sin(zeit * .0025 + phase);
+      ctx.globalAlpha = A * (.18 + .1 * rg) * puls;
+      ctx.drawImage(glimmen(fa, "#fff6dc"), -150 * skala * wz, -104 * skala * wz, 300 * skala * wz, 208 * skala * wz);
+      ctx.globalAlpha = A * .85;
+      ctx.strokeStyle = fa; ctx.lineWidth = Math.max(1, 3 * skala);
+      ctx.setLineDash([16 * skala, 10 * skala]); ctx.lineDashOffset = o.ruhig ? 0 : -zeit * .01;
+      ctx.beginPath(); ctx.ellipse(0, 0, 142 * skala * wz, 112 * skala * wz, 0, 0, 6.283); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = A;
+    }
+
     /* Aura (Spezial-Stufe) */
     if (st.spezial > 0) {
       const puls = o.ruhig ? 0.5 : 0.5 + 0.5 * Math.sin(zeit * 0.003 + phase);
@@ -988,7 +1547,58 @@
     });
     ctx.globalAlpha = A;
 
+    /* V2: Geister ziehen Nachbilder hinter sich her */
+    if (o.seite === "geister" && !o.ruhig) {
+      [1, 2].forEach(function (k) {
+        ctx.globalAlpha = A * (.26 / k);
+        ctx.drawImage(sp, -sp.width / dpr / 2 - k * 26 * skala + Math.sin(zeit * .003 + phase + k) * 6 * skala,
+          -sp.height / dpr / 2 + Math.sin(zeit * .002 + k + phase) * 8 * skala, sp.width / dpr, sp.height / dpr);
+      });
+      ctx.globalAlpha = A;
+    }
     ctx.drawImage(sp, -sp.width / dpr / 2, -sp.height / dpr / 2, sp.width / dpr, sp.height / dpr);
+
+    /* V2: bewegte Partei-Signatur */
+    const G = grenzen(T), zt = o.ruhig ? 0 : zeit;
+    if (o.seite === "menschen") {
+      if (o.ruhig || Math.sin(zt * .006 + phase) > .55) {
+        [[-1, "#ff4a4a"], [1, "#4aff8a"]].forEach(function (n) {
+          ctx.drawImage(glimmen(n[1], "#ffffff"), (G.minX * .55 - 9) * skala, (n[0] * (G.maxY + 4) - 9) * skala, 18 * skala, 18 * skala);
+        });
+      }
+    } else if (o.seite === "aliens") {
+      ctx.globalAlpha = A * (.16 + .14 * Math.sin(zt * .004 + phase));
+      ctx.drawImage(glimmen(F.akzent, F.licht), -100 * skala, -66 * skala, 200 * skala, 132 * skala);
+    } else if (o.seite === "maschinen") {
+      const yy = Math.sin(zt * .003 + phase) * G.maxY * .85;
+      ctx.globalAlpha = A * .7; ctx.strokeStyle = F.akzent; ctx.lineWidth = Math.max(1, 2 * skala);
+      ctx.beginPath(); ctx.moveTo(G.minX * .6 * skala, yy * skala); ctx.lineTo(G.maxX * .85 * skala, yy * skala); ctx.stroke();
+    } else if (o.seite === "kristall") {
+      const r = zz("gl" + Math.floor(zt / 260 + phase) + o.typ);
+      for (let i = 0; i < 2; i++) {
+        const gx = (G.minX + r() * (G.maxX - G.minX)) * skala * .8, gy = (r() - .5) * G.maxY * 1.4 * skala, s = (12 + r() * 16) * skala;
+        ctx.globalAlpha = A * .9;
+        ctx.drawImage(glimmen(F.zweit, "#ffffff"), gx - s / 2, gy - s / 2, s, s);
+      }
+    } else if (o.seite === "piraten") {
+      ctx.globalAlpha = A * (.55 + .3 * Math.sin(zt * .02 + phase) * Math.sin(zt * .013));
+      const s = 34 * skala;
+      ctx.drawImage(glimmen(F.zweit, "#fff4d0"), G.minX * .8 * skala - s / 2, -s / 2, s, s);
+    }
+    ctx.globalAlpha = A;
+
+    /* V2: ab Spezial 3 kreisen 1-3 Begleitdrohnen um das Schiff */
+    if ((st.spezial || 0) >= 3) {
+      const n = st.spezial - 2;
+      for (let i = 0; i < n; i++) {
+        const a = (o.ruhig ? 0 : zeit * .0012) + phase + i * 6.283 / n;
+        const sx = Math.cos(a) * 150 * skala * wz, sy = Math.sin(a) * 104 * skala * wz;
+        ctx.globalAlpha = A * (Math.sin(a) > 0 ? 1 : .55);
+        ctx.drawImage(glimmen(F.akzent, F.licht), sx - 18 * skala, sy - 18 * skala, 36 * skala, 36 * skala);
+        ctx.fillStyle = F.kante; ctx.beginPath(); ctx.arc(sx, sy, Math.max(1.5, 5 * skala), 0, 6.283); ctx.fill();
+      }
+      ctx.globalAlpha = A;
+    }
 
     /* Deflektorschild (58): ein feiner Schimmer um das Schiff */
     if (mod.indexOf("schild") >= 0) {
@@ -1023,6 +1633,16 @@
       ctx.globalAlpha = A;
     }
     ctx.restore();
+
+    /* V2: Rangwinkel ueber dem Schiff (nicht mitgedreht) */
+    if (rg && o.breite >= 46) {
+      const fa = RANG_FARBE[rg], bx = o.x, by = o.y - o.breite * .5 * wz;
+      ctx.save();
+      ctx.globalAlpha = A; ctx.strokeStyle = fa; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.shadowColor = fa; ctx.shadowBlur = 6;
+      for (let k = 0; k < rg; k++) { const yy = by - k * 5; ctx.beginPath(); ctx.moveTo(bx - 6, yy); ctx.lineTo(bx, yy - 4); ctx.lineTo(bx + 6, yy); ctx.stroke(); }
+      ctx.restore();
+    }
   }
 
   /* Standbild fuer den Hangar (Flamme und Aura ruhend). */
@@ -1062,6 +1682,9 @@
     motorPunkte: motorPunkte,
     farbe: function (seite) { return farben()[seite] || farben().menschen; },
     stil: stil,
+    emblem: emblem,
+    rang: rang,
+    RANG_FARBE: RANG_FARBE,
     WAFFEN_FARBE: WAFFEN_FARBE,
     TYPEN: Object.keys(TYPEN),
   };

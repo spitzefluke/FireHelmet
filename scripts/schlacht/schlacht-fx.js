@@ -63,6 +63,8 @@
     sonde: "puls", waechter: "strahl", zerstoerer: "rail", fabrik: "reparatur",
     splitter: "splitter", prisma: "strahl", resonator: "schall", monolith: "reparatur",
     irrlicht: "puls", phantom: "laser", banshee: "schall", totenschiff: "breitseite",
+    /* Design V2 (63): der fuenfte Typ je Partei */
+    schlachtschiff: "rail", koenigin: "brut", rammer: "breitseite", titan: "strahl", kathedrale: "splitter", leviathan: "schall",
     mutterschiff: "strahl",
   };
   /* Zielschuss mit Sonderwaffe (58) */
@@ -462,9 +464,9 @@
      GROSSSCHIFFE IM HINTERGRUND
   ------------------------------------------------------ */
   const GROSS_TYPEN = {
-    menschen: ["kreuzer", "traeger", "kreuzer", "fregatte"], aliens: ["brutschiff", "weber", "brutschiff", "stachel"],
-    piraten: ["galeone", "brigant", "galeone", "schmuggler"], maschinen: ["zerstoerer", "fabrik", "waechter", "zerstoerer"],
-    kristall: ["monolith", "prisma", "monolith", "resonator"], geister: ["totenschiff", "phantom", "totenschiff", "banshee"],
+    menschen: ["schlachtschiff", "traeger", "kreuzer", "fregatte"], aliens: ["koenigin", "weber", "brutschiff", "stachel"],
+    piraten: ["galeone", "brigant", "rammer", "schmuggler"], maschinen: ["titan", "fabrik", "waechter", "zerstoerer"],
+    kristall: ["kathedrale", "prisma", "monolith", "resonator"], geister: ["leviathan", "phantom", "totenschiff", "banshee"],
   };
   /* Welche Partei links bzw. rechts kaempft (schlacht.js setzt das). */
   let grossLinks = "menschen", grossRechts = "aliens";

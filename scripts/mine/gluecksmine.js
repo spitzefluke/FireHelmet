@@ -18,6 +18,14 @@
 
    Der Fels ist ein Canvas mit Funken und Brocken - reine Optik.
    Bei "Bewegung reduzieren" ohne Brocken und Wackeln.
+
+   BLOECKE UND RAUMERZ (Migration 64): Statt eines endlosen Felsens
+   liegt immer ein Block vor dir - Stein, Eisen, Goldader, Kristall
+   oder (jeder 30.) Raumerz -, jeder mit eigenem Leben. Ein Hieb zieht
+   so viel ab, wie die Spitzhacke Stufen hat. Die Anzeige zieht die
+   geklickten, noch nicht verbuchten Hiebe schon ab; welcher Block
+   danach kommt, sagt erst die Datenbank. Raumerz bezahlt im Hangar
+   die Stufen 1..15.
 ====================================================== */
 
 (function () {
@@ -52,6 +60,17 @@
   let canvas = null, ctx = null, raf = 0, B = 1, H = 1, D = 1;
   let teilchen = [], wackeln = 0, risse = [];
   let zeitVersatz = 0;
+  let unterwegsN = 0;          // gesendete, noch unbeantwortete Hiebe
+  let blockSeit = 0;           // wann der aktuelle Block erschienen ist
+
+  /* Bloecke (wie 64-raumerz.sql): Farben fuer den Canvas. */
+  const BLOCK_FARBE = {
+    stein:    { grund: "#5c4c3c", hell: "#8a7660", ader: "#a8957c" },
+    eisen:    { grund: "#4c545d", hell: "#8f9aa6", ader: "#c9d2db" },
+    gold:     { grund: "#5a4526", hell: "#9a7a3e", ader: "#f0c96a" },
+    kristall: { grund: "#1f4a52", hell: "#3f8f96", ader: "#7affea" },
+    raumerz:  { grund: "#24183f", hell: "#5b3fa0", ader: "#c4a6ff" },
+  };
 
   function seiteOffen() {
     const s = document.getElementById("gluecksmine");
@@ -66,6 +85,7 @@
 
   function uebernehmen(d) {
     if (!d) return;
+    if (d.block && (!stand || !stand.block || (d.gebrochen && d.gebrochen.length))) blockSeit = performance.now();
     stand = Object.assign({}, stand || {}, d);
     if (d.jetzt) zeitVersatz = Date.parse(d.jetzt) - Date.now();
   }
@@ -93,6 +113,7 @@
     if (window.fhSchlachtKlang && window.fhSchlachtKlang.sfx) window.fhSchlachtKlang.sfx("treffer", true);
     if (!RUHIG.matches) { wackeln = 6; risse.push({ x: x, y: y, t0: performance.now(), w: Math.random() * 6.283 }); if (risse.length > 12) risse.shift(); }
     if (!sendeUhr) sendeUhr = setTimeout(senden, 600);
+    blockAnzeigen();
   }
 
   async function senden() {
@@ -100,9 +121,11 @@
     if (unterwegs || !wartend) return;
     const n = Math.min(20, wartend);
     wartend -= n;
+    unterwegsN = n;
     unterwegs = true;
     try {
       const d = await rpc("mine_hacken", { p_anzahl: n });
+      unterwegsN = 0;   // verbucht - nicht noch einmal vom Block abziehen
       if (d && d.ok) {
         uebernehmen(d);
         fund(d);
@@ -115,21 +138,34 @@
       status(fehlerText(null), true);
     } finally {
       unterwegs = false;
+      unterwegsN = 0;
       if (wartend) sendeUhr = setTimeout(senden, 600);
     }
   }
 
-  /* Was die Datenbank gewuerfelt hat, gross zeigen. */
+  /* Was die Datenbank gewuerfelt hat, gross zeigen. Seit 64 zaehlen
+     die zerbrochenen Bloecke ("gebrochen"); das Seltenste gewinnt.
+     Ohne 64 (kein "block") gelten die Betraege aus 61. */
   function fund(d) {
     const mx = B / 2, my = H * 0.45;
-    if (d.edelsteine > 0) {
+    const g = d.gebrochen || [];
+    const h = d.hacke || 1;
+    if (g.indexOf("raumerz") >= 0) {
+      funken(mx, my, 80, "#c4a6ff");
+      funken(mx, my, 30, "#5ff3ff");
+      status(t("mine.raumerzFund", "Raumerz! +{n} Raumerz").replace("{n}", zahl(d.raumerz_neu || 1)), false, "ist-raumerz");
+      if (window.fhSchlachtKlang) window.fhSchlachtKlang.akzent("sieg");
+    } else if (d.edelsteine > 0) {
       funken(mx, my, 60, "#7affea");
-      status(t("mine.edelstein", "Ein Edelstein! +{n} Erz").replace("{n}", zahl(500 * d.hacke * d.edelsteine)), false, "ist-edelstein");
+      status(t("mine.edelstein", "Ein Edelstein! +{n} Erz").replace("{n}", zahl((d.block ? 400 : 500) * h * d.edelsteine)), false, "ist-edelstein");
       if (window.fhSchlachtKlang) window.fhSchlachtKlang.akzent("sieg");
     } else if (d.goldadern > 0) {
       funken(mx, my, 32, "#f0c96a");
-      status(t("mine.goldader", "Goldader! +{n} Erz").replace("{n}", zahl(20 * d.hacke * d.goldadern)), false, "ist-gold");
+      status(t("mine.goldader", "Goldader! +{n} Erz").replace("{n}", zahl((d.block ? 100 : 20) * h * d.goldadern)), false, "ist-gold");
       if (window.fhSchlachtKlang) window.fhSchlachtKlang.akzent("ort");
+    } else if (g.length) {
+      funken(mx, my, 20, "#d9c8b0");
+      status(t("mine.zerbrochen", "Block zerbrochen! +{n} Erz").replace("{n}", zahl(d.ertrag)), false);
     } else {
       status("+" + zahl(d.ertrag) + " " + t("mine.erz", "Erz"), false);
     }
@@ -215,16 +251,20 @@
     const konto = el("div", "mn-konto");
     konto.append(el("span", "mn-konto-zahl"), el("span", "mn-konto-name", t("mine.erz", "Erz")));
     konto.firstChild.id = "mine-erz";
+    const kontoR = el("div", "mn-konto ist-raumerz");
+    kontoR.append(el("span", "mn-konto-zahl"), el("span", "mn-konto-name", t("mine.raumerz", "Raumerz")));
+    kontoR.firstChild.id = "mine-raumerz";
+    if (stand.raumerz == null) kontoR.hidden = true;   // ohne Migration 64
     const werte = el("p", "mn-werte");
     werte.id = "mine-werte";
-    kopf.append(konto, werte);
+    kopf.append(konto, kontoR, werte);
 
     const fels = el("div", "mn-fels");
     canvas = el("canvas", "mn-canvas");
     canvas.id = "mine-canvas";
     canvas.setAttribute("role", "button");
     canvas.setAttribute("tabindex", "0");
-    canvas.setAttribute("aria-label", t("mine.hackenAria", "Fels – tippen oder Leertaste zum Hacken"));
+    canvas.setAttribute("aria-label", t("mine.hackenAria", "Block – tippen oder Leertaste zum Hacken"));
     canvas.addEventListener("pointerdown", function (ev) {
       const r = canvas.getBoundingClientRect();
       hacken(ev.clientX - r.left, ev.clientY - r.top);
@@ -233,6 +273,9 @@
       if (ev.key === " " || ev.key === "Enter") { ev.preventDefault(); hacken(B / 2 + (Math.random() - 0.5) * B * 0.3, H * 0.45 + (Math.random() - 0.5) * H * 0.2); }
     });
     fels.appendChild(canvas);
+    const blockText = el("p", "mn-block");
+    blockText.id = "mine-block";
+    fels.appendChild(blockText);
     const st = el("p", "mn-status");
     st.id = "mine-status";
     st.setAttribute("role", "status");
@@ -273,6 +316,9 @@
     if (!stand || stand.gesperrt) return;
     const erz = document.getElementById("mine-erz");
     if (erz) erz.textContent = zahl(stand.erz);
+    const raum = document.getElementById("mine-raumerz");
+    if (raum) raum.textContent = zahl(stand.raumerz);
+    blockAnzeigen();
     const w = document.getElementById("mine-werte");
     if (w) w.textContent = t("mine.werte", "{g} Goldadern · {e} Edelsteine · {s} Schläge")
       .replace("{g}", zahl(stand.goldadern_gesamt)).replace("{e}", zahl(stand.edelsteine_gesamt)).replace("{s}", zahl(stand.schlaege_gesamt));
@@ -281,11 +327,14 @@
     if (!g) return;
     g.replaceChildren();
     [
-      ["hacke", stand.hacke, 10, t("mine.text.hacke", "{n} Erz je Schlag").replace("{n}", zahl(2 * stand.hacke))],
+      ["hacke", stand.hacke, 10, (stand.block ? t("mine.text.hackeBlock", "{n} Erz und {d} Schaden je Hieb").replace("{d}", zahl(stand.hacke))
+        : t("mine.text.hacke", "{n} Erz je Schlag")).replace("{n}", zahl(2 * stand.hacke))],
       ["bohrer", stand.bohrer, 10, t("mine.text.bohrer", "{n} Erz je Stunde").replace("{n}", zahl(60 * stand.bohrer))],
       ["lore", stand.lore, 10, t("mine.text.lore", "fasst {n} Stunden").replace("{n}", 2 + 2 * stand.lore)],
+      /* Seit 64 je Block: Gold 4 % + 2 %, Kristall 0,6 % + 0,3 % je Stufe */
       ["lampe", stand.lampe, 10, t("mine.text.lampe", "Goldader {g} % · Edelstein {e} %")
-        .replace("{g}", (2 + 1.1 * stand.lampe).toFixed(1).replace(".0", "")).replace("{e}", (0.2 + 0.1 * stand.lampe).toFixed(1))],
+        .replace("{g}", zahl(Math.round((stand.block ? 4 + 2 * stand.lampe : 2 + 1.1 * stand.lampe) * 10) / 10))
+        .replace("{e}", zahl(Math.round((stand.block ? 0.6 + 0.3 * stand.lampe : 0.2 + 0.1 * stand.lampe) * 10) / 10))],
     ].forEach(function (z) {
       const id = z[0], stufe = z[1], preis = stand.preise ? stand.preise[id] : null;
       const k = el("article", "mn-geraet");
@@ -305,6 +354,20 @@
       k.append(sym, text, b);
       g.appendChild(k);
     });
+  }
+
+  /* Leben des Blocks, wie es nach den geklickten Hieben aussieht. */
+  function blockLeben() {
+    if (!stand || !stand.block) return 0;
+    return Math.max(0, stand.block.leben - (stand.hacke || 1) * (wartend + unterwegsN));
+  }
+  function blockAnzeigen() {
+    const p = document.getElementById("mine-block");
+    if (!p) return;
+    if (!stand || !stand.block) { p.textContent = ""; return; }
+    p.textContent = t("mine.block." + stand.block.art, stand.block.art) + " · "
+      + t("mine.blockLeben", "{l} von {m} Leben").replace("{l}", zahl(blockLeben())).replace("{m}", zahl(stand.block.max));
+    p.className = "mn-block ist-" + stand.block.art;
   }
 
   function bohrerAnzeigen() {
@@ -399,6 +462,7 @@
       }
       ctx.stroke();
     });
+    if (stand && stand.block) blockZeichnen(jetzt);
     /* Lichtkegel der Grubenlampe */
     const licht = ctx.createRadialGradient(B / 2, H * 0.4, 0, B / 2, H * 0.4, Math.max(B, H) * (0.35 + 0.03 * lampe));
     licht.addColorStop(0, "rgba(255,230,180," + (0.16 + 0.015 * lampe) + ")"); licht.addColorStop(1, "rgba(0,0,0,0)");
@@ -421,8 +485,70 @@
       ctx.fillStyle = "rgba(255,240,210,.8)";
       ctx.font = "600 15px Inter, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(t("mine.tipp", "Tippe auf den Fels!"), B / 2, H * 0.9);
+      ctx.fillText(t("mine.tipp", "Hau auf den Block!"), B / 2, H * 0.9);
     }
+  }
+
+  /* Der Block in der Mitte: Umriss aus dem Seitenzufall, Adern in der
+     Farbe seiner Art, Risse je verlorenem Leben, Lebensbalken darueber. */
+  function blockZeichnen(jetzt) {
+    const b = stand.block, f = BLOCK_FARBE[b.art] || BLOCK_FARBE.stein;
+    const anteil = b.max > 0 ? blockLeben() / b.max : 0;
+    const auf = RUHIG.matches ? 1 : Math.min(1, (jetzt - blockSeit) / 260);
+    const s = Math.min(B, H) * 0.34 * (0.6 + 0.4 * (1 - Math.pow(1 - auf, 3)));
+    const cx = B / 2, cy = H * 0.47;
+    const saat = (stand.bloecke_gesamt || 0) * 7 + 3;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.globalAlpha = auf;
+    /* Umriss */
+    ctx.beginPath();
+    for (let i = 0; i < 9; i++) {
+      const w = i / 9 * 6.283 + hash(saat + i) * 0.3, r = s * (0.78 + hash(saat + i + 40) * 0.26);
+      if (i === 0) ctx.moveTo(Math.cos(w) * r, Math.sin(w) * r * 0.86); else ctx.lineTo(Math.cos(w) * r, Math.sin(w) * r * 0.86);
+    }
+    ctx.closePath();
+    const g = ctx.createLinearGradient(-s, -s, s, s);
+    g.addColorStop(0, f.hell); g.addColorStop(1, f.grund);
+    ctx.fillStyle = g;
+    if (b.art === "raumerz" || b.art === "kristall") { ctx.shadowColor = f.ader; ctx.shadowBlur = 18 + 8 * Math.sin(jetzt / 300); }
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 2; ctx.strokeStyle = "rgba(0,0,0,.45)"; ctx.stroke();
+    ctx.clip();
+    /* Adern bzw. Einschluesse */
+    ctx.strokeStyle = f.ader; ctx.lineWidth = b.art === "stein" ? 1 : 2.4;
+    ctx.globalAlpha = auf * (b.art === "stein" ? 0.35 : 0.85);
+    for (let i = 0; i < 4; i++) {
+      const y0 = (hash(saat + i * 3) - 0.5) * s * 1.4;
+      ctx.beginPath(); ctx.moveTo(-s, y0);
+      ctx.quadraticCurveTo(0, y0 + (hash(saat + i + 9) - 0.5) * s, s, y0 + (hash(saat + i + 17) - 0.5) * s * 0.6);
+      ctx.stroke();
+    }
+    if (b.art === "raumerz" || b.art === "kristall") {
+      for (let i = 0; i < 10; i++) {
+        const x = (hash(saat + i + 60) - 0.5) * s * 1.4, y = (hash(saat + i + 80) - 0.5) * s * 1.2;
+        ctx.globalAlpha = auf * (0.5 + 0.5 * Math.abs(Math.sin(jetzt / 400 + i)));
+        ctx.fillStyle = i % 3 ? f.ader : "#5ff3ff";
+        ctx.beginPath(); ctx.arc(x, y, 1.6 + hash(saat + i) * 2.4, 0, 6.283); ctx.fill();
+      }
+    }
+    /* Risse je verlorenem Leben */
+    ctx.globalAlpha = auf;
+    const risse2 = Math.round((1 - anteil) * 8);
+    ctx.strokeStyle = "rgba(10,6,4,.8)"; ctx.lineWidth = 2;
+    for (let i = 0; i < risse2; i++) {
+      const w = hash(saat + i + 120) * 6.283, l = s * (0.4 + hash(saat + i + 140) * 0.5);
+      ctx.beginPath(); ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(w) * l * 0.5, Math.sin(w) * l * 0.5);
+      ctx.lineTo(Math.cos(w + 0.25) * l, Math.sin(w + 0.25) * l);
+      ctx.stroke();
+    }
+    ctx.restore();
+    /* Lebensbalken */
+    const bb = Math.min(B * 0.5, 260), bx = cx - bb / 2, by = cy - s - 26;
+    ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fillRect(bx - 2, by - 2, bb + 4, 12);
+    ctx.fillStyle = f.ader; ctx.fillRect(bx, by, bb * anteil, 8);
   }
 
   window.updateGluecksminePage = function (pageID) {
@@ -445,5 +571,6 @@
   window.fhMine = {
     erz: function () { return stand && !stand.gesperrt ? Number(stand.erz) || 0 : null; },
     setzen: function (erz) { if (stand && !stand.gesperrt) stand.erz = erz; },
+    raumerzSetzen: function (n) { if (stand && !stand.gesperrt) stand.raumerz = n; },
   };
 })();
