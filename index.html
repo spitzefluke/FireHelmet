@@ -64,7 +64,7 @@
   <link rel="stylesheet" href="css/20-spiele.css?v=2970bf6bc5">
   <link rel="stylesheet" href="css/30-events.css?v=688de60593">
   <link rel="stylesheet" href="css/40-shop.css?v=1af16124ab">
-  <link rel="stylesheet" href="css/50-redesign.css?v=62951dbf01">
+  <link rel="stylesheet" href="css/50-redesign.css?v=83c7736372">
   <link rel="stylesheet" href="css/60-fortschritt.css?v=a07788cdb5">
   <link rel="stylesheet" href="css/65-startseite.css?v=e6eb9160d1">
   <link rel="stylesheet" href="css/70-entwurf-1c.css?v=3a8f14a3ad">
@@ -231,8 +231,8 @@
       <a class="fh-nav-item fh-flag-aus" tabindex="0" data-page="gegenhack" onclick="changePage('gegenhack')"><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"/><path d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5"/><circle cx="12" cy="9" r="2"/><path d="M16.2 4.8c2 2 2.26 5.11.8 7.47"/><path d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1"/><path d="M9.5 18h5"/><path d="m8 22 4-11 4 11"/></svg></span><span class="fh-nav-label" data-i18n="menu.gegenhack">Gegenhack</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-question"></i></span><span class="fh-nav-label" data-i18n="menu.streamraetselShort">???</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="skill-tree" data-fh-flag="skillTree" onclick="changePage('skill-tree')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-tree-structure"></i></span><span class="fh-nav-label" data-i18n="menu.skillTree">Skill-Baum</span></a>
-      <!-- Freigaben "spind" und "gluecksmine" (Migrationen 60/61) -->
-      <a class="fh-nav-item" tabindex="0" data-page="spind" data-fh-flag="spind" onclick="changePage('spind')"><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg></span><span class="fh-nav-label" data-i18n="menu.spind">Spind</span></a>
+      <!-- Freigabe "gluecksmine" (Migration 61). Der Spind (60) hat bewusst keinen
+           Menueeintrag: Er oeffnet sich nur ueber das eigene Bild unten links (avatar-wahl.js). -->
       <a class="fh-nav-item" tabindex="0" data-page="gluecksmine" data-fh-flag="gluecksmine" onclick="changePage('gluecksmine')"><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.531 12.469 6.619 20.38a1 1 0 1 1-3-3l7.912-7.912"/><path d="M15.686 4.314A12.5 12.5 0 0 0 5.461 2.958 1 1 0 0 0 5.58 4.71a22 22 0 0 1 6.318 3.393"/><path d="M17.7 3.7a1 1 0 0 0-1.4 0l-4.6 4.6a1 1 0 0 0 0 1.4l2.6 2.6a1 1 0 0 0 1.4 0l4.6-4.6a1 1 0 0 0 0-1.4z"/><path d="M19.686 8.314a12.501 12.501 0 0 1 1.356 10.225 1 1 0 0 1-1.751-.119 22 22 0 0 0-3.393-6.319"/></svg></span><span class="fh-nav-label" data-i18n="menu.gluecksmine">Glücksmine</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionMore">Mehr</p>
@@ -1900,8 +1900,8 @@
   <script src="scripts/nav/quick-search.js?v=3d1d43014e" defer></script>
   <script src="scripts/core/share.js?v=afae2a5ba3" defer></script>
   <script src="scripts/core/fire-helmet-config.js?v=5beaa7a1a9" defer></script>
-  <script src="scripts/core/nachladen.js?v=bb213734e8" defer></script>
-  <script src="scripts/core/i18n.js?v=96a98b6501" defer></script>
+  <script src="scripts/core/nachladen.js?v=966e453feb" defer></script>
+  <script src="scripts/core/i18n.js?v=6636232dfa" defer></script>
   <script src="scripts/core/audiobook-link.js?v=5ab730a9b0" defer></script>
   <script src="scripts/core/update-notice-data.js?v=158096cddf" defer></script>
   <script src="scripts/core/update-notice.js?v=15d517ed67" defer></script>
@@ -1985,15 +1985,15 @@
   <script src="scripts/skilltree/skilltree.js?v=03e2251c84" defer></script>
   <script src="scripts/hangar/schiffe.js?v=1532ffad2d" defer></script>
   <script src="scripts/schlacht/schlacht-fx.js?v=e771e89701" defer></script>
-  <script src="scripts/schlacht/schlacht-klang.js?v=63bad09728" defer></script>
+  <script src="scripts/schlacht/schlacht-klang.js?v=be626cd2eb" defer></script>
   <script src="scripts/schlacht/schlacht-orte.js?v=43538b9baf" defer></script>
   <script src="scripts/schlacht/schlacht-kampf.js?v=ea982bcfbd" defer></script>
   <script src="scripts/schlacht/schlacht-front.js?v=72e84f5fcc" defer></script>
   <script src="scripts/hangar/hangar-data.js?v=7ce872f298" defer></script>
-  <script src="scripts/schlacht/schlacht.js?v=50f453a2fd" defer></script>
+  <script src="scripts/schlacht/schlacht.js?v=8ed262c5e5" defer></script>
   <script src="scripts/spind/spind.js?v=7e336ff6d6" defer></script>
   <script src="scripts/mine/gluecksmine.js?v=9f949fda64" defer></script>
-  <script src="scripts/hangar/hangar.js?v=a3be0f142d" defer></script>
+  <script src="scripts/hangar/hangar.js?v=8ad3d59831" defer></script>
   <script src="scripts/seiten/seiten.js?v=f44617a279" defer></script>
   <script src="scripts/core/admin-zugang.js?v=676fb09072" defer></script>
   <script src="scripts/support/support.js?v=ffbe30a325" defer></script>

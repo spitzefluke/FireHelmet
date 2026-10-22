@@ -210,10 +210,18 @@ Kamerafahrt im Einflug). Der Einflug stylt sich selbst mit Inline-Stilen aus den
 Ein neuer Typ für Menschen oder Aliens braucht zusätzlich einen Eintrag im Constraint
 `hangar_typ_bekannt`; `app.hangar_typ_passt()` liest seit 63 aus `schlacht_typen`.
 
+**Musik je Kampfort** (`schlacht-klang.js`): Jeder Ort hat ein eigenes Synth-Stück (`STUECKE`:
+Tempo, Akkorde, Muster, Erkennungszeichen) oder eine hochgeladene Datei `schlacht_<ort>` (Admin:
+„Musik je Story“, Versionen in `live_event.musik_versionen`, Migration 34 – keine eigene Migration
+nötig). `fhSchlachtKlang.ort(id)` schaltet um; die Schlacht setzt den Ort der laufenden Schlacht,
+der Hangar den der letzten Schlacht oder den dort gewählten (`localStorage` „fhHangarMusik“).
+Ein neuer Ort braucht ein Stück in `STUECKE` und eine Zeile in `GW_MUSIK_STORYS`.
+
 ### Spind und Glücksmine
 
 Der **Spind** (Migration 60, Freigabe `spind`, `scripts/spind/spind.js`) bündelt Titel, Avatar
-und Rahmen, Namensfarbe, Banner und Spruch. Namensfarben und Banner kauft man mit Dublonen
+und Rahmen, Namensfarbe, Banner und Spruch. Er hat **keinen Menüeintrag**: Man erreicht ihn nur
+über das eigene Bild in der Spielerkarte unten links (`fhAvatarKlick()` in `avatar-wahl.js`). Namensfarben und Banner kauft man mit Dublonen
 (`spind_teile`, `spind_teil_kaufen()`); getragen wird über `spind_tragen()`. Was jemand trägt,
 liest jeder über `spind_je_spieler()` – `fhProfil.namensKlasse(uid)` färbt damit Namen in
 Bestenlisten, `fhProfil.zeigen(uid)` öffnet die Profilkarte. Der getragene Titel gewinnt in

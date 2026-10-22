@@ -2014,6 +2014,18 @@ html.fh-2100 #race > .race-ruht {
   transition: background var(--fh-dauer) var(--fh-ease), border-color var(--fh-dauer) var(--fh-ease);
 }
 .hg-ton svg { width: 20px; height: 20px; }
+/* Musik je Kampfort im Hangar (hangar.js) */
+.hg-musik { justify-self: start; display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 13px; color: var(--fh-muted-fg); }
+.hg-musik-wahl {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--fh-border);
+  background: var(--fh-surface);
+  color: var(--fh-fg);
+  font: inherit;
+  cursor: pointer;
+}
+.hg-musik-wahl:hover, .hg-musik-wahl:focus-visible { border-color: var(--fh-cold); outline: none; }
 .hg-ton:hover, .hg-ton:focus-visible { background: color-mix(in srgb, var(--fh-cold) 22%, transparent); border-color: var(--fh-cold); outline: none; }
 .hg-ton[aria-pressed="false"] { opacity: .6; }
 .hg-oberzeile { margin: 0; font-family: var(--fh-font-display); letter-spacing: .3em; text-transform: uppercase; font-size: 12px; color: var(--fh-cold); }

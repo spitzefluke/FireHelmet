@@ -221,6 +221,8 @@
       } else if (schlacht && !schlacht.ort) {
         ortZeile = null;
       }
+      /* Jeder Kampfort hat seine eigene Musik (schlacht-klang.js). */
+      if (seiteOffen() && klang()) klang().ort(ortZeile ? ortZeile.ort_id : null);
       if (stand && stand.ok && schlacht && stand.id === schlacht.id) {
         if (stand.status === "vorbei" && schlacht.status === "laeuft") schlacht.status = "vorbei";
         if (stand.ende_at) schlacht.ende_at = stand.ende_at;

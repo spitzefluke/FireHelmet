@@ -33,6 +33,11 @@
    Leben, Schaden und Spezial auf ALLEN Stufen 1..15 nur noch Raumerz
    (hangar_ausbauen_raumerz) - Dublonen und Erz gehen dafuer nicht
    mehr. Raumerz steckt in jedem 30. Block der Glücksmine.
+
+   MUSIK: Der Hangar spielt die Musik des Kampforts der laufenden bzw.
+   letzten Schlacht (schlacht-klang.js, je Ort ein eigenes Stueck).
+   Oben neben dem Lautsprecher laesst sich ein anderer Ort waehlen -
+   gemerkt im Browser (localStorage "fhHangarMusik").
 ====================================================== */
 
 (function () {
@@ -52,6 +57,7 @@
   let ausruestung = null;    // Antwort von hangar_ausruestung (58) oder null
   let erz = null;            // Erz aus der Glücksmine (61) oder null
   let raumerz = null;        // Raumerz (64) oder null - dann gilt nur Raumerz
+  let schlachtOrt = null;    // Kampfort der laufenden bzw. letzten Schlacht (fuer die Musik)
   let bestaetigenUhr = null;
 
   function typText(id, feld) { return t("hangar.typ." + id + "." + feld, HANGAR_TYPEN[id][feld]); }
@@ -116,6 +122,11 @@
         const a = await withSupabaseRlsColdStartRetry(function () { return supabaseClient.rpc("hangar_ausruestung"); });
         ausruestung = a.error ? null : a.data;   // ohne Migration 58: nichts zeigen
       }
+      const sl = await withSupabaseRlsColdStartRetry(function () {
+        return supabaseClient.from("sternenschlacht").select("ort").order("id", { ascending: false }).limit(1).maybeSingle();
+      });
+      schlachtOrt = !sl.error && sl.data ? sl.data.ort || null : null;
+      musikSetzen();
       if (mineFrei()) {
         const m = await withSupabaseRlsColdStartRetry(function () { return supabaseClient.rpc("mine_stand_holen"); });
         erz = !m.error && m.data && m.data.ok ? Number(m.data.erz) || 0 : null;   // ohne Migration 61: kein Erz
@@ -645,6 +656,49 @@
   const TON_AUS = SVG_TON(LAUTSPRECHER + '<line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>');
   function klang() { return window.fhSchlachtKlang || null; }
 
+  /* Musik: gewaehlter Ort oder ("" = automatisch) der Ort der Schlacht. */
+  const MUSIK_SPEICHER = "fhHangarMusik";
+  function musikWahl() { try { return localStorage.getItem(MUSIK_SPEICHER) || ""; } catch (e) { return ""; } }
+  function musikSetzen() {
+    if (!klang() || !seiteOffen()) return;
+    const w = musikWahl();
+    klang().ort(w && klang().ORTE.indexOf(w) >= 0 ? w : schlachtOrt);
+    musikAuswahl();
+  }
+  function ortName(id) {
+    return window.fhSchlachtOrte && window.fhSchlachtOrte.name ? window.fhSchlachtOrte.name(id) || id : id;
+  }
+  function musikAuswahl() {
+    const kopf = document.querySelector("#hangar .hg-kopf");
+    if (!kopf || !klang() || !klang().ORTE) return;
+    let feld = document.getElementById("hangar-musik");
+    if (!feld) {
+      const lab = el("label", "hg-musik");
+      lab.append(el("span", "hg-musik-name", t("hangar.musik", "Musik")));
+      feld = el("select", "hg-musik-wahl");
+      feld.id = "hangar-musik";
+      feld.addEventListener("change", function () {
+        try { localStorage.setItem(MUSIK_SPEICHER, feld.value); } catch (e) { /* nur fuer jetzt */ }
+        musikSetzen();
+      });
+      lab.appendChild(feld);
+      kopf.appendChild(lab);
+    }
+    const w = musikWahl();
+    feld.replaceChildren();
+    const auto = el("option", null, schlachtOrt
+      ? t("hangar.musikAutoOrt", "Automatisch · {ort}").replace("{ort}", ortName(schlachtOrt))
+      : t("hangar.musikAuto", "Automatisch"));
+    auto.value = "";
+    feld.appendChild(auto);
+    klang().ORTE.forEach(function (id) {
+      const o = el("option", null, ortName(id));
+      o.value = id;
+      feld.appendChild(o);
+    });
+    feld.value = klang().ORTE.indexOf(w) >= 0 ? w : "";
+  }
+
   function tonKnopf() {
     const kopf = document.querySelector("#hangar .hg-kopf");
     if (!kopf || !klang()) return;
@@ -670,6 +724,7 @@
     }
     if (klang() && ist2100()) { klang().start("hangar"); klang().spannung(0); }
     tonKnopf();
+    musikSetzen();
     zeichnen();
     Promise.resolve(window.fhSeite ? window.fhSeite.laden() : null)
       .then(laden)
