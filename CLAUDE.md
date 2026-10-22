@@ -210,6 +210,13 @@ Kamerafahrt im Einflug). Der Einflug stylt sich selbst mit Inline-Stilen aus den
 Ein neuer Typ für Menschen oder Aliens braucht zusätzlich einen Eintrag im Constraint
 `hangar_typ_bekannt`; `app.hangar_typ_passt()` liest seit 63 aus `schlacht_typen`.
 
+**Musik je Kampfort** (`schlacht-klang.js`): Jeder Ort hat ein eigenes Synth-Stück (`STUECKE`:
+Tempo, Akkorde, Muster, Erkennungszeichen) oder eine hochgeladene Datei `schlacht_<ort>` (Admin:
+„Musik je Story“, Versionen in `live_event.musik_versionen`, Migration 34 – keine eigene Migration
+nötig). `fhSchlachtKlang.ort(id)` schaltet um; die Schlacht setzt den Ort der laufenden Schlacht,
+der Hangar den der letzten Schlacht oder den dort gewählten (`localStorage` „fhHangarMusik“).
+Ein neuer Ort braucht ein Stück in `STUECKE` und eine Zeile in `GW_MUSIK_STORYS`.
+
 ### Spind und Glücksmine
 
 Der **Spind** (Migration 60, Freigabe `spind`, `scripts/spind/spind.js`) bündelt Titel, Avatar

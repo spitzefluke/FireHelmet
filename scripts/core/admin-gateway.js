@@ -1086,8 +1086,14 @@ async function gwPreisSpeichern(id) {
 const GW_MUSIK_STORYS = GW_STORYS.map(([id, name, , ton]) => [id, name, ton])
   .concat([["gegenhack_sieg", "Gegenhack: Sieg", "neon"], ["gegenhack_niederlage", "Gegenhack: Niederlage", "rot"],
     /* Sternenschlacht (scripts/schlacht/schlacht-klang.js): ohne Datei
-       spielt die Schlacht ihre im Browser erzeugte Synth-Musik. */
-    ["schlacht", "Sternenschlacht", "neon"]]);
+       spielt die Schlacht ihre im Browser erzeugte Synth-Musik - je
+       Kampfort ein eigenes Stueck. "schlacht" gilt nur ohne Kampfort. */
+    ["schlacht", "Sternenschlacht (ohne Kampfort)", "neon"]])
+  .concat([["asteroiden", "Kepler-Asteroidengürtel"], ["schwarzes_loch", "Ereignishorizont Sagitta"],
+    ["station", "Wrack der Orbis-Station"], ["nebel", "Ionennebel von Vesh"], ["sonne", "Korona von Helion"],
+    ["eisring", "Eisringe von Kryos"], ["wurmloch", "Wurmloch-Schlund Ixion"], ["pulsar", "Pulsar Vela-9"],
+    ["friedhof", "Schiffsfriedhof Nekros"], ["mondring", "Ringe von Tethra"]]
+    .map(([ort, name]) => ["schlacht_" + ort, "Sternenschlacht: " + name, "neon"]));
 let gwMusikVersionen = {};
 let gwMusikVersionAlt = null;  // live_event.musik_version aus 29 (Disco)
 
@@ -1121,6 +1127,7 @@ function gwMusikStandZeigen() {
     if (v) el.textContent = "Eigene Datei (Version " + v + ")";
     else el.textContent = id === "disco" ? "Standard: music/disco.mp3"
       : id === "schlacht" ? "Keine Datei – es läuft die erzeugte Synth-Musik"
+      : id.indexOf("schlacht_") === 0 ? "Keine Datei – es läuft die erzeugte Musik dieses Kampforts"
       : "Keine Musik – die Story läuft still";
   });
 }
@@ -1677,7 +1684,7 @@ async function gwMusikHochladen(id, feld) {
     const { error: e2 } = await supabaseClient.rpc("admin_story_musik", { p_story: id, p_version: version });
     if (e2) throw e2;
     gwLiveStatus("gw-musik-status", "✓ „" + datei.name + "“ ist jetzt die Musik für " + gwMusikName(id) + ".", false);
-    if (id === "schlacht") window.dispatchEvent(new CustomEvent("fhSchlachtMusikNeu"));
+    if (id.indexOf("schlacht") === 0) window.dispatchEvent(new CustomEvent("fhSchlachtMusikNeu"));
     gwStoryLageLaden();
   } catch (err) {
     console.error("Musik hochladen fehlgeschlagen:", err);
@@ -1695,10 +1702,10 @@ async function gwMusikEntfernen(id) {
     if (e2) throw e2;
     gwLiveStatus("gw-musik-status", id === "disco"
       ? "✓ Eigene Disco-Musik entfernt – es läuft wieder music/disco.mp3."
-      : id === "schlacht"
-        ? "✓ Eigene Schlacht-Musik entfernt – es läuft wieder die erzeugte Synth-Musik."
+      : id.indexOf("schlacht") === 0
+        ? "✓ Eigene Musik für " + gwMusikName(id) + " entfernt – es läuft wieder die erzeugte Synth-Musik."
         : "✓ Musik für " + gwMusikName(id) + " entfernt – die Story läuft wieder still.", false);
-    if (id === "schlacht") window.dispatchEvent(new CustomEvent("fhSchlachtMusikNeu"));
+    if (id.indexOf("schlacht") === 0) window.dispatchEvent(new CustomEvent("fhSchlachtMusikNeu"));
     gwStoryLageLaden();
   } catch (err) {
     gwLiveStatus("gw-musik-status", "Entfernen fehlgeschlagen: " + ((err && err.message) || err), true);
@@ -1706,6 +1713,30 @@ async function gwMusikEntfernen(id) {
 }
 
 let gwMusikAudio = null, gwMusikAudioId = null;
+
+/* Ohne Datei: die im Browser erzeugte Musik des Kampforts anhören
+   (schlacht-klang.js). Endet beim Verlassen des Gateways. */
+let gwSynthId = null, gwSynthUhr = null;
+function gwSynthProbeAus() {
+  clearInterval(gwSynthUhr);
+  if (gwSynthId && window.fhSchlachtKlang) window.fhSchlachtKlang.stop("gateway");
+  gwSynthId = null;
+}
+function gwSynthProbe(id) {
+  const k = window.fhSchlachtKlang;
+  if (gwSynthId === id) { gwSynthProbeAus(); gwLiveStatus("gw-musik-status", "Angehalten.", false); return; }
+  if (!k.istAn()) { gwLiveStatus("gw-musik-status", "Der Ton der Sternenschlacht ist ausgeschaltet – im Hangar oder in der Schlacht einschalten.", true); return; }
+  k.ort(id === "schlacht" ? null : id.slice("schlacht_".length));
+  k.start("gateway");
+  gwSynthId = id;
+  clearInterval(gwSynthUhr);
+  gwSynthUhr = setInterval(() => {
+    const g = document.getElementById("gateway");
+    if (!g || !g.classList.contains("active-page")) gwSynthProbeAus();
+  }, 1000);
+  gwLiveStatus("gw-musik-status", "Spielt die erzeugte Musik: " + gwMusikName(id) + " – nochmal „Anhören“ zum Anhalten.", false);
+}
+
 function gwMusikProbe(id) {
   if (gwMusikAudio && !gwMusikAudio.paused) {
     gwMusikAudio.pause();
@@ -1718,7 +1749,9 @@ function gwMusikProbe(id) {
   if (v) {
     try { url = supabaseClient.storage.from("live-musik").getPublicUrl(id).data.publicUrl + "?v=" + encodeURIComponent(v); } catch (e) { /* bleibt */ }
   }
+  if (!url && id.indexOf("schlacht") === 0 && window.fhSchlachtKlang) { gwSynthProbe(id); return; }
   if (!url) { gwLiveStatus("gw-musik-status", gwMusikName(id) + " hat noch keine Musik – erst eine Datei wählen.", true); return; }
+  gwSynthProbeAus();
   gwMusikAudio = new Audio(url);
   gwMusikAudioId = id;
   gwMusikAudio.volume = 0.6;

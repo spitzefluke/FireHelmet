@@ -1,14 +1,25 @@
 /* ======================================================
    STERNENSCHLACHT: MUSIK UND KLANG
    ---------------------------------------------------
-   Musik
+   Musik - JE KAMPFORT EINE EIGENE (ort(id), seit Design V2):
      - Hat der Admin im Panel (Live-Event -> Storys -> "Musik je
-       Story", Eintrag "Sternenschlacht") eine Datei hochgeladen,
-       laeuft sie in Schleife: Bucket "live-musik", Datei "schlacht",
-       Version in live_event.musik_versionen.schlacht (Migration 34).
-     - Sonst erzeugt der Browser einen Synth-Kampftrack per Web Audio:
-       Kick, Snare, Hi-Hats, treibender Saegezahn-Bass, Flaechen und
-       ein Arpeggio in a-Moll (Am - F - C - G), 124 BPM.
+       Story") fuer den Ort eine Datei hochgeladen, laeuft sie in
+       Schleife: Bucket "live-musik", Datei "schlacht_<ort>", Version
+       in live_event.musik_versionen.schlacht_<ort> (Migration 34).
+       Ohne Ort (Kampforte nicht freigegeben) gilt wie bisher die
+       Datei "schlacht".
+     - Sonst erzeugt der Browser den Synth-Track des Orts per Web
+       Audio (STUECKE): eigenes Tempo, eigene Akkordfolge, eigener
+       Rhythmus und Klang, dazu ein Erkennungszeichen - Geroell im
+       Asteroidenguertel, Sog am Schwarzen Loch, Metall in der
+       Station, Funken im Nebel, Fanfaren an der Sonne, Glocken im
+       Eisring, ein Sog-Rauschen im Wurmloch, das Piepen des Pulsars,
+       die Totenglocke auf dem Schiffsfriedhof, Schimmer im Mondring.
+       Ohne Ort laeuft der bisherige Track (Am - F - C - G, 124 BPM).
+     - Ein Ortswechsel blendet um: der Synth zum naechsten Taktanfang,
+       eine Datei per Ueberblendung.
+     - Der Hangar spielt die Musik des Orts der laufenden bzw. letzten
+       Schlacht oder den Ort, den man dort auswaehlt (hangar.js).
    Spannung (0..1, von schlacht.js): Faellt eine Seite unter 25 %,
    oeffnet der Bassfilter, die Hi-Hats laufen doppelt so schnell und
    das Arpeggio tritt hervor; eine hochgeladene Datei wird lauter.
@@ -25,6 +36,7 @@
 
    API (window.fhSchlachtKlang):
      start(wer), stop(wer), setzeAn(bool), istAn(), spannung(0..1),
+     ort(ortId | null), ortJetzt(), ORTE (Orte mit eigenem Stueck),
      akzent("runde" | "spezial" | "sieg" | "sprung" | "ort" | "zaehlen"
             | "feuer" | "ereignis"), sfx(art, laut)
      (sprung bis feuer: Start-Animation in schlacht-orte.js;
@@ -35,24 +47,69 @@
   "use strict";
 
   const SPEICHER = "fhSchlachtTon";
-  const BPM = 124;
-  const SECHZEHNTEL = 60 / BPM / 4;
   const VORLAUF = 0.12;
-  /* Am - F - C - G: Bass-Grundton und Akkordtoene (MIDI) */
-  const TAKTE = [
-    { bass: 33, akkord: [57, 60, 64] },
-    { bass: 29, akkord: [53, 57, 60] },
-    { bass: 36, akkord: [55, 60, 64] },
-    { bass: 31, akkord: [55, 59, 62] },
-  ];
+
+  /* Ein Takt: Bass-Grundton und Akkordtoene (MIDI). */
+  function T(bass, a, b, c) { return { bass: bass, akkord: [a, b, c] }; }
+
+  /* STUECKE - je Kampfort ein Track. Muster mit 16 Zeichen je Takt:
+       kick, snare, hats  "x" = Schlag
+       bass               "x" = Grundton, "o" = eine Oktave hoeher
+       arp                "0".."2" = Akkordton, "3".."5" = eine Oktave hoeher
+     Dazu Wellenform, Laenge (in Sechzehnteln) und Lautstaerke je
+     Stimme und ein "extra" (EXTRA unten), das den Ort erkennbar macht. */
+  const STUECKE = {
+    standard: { bpm: 124, takte: [T(33, 57, 60, 64), T(29, 53, 57, 60), T(36, 55, 60, 64), T(31, 55, 59, 62)],
+      kick: "x...x...x...x...", snare: "....x.......x...", hats: ".x.x.x.x.x.x.x.x",
+      bass: "x.x.x.o.x.x.x.o.", bassWelle: "sawtooth", arp: "0120150120150120", arpWelle: "square" },
+    asteroiden: { bpm: 132, takte: [T(38, 57, 62, 65), T(34, 58, 62, 65), T(29, 57, 60, 65), T(36, 55, 60, 64)],
+      kick: "x..x..x.x..x..x.", snare: "....x.......x...", hats: ".x.x.x.x.x.x.x.x",
+      bass: "xx.xx.x.xx.xx.o.", bassWelle: "sawtooth", arp: "0.1.2.1.0.1.5.1.", arpWelle: "square", extra: "geroell" },
+    schwarzes_loch: { bpm: 96, takte: [T(36, 55, 60, 63), T(32, 56, 60, 63), T(29, 56, 60, 65), T(31, 55, 59, 62)],
+      kick: "x.......x..x....", snare: "........x.......", hats: "..x...x...x...x.",
+      bass: "x.......x.......", bassWelle: "sine", bassLang: 7, bassLaut: 0.4,
+      arp: "0...1...2...1...", arpWelle: "triangle", arpLang: 3, flaecheHz: 380, extra: "sog" },
+    station: { bpm: 118, takte: [T(28, 55, 59, 64), T(36, 55, 60, 64), T(38, 57, 62, 66), T(35, 54, 59, 62)],
+      kick: "x...x...x...x...", snare: "....x.......x..x", hats: "x.x.x.x.x.x.x.x.",
+      bass: "x..x..x.x..x..x.", bassWelle: "square", bassLaut: 0.2, arp: "0.0.1.0.2.0.1.0.", arpWelle: "square", extra: "metall" },
+    nebel: { bpm: 110, takte: [T(30, 57, 61, 66), T(38, 57, 62, 66), T(33, 57, 61, 64), T(28, 56, 59, 64)],
+      kick: "x.....x...x.....", snare: "............x...", hats: "..x..x..x..x..x.",
+      bass: "x...x...x...x...", bassWelle: "triangle", bassLaut: 0.3,
+      arp: "0..1..2..5..1..2", arpWelle: "sine", arpLang: 2.5, arpLaut: 0.035, flaecheHz: 500, extra: "knistern" },
+    sonne: { bpm: 140, takte: [T(28, 59, 64, 67), T(36, 60, 64, 67), T(31, 59, 62, 67), T(38, 57, 62, 66)],
+      kick: "x...x...x...x...", snare: "....x.......x.x.", hats: "xxxxxxxxxxxxxxxx",
+      bass: "xoxoxoxoxoxoxoxo", bassWelle: "sawtooth", bassLaut: 0.22, bassLang: 0.9,
+      arp: "0120120120120125", arpWelle: "sawtooth", arpLaut: 0.02, extra: "fanfare" },
+    eisring: { bpm: 100, takte: [T(35, 54, 59, 62), T(31, 55, 59, 62), T(38, 54, 57, 62), T(33, 52, 57, 61)],
+      kick: "x.......x.......", snare: "....x.......x...", hats: ".x.x.x.x.x.x.x.x",
+      bass: "x.....x...x.....", bassWelle: "sine", bassLaut: 0.35, bassLang: 4,
+      arp: "5.2.1.0.5.2.1.0.", arpWelle: "sine", arpLaut: 0.04, arpLang: 2, flaecheWelle: "triangle", extra: "glocken" },
+    wurmloch: { bpm: 128, takte: [T(31, 55, 58, 62), T(39, 55, 58, 63), T(34, 53, 58, 62), T(29, 53, 57, 60)],
+      kick: "x...x...x...x...", snare: "....x.......x...", hats: ".x.x.x.x.x.x.x.x",
+      bass: "x.xxx.xxx.xxx.xo", bassWelle: "sawtooth", bassQ: 10, arp: "0.1.2.5.2.1.0.1.", arpWelle: "square", extra: "wirbel" },
+    pulsar: { bpm: 120, takte: [T(33, 57, 60, 64), T(38, 57, 62, 65), T(28, 55, 59, 64), T(33, 57, 60, 64)],
+      kick: "x...x...x...x...", snare: "....x.......x...", hats: "x.x.x.x.x.x.x.x.",
+      bass: "x.x.x.x.x.x.x.x.", bassWelle: "square", bassLaut: 0.2, arp: "0120120120120120", arpWelle: "square", extra: "ping" },
+    friedhof: { bpm: 84, takte: [T(38, 57, 62, 65), T(31, 55, 58, 62), T(33, 57, 61, 64), T(38, 57, 62, 65)],
+      kick: "x.......x.......", snare: "............x...", hats: "................",
+      bass: "x.......x.......", bassWelle: "triangle", bassLang: 6, bassLaut: 0.32,
+      arp: "0...1...2...5...", arpWelle: "sine", arpLang: 3, arpLaut: 0.04,
+      flaecheWelle: "triangle", flaecheHz: 600, flaecheLaut: 0.03, extra: "totenglocke" },
+    mondring: { bpm: 108, takte: [T(39, 55, 58, 63), T(36, 55, 60, 63), T(32, 56, 60, 63), T(34, 53, 58, 62)],
+      kick: "x.....x...x.....", snare: "....x.......x...", hats: ".x.x.x.x.x.x.x.x",
+      bass: "x...x.x.x...x.o.", bassWelle: "sine", bassLaut: 0.32, bassLang: 2.5,
+      arp: "0.2.1.5.0.2.1.5.", arpWelle: "triangle", arpLaut: 0.035, arpLang: 1.6, extra: "schimmer" },
+  };
 
   let ctx = null, master = null, musikBus = null, sfxBus = null, rauschen = null;
   let an = (function () { try { return localStorage.getItem(SPEICHER) !== "aus"; } catch (e) { return true; } })();
   let laeuft = false;
   const besitzer = new Set();   // Seiten, die gerade Musik wollen ("schlacht", "hangar")
   let planer = null, naechste = 0, schritt = 0;
+  let stueck = STUECKE.standard, wechselZu = null;   // wechselZu: ab dem naechsten Takt
+  let ortJetzt = null;                               // Kampfort, dessen Musik laufen soll
   let spannungZiel = 0, spannungJetzt = 0;
-  let mp3 = null, mp3Url = null, mp3Gesucht = false, mp3Uhr = null;
+  let mp3 = null, versionen = null, mp3Uhr = null;
   const zuletzt = {};
   let sfxFenster = [];
 
@@ -120,60 +177,122 @@
   }
 
   /* ------------------------------------------------------
-     SYNTH-TRACK
+     SYNTH-TRACKS (STUECKE)
   ------------------------------------------------------ */
-  function spiele(s, t) {
-    const i = s % 16;
-    const takt = TAKTE[Math.floor(s / 16) % TAKTE.length];
-    const sp = spannungJetzt;
+  function kick(t) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(150, t);
+    o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+    huelle(g, t, 0.9, 0.002, 0.28);
+    o.connect(g); g.connect(musikBus); o.start(t); o.stop(t + 0.32);
+  }
 
-    /* Kick auf jede Viertel */
-    if (i % 4 === 0) {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.frequency.setValueAtTime(150, t);
-      o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
-      huelle(g, t, 0.9, 0.002, 0.28);
-      o.connect(g); g.connect(musikBus); o.start(t); o.stop(t + 0.32);
-    }
-    /* Snare auf 2 und 4 */
-    if (i === 4 || i === 12) geraeusch(t, 0.16, 0.32, musikBus, "bandpass", 1900, null, 0.8);
-    /* Hi-Hats: Achtel, unter Spannung Sechzehntel */
-    if (i % 2 === 1 || sp > 0.45) geraeusch(t, 0.035, i % 2 === 1 ? 0.12 : 0.07, musikBus, "highpass", 7500);
-    /* Bass: Achtel mit Oktavsprung */
-    if (i % 2 === 0) {
-      const oktave = (i === 6 || i === 14) ? 12 : 0;
-      ton("sawtooth", hz(takt.bass + oktave), t, SECHZEHNTEL * 1.7, 0.26, musikBus,
-        { hz: 260 + 1500 * sp, bis: 180 + 600 * sp, q: 6 });
-    }
-    /* Flaeche zum Taktbeginn */
-    if (i === 0) {
-      takt.akkord.forEach(function (n) {
-        [-6, 6].forEach(function (cent) {
-          const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
-          o.type = "sawtooth"; o.frequency.value = hz(n); o.detune.value = cent;
-          f.type = "lowpass"; f.frequency.value = 700 + 900 * sp;
-          const lang = SECHZEHNTEL * 16;
-          g.gain.setValueAtTime(0.0001, t);
-          g.gain.exponentialRampToValueAtTime(0.022, t + 0.35);
-          g.gain.setValueAtTime(0.022, t + lang - 0.3);
-          g.gain.exponentialRampToValueAtTime(0.0001, t + lang);
-          o.connect(f); f.connect(g); g.connect(musikBus);
-          o.start(t); o.stop(t + lang + 0.05);
-        });
+  /* Glocke: Grundton und ein unharmonischer Oberton, langer Nachklang. */
+  function glocke(freq, t, dauer, laut) {
+    ton("sine", freq, t, dauer, laut, musikBus);
+    ton("sine", freq * 2.76, t, dauer * 0.5, laut * 0.35, musikBus);
+  }
+
+  function flaeche(takt, t, st, S, sp) {
+    const lang = st * 16, laut = S.flaecheLaut || 0.022;
+    takt.akkord.forEach(function (n) {
+      [-6, 6].forEach(function (cent) {
+        const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+        o.type = S.flaecheWelle || "sawtooth"; o.frequency.value = hz(n); o.detune.value = cent;
+        f.type = "lowpass"; f.frequency.value = (S.flaecheHz || 700) + 900 * sp;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(laut, t + 0.35);
+        g.gain.setValueAtTime(laut, t + lang - 0.3);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + lang);
+        o.connect(f); f.connect(g); g.connect(musikBus);
+        o.start(t); o.stop(t + lang + 0.05);
       });
+    });
+  }
+
+  /* Das Erkennungszeichen je Ort. s = Schritt seit Stueckbeginn, i = Schritt im Takt. */
+  const EXTRA = {
+    geroell: function (s, i, t) {
+      if (i === 10 && s % 32 >= 16) { geraeusch(t, 0.35, 0.22, musikBus, "lowpass", 380, 90); ton("sine", 55, t, 0.3, 0.25, musikBus); }
+    },
+    sog: function (s, i, t, st) {
+      if (i === 0 && Math.floor(s / 16) % 2 === 0) {
+        const o = ton("sine", 110, t, st * 30, 0.09, musikBus);
+        o.frequency.exponentialRampToValueAtTime(30, t + st * 30);
+      }
+    },
+    metall: function (s, i, t) {
+      if (i === 2 || i === 10) geraeusch(t, 0.08, 0.12, musikBus, "bandpass", 3200, null, 12);
+      if (i === 14 && s % 32 >= 16) geraeusch(t, 0.12, 0.1, musikBus, "bandpass", 1700, 900, 14);
+    },
+    knistern: function (s, i, t) {
+      if (Math.random() < 0.25) geraeusch(t + Math.random() * 0.05, 0.012, 0.06, musikBus, "highpass", 6000);
+    },
+    fanfare: function (s, i, t, st, takt) {
+      if (i === 0 || i === 10) takt.akkord.forEach(function (n) { ton("sawtooth", hz(n + 12), t, st * 2.4, 0.045, musikBus, { hz: 2600, q: 1 }); });
+    },
+    glocken: function (s, i, t, st, takt) {
+      if (i === 0 || i === 8) glocke(hz(takt.akkord[i === 0 ? 2 : 1] + 24), t, st * 10, 0.045);
+    },
+    wirbel: function (s, i, t, st) {
+      if (i === 0) {
+        const o = ton("sine", 200, t, st * 15, 0.03, musikBus);
+        o.frequency.exponentialRampToValueAtTime(1300, t + st * 15);
+        geraeusch(t, st * 15, 0.05, musikBus, "bandpass", 300, 3600, 4);
+      }
+    },
+    ping: function (s, i, t) {
+      if (i % 4 === 2) ton("sine", 1760, t, 0.06, 0.06, musikBus);
+      if (i === 0) ton("sine", 2637, t, 0.12, 0.05, musikBus);
+    },
+    totenglocke: function (s, i, t, st, takt) {
+      if (i === 0 && Math.floor(s / 16) % 2 === 0) glocke(hz(takt.bass + 24), t, st * 24, 0.09);
+    },
+    schimmer: function (s, i, t, st, takt) {
+      if (i % 2 === 1 && Math.random() < 0.3) ton("sine", hz(takt.akkord[Math.floor(Math.random() * 3)] + 36), t, 0.4, 0.02, musikBus);
+    },
+  };
+
+  function spiele(s, t) {
+    const S = stueck, i = s % 16;
+    const takt = S.takte[Math.floor(s / 16) % S.takte.length];
+    const sp = spannungJetzt;
+    const st = 60 / S.bpm / 4;
+
+    if (S.kick[i] === "x") kick(t);
+    if (S.snare[i] === "x") geraeusch(t, 0.16, 0.32, musikBus, "bandpass", 1900, null, 0.8);
+    /* Hi-Hats nach Muster, unter Spannung jede Sechzehntel */
+    if (S.hats[i] === "x" || sp > 0.45) geraeusch(t, 0.035, S.hats[i] === "x" ? 0.12 : 0.07, musikBus, "highpass", 7500);
+    const b = S.bass[i];
+    if (b !== ".") {
+      ton(S.bassWelle, hz(takt.bass + (b === "o" ? 12 : 0)), t, st * (S.bassLang || 1.7), S.bassLaut || 0.26, musikBus,
+        { hz: 260 + 1500 * sp, bis: 180 + 600 * sp, q: S.bassQ || 6 });
     }
-    /* Arpeggio: leise immer, unter Spannung deutlich */
-    const n = takt.akkord[i % 3] + 12 + (i % 6 === 5 ? 12 : 0);
-    ton("square", hz(n), t, SECHZEHNTEL * 0.9, 0.025 + 0.07 * sp, musikBus, { hz: 1400 + 2600 * sp, q: 2 });
+    if (i === 0) flaeche(takt, t, st, S, sp);
+    const a = S.arp[i];
+    if (a !== ".") {
+      const k = Number(a);
+      const n = takt.akkord[k % 3] + 12 + (k >= 3 ? 12 : 0);
+      ton(S.arpWelle, hz(n), t, st * (S.arpLang || 0.9), (S.arpLaut || 0.025) + 0.07 * sp, musikBus, { hz: 1400 + 2600 * sp, q: 2 });
+    }
+    if (S.extra && EXTRA[S.extra]) EXTRA[S.extra](s, i, t, st, takt, sp);
   }
 
   function planen() {
     spannungJetzt += (spannungZiel - spannungJetzt) * 0.08;
     while (naechste < ctx.currentTime + VORLAUF) {
+      /* Ortswechsel: zum naechsten Taktanfang umschalten. */
+      if (wechselZu && schritt % 16 === 0) { stueck = wechselZu; wechselZu = null; schritt = 0; }
       spiele(schritt, naechste);
-      naechste += SECHZEHNTEL;
+      naechste += 60 / stueck.bpm / 4;
       schritt++;
     }
+  }
+
+  function stueckSetzen(id) {
+    const neu = STUECKE[id] || STUECKE.standard;
+    if (!planer) { stueck = neu; wechselZu = null; return; }
+    wechselZu = neu === stueck ? null : neu;
   }
 
   function synthStart() {
@@ -185,26 +304,30 @@
   function synthStop() { clearInterval(planer); planer = null; }
 
   /* ------------------------------------------------------
-     HOCHGELADENE DATEI (Admin-Panel, Migration 34)
+     HOCHGELADENE DATEIEN (Admin-Panel, Migration 34)
+     Je Ort "schlacht_<ort>", ohne Ort "schlacht".
   ------------------------------------------------------ */
-  async function mp3Suchen() {
-    if (mp3Gesucht) return mp3Url;
+  async function versionenLaden() {
+    if (versionen) return versionen;
     if (typeof supabaseClient === "undefined" || !supabaseClient || !supabaseClient.storage) return null;
     try {
       const { data, error } = await withSupabaseRlsColdStartRetry(function () {
         return supabaseClient.from("live_event").select("musik_versionen").eq("id", 1).maybeSingle();
       });
       if (error) throw error;
-      const v = data && data.musik_versionen && data.musik_versionen.schlacht;
-      if (v) {
-        const d = supabaseClient.storage.from("live-musik").getPublicUrl("schlacht").data;
-        mp3Url = d && d.publicUrl ? d.publicUrl + "?v=" + encodeURIComponent(v) : null;
-      }
-      mp3Gesucht = true;
+      versionen = (data && data.musik_versionen) || {};
     } catch (e) {
       /* dann eben Synth - beim naechsten Oeffnen neu fragen */
     }
-    return mp3Url;
+    return versionen;
+  }
+
+  function dateiFuer(ortId) {
+    const name = ortId ? "schlacht_" + ortId : "schlacht";
+    const v = versionen && versionen[name];
+    if (!v) return null;
+    const d = supabaseClient.storage.from("live-musik").getPublicUrl(name).data;
+    return d && d.publicUrl ? d.publicUrl + "?v=" + encodeURIComponent(v) : null;
   }
 
   function mp3Lautstaerke() { return Math.min(1, 0.5 + 0.3 * spannungZiel); }
@@ -219,16 +342,27 @@
       if (f >= 1) { clearInterval(mp3Uhr); if (danach) danach(); }
     }, 40);
   }
+  function mp3BlendenBis(ziel, ms) { return new Promise(function (fertig) { mp3Blenden(ziel, ms, fertig); }); }
 
+  /* Bringt die Musik in den Zustand, der zu ortJetzt passt - beim
+     Start und bei jedem Ortswechsel. */
+  let musikLauf = 0;
   async function musikStarten() {
-    const url = await mp3Suchen();
-    if (!laeuft || !an) return;
+    const lauf = ++musikLauf;
+    await versionenLaden();
+    if (lauf !== musikLauf || !laeuft || !an) return;
+    const url = dateiFuer(ortJetzt);
     if (url) {
       if (!mp3) { mp3 = new Audio(); mp3.loop = true; }
-      if (mp3.getAttribute("src") !== url) mp3.src = url;
-      mp3.volume = 0;
+      if (mp3.getAttribute("src") !== url) {
+        if (!mp3.paused) await mp3BlendenBis(0, 450);
+        if (lauf !== musikLauf) return;
+        mp3.src = url;
+        mp3.volume = 0;
+      }
       try {
-        await mp3.play();
+        if (mp3.paused) await mp3.play();
+        if (lauf !== musikLauf) return;
         synthStop();
         mp3Blenden(mp3Lautstaerke(), 1200);
         return;
@@ -236,10 +370,13 @@
         /* Datei nicht abspielbar -> Synth */
       }
     }
+    if (mp3 && !mp3.paused) mp3Blenden(0, 600, function () { if (mp3) mp3.pause(); });
+    stueckSetzen(ortJetzt);
     synthStart();
   }
 
   function musikStoppen() {
+    musikLauf++;   // ein noch laufendes musikStarten nicht mehr zu Ende fuehren
     synthStop();
     if (mp3 && !mp3.paused) mp3Blenden(0, 500, function () { if (mp3) mp3.pause(); });
   }
@@ -296,6 +433,14 @@
     try { localStorage.setItem(SPEICHER, an ? "an" : "aus"); } catch (e) { /* egal */ }
     if (!an) { musikStoppen(); masterAuf(0, 0.3); }
     else if (laeuft) { laeuft = false; start(besitzer.values().next().value); }
+  }
+
+  /* Kampfort, dessen Musik laufen soll (null = ohne Ort). */
+  function ort(id) {
+    const neu = id && STUECKE[id] ? id : null;
+    if (neu === ortJetzt) return;
+    ortJetzt = neu;
+    if (laeuft && an && ctx) musikStarten();
   }
 
   function spannung(wert) {
@@ -397,15 +542,17 @@
       if (mp3 && !mp3.paused) mp3.pause();
     } else if (laeuft && an) {
       ctx.resume();
-      if (mp3 && mp3.paused && mp3Url && !planer) mp3.play().catch(function () { synthStart(); });
+      if (mp3 && mp3.paused && mp3.getAttribute("src") && !planer) mp3.play().catch(function () { synthStart(); });
     }
   });
 
   /* Neue Datei im Admin hochgeladen: beim naechsten Oeffnen neu fragen. */
-  window.addEventListener("fhSchlachtMusikNeu", function () { mp3Gesucht = false; mp3Url = null; });
+  window.addEventListener("fhSchlachtMusikNeu", function () { versionen = null; });
 
   window.fhSchlachtKlang = {
     start: start, stop: stop, setzeAn: setzeAn, istAn: function () { return an; },
     spannung: spannung, akzent: akzent, sfx: sfx,
+    ort: ort, ortJetzt: function () { return ortJetzt; },
+    ORTE: Object.keys(STUECKE).filter(function (k) { return k !== "standard"; }),
   };
 })();
