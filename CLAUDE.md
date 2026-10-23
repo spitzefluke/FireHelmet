@@ -16,9 +16,9 @@ Datei, die du gerade anfasst.
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 134 `<script defer>`-Tags in fester
-Reihenfolge, davon 120 aus diesem Repo. Sieben große Skripte, die fast niemand braucht
+Reihenfolge, davon 120 aus diesem Repo. Acht große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `story-wetter.js`,
-`drehbuch.js`), stehen stattdessen in der Tabelle
+`drehbuch.js`, `sternenreise.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
 meldet CodeQL das als hohe Sicherheitslücke. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
@@ -122,7 +122,7 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhStoryWetter`, `window.fhDrehbuch` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
 nach `fhNachladen(...)`. Das **Drehbuch** (Migration 65, `scripts/liveevent/drehbuch.js`) baut
 im Admin-Bereich ein Live-Event vorab aus Schritten (Text, Story, Story beenden, Effekt, Pause),
 gespeichert in `event_drehbuecher` (nur Admins per RLS); abgespielt wird im Browser des Admins
@@ -135,7 +135,7 @@ Immer-geladen-Datei daneben (`admin-zugang.js`: `isAuthorizedAdmin`, `updateGate
 
 ### CSS
 
-Dreizehn Dateien in fester Ladereihenfolge, `css/00-basis.css` bis `css/96-epoche-2100.css`. Die
+Vierzehn Dateien in fester Ladereihenfolge, `css/00-basis.css` bis `css/97-sternenreise.css`. Die
 Nummer ist die Kaskade: Späteres überschreibt Früheres. Die Design-Tokens (`--fh-gold`,
 `--fh-surface`, `--fh-ease`, …) stehen in `00-basis.css` unter `:root`. **Neue Farben und
 Kurven aus den Tokens nehmen**, nicht als Rohwert schreiben.
@@ -148,9 +148,23 @@ umgefärbt werden soll (ein Live-Effekt), trägt es dort in die `:not(...)`-List
 Bildschirmrand – feste Hinweise an `body` hängen.
 
 `96-epoche-2100.css` gilt genauso unter `html.fh-2100` (nach der Zeitmaschine, Migration 46)
-und hat eine eigene `:not(...)`-Liste – ein neues Live-Element gehört in **beide** Listen.
+und hat eine eigene `:not(...)`-Liste – ein neues Live-Element gehört in **beide** Listen (und in
+die beiden Listen von `97-sternenreise.css`).
 Welche Epoche gilt, entscheidet die zuletzt erreichte Zeitmarke (`jahr_1720_ab`,
 `jahr_2100_ab`), siehe `live-storys.js`.
+
+### Sternenreise
+
+`scripts/liveevent/sternenreise.js` (nachgeladen als `reise`) ist der Entwurf „Sternenreise“ aus
+Claude Design: Schlacht gegen das Mutterschiff → jeder besetzt eine Kanone der Arche → rund fünf
+Minuten Reise durch fünf Sektoren (Hülle repariert sich nicht) → Ankunft, Terra Nova öffnet ein
+Auge → Landung oder Zerstörung. Die Zeichen- und Spiellogik steht fast wörtlich als Klasse
+`Reise` darin; die Vorlage des Entwurfs baut `ui()` als DOM. Danach ändert sich die Seite:
+`html.fh-terra` (gelandet, Nocturne-Violett, ein wanderndes Auge) oder `html.fh-verwahrung`
+(Hülle 0: Rot, Gitter, Akte) – CSS in `97-sternenreise.css`, alles Feste in `#fh-reise-welt`.
+**Bisher nur Admin-Vorschau** (Live-Event → Epoche): Es gibt weder eine Story-ID noch eine
+Zeitmarke in der Datenbank; Mitspieler kommen nur aus anderen Tabs desselben Browsers
+(BroadcastChannel), die übrigen Kanonen sind Crew-Namen.
 
 ### Piratenpass
 

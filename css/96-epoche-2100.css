@@ -90,7 +90,7 @@ html.fh-2100 .stars2 { opacity: 1; }
 html.fh-2100 .nebula { opacity: .9; filter: hue-rotate(40deg); }
 
 /* ---- Farbfilter: Gold wird Cyan ---- */
-html.fh-2100 body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an),
+html.fh-2100 body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt),
 html.fh-2100 dialog[open] {
   filter: hue-rotate(165deg) saturate(1.1);
 }
