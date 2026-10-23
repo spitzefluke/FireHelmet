@@ -595,6 +595,7 @@ function buildGatewayStorysHtml() {
     </div>
     ${buildGatewayEpocheHtml()}
     ${buildGatewayPlanHtml()}
+    <div id="gw-db-wurzel"></div>
     <p class="gw-plan-ueberschrift">Alle Storys</p>
     <div class="gw-story-liste">${zeilen}</div>
     <p id="gw-story-status" class="gw-live-status" role="status" aria-live="polite"></p>
@@ -1342,6 +1343,24 @@ async function gwGegenhackAbbrechen() {
   } catch (err) {
     gwLiveStatus("gw-gh-status", "Fehlgeschlagen: " + ((err && err.message) || err), true);
   }
+}
+
+/* ------------------------------------------------------
+   DREHBUCH JE EVENT (Migration 65)
+   ---------------------------------------------------
+   Text → Disco → währenddessen Text → …, vorab gebaut und per
+   Start/Weiter abgespielt. Die Oberfläche steckt in
+   scripts/liveevent/drehbuch.js und wird erst hier nachgeladen.
+------------------------------------------------------ */
+function gwDrehbuchStarten() {
+  const wurzel = document.getElementById("gw-db-wurzel");
+  if (!wurzel || typeof window.fhNachladen !== "function") return;
+  window.fhNachladen("drehbuch").then(function () {
+    if (window.fhDrehbuch) window.fhDrehbuch.montieren(wurzel);
+  }).catch(function (err) {
+    console.error("Drehbuch nicht ladbar:", err);
+    wurzel.textContent = "Drehbuch ließ sich nicht laden.";
+  });
 }
 
 /* ------------------------------------------------------
@@ -2289,6 +2308,7 @@ async function renderGatewayPage() {
   ladeGatewayAngriffMarker();
   gwCodeListeLaden();
   gwStoryLageLaden();
+  gwDrehbuchStarten();
 
   buildGatewayTournamentHtml().then((html) => {
     const sub = document.getElementById("gateway-tournament-sub");
