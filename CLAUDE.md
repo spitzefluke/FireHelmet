@@ -235,7 +235,10 @@ Die **Glücksmine** (Migration 61, Freigabe `gluecksmine`, `scripts/mine/gluecks
 bringt **Erz**, eine dritte Währung in `mine_stand`. Gehackt wird über `mine_hacken()`
 (serverseitig gedrosselt), der Bohrer füllt die Lore auch ohne Spieler (`mine_abholen()`),
 Geräte steigen über `mine_verbessern()`. Erz bezahlt die Schiffssysteme Panzerung und Geschütz
-(`schiff_system_ausbauen()`) und die Geräte.
+(`schiff_system_ausbauen()`) und die Geräte. Die Seite folgt dem Entwurf „Nocturne“ aus Claude Design
+(„Gluecksmine“, 1b): Fels als Bühne mit Anzeigen für Block und **Tiefe** (alle 25 Blöcke eine
+weiter, reine Optik aus `bloecke_gesamt`), Bohrturm im Canvas, Ausrüstung und Bestenliste in
+einer Spalte daneben. Die Lore leert sich bei offener Seite alle 30 s von selbst (`mine_abholen()`).
 
 Seit 64 besteht die Mine aus **Blöcken mit Leben** (`block_art`, `block_leben`): Ein Hieb zieht
 so viel ab, wie die Spitzhacke Stufen hat; beim Zerbrechen würfelt `app.mine_neuer_block()` den
