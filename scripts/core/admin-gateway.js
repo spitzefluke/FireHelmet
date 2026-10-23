@@ -629,6 +629,21 @@ function buildGatewayEpocheHtml() {
     </div>
     <p id="gw-epoche-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <div class="gw-story-lage">
+      <p class="gw-story-jetzt">Sternenreise (Entwurf „Sternenreise“, bisher nur als Vorschau): Schlacht gegen das Mutterschiff, dann besetzt jeder eine Kanone der Arche und verteidigt sie auf der Reise nach Terra Nova. Kommt sie an, wird die Seite zur Kolonie „Terra Nova“, in der ein Auge wacht; ist die Hülle bei 0, wird sie zur „Verwahrung“. Alles nur in diesem Browser – für alle live geht es noch nicht.</p>
+      <div class="gw-story-lage-knoepfe">
+        <select id="gw-reise-dauer" class="gw-feld" aria-label="Dauer der Reise">
+          <option value="60">Reise 1 min</option>
+          <option value="180">Reise 3 min</option>
+          <option value="300" selected>Reise 5 min (wie im Entwurf)</option>
+        </select>
+        <button type="button" class="gw-live-knopf" onclick="gwReiseFilm()">Sternenreise ansehen (nur hier)</button>
+        <button type="button" class="gw-live-knopf" onclick="gwReiseWelt('terra')">Vorschau Terra Nova (nur hier)</button>
+        <button type="button" class="gw-live-knopf" onclick="gwReiseWelt('verwahrung')">Vorschau Verwahrung (nur hier)</button>
+        <button type="button" class="gw-live-knopf" onclick="gwReiseWelt(null)">Vorschau beenden</button>
+      </div>
+      <p id="gw-reise-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    </div>
+    <div class="gw-story-lage">
       <p class="gw-story-jetzt">Seite eines Spielers (Jahr 2100, Migration 47) – die Wahl ist für Spieler endgültig, nur hier lässt sie sich ändern oder zurücksetzen.</p>
       <div class="gw-story-lage-knoepfe">
         <input type="text" id="gw-seite-uid" class="gw-feld gw-feld-breit" maxlength="64" placeholder="UID des Spielers" aria-label="UID des Spielers">
@@ -942,6 +957,28 @@ async function gwEpocheSetzen(jahr) {
 
 /* Vorschau 1720 oder 2100 nur in diesem Browser; derselbe Knopf
    nochmal beendet sie. */
+/* Sternenreise (scripts/liveevent/sternenreise.js): Film und die beiden
+   Seitenzustände danach - bisher nur als Vorschau in diesem Browser. */
+function gwReiseLaden() {
+  if (typeof window.fhNachladen !== "function") return Promise.reject(new Error("fhNachladen fehlt"));
+  return window.fhNachladen("reise").then(function () {
+    if (!window.fhSternenreise) throw new Error("Sternenreise fehlt");
+    return window.fhSternenreise;
+  });
+}
+function gwReiseFilm() {
+  const dauer = Number(document.getElementById("gw-reise-dauer")?.value || 300);
+  gwReiseLaden().then(function (r) { r.start({ dauer: dauer, vorschau: true }); })
+    .catch(function (err) { gwLiveStatus("gw-reise-status", "Sternenreise ließ sich nicht laden: " + ((err && err.message) || err), true); });
+}
+function gwReiseWelt(art) {
+  gwReiseLaden().then(function (r) {
+    r.welt(art);
+    gwLiveStatus("gw-reise-status", art === "terra" ? "Vorschau Terra Nova – nur bei dir. „Vorschau beenden“ schaltet zurück."
+      : art === "verwahrung" ? "Vorschau Verwahrung – nur bei dir. „Vorschau beenden“ schaltet zurück." : "Vorschau beendet.", false);
+  }).catch(function (err) { gwLiveStatus("gw-reise-status", "Sternenreise ließ sich nicht laden: " + ((err && err.message) || err), true); });
+}
+
 function gwEpocheVorschau(jahr) {
   if (!window.fhEpoche) return;
   const an = window.fhEpoche.vorschauJahr ? window.fhEpoche.vorschauJahr() !== jahr : window.fhEpoche.jahr() !== jahr;

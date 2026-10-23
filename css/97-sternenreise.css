@@ -1,0 +1,413 @@
+/* =====================================================
+   STERNENREISE (scripts/liveevent/sternenreise.js)
+   -----------------------------------------------------
+   1. Der Film #fh-reise: Vollbild-Canvas mit Anzeigen im Stil des
+      Entwurfs „Sternenreise“ (Nocturne): Glasflächen, Violett.
+   2. Die Seite danach – zwei Zustände, ein- und ausgeschaltet nur
+      über die Klassen an <html> (wie fh-1720 / fh-2100):
+        html.fh-terra       Terra Nova: Nocturne-Violett, das Auge wacht
+        html.fh-verwahrung  Verwahrung: Rot, Gitter, Flackern
+      Beide gelten über jeder Epoche (diese Datei lädt zuletzt).
+      #fh-reise und #fh-reise-welt stehen in den :not-Listen von
+      95, 96 und hier – sie werden nie umgefärbt.
+===================================================== */
+
+/* ---------- 1. Der Film ---------- */
+.rs {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  overflow: hidden;
+  background: var(--fh-nocturne-grund);
+  color: var(--fh-fg);
+  font-family: var(--fh-font-sans);
+  user-select: none;
+  -webkit-user-select: none;
+  animation: rs-rein .6s var(--fh-ease) both;
+  transition: opacity 1.6s var(--fh-ease);
+}
+.rs.ist-weg { opacity: 0; pointer-events: none; }
+@keyframes rs-rein { from { opacity: 0; } }
+
+.rs-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+/* Die Bilder-Regeln der Epochen (95/96: zwei IDs) drehen sonst auch
+   diesen Canvas um – :root und die doppelte ID schlagen sie. */
+:root body > #fh-reise#fh-reise > .rs-cv { filter: none; }
+.rs.ist-zielen .rs-cv { cursor: none; }
+.rs-ebene { position: absolute; inset: 0; pointer-events: none; }
+.rs-ebene button, .rs-ebene input, .rs-karte { pointer-events: auto; }
+.rs-blende { position: absolute; inset: 0; background: var(--fh-nocturne-grund); opacity: 0; pointer-events: none; }
+
+.rs-ecke { position: absolute; display: flex; flex-direction: column; gap: 6px; }
+.rs-lo { left: 32px; top: 28px; }
+.rs-ro { right: 32px; top: 28px; }
+.rs-lu { left: 24px; bottom: 24px; }
+.rs-ru { right: 24px; bottom: 24px; align-items: flex-end; }
+.rs-om { left: 50%; top: 24px; transform: translateX(-50%); }
+
+.rs-kicker { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--fh-nocturne-hell); }
+.rs-titel { font-size: 22px; font-weight: 500; }
+.rs-titel.ist-klein { font-size: 18px; }
+.rs-leise { font-size: 12px; color: var(--fh-muted-fg); }
+.rs-ziffern { font-variant-numeric: tabular-nums; }
+.ist-rot { color: var(--fh-reise-rot-hell); }
+.rs-zeile { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--fh-muted-fg); }
+
+/* Balken (Mutterschiff, Reisefortschritt) */
+.rs-boss { width: min(340px, 40vw); gap: 8px; }
+.rs-fortschritt { width: min(520px, 42vw); gap: 8px; }
+.rs-bahn { position: relative; height: 4px; border-radius: 2px; background: var(--fh-nocturne-dunkel); }
+.rs-boss .rs-bahn { overflow: hidden; }
+.rs-bahn-fuell { height: 100%; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--fh-nocturne)); transition: width .2s linear; }
+.rs-bahn-fuell.ist-boss { width: 100%; background: var(--fh-boss); box-shadow: 0 0 10px var(--fh-boss); }
+.rs-bahn-punkt {
+  position: absolute; top: 50%; left: 0;
+  width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%;
+  background: var(--fh-nocturne-hell); box-shadow: 0 0 10px var(--fh-nocturne);
+}
+
+/* Knöpfe, Schilder, Felder */
+.rs-knopf {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--fh-nocturne) 45%, transparent);
+  border-radius: var(--fh-radius-sm);
+  background: color-mix(in srgb, var(--fh-nocturne-karte) 80%, transparent);
+  color: var(--fh-fg); font: inherit; font-size: 14px; cursor: pointer;
+  transition: background .16s var(--fh-ease), border-color .16s var(--fh-ease);
+}
+.rs-knopf svg { width: 16px; height: 16px; }
+.rs-knopf:hover:not(:disabled) { border-color: var(--fh-nocturne-hell); background: color-mix(in srgb, var(--fh-nocturne) 22%, var(--fh-nocturne-karte)); }
+.rs-knopf:focus-visible { outline: 2px solid var(--fh-nocturne-hell); outline-offset: 2px; }
+.rs-knopf:disabled { opacity: .5; cursor: not-allowed; }
+.rs-knopf.ist-leise { background: transparent; border-color: transparent; color: var(--fh-nocturne-hell); }
+.rs-knopf.ist-leise:hover:not(:disabled) { background: color-mix(in srgb, var(--fh-nocturne) 14%, transparent); }
+.rs-knopf.ist-haupt { background: var(--fh-nocturne); border-color: var(--fh-nocturne); color: var(--fh-nocturne-grund); font-weight: 600; min-height: 44px; }
+.rs-knopf.ist-haupt:hover:not(:disabled) { background: var(--fh-nocturne-hell); }
+.rs-knopf.ist-haupt.ist-rot { background: var(--fh-reise-rot); border-color: var(--fh-reise-rot); }
+
+.rs-tag {
+  display: inline-flex; align-items: center; align-self: flex-start;
+  padding: 2px 9px; border-radius: 999px; font-size: 12px;
+  background: color-mix(in srgb, var(--fh-nocturne) 16%, transparent); color: var(--fh-fg);
+}
+.rs-tag.ist-ich { background: var(--fh-nocturne); color: var(--fh-nocturne-grund); font-weight: 600; }
+.rs-tag.ist-rand { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fh-nocturne-hell) 55%, transparent); color: var(--fh-nocturne-hell); }
+.rs-tag.ist-rand.ist-rot { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fh-reise-rot) 60%, transparent); color: var(--fh-reise-rot-hell); }
+.rs-tag.ist-mini { padding: 0 6px; font-size: 10px; }
+.rs-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.rs-karte {
+  position: absolute; right: 6vw; top: 50%; transform: translateY(-50%);
+  width: min(420px, calc(100vw - 32px));
+  display: flex; flex-direction: column; gap: 14px; padding: 24px;
+  border-radius: var(--fh-radius);
+  background: color-mix(in srgb, var(--fh-nocturne-karte) 88%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-nocturne) 30%, transparent), var(--fh-shadow);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  animation: rs-banner .7s var(--fh-ease) both;
+}
+.rs-karte-titel { font-size: 26px; font-weight: 500; line-height: 1.15; }
+.rs-text { margin: 0; font-size: 14px; line-height: 1.55; color: var(--fh-muted-fg); text-wrap: pretty; }
+.rs-feld { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--fh-muted-fg); }
+.rs-eingabe {
+  min-height: 40px; padding: 0 12px; border-radius: var(--fh-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--fh-nocturne) 40%, transparent);
+  background: var(--fh-nocturne-grund); color: var(--fh-fg); font: inherit; font-size: 15px;
+}
+.rs-eingabe:focus-visible { outline: 2px solid var(--fh-nocturne-hell); outline-offset: 1px; }
+.rs-farbzeile { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.rs-farben { display: flex; gap: 8px; pointer-events: auto; }
+.rs-farben.ist-gross { gap: 10px; }
+.rs-farbe {
+  width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  background: var(--rs-farbe); box-shadow: inset 0 0 0 1px rgba(22,24,38,.4);
+  transition: box-shadow .16s var(--fh-ease);
+}
+.rs-farben.ist-gross .rs-farbe { width: 28px; height: 28px; }
+.rs-farbe.ist-an { box-shadow: 0 0 0 2px var(--fh-nocturne-karte), 0 0 0 4px var(--rs-farbe); }
+.rs-farbe:focus-visible { outline: 2px solid var(--fh-fg); outline-offset: 3px; }
+.rs-crew { display: flex; flex-direction: column; gap: 6px; }
+
+/* Anzeigen der Reise */
+.rs-glas {
+  border-radius: var(--fh-radius-sm);
+  background: color-mix(in srgb, var(--fh-nocturne-karte) 72%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.rs-huelle {
+  right: 28px; top: 20px; width: 250px; gap: 7px; padding: 10px 12px 11px;
+  border-radius: var(--fh-radius-sm);
+  background: color-mix(in srgb, var(--fh-nocturne-karte) 72%, transparent);
+  box-shadow: var(--fh-shadow-sm);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transition: box-shadow .2s;
+}
+.rs-huelle-kopf { display: flex; align-items: center; gap: 8px; }
+.rs-huelle-kopf svg { width: 16px; height: 16px; flex: none; }
+.rs-huelle-text { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+.rs-huelle-text .rs-kicker { font-size: 10px; }
+.rs-huelle-text .rs-leise { font-size: 11px; }
+.rs-huelle-zahl { font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rs-segmente { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 2px; padding: 0 2px; }
+.rs-segment { height: 8px; border-radius: 1px; transform: skewX(-24deg); background: var(--fh-nocturne-dunkel); transition: background .2s; }
+.rs-rang {
+  width: 230px; padding: 12px 14px;
+  border-radius: var(--fh-radius-sm);
+  background: color-mix(in srgb, var(--fh-nocturne-karte) 72%, transparent);
+  box-shadow: var(--fh-shadow-sm);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.rs-rang .rs-kicker { font-size: 10px; }
+.rs-rangliste { display: flex; flex-direction: column; gap: 6px; }
+.rs-rangzeile { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.rs-rangzeile > .rs-leise:first-child { width: 14px; }
+.rs-rangzeile.ist-ich { color: var(--fh-nocturne-hell); }
+.rs-rangname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-ich .rs-kicker { font-size: 11px; }
+.rs-ich-zahl { font-size: 30px; font-weight: 500; }
+.rs-ich-zahl .rs-leise { font-size: 14px; }
+.rs-drohung { font-size: 13px; color: var(--fh-muted-fg); }
+
+/* Große Zeilen (Sieg, Sektor, Ankunft, Landung, Verlust) */
+.rs-banner {
+  position: absolute; left: 8vw; display: flex; flex-direction: column; gap: 10px;
+  max-width: min(80vw, 760px);
+  animation: rs-banner .9s var(--fh-ease) both;
+}
+.rs-banner.ist-mitte { top: 50%; transform: translateY(-50%); }
+.rs-banner.ist-oben { top: 30%; }
+.rs-banner.ist-hoch { top: 22%; }
+.rs-banner .rs-kicker { font-size: 12px; letter-spacing: .16em; }
+.rs-banner.ist-rot .rs-kicker { color: var(--fh-reise-rot-hell); }
+.rs-gross { font-size: clamp(34px, 5vw, 76px); font-weight: 500; line-height: 1; letter-spacing: -.02em; text-wrap: pretty; }
+.rs-banner.ist-mitte .rs-gross { max-width: 12ch; }
+.rs-unter { font-size: 15px; color: var(--fh-muted-fg); }
+.rs-unter.ist-auge { font-size: 16px; color: var(--fh-reise-rot-hell); animation: rs-blende-rein 1.2s ease-out both; }
+.rs-linie { width: 220px; height: 1px; background: linear-gradient(90deg, var(--fh-nocturne), transparent); }
+@keyframes rs-banner { from { opacity: 0; translate: -24px 0; } }
+@keyframes rs-blende-rein { from { opacity: 0; } }
+
+.rs-steuer { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; gap: 6px; white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .rs-lo { left: 16px; top: 16px; }
+  .rs-ro { right: 16px; top: 16px; }
+  .rs-lu { left: 12px; bottom: 64px; }
+  .rs-ru { right: 12px; bottom: 64px; }
+  .rs-titel { font-size: 17px; }
+  .rs-boss { width: 44vw; }
+  .rs-fortschritt { top: 96px; width: calc(100vw - 32px); }
+  .rs-huelle { width: 176px; padding: 8px; }
+  .rs-huelle-text .rs-kicker { white-space: nowrap; font-size: 9px; letter-spacing: .08em; }
+  .rs-huelle-text .rs-leise { display: none; }
+  .rs-steuer { bottom: 10px; gap: 2px; }
+  .rs-steuer .rs-knopf { min-height: 34px; padding: 0 8px; font-size: 12px; }
+  .rs-huelle-zahl { font-size: 18px; }
+  .rs-rang { display: none; }
+  .rs-ich-zahl { font-size: 22px; }
+  .rs-ich > .rs-leise { display: none; }
+  .rs-karte { right: 16px; top: auto; bottom: 72px; transform: none; padding: 18px; }
+  .rs-karte-titel { font-size: 21px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs, .rs-karte, .rs-banner, .rs-unter.ist-auge { animation: none; }
+}
+
+/* ---------- 2. Die Seite danach ---------- */
+/* Über Hinweisen und Kurzmeldungen, unter Level-Fenstern & Co. */
+.rsw { position: fixed; inset: 0; z-index: calc(var(--fh-z-modal) - 1); pointer-events: none; }
+.rsw-gitter {
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0, transparent calc(11vw - 7px), rgba(12,13,21,.5) calc(11vw - 7px), rgba(63,66,77,.42) calc(11vw - 3px), rgba(12,13,21,.5) 11vw);
+  box-shadow: inset 0 14px 0 rgba(12,13,21,.6), inset 0 -14px 0 rgba(12,13,21,.6);
+}
+.rsw-flacker { position: absolute; inset: 0; background: rgba(8,8,12,.55); opacity: 0; }
+
+.rsw-auge {
+  position: absolute; left: 80%; top: 30%; width: 58px; height: 27px;
+  border-radius: 50%; overflow: hidden;
+  background: var(--fh-reise-lederhaut);
+  box-shadow: 0 0 var(--rsw-glut, 35px) color-mix(in srgb, var(--fh-reise-auge) 50%, transparent), 0 0 0 1px color-mix(in srgb, var(--fh-reise-auge) 40%, transparent);
+  animation: rsw-auge-auf 1.6s ease-out both;
+  transition: transform .14s;
+}
+.rsw-auge.ist-zu { transform: scaleY(.06); }
+.rsw-pupille {
+  position: absolute; left: 50%; top: 50%; height: 94%; aspect-ratio: 1; border-radius: 50%;
+  transform: translate(-50%,-50%);
+  background: radial-gradient(circle, var(--fh-nocturne-grund) 0 30%, var(--fh-reise-auge) 35%, var(--fh-reise-auge-tief) 72%, #3a0309 100%);
+  box-shadow: 0 0 12px var(--fh-reise-auge);
+}
+@keyframes rsw-auge-auf { from { opacity: 0; filter: blur(6px); } }
+
+.rsw-leiste {
+  position: absolute; right: 16px; top: 72px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  max-width: calc(100vw - 32px); padding: 8px 14px;
+  border-radius: 999px; font-size: 12px; color: var(--fh-muted-fg);
+  background: color-mix(in srgb, var(--fh-nocturne-grund) 82%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-nocturne) 35%, transparent), var(--fh-shadow-sm);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.rsw-leiste svg { width: 16px; height: 16px; color: var(--fh-nocturne-hell); }
+.rsw-leiste-teil:first-of-type { color: var(--fh-fg); }
+.rsw-leiste .rs-ziffern { color: var(--fh-fg); }
+.rsw-verwahrung .rsw-leiste { box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-reise-rot) 35%, transparent), var(--fh-shadow-sm); }
+.rsw-verwahrung .rsw-leiste svg, .rsw-verwahrung .rsw-leiste .rs-ziffern { color: var(--fh-reise-rot-hell); }
+
+.rsw-karte {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  z-index: 1; pointer-events: auto;
+  width: min(820px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 18px; padding: 32px;
+  border-radius: var(--fh-radius);
+  background:
+    radial-gradient(70% 50% at 80% 0%, color-mix(in srgb, var(--fh-nocturne) 22%, transparent) 0%, transparent 70%),
+    var(--fh-nocturne-grund);
+  color: var(--fh-fg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-nocturne) 35%, transparent), var(--fh-shadow);
+  font-family: var(--fh-font-sans);
+  animation: rsw-karte 1.2s var(--fh-ease) both;
+}
+.rsw-verwahrung .rsw-karte {
+  background:
+    radial-gradient(55% 45% at 76% 16%, color-mix(in srgb, var(--fh-reise-auge-tief) 24%, transparent) 0%, transparent 70%),
+    linear-gradient(180deg, #11121c, #0d0e16);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-reise-rot) 28%, transparent), var(--fh-shadow);
+}
+@keyframes rsw-karte { from { opacity: 0; translate: 0 16px; } }
+.rsw-titel { margin: 0; font-size: clamp(34px, 5.4vw, 64px); line-height: .98; letter-spacing: -.03em; max-width: 12ch; text-wrap: pretty; }
+.rsw-verwahrung .rsw-titel { color: #cfd3e5; }
+.rsw-text { margin: 0; max-width: 52ch; font-size: 17px; line-height: 1.55; color: var(--fh-muted-fg); text-wrap: pretty; }
+.rsw-zahlen {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px;
+  padding: 20px; border-radius: var(--fh-radius-sm);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fh-nocturne-dunkel) 70%, transparent), color-mix(in srgb, var(--fh-nocturne-tief) 30%, transparent));
+}
+.rsw-zahl-wert { font-size: 40px; font-weight: 500; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.rsw-zahl-text { font-size: 13px; color: var(--fh-nocturne-hell); }
+.rsw-systeme { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.rsw-system { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: var(--fh-radius-sm); background: var(--fh-nocturne-karte); box-shadow: var(--fh-shadow-sm); }
+.rsw-system svg { width: 20px; height: 20px; color: var(--fh-reise-rot); }
+.rsw-system-name { font-weight: 600; }
+.rsw-system-text { margin: 0; font-size: 13px; line-height: 1.45; color: var(--fh-muted-fg); }
+.rsw-system.ist-rot .rs-leise { color: var(--fh-reise-rot); }
+.rsw-doppel { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.rsw-akte { display: flex; flex-direction: column; gap: 14px; padding: 20px; border-radius: var(--fh-radius-sm); background: #191a26; box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-reise-rot) 28%, transparent); }
+.rsw-akte-raster { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 9px 20px; font-size: 14px; }
+.rsw-ordnung { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 9px; font-size: 14px; color: #b2b6ca; }
+.rsw-fuss { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.rsw-fuss > .rs-leise { margin-right: auto; }
+
+@media (max-width: 760px) {
+  .rsw-karte { padding: 20px; gap: 14px; }
+  .rsw-zahl-wert { font-size: 30px; }
+  .rsw-leiste { left: 12px; right: 12px; top: 76px; justify-content: center; font-size: 11px; }
+  .rsw-karte { max-height: calc(100dvh - 170px); top: calc(50% + 12px); }
+}
+
+/* ---- Terra Nova: aus Gold wird das Violett von Nocturne ---- */
+html.fh-terra body {
+  background:
+    radial-gradient(60% 45% at 85% 0%, color-mix(in srgb, var(--fh-nocturne) 18%, transparent), transparent 70%),
+    var(--fh-nocturne-grund) fixed;
+  background-color: var(--fh-nocturne-grund);
+}
+html.fh-terra body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt),
+html.fh-terra dialog[open] {
+  filter: hue-rotate(210deg) saturate(.72);
+}
+html.fh-terra body > :not(#fh-sidebar):not(#fh-topbar):not(#fh-reise):not(#fh-reise-welt) :is(img, video, canvas, iframe),
+html.fh-terra dialog[open] :is(img, video, canvas, iframe) {
+  filter: saturate(1.39) hue-rotate(-210deg);
+}
+html.fh-terra .fh-sidebar,
+html.fh-terra .fh-topbar {
+  background: color-mix(in srgb, var(--fh-nocturne-karte) 86%, transparent);
+  border-color: color-mix(in srgb, var(--fh-nocturne) 30%, transparent);
+  box-shadow: none;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  color: var(--fh-fg);
+}
+html.fh-terra .fh-sidebar-flame {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #8fe0d6, #1e6f84 60%, #0d2440);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--fh-nocturne) 60%, transparent);
+  color: var(--fh-fg);
+}
+html.fh-terra .fh-sidebar-nav .fh-nav-item { color: var(--fh-muted-fg); background: transparent; }
+html.fh-terra .fh-sidebar-nav .fh-nav-item:hover,
+html.fh-terra .fh-sidebar-nav .fh-nav-item:focus-visible { color: var(--fh-fg); background: color-mix(in srgb, var(--fh-nocturne) 12%, transparent); outline-color: var(--fh-nocturne-hell); }
+html.fh-terra .fh-sidebar-nav .fh-nav-item.fh-nav-active { color: var(--fh-fg); background: color-mix(in srgb, var(--fh-nocturne) 18%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fh-nocturne) 45%, transparent); }
+html.fh-terra .fh-sidebar-nav .fh-nav-item.fh-nav-active::before { background: var(--fh-nocturne-hell); box-shadow: 0 0 10px var(--fh-nocturne); }
+html.fh-terra .fh-topbar-btn,
+html.fh-terra .fh-topbar-lang,
+html.fh-terra .fh-topbar-coins,
+html.fh-terra .fh-topbar .fh-qs-trigger {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--fh-nocturne) 35%, transparent);
+  color: var(--fh-fg);
+  box-shadow: none;
+}
+html.fh-terra .fh-topbar-coins .ph { color: var(--fh-nocturne-hell); }
+
+/* ---- Verwahrung: Rot, entsättigt, dunkler ---- */
+html.fh-verwahrung body {
+  background:
+    radial-gradient(55% 45% at 76% 16%, color-mix(in srgb, var(--fh-reise-auge-tief) 24%, transparent), transparent 70%),
+    linear-gradient(180deg, #11121c, #0d0e16) fixed;
+  background-color: #0d0e16;
+}
+html.fh-verwahrung body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt),
+html.fh-verwahrung dialog[open] {
+  filter: hue-rotate(-45deg) saturate(.5) brightness(.82);
+}
+html.fh-verwahrung body > :not(#fh-sidebar):not(#fh-topbar):not(#fh-reise):not(#fh-reise-welt) :is(img, video, canvas, iframe),
+html.fh-verwahrung dialog[open] :is(img, video, canvas, iframe) {
+  filter: grayscale(.6) brightness(.9);
+}
+html.fh-verwahrung .fh-sidebar,
+html.fh-verwahrung .fh-topbar {
+  background: rgba(13,14,22,.9);
+  border-color: color-mix(in srgb, var(--fh-reise-rot) 22%, transparent);
+  box-shadow: none;
+  color: #b2b6ca;
+}
+html.fh-verwahrung .fh-sidebar-flame {
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--fh-nocturne-grund) 0 30%, var(--fh-reise-auge) 35%, var(--fh-reise-auge-tief) 72%);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--fh-reise-auge) 60%, transparent);
+  color: transparent;
+}
+html.fh-verwahrung .fh-sidebar-nav .fh-nav-item { color: #8a8e9c; background: transparent; }
+html.fh-verwahrung .fh-sidebar-nav .fh-nav-item.fh-nav-active { color: var(--fh-reise-rot-hell); background: color-mix(in srgb, var(--fh-reise-rot) 10%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fh-reise-rot) 35%, transparent); }
+html.fh-verwahrung .fh-sidebar-nav .fh-nav-item.fh-nav-active::before { background: var(--fh-reise-rot); box-shadow: 0 0 10px var(--fh-reise-auge); }
+html.fh-verwahrung .fh-topbar-btn,
+html.fh-verwahrung .fh-topbar-lang,
+html.fh-verwahrung .fh-topbar-coins,
+html.fh-verwahrung .fh-topbar .fh-qs-trigger {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--fh-reise-rot) 28%, transparent);
+  color: #b2b6ca;
+  box-shadow: none;
+}
+html.fh-verwahrung .fh-page-title { color: #cfd3e5; text-shadow: none; }
+
+/* Dunkle Ränder über allem (unter Gitter und Auge, fängt keine Klicks). */
+html.fh-verwahrung #fh-reise-welt::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 40%, rgba(22,24,38,0) 25%, rgba(10,8,14,.8) 100%),
+    linear-gradient(180deg, rgba(120,10,24,.2), rgba(22,24,38,.12));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.fh-reise-wechsel body > * { transition: filter .9s var(--fh-ease), background-color .9s var(--fh-ease); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rsw-auge, .rsw-karte { animation: none; }
+}

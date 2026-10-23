@@ -236,6 +236,14 @@ body.loaded {
   --fh-nocturne-dunkel: #2b2741;
   --fh-nocturne-karte: #1d1e2c;
   --fh-nocturne-grund: #161826;
+  /* Sternenreise (scripts/liveevent/sternenreise.js, css/97-sternenreise.css):
+     das Violett der Kanonen, das rote Auge von Terra Nova. */
+  --fh-reise-violett: #b5abfc;
+  --fh-reise-rot: #ff6b78;
+  --fh-reise-rot-hell: #ff8a94;
+  --fh-reise-auge: #ff2b3d;
+  --fh-reise-auge-tief: #9a0716;
+  --fh-reise-lederhaut: #e4dcd8;
   /* Konsolenschrift der Live-Storys (Hacked, Systemausfall). */
   --fh-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
