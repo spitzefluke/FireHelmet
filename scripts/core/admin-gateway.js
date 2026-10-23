@@ -661,6 +661,9 @@ function buildGatewayEpocheHtml() {
           <option value="sonne">Korona von Helion (Sonne)</option>
           <option value="eisring">Eisringe von Kryos</option>
           <option value="wurmloch">Wurmloch-Schlund Ixion</option>
+          <option value="pulsar">Pulsar Vela-9</option>
+          <option value="friedhof">Schiffsfriedhof Nekros</option>
+          <option value="mondring">Ringe von Tethra</option>
         </select>
         <select id="gw-schlacht-links" class="gw-feld" aria-label="Partei links">${gwParteiOptionen("menschen")}</select>
         <select id="gw-schlacht-rechts" class="gw-feld" aria-label="Partei rechts">${gwParteiOptionen("aliens")}</select>

@@ -1823,6 +1823,14 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 .gw-db-gruppe .gw-feld-breit { flex: 1 1 200px; }
 .gw-db input[type="color"] { width: 44px; height: 34px; padding: 2px; }
 .gw-db input[type="number"] { width: 84px; }
+.gw-db-ueberblick { display: block; margin: 2px 0 8px; }
+.gw-db-marke { color: var(--fh-gold); }
+.gw-plan-schritt.ist-bearbeitet { outline: 1px dashed var(--fh-gold); outline-offset: 2px; }
+.gw-db-form optgroup { font-style: normal; }
+/* acht Knöpfe je Schritt - auf schmalen Schirmen umbrechen statt überstehen */
+.gw-db > *, .gw-db .gw-story-text { min-width: 0; }
+.gw-db .gw-story-knoepfe { flex-wrap: wrap; }
+.gw-db select.gw-feld { max-width: 100%; }
 
 /* Musik je Story (admin-gateway.js, Migration 34) */
 .gw-musik-datei { display: inline-flex; align-items: center; white-space: nowrap; cursor: pointer; }
