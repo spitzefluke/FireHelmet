@@ -1813,6 +1813,17 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
   color: var(--fh-muted-fg);
 }
 
+/* Drehbuch je Event (scripts/liveevent/drehbuch.js, Migration 65) */
+.gw-db { margin-top: 14px; }
+.gw-db-steuer { padding-top: 4px; border-top: 1px dashed color-mix(in srgb, var(--fh-gold) 30%, transparent); }
+.gw-db-steuer .gw-story-info { margin-left: 6px; }
+.gw-db-form { align-items: center; }
+.gw-db-form [hidden], .gw-db-gruppe[hidden] { display: none; }
+.gw-db-gruppe { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 260px; }
+.gw-db-gruppe .gw-feld-breit { flex: 1 1 200px; }
+.gw-db input[type="color"] { width: 44px; height: 34px; padding: 2px; }
+.gw-db input[type="number"] { width: 84px; }
+
 /* Musik je Story (admin-gateway.js, Migration 34) */
 .gw-musik-datei { display: inline-flex; align-items: center; white-space: nowrap; cursor: pointer; }
 

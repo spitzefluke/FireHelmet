@@ -16,8 +16,9 @@ Datei, die du gerade anfasst.
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 134 `<script defer>`-Tags in fester
-Reihenfolge, davon 120 aus diesem Repo. Sechs große Skripte, die fast niemand braucht
-(`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `story-wetter.js`), stehen stattdessen in der Tabelle
+Reihenfolge, davon 120 aus diesem Repo. Sieben große Skripte, die fast niemand braucht
+(`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `story-wetter.js`,
+`drehbuch.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
 meldet CodeQL das als hohe Sicherheitslücke. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
@@ -121,8 +122,11 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhStoryWetter` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
-nach `fhNachladen(...)`. Was andere Dateien früher brauchen, gehört in die kleine
+`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhStoryWetter`, `window.fhDrehbuch` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+nach `fhNachladen(...)`. Das **Drehbuch** (Migration 65, `scripts/liveevent/drehbuch.js`) baut
+im Admin-Bereich ein Live-Event vorab aus Schritten (Text, Story, Story beenden, Effekt, Pause),
+gespeichert in `event_drehbuecher` (nur Admins per RLS); abgespielt wird im Browser des Admins
+über dieselben Wege wie die Einzelknöpfe (`liveSend`, `gwStoryStart`). Was andere Dateien früher brauchen, gehört in die kleine
 Immer-geladen-Datei daneben (`admin-zugang.js`: `isAuthorizedAdmin`, `updateGatewayPage`).
 
 ### CSS
