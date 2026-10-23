@@ -26,13 +26,13 @@
   "use strict";
 
   const ADRESSEN = {
-    admin: "scripts/core/admin-gateway.js?v=c9884f69e1",
+    admin: "scripts/core/admin-gateway.js?v=f265cb674f",
     riss: "scripts/liveevent/riss-film.js?v=c60d9cac41",
     herz: "scripts/liveevent/herz-film.js?v=c6ba6293c5",
     zeit: "scripts/liveevent/zeit-film.js?v=8a4f71898d",
     nukes: "scripts/liveevent/nukes-film.js?v=5a18110731",
     wetter: "scripts/liveevent/story-wetter.js?v=d38bfcebe3",
-    drehbuch: "scripts/liveevent/drehbuch.js?v=0178bdf7c3"
+    drehbuch: "scripts/liveevent/drehbuch.js?v=efff93b38f"
   };
 
   const laeuft = Object.create(null);

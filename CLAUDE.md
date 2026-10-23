@@ -126,7 +126,11 @@ Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
 nach `fhNachladen(...)`. Das **Drehbuch** (Migration 65, `scripts/liveevent/drehbuch.js`) baut
 im Admin-Bereich ein Live-Event vorab aus Schritten (Text, Story, Story beenden, Effekt, Pause),
 gespeichert in `event_drehbuecher` (nur Admins per RLS); abgespielt wird im Browser des Admins
-über dieselben Wege wie die Einzelknöpfe (`liveSend`, `gwStoryStart`). Was andere Dateien früher brauchen, gehört in die kleine
+über dieselben Wege wie die Einzelknöpfe (`liveSend`, `gwStoryStart`, die `admin_*`-RPCs,
+`patchSupabaseSiteConfig`). Seit Migration 66 kennt es auch Freigaben und Seiten an/aus, Event
+starten/beenden, Abstimmung, Live-Bühne, Epoche, Geschenke an alle und Sternenschlacht/Boss; die
+Form jeder Art prüft `drehbuch_form_ok_66()` – eine neue Schritt-Art braucht dort einen Zweig,
+sonst lehnt die Datenbank das Speichern ab. Was andere Dateien früher brauchen, gehört in die kleine
 Immer-geladen-Datei daneben (`admin-zugang.js`: `isAuthorizedAdmin`, `updateGatewayPage`).
 
 ### CSS
