@@ -2926,84 +2926,165 @@ html.fh-schlacht-offen #fh-schlacht-hinweis { display: none; }
   .sp-vorschau { position: static; }
 }
 
-/* Gluecksmine */
+/* Gluecksmine - Design "Nocturne" (Claude Design "Gluecksmine", Entwurf 1b):
+   der Fels als Buehne mit Anzeigen darueber, Ausruestung und Bestenliste in
+   einer Spalte daneben, Erz und Raumerz rechts neben der Ueberschrift. */
+#gluecksmine .mn-seite { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 32px; }
+#gluecksmine .fh-page-head { text-align: left; margin-bottom: 28px; max-width: 60ch; }
+#gluecksmine .fh-page-kicker { margin-bottom: 8px; font-family: var(--fh-font-sans); font-size: 12px; letter-spacing: .16em; color: var(--fh-nocturne); }
+#gluecksmine h1.fh-page-title { font-family: var(--fh-font-sans); font-size: clamp(2rem, 4.4vw, 2.75rem); line-height: 1.05; letter-spacing: -.02em; text-shadow: none; }
+#gluecksmine .fh-page-lead { margin: 8px 0 0; font-size: 15px; color: color-mix(in srgb, var(--fh-text) 62%, transparent); }
+#gluecksmine .mn-inhalt { grid-column: 1 / -1; }
+.mn-konten { display: flex; gap: 32px; align-items: flex-end; margin-bottom: 28px; }
+.mn-konten[hidden], .mn-konto[hidden] { display: none; }
+.mn-konto { display: flex; flex-direction: column; gap: 2px; }
+.mn-konto-name { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb, var(--fh-text) 55%, transparent); }
+.mn-konto-zahl { font-family: var(--fh-font-sans); font-size: clamp(30px, 4vw, 40px); font-weight: 500; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--fh-text); }
+.mn-konto.ist-raumerz .mn-konto-zahl { color: var(--fh-nocturne-hell); text-shadow: 0 0 24px color-mix(in srgb, var(--fh-nocturne) 45%, transparent); }
+
 .mn-inhalt { display: grid; gap: 16px; }
-.mn-kopf { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; }
-.mn-konto { display: flex; align-items: baseline; gap: 8px; }
-.mn-konto-zahl { font-family: var(--fh-font-display); font-size: clamp(34px, 6vw, 52px); color: var(--fh-gold-bright); font-variant-numeric: tabular-nums; text-shadow: var(--fh-glow-gold); }
-.mn-konto-name { font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--fh-muted-fg); }
-.mn-werte { margin: 0; font-size: 13px; color: var(--fh-muted-fg); font-variant-numeric: tabular-nums; }
-.mn-fels { position: relative; border-radius: var(--fh-radius-lg); overflow: hidden; border: 1px solid var(--fh-seekarte-holz); box-shadow: inset 0 0 40px rgba(0, 0, 0, .6); }
-.mn-canvas { display: block; width: 100%; height: clamp(240px, 42vh, 380px); cursor: pointer; touch-action: manipulation; }
-.mn-canvas:focus-visible { outline: 2px solid var(--fh-gold); outline-offset: -2px; }
+.mn-raster { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+.mn-links { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.mn-fels {
+  position: relative;
+  border-radius: var(--fh-radius);
+  overflow: hidden;
+  background: var(--fh-nocturne-karte);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-text) 20%, transparent), 0 6px 18px rgba(0, 0, 0, .55);
+}
+.mn-canvas { display: block; width: 100%; height: clamp(300px, 52vh, 460px); cursor: pointer; touch-action: manipulation; }
+.mn-canvas:focus-visible { outline: 2px solid var(--fh-nocturne); outline-offset: -2px; }
+
+/* Anzeigen ueber dem Fels: Block (links), Tiefe (rechts), Tipp und Meldung (unten) */
+.mn-hud {
+  position: absolute; top: 16px;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--fh-radius-sm);
+  background: color-mix(in srgb, var(--fh-nocturne-grund) 72%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-text) 14%, transparent);
+  backdrop-filter: blur(6px);
+  font-size: 14px;
+  pointer-events: none;
+}
+.mn-hud.ist-block { left: 16px; min-width: 220px; }
+.mn-hud.ist-tiefe { right: 16px; min-width: 170px; align-items: flex-end; gap: 6px; }
+.mn-hud-zeile { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+.mn-hud-name { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+.mn-hud-wert, .mn-hud-klein { font-size: 12px; color: color-mix(in srgb, var(--fh-text) 60%, transparent); font-variant-numeric: tabular-nums; }
+.mn-raute { width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); }
+.mn-leiste { align-self: stretch; height: 4px; border-radius: 2px; overflow: hidden; background: color-mix(in srgb, var(--fh-text) 12%, transparent); }
+.mn-leiste-fuellung { height: 100%; border-radius: 2px; transition: width .15s ease-out; }
+.mn-leiste-fuellung.ist-tiefe { background: var(--fh-nocturne-hell); transition-duration: .3s; }
+.mn-tipp {
+  position: absolute; right: 16px; bottom: 18px;
+  margin: 0;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: color-mix(in srgb, var(--fh-text) 60%, transparent);
+  pointer-events: none;
+}
+.mn-tipp kbd {
+  padding: 2px 8px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-text) 20%, transparent);
+  background: color-mix(in srgb, var(--fh-nocturne-grund) 60%, transparent);
+  color: color-mix(in srgb, var(--fh-text) 82%, transparent);
+  font: inherit; font-size: 11px; letter-spacing: .04em;
+}
 .mn-status {
-  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  max-width: calc(100% - 32px);
   margin: 0; padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(10, 6, 3, .72);
-  font-weight: 700; font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  background: color-mix(in srgb, var(--fh-nocturne-grund) 82%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-text) 14%, transparent);
+  color: var(--fh-text);
+  font-weight: 500; font-variant-numeric: tabular-nums;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   pointer-events: none;
 }
 .mn-status:empty { display: none; }
-.mn-status.ist-gold { color: var(--fh-gold-bright); box-shadow: var(--fh-glow-gold); }
-.mn-status.ist-edelstein { color: var(--fh-geist); box-shadow: 0 0 24px color-mix(in srgb, var(--fh-geist) 60%, transparent); }
+.mn-status.ist-gold { color: var(--fh-gold-bright); box-shadow: 0 0 0 1px var(--fh-gold-bright), 0 0 24px color-mix(in srgb, var(--fh-gold-bright) 35%, transparent); }
+.mn-status.ist-edelstein { color: var(--fh-geist); box-shadow: 0 0 0 1px var(--fh-geist), 0 0 24px color-mix(in srgb, var(--fh-geist) 35%, transparent); }
+.mn-status.ist-raumerz,
+.mn-status.ist-tiefe { color: var(--fh-nocturne-hell); box-shadow: 0 0 0 1px var(--fh-nocturne-hell), 0 0 24px color-mix(in srgb, var(--fh-nocturne) 45%, transparent); }
 .mn-status.ist-fehler { color: var(--fh-danger); }
-/* Bloecke und Raumerz (64) */
-.mn-konto.ist-raumerz .mn-konto-zahl { color: var(--fh-raumerz); text-shadow: 0 0 24px color-mix(in srgb, var(--fh-raumerz) 55%, transparent); }
-.mn-konto[hidden] { display: none; }
-.mn-status.ist-raumerz { color: var(--fh-raumerz); box-shadow: 0 0 28px color-mix(in srgb, var(--fh-raumerz) 65%, transparent); }
-.mn-block {
-  position: absolute; left: 14px; top: 12px;
-  margin: 0; padding: 4px 12px;
-  border-radius: 999px;
-  background: rgba(10, 6, 3, .72);
-  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
-  pointer-events: none;
+.mn-zahlen { margin: 0; padding-left: 4px; display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 13px; color: color-mix(in srgb, var(--fh-text) 60%, transparent); font-variant-numeric: tabular-nums; }
+.mn-zahl strong { font-weight: 500; color: var(--fh-text); }
+
+/* Spalte: Ausruestung und Bestenliste */
+.mn-spalte { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.mn-gruppe { display: flex; flex-direction: column; gap: 10px; }
+.mn-gruppe-titel { margin: 0; font-family: var(--fh-font-sans); font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb, var(--fh-text) 55%, transparent); }
+.mn-geraete { display: flex; flex-direction: column; gap: 10px; }
+.mn-geraet {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  grid-template-areas: "sym kopf knopf" "sym fuss knopf";
+  gap: 4px 12px; align-items: center;
+  padding: 12px;
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-nocturne-karte);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-text) 14%, transparent);
 }
-.mn-block:empty { display: none; }
-.mn-block.ist-gold { color: var(--fh-gold-bright); }
-.mn-block.ist-kristall { color: var(--fh-geist); }
-.mn-block.ist-raumerz { color: var(--fh-raumerz); }
+.mn-geraet-sym { grid-area: sym; width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--fh-radius-sm); background: var(--fh-nocturne-dunkel); color: var(--fh-nocturne-hell); }
+.mn-geraet-sym svg { width: 20px; height: 20px; }
+.mn-geraet-kopf { grid-area: kopf; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.mn-geraet-name { margin: 0; font-family: var(--fh-font-sans); font-size: 14px; font-weight: 500; }
+.mn-geraet-stufe { font-size: 12px; color: color-mix(in srgb, var(--fh-text) 55%, transparent); font-variant-numeric: tabular-nums; }
+.mn-geraet-fuss { grid-area: fuss; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.mn-punkte { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; max-width: 150px; }
+.mn-punkte span { height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--fh-text) 12%, transparent); }
+.mn-punkte span.ist-an { background: var(--fh-nocturne-hell); }
+.mn-geraet-wirkung { margin: 0; font-size: 12px; color: color-mix(in srgb, var(--fh-text) 60%, transparent); }
+.mn-knopf {
+  grid-area: knopf;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--fh-text) 16%, transparent);
+  background: transparent;
+  color: var(--fh-text);
+  font: inherit; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--fh-dauer) var(--fh-ease), border-color var(--fh-dauer) var(--fh-ease);
+}
+.mn-knopf svg { width: 16px; height: 16px; }
+.mn-knopf:hover:not(:disabled) { background: color-mix(in srgb, var(--fh-text) 7%, transparent); }
+.mn-knopf:active:not(:disabled) { background: color-mix(in srgb, var(--fh-text) 14%, transparent); }
+.mn-knopf:focus-visible { outline: 2px solid var(--fh-nocturne); outline-offset: 2px; }
+.mn-knopf:disabled { opacity: .45; cursor: not-allowed; }
+.mn-rangliste { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.mn-rang { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px; border-radius: 4px; transition: background var(--fh-dauer) var(--fh-ease); }
+.mn-rang:hover { background: color-mix(in srgb, var(--fh-text) 6%, transparent); }
+.mn-rang-platz { font-size: 12px; font-variant-numeric: tabular-nums; color: color-mix(in srgb, var(--fh-text) 55%, transparent); }
+.mn-rang.ist-erster .mn-rang-platz { color: var(--fh-nocturne-hell); }
+.mn-rang-name { font: inherit; font-weight: 500; text-align: left; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-rang-name:hover, .mn-rang-name:focus-visible { text-decoration: underline; outline: none; }
+.mn-rang-erz { font-variant-numeric: tabular-nums; color: color-mix(in srgb, var(--fh-text) 60%, transparent); }
+.mn-leer, .mn-hinweis { color: var(--fh-muted-fg); }
+
+@media (max-width: 1080px) {
+  .mn-raster { grid-template-columns: minmax(0, 1fr); }
+  .mn-geraete { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+}
+@media (max-width: 760px) {
+  #gluecksmine .mn-seite { grid-template-columns: minmax(0, 1fr); }
+  .mn-konten { gap: 24px; }
+  .mn-hud { top: 10px; padding: 8px 10px; font-size: 13px; }
+  .mn-hud.ist-block { left: 10px; min-width: 0; max-width: 52%; }
+  .mn-hud.ist-tiefe { right: 10px; min-width: 0; max-width: 42%; }
+  .mn-hud-wert { display: none; }
+  .mn-tipp { display: none; }
+}
+
 .hg-raumerz-konto { margin: 0 0 4px; font-size: 13px; color: var(--fh-muted-fg); }
 .hg-raumerz { color: var(--fh-raumerz); font-variant-numeric: tabular-nums; }
 .hg-punkte.ist-raumerz { grid-template-columns: repeat(15, 1fr); }
 .hg-punkt.ist-raumerz { background: color-mix(in srgb, var(--fh-raumerz) 16%, transparent); }
 .hg-punkt.ist-raumerz.ist-an { background: var(--fh-raumerz); box-shadow: 0 0 8px color-mix(in srgb, var(--fh-raumerz) 60%, transparent); }
 .hg-ausbau.ist-raumerz { border-color: var(--fh-raumerz); background: color-mix(in srgb, var(--fh-raumerz) 14%, transparent); }
-.mn-bohrer { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "text knopf" "balken knopf"; gap: 6px 14px; align-items: center; padding: 14px 16px; border-radius: var(--fh-radius-lg); border: 1px solid var(--fh-border); background: var(--fh-surface); }
-.mn-bohrer-text { grid-area: text; margin: 0; font-variant-numeric: tabular-nums; }
-.mn-lore-balken { grid-area: balken; height: 10px; border-radius: 5px; overflow: hidden; background: color-mix(in srgb, var(--fh-gold) 12%, transparent); }
-.mn-lore-fuellung { display: block; height: 100%; background: linear-gradient(90deg, var(--fh-seekarte-holz), var(--fh-gold-bright)); transition: width 1s linear; }
-.mn-bohrer .mn-knopf { grid-area: knopf; }
-.mn-geraete { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
-.mn-geraet { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 12px; align-items: center; padding: 14px; border-radius: var(--fh-radius-lg); border: 1px solid var(--fh-border); background: linear-gradient(150deg, color-mix(in srgb, var(--fh-seekarte-holz) 22%, var(--fh-surface)), var(--fh-surface) 70%); }
-.mn-geraet-sym { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; color: var(--fh-gold-bright); background: color-mix(in srgb, var(--fh-gold) 14%, transparent); }
-.mn-geraet-sym svg { width: 24px; height: 24px; }
-.mn-geraet-text { display: grid; gap: 2px; min-width: 0; }
-.mn-geraet-name { margin: 0; font-size: 15px; }
-.mn-geraet-wirkung { margin: 0; font-size: 12px; color: var(--fh-muted-fg); }
-.mn-geraet .mn-knopf { grid-column: 1 / -1; }
-.mn-knopf {
-  font: inherit; font-weight: 600;
-  padding: 9px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--fh-gold);
-  background: color-mix(in srgb, var(--fh-gold) 18%, transparent);
-  color: var(--fh-fg);
-  cursor: pointer;
-  font-variant-numeric: tabular-nums;
-}
-.mn-knopf:hover:not(:disabled), .mn-knopf:focus-visible { background: color-mix(in srgb, var(--fh-gold) 32%, transparent); outline: none; }
-.mn-knopf:disabled { opacity: .5; cursor: default; }
-.mn-titel { margin: 0 0 8px; font-family: var(--fh-font-display); font-size: 20px; }
-.mn-rangliste { margin: 0; padding: 0; list-style: none; counter-reset: mn; display: grid; gap: 4px; }
-.mn-rang { counter-increment: mn; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 12px; border-radius: var(--fh-radius-sm); background: var(--fh-surface); }
-.mn-rang::before { content: counter(mn); font-weight: 700; color: var(--fh-muted-fg); font-variant-numeric: tabular-nums; }
-.mn-rang-name { font: inherit; font-weight: 600; text-align: left; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mn-rang-name:hover, .mn-rang-name:focus-visible { text-decoration: underline; outline: none; }
-.mn-rang-erz { font-variant-numeric: tabular-nums; color: var(--fh-gold-bright); }
-.mn-leer, .mn-hinweis { color: var(--fh-muted-fg); }
 
 /* Hangar: Erz-Stufen und Schiffssysteme */
 .hg-punkte.ist-erz { grid-template-columns: repeat(10, 1fr); }
