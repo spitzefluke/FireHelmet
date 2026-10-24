@@ -27,14 +27,14 @@
   "use strict";
 
   const ADRESSEN = {
-    admin: "scripts/core/admin-gateway.js?v=46823425d7",
+    admin: "scripts/core/admin-gateway.js?v=4b371fa728",
     riss: "scripts/liveevent/riss-film.js?v=c60d9cac41",
     herz: "scripts/liveevent/herz-film.js?v=c6ba6293c5",
     zeit: "scripts/liveevent/zeit-film.js?v=8a4f71898d",
     nukes: "scripts/liveevent/nukes-film.js?v=5a18110731",
     wetter: "scripts/liveevent/story-wetter.js?v=d38bfcebe3",
     drehbuch: "scripts/liveevent/drehbuch.js?v=efff93b38f",
-    reise: "scripts/liveevent/sternenreise.js?v=45178990bb"
+    reise: "scripts/liveevent/sternenreise.js?v=90d6a8ec1b"
   };
 
   const laeuft = Object.create(null);

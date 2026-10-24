@@ -162,9 +162,16 @@ Auge → Landung oder Zerstörung. Die Zeichen- und Spiellogik steht fast wörtl
 `Reise` darin; die Vorlage des Entwurfs baut `ui()` als DOM. Danach ändert sich die Seite:
 `html.fh-terra` (gelandet, Nocturne-Violett, ein wanderndes Auge) oder `html.fh-verwahrung`
 (Hülle 0: Rot, Gitter, Akte) – CSS in `97-sternenreise.css`, alles Feste in `#fh-reise-welt`.
-**Bisher nur Admin-Vorschau** (Live-Event → Epoche): Es gibt weder eine Story-ID noch eine
-Zeitmarke in der Datenbank; Mitspieler kommen nur aus anderen Tabs desselben Browsers
-(BroadcastChannel), die übrigen Kanonen sind Crew-Namen.
+
+Seit **Migration 67** läuft sie als Story `reise` für alle, fest getaktet ab `story_at`
+(`app.reise_takt()` und `BEREIT_AB`/`REISE_AB` im Browser müssen übereinstimmen: Schlacht bis
+48,5 s, Kanone besetzen bis 78,5 s, Reise 300 s). Jeder Browser rechnet die Reise selbst; was in
+**seinem** Sektor die Arche trifft, meldet er über `reise_melden()`. Die **gemeinsame Hülle** ist
+100 − 9 × Durchschnitt dieser Schäden und sinkt nur; bei 0 ist die Arche für alle verloren, sonst
+setzt `reise_abschluss()` nach der Reise „gelandet“. Das Ergebnis schreibt `live_event.reise_welt`
+('terra'|'verwahrung') und `reise_welt_ab` – `live-storys.js` schaltet damit die Seite für alle um
+(unabhängig von 1720/2100), der Admin per `admin_reise_welt()` (Live-Event → Epoche) zurück oder
+direkt. Die Vorschau-Knöpfe dort wirken weiter nur im eigenen Browser.
 
 ### Piratenpass
 
