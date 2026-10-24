@@ -11,7 +11,8 @@
      zeit     scripts/liveevent/zeit-film.js  (nur "Zeitmaschine 2100")
      nukes    scripts/liveevent/nukes-film.js (nur "Hundert Atombomben gegen eine Mücke")
      drehbuch scripts/liveevent/drehbuch.js   (nur das Drehbuch im Admin-Bereich)
-     reise    scripts/liveevent/sternenreise.js (Sternenreise, bisher nur Admin-Vorschau)
+     reise    scripts/liveevent/sternenreise.js (Sternenreise und die Seite danach)
+     zelle    scripts/liveevent/zelle.js      (Minispiel „Entkomme der Zelle“ in der Verwahrung)
 
    Die Adressen stehen fest hier in ADRESSEN - nicht im HTML, damit
    keine Skriptadresse aus dem DOM gelesen wird (CodeQL: "DOM text
@@ -34,7 +35,8 @@
     nukes: "scripts/liveevent/nukes-film.js?v=5a18110731",
     wetter: "scripts/liveevent/story-wetter.js?v=d38bfcebe3",
     drehbuch: "scripts/liveevent/drehbuch.js?v=efff93b38f",
-    reise: "scripts/liveevent/sternenreise.js?v=90d6a8ec1b"
+    reise: "scripts/liveevent/sternenreise.js?v=d3c6b7bf35",
+    zelle: "scripts/liveevent/zelle.js?v=beb445fdf8"
   };
 
   const laeuft = Object.create(null);

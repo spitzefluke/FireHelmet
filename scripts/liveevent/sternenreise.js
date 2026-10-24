@@ -1131,7 +1131,31 @@
      (live-storys.js ruft welt() mit allen: true); eine Admin-Vorschau
      (vorschau: true) merkt sich nichts und hat Vorrang, bis sie endet.
   ====================================================== */
-  const welt = { art: null, fin: null, wurzel: null, auge: null, uhren: [], maus: null, x: -1, y: -1, schluessel: null, vorschau: false, nr: 0 };
+  const welt = { art: null, fin: null, wurzel: null, auge: null, uhren: [], maus: null, x: -1, y: -1, schluessel: null, vorschau: false, nr: 0, opt: null, vorschauFrei: false };
+
+  /* „Entkomme der Zelle“: Wer ausgebrochen ist, sieht keine Gitter mehr
+     (je Verwahrung; in der Admin-Vorschau nur bis zum Neuladen). */
+  function entkommenSchon() {
+    return welt.vorschau ? welt.vorschauFrei : !!welt.schluessel && gemerkt("fhZelleEntkommen") === welt.schluessel;
+  }
+  function zelleOeffnen() {
+    if (typeof window.fhNachladen !== "function") return;
+    window.fhNachladen("zelle").then(function () {
+      if (!window.fhZelle || welt.art !== "verwahrung") return;
+      window.fhZelle.start({
+        schluessel: welt.vorschau ? "vorschau" : (welt.schluessel || "vorschau"),
+        belohnung: !welt.vorschau && !!welt.schluessel,
+        beimEntkommen: function () {
+          if (welt.art !== "verwahrung") return;
+          if (welt.vorschau) welt.vorschauFrei = true;
+          /* Seite neu zeichnen: ohne Gitter, „Auf der Flucht“ */
+          const art = welt.art, fin = welt.fin, opt = Object.assign({}, welt.opt || {}, { ohneKarte: true });
+          welt.schluessel = null;
+          weltAn(art, fin, opt);
+        },
+      });
+    }, function (e) { console.warn(e); });
+  }
 
   function merken(schl, wert) {
     try { if (wert == null) localStorage.removeItem(schl); else localStorage.setItem(schl, wert); } catch (e) { /* Privatmodus */ }
@@ -1249,9 +1273,9 @@
       : t("reise.welt.t.fuss", "Kolonialnetz Terra Nova · Jede Bewegung wird zu eurer Sicherheit erfasst.")));
     const zu = function () { k.remove(); };
     if (verloren) {
-      const zelle = knopf(t("reise.welt.v.zelleVerlassen", "Zelle verlassen"), "ist-leise", null, "schloss");
-      zelle.disabled = true;
-      fuss.appendChild(zelle);
+      /* Das Minispiel „Entkomme der Zelle“ (zelle.js) */
+      fuss.appendChild(knopf(entkommenSchon() ? t("reise.welt.v.nochmal", "Noch einmal ausbrechen") : t("reise.welt.v.zelleVerlassen", "Zelle verlassen"),
+        "ist-leise", function () { k.remove(); zelleOeffnen(); }, "schloss"));
       fuss.appendChild(knopf(t("reise.welt.v.schliessen", "Akte schließen"), "ist-haupt ist-rot", zu));
     } else {
       fuss.appendChild(knopf(t("reise.welt.t.quartier", "Quartier beziehen"), "ist-haupt", zu, "planet"));
@@ -1305,9 +1329,12 @@
     }
     if (welt.art) weltAus(opt);
     fin = fin ? Object.assign(leerFin(verloren), fin, { leer: !!fin.leer }) : leerFin(verloren);
-    welt.art = art; welt.fin = fin; welt.schluessel = opt.schluessel || null; welt.vorschau = !!opt.vorschau;
+    const frei = !!opt.ohneKarte && welt.vorschauFrei;
+    welt.art = art; welt.fin = fin; welt.schluessel = opt.schluessel || null; welt.vorschau = !!opt.vorschau; welt.opt = opt;
+    welt.vorschauFrei = frei;
     if (!opt.vorschau) merken("fhReiseWelt", art);
-    const still = !!(opt.schluessel && gemerkt("fhReiseWeltGesehen") === opt.schluessel);
+    const still = !!opt.ohneKarte || !!(opt.schluessel && gemerkt("fhReiseWeltGesehen") === opt.schluessel);
+    const flucht = verloren && entkommenSchon();
     if (opt.schluessel && !still) merken("fhReiseWeltGesehen", opt.schluessel);
     const h = document.documentElement;
     h.classList.add("fh-reise-wechsel");
@@ -1317,10 +1344,11 @@
 
     const w = el("div", "rsw rsw-" + art);
     w.id = "fh-reise-welt";
-    if (verloren) {
+    if (verloren && !flucht) {
       w.appendChild(el("div", "rsw-gitter")).setAttribute("aria-hidden", "true");
       w.appendChild(el("div", "rsw-flacker")).setAttribute("aria-hidden", "true");
     }
+    if (flucht) w.classList.add("ist-flucht");
     const auge = el("div", "rsw-auge");
     auge.setAttribute("aria-hidden", "true");
     auge.appendChild(el("div", "rsw-pupille"));
@@ -1331,11 +1359,12 @@
     leiste.appendChild(symbol(verloren ? "schloss" : "planet"));
     let uhr;
     if (verloren) {
-      zeile(leiste, "rsw-leiste-teil", [t("reise.welt.v.anlage", "Verwahranlage Terra Nova")]);
+      zeile(leiste, "rsw-leiste-teil", [flucht ? t("reise.welt.v.flucht", "Auf der Flucht") : t("reise.welt.v.anlage", "Verwahranlage Terra Nova")]);
       zeile(leiste, "rsw-leiste-teil", [tf("reise.welt.v.insasse", "Insasse #{n}", { n: insasse(fin.name) })]);
       zeile(leiste, "rsw-leiste-teil", [tf("reise.welt.v.zelleNr", "Zelle {n}", { n: "C-17" })]);
       uhr = el("span", "rs-ziffern ist-rot", "00:59");
       zeile(leiste, "rsw-leiste-teil", [t("reise.welt.v.kontrolle", "Nächste Kontrolle") + " ", uhr]);
+      if (!flucht) leiste.appendChild(knopf(t("reise.welt.v.ausbruch", "Ausbruch versuchen"), "ist-leise rsw-ausbruch", zelleOeffnen, "schloss"));
     } else {
       zeile(leiste, "rsw-leiste-teil", [t("reise.welt.t.netz", "Kolonialnetz Terra Nova")]);
       uhr = el("span", "rs-ziffern", "00:00:00");
