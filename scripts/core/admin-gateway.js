@@ -563,6 +563,7 @@ const GW_STORYS = [
   ["herz", "Zwei Hälften eines Herzens", "10:16 min · Kurzfilm in zehn Kapiteln mit Erzählerstimme (Sprachausgabe des Browsers, Deutsch oder Englisch je nach Seite): Leistungsdruck, Angst, Mobbing, eine erste Liebe – und ein kleines Licht. Musik („Patient Pulse“) unten unter „Musik je Story“ hochladen", "violett"],
   ["riss", "Der Riss", "5 min · Film: Rückeroberung scheitert, Systemausfall, Flug durch Raum und Zeit bis ins Jahr 1720 – danach ist die ganze Seite für alle im 1720-Design, bis du oben zurückschaltest", "violett"],
   ["zeit", "Zeitmaschine 2100", "5 min · Film: Auf dem Pergament zeichnet sich eine Zeitmaschine auf, Sprung durchs Zeittunnel, die Erde bricht auseinander, Menschen gegen Aliens – danach ist die ganze Seite für alle im All-Design (Jahr 2100), bis du oben zurückschaltest", "kalt"],
+  ["reise", "Sternenreise", "≈ 7 min · Schlacht gegen das Mutterschiff, dann besetzt jeder Zuschauer eine Kanone der Arche und verteidigt seinen Sektor auf der Reise nach Terra Nova. Gemeinsame Hülle: Landet die Arche, wird die Seite für alle zu „Terra Nova“, fällt die Hülle auf 0, zur „Verwahrung“ – bis du sie unter Epoche zurückschaltest (Migration 67)", "violett"],
   ["nukes", "Hundert Atombomben gegen eine Mücke", "3 min · Film: Eine Mücke weckt Kapitän Ändii um 03:12 Uhr. Hand, Pfanne, Kanone – daneben. Dann der Notfallknopf und hundert Atombomben, bis die Erde zerbricht. Musik unten unter „Musik je Story“ hochladen (Migration 51)", "gold"],
 ];
 /* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
@@ -629,7 +630,7 @@ function buildGatewayEpocheHtml() {
     </div>
     <p id="gw-epoche-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <div class="gw-story-lage">
-      <p class="gw-story-jetzt">Sternenreise (Entwurf „Sternenreise“, bisher nur als Vorschau): Schlacht gegen das Mutterschiff, dann besetzt jeder eine Kanone der Arche und verteidigt sie auf der Reise nach Terra Nova. Kommt sie an, wird die Seite zur Kolonie „Terra Nova“, in der ein Auge wacht; ist die Hülle bei 0, wird sie zur „Verwahrung“. Alles nur in diesem Browser – für alle live geht es noch nicht.</p>
+      <p class="gw-story-jetzt">Sternenreise (Migration 67): Für alle startest du sie unter Storys („Sternenreise“). Landet die Arche, wird die Seite für alle zur Kolonie „Terra Nova“, in der ein Auge wacht; fällt die gemeinsame Hülle auf 0, wird sie zur „Verwahrung“ – bis du hier zurückschaltest. Die Vorschau-Knöpfe wirken nur in diesem Browser.</p>
       <div class="gw-story-lage-knoepfe">
         <select id="gw-reise-dauer" class="gw-feld" aria-label="Dauer der Reise">
           <option value="60">Reise 1 min</option>
@@ -640,6 +641,11 @@ function buildGatewayEpocheHtml() {
         <button type="button" class="gw-live-knopf" onclick="gwReiseWelt('terra')">Vorschau Terra Nova (nur hier)</button>
         <button type="button" class="gw-live-knopf" onclick="gwReiseWelt('verwahrung')">Vorschau Verwahrung (nur hier)</button>
         <button type="button" class="gw-live-knopf" onclick="gwReiseWelt(null)">Vorschau beenden</button>
+      </div>
+      <div class="gw-story-lage-knoepfe">
+        <button type="button" class="gw-live-knopf" onclick="gwReiseWeltAlle('terra')">Terra Nova jetzt für alle</button>
+        <button type="button" class="gw-live-knopf" onclick="gwReiseWeltAlle('verwahrung')">Verwahrung jetzt für alle</button>
+        <button type="button" class="gw-live-knopf" onclick="gwReiseWeltAlle(null)">Seite wieder normal (für alle)</button>
       </div>
       <p id="gw-reise-status" class="gw-live-status" role="status" aria-live="polite"></p>
     </div>
@@ -973,10 +979,25 @@ function gwReiseFilm() {
 }
 function gwReiseWelt(art) {
   gwReiseLaden().then(function (r) {
-    r.welt(art);
+    r.welt(art, null, { vorschau: true });
+    if (!art && window.fhLiveStorys && window.fhLiveStorys.reiseWeltAuffrischen) window.fhLiveStorys.reiseWeltAuffrischen();
     gwLiveStatus("gw-reise-status", art === "terra" ? "Vorschau Terra Nova – nur bei dir. „Vorschau beenden“ schaltet zurück."
       : art === "verwahrung" ? "Vorschau Verwahrung – nur bei dir. „Vorschau beenden“ schaltet zurück." : "Vorschau beendet.", false);
   }).catch(function (err) { gwLiveStatus("gw-reise-status", "Sternenreise ließ sich nicht laden: " + ((err && err.message) || err), true); });
+}
+
+async function gwReiseWeltAlle(art) {
+  if (!supabaseClient) return;
+  const name = art === "terra" ? "Terra Nova" : art === "verwahrung" ? "Verwahrung" : null;
+  if (!confirm(name ? "Die Seite jetzt für alle zu „" + name + "“ machen – ohne Reise?" : "Terra Nova bzw. Verwahrung für alle beenden?")) return;
+  try {
+    const { error } = await supabaseClient.rpc("admin_reise_welt", { p_art: art });
+    if (error) throw error;
+    gwLiveStatus("gw-reise-status", name ? "✓ Alle sehen jetzt „" + name + "“." : "✓ Die Seite ist für alle wieder normal.", false);
+  } catch (err) {
+    console.error("Reise-Welt umschalten fehlgeschlagen:", err);
+    gwLiveStatus("gw-reise-status", "Umschalten fehlgeschlagen: " + ((err && err.message) || err) + " – ist Migration 67 eingespielt?", true);
+  }
 }
 
 function gwEpocheVorschau(jahr) {

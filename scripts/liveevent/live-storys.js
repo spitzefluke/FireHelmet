@@ -95,6 +95,10 @@
     /* Migration 51: "Hundert Atombomben gegen eine Muecke" - der
        3-Minuten-Film aus nukes-film.js, sechs Szenen zu je 30 s. */
     nukes: { szenen: [30000, 30000, 30000, 30000, 30000, 30000] },
+    /* Migration 67: "Sternenreise" aus sternenreise.js - Schlacht (bis
+       48,5 s), Kanone besetzen (30 s), Reise (300 s), Ankunft/Landung.
+       Der Film taktet sich selbst ab dem Start (wie app.reise_takt). */
+    reise: { szenen: [48500, 30000, 300000, 45000] },
   };
   const ZEITEN_IN_SZENE = {};  // Summe der Dauer bis zum Beginn jeder Szene
   Object.keys(STORYS).forEach(function (st) {
@@ -1256,6 +1260,18 @@
       else if (window.fhNachladen) window.fhNachladen("nukes").then(nukesStart, function (e) { console.warn(e); });
     }
 
+    /* Sternenreise (67): genauso, sternenreise.js - der Film rechnet
+       aus ab selbst, in welcher Phase man einsteigt. */
+    if (st === "reise" && !lauf.reiseGestartet) {
+      lauf.reiseGestartet = true;
+      const reiseStart = function () {
+        if (!lauf || lauf.id !== id || lauf.story !== "reise" || !window.fhSternenreise) return;
+        window.fhSternenreise.live({ ab: ZEITEN_IN_SZENE.reise[lauf.n - 1] + imSzeneMs(), storyId: id, vorschau: vorschau });
+      };
+      if (window.fhSternenreise) reiseStart();
+      else if (window.fhNachladen) window.fhNachladen("reise").then(reiseStart, function (e) { console.warn(e); });
+    }
+
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
     if (st === "hacked" && n === 7) {
       const p = hatPreis("hacked") ? belohnungAbholen(id, "hacked", 0, vorschau) : Promise.resolve(null);
@@ -1397,13 +1413,14 @@
     if (st === "herz" && window.fhHerzFilm) window.fhHerzFilm.ende();
     if (st === "zeit" && window.fhZeitFilm) window.fhZeitFilm.ende();
     if (st === "nukes" && window.fhNukesFilm) window.fhNukesFilm.ende();
+    if (st === "reise" && window.fhSternenreise) window.fhSternenreise.ende();
     if (st === "hacked") loecherSpawnen(id, vorschau);
     if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
     if (st === "sturm" && !vorschau) nachregen = true;
     anzeigen();
     /* 36: Riss und Systemausfall zahlen am Ende - nur wer bis hier
        dabei war, und nur, wenn der Admin etwas eingestellt hat. */
-    if ((st === "riss" || st === "ende" || st === "herz" || st === "zeit" || st === "nukes") && hatPreis(st)) {
+    if ((st === "riss" || st === "ende" || st === "herz" || st === "zeit" || st === "nukes" || st === "reise") && hatPreis(st)) {
       belohnungAbholen(id, "abschluss", 0, vorschau, st).then(function (erg) {
         const teile = belohnungsTeile(erg);
         if (!teile.length) return;
@@ -1411,8 +1428,9 @@
           : st === "herz" ? t("story.herz.reward", "Danke fürs Zuschauen")
           : st === "zeit" ? t("story.zeit.reward", "Willkommen im Jahr 2100")
           : st === "nukes" ? t("story.nukes.reward", "Bsss. Die Mücke lässt grüßen")
+          : st === "reise" ? t("story.reise.reward", "Danke, Crew der Arche")
           : t("story.end.reward", "Ein Trostpflaster für die Crew");
-        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : st === "zeit" ? "#7fe0ff" : st === "nukes" ? "#f0c96a" : "#39ff14", st === "ende");
+        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : st === "zeit" ? "#7fe0ff" : st === "nukes" ? "#f0c96a" : st === "reise" ? "#b5abfc" : "#39ff14", st === "ende");
       });
     }
   }
@@ -1447,6 +1465,7 @@
     if (window.fhHerzFilm) window.fhHerzFilm.weg();
     if (window.fhZeitFilm) window.fhZeitFilm.weg();
     if (window.fhNukesFilm) window.fhNukesFilm.weg();
+    if (window.fhSternenreise) window.fhSternenreise.weg();
     if (window.fhStoryWetter) window.fhStoryWetter.weg();
     if (musikLaeuft) musikAus(0);
     lauf = null;
@@ -1538,6 +1557,42 @@
     if (gemerkt === "1720" || gemerkt === "2100") epocheAn(Number(gemerkt));
   } catch (e) { /* egal */ }
 
+  /* ------------------------------------------------------
+     SEITE NACH DER STERNENREISE (Migration 67)
+     live_event.reise_welt ('terra' | 'verwahrung') gilt ab
+     reise_welt_ab fuer alle - unabhaengig von 1720/2100. Gezeichnet
+     wird sie in sternenreise.js (nachgeladen); die Klasse an <html>
+     setzen wir beim Laden schon aus dem letzten Stand, damit die
+     Seite nicht erst normal aufblitzt.
+  ------------------------------------------------------ */
+  let reiseWeltUhr = null;
+  let reiseWeltZuletzt = null;   // [art, ab, lauf] aus der letzten Zeile
+  function reiseWeltSetzen(art, ab, reiseLauf) {
+    clearTimeout(reiseWeltUhr);
+    reiseWeltZuletzt = [art, ab, reiseLauf];
+    if (art !== "terra" && art !== "verwahrung") {
+      art = null;
+      document.documentElement.classList.remove("fh-terra", "fh-verwahrung");
+      try { localStorage.removeItem("fhReiseWelt"); } catch (e) { /* Privatmodus */ }
+      if (window.fhSternenreise) window.fhSternenreise.welt(null, null, { allen: true });
+      return;
+    }
+    const zeit = ab ? Date.parse(ab) : Date.now();
+    if (isFinite(zeit) && zeit > Date.now()) {
+      reiseWeltUhr = setTimeout(function () { reiseWeltSetzen(art, ab, reiseLauf); }, Math.min(zeit - Date.now() + 50, 2147483000));
+      return;
+    }
+    const an = function () {
+      if (window.fhSternenreise) window.fhSternenreise.welt(art, null, { allen: true, lauf: reiseLauf || null, schluessel: art + "|" + (reiseLauf || ab || "") });
+    };
+    if (window.fhSternenreise) an();
+    else if (window.fhNachladen) window.fhNachladen("reise").then(an, function (e) { console.warn(e); });
+  }
+  try {
+    const gemerkteWelt = localStorage.getItem("fhReiseWelt");
+    if (gemerkteWelt === "terra" || gemerkteWelt === "verwahrung") document.documentElement.classList.add("fh-" + gemerkteWelt);
+  } catch (e) { /* egal */ }
+
   window.fhEpoche = {
     /* Admin-Vorschau nur hier: 1720 oder 2100 (true = 1720), null = wieder wie bei allen. */
     vorschau: function (jahr) {
@@ -1568,6 +1623,7 @@
     letzteEpoche = z.jahr_1720_ab || null;
     letzteEpoche2100 = z.jahr_2100_ab || null;
     epocheSetzen(letzteEpoche, letzteEpoche2100);
+    if ("reise_welt" in z) reiseWeltSetzen(z.reise_welt || null, z.reise_welt_ab || null, z.reise_lauf || null);
     const id = z.story_id || null;
     if (id !== aktuelleId) {
       aktuelleId = id;
@@ -1597,6 +1653,8 @@
     /* Admin: nur im eigenen Browser, ohne Belohnung */
     vorschau: function (st) { starten(st, null, 0, true, null); },
     vorschauAusklingen: ausklingen,
+    /* Nach einer Admin-Vorschau von Terra Nova/Verwahrung: wieder wie bei allen */
+    reiseWeltAuffrischen: function () { if (reiseWeltZuletzt) reiseWeltSetzen.apply(null, reiseWeltZuletzt); },
     vorschauStopp: function () { gehackt = false; loecherWeg(); stoppen(); },
     laeuft: function () { return lauf ? { story: lauf.story, szene: lauf.n, szenen: STORYS[lauf.story].szenen.length, vorschau: lauf.vorschau } : null; },
     istGehackt: function () { return gehackt; },

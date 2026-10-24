@@ -85,6 +85,16 @@
     return k;
   }
 
+  /* Takt der Story 'reise' in Sekunden ab dem Start (Migration 67,
+     app.reise_takt): Schlacht, Kanone besetzen, Reise, Ergebnis. */
+  const BEREIT_AB = 48.5, REISE_AB = 78.5, REISE_DAUER = 300;
+  function dbDa() { return typeof supabaseClient !== "undefined" && !!supabaseClient; }
+  function rpc(name, args) {
+    const ruf = function () { return supabaseClient.rpc(name, args); };
+    const p = typeof withSupabaseRlsColdStartRetry === "function" ? withSupabaseRlsColdStartRetry(ruf) : ruf();
+    return Promise.resolve(p).then(function (a) { if (a.error) throw a.error; return a.data; });
+  }
+
   /* Die Texte der fünf Sektoren (Entwurf: SEK[].name/text/feinde) */
   const SEK_TEXT = [
     ["kuiper", "Kuipergürtel", "Asteroiden und Piratenkaper", "Piraten-Armada"],
@@ -178,7 +188,7 @@
         this.resize();
         if (!this.ctx) { this.wt = setTimeout(go, 60); return; }
         if (window.ResizeObserver && !this.ro) { this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(this.root); }
-        this.enter(this.props.startPhase || "schlacht", null);
+        this.enter(this.props.live ? this.livePhase() : (this.props.startPhase || "schlacht"), null);
         this.raf = requestAnimationFrame(this.loop);
       };
       go();
@@ -214,7 +224,7 @@
       const st = { phase: ph, sieg: false, banner: null, landing: false, landingEye: false, landed: false, lost: false };
       if (ph === "landung") { E.touched = false; E.dust = []; E.shake = 0; if (!this.land) this.land = this.makeLand(); }
       if (ph === "zerstoert") { E.chain = 0; E.boom = false; E.debris = []; st.lost = true; }
-      if (ph === "schlacht") { this.setupBattle(); st.boss = 100; E.crewHits = 0; E.cannons.forEach(k => k.hits = 0); }
+      if (ph === "schlacht") { this.setupBattle(); st.boss = 100; E.crewHits = 0; E.cannons.forEach(k => k.hits = 0); if (this.props.live) E.battle.t = Math.max(0, this.liveSek()); }
       if (ph === "bereit" || ph === "reise" || ph === "ankunft") this.buildCannons(saved && saved.hits);
       if (ph === "bereit") st.crew = E.cannons.filter(k => !k.me).map(k => k.name);
       if (ph === "reise") {
@@ -228,10 +238,74 @@
 
     finish(lost) {
       const E = this.E;
+      if (this.props.live && this.stand) {
+        const me0 = E.cannons.find(k => k.me) || { hits: 0 }, d = this.stand;
+        return { crewHits: Number(d.treffer_gesamt) || 0, myHits: d.ich ? Number(d.ich.treffer) || 0 : me0.hits, hull: Math.round(Number(d.huelle) || 0),
+          crew: Number(d.kanonen) || 0, name: this.state.name || t("reise.du", "Du"), lost: !!lost };
+      }
       if (!E.cannons.length) this.buildCannons();
       if (!E.crewHits) { E.cannons.forEach(k => k.hits = 30 + Math.floor(Math.random() * 70)); E.crewHits = E.cannons.reduce((s, k) => s + k.hits, 0); E.hull = 64; }
       const me = E.cannons.find(k => k.me) || { hits: 0 };
       return { crewHits: E.crewHits, myHits: me.hits, hull: Math.round(E.hull), crew: E.cannons.length, name: this.state.name || t("reise.du", "Du"), leaders: this.leaders(10), lost: !!lost };
+    }
+
+    /* ------------------------------------------------------
+       LIVE FÜR ALLE (Story 'reise', Migration 67)
+       Die Uhr läuft ab dem Start der Story (props.live.t0). Jeder
+       verteidigt seinen Sektor; was dort die Arche trifft (schaden),
+       meldet reise_melden() alle 2 s. Die Hülle für alle und das
+       Ergebnis kommen aus der Datenbank (this.stand).
+    ------------------------------------------------------ */
+    liveSek() { return (Date.now() - this.props.live.t0) / 1000; }
+    livePhase() {
+      const s = this.liveSek();
+      return s < BEREIT_AB ? "schlacht" : s < REISE_AB ? "bereit" : "reise";
+    }
+    schaden(o, menge) {
+      const E = this.E;
+      if (!this.props.live) { E.hull = Math.max(0, E.hull - menge); return; }
+      const me = E.cannons.find(k => k.me);
+      if (me && o && o.lane === me.lane) E.eigen = (E.eigen || 0) + menge;
+    }
+    liveTakt(ts) {
+      const E = this.E, s = this.liveSek();
+      if (E.phase === "schlacht" && s >= BEREIT_AB) this.enter("bereit");
+      if (E.phase === "bereit" && s >= REISE_AB) this.enter("reise");
+      if (E.phase === "bereit" && this.ref && this.ref.los && ts - (this.letzterLos || 0) > 400) {
+        this.letzterLos = ts;
+        this.losSchreiben();
+      }
+      const fragen = E.phase === "reise" || (E.phase === "ankunft" && !this.stand);
+      if (fragen && ts - (this.letzteMeldung || 0) > 2000) { this.letzteMeldung = ts; this.melden(); }
+    }
+    losSchreiben() {
+      const R = this.ref || {};
+      if (!R.los) return;
+      const rest = Math.max(0, Math.ceil(REISE_AB - this.liveSek()));
+      R.losText.textContent = this.bemannt ? tf("reise.live.bereit", "Bereit · Start in {n} s", { n: rest }) : t("reise.bereit.los", "Kanone besetzen");
+      R.los.disabled = !!this.bemannt;
+    }
+    melden() {
+      if (this.meldetGerade || !dbDa()) return;
+      const E = this.E, L = this.props.live, me = E.cannons.find(k => k.me);
+      const zuEnde = E.elapsed >= this.cfg().dur;
+      let p;
+      if (zuEnde) p = rpc("reise_abschluss", { p_story_id: L.storyId });
+      else if (this.bemannt) {
+        p = rpc("reise_melden", { p_story_id: L.storyId, p_schaden: Math.round((E.eigen || 0) * 100) / 100, p_treffer: me ? me.hits : 0,
+          p_name: (this.state.name || "").trim() || null, p_farbe: this.state.fireCol });
+      } else p = rpc("reise_stand", { p_story_id: L.storyId });
+      this.meldetGerade = true;
+      p.then((d) => this.standNeu(d), (err) => console.warn("Sternenreise:", (err && err.message) || err))
+        .then(() => { this.meldetGerade = false; });
+    }
+    standNeu(d) {
+      if (!d || d.ok !== true || !this.E) return;
+      this.stand = d;
+      this.E.hull = Math.max(0, Math.min(100, Number(d.huelle)));
+      /* Die anderen Kanonen tragen die Namen echter Mitspieler. */
+      const namen = (d.crew || []).filter((c) => !c.ich).map((c) => String(c.name || "").slice(0, 18));
+      this.E.cannons.filter((k) => !k.me && !k.remote).forEach((k, i) => { if (namen[i]) k.name = namen[i]; });
     }
 
     /* ------------------------------------------------------
@@ -313,7 +387,7 @@
           const me = this.E && this.E.cannons.find(k => k.me); if (me) me.name = v || t("reise.du", "Du");
           if (R.meTag) R.meTag.textContent = v || t("reise.du", "Du");
         });
-        eingabe.addEventListener("keydown", (e) => { if (e.key === "Enter") this.enter("reise"); });
+        eingabe.addEventListener("keydown", (e) => { if (e.key === "Enter" && !this.props.live) this.enter("reise"); });
         feld.appendChild(eingabe);
         const farbe = el("div", "rs-feld");
         farbe.appendChild(el("span", null, t("reise.bereit.farbe", "Feuerfarbe")));
@@ -321,13 +395,24 @@
         fz.append(this.farbwahl(true), el("span", "rs-leise", this.farbName(s.fireCol)));
         farbe.appendChild(fz);
         const crew = el("div", "rs-crew");
-        crew.appendChild(el("div", "rs-leise", tf("reise.bereit.anBord", "An Bord · {n} Kanonen besetzt", { n: s.crew.length + 1 })));
+        crew.appendChild(el("div", "rs-leise", this.props.live ? t("reise.live.anBord", "Jeder Zuschauer besetzt eine Kanone – die Reise beginnt für alle zugleich.")
+          : tf("reise.bereit.anBord", "An Bord · {n} Kanonen besetzt", { n: s.crew.length + 1 })));
         const tags = el("div", "rs-tags");
         R.meTag = tags.appendChild(el("span", "rs-tag ist-ich", s.name || t("reise.du", "Du")));
-        s.crew.forEach((n) => tags.appendChild(el("span", "rs-tag", n)));
+        if (!this.props.live) s.crew.forEach((n) => tags.appendChild(el("span", "rs-tag", n)));
         crew.appendChild(tags);
-        const los = knopf(t("reise.bereit.los", "Kanone besetzen"), "ist-haupt", () => { this.save(); this.enter("reise"); }, "ziel");
+        const los = knopf(t("reise.bereit.los", "Kanone besetzen"), "ist-haupt", () => {
+          this.save();
+          if (!this.props.live) { this.enter("reise"); return; }
+          this.bemannt = true; this.losSchreiben();
+        }, "ziel");
+        if (this.props.live) {
+          R.los = los;
+          R.losText = los.lastChild;
+          eingabe.addEventListener("keydown", (e) => { if (e.key === "Enter") { this.bemannt = true; this.losSchreiben(); } });
+        }
         karte.append(feld, farbe, crew, los);
+        if (this.props.live) this.losSchreiben();
         teile.push(karte);
       }
 
@@ -490,6 +575,7 @@
       if (!this.ctx || E.phase === "erde" || E.phase === "laden" || E.phase === "aus") return;
       if (RUHIG.matches) E.shake = 0;
       E.pt += dt;
+      if (this.props.live) { this.liveTakt(ts); if (E.phase === "erde" || E.phase === "aus") return; }
       const ctx = this.ctx; ctx.setTransform(E.dpr, 0, 0, E.dpr, 0, 0);
       if (E.phase === "schlacht") this.battle(ctx, dt, ts);
       else if (E.phase === "bereit") this.bereit(ctx, dt, ts);
@@ -671,18 +757,22 @@
 
     reise(ctx, dt, now) {
       const E = this.E, c = this.cfg(), g = this.ship(now);
-      E.elapsed += dt; const prog = Math.min(1, E.elapsed / c.dur);
+      if (this.props.live) E.elapsed = Math.min(c.dur, Math.max(0, this.liveSek() - REISE_AB)); else E.elapsed += dt;
+      const prog = Math.min(1, E.elapsed / c.dur);
       const si = Math.min(4, Math.floor(prog * 5));
       if (si !== E.sector) { E.prevSec = E.sector < 0 ? si : E.sector; E.sector = si; E.secT = 0; this.showBanner(si); }
       E.secT += dt;
       const S = this.SEK[si];
       if (prog < .975) { E.spawnAcc += dt * S.rate * (.8 + .5 * (prog * 5 - si)) * 1.3 * (E.lanes || c.crew) / 9; while (E.spawnAcc > 1) { E.spawnAcc--; this.spawn(S, g); } }
       this.simulate(dt, now, g, true);
-      if (E.hull <= 0) { this.hud(prog, si); this.enter("zerstoert"); return; }
+      if (this.props.live ? (this.stand && this.stand.ergebnis === "verloren") : E.hull <= 0) { this.hud(prog, si); this.enter("zerstoert"); return; }
       if (now - E.lastHud > 200) { E.lastHud = now; this.hud(prog, si); }
       if (now - E.lastSave > 2000) { E.lastSave = now; this.save("reise"); }
       this.scene(ctx, dt, now, g, si, 380 + prog * 260, 1);
-      if (E.elapsed >= c.dur) this.enter("ankunft");
+      if (E.elapsed >= c.dur) {
+        if (!this.props.live) this.enter("ankunft");
+        else if (this.stand && this.stand.ergebnis) this.enter(this.stand.ergebnis === "gelandet" ? "ankunft" : "zerstoert");
+      }
     }
     simulate(dt, now, g, shoot) {
       const E = this.E;
@@ -691,7 +781,7 @@
         k.x = g.x + k.fx * g.b; k.y = g.y + k.fy * g.b; k.cd -= dt; k.flash = Math.max(0, k.flash - dt * 8);
         if (k.rec) { k.rec[0] = Math.max(0, k.rec[0] - dt * 9); k.rec[1] = Math.max(0, k.rec[1] - dt * 9); } k.heat = Math.max(0, (k.heat || 0) - dt * .5);
         let fire = false;
-        if (k.me) { k.ang = Math.atan2(E.my - k.y, E.mx - k.x); fire = E.down || E.key; }
+        if (k.me) { k.ang = Math.atan2(E.my - k.y, E.mx - k.x); fire = E.down || E.key; if (fire && shoot) this.bemannt = true; }
         else if (k.remote) { const R = E.remote[k.remote]; if (R) { k.ang = R.ang; fire = R.fire; k.col = R.col; } }
         else {
           if (!k.tgt || k.tgt.dead || Math.random() < dt * .7) k.tgt = this.pickTarget(k);
@@ -732,14 +822,14 @@
             if (o.cd <= 0) {
               o.cd = F.fire * (.8 + Math.random() * .5);
               const tg = { x: g.x + (Math.random() - .5) * g.b * .7, y: g.y + (Math.random() - .5) * g.b * .1 };
-              window.fhSchlachtFx.schuss(o, tg, { typ: o.typ, seite: o.partei, beimTreffer: () => { const E2 = this.E; if (E2.phase !== "reise") return; E2.hull = Math.max(0, E2.hull - 1); E2.hitT = Math.max(E2.hitT || 0, .6); E2.shake = Math.max(E2.shake, 4); } });
+              window.fhSchlachtFx.schuss(o, tg, { typ: o.typ, seite: o.partei, beimTreffer: () => { const E2 = this.E; if (E2.phase !== "reise") return; this.schaden(o, 1); E2.hitT = Math.max(E2.hitT || 0, .6); E2.shake = Math.max(E2.shake, 4); } });
             }
           }
         }
         o.x += o.vx * dt; o.y += o.vy * dt; o.rot += o.vr * dt; o.hit = Math.max(0, o.hit - dt * 6);
         const ex = (o.x - g.x) / (g.b * .48), ey = (o.y - g.y) / (g.b * .15);
         if (ex * ex + ey * ey < 1) {
-          o.dead = true; E.hull = Math.max(0, E.hull - (o.kind === "stein" ? o.r * .16 : o.kind === "truemmer" ? 1.5 : o.r * .13));
+          o.dead = true; this.schaden(o, o.kind === "stein" ? o.r * .16 : o.kind === "truemmer" ? 1.5 : o.r * .13);
           E.shake = 9; E.hitT = 1; fhSchlachtFx.explosion(o.x, o.y, "boss", o.r * 1.1);
         }
         if (o.x < -100 || o.y < -140 || o.y > E.H + 140) o.dead = true;
@@ -847,7 +937,7 @@
       const segs = Array.from({ length: 20 }, (_, i) => i < lit ? { bg: (i === lit - 1 && pulse) ? "#f5f4ff" : segCol, glow: "0 0 6px " + segCol } : { bg: "", glow: "none" });
       const mk = E.cannons.find(k => k.me);
       const threat = mk ? E.objs.filter(o => o.lane === mk.lane && o.x < E.W).length : 0;
-      this.setState({ hud: {
+      this.setState({ hud: Object.assign({
         threat,
         segs, hullState: hull <= 0 ? t("reise.huelle.weg", "Zerstört") : crit ? t("reise.huelle.kritisch", "Kritisch · keine Reparatur") : hull > 55 ? t("reise.huelle.stabil", "Stabil · keine Reparatur") : t("reise.huelle.beschaedigt", "Beschädigt · keine Reparatur"),
         hullStateCol: crit ? "#ff8a94" : "",
@@ -855,7 +945,11 @@
         nr: si + 1, sector: sekText(si, "name"), feinde: sekText(si, "feinde"), pct: (prog * 100).toFixed(1), left: Math.floor(left / 60) + ":" + String(Math.floor(left % 60)).padStart(2, "0"),
         lj: zahl(Math.round((1 - prog) * 1240)), hull, hullCol: segCol,
         crew: E.cannons.length, crewHits: E.crewHits, myHits: me.hits, myName: me.name, leaders: this.leaders(5),
-      } });
+      }, this.props.live && this.stand ? {
+        /* Live: Crew und Treffer aller echten Kanonen aus der Datenbank */
+        crew: Number(this.stand.kanonen) || 0, crewHits: Number(this.stand.treffer_gesamt) || 0,
+        leaders: (this.stand.crew || []).slice(0, 5).map((c, i) => ({ rank: i + 1, name: String(c.name || "").slice(0, 18) + (c.ich ? " " + t("reise.duKlammer", "(du)") : ""), hits: Number(c.treffer) || 0, live: false, ich: !!c.ich })),
+      } : {}) });
     }
     showBanner(si) {
       clearTimeout(this.bt);
@@ -1032,11 +1126,25 @@
                          großes Auge oben rechts, die Akte
      Alles Feste hängt in #fh-reise-welt an body (steht in den
      :not-Listen von 95/96/97). Die Willkommenskarte erscheint einmal
-     je Umschalten und lässt sich schließen.
+     je Reise (localStorage „fhReiseWeltGesehen“) und lässt sich
+     schließen. Für alle gilt die Seite über live_event.reise_welt
+     (live-storys.js ruft welt() mit allen: true); eine Admin-Vorschau
+     (vorschau: true) merkt sich nichts und hat Vorrang, bis sie endet.
   ====================================================== */
-  const welt = { art: null, fin: null, wurzel: null, auge: null, uhren: [], maus: null, x: -1, y: -1 };
+  const welt = { art: null, fin: null, wurzel: null, auge: null, uhren: [], maus: null, x: -1, y: -1, schluessel: null, vorschau: false, nr: 0 };
 
-  function weltAus() {
+  function merken(schl, wert) {
+    try { if (wert == null) localStorage.removeItem(schl); else localStorage.setItem(schl, wert); } catch (e) { /* Privatmodus */ }
+  }
+  function gemerkt(schl) {
+    try { return localStorage.getItem(schl); } catch (e) { return null; }
+  }
+
+  function weltAus(opt) {
+    opt = opt || {};
+    if (opt.allen && welt.vorschau) return;
+    if (!opt.vorschau) merken("fhReiseWelt", null);
+    welt.vorschau = false; welt.schluessel = null; welt.nr++;
     welt.uhren.forEach(clearInterval); welt.uhren = [];
     if (welt.maus) document.removeEventListener("pointermove", welt.maus);
     welt.maus = null;
@@ -1048,10 +1156,14 @@
     setTimeout(function () { h.classList.remove("fh-reise-wechsel"); }, 1200);
   }
 
-  function beispielFin(verloren) {
-    let name = "";
-    try { name = localStorage.getItem("wheelNickname") || ""; } catch (e) { /* egal */ }
-    return { crewHits: 612, myHits: 87, hull: verloren ? 0 : 64, crew: 9, name: name || t("reise.du", "Du"), lost: !!verloren };
+  /* Ohne Zahlen einer Reise (Admin schaltet direkt um): leere Karte. */
+  function leerFin(verloren) {
+    return { leer: true, crewHits: 0, myHits: 0, hull: verloren ? 0 : 100, crew: 0, name: gemerkt("wheelNickname") || t("reise.du", "Du"), lost: !!verloren };
+  }
+  function finAusStand(d, verloren) {
+    if (!d || d.ok !== true || !(Number(d.kanonen) > 0)) return null;
+    return { crewHits: Number(d.treffer_gesamt) || 0, myHits: d.ich ? Number(d.ich.treffer) || 0 : 0, hull: Math.round(Number(d.huelle) || 0),
+      crew: Number(d.kanonen) || 0, name: gemerkt("wheelNickname") || t("reise.du", "Du"), lost: !!verloren };
   }
 
   function insasse(name) {
@@ -1079,7 +1191,7 @@
       ? t("reise.welt.v.text", "Die Arche ist gefallen. Eure Crew wurde aus den Trümmern geborgen und hierher gebracht. Hier seid ihr sicher. Hier bleibt ihr.")
       : t("reise.welt.t.text", "Die Flotte hat Terra Nova erreicht. Atmosphäre stabil, Biosphäre intakt, alle Systeme online. Ihr seid in Sicherheit.")));
 
-    if (!verloren) {
+    if (!verloren && !fin.leer) {
       const zahlen = el("div", "rsw-zahlen");
       [[zahl(fin.crewHits), t("reise.welt.t.crewTreffer", "Abschüsse der Crew auf der Reise")],
         [zahl(fin.myHits), tf("reise.welt.t.deine", "davon von {name}", { name: fin.name })],
@@ -1090,6 +1202,8 @@
         zahlen.appendChild(z);
       });
       k.appendChild(zahlen);
+    }
+    if (!verloren) {
       const sys = el("div", "rsw-systeme");
       [["atmo", "Atmosphäre", "21 % Sauerstoff, 0,94 g. Atmen ohne Maske ab Tag drei.", "Sensor 01 · online"],
         ["bio", "Biosphäre", "Wälder, Ozeane, gemäßigte Zonen. Keine bekannten Raubtiere.", "Sensor 02 · online"],
@@ -1112,7 +1226,7 @@
         [t("reise.welt.v.nummer", "Nummer"), "#" + insasse(fin.name)],
         [t("reise.welt.v.zelle", "Zelle"), "C-17"],
         [t("reise.welt.v.vergehen", "Vergehen"), t("reise.welt.v.vergehenText", "Arche verloren · Hülle 0 %")],
-        [t("reise.welt.v.abschuesse", "Abschüsse"), tf("reise.welt.v.abschuesseText", "{mein} von {alle}", { mein: zahl(fin.myHits), alle: zahl(fin.crewHits) })],
+        [t("reise.welt.v.abschuesse", "Abschüsse"), fin.leer ? "–" : tf("reise.welt.v.abschuesseText", "{mein} von {alle}", { mein: zahl(fin.myHits), alle: zahl(fin.crewHits) })],
         [t("reise.welt.v.status", "Status"), t("reise.welt.v.statusText", "unter Beobachtung")]].forEach(function (p, i) {
         g.appendChild(el("span", "rs-leise", p[0]));
         g.appendChild(el("span", i === 5 ? "ist-rot" : null, p[1]));
@@ -1174,12 +1288,27 @@
     setTimeout(function () { if (welt.auge === a) a.classList.remove("ist-zu"); }, dauer || 150);
   }
 
-  function weltAn(art, fin, still) {
-    if (art !== "terra" && art !== "verwahrung") { weltAus(); return; }
-    if (welt.art) weltAus();
+  /* opt: { schluessel, lauf, allen, vorschau } - siehe oben. */
+  function weltAn(art, fin, opt) {
+    opt = opt || {};
+    if (art !== "terra" && art !== "verwahrung") { weltAus(opt); return; }
+    if (opt.allen && welt.vorschau) return;
+    if (opt.schluessel && opt.schluessel === welt.schluessel && welt.art === art) return;
     const verloren = art === "verwahrung";
-    fin = Object.assign(beispielFin(verloren), fin || {});
-    welt.art = art; welt.fin = fin;
+    /* Für alle nach einer Reise: erst die Zahlen holen, dann umschalten. */
+    if (!fin && opt.lauf && dbDa()) {
+      const nr = ++welt.nr;
+      rpc("reise_stand", { p_story_id: opt.lauf })
+        .then((d) => finAusStand(d, verloren), () => null)
+        .then((f) => { if (nr === welt.nr) weltAn(art, f || leerFin(verloren), Object.assign({}, opt, { lauf: null })); });
+      return;
+    }
+    if (welt.art) weltAus(opt);
+    fin = fin ? Object.assign(leerFin(verloren), fin, { leer: !!fin.leer }) : leerFin(verloren);
+    welt.art = art; welt.fin = fin; welt.schluessel = opt.schluessel || null; welt.vorschau = !!opt.vorschau;
+    if (!opt.vorschau) merken("fhReiseWelt", art);
+    const still = !!(opt.schluessel && gemerkt("fhReiseWeltGesehen") === opt.schluessel);
+    if (opt.schluessel && !still) merken("fhReiseWeltGesehen", opt.schluessel);
     const h = document.documentElement;
     h.classList.add("fh-reise-wechsel");
     h.classList.toggle("fh-terra", !verloren);
@@ -1275,9 +1404,12 @@
     cv.setAttribute("aria-hidden", "true");
     w.append(cv, el("div", "rs-ebene"), el("div", "rs-blende"));
     document.body.appendChild(w);
-    const reise = new Reise({ journeySeconds: opt.dauer || 300, crewSize: opt.crew || 9, vorschau: opt.vorschau !== false, startPhase: opt.ab || "schlacht" }, function (fin) {
+    const live = opt.live || null;
+    const reise = new Reise({ journeySeconds: live ? REISE_DAUER : (opt.dauer || 300), crewSize: opt.crew || 9, vorschau: !live && opt.vorschau !== false, startPhase: opt.ab || "schlacht", live: live }, function (fin) {
       filmWeg(true);
-      weltAn(fin && fin.lost ? "verwahrung" : "terra", fin);
+      const art = fin && fin.lost ? "verwahrung" : "terra";
+      if (live) weltAn(art, fin, { allen: true, schluessel: art + "|" + live.storyId });
+      else weltAn(art, fin, { vorschau: true });
     });
     reise.beimAbbruch = function () { filmWeg(false); };
     const esc = function (e) { if (e.key === "Escape") filmWeg(false); };
@@ -1287,9 +1419,21 @@
   }
 
   window.fhSternenreise = {
+    /* Admin-Vorschau: nur dieser Browser, ohne Datenbank */
     start: start,
     stopp: function () { filmWeg(false); },
-    welt: function (art, fin) { weltAn(art, fin); },
+    /* Story 'reise' aus live-storys.js: ab = ms seit dem Start */
+    live: function (o) {
+      o = o || {};
+      if (!o.storyId || o.vorschau) { start({ dauer: REISE_DAUER, vorschau: true }); return; }
+      /* Längst vorbei (später Einstieg): die Seite schaltet live-storys.js. */
+      if ((o.ab || 0) / 1000 > REISE_AB + REISE_DAUER + 24) return;
+      start({ live: { storyId: o.storyId, t0: Date.now() - (o.ab || 0) } });
+    },
+    ende: function () { filmWeg(true); },
+    weg: function () { filmWeg(false); },
+    /* welt(art, fin?, { allen, lauf, schluessel, vorschau }) */
+    welt: function (art, fin, opt) { weltAn(art, fin, opt); },
     weltArt: function () { return welt.art; },
   };
 })();
