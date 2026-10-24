@@ -16,9 +16,9 @@ Datei, die du gerade anfasst.
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 134 `<script defer>`-Tags in fester
-Reihenfolge, davon 120 aus diesem Repo. Acht große Skripte, die fast niemand braucht
+Reihenfolge, davon 120 aus diesem Repo. Neun große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `story-wetter.js`,
-`drehbuch.js`, `sternenreise.js`), stehen stattdessen in der Tabelle
+`drehbuch.js`, `sternenreise.js`, `zelle.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
 meldet CodeQL das als hohe Sicherheitslücke. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
@@ -122,7 +122,7 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
 nach `fhNachladen(...)`. Das **Drehbuch** (Migration 65, `scripts/liveevent/drehbuch.js`) baut
 im Admin-Bereich ein Live-Event vorab aus Schritten (Text, Story, Story beenden, Effekt, Pause),
 gespeichert in `event_drehbuecher` (nur Admins per RLS); abgespielt wird im Browser des Admins
@@ -172,6 +172,15 @@ setzt `reise_abschluss()` nach der Reise „gelandet“. Das Ergebnis schreibt `
 ('terra'|'verwahrung') und `reise_welt_ab` – `live-storys.js` schaltet damit die Seite für alle um
 (unabhängig von 1720/2100), der Admin per `admin_reise_welt()` (Live-Event → Epoche) zurück oder
 direkt. Die Vorschau-Knöpfe dort wirken weiter nur im eigenen Browser.
+
+**Entkomme der Zelle** (`scripts/liveevent/zelle.js`, nachgeladen als `zelle`) ist ein Escape Room,
+den es nur in der Verwahrung gibt (Knopf „Zelle verlassen“ auf der Akte, „Ausbruch versuchen“ in
+der Statusleiste): Löffel → Stein → Blechstück → Lüftungsgitter → Notiz → Türcode aus der
+Hausordnung (Wörter je Regel, **aus den Texten der gerade gewählten Sprache** – wer
+`reise.welt.v.regel1..4` ändert, ändert den Code) → Tür nur bei geschlossenem Auge. Rein im Browser;
+einmal je Verwahrung 250 Dublonen über `addCurrency()`, danach zeigt die Seite dem Spieler keine
+Gitter mehr („Auf der Flucht“, `localStorage` „fhZelleEntkommen“). `#fh-zelle` steht in allen
+`:not`-Listen der Epochen.
 
 ### Piratenpass
 

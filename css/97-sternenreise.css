@@ -8,8 +8,8 @@
         html.fh-terra       Terra Nova: Nocturne-Violett, das Auge wacht
         html.fh-verwahrung  Verwahrung: Rot, Gitter, Flackern
       Beide gelten über jeder Epoche (diese Datei lädt zuletzt).
-      #fh-reise und #fh-reise-welt stehen in den :not-Listen von
-      95, 96 und hier – sie werden nie umgefärbt.
+      #fh-reise, #fh-reise-welt und #fh-zelle stehen in den :not-Listen
+      von 95, 96 und hier – sie werden nie umgefärbt.
 ===================================================== */
 
 /* ---------- 1. Der Film ---------- */
@@ -316,7 +316,7 @@ html.fh-terra body {
     var(--fh-nocturne-grund) fixed;
   background-color: var(--fh-nocturne-grund);
 }
-html.fh-terra body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt),
+html.fh-terra body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle),
 html.fh-terra dialog[open] {
   filter: hue-rotate(210deg) saturate(.72);
 }
@@ -361,7 +361,7 @@ html.fh-verwahrung body {
     linear-gradient(180deg, #11121c, #0d0e16) fixed;
   background-color: #0d0e16;
 }
-html.fh-verwahrung body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt),
+html.fh-verwahrung body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle),
 html.fh-verwahrung dialog[open] {
   filter: hue-rotate(-45deg) saturate(.5) brightness(.82);
 }
@@ -410,4 +410,174 @@ html.fh-verwahrung #fh-reise-welt::before {
 }
 @media (prefers-reduced-motion: reduce) {
   .rsw-auge, .rsw-karte { animation: none; }
+}
+
+/* ---------- 3. Entkomme der Zelle (scripts/liveevent/zelle.js) ---------- */
+.rsw-ausbruch { pointer-events: auto; min-height: 30px; padding: 0 8px; font-size: 12px; color: var(--fh-reise-rot-hell); }
+.rsw-ausbruch:hover:not(:disabled) { background: color-mix(in srgb, var(--fh-reise-rot) 14%, transparent); }
+.rsw.ist-flucht .rsw-leiste-teil:first-of-type { color: var(--fh-success); }
+
+.zl {
+  position: fixed; inset: 0; z-index: 10050;
+  display: flex; flex-direction: column; gap: 12px; padding: 16px clamp(12px, 3vw, 32px);
+  background: radial-gradient(60% 50% at 70% 10%, color-mix(in srgb, var(--fh-reise-auge-tief) 22%, transparent), transparent 70%), #0d0e16;
+  color: var(--fh-fg); font-family: var(--fh-font-sans);
+  animation: rs-rein .6s var(--fh-ease) both;
+}
+.zl-kopf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.zl-titel { display: flex; flex-direction: column; gap: 4px; }
+.zl-kopf-rechts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.zl-zeit { font-size: 20px; color: var(--fh-reise-rot-hell); }
+
+.zl-raum {
+  position: relative; flex: 1; min-height: 0; width: 100%; max-width: 1100px; margin: 0 auto;
+  aspect-ratio: 16 / 9; max-height: calc(100dvh - 210px);
+  border-radius: var(--fh-radius); overflow: hidden;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fh-reise-rot) 24%, transparent), var(--fh-shadow);
+}
+.zl-wand {
+  position: absolute; inset: 0 0 26% 0;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 34px, rgba(8,8,12,.55) 34px 36px),
+    repeating-linear-gradient(90deg, transparent 0 70px, rgba(8,8,12,.45) 70px 72px),
+    linear-gradient(180deg, #2a2b36, #1d1e28);
+}
+.zl-boden { position: absolute; inset: 74% 0 0 0; background: linear-gradient(180deg, #23222a, #121219); box-shadow: inset 0 6px 14px rgba(0,0,0,.5); }
+.zl-lampe {
+  position: absolute; left: 46%; top: 0; width: 70px; height: 70px; margin-left: -35px;
+  background: radial-gradient(circle at 50% 30%, rgba(255,225,170,.9) 0 8px, rgba(255,200,120,.18) 9px, transparent 70%);
+  animation: zl-flackern 5s steps(1) infinite;
+}
+@keyframes zl-flackern { 0%, 100% { opacity: 1; } 41% { opacity: .35; } 43% { opacity: 1; } 77% { opacity: .55; } 78% { opacity: 1; } }
+.zl.ist-ruhig .zl-lampe { animation: none; }
+
+.zl-teil {
+  position: absolute; padding: 0; border: 0; cursor: pointer; color: inherit;
+  transition: filter .16s var(--fh-ease), box-shadow .16s var(--fh-ease);
+}
+.zl-teil:hover, .zl-teil:focus-visible { filter: brightness(1.25); box-shadow: 0 0 0 2px color-mix(in srgb, var(--fh-reise-rot-hell) 70%, transparent); outline: none; }
+
+.zl-pritsche {
+  left: 4%; bottom: 8%; width: 30%; height: 20%; border-radius: 6px;
+  background: linear-gradient(180deg, #6b6658 0 30%, #4a463c 30% 55%, #2c2b30 55%);
+  box-shadow: 0 10px 18px rgba(0,0,0,.45);
+}
+.zl-stein {
+  left: 14%; top: 34%; width: 6.4%; height: 7.5%; border-radius: 3px;
+  background: linear-gradient(180deg, #3b3c48, #2d2e38);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 2px 2px 0 rgba(0,0,0,.35);
+}
+.zl-stein.ist-raus { background: #07070b; box-shadow: inset 0 4px 10px rgba(0,0,0,.9); }
+.zl-ordnung {
+  left: 38%; top: 20%; width: 18%; height: 26%; border-radius: 4px;
+  display: flex; align-items: flex-start; justify-content: center; padding-top: 10px;
+  background: linear-gradient(180deg, #d8d2c2, #b9b2a0); color: #2b2a30;
+  font-size: clamp(9px, 1.1vw, 13px); font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  box-shadow: 0 6px 14px rgba(0,0,0,.4);
+}
+.zl-gitter { position: absolute; left: 4%; top: 6%; width: 18%; height: 18%; }
+.zl-schacht {
+  position: absolute; inset: 0; border-radius: 4px;
+  background: repeating-linear-gradient(90deg, #4c4d58 0 6px, #17171e 6px 12px);
+  box-shadow: inset 0 0 0 3px #5b5c68;
+}
+.zl-gitter.ist-offen .zl-schacht { background: #08080c; box-shadow: inset 0 0 0 3px #3a3b45, inset 0 8px 18px rgba(0,0,0,.9); }
+.zl-zettel-im-schacht { position: absolute; left: 30%; top: 40%; width: 34%; height: 22%; background: #d8d2c2; transform: rotate(-8deg); opacity: 0; }
+.zl-gitter.ist-offen .zl-zettel-im-schacht { opacity: 1; }
+.zl-schraube { width: 13%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, #9a9ba8 0 35%, #5b5c68 36%); z-index: 1; }
+.zl-schraube::after { content: ""; position: absolute; left: 20%; right: 20%; top: 46%; height: 8%; background: #2b2c34; }
+.zl-schraube-0 { left: -4%; top: -4%; } .zl-schraube-1 { right: -4%; top: -4%; }
+.zl-schraube-2 { left: -4%; bottom: -4%; } .zl-schraube-3 { right: -4%; bottom: -4%; }
+.zl-schraube.ist-los { opacity: 0; pointer-events: none; }
+.zl-gitter.ist-offen .zl-schraube { display: none; }
+
+.zl-tuer {
+  right: 7%; top: 12%; width: 20%; height: 64%; border-radius: 4px 4px 0 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 18%, rgba(0,0,0,.25) 18% 20%),
+    linear-gradient(180deg, #4a4b56, #33343e);
+  box-shadow: inset 0 0 0 4px #26272f, 0 0 0 2px #1b1b22;
+}
+.zl-klinke { position: absolute; left: 10%; top: 52%; width: 16%; height: 4%; border-radius: 3px; background: #8c8d99; }
+.zl-tuer.ist-entsperrt { box-shadow: inset 0 0 0 4px #26272f, 0 0 0 2px color-mix(in srgb, var(--fh-success) 70%, transparent), 0 0 22px color-mix(in srgb, var(--fh-success) 30%, transparent); }
+.zl-feld {
+  position: absolute; right: 28.5%; top: 38%; width: 10.5%; min-width: 92px;
+  display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: 6px;
+  background: #15161d; box-shadow: 0 0 0 1px #3a3b45, 0 6px 14px rgba(0,0,0,.5);
+}
+.zl-anzeige { padding: 3px 0; border-radius: 3px; text-align: center; font-size: 13px; letter-spacing: .1em; background: #07120a; color: var(--fh-success); }
+.zl-tasten { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+.zl-taste {
+  min-height: 24px; padding: 0; border: 0; border-radius: 3px; cursor: pointer;
+  background: #2d2e38; color: var(--fh-fg); font: inherit; font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.zl-taste:hover, .zl-taste:focus-visible { background: #43444f; outline: 1px solid var(--fh-reise-rot-hell); }
+.zl-taste:nth-child(10) { color: var(--fh-reise-rot-hell); }
+
+.zl-auge {
+  right: 2.5%; top: 4%; width: 9%; aspect-ratio: 2.2 / 1; border-radius: 50%; overflow: hidden;
+  background: var(--fh-reise-lederhaut);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--fh-reise-auge) 55%, transparent), 0 0 0 1px color-mix(in srgb, var(--fh-reise-auge) 40%, transparent);
+  transition: transform .14s, box-shadow .2s;
+}
+.zl-auge.ist-zu { transform: scaleY(.06); }
+.zl-auge.ist-wach { box-shadow: 0 0 46px var(--fh-reise-auge), 0 0 0 2px var(--fh-reise-auge); }
+.zl-pupille {
+  position: absolute; left: 50%; top: 50%; height: 94%; aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%);
+  background: radial-gradient(circle, var(--fh-nocturne-grund) 0 30%, var(--fh-reise-auge) 35%, var(--fh-reise-auge-tief) 72%, #3a0309 100%);
+}
+
+/* Kontrolle: der Lichtkegel einer Taschenlampe wandert durch die Zelle */
+.zl-licht { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: rgba(5,5,9,.6); transition: opacity .3s; }
+.zl-licht::before {
+  content: ""; position: absolute; top: 18%; left: 0; width: 34%; height: 64%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255,240,200,.38), transparent);
+}
+.zl-raum.ist-kontrolle .zl-licht { opacity: 1; }
+.zl-raum.ist-kontrolle .zl-licht::before { animation: zl-taschenlampe 3.2s linear both; }
+@keyframes zl-taschenlampe { 0% { translate: -10% 0; } 50% { translate: 190% 0; } 100% { translate: 60% 0; } }
+.zl.ist-ruhig .zl-raum.ist-kontrolle .zl-licht::before { animation: none; translate: 90% 0; }
+
+.zl-zettel {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3;
+  width: min(420px, 88%); display: flex; flex-direction: column; gap: 8px; padding: 18px 20px;
+  border-radius: 4px; background: #e2dccb; color: #26252b; box-shadow: var(--fh-shadow);
+  font-size: 15px; line-height: 1.5;
+}
+.zl-zettel p { margin: 0; }
+.zl-zettel .rs-knopf { align-self: flex-end; color: #6a1220; }
+.zl-zettel[hidden] { display: none; }
+
+.zl-fuss { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; max-width: 1100px; width: 100%; margin: 0 auto; }
+.zl-meldung { margin: 0; flex: 1 1 320px; min-height: 1.5em; font-size: 15px; color: #cfd3e5; }
+.zl-meldung.ist-gut { color: var(--fh-success); }
+.zl-meldung.ist-rot { color: var(--fh-reise-rot-hell); }
+.zl-meldung.ist-tipp { color: var(--fh-gold-bright); }
+.zl-inventar { display: flex; flex-wrap: wrap; gap: 6px; }
+.zl-ding {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 13px;
+  background: #1d1e2a; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fh-reise-rot) 30%, transparent);
+}
+.zl-ding svg { width: 16px; height: 16px; color: var(--fh-reise-rot-hell); }
+.zl-ding.ist-klickbar { cursor: pointer; }
+.zl-ding.ist-klickbar:hover, .zl-ding.ist-klickbar:focus-visible { background: #2a2b38; outline: none; }
+
+.zl-ende {
+  position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; justify-content: center; gap: 12px;
+  padding: 8%; background: radial-gradient(70% 60% at 30% 40%, rgba(22,24,38,.7), rgba(8,8,12,.94));
+  animation: rs-banner .9s var(--fh-ease) both;
+}
+.zl-ende .rs-knopf { align-self: flex-start; }
+.zl-belohnung { margin: 0; color: var(--fh-gold-bright); font-weight: 600; }
+
+@media (max-width: 760px) {
+  .zl { padding: 10px; gap: 8px; }
+  .zl-raum { aspect-ratio: 3 / 4; max-height: calc(100dvh - 230px); }
+  .zl-pritsche { left: 3%; width: 46%; height: 14%; }
+  .zl-stein { left: 30%; top: 30%; width: 11%; height: 6%; }
+  .zl-ordnung { left: 6%; top: 38%; width: 34%; height: 18%; }
+  .zl-gitter { left: 6%; top: 7%; width: 30%; height: 13%; }
+  .zl-tuer { right: 5%; top: 24%; width: 30%; height: 52%; }
+  .zl-feld { right: auto; left: 44%; top: 46%; width: 22%; }
+  .zl-auge { width: 20%; }
 }
