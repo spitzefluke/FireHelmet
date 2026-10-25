@@ -1586,6 +1586,16 @@ function escapeAttr(str) {
   });
 }
 
+/* Ein Wert als Argument in onclick="fn(...)". Auch escapeAttr reicht
+   dort NICHT: Der Browser decodiert &#39; zurueck zu ', bevor das
+   JavaScript laeuft - ein ' im Wert beendet dann die Zeichenkette.
+   Deshalb erst als JS-Zeichenkette (JSON.stringify, mit
+   Anfuehrungszeichen), dann fuers Attribut codieren. Aufruf ohne
+   eigene Anfuehrungszeichen: onclick="fn(${escapeJsArg(wert)})". */
+function escapeJsArg(wert) {
+  return escapeAttr(JSON.stringify(String(wert == null ? "" : wert)));
+}
+
 function renderRewardBadges(rewards) {
   if (!rewards || !rewards.length) {
     return '<span class="reward-none">–</span>';

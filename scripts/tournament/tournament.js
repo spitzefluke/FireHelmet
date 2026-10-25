@@ -281,7 +281,7 @@ function buildTournamentRegistrationHtml(tournament, myParticipant) {
 
   const nickname = localStorage.getItem("wheelNickname") || "";
   const enterButton = nickname
-    ? `<button type="button" class="code-button tournament-enter-button" id="tournament-join-btn" onclick="joinTournamentFlow('${escapeHtml(tournament.id)}')">${escapeHtml(tt("tournament.page.enterButton", "TURNIER BEITRETEN"))}</button>`
+    ? `<button type="button" class="code-button tournament-enter-button" id="tournament-join-btn" onclick="joinTournamentFlow(${escapeJsArg(tournament.id)})">${escapeHtml(tt("tournament.page.enterButton", "TURNIER BEITRETEN"))}</button>`
     : `<p class="tournament-status-text is-warning">${escapeHtml(tt("tournament.page.needNickname", "Setze zuerst einen Namen, um teilzunehmen."))}</p>`;
 
   return `

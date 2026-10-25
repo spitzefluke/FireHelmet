@@ -246,7 +246,7 @@ function buildGatewaySeitenHtml() {
   const zeilen = seiten
     .map((s) => `
         <label class="gateway-chapter-row">
-          <input type="checkbox" ${aus.includes(s.id) ? "" : "checked"} onchange="toggleGatewaySeite('${escapeHtml(s.id)}', !this.checked)">
+          <input type="checkbox" ${aus.includes(s.id) ? "" : "checked"} onchange="toggleGatewaySeite(${escapeJsArg(s.id)}, !this.checked)">
           <span>${escapeHtml(s.name)}${aus.includes(s.id) ? " <small>(aus – nur du siehst sie)</small>" : ""}</span>
         </label>`)
     .join("");
@@ -2499,8 +2499,8 @@ function buildGatewayTurnierFeinHtml(tournament, matches, participants) {
         <p class="gateway-status-sub">
           Runde ${m.round}: <strong>${escapeHtml(m.player_1_nickname || "?")}</strong> gegen <strong>${escapeHtml(m.player_2_nickname || "?")}</strong>
           ${raus.has(m.player_1_uid) && raus.has(m.player_2_uid) ? `<em>(beide ausgeschlossen – bitte von Hand entscheiden)</em>` : ""}
-          <button type="button" class="code-button gateway-inline-btn" onclick="gatewayMatchEntscheiden(${m.id}, '${escapeHtml(m.player_1_uid || "")}')">${escapeHtml(m.player_1_nickname || "?")} gewinnt</button>
-          <button type="button" class="code-button gateway-inline-btn" onclick="gatewayMatchEntscheiden(${m.id}, '${escapeHtml(m.player_2_uid || "")}')">${escapeHtml(m.player_2_nickname || "?")} gewinnt</button>
+          <button type="button" class="code-button gateway-inline-btn" onclick="gatewayMatchEntscheiden(${m.id}, ${escapeJsArg(m.player_1_uid || "")})">${escapeHtml(m.player_1_nickname || "?")} gewinnt</button>
+          <button type="button" class="code-button gateway-inline-btn" onclick="gatewayMatchEntscheiden(${m.id}, ${escapeJsArg(m.player_2_uid || "")})">${escapeHtml(m.player_2_nickname || "?")} gewinnt</button>
         </p>`).join("")
     : `<p class="gateway-status-sub">Gerade kein offenes Match.</p>`;
 
@@ -2541,7 +2541,7 @@ function buildGatewayTurnierAusschlussHtml(tournament, participants) {
     return `
       <p class="gateway-status-sub">
         <strong>${escapeHtml(p.nickname || "?")}</strong> – ${zustand}
-        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayTeilnehmerAusschliessen('${escapeHtml(tournament.id)}', '${escapeHtml(p.firebase_uid)}', ${!p.ausgeschlossen})">${p.ausgeschlossen ? "Wieder zulassen" : "Ausschließen"}</button>
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayTeilnehmerAusschliessen(${escapeJsArg(tournament.id)}, ${escapeJsArg(p.firebase_uid)}, ${!p.ausgeschlossen})">${p.ausgeschlossen ? "Wieder zulassen" : "Ausschließen"}</button>
       </p>`;
   }).join("");
   return `${zeilen}
@@ -2972,7 +2972,7 @@ async function gatewayGesperrteNamen() {
       <p class="gateway-status-sub">
         <code>${escapeHtml(n.name_klein)}</code>
         ${n.grund ? " – " + escapeHtml(n.grund) : ""}
-        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayNameEntsperren('${escapeHtml(n.name_klein)}')">Entsperren</button>
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayNameEntsperren(${escapeJsArg(n.name_klein)})">Entsperren</button>
       </p>`).join("");
   } catch (err) {
     console.error("Namensliste fehlgeschlagen:", err);
@@ -3056,7 +3056,7 @@ async function ladeGatewayCaps() {
             <strong>${escapeHtml(z.name || "?")}</strong>
             <code>${escapeHtml(z.uid)}</code>
             ${z.wann ? escapeHtml(String(z.wann).slice(0, 10)) : ""}
-            <button type="button" class="code-button gateway-inline-btn" onclick="gatewayCapZurueck('${escapeHtml(z.uid)}')">Zurücknehmen</button>
+            <button type="button" class="code-button gateway-inline-btn" onclick="gatewayCapZurueck(${escapeJsArg(z.uid)})">Zurücknehmen</button>
           </p>`).join("")
       : `<p class="gateway-status-sub">Noch keine Cap zugesagt.</p>`;
 
@@ -3131,7 +3131,7 @@ async function ladeGatewayTanz() {
             ${z.erledigt_am
               ? `– verschenkt am ${escapeHtml(String(z.erledigt_am).slice(0, 10))}: ${escapeHtml(z.tanz)}`
               : `– Epic: <code>${escapeHtml(z.epic_name || "?")}</code> · Tanz: <strong>${escapeHtml(z.tanz)}</strong> (${escapeHtml(String(z.vbucks))} V-Bucks) · seit ${escapeHtml(String(z.angefragt_am).slice(0, 10))}
-                 <button type="button" class="code-button gateway-inline-btn" data-tanz-uid="${escapeHtml(z.uid)}" data-tanz-pass="${escapeHtml(z.pass_id)}">Verschenkt</button>`}
+                 <button type="button" class="code-button gateway-inline-btn" data-tanz-uid="${escapeAttr(z.uid)}" data-tanz-pass="${escapeAttr(z.pass_id)}">Verschenkt</button>`}
           </p>`).join("")
       : `<p class="gateway-status-sub">Noch niemand hat den Tanz angefordert.</p>`;
     ziel.innerHTML = `
@@ -3316,7 +3316,7 @@ async function ladeGatewayVerlosung() {
             <p class="gateway-status-sub">
               <strong>${escapeHtml(r.runde)}</strong> — ${r.lose} Lose
               ${g ? " · gezogen: " + g.map((x) => escapeHtml(x.nickname || x.uid || "?")).join(", ") : " · noch nicht gezogen"}
-              <button type="button" class="code-button gateway-inline-btn" onclick="gatewayVerlosungLose('${escapeHtml(r.runde)}')">Lose zeigen</button>
+              <button type="button" class="code-button gateway-inline-btn" onclick="gatewayVerlosungLose(${escapeJsArg(r.runde)})">Lose zeigen</button>
             </p>`;
         }).join("")
       : `<p class="gateway-status-sub">Noch keine Lose abgegeben.</p>`;
@@ -3349,7 +3349,7 @@ async function gatewayVerlosungLose(runde) {
     ziel.innerHTML = (data || []).map((l) => `
       <p class="gateway-status-sub">
         ${escapeHtml(l.nickname || "?")} <code>${escapeHtml(l.firebase_uid)}</code>
-        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayLosEntfernen('${escapeHtml(runde)}', '${escapeHtml(l.firebase_uid)}')">Los entfernen</button>
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayLosEntfernen(${escapeJsArg(runde)}, ${escapeJsArg(l.firebase_uid)})">Los entfernen</button>
       </p>`).join("") || `<p class="gateway-status-sub">Keine Lose.</p>`;
   } catch (err) {
     console.error("Lose konnten nicht geladen werden:", err);
@@ -3421,7 +3421,7 @@ async function ladeGatewayBoss() {
       ${monatsListe || `<p class="gateway-status-sub">Noch kein Boss angelegt.</p>`}
       ${jetzt ? `
       <div class="gateway-form-row">
-        <label>Monat<br><input type="text" id="gateway-boss-monat" class="code-input" value="${escapeHtml(jetzt.monat)}"></label>
+        <label>Monat<br><input type="text" id="gateway-boss-monat" class="code-input" value="${escapeAttr(jetzt.monat)}"></label>
         <label>HP<br><input type="number" min="0" id="gateway-boss-hp" class="code-input" value="${jetzt.hp}"></label>
         <label>Obergrenze<br><input type="number" min="1" id="gateway-boss-maxhp" class="code-input" value="${jetzt.max_hp}"></label>
       </div>
@@ -3852,7 +3852,7 @@ function buildGatewayAngriffAuswahlHtml() {
 
   const zeilen = BOSS_SPEZIALANGRIFFE.map((a) => {
     const name = (a.name && (a.name.de || a.name.en)) || a.schluessel;
-    return `<option value="${escapeHtml(a.schluessel)}">${escapeHtml(name)}</option>`;
+    return `<option value="${escapeAttr(a.schluessel)}">${escapeHtml(name)}</option>`;
   }).join("");
 
   return `<select id="gateway-bosscode-key" class="code-input">
@@ -3965,8 +3965,8 @@ async function gatewayRennenLaden() {
       <p class="gateway-status-sub gateway-rennen-zeile">
         <strong>${escapeHtml(r.nickname || "?")}</strong>
         <input type="number" min="0" class="code-input gateway-mini-input" id="grn-${escapeHtml(r.firebase_uid)}" value="${r.progress}">
-        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayRennenSetzen('${escapeHtml(r.firebase_uid)}')">Setzen</button>
-        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayRennenLoeschen('${escapeHtml(r.firebase_uid)}')">Löschen</button>
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayRennenSetzen(${escapeJsArg(r.firebase_uid)})">Setzen</button>
+        <button type="button" class="code-button gateway-inline-btn" onclick="gatewayRennenLoeschen(${escapeJsArg(r.firebase_uid)})">Löschen</button>
       </p>`).join("");
   } catch (err) {
     console.error("Rennrangliste fehlgeschlagen:", err);
