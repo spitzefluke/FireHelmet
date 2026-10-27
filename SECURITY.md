@@ -1,21 +1,33 @@
-# Security Policy
+# Sicherheit
 
-## Supported Versions
+## Lücke gefunden?
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Bitte **nicht** als öffentliches Issue melden, sondern über GitHub unter
+**Security → Report a vulnerability** (privat) an die Betreiber dieses Repositorys.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+Alternativ: privaten Kontakt über den Support-Bereich der Live-Seite
+(https://spitzefluke.github.io/FireHelmet/ → Support).
 
-## Reporting a Vulnerability
+## Was die Seite schützt
 
-Use this section to tell people how to report a vulnerability.
+- **Datenbank:** Supabase mit Row Level Security; Schreibzugriffe laufen über geprüfte
+  RPCs (`security definer`). Die Spalte `firebase_uid` enthält aus historischen Gründen
+  eine Supabase-UUID.
+- **Anmeldung:** anonyme Sitzungen (optional mit Cloudflare Turnstile), optional Google
+  für Admins. Kontosperren werden clientseitig angezeigt und serverseitig erzwungen.
+- **Webseite:** statisches HTML/CSS/Vanilla-JS auf GitHub Pages, keine Server-Secrets im
+  Client. In `scripts/supabase/supabase-config.js` stehen nur die öffentliche Project-URL
+  und der Anon-Key.
+- **Geheimnisse:** liegen ausschließlich in Supabase (Dashboard → Project Settings / Edge
+  Function Secrets), nie im Code und nie in Issues.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+## Wenn etwas passiert
+
+1. Betroffene Secrets rotieren (Supabase-Keys, Turnstile, OAuth-Client-Secret).
+2. Bei verdächtigen Konten: in Supabase unter Authentication → Users sperren oder abmelden.
+3. Die Änderung in einer eigenen PR dokumentieren; öffentliche Issues nur für nicht-sensible Hinweise.
+
+## Unterstützte Version
+
+Es gibt nur den Stand auf `main` (GitHub Pages liefert bei jedem Merge live aus).
+Sicherheitsfixes landen dort direkt.
