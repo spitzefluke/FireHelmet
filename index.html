@@ -1,10 +1,38 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>TEMP - restoring</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FireHelmet – Wiederherstellung</title>
+<script>
+/* Notfall: lädt den letzten bekannten guten Stand (inkl. aller Skripte)
+   und schreibt ihn in das Dokument. Der Commit 08e2d1e enthält die
+   vollständige index.html vor dem PLACEHOLDER-Zwischenfall. */
+(async function () {
+  const urls = [
+    'https://cdn.jsdelivr.net/gh/spitzefluke/FireHelmet@08e2d1efe4746c9e79f2047803847ff473c3379b/index.html',
+    'https://raw.githubusercontent.com/spitzefluke/FireHelmet/08e2d1efe4746c9e79f2047803847ff473c3379b/index.html'
+  ];
+  let html = null;
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (r.ok) { html = await r.text(); break; }
+    } catch (e) {}
+  }
+  if (!html) {
+    document.body.innerHTML = '<p style="font-family:sans-serif;padding:2rem">Wiederherstellung fehlgeschlagen. Bitte später erneut versuchen oder das Repo manuell zurücksetzen.</p>';
+    return;
+  }
+  // Relative Asset-Pfade bleiben korrekt, weil wir unter /FireHelmet/ laufen
+  // und die geladene HTML dieselben relativen URLs nutzt.
+  document.open();
+  document.write(html);
+  document.close();
+})();
+</script>
 </head>
-<body><p>Restore in progress – bitte kurz warten.</p>
-<script>location.reload()</script>
+<body>
+<p style="font-family:system-ui,sans-serif;padding:2rem;color:#ccc;background:#05070b;min-height:100vh">FireHelmet wird wiederhergestellt …</p>
 </body>
 </html>
