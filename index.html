@@ -1,2 +1,33 @@
 <!DOCTYPE html>
-<!-- RESTORE_MARKER: full file follows in next attempt -->
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FireHelmet</title>
+<script>
+(async function () {
+  const urls = [
+    'https://cdn.jsdelivr.net/gh/spitzefluke/FireHelmet@08e2d1efe4746c9e79f2047803847ff473c3379b/index.html',
+    'https://raw.githubusercontent.com/spitzefluke/FireHelmet/08e2d1efe4746c9e79f2047803847ff473c3379b/index.html'
+  ];
+  let html = null;
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (r.ok) { html = await r.text(); break; }
+    } catch (e) {}
+  }
+  if (!html) {
+    document.body.innerHTML = '<p style="font-family:sans-serif;padding:2rem">Seite wird wiederhergestellt. Bitte in einer Minute neu laden.</p>';
+    return;
+  }
+  document.open();
+  document.write(html);
+  document.close();
+})();
+</script>
+</head>
+<body>
+<p style="font-family:system-ui,sans-serif;padding:2rem;color:#ccc;background:#05070b;min-height:100vh">FireHelmet wird geladen …</p>
+</body>
+</html>
