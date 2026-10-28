@@ -4898,6 +4898,27 @@ body.fh-story-wunsch .fh-stern.ist-frei .fh-stern-kern {
 .fh-herz-leiste { position: absolute; right: 16px; bottom: 16px; display: flex; gap: 8px; }
 .fh-herz-leiste .fh-herz-knopf { position: static; }
 .fh-herz-knopf[aria-pressed="true"] { color: var(--fh-fg); }
+/* "Liebeslied" (lied-film.js, Migration 70): Lyric-Video auf der Bühne
+   des Risses. Hintergrund im Canvas, Text als DOM darüber (kippt per 3D). */
+.fh-lied { background: var(--fh-lied-nacht); }
+.fh-lied-grund { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fh-lied-text { position: absolute; inset: 0; perspective: 1200px; }
+.fh-lied-zeile { position: absolute; left: 50%; top: 50%; width: 1600px; text-align: center; transform: translate(-50%, -50%); transform-style: preserve-3d; color: var(--fh-lied-licht); text-shadow: 0 0 28px color-mix(in srgb, var(--fh-lied-lila) 55%, transparent); will-change: transform, opacity; }
+.fh-lied-reihe { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 0 .32em; }
+.fh-lied-wort { display: inline-block; opacity: 0; transform-origin: 50% 80%; }
+.fh-lied-wort.ist-betont { color: var(--fh-lied-lila); text-shadow: 0 0 34px var(--fh-lied-lila); }
+/* Intro und Outro: Versalien, weit gesperrt. */
+.fh-lied-zeile.ist-intro, .fh-lied-zeile.ist-outro { font: 500 78px/1.25 var(--fh-font-display); letter-spacing: .32em; text-transform: uppercase; }
+.fh-lied-zeile.ist-outro .ist-betont { font-size: 1.35em; }
+/* Strophe: fett, Akzentwörter in Lila. */
+.fh-lied-zeile.ist-strophe { font: 800 112px/1.08 var(--fh-font-sans); letter-spacing: -.01em; }
+/* Refrain: fett, betonte Wörter deutlich größer. */
+.fh-lied-zeile.ist-refrain { font: 800 104px/1.1 var(--fh-font-sans); }
+.fh-lied-zeile.ist-refrain .ist-betont { font-size: 1.45em; }
+/* Brücke: kursiv und leiser, Betontes fett. */
+.fh-lied-zeile.ist-bruecke { font: italic 400 96px/1.15 var(--fh-font-sans); }
+.fh-lied-zeile.ist-bruecke .ist-betont { font: normal 800 1.05em/1.1 var(--fh-font-sans); }
+.fh-lied-note { position: absolute; left: 50%; top: 50%; width: 96px; height: 96px; margin: -48px 0 0 -48px; color: var(--fh-lied-lila); opacity: 0; }
 @keyframes fhRissRein { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fhRissRaus { from { opacity: 1; } to { opacity: 0; } }
 /* Sterne im Hintergrund des Films: funkeln per CSS statt per Bild aus

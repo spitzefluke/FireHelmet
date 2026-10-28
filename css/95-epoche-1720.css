@@ -108,7 +108,7 @@ html.fh-1720:not([data-fh-saison]) .nebula {
 }
 
 /* ---- Der Farbfilter fuer alles Uebrige ---- */
-html.fh-1720:not([data-fh-saison]) body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle):not(#fh-saison-hinweis):not(#fh-saison-mitternacht):not(#fh-advent-fenster),
+html.fh-1720:not([data-fh-saison]) body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-lied):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle):not(#fh-saison-hinweis):not(#fh-saison-mitternacht):not(#fh-advent-fenster),
 html.fh-1720:not([data-fh-saison]) dialog[open] {
   filter: invert(1) hue-rotate(180deg) sepia(.45) saturate(.9);
 }
