@@ -30,7 +30,7 @@
 (function () {
   "use strict";
 
-  const NIE_AUS = ["home", "gateway", "impressum", "datenschutz"];
+  const NIE_AUS = ["stand", "gateway", "impressum", "datenschutz"];
   const UNTERSEITEN = { "story-detail": "story", "book-reader": "story" };
   const LINK_MUSTER = /changePage\('([^']+)'\)/;
 
@@ -87,7 +87,7 @@
 
     /* Ist die offene Seite gerade abgeschaltet worden? Dann zum Start. */
     const offen = document.querySelector(".page.active-page");
-    if (offen && window.fhSeiteGesperrt(offen.id) && typeof changePage === "function") changePage("home");
+    if (offen && window.fhSeiteGesperrt(offen.id) && typeof changePage === "function") changePage("stand");
   }
   window.fhSeitenSperreAnwenden = anwenden;
 

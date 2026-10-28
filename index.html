@@ -59,23 +59,23 @@
        gewinnt (z.B. .fh-row nach .chapter-card, .fh-page-title nach
        .page-content h1). Diese Liste darf daher weder umsortiert noch
        um einen Eintrag verkuerzt werden. -->
-  <link rel="stylesheet" href="css/00-basis.css?v=0e021fe7b9">
+  <link rel="stylesheet" href="css/00-basis.css?v=92e32e30f4">
   <link rel="stylesheet" href="css/10-inhaltsseiten.css?v=1a230c2caa">
   <link rel="stylesheet" href="css/20-spiele.css?v=2970bf6bc5">
   <link rel="stylesheet" href="css/30-events.css?v=688de60593">
   <link rel="stylesheet" href="css/40-shop.css?v=1af16124ab">
   <link rel="stylesheet" href="css/50-redesign.css?v=4fa3dec499">
   <link rel="stylesheet" href="css/60-fortschritt.css?v=a07788cdb5">
-  <link rel="stylesheet" href="css/65-startseite.css?v=e6eb9160d1">
-  <link rel="stylesheet" href="css/70-entwurf-1c.css?v=3a8f14a3ad">
+  <link rel="stylesheet" href="css/70-entwurf-1c.css?v=6e740e4d4b">
   <!-- 80 kommt bewusst zuletzt: die Datei vereinheitlicht Tempo,
        Druckgefuehl und Tastaturfokus aller Bedienelemente und muss
        dafuer die Regeln aus 00 bis 70 ueberschreiben koennen. -->
   <link rel="stylesheet" href="css/80-interaktion.css?v=f333fbccb6">
   <link rel="stylesheet" href="css/90-typografie.css?v=73aff913ba">
-  <link rel="stylesheet" href="css/95-epoche-1720.css?v=42bff7ab11">
-  <link rel="stylesheet" href="css/96-epoche-2100.css?v=b4e48508b1">
-  <link rel="stylesheet" href="css/97-sternenreise.css?v=9cff38fc2e">
+  <link rel="stylesheet" href="css/95-epoche-1720.css?v=c86f1f0cea">
+  <link rel="stylesheet" href="css/96-epoche-2100.css?v=24a291d3c9">
+  <link rel="stylesheet" href="css/97-sternenreise.css?v=21c336040d">
+  <link rel="stylesheet" href="css/98-saisons.css?v=5085876101">
 </head>
 <body>
 
@@ -209,11 +209,12 @@
       <a class="fh-nav-item" tabindex="0" data-page="login" onclick="changePage('login')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-sign-in"></i></span><span class="fh-nav-label" data-i18n="menu.login">Anmelden</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionExplore">Erkunden</p>
-      <a class="fh-nav-item" tabindex="0" data-page="home" onclick="changePage('home')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-house"></i></span><span class="fh-nav-label" data-i18n="menu.home">Home</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="stand" onclick="changePage('stand')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-chart-line-up"></i></span><span class="fh-nav-label" data-i18n="menu.stand">Dein Stand</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="story" onclick="changePage('story')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-book-open-text"></i></span><span class="fh-nav-label" data-i18n="menu.story">Stories</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="characters" onclick="changePage('characters')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-users-three"></i></span><span class="fh-nav-label" data-i18n="menu.characters">Characters</span></a>
       <a class="fh-nav-item" tabindex="0" data-page="socials" onclick="changePage('socials')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-globe-hemisphere-west"></i></span><span class="fh-nav-label" data-i18n="menu.socials">Socials</span></a>
+      <!-- Nur in der Weihnachtssaison sichtbar (scripts/saison/saison.js). -->
+      <a class="fh-nav-item" tabindex="0" data-page="advent" onclick="changePage('advent')" hidden><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg></span><span class="fh-nav-label" data-i18n="menu.advent">Adventskalender</span></a>
 
       <p class="fh-nav-section-label" data-i18n="menu.sectionGames">Spiele</p>
       <a class="fh-nav-item" tabindex="0" data-page="shop" onclick="changePage('shop')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-shopping-cart-simple"></i></span><span class="fh-nav-label" data-i18n="menu.shop">Shop</span></a>
@@ -317,9 +318,9 @@
     <!-- Bestehendes Hamburger-Menü bleibt als "Mehr"-Schublade für
          alle restlichen Seiten erhalten (openMenu()). -->
     <nav class="fh-bottom-nav" id="fh-bottom-nav">
-      <a class="fh-bottom-nav-item" tabindex="0" data-page="home" onclick="changePage('home')">
-        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-house"></i></span>
-        <span class="fh-bottom-nav-label" data-i18n="menu.home">Home</span>
+      <a class="fh-bottom-nav-item" tabindex="0" data-page="stand" onclick="changePage('stand')">
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-chart-line-up"></i></span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.bottomStand">Stand</span>
       </a>
       <a class="fh-bottom-nav-item" tabindex="0" data-page="community-boss" onclick="changePage('community-boss')">
         <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-skull"></i></span>
@@ -341,192 +342,6 @@
   </div>
 
   <main id="fh-main" tabindex="-1">
-
-    <!-- ============================================================
-         STARTSEITE: DIE OZEAN-REISE
-         ---------------------------------------------------
-         Eine lange Bahn (FH_START_WEG in
-         scripts/home/startseite.js, 8000px), eine klebende Buehne
-         und darauf eine 3D-Szene: das Schiff der Crew faehrt von
-         der offenen See bis zur Schatzinsel. Darueber liegen
-         sieben Kapiteltexte, die sich mit dem Scrollen abloesen.
-
-         Uebernommen aus dem Entwurf "Schatzinsel Scroll"
-         (Claude Design); die Szene zeichnet
-         scripts/home/ozean-szene.js mit three.js.
-
-         Alles haengt an EINER Variablen --fh-weg (0 bis 1), die
-         GSAP ScrollTrigger schreibt. Die Kapitel rechnen ihr
-         Ein- und Ausblenden in CSS daraus selbst aus - jedes
-         traegt sein Fenster als --von und --bis.
-
-         Der Countdown steht in Kapitel VII. Sichtbar ist dort der
-         3D-Countdown IN der Szene; das HTML darunter bleibt als
-         Datenquelle (countdown.js schreibt hinein, ozean-szene.js
-         liest daraus) und fuer Screenreader stehen.
-    ============================================================ -->
-    <section id="home" class="page active-page">
-      <h1 class="fh-visually-hidden" data-i18n="home.title">COUNTDOWN</h1>
-
-      <div class="fh-start" id="fh-start">
-        <!-- Die Buehne klebt und fuellt den Schirm; gescrollt wird
-             die Bahn darum herum. -->
-        <div class="fh-start-buehne" id="fh-start-buehne">
-
-          <!-- Die Szene. Rein dekorativ, deshalb aria-hidden. -->
-          <div class="fh-ozean" id="fh-ozean" aria-hidden="true">
-            <canvas class="fh-ozean-leinwand"></canvas>
-            <div class="fh-ozean-schleier fh-ozean-schleier-rund"></div>
-            <div class="fh-ozean-schleier fh-ozean-schleier-kante"></div>
-            <div class="fh-ozean-schleier fh-ozean-schleier-unten"></div>
-            <div class="fh-ozean-schleier fh-ozean-schleier-seiten"></div>
-          </div>
-
-          <div class="fh-ozean-balken fh-ozean-balken-oben" aria-hidden="true"></div>
-          <div class="fh-ozean-balken fh-ozean-balken-unten" aria-hidden="true"></div>
-
-          <!-- ---------- KAPITEL I ---------- -->
-          <div class="fh-kapitel" style="--von: -0.06; --bis: 0.10;">
-            <div class="fh-kapitel-marke">
-              <span class="fh-kapitel-strich" aria-hidden="true"></span>
-              <span class="fh-kapitel-nr" data-i18n="home.kap1Nr">Kapitel I — Auslaufen</span>
-            </div>
-            <h1 data-i18n="home.kap1Titel">Romna liegt hinter uns</h1>
-            <p data-i18n="home.kap1Text">Ein rot bemaltes Schiff, eine Crew, die ihren Captain Fliezpiepenheimer nennt, und eine Fracht, die niemand öffnen darf.</p>
-          </div>
-
-          <!-- ---------- KAPITEL II ---------- -->
-          <div class="fh-kapitel" style="--von: 0.14; --bis: 0.26;">
-            <div class="fh-kapitel-marke">
-              <span class="fh-kapitel-strich" aria-hidden="true"></span>
-              <span class="fh-kapitel-nr" data-i18n="home.kap2Nr">Kapitel II — Die Fracht</span>
-            </div>
-            <h2 data-i18n="home.kap2Titel">Fünf Schlösser, kein Schlüssel</h2>
-            <p data-i18n="home.kap2Text">Eine massive Metallbox steht unter Deck. Wer sie öffnet, stirbt — das war die einzige Anweisung.</p>
-          </div>
-
-          <!-- ---------- KAPITEL III ---------- -->
-          <div class="fh-kapitel" style="--von: 0.30; --bis: 0.42;">
-            <div class="fh-kapitel-marke">
-              <span class="fh-kapitel-strich" aria-hidden="true"></span>
-              <span class="fh-kapitel-nr" data-i18n="home.kap3Nr">Kapitel III — Volle Fahrt</span>
-            </div>
-            <h2 data-i18n="home.kap3Titel">Sie hält direkt auf uns zu</h2>
-            <p data-i18n="home.kap3Text">Schwarze Flagge, alle Segel gesetzt. Dave gibt den Befehl, den keiner hören will.</p>
-          </div>
-
-          <!-- ---------- KAPITEL IV ----------
-               Das einzige rechtsbuendige Kapitel, genau an der
-               Stelle, an der das fremde Schiff vorbeizieht. -->
-          <div class="fh-kapitel fh-kapitel-rechts" style="--von: 0.46; --bis: 0.56;">
-            <div class="fh-kapitel-marke">
-              <span class="fh-kapitel-nr" data-i18n="home.kap4Nr">Kapitel IV — Vorbei</span>
-              <span class="fh-kapitel-strich" aria-hidden="true"></span>
-            </div>
-            <h2 data-i18n="home.kap4Titel">Dreh bei. Wir folgen ihr.</h2>
-          </div>
-
-          <!-- ---------- KAPITEL V ---------- -->
-          <div class="fh-kapitel" style="--von: 0.60; --bis: 0.72;">
-            <div class="fh-kapitel-marke">
-              <span class="fh-kapitel-strich" aria-hidden="true"></span>
-              <span class="fh-kapitel-nr" data-i18n="home.kap5Nr">Kapitel V — Im Kielwasser</span>
-            </div>
-            <h2 data-i18n="home.kap5Titel">Kurs nach Südwest</h2>
-            <p data-i18n="home.kap5Text">Der Nebel reißt auf. Vor dem Bug wird es hell — und es ist nicht die Sonne.</p>
-          </div>
-
-          <!-- ---------- KAPITEL VI ---------- -->
-          <div class="fh-kapitel" style="--von: 0.76; --bis: 0.86;">
-            <div class="fh-kapitel-marke">
-              <span class="fh-kapitel-strich" aria-hidden="true"></span>
-              <span class="fh-kapitel-nr" data-i18n="home.kap6Nr">Kapitel VI — Land in Sicht</span>
-            </div>
-            <h2 data-i18n="home.kap6Titel">Klippen, Dschungel, ein Licht</h2>
-          </div>
-
-          <!-- ---------- KAPITEL VII: DAS ZIEL ----------
-               Hier steht NUR der Countdown, eine Zeile darunter
-               und die zwei Knoepfe. Der grosse Titel "Die
-               Schatzinsel" und der Kicker sind bewusst weg: sie
-               haben mit der Zahl um die Aufmerksamkeit
-               gekaempft, und das Ziel der Reise ist die Zahl.
-               Welches Kapitel man sieht, sagt der Zaehler oben
-               rechts. -->
-          <div class="fh-kapitel fh-kapitel-mitte" style="--von: 0.89; --bis: 1.06;">
-
-            <!-- Sichtbar ist der 3D-Countdown in der Szene. Das
-                 hier ist die Datenquelle dafuer und gleichzeitig
-                 das, was ohne Szene uebrig bleibt. -->
-            <div class="fh-start-countdown">
-              <div class="countdown">
-                <div class="time-box">
-                  <span id="days">00</span>
-                  <small data-i18n="common.days">Tage</small>
-                </div>
-                <div class="time-box">
-                  <span id="hours">00</span>
-                  <small data-i18n="common.hours">Stunden</small>
-                </div>
-                <div class="time-box">
-                  <span id="minutes">00</span>
-                  <small data-i18n="common.minutes">Minuten</small>
-                </div>
-                <div class="time-box">
-                  <span id="seconds">00</span>
-                  <small data-i18n="common.seconds">Sekunden</small>
-                </div>
-              </div>
-            </div>
-
-            <p data-i18n="home.kap7Text">Noch so lange, bis die Crew auf der Schatzinsel an Land geht.</p>
-
-            <div class="fh-kapitel-knoepfe">
-              <button type="button" class="code-button" onclick="changePage('story')" data-i18n="home.kap7Logbuch">Logbuch lesen</button>
-              <button type="button" class="code-button fh-kapitel-knopf-still" onclick="changePage('stand')" data-i18n="home.kap7Land">An Land gehen</button>
-            </div>
-          </div>
-
-          <!-- ---------- RAHMEN ---------- -->
-          <div class="fh-ozean-marke" aria-hidden="true">
-            <span class="fh-ozean-raute"></span>
-            <span data-i18n="home.kicker">Logbuch der Crew</span>
-          </div>
-
-          <!-- Sieben Punkte statt "I / VII": das Kapitel, in dem man
-               gerade steht, leuchtet auf, die anderen stehen blass
-               daneben. Man sieht damit auf einen Blick, wieviel
-               Reise noch vor einem liegt - eine Bruchzahl muss man
-               dafuer erst lesen. Die roemische Ziffer bleibt
-               darunter, weil sie in den Kapitelmarken auftaucht. -->
-          <div class="fh-ozean-fortschritt" aria-hidden="true">
-            <div class="fh-ozean-punkte">
-              <span class="fh-ozean-punkt"></span>
-              <span class="fh-ozean-punkt"></span>
-              <span class="fh-ozean-punkt"></span>
-              <span class="fh-ozean-punkt"></span>
-              <span class="fh-ozean-punkt"></span>
-              <span class="fh-ozean-punkt"></span>
-              <span class="fh-ozean-punkt"></span>
-            </div>
-            <span id="fh-kapitel-zaehler">I</span>
-          </div>
-
-          <!-- Erscheint erst nach drei Sekunden ohne Scrollen und
-               verschwindet beim ersten Scrollen fuer immer. -->
-          <button type="button" class="fh-start-wink" id="fh-start-wink" hidden
-                  onclick="fhStartWinkFolgen()">
-            <span class="fh-start-wink-rad" aria-hidden="true">
-              <span class="fh-start-wink-kugel"></span>
-            </span>
-            <span data-i18n="home.scrollCue">Sieben Kapitel voraus</span>
-          </button>
-
-          <div class="fh-ozean-korn" aria-hidden="true"></div>
-
-        </div>
-      </div>
-    </section>
 
     <!-- ======================================================
          STORY ARCHIV
@@ -675,7 +490,7 @@
          jetzt mit eigener Seite - befuellt von
          scripts/stand/stand.js aus den echten Quellen.
     ===================== -->
-    <section id="stand" class="page">
+    <section id="stand" class="page active-page">
       <div class="page-content">
         <div class="fh-page-head">
           <p class="fh-page-kicker" data-i18n="stand.kicker">Logbuch</p>
@@ -689,6 +504,39 @@
           <article class="fh-card" id="fh-dash-race"></article>
           <article class="fh-card" id="fh-dash-code"></article>
           <article class="fh-card" id="fh-dash-board"></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         ADVENTSKALENDER
+         Nur in der Weihnachtssaison erreichbar. Die Tuerchen baut
+         scripts/saison/saison.js aus saison_stand() (Migration 69);
+         was hinter einem Tuerchen steckt, kommt erst beim Oeffnen.
+    ===================== -->
+    <section id="advent" class="page">
+      <div class="page-content">
+        <div class="fh-page-head fh-advent-kopf">
+          <div>
+            <p class="fh-page-kicker" data-i18n="saison.advent.kicker">Adventskalender</p>
+            <h1 class="fh-page-title" data-i18n="saison.advent.titel">24 Türchen</h1>
+            <p class="fh-page-lead" data-i18n="saison.advent.lead">Jeden Tag öffnet sich genau ein Türchen. Wer einen Tag verpasst, verpasst auch dessen Inhalt – schau also täglich vorbei.</p>
+          </div>
+          <div class="fh-advent-zahlen">
+            <div><small data-i18n="saison.advent.heute">Heute</small><span id="fh-advent-heute">–</span></div>
+            <div><small data-i18n="saison.advent.geoeffnet">Geöffnet</small><span class="ist-offen" id="fh-advent-offen">0</span></div>
+            <div><small data-i18n="saison.advent.verfallenZahl">Verfallen</small><span class="ist-verfallen" id="fh-advent-verfallen">0</span></div>
+          </div>
+        </div>
+
+        <div class="fh-sa-tueren" id="fh-advent-tueren"></div>
+
+        <p class="fh-advent-legende-titel" data-i18n="saison.advent.drin">Was drinsteckt</p>
+        <div class="fh-advent-legende">
+          <span><svg class="fh-sa-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg><span data-i18n="saison.advent.drinDublonen">Dublonen</span></span>
+          <span><svg class="fh-sa-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg><span data-i18n="saison.advent.drinSpind">Spind-Teile: Banner und Namensfarben</span></span>
+          <span><svg class="fh-sa-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg><span data-i18n="saison.advent.drinCodes">Geheimcodes</span></span>
+          <span><svg class="fh-sa-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg><span data-i18n="saison.advent.drin24">Türchen 24: Sonderbelohnung der Crew</span></span>
         </div>
       </div>
     </section>
@@ -1868,14 +1716,6 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
   <script src="scripts/fx/fh-webgl.js?v=7516a195d5" defer></script>
 
-  <!-- Water und Sky aus three.js/examples. Es gibt sie nur als
-       ES-Module; hier liegen sie als klassische Skripte, die sich
-       an den THREE-Globalen oben haengen. Die Alternative waere,
-       three.js ein zweites Mal als Modul zu laden (670 KB) -
-       diese beiden Dateien kosten zusammen 18 KB. Siehe Kopf von
-       scripts/vendor/three-water.js. -->
-  <script src="scripts/vendor/three-water.js?v=5096ca9394" defer></script>
-  <script src="scripts/vendor/three-sky.js?v=94c5724368" defer></script>
   <script src="scripts/fx/aurora-bg.js?v=c3bafa323c" defer></script>
   <script src="scripts/fx/celebration-burst-3d.js?v=269541d893" defer></script>
   <script src="scripts/fx/sidebar-ambient-3d.js?v=d7872cf6e7" defer></script>
@@ -1890,7 +1730,7 @@
   <script src="scripts/nav/nav-sync.js?v=7bb522e580" defer></script>
   <script src="scripts/nav/rail-flyout.js?v=d25ae49fe6" defer></script>
   <script src="scripts/nav/nav-keys.js?v=838d82d96c" defer></script>
-  <script src="scripts/nav/seitenwechsel.js?v=ba30d3630c" defer></script>
+  <script src="scripts/nav/seitenwechsel.js?v=c6b3023641" defer></script>
   <script src="scripts/fx/schrift-licht.js?v=f34244176d" defer></script>
   <script src="scripts/fx/zaehler.js?v=f28a9b6052" defer></script>
   <!-- Erst die Szenen, dann die Flaeche: seiten-fx.js liest
@@ -1898,17 +1738,17 @@
   <script src="scripts/fx/seiten-fx-szenen.js?v=a428448470" defer></script>
   <script src="scripts/fx/seiten-fx.js?v=f5919195ed" defer></script>
   <script src="scripts/fx/path-draw.js?v=5d4d69c831" defer></script>
-  <script src="scripts/nav/quick-search.js?v=3d1d43014e" defer></script>
+  <script src="scripts/nav/quick-search.js?v=c7d781255f" defer></script>
   <script src="scripts/core/share.js?v=afae2a5ba3" defer></script>
   <script src="scripts/core/fire-helmet-config.js?v=5beaa7a1a9" defer></script>
-  <script src="scripts/core/nachladen.js?v=bd9974269f" defer></script>
-  <script src="scripts/core/i18n.js?v=c49d2c9a5e" defer></script>
+  <script src="scripts/core/nachladen.js?v=71ff760990" defer></script>
+  <script src="scripts/core/i18n.js?v=9adb0ed070" defer></script>
   <script src="scripts/core/audiobook-link.js?v=5ab730a9b0" defer></script>
   <script src="scripts/core/update-notice-data.js?v=158096cddf" defer></script>
   <script src="scripts/core/update-notice.js?v=15d517ed67" defer></script>
   <script src="scripts/codes/codes-data.js?v=044c2364b9" defer></script>
   <script src="scripts/music/music-data.js?v=70e2cc0cc7" defer></script>
-  <script src="scripts/music/music-player.js?v=ccffbd43b3" defer></script>
+  <script src="scripts/music/music-player.js?v=f054f733bc" defer></script>
   <script src="scripts/wheel/wheel-data.js?v=801674a79e" defer></script>
   <script src="scripts/wheel/avatars-data.js?v=4ed9b41c65" defer></script>
   <script src="scripts/core/progression-data.js?v=186a565aa0" defer></script>
@@ -1943,25 +1783,21 @@
   <script src="scripts/supabase/supabase-statistics.js?v=45cf0cc929" defer></script>
   <script src="scripts/core/site-config.js?v=bea37fc622" defer></script>
   <script src="scripts/core/feature-flags.js?v=3e7e628f44" defer></script>
-  <script src="scripts/core/seiten-sperre.js?v=6eda8f8173" defer></script>
+  <script src="scripts/core/seiten-sperre.js?v=1a3004162f" defer></script>
   <script src="scripts/liveevent/live-event.js?v=5db63b9d6a" defer></script>
   <script src="scripts/liveevent/event-titel.js?v=afc5b6b4cf" defer></script>
   <script src="scripts/liveevent/nordlicht-wunsch.js?v=21ca63e433" defer></script>
   <script src="scripts/liveevent/live-storys.js?v=b225c99665" defer></script>
   <script src="scripts/liveevent/live-zuschauer.js?v=59b7e265a4" defer></script>
   <script src="scripts/liveevent/werbungsflut.js?v=da5a0ccc55" defer></script>
-  <script src="scripts/liveevent/gegenhack.js?v=ffc68e0b46" defer></script>
+  <script src="scripts/liveevent/gegenhack.js?v=69d1ab8d73" defer></script>
   <script src="scripts/core/discord-notify-data.js?v=e0fdc8d435" defer></script>
   <script src="scripts/core/discord-notify.js?v=aad2217ad4" defer></script>
-  <script src="scripts/core/countdown.js?v=ddbc62363d" defer></script>
   <script src="scripts/fx/reveal.js?v=b8f9971b93" defer></script>
-  <script src="scripts/home/startseite.js?v=207933b961" defer></script>
-  <!-- Die Ozean-Reise. Braucht three.js, fh-webgl.js und die
-       beiden vendor-Dateien (alle weiter oben) sowie countdown.js,
-       aus dessen Feldern sie die Zahlen fuer den 3D-Countdown
-       liest. Liest --fh-weg, das startseite.js schreibt. -->
-  <script src="scripts/home/ozean-szene.js?v=4e804856b1" defer></script>
   <script src="scripts/stand/stand.js?v=576a0f65d3" defer></script>
+  <!-- Saisons (Migration 69): Halloween, Weihnachten, Neujahr, Ostern.
+       Braucht supabase-client.js, i18n.js und stand.js (alle oben). -->
+  <script src="scripts/saison/saison.js?v=cc8ac0f3d4" defer></script>
   <script src="scripts/stories/stories-data.js?v=73c784316f" defer></script>
   <script src="scripts/characters/characters-data.js?v=f71edfe488" defer></script>
   <script src="scripts/stories/stories.js?v=3efc94339b" defer></script>
@@ -1991,7 +1827,7 @@
   <script src="scripts/schlacht/schlacht-kampf.js?v=ea982bcfbd" defer></script>
   <script src="scripts/schlacht/schlacht-front.js?v=72e84f5fcc" defer></script>
   <script src="scripts/hangar/hangar-data.js?v=7ce872f298" defer></script>
-  <script src="scripts/schlacht/schlacht.js?v=8ed262c5e5" defer></script>
+  <script src="scripts/schlacht/schlacht.js?v=aaba80f9bc" defer></script>
   <script src="scripts/spind/spind.js?v=7e336ff6d6" defer></script>
   <script src="scripts/mine/gluecksmine.js?v=79bd96f98c" defer></script>
   <script src="scripts/hangar/hangar.js?v=8ad3d59831" defer></script>
@@ -1999,7 +1835,7 @@
   <script src="scripts/core/admin-zugang.js?v=676fb09072" defer></script>
   <script src="scripts/support/support.js?v=ffbe30a325" defer></script>
   <script src="scripts/rating/rating.js?v=a06c7d42b8" defer></script>
-  <script src="scripts/core/main.js?v=df57d500c8" defer></script>
+  <script src="scripts/core/main.js?v=22207e8ad9" defer></script>
   <script src="scripts/codes/code-button-effect.js?v=12af905b26" defer></script>
   <script src="scripts/codes/code-ambient-fx.js?v=61b476b1dd" defer></script>
   <script src="scripts/codes/code-history.js?v=2530fa82ec" defer></script>

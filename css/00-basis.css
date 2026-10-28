@@ -21,7 +21,7 @@
    4. Menü Button
    5. Sidebar
    6. Seiten / Page-Transitions
-   7. Home / Countdown
+   7. (entfallen: Home / Countdown)
    8. Story Archiv (Grid)
    9. Story Detail
    10. Book Reader
@@ -243,6 +243,37 @@ body.loaded {
   --fh-reise-rot-hell: #ff8a94;
   --fh-reise-auge: #ff2b3d;
   --fh-reise-auge-tief: #9a0716;
+  /* Saisons (scripts/saison/saison.js, css/98-saisons.css), je Saison:
+     Akzent hell/tief, Zweitfarbe hell/tief, Flaechen, Rahmen, gedaempfter
+     Text, Flamme fuer Logo und Symbole, Schein. Aus dem Entwurf
+     "FireHelmet Saisons". */
+  --fh-halloween-akzent: #ff9d3d;   --fh-halloween-akzent-tief: #ff6a2a;
+  --fh-halloween-alt: #a66bff;      --fh-halloween-alt-tief: #4b2a7a;
+  --fh-halloween-flaeche: #1c1326;  --fh-halloween-flaeche-tief: #0d0812;
+  --fh-halloween-rand: #2b1e38;     --fh-halloween-rand-stark: #42305a;
+  --fh-halloween-matt: #9a88b0;     --fh-halloween-grund: #07030b;
+  --fh-halloween-flamme: #ff9d3d;   --fh-halloween-flamme-tief: #d9431e;
+  --fh-weihnachten-akzent: #f0c96a; --fh-weihnachten-akzent-tief: #d6a84f;
+  --fh-weihnachten-alt: #e53935;    --fh-weihnachten-alt-tief: #7c1f1c;
+  --fh-weihnachten-flaeche: #10221f; --fh-weihnachten-flaeche-tief: #08110f;
+  --fh-weihnachten-rand: #1a332e;   --fh-weihnachten-rand-stark: #2a4a43;
+  --fh-weihnachten-matt: #8fb0a6;   --fh-weihnachten-grund: #020a0b;
+  --fh-weihnachten-flamme: #e53935; --fh-weihnachten-flamme-tief: #7c1f1c;
+  --fh-weihnachten-tanne: #55c878;  --fh-weihnachten-schnee: #e8edf4;
+  --fh-neujahr-akzent: #f0d27a;     --fh-neujahr-akzent-tief: #c9a227;
+  --fh-neujahr-alt: #9184d9;        --fh-neujahr-alt-tief: #5d519f;
+  --fh-neujahr-flaeche: #1d1e2c;    --fh-neujahr-flaeche-tief: #10111b;
+  --fh-neujahr-rand: #2b2741;       --fh-neujahr-rand-stark: #3d3860;
+  --fh-neujahr-matt: #9b98b8;       --fh-neujahr-grund: #05050e;
+  --fh-neujahr-flamme: #f0d27a;     --fh-neujahr-flamme-tief: #9184d9;
+  --fh-neujahr-alt-hell: #bdb3f2;
+  --fh-ostern-akzent: #8fd98a;      --fh-ostern-akzent-tief: #55c878;
+  --fh-ostern-alt: #ff9aa8;         --fh-ostern-alt-tief: #8a4a55;
+  --fh-ostern-flaeche: #142420;     --fh-ostern-flaeche-tief: #0a1412;
+  --fh-ostern-rand: #20362f;        --fh-ostern-rand-stark: #2f4c42;
+  --fh-ostern-matt: #8fae9f;        --fh-ostern-grund: #04090a;
+  --fh-ostern-flamme: #ff9aa8;      --fh-ostern-flamme-tief: #c4a6ff;
+  --fh-saison-verfallen: #ff8a94;
   --fh-reise-lederhaut: #e4dcd8;
   /* Konsolenschrift der Live-Storys (Hacked, Systemausfall). */
   --fh-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -888,44 +919,6 @@ main {
     animation: none;
     transform: none;
   }
-}
-
-/* =========================
-   7. HOME / COUNTDOWN
-========================= */
-#home {
-  position: relative;
-  overflow: hidden;
-}
-
-/* Home ist die einzige Seite mit echtem Scroll-Inhalt (Cinematic
-   Intro). Nur hier wird die generische .active-page Flex-Zentrierung
-   durch echtes Scrollen innerhalb der Seite ersetzt - alle anderen
-   Seiten bleiben unveraendert fixe, zentrierte Viewports. */
-#home.active-page {
-  display: block;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  animation: none;
-  transform: none;
-  opacity: 1;
-}
-
-/* Bestehender Hero (Countdown + Schiff-Canvas + Riss-Effekt) bleibt
-   1:1 erhalten, bekommt aber einen eigenen positionierten Wrapper,
-   damit .home-fx{position:absolute;inset:0} weiterhin exakt einen
-   Viewport fuellt - jetzt als letzte Phase der Cinematic Experience. */
-.fh-hero-section {
-  position: relative;
-  min-height: 100dvh;
-  min-height: 100svh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 #streamraetsel {

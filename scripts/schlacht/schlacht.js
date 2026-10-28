@@ -114,7 +114,7 @@
   let ruhm = [];
   let lebendVorher = null;   // Set der UIDs, die im letzten Bild noch flogen
   let schussKonto = 0, letztesBild = 0;
-  let vorherigeSeite = "home";
+  let vorherigeSeite = "stand";
   let siegGespielt = null;
   let ortZeile = null;       // Zeile aus schlacht_orte (Migration 55)
   let zeitVersatz = 0;       // Serverzeit minus Geraetezeit in ms
@@ -1047,7 +1047,7 @@
   }
 
   function verlassen() {
-    const ziel2 = vorherigeSeite && vorherigeSeite !== "sternenschlacht" ? vorherigeSeite : "home";
+    const ziel2 = vorherigeSeite && vorherigeSeite !== "sternenschlacht" ? vorherigeSeite : "stand";
     if (typeof changePage === "function") changePage(ziel2);
     else buehneSchliessen();
   }

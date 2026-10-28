@@ -30,7 +30,12 @@
    (Ankunft, Objekt P in riss-film.js), als Tokens unten.
 ===================================================== */
 
-html.fh-1720 {
+/* Laeuft eine Saison (html[data-fh-saison], css/98-saisons.css),
+   tritt die Optik dieser Epoche zurueck - der Farbfilter wuerde sonst
+   aus Halloween-Orange etwas ganz anderes machen. Deshalb tragen alle
+   Regeln hier :not([data-fh-saison]). Was die Epoche spielerisch
+   schaltet (Hangar, ruhendes Rennen ...), gilt weiter. */
+html.fh-1720:not([data-fh-saison]) {
   --fh-1720-papier: #e8dab9;
   --fh-1720-papier-dunkel: #c9b183;
   --fh-1720-rand: #8f6d3e;
@@ -53,7 +58,7 @@ html.fh-1720 {
 }
 
 /* ---- Pergament mit Kerzenlicht ---- */
-html.fh-1720 body {
+html.fh-1720:not([data-fh-saison]) body {
   font-family: var(--fh-font-sans);
   background:
     repeating-linear-gradient(0deg, rgba(94,70,48,.05) 0 1px, transparent 1px 3px),
@@ -67,7 +72,7 @@ html.fh-1720 body {
    Pergament, Tinte bleibt dunkel - und Faserung und Flecken liegen
    auch auf Karten und Knoepfen. Unter Leiste und Kopfzeile, faengt
    keine Klicks. */
-html.fh-1720 body::before {
+html.fh-1720:not([data-fh-saison]) body::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -83,7 +88,7 @@ html.fh-1720 body::before {
 
 /* Kerzenschein und dunkle Raender - ueber dem Inhalt, unter Leiste
    und Kopfzeile, faengt keine Klicks. */
-html.fh-1720 body::after {
+html.fh-1720:not([data-fh-saison]) body::after {
   content: "";
   position: fixed;
   inset: 0;
@@ -95,38 +100,38 @@ html.fh-1720 body::after {
 }
 
 /* Der Sternenhimmel und das Nordlicht gehoeren ins Jahr 2026. */
-html.fh-1720 #fh-bg-canvas,
-html.fh-1720 .stars,
-html.fh-1720 .stars2,
-html.fh-1720 .nebula {
+html.fh-1720:not([data-fh-saison]) #fh-bg-canvas,
+html.fh-1720:not([data-fh-saison]) .stars,
+html.fh-1720:not([data-fh-saison]) .stars2,
+html.fh-1720:not([data-fh-saison]) .nebula {
   display: none !important;
 }
 
 /* ---- Der Farbfilter fuer alles Uebrige ---- */
-html.fh-1720 body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle),
-html.fh-1720 dialog[open] {
+html.fh-1720:not([data-fh-saison]) body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle):not(#fh-saison-hinweis):not(#fh-saison-mitternacht):not(#fh-advent-fenster),
+html.fh-1720:not([data-fh-saison]) dialog[open] {
   filter: invert(1) hue-rotate(180deg) sepia(.45) saturate(.9);
 }
 
 /* Bilder, Videos und Canvas darin zurueckdrehen - sie behalten ihre
    Farben, nur mit dem Sepia-Ton der Seite. */
-html.fh-1720 body > :not(#fh-sidebar):not(#fh-topbar) :is(img, video, canvas, iframe),
-html.fh-1720 dialog[open] :is(img, video, canvas, iframe) {
+html.fh-1720:not([data-fh-saison]) body > :not(#fh-sidebar):not(#fh-topbar) :is(img, video, canvas, iframe),
+html.fh-1720:not([data-fh-saison]) dialog[open] :is(img, video, canvas, iframe) {
   filter: invert(1) hue-rotate(180deg);
 }
 
 /* Das Schlachtfeld (Vollbild an body) ist vom Farbfilter ausgenommen -
    also auch von dieser Gegendrehung (zwei IDs, zwei Klassen). */
-html.fh-1720 body > #fh-schlacht-buehne #schlacht-inhalt canvas.sl-canvas,
-html.fh-1720 body > #fh-schlacht-buehne #schlacht-inhalt .sl-wahl-bild canvas,
-html.fh-1720 body > #fh-schlacht-buehne #sl-intro-canvas.sl-intro-canvas,
-html.fh-1720 body > #fh-orte-vorschau #sl-intro-canvas.sl-intro-canvas,
-html.fh-1720 body > #fh-orte-vorschau #sl-vorschau-canvas.sl-vorschau-canvas {
+html.fh-1720:not([data-fh-saison]) body > #fh-schlacht-buehne #schlacht-inhalt canvas.sl-canvas,
+html.fh-1720:not([data-fh-saison]) body > #fh-schlacht-buehne #schlacht-inhalt .sl-wahl-bild canvas,
+html.fh-1720:not([data-fh-saison]) body > #fh-schlacht-buehne #sl-intro-canvas.sl-intro-canvas,
+html.fh-1720:not([data-fh-saison]) body > #fh-orte-vorschau #sl-intro-canvas.sl-intro-canvas,
+html.fh-1720:not([data-fh-saison]) body > #fh-orte-vorschau #sl-vorschau-canvas.sl-vorschau-canvas {
   filter: none;
 }
 
 /* ---- Leiste: Ledereinband mit Faden ---- */
-html.fh-1720 .fh-sidebar {
+html.fh-1720:not([data-fh-saison]) .fh-sidebar {
   background:
     repeating-linear-gradient(180deg, var(--fh-1720-faden) 0 7px, transparent 7px 13px) right 10px top 10px / 2px calc(100% - 20px) no-repeat,
     linear-gradient(90deg, var(--fh-1720-leder), var(--fh-1720-leder-hell));
@@ -134,61 +139,61 @@ html.fh-1720 .fh-sidebar {
   box-shadow: 6px 0 18px rgba(53,37,26,.45);
 }
 
-html.fh-1720 .fh-sidebar-flame {
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-flame {
   border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #b43a26, var(--fh-1720-wachs));
   box-shadow: inset 0 -3px 6px rgba(0,0,0,.35), 0 3px 6px rgba(0,0,0,.35);
   color: #f0d6b0;
 }
 
-html.fh-1720 .fh-sidebar-title,
-html.fh-1720 .fh-sidebar-subtitle {
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-title,
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-subtitle {
   color: #f0d6b0;
   font-family: var(--fh-font-display);
 }
 
-html.fh-1720 .fh-sidebar-nav .fh-nav-item {
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-item {
   color: var(--fh-1720-faden);
   opacity: .78;
   background: transparent;
 }
 
-html.fh-1720 .fh-sidebar-nav .fh-nav-item:hover,
-html.fh-1720 .fh-sidebar-nav .fh-nav-item:focus-visible {
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-item:hover,
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-item:focus-visible {
   color: #f0d6b0;
   opacity: 1;
   background: rgba(240,214,176,.10);
   outline-color: #f0d6b0;
 }
 
-html.fh-1720 .fh-sidebar-nav .fh-nav-item.fh-nav-active {
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-item.fh-nav-active {
   color: #f0d6b0;
   opacity: 1;
   background: rgba(240,214,176,.14);
 }
 
-html.fh-1720 .fh-sidebar-nav .fh-nav-item.fh-nav-active::before {
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-item.fh-nav-active::before {
   background: var(--fh-1720-faden);
   box-shadow: none;
 }
 
-html.fh-1720 .fh-sidebar-nav .fh-nav-section-label {
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-section-label {
   background: linear-gradient(90deg, transparent, rgba(217,194,150,.55), transparent);
 }
 
-html.fh-1720 .fh-sidebar-footer,
-html.fh-1720 .fh-sidebar-footer-wrap {
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-footer,
+html.fh-1720:not([data-fh-saison]) .fh-sidebar-footer-wrap {
   color: #f0d6b0;
 }
 
 /* ---- Kopfzeile mit Tintenlinien ---- */
-html.fh-1720 .fh-topbar {
+html.fh-1720:not([data-fh-saison]) .fh-topbar {
   background: linear-gradient(180deg, rgba(232,218,185,.92), rgba(232,218,185,0));
   color: var(--fh-1720-tinte);
 }
 
 /* Die Jahreszahl wie auf der Seite im Film. */
-html.fh-1720 .fh-topbar::after {
+html.fh-1720:not([data-fh-saison]) .fh-topbar::after {
   content: "Anno Domini MDCCXX";
   position: absolute;
   left: 50%;
@@ -203,10 +208,10 @@ html.fh-1720 .fh-topbar::after {
 }
 
 @media (max-width: 1180px) {
-  html.fh-1720 .fh-topbar::after { display: none; }
+  html.fh-1720:not([data-fh-saison]) .fh-topbar::after { display: none; }
 }
 
-html.fh-1720 .fh-topbar .fh-qs-trigger {
+html.fh-1720:not([data-fh-saison]) .fh-topbar .fh-qs-trigger {
   background: transparent;
   border: 0;
   border-bottom: 1.5px solid var(--fh-1720-tinte-weich);
@@ -218,7 +223,7 @@ html.fh-1720 .fh-topbar .fh-qs-trigger {
   box-shadow: none;
 }
 
-html.fh-1720 .fh-topbar .fh-qs-trigger kbd {
+html.fh-1720:not([data-fh-saison]) .fh-topbar .fh-qs-trigger kbd {
   background: transparent;
   border: 1px solid var(--fh-1720-tinte-weich);
   border-radius: 3px;
@@ -226,8 +231,8 @@ html.fh-1720 .fh-topbar .fh-qs-trigger kbd {
   font-style: normal;
 }
 
-html.fh-1720 .fh-topbar-btn,
-html.fh-1720 .fh-topbar-lang {
+html.fh-1720:not([data-fh-saison]) .fh-topbar-btn,
+html.fh-1720:not([data-fh-saison]) .fh-topbar-lang {
   background: transparent;
   border: 1.5px solid var(--fh-1720-tinte-weich);
   border-radius: 4px;
@@ -235,14 +240,14 @@ html.fh-1720 .fh-topbar-lang {
   box-shadow: none;
 }
 
-html.fh-1720 .fh-topbar-btn:hover,
-html.fh-1720 .fh-topbar-lang:hover {
+html.fh-1720:not([data-fh-saison]) .fh-topbar-btn:hover,
+html.fh-1720:not([data-fh-saison]) .fh-topbar-lang:hover {
   color: var(--fh-1720-rost);
   border-color: var(--fh-1720-rost);
   background: rgba(124,47,28,.06);
 }
 
-html.fh-1720 .fh-topbar-coins {
+html.fh-1720:not([data-fh-saison]) .fh-topbar-coins {
   background: transparent;
   border: 1.5px solid var(--fh-1720-gold);
   border-radius: 4px;
@@ -251,18 +256,18 @@ html.fh-1720 .fh-topbar-coins {
   box-shadow: none;
 }
 
-html.fh-1720 .fh-topbar-coins .ph {
+html.fh-1720:not([data-fh-saison]) .fh-topbar-coins .ph {
   color: var(--fh-1720-gold);
 }
 
 /* ---- Seitenkoepfe: Zierlinie unter dem Titel ---- */
-html.fh-1720 .fh-page-title {
+html.fh-1720:not([data-fh-saison]) .fh-page-title {
   font-family: 'IM Fell English', Georgia, serif;
   font-weight: 400;
   letter-spacing: 0;
 }
 
-html.fh-1720 .fh-page-kicker {
+html.fh-1720:not([data-fh-saison]) .fh-page-kicker {
   font-family: 'IM Fell English SC', Georgia, serif;
   letter-spacing: .3em;
 }

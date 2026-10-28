@@ -37,11 +37,6 @@
       verwenden. GSAP ist ohnehin geladen (scripts/fx/gsap-init.js)
       und wurde bisher nur an rund zehn Stellen benutzt.
 
-   AUSNAHME STARTSEITE: die hat mit ihrem 4000px langen Scrollweg
-   (scripts/home/startseite.js, ScrollTrigger) eine eigene,
-   laengere Eroeffnung. Eine zweite Staffelung daneben waere
-   Bewegung ueber Bewegung.
-
    Bei "Bewegung reduzieren" passiert von beidem nichts: die
    Richtung wird nicht gesetzt (die vorhandene Regel in
    00-basis.css schaltet die Seitenanimation dort ohnehin ab), und
@@ -110,8 +105,6 @@
      die oberste Ebene: eine Rangliste mit 50 Zeilen wuerde sonst
      eine halbe Sekunde lang durchrieseln. */
   function staffeln(seiteID) {
-    if (seiteID === "home") return;
-
     const seite = document.getElementById(seiteID);
     if (!seite) return;
 
@@ -189,7 +182,6 @@
   function titel(seiteID) {
     splitAbraeumen();
 
-    if (seiteID === "home") return;   // hat ihre eigene Eroeffnung
     if (reduziert()) return;
     if (typeof gsap === "undefined" || typeof SplitText === "undefined") return;
 

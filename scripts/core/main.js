@@ -5,11 +5,19 @@
 /* ------------------------------------------------------
    SEITENWECHSEL
 ------------------------------------------------------ */
+// Hier startet jeder Besuch. Seiten-Sperre, Sternenschlacht und
+// Gegenhack schicken ebenfalls hierher zurueck.
+const FH_STARTSEITE = "stand";
+
 function changePage(pageID) {
+  // Die fruehere Startseite "home" gibt es nicht mehr - "Dein Stand"
+  // ist jetzt der Einstieg. Alte Aufrufe und Lesezeichen landen dort.
+  if (pageID === "home") pageID = FH_STARTSEITE;
+
   // Vom Admin abgeschaltete Seite (seiten-sperre.js): Besucher landen
   // auf der Startseite, der Admin sieht sie weiter als Vorschau.
   if (typeof fhSeiteGesperrt === "function" && fhSeiteGesperrt(pageID)) {
-    pageID = "home";
+    pageID = FH_STARTSEITE;
   }
 
   // VOR dem Umschalten merken, wo der Fokus war: sobald die alte Seite
@@ -38,7 +46,6 @@ function changePage(pageID) {
   }
 
   updateMusicForPage(pageID);
-  updateHomeEffects(pageID);
   updateWheelPage(pageID);
   updateLeaderboardPage(pageID);
   updateRacePage(pageID);
@@ -105,13 +112,6 @@ function changePage(pageID) {
     refreshShopCurrencyDisplay();
   }
 
-  // Die Startseiten-Uebersicht zeigt Lesestand, Schatzrad, Rennen und
-  // Codes. Wer von einer dieser Seiten zurueckkommt, soll den neuen
-  // Stand sehen und nicht den vom Seitenaufruf.
-  if (pageID === "home" && typeof fhRenderHomeDashboard === "function") {
-    fhRenderHomeDashboard();
-  }
-
   if (typeof updateRatingPage === "function") {
     updateRatingPage(pageID);
   }
@@ -127,6 +127,12 @@ function changePage(pageID) {
 
   if (typeof updateStandPage === "function") {
     updateStandPage(pageID);
+  }
+
+  // Saisons (scripts/saison/saison.js): Adventskalender und die
+  // versteckten Funde auf der neuen Seite.
+  if (typeof updateSaisonPage === "function") {
+    updateSaisonPage(pageID);
   }
 
   updateActiveNavHighlight(pageID);
@@ -242,408 +248,6 @@ function updateActiveNavHighlight(pageID) {
     spawnSparks(e.clientX, e.clientY);
   });
 })();
-
-/* ------------------------------------------------------
-   HOME HINTERGRUND-ANIMATION (Canvas)
-   Kino-reifer Sternenhimmel: mehrere Parallax-Ebenen aus
-   twinkelnden Sternen, langsam driftende Nebel-Wolken und
-   gelegentliche Kometen mit Leuchtspur.
-
-   STILLGELEGT seit dem Umbau der Startseite: das Ziel-Element
-   #home-fx gibt es nicht mehr, den Himmel malt jetzt CSS in
-   css/65-startseite.css. setupHomeCanvas() gibt ohne #home-fx
-   false zurueck, damit laeuft der ganze Block ins Leere - er
-   steht hier nur noch, weil er die Audio-Reaktion mitbringt
-   (setupAudioReactivity/applyAudioReactiveUI), die der
-   Musikspieler weiterhin benutzt.
------------------------------------------------------- */
-const homeFx = document.getElementById("home-fx");
-
-let homeCanvas = null;
-let homeCtx = null;
-let homeAnimationFrame = null;
-let homeEffectsRunning = false;
-let homeResizeHandler = null;
-let homeCometTimeout = null;
-
-let homeStars = [];
-let homeNebulae = [];
-let homeComets = [];
-
-const HOME_STAR_COLORS = ["#ffffff", "#bcdfff", "#c9a4ff", "#8fd9ff"];
-const HOME_NEBULA_COLORS = ["rgba(77,163,255,.16)", "rgba(145,70,255,.14)", "rgba(255,110,196,.10)"];
-
-function getHomeIntensity() {
-  return typeof getHomeIntensityMultiplier === "function" ? getHomeIntensityMultiplier() : 1;
-}
-
-function setupHomeCanvas() {
-  if (!homeFx) return false;
-
-  if (!homeCanvas) {
-    homeCanvas = document.createElement("canvas");
-    homeCanvas.className = "home-canvas";
-    homeFx.appendChild(homeCanvas);
-    homeCtx = homeCanvas.getContext("2d");
-  }
-
-  resizeHomeCanvas();
-  return true;
-}
-
-function resizeHomeCanvas() {
-  if (!homeCanvas || !homeFx) return;
-
-  homeCanvas.width = homeFx.clientWidth;
-  homeCanvas.height = homeFx.clientHeight;
-  buildHomeStarfield();
-  buildHomeNebulae();
-}
-
-function buildHomeStarfield() {
-  if (!homeCanvas) return;
-  const area = homeCanvas.width * homeCanvas.height;
-  const density = Math.min(220, Math.max(90, Math.floor(area / 9000)));
-
-  homeStars = new Array(density).fill(0).map(() => ({
-    x: Math.random() * homeCanvas.width,
-    y: Math.random() * homeCanvas.height,
-    layer: Math.random(), // 0 = weit weg/klein/langsam, 1 = nah/groß/schnell
-    radius: 0,
-    phase: Math.random() * Math.PI * 2,
-    color: HOME_STAR_COLORS[Math.floor(Math.random() * HOME_STAR_COLORS.length)],
-  })).map((star) => ({
-    ...star,
-    radius: 0.5 + star.layer * 1.6,
-  }));
-}
-
-function buildHomeNebulae() {
-  if (!homeCanvas) return;
-
-  homeNebulae = HOME_NEBULA_COLORS.map((color, i) => ({
-    baseX: (0.2 + i * 0.3) * homeCanvas.width,
-    baseY: (0.25 + (i % 2) * 0.4) * homeCanvas.height,
-    radius: homeCanvas.width * (0.35 + i * 0.08),
-    color,
-    angle: Math.random() * Math.PI * 2,
-    speed: 0.00025 + i * 0.00008,
-  }));
-}
-
-function spawnHomeComet() {
-  if (!homeCanvas) return;
-
-  homeComets.push({
-    x: homeCanvas.width * (0.55 + Math.random() * 0.4),
-    y: homeCanvas.height * Math.random() * 0.35,
-    vx: -(9 + Math.random() * 6),
-    vy: 4 + Math.random() * 3,
-    life: 0,
-    maxLife: 55 + Math.random() * 20,
-    color: HOME_STAR_COLORS[Math.floor(Math.random() * HOME_STAR_COLORS.length)],
-  });
-
-  const intensity = getHomeIntensity();
-  clearTimeout(homeCometTimeout);
-  homeCometTimeout = setTimeout(spawnHomeComet, (3200 + Math.random() * 3800) / intensity);
-}
-
-/* ------------------------------------------------------
-   AUDIO-REAKTIVITÄT
-   Verbindet sich einmalig per Web Audio API mit dem
-   Hintergrund-Musikplayer (#bg-music) und liefert ein
-   geglättetes 0..1 Pegelsignal. Damit pulsieren Sternenglanz,
-   Piratenschiff-Laterne und Countdown im Takt der Musik mit.
-   Bricht die Musikwiedergabe NIE ab, falls etwas schiefgeht.
------------------------------------------------------- */
-let audioCtx = null;
-let audioAnalyser = null;
-let audioDataArray = null;
-let audioLevelSmoothed = 0;
-let audioSetupAttempted = false;
-
-function setupAudioReactivity() {
-  if (audioSetupAttempted) return;
-  audioSetupAttempted = true;
-
-  const bgMusicEl = document.getElementById("bg-music");
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!bgMusicEl || !AudioContextClass) return;
-
-  try {
-    audioCtx = new AudioContextClass();
-    const source = audioCtx.createMediaElementSource(bgMusicEl);
-    audioAnalyser = audioCtx.createAnalyser();
-    audioAnalyser.fftSize = 64;
-    audioDataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
-
-    // WICHTIG: ohne diese Verbindung zum Ausgang bliebe die Musik stumm
-    source.connect(audioAnalyser);
-    audioAnalyser.connect(audioCtx.destination);
-  } catch (err) {
-    console.warn("Audio-Reaktivität konnte nicht initialisiert werden:", err);
-    audioCtx = null;
-    audioAnalyser = null;
-  }
-}
-
-// Manche Browser starten den AudioContext gesperrt, bis der Mensch klickt
-document.addEventListener("click", () => {
-  if (audioCtx && audioCtx.state === "suspended") {
-    audioCtx.resume().catch(() => {});
-  }
-});
-
-function getAudioLevel() {
-  if (!audioAnalyser || !audioDataArray) return 0;
-
-  audioAnalyser.getByteFrequencyData(audioDataArray);
-
-  // Bass-Bereich (die ersten paar Frequenzbänder) statt gesamtem
-  // Spektrum - das macht die Reaktion viel spürbarer/rhythmischer,
-  // näher am tatsächlichen Beat statt einem trägen Durchschnitt.
-  const bassBins = Math.max(4, Math.floor(audioDataArray.length * 0.22));
-  let sum = 0;
-  for (let i = 0; i < bassBins; i++) sum += audioDataArray[i];
-  const avg = sum / bassBins / 255;
-
-  // Betonung: leise Stellen bleiben ruhig, laute Stellen schlagen
-  // deutlich stärker aus
-  const emphasized = Math.pow(avg, 1.4) * 1.6;
-
-  // Schneller Attack (springt sofort mit hoch), langsamerer Release
-  // (fällt sanft wieder ab) - fühlt sich "punchy" an statt trägem Mittelwert
-  if (emphasized > audioLevelSmoothed) {
-    audioLevelSmoothed += (emphasized - audioLevelSmoothed) * 0.55;
-  } else {
-    audioLevelSmoothed += (emphasized - audioLevelSmoothed) * 0.08;
-  }
-
-  return Math.min(1, audioLevelSmoothed);
-}
-
-function applyAudioReactiveUI(level) {
-  const heroTitle = document.querySelector(".hero h1");
-  const timeBoxes = document.querySelectorAll(".time-box");
-  const heroBlock = document.querySelector(".hero");
-
-  // Beim allerersten Hover eine Box freiräumen: der bisherige
-  // Inline-Style (von den Frames davor) muss weg, sonst blockiert er
-  // die CSS-":hover"-Regel weiterhin, obwohl wir unten aufhören ihn
-  // neu zu setzen
-  timeBoxes.forEach((box) => {
-    if (box.dataset.hoverBound) return;
-    box.dataset.hoverBound = "1";
-    box.addEventListener("mouseenter", () => {
-      box.style.boxShadow = "";
-      box.style.transform = "";
-    });
-  });
-
-  if (heroTitle) {
-    heroTitle.style.filter = `brightness(${(1 + level * 0.9).toFixed(3)})`;
-    heroTitle.style.textShadow = `0 0 ${Math.round(40 + level * 110)}px #4da3ff`;
-  }
-
-  if (heroBlock) {
-    heroBlock.style.transform = `scale(${(1 + level * 0.035).toFixed(3)})`;
-  }
-
-  timeBoxes.forEach((box) => {
-    // Box unterm Mauszeiger lassen wir in Ruhe, damit die CSS-Hover-
-    // Animation (:hover { transform, box-shadow }) sichtbar bleibt -
-    // sonst überschreibt dieser Style hier jeden Frame den Hover-Effekt
-    if (box.matches(":hover")) return;
-
-    box.style.boxShadow = `0 0 ${Math.round(10 + level * 75)}px rgba(77,163,255,${(0.25 + level * 0.7).toFixed(2)})`;
-    box.style.transform = `scale(${(1 + level * 0.09).toFixed(3)})`;
-  });
-}
-
-function drawHomeFrame(time) {
-  if (!homeCtx || !homeCanvas) return;
-
-  const audioLevel = getAudioLevel();
-
-  homeCtx.clearRect(0, 0, homeCanvas.width, homeCanvas.height);
-
-  // Nebel-Wolken, langsam auf leichten Kreisbahnen driftend - werden
-  // im Takt der Musik etwas kräftiger
-  homeNebulae.forEach((n) => {
-    n.angle += n.speed;
-    const x = n.baseX + Math.cos(n.angle) * 60;
-    const y = n.baseY + Math.sin(n.angle) * 40;
-
-    const gradient = homeCtx.createRadialGradient(x, y, 0, x, y, n.radius * (1 + audioLevel * 0.08));
-    gradient.addColorStop(0, n.color);
-    gradient.addColorStop(1, "rgba(0,0,0,0)");
-    homeCtx.fillStyle = gradient;
-    homeCtx.fillRect(0, 0, homeCanvas.width, homeCanvas.height);
-  });
-
-  // Twinkelnde Sterne mit Parallax-Drift, Helligkeit reagiert auf die Musik
-  homeStars.forEach((star) => {
-    const twinkle = 0.55 + Math.sin(time / 900 + star.phase) * 0.45;
-    star.x -= 0.02 + star.layer * 0.06;
-    if (star.x < -5) star.x = homeCanvas.width + 5;
-
-    homeCtx.globalAlpha = Math.max(0, Math.min(1, twinkle + audioLevel * 0.3));
-    homeCtx.fillStyle = star.color;
-    homeCtx.shadowColor = star.color;
-    homeCtx.shadowBlur = star.radius * (3 + audioLevel * 2.5);
-    homeCtx.beginPath();
-    homeCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-    homeCtx.fill();
-  });
-  homeCtx.globalAlpha = 1;
-  homeCtx.shadowBlur = 0;
-
-  // Kometen mit ausblassender Leuchtspur
-  homeComets = homeComets.filter((c) => c.life < c.maxLife);
-  homeComets.forEach((c) => {
-    c.x += c.vx;
-    c.y += c.vy;
-    c.life++;
-
-    const fade = 1 - c.life / c.maxLife;
-    const tailX = c.x - c.vx * 6;
-    const tailY = c.y - c.vy * 6;
-
-    const grad = homeCtx.createLinearGradient(c.x, c.y, tailX, tailY);
-    grad.addColorStop(0, `rgba(255,255,255,${fade})`);
-    grad.addColorStop(1, "rgba(255,255,255,0)");
-
-    homeCtx.strokeStyle = grad;
-    homeCtx.lineWidth = 2.5;
-    homeCtx.shadowColor = c.color;
-    homeCtx.shadowBlur = 14;
-    homeCtx.beginPath();
-    homeCtx.moveTo(c.x, c.y);
-    homeCtx.lineTo(tailX, tailY);
-    homeCtx.stroke();
-    homeCtx.shadowBlur = 0;
-  });
-
-  drawHomeRipples();
-  applyAudioReactiveUI(audioLevel);
-
-  if (homeEffectsRunning) homeAnimationFrame = requestAnimationFrame(drawHomeFrame);
-}
-
-function startHomeEffects() {
-  if (homeEffectsRunning) return;
-  if (!setupHomeCanvas()) return;
-
-  setupAudioReactivity();
-  setupHomeTapEffect();
-
-  homeEffectsRunning = true;
-  drawHomeFrame(0);
-
-  const intensity = getHomeIntensity();
-  clearTimeout(homeCometTimeout);
-  homeCometTimeout = setTimeout(spawnHomeComet, 1200 / intensity);
-
-  if (!homeResizeHandler) {
-    homeResizeHandler = () => resizeHomeCanvas();
-    window.addEventListener("resize", homeResizeHandler);
-  }
-}
-
-/* ------------------------------------------------------
-   TIPP-/KLICK-EFFEKT AUF DEM HINTERGRUND
-   Beim Antippen des Sternenhimmels gibt es, sofern das Gerät
-   es unterstützt, eine kurze echte Vibration (navigator.vibrate
-   - "haptisches" Feedback auf dem Handy) UND eine sichtbare,
-   ausbreitende Ringwelle an der Tippstelle, für alle Geräte.
------------------------------------------------------- */
-let homeRipples = [];
-let homeTapListenerBound = false;
-
-function spawnHomeRipple(x, y) {
-  homeRipples.push({ x, y, life: 0, maxLife: 45 });
-
-  if (navigator.vibrate) {
-    navigator.vibrate(18);
-  }
-}
-
-function drawHomeRipples() {
-  if (!homeCtx) return;
-
-  homeRipples = homeRipples.filter((r) => r.life < r.maxLife);
-  homeRipples.forEach((r) => {
-    r.life++;
-    const progress = r.life / r.maxLife;
-    const radius = progress * 90;
-    const fade = 1 - progress;
-
-    homeCtx.beginPath();
-    homeCtx.arc(r.x, r.y, radius, 0, Math.PI * 2);
-    homeCtx.strokeStyle = `rgba(255,255,255,${(fade * 0.55).toFixed(2)})`;
-    homeCtx.lineWidth = 2.5 * fade + 0.5;
-    homeCtx.shadowColor = "rgba(140,200,255,.8)";
-    homeCtx.shadowBlur = 14 * fade;
-    homeCtx.stroke();
-    homeCtx.shadowBlur = 0;
-
-    // zweiter, kleinerer Ring kurz dahinter für mehr "Wumms"
-    if (progress > 0.15) {
-      const innerProgress = Math.max(0, progress - 0.15);
-      homeCtx.beginPath();
-      homeCtx.arc(r.x, r.y, innerProgress * 90, 0, Math.PI * 2);
-      homeCtx.strokeStyle = `rgba(255,255,255,${(fade * 0.35).toFixed(2)})`;
-      homeCtx.lineWidth = 1.5;
-      homeCtx.stroke();
-    }
-  });
-}
-
-function setupHomeTapEffect() {
-  if (homeTapListenerBound || !homeFx) return;
-  homeTapListenerBound = true;
-
-  homeFx.addEventListener("pointerdown", (e) => {
-    const rect = homeCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    spawnHomeRipple(x, y);
-  });
-}
-
-function stopHomeEffects() {
-  homeEffectsRunning = false;
-  cancelAnimationFrame(homeAnimationFrame);
-  clearTimeout(homeCometTimeout);
-  homeCometTimeout = null;
-  homeComets = [];
-  homeRipples = [];
-
-  const heroTitle = document.querySelector(".hero h1");
-  if (heroTitle) {
-    heroTitle.style.filter = "";
-    heroTitle.style.textShadow = "";
-  }
-  const heroBlock = document.querySelector(".hero");
-  if (heroBlock) {
-    heroBlock.style.transform = "";
-  }
-  document.querySelectorAll(".time-box").forEach((box) => {
-    box.style.boxShadow = "";
-    box.style.transform = "";
-  });
-
-  if (homeCtx && homeCanvas) homeCtx.clearRect(0, 0, homeCanvas.width, homeCanvas.height);
-}
-
-function updateHomeEffects(pageID) {
-  if (pageID === "home") {
-    startHomeEffects();
-  } else {
-    stopHomeEffects();
-  }
-}
 
 /* ------------------------------------------------------
    MUSIK
@@ -974,5 +578,5 @@ async function checkCode() {
    START
 ------------------------------------------------------ */
 window.addEventListener("DOMContentLoaded", () => {
-  changePage("home");
+  changePage(FH_STARTSEITE);
 });

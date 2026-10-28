@@ -15,10 +15,10 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 134 `<script defer>`-Tags in fester
-Reihenfolge, davon 120 aus diesem Repo. Neun große Skripte, die fast niemand braucht
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 130 `<script defer>`-Tags in fester
+Reihenfolge, davon 116 aus diesem Repo. Zehn große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `story-wetter.js`,
-`drehbuch.js`, `sternenreise.js`, `zelle.js`), stehen stattdessen in der Tabelle
+`drehbuch.js`, `sternenreise.js`, `zelle.js`, `saison-admin.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
 meldet CodeQL das als hohe Sicherheitslücke. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
@@ -91,13 +91,15 @@ Zwei Hinweise, die beim Eintragen dieser Liste aufgefallen sind und die noch off
 
 ### Seiten
 
-`index.html` enthält alle 28 Seiten als `<section id="…" class="page">`. `changePage(pageID)`
+`index.html` enthält alle 28 Seiten als `<section id="…" class="page">`. Jeder Besuch beginnt auf
+**„Dein Stand“** (`stand`, `FH_STARTSEITE` in `main.js`); die frühere Startseite `home` gibt es
+nicht mehr – `changePage("home")` landet dort, und auch die Musik läuft nur dort. `changePage(pageID)`
 in `scripts/core/main.js` schaltet `.active-page` um und ruft danach die `update…Page(pageID)`
 jedes Bereichs auf. **Eine neue Seite muss sich dort eintragen**, sonst wird sie nie
 aufgefrischt. Der Wechsel selbst ist eine CSS-Transition auf `.page` (350 ms, `--fh-ease`) —
 diese Animation nicht zusätzlich per JS bespielen.
 
-Der Admin kann jede Seite außer Start, Gateway, Impressum und Datenschutz abschalten
+Der Admin kann jede Seite außer „Dein Stand“, Gateway, Impressum und Datenschutz abschalten
 (`siteConfig.disabledPageIds`, `scripts/core/seiten-sperre.js`). Die Liste im Gateway
 entsteht aus den Nav-Einträgen mit `data-page` – eine neue Seite braucht dafür nichts
 Eigenes. Die Sperre nutzt die Klasse `fh-seite-aus`, **nicht** `fh-flag-aus` (die schaltet
@@ -122,7 +124,7 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
 nach `fhNachladen(...)`. Das **Drehbuch** (Migration 65, `scripts/liveevent/drehbuch.js`) baut
 im Admin-Bereich ein Live-Event vorab aus Schritten (Text, Story, Story beenden, Effekt, Pause),
 gespeichert in `event_drehbuecher` (nur Admins per RLS); abgespielt wird im Browser des Admins
@@ -135,7 +137,7 @@ Immer-geladen-Datei daneben (`admin-zugang.js`: `isAuthorizedAdmin`, `updateGate
 
 ### CSS
 
-Vierzehn Dateien in fester Ladereihenfolge, `css/00-basis.css` bis `css/97-sternenreise.css`. Die
+Vierzehn Dateien in fester Ladereihenfolge, `css/00-basis.css` bis `css/98-saisons.css`. Die
 Nummer ist die Kaskade: Späteres überschreibt Früheres. Die Design-Tokens (`--fh-gold`,
 `--fh-surface`, `--fh-ease`, …) stehen in `00-basis.css` unter `:root`. **Neue Farben und
 Kurven aus den Tokens nehmen**, nicht als Rohwert schreiben.
@@ -151,7 +153,10 @@ Bildschirmrand – feste Hinweise an `body` hängen.
 und hat eine eigene `:not(...)`-Liste – ein neues Live-Element gehört in **beide** Listen (und in
 die beiden Listen von `97-sternenreise.css`).
 Welche Epoche gilt, entscheidet die zuletzt erreichte Zeitmarke (`jahr_1720_ab`,
-`jahr_2100_ab`), siehe `live-storys.js`.
+`jahr_2100_ab`), siehe `live-storys.js`. **Läuft eine Saison** (`html[data-fh-saison]`, siehe
+unten), tritt die Optik beider Epochen zurück: Jede Regel in 95/96 trägt
+`:not([data-fh-saison])` – eine neue Regel dort braucht das auch, sonst färbt der Filter die
+Saison um. Was die Epoche spielerisch schaltet, gilt weiter.
 
 ### Sternenreise
 
@@ -181,6 +186,33 @@ Hausordnung (Wörter je Regel, **aus den Texten der gerade gewählten Sprache** 
 einmal je Verwahrung 250 Dublonen über `addCurrency()`, danach zeigt die Seite dem Spieler keine
 Gitter mehr („Auf der Flucht“, `localStorage` „fhZelleEntkommen“). `#fh-zelle` steht in allen
 `:not`-Listen der Epochen.
+
+### Saisons
+
+Migration 69, Entwurf „FireHelmet Saisons“ aus Claude Design. `scripts/saison/saison.js` liest
+`saison_stand()` und setzt `html[data-fh-saison]` (`halloween`, `weihnachten`, `neujahr`,
+`ostern`; ohne Attribut = Original). Welche gilt, entscheidet `app.saison_jetzt()` nach Datum in
+deutscher Zeit aus den Zeitfenstern in `saison_config` (`MM-TT` jährlich, auch über Silvester;
+`JJJJ-MM-TT` einmalig) – oder die vom Admin erzwungene. `saison_config` ist **nicht** öffentlich
+lesbar (sonst stünden die Codes hinter den Türchen schon am 1. Dezember im Netz); jeder bekommt
+nur seinen Teil über `saison_stand()`. Die Paletten stehen als `--fh-halloween-*` usw. in
+`00-basis.css`, `98-saisons.css` legt sie auf die allgemeinen Tokens um (die Spielfarben wie
+`--fh-cold` bleiben).
+
+- **Kürbisjagd / Eiersuche:** 17 Funde, je einer auf der Seite, die der Admin festlegt (Gateway →
+  Seite → Saisons). Der Platz ist je Fund und Jahr fest. `saison_fund()` zahlt; beim 17. gibt es
+  Bonus und den Titel `saison-halloween` bzw. `saison-ostern` (feste IDs in `event_titel`).
+  Erlaubte Seiten: `app.saison_seiten()` und `SEITEN` in `saison-admin.js` – beide pflegen.
+- **Adventskalender:** Seite `#advent`, Nav-Eintrag nur in der Weihnachtssaison sichtbar.
+  `advent_oeffnen()` öffnet nur das Türchen von heute (1.–24.12.); verpasste verfallen. Ein
+  Geheimcode im Türchen wird nur angezeigt – anlegen muss man ihn unter Codes.
+- **Neujahr:** Countdown nach Serverzeit, um 0 Uhr der 0-Uhr-Moment, danach `neujahr_geschenk()`
+  (einmal je Jahr, ab dem 1. Januar).
+
+Die Vorschau im Gateway (`fhSaison.vorschau()`) gilt nur im eigenen Browser und nur fürs
+Aussehen. Feste Elemente an `body` (`#fh-saison-hinweis`, `#fh-saison-mitternacht`,
+`#fh-advent-fenster`) stehen in allen `:not`-Listen; die Effektfläche ist ein `canvas` und fällt
+damit ohnehin heraus. Neue Tabellen mit Spielerbezug räumt `saison_konto_aufraeumen` ab.
 
 ### Piratenpass
 

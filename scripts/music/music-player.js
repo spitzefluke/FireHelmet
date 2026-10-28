@@ -1,7 +1,8 @@
 /* ======================================================
    MUSIK-PLAYER (eigenständig, robust)
    Spielt die Playlist aus scripts/music/music-data.js in
-   Dauerschleife, solange die Home-Seite aktiv ist.
+   Dauerschleife, solange "Dein Stand" offen ist - die Seite,
+   auf der jeder Besuch beginnt (frueher lief sie auf Home).
 
    Diese Datei ist bewusst komplett eigenständig (unabhängig
    von main.js), damit ein Fehler an anderer Stelle der Seite
@@ -28,6 +29,8 @@
   let musicMuted = false;
   let pendingAutoplay = false;
   let currentTrackIndex = 0;
+  // Die Seite mit Musik. War bis zum Wegfall der Startseite "home".
+  const MUSIK_SEITE = "stand";
   let onHomePage = false;
   let watchdogInterval = null;
 
@@ -166,7 +169,7 @@
   function updateMusicForPage(pageID) {
     if (!bgMusic) return;
     const wasOnHomePage = onHomePage;
-    onHomePage = pageID === "home";
+    onHomePage = pageID === MUSIK_SEITE;
 
     if (!musicToggle) musicToggle = document.getElementById("music-toggle");
     if (!topbarToggle) topbarToggle = document.getElementById("fh-topbar-music");
@@ -180,7 +183,7 @@
         bgMusic.volume = 0;
       }
 
-      // Kam man gerade erst auf Home (oder war die Musik pausiert),
+      // Kam man gerade erst auf die Seite (oder war die Musik pausiert),
       // erst leise starten und dann sanft einblenden
       if (!wasOnHomePage || bgMusic.paused) {
         bgMusic.volume = 0;

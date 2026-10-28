@@ -316,7 +316,7 @@ html.fh-terra body {
     var(--fh-nocturne-grund) fixed;
   background-color: var(--fh-nocturne-grund);
 }
-html.fh-terra body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle),
+html.fh-terra body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle):not(#fh-saison-hinweis):not(#fh-saison-mitternacht):not(#fh-advent-fenster),
 html.fh-terra dialog[open] {
   filter: hue-rotate(210deg) saturate(.72);
 }
@@ -361,7 +361,7 @@ html.fh-verwahrung body {
     linear-gradient(180deg, #11121c, #0d0e16) fixed;
   background-color: #0d0e16;
 }
-html.fh-verwahrung body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle),
+html.fh-verwahrung body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle):not(#fh-saison-hinweis):not(#fh-saison-mitternacht):not(#fh-advent-fenster),
 html.fh-verwahrung dialog[open] {
   filter: hue-rotate(-45deg) saturate(.5) brightness(.82);
 }

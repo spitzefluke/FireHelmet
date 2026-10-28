@@ -21,7 +21,12 @@
    gleiche Liste in 95-epoche-1720.css.
 ===================================================== */
 
-html.fh-2100 {
+/* Laeuft eine Saison (html[data-fh-saison], css/98-saisons.css),
+   tritt die Optik dieser Epoche zurueck - der Farbfilter wuerde sonst
+   aus Halloween-Orange etwas ganz anderes machen. Deshalb tragen alle
+   Regeln hier :not([data-fh-saison]). Was die Epoche spielerisch
+   schaltet (Hangar, ruhendes Rennen ...), gilt weiter. */
+html.fh-2100:not([data-fh-saison]) {
   --fh-2100-all: #03040c;
   --fh-2100-glas: rgba(12,16,42,.62);
   --fh-2100-kante: rgba(150,190,255,.28);
@@ -36,7 +41,7 @@ html.fh-2100 {
 }
 
 /* ---- Weltall ---- */
-html.fh-2100 body {
+html.fh-2100:not([data-fh-saison]) body {
   background:
     radial-gradient(40% 35% at 30% 40%, rgba(90,60,200,.28), transparent 70%),
     radial-gradient(35% 30% at 75% 60%, rgba(30,140,180,.18), transparent 70%),
@@ -47,7 +52,7 @@ html.fh-2100 body {
 
 /* Glut der gespaltenen Erde links unten und dunkle Raender -
    unter Leiste und Kopfzeile, faengt keine Klicks. */
-html.fh-2100 body::before {
+html.fh-2100:not([data-fh-saison]) body::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -60,7 +65,7 @@ html.fh-2100 body::before {
 
 /* Ferne Laserblitze der Schlacht. Ohne Animation bleibt opacity 0 -
    kein stehender Strich. */
-html.fh-2100 body::after {
+html.fh-2100:not([data-fh-saison]) body::after {
   content: "";
   position: fixed;
   inset: 0;
@@ -73,7 +78,7 @@ html.fh-2100 body::after {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  html.fh-2100 body::after { animation: fh-2100-laser 7s steps(1) infinite; }
+  html.fh-2100:not([data-fh-saison]) body::after { animation: fh-2100-laser 7s steps(1) infinite; }
 }
 
 @keyframes fh-2100-laser {
@@ -85,23 +90,23 @@ html.fh-2100 body::after {
 }
 
 /* Sterne und Nebel bleiben - und leuchten etwas staerker. */
-html.fh-2100 .stars,
-html.fh-2100 .stars2 { opacity: 1; }
-html.fh-2100 .nebula { opacity: .9; filter: hue-rotate(40deg); }
+html.fh-2100:not([data-fh-saison]) .stars,
+html.fh-2100:not([data-fh-saison]) .stars2 { opacity: 1; }
+html.fh-2100:not([data-fh-saison]) .nebula { opacity: .9; filter: hue-rotate(40deg); }
 
 /* ---- Farbfilter: Gold wird Cyan ---- */
-html.fh-2100 body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle),
-html.fh-2100 dialog[open] {
+html.fh-2100:not([data-fh-saison]) body > :not(#fh-sidebar):not(#fh-topbar):not(script):not(audio):not(canvas):not(dialog):not(.stars):not(.stars2):not(.nebula):not(.fh-skip-link):not(#turnstile-widget):not(#transition):not(#code-fx):not(#fh-story):not(#fh-story-filter):not(#fh-story-muenzen):not(#fh-riss):not(#fh-herz):not(#fh-zeit):not(#fh-nukes):not(#fh-wunsch):not(#fh-seitenwahl):not(#fh-schlacht-hinweis):not(#fh-schlacht-buehne):not(#fh-orte-vorschau):not(#fh-wetter):not(#fh-live-banderole):not(#fh-live-disco-licht):not(#fh-live-konfetti):not(#fh-live-blitz):not(#fh-live-buehne):not(.fh-ton-an):not(#fh-reise):not(#fh-reise-welt):not(#fh-zelle):not(#fh-saison-hinweis):not(#fh-saison-mitternacht):not(#fh-advent-fenster),
+html.fh-2100:not([data-fh-saison]) dialog[open] {
   filter: hue-rotate(165deg) saturate(1.1);
 }
 
-html.fh-2100 body > :not(#fh-sidebar):not(#fh-topbar) :is(img, video, canvas, iframe),
-html.fh-2100 dialog[open] :is(img, video, canvas, iframe) {
+html.fh-2100:not([data-fh-saison]) body > :not(#fh-sidebar):not(#fh-topbar) :is(img, video, canvas, iframe),
+html.fh-2100:not([data-fh-saison]) dialog[open] :is(img, video, canvas, iframe) {
   filter: hue-rotate(-165deg) saturate(.91);
 }
 
 /* ---- Leiste: Glas mit Leuchtkante ---- */
-html.fh-2100 .fh-sidebar {
+html.fh-2100:not([data-fh-saison]) .fh-sidebar {
   background: var(--fh-2100-glas);
   border-right: 1px solid var(--fh-2100-kante);
   box-shadow: 0 0 40px rgba(80,120,255,.14), inset -1px 0 0 rgba(255,255,255,.04);
@@ -109,50 +114,50 @@ html.fh-2100 .fh-sidebar {
   -webkit-backdrop-filter: blur(12px);
 }
 
-html.fh-2100 .fh-sidebar-flame {
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-flame {
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #bfeaff, #3a6bff 60%, #1a1060);
   box-shadow: 0 0 18px rgba(90,160,255,.7);
   color: #fff;
 }
 
-html.fh-2100 .fh-sidebar-title,
-html.fh-2100 .fh-sidebar-subtitle,
-html.fh-2100 .fh-sidebar-footer,
-html.fh-2100 .fh-sidebar-footer-wrap {
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-title,
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-subtitle,
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-footer,
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-footer-wrap {
   color: var(--fh-2100-text);
 }
 
-html.fh-2100 .fh-sidebar-nav .fh-nav-item {
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-item {
   color: var(--fh-2100-text-weich);
   background: transparent;
   border-radius: var(--fh-radius);
 }
 
-html.fh-2100 .fh-sidebar-nav .fh-nav-item:hover,
-html.fh-2100 .fh-sidebar-nav .fh-nav-item:focus-visible {
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-item:hover,
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-item:focus-visible {
   color: var(--fh-2100-text);
   background: rgba(127,224,255,.08);
   outline-color: var(--fh-2100-cyan);
 }
 
-html.fh-2100 .fh-sidebar-nav .fh-nav-item.fh-nav-active {
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-item.fh-nav-active {
   color: #fff;
   background: rgba(127,224,255,.12);
   box-shadow: inset 0 0 0 1px rgba(127,224,255,.45);
 }
 
-html.fh-2100 .fh-sidebar-nav .fh-nav-item.fh-nav-active::before {
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-item.fh-nav-active::before {
   background: linear-gradient(180deg, var(--fh-2100-cyan), var(--fh-2100-violett));
   box-shadow: 0 0 10px var(--fh-2100-cyan);
 }
 
-html.fh-2100 .fh-sidebar-nav .fh-nav-section-label {
+html.fh-2100:not([data-fh-saison]) .fh-sidebar-nav .fh-nav-section-label {
   background: linear-gradient(90deg, transparent, rgba(127,224,255,.45), transparent);
 }
 
 /* ---- Kopfzeile: Glas ---- */
-html.fh-2100 .fh-topbar {
+html.fh-2100:not([data-fh-saison]) .fh-topbar {
   background: linear-gradient(180deg, rgba(12,16,42,.78), rgba(12,16,42,.35));
   border-bottom: 1px solid var(--fh-2100-kante);
   backdrop-filter: blur(12px);
@@ -160,7 +165,7 @@ html.fh-2100 .fh-topbar {
   color: var(--fh-2100-text);
 }
 
-html.fh-2100 .fh-topbar .fh-qs-trigger {
+html.fh-2100:not([data-fh-saison]) .fh-topbar .fh-qs-trigger {
   background: rgba(255,255,255,.03);
   border: 1px solid rgba(150,190,255,.35);
   border-radius: 999px;
@@ -168,15 +173,15 @@ html.fh-2100 .fh-topbar .fh-qs-trigger {
   box-shadow: none;
 }
 
-html.fh-2100 .fh-topbar .fh-qs-trigger kbd {
+html.fh-2100:not([data-fh-saison]) .fh-topbar .fh-qs-trigger kbd {
   background: transparent;
   border: 1px solid rgba(150,190,255,.35);
   color: var(--fh-2100-text-weich);
 }
 
-html.fh-2100 .fh-topbar-btn,
-html.fh-2100 .fh-topbar-lang,
-html.fh-2100 .fh-topbar-coins {
+html.fh-2100:not([data-fh-saison]) .fh-topbar-btn,
+html.fh-2100:not([data-fh-saison]) .fh-topbar-lang,
+html.fh-2100:not([data-fh-saison]) .fh-topbar-coins {
   background: rgba(255,255,255,.03);
   border: 1px solid var(--fh-2100-kante);
   border-radius: var(--fh-radius);
@@ -184,16 +189,16 @@ html.fh-2100 .fh-topbar-coins {
   box-shadow: none;
 }
 
-html.fh-2100 .fh-topbar-btn:hover,
-html.fh-2100 .fh-topbar-lang:hover {
+html.fh-2100:not([data-fh-saison]) .fh-topbar-btn:hover,
+html.fh-2100:not([data-fh-saison]) .fh-topbar-lang:hover {
   border-color: var(--fh-2100-cyan);
   background: rgba(127,224,255,.08);
   box-shadow: 0 0 14px rgba(127,224,255,.3);
 }
 
-html.fh-2100 .fh-topbar-coins .ph { color: var(--fh-2100-cyan); }
+html.fh-2100:not([data-fh-saison]) .fh-topbar-coins .ph { color: var(--fh-2100-cyan); }
 
-html.fh-2100 .fh-page-title {
+html.fh-2100:not([data-fh-saison]) .fh-page-title {
   text-shadow: 0 0 24px rgba(127,224,255,.35);
 }
 
@@ -207,8 +212,8 @@ html.fh-2100 .fh-page-title {
    schon in den Farben des Films gestaltet (kalt-blau, violett, gruener
    Kern). Der Farbfilter oben wuerde sie nach Orange drehen - darum
    hier zurueckdrehen, wie bei Bildern. */
-html.fh-2100 #hangar .hg-seite,
-html.fh-2100 #sternenschlacht .sl-seite {
+html.fh-2100:not([data-fh-saison]) #hangar .hg-seite,
+html.fh-2100:not([data-fh-saison]) #sternenschlacht .sl-seite {
   filter: hue-rotate(-165deg) saturate(.91);
 }
 
@@ -218,11 +223,11 @@ html.fh-2100 #sternenschlacht .sl-seite {
    steht in der :not-Liste und bekommt gar keinen Filter - auch die
    Bilder-Regel darf es nicht treffen. Zwei IDs und zwei Klassen,
    damit beides die Bilder-Regel (zwei IDs, eine Klasse) schlaegt. */
-html.fh-2100 body > #fh-main #hangar .hg-schiff canvas,
-html.fh-2100 body > #fh-schlacht-buehne #schlacht-inhalt canvas.sl-canvas,
-html.fh-2100 body > #fh-schlacht-buehne #schlacht-inhalt .sl-wahl-bild canvas,
-html.fh-2100 body > #fh-schlacht-buehne #sl-intro-canvas.sl-intro-canvas,
-html.fh-2100 body > #fh-orte-vorschau #sl-intro-canvas.sl-intro-canvas,
-html.fh-2100 body > #fh-orte-vorschau #sl-vorschau-canvas.sl-vorschau-canvas {
+html.fh-2100:not([data-fh-saison]) body > #fh-main #hangar .hg-schiff canvas,
+html.fh-2100:not([data-fh-saison]) body > #fh-schlacht-buehne #schlacht-inhalt canvas.sl-canvas,
+html.fh-2100:not([data-fh-saison]) body > #fh-schlacht-buehne #schlacht-inhalt .sl-wahl-bild canvas,
+html.fh-2100:not([data-fh-saison]) body > #fh-schlacht-buehne #sl-intro-canvas.sl-intro-canvas,
+html.fh-2100:not([data-fh-saison]) body > #fh-orte-vorschau #sl-intro-canvas.sl-intro-canvas,
+html.fh-2100:not([data-fh-saison]) body > #fh-orte-vorschau #sl-vorschau-canvas.sl-vorschau-canvas {
   filter: none;
 }
