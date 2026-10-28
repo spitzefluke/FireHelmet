@@ -99,9 +99,10 @@
        48,5 s), Kanone besetzen (30 s), Reise (300 s), Ankunft/Landung.
        Der Film taktet sich selbst ab dem Start (wie app.reise_takt). */
     reise: { szenen: [48500, 30000, 300000, 45000] },
-    /* Migration 70: "Liebeslied" - das Lyric-Video aus lied-film.js,
-       77,4 s: Intro, Strophe, Refrain, Bruecke, Outro. */
-    liebeslied: { szenen: [15000, 11500, 22500, 10500, 17900] },
+    /* Migration 70: "Liebeslied" - das Lyric-Video aus lied-film.js
+       ueber den ganzen Song (5:23 min = DAUER dort); die fuenf Szenen
+       sind nur gleich lange Abschnitte fuer den spaeten Einstieg. */
+    liebeslied: { szenen: [64620, 64620, 64620, 64620, 64620] },
   };
   const ZEITEN_IN_SZENE = {};  // Summe der Dauer bis zum Beginn jeder Szene
   Object.keys(STORYS).forEach(function (st) {

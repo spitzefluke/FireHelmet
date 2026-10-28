@@ -4899,26 +4899,36 @@ body.fh-story-wunsch .fh-stern.ist-frei .fh-stern-kern {
 .fh-herz-leiste .fh-herz-knopf { position: static; }
 .fh-herz-knopf[aria-pressed="true"] { color: var(--fh-fg); }
 /* "Liebeslied" (lied-film.js, Migration 70): Lyric-Video auf der Bühne
-   des Risses. Hintergrund im Canvas, Text als DOM darüber (kippt per 3D). */
+   des Risses. Hintergrund im Canvas, Ringe und Text als DOM darüber. */
 .fh-lied { background: var(--fh-lied-nacht); }
 .fh-lied-grund { position: absolute; inset: 0; width: 100%; height: 100%; }
-.fh-lied-text { position: absolute; inset: 0; perspective: 1200px; }
-.fh-lied-zeile { position: absolute; left: 50%; top: 50%; width: 1600px; text-align: center; transform: translate(-50%, -50%); transform-style: preserve-3d; color: var(--fh-lied-licht); text-shadow: 0 0 28px color-mix(in srgb, var(--fh-lied-lila) 55%, transparent); will-change: transform, opacity; }
-.fh-lied-reihe { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 0 .32em; }
-.fh-lied-wort { display: inline-block; opacity: 0; transform-origin: 50% 80%; }
-.fh-lied-wort.ist-betont { color: var(--fh-lied-lila); text-shadow: 0 0 34px var(--fh-lied-lila); }
-/* Intro und Outro: Versalien, weit gesperrt. */
-.fh-lied-zeile.ist-intro, .fh-lied-zeile.ist-outro { font: 500 78px/1.25 var(--fh-font-display); letter-spacing: .32em; text-transform: uppercase; }
-.fh-lied-zeile.ist-outro .ist-betont { font-size: 1.35em; }
-/* Strophe: fett, Akzentwörter in Lila. */
-.fh-lied-zeile.ist-strophe { font: 800 112px/1.08 var(--fh-font-sans); letter-spacing: -.01em; }
-/* Refrain: fett, betonte Wörter deutlich größer. */
-.fh-lied-zeile.ist-refrain { font: 800 104px/1.1 var(--fh-font-sans); }
-.fh-lied-zeile.ist-refrain .ist-betont { font-size: 1.45em; }
-/* Brücke: kursiv und leiser, Betontes fett. */
-.fh-lied-zeile.ist-bruecke { font: italic 400 96px/1.15 var(--fh-font-sans); }
-.fh-lied-zeile.ist-bruecke .ist-betont { font: normal 800 1.05em/1.1 var(--fh-font-sans); }
+.fh-lied-text { position: absolute; inset: 0; }
+.fh-lied-zeile { position: absolute; left: 50%; top: 50%; width: 1500px; text-align: center; transform: translate(-50%, -50%); transform-style: preserve-3d; color: var(--fh-lied-licht); text-shadow: 0 0 22px color-mix(in srgb, var(--fh-lied-lila) 45%, transparent), 1px 1px 0 color-mix(in srgb, var(--fh-lied-lila) 60%, transparent), 2px 2px 0 color-mix(in srgb, var(--fh-lied-lila-tief) 45%, transparent); will-change: transform, opacity; }
+.fh-lied-reihe { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 0 .3em; }
+.fh-lied-wort, .fh-lied-zeichen { display: inline-block; opacity: 0; transform-origin: 50% 80%; transition: color .7s var(--fh-ease); }
+.fh-lied-wort.ist-neu, .fh-lied-zeichen.ist-neu, .ist-neu > .fh-lied-zeichen { color: var(--fh-lied-lila); }
+.fh-lied-wort.ist-betont { color: var(--fh-lied-lila); font-size: 1.22em; font-weight: 700; }
+/* Kippen am Zeilenende: dicke 3D-Schrift in Lila. */
+.fh-lied-zeile.ist-tief { text-shadow: 1px 1px 0 #d9d3ff, 2px 2px 0 #c4bbfb, 3px 3px 0 #ada2f2, 4px 4px 0 #978be6, 5px 5px 0 #8175d8, 6px 6px 0 #6c60c6, 7px 7px 0 var(--fh-lied-lila-tief), 0 0 40px color-mix(in srgb, var(--fh-lied-lila) 50%, transparent); }
+/* Intro und Outro: Versalien, weit gesperrt, eher klein. */
+.fh-lied-zeile.ist-intro, .fh-lied-zeile.ist-outro { font: 500 54px/1.3 var(--fh-font-sans); letter-spacing: .2em; text-transform: uppercase; }
+.fh-lied-zeile.ist-intro .ist-betont, .fh-lied-zeile.ist-outro .ist-betont { color: var(--fh-lied-licht); font-size: 1.25em; font-weight: 600; }
+/* Strophe: kräftig, an wechselnden Stellen. */
+.fh-lied-zeile.ist-strophe { width: 1300px; font: 600 112px/1.12 var(--fh-font-sans); letter-spacing: -.012em; }
+/* Refrain: kräftig, betonte Wörter weiß und größer. */
+.fh-lied-zeile.ist-refrain { font: 600 100px/1.15 var(--fh-font-sans); letter-spacing: -.01em; }
+.fh-lied-zeile.ist-refrain .ist-betont { color: var(--fh-lied-licht); }
+/* Brücke: kursiv und leicht, Betontes aufrecht und fett. */
+.fh-lied-zeile.ist-bruecke { font: italic 400 78px/1.2 var(--fh-font-sans); }
+.fh-lied-zeile.ist-bruecke .ist-betont { font-style: normal; font-weight: 600; color: var(--fh-lied-licht); }
+/* Ringe um den Text: drei dünne Kreise, innen ein Hauch Licht. */
+.fh-lied-ringe { position: absolute; left: 50%; top: 50%; width: 0; height: 0; opacity: 0; transform: translate(-50%, -50%); }
+.fh-lied-ring { position: absolute; left: 0; top: 0; border: 2px solid color-mix(in srgb, var(--fh-lied-licht) 55%, transparent); border-radius: 50%; transform: translate(-50%, -50%); }
+.fh-lied-ring:nth-child(1) { width: 440px; height: 440px; background: radial-gradient(circle, color-mix(in srgb, var(--fh-lied-lila) 22%, transparent), transparent 70%); }
+.fh-lied-ring:nth-child(2) { width: 860px; height: 860px; border-color: color-mix(in srgb, var(--fh-lied-licht) 38%, transparent); }
+.fh-lied-ring:nth-child(3) { width: 1300px; height: 1300px; border-color: color-mix(in srgb, var(--fh-lied-licht) 22%, transparent); }
 .fh-lied-note { position: absolute; left: 50%; top: 50%; width: 96px; height: 96px; margin: -48px 0 0 -48px; color: var(--fh-lied-lila); opacity: 0; }
+.fh-lied-vorlesen { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @keyframes fhRissRein { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fhRissRaus { from { opacity: 1; } to { opacity: 0; } }
 /* Sterne im Hintergrund des Films: funkeln per CSS statt per Bild aus

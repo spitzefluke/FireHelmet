@@ -1815,6 +1815,9 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 .gw-live-knopf:disabled { opacity: .35; cursor: default; }
 /* Liedtext fuer "Liebeslied" (Gateway, Migration 70). */
 .gw-lied-text { display: block; width: 100%; min-height: 220px; margin: 0 0 8px; resize: vertical; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: left; }
+.gw-lied-klopfen { margin: 0 0 8px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--fh-lied-lila) 40%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--fh-lied-daemmer) 18%, transparent); }
+.gw-lied-klopfen-zeit { margin: 0 0 6px; font: 500 12px/1.4 var(--fh-font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--fh-muted-fg); }
+.gw-lied-naechste { margin: 0 0 10px; font: 600 20px/1.35 var(--fh-font-sans); color: var(--fh-lied-lila); }
 
 .gw-plan-ueberschrift {
   margin: 4px 0 8px;

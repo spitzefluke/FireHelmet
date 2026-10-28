@@ -189,12 +189,19 @@ Gitter mehr („Auf der Flucht“, `localStorage` „fhZelleEntkommen“). `#fh-
 
 ### Liebeslied
 
-Migration 70: die Story `liebeslied`, ein Lyric-Video (`scripts/liveevent/lied-film.js`, nachgeladen
-als `lied`, 77,4 s, fünf Teile Intro/Strophe/Refrain/Brücke/Outro). Hintergrund (Strahlen, Sterne,
-Bokeh, Ringe, Orb, Horizont, Blitz) im Canvas zu festen Zeitpunkten, der Text als DOM darüber.
+Migration 70: die Story `liebeslied`, ein Lyric-Video zum Song „I Don't Know Love“
+(`scripts/liveevent/lied-film.js`, nachgeladen als `lied`). Der Film läuft über den **ganzen Song**
+(`DAUER` 323,1 s = `STORYS.liebeslied` in `live-storys.js`); die 77-s-Vorlage aus Claude Design war
+nur ein Zusammenschnitt. Der Look folgt ihr je Stil: Intro/Outro Dämmerblau mit Sternenflug und
+Versalien aus der Tiefe, Strophe sattes Blau mit dunklen Flächen, Orb und einfliegenden Buchstaben,
+Refrain/Brücke Dunst mit Bokeh und Ringen; am Zeilenende kippt der Text als 3D-Schrift weg.
+Hintergrund im Canvas, Ringe und Text als DOM. Alle Effekte hängen an den **Zeilen**, nicht an
+festen Zeiten.
+
 **Der Liedtext steht nicht im Repo**: Der Admin trägt ihn im Gateway unter „Liedtext: Liebeslied“
-ein (`siteConfig.liedText`, je Zeile `Sekunde | Text`, `/` bricht um, `*Wort*` betont, `# strophe`
-wechselt den Stil); „Zeitmarken einsetzen“ setzt die Einsätze des Vorbild-Videos vor. Die Musik
+ein (`siteConfig.liedText`, je Zeile `Sekunde | Text`, `/` bricht um, `*Wort*` betont,
+`# strophe` wechselt den Stil, `{ringe}` usw. schalten Effekte). „Text aus MP3 lesen“ holt ihn aus
+dem ID3-Tag (USLT) der eigenen MP3 im Browser, „Mitklopfen“ setzt die Zeiten zur Musik. Die Musik
 kommt wie bei jeder Story über „Musik je Story“ (Datei `liebeslied`). `#fh-lied` steht in allen
 `:not`-Listen der Epochen.
 
