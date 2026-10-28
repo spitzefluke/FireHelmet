@@ -99,6 +99,9 @@
        48,5 s), Kanone besetzen (30 s), Reise (300 s), Ankunft/Landung.
        Der Film taktet sich selbst ab dem Start (wie app.reise_takt). */
     reise: { szenen: [48500, 30000, 300000, 45000] },
+    /* Migration 70: "Liebeslied" - das Lyric-Video aus lied-film.js,
+       77,4 s: Intro, Strophe, Refrain, Bruecke, Outro. */
+    liebeslied: { szenen: [15000, 11500, 22500, 10500, 17900] },
   };
   const ZEITEN_IN_SZENE = {};  // Summe der Dauer bis zum Beginn jeder Szene
   Object.keys(STORYS).forEach(function (st) {
@@ -1272,6 +1275,18 @@
       else if (window.fhNachladen) window.fhNachladen("reise").then(reiseStart, function (e) { console.warn(e); });
     }
 
+    /* Liebeslied (70): genauso, lied-film.js. Den Liedtext liest der
+       Film selbst aus siteConfig.liedText. */
+    if (st === "liebeslied" && !lauf.liedGestartet) {
+      lauf.liedGestartet = true;
+      const liedStart = function () {
+        if (!lauf || lauf.id !== id || lauf.story !== "liebeslied" || !window.fhLiedFilm) return;
+        window.fhLiedFilm.start({ ab: ZEITEN_IN_SZENE.liebeslied[lauf.n - 1] + imSzeneMs(), vorschau: vorschau });
+      };
+      if (window.fhLiedFilm) liedStart();
+      else if (window.fhNachladen) window.fhNachladen("lied").then(liedStart, function (e) { console.warn(e); });
+    }
+
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
     if (st === "hacked" && n === 7) {
       const p = hatPreis("hacked") ? belohnungAbholen(id, "hacked", 0, vorschau) : Promise.resolve(null);
@@ -1414,13 +1429,14 @@
     if (st === "zeit" && window.fhZeitFilm) window.fhZeitFilm.ende();
     if (st === "nukes" && window.fhNukesFilm) window.fhNukesFilm.ende();
     if (st === "reise" && window.fhSternenreise) window.fhSternenreise.ende();
+    if (st === "liebeslied" && window.fhLiedFilm) window.fhLiedFilm.ende();
     if (st === "hacked") loecherSpawnen(id, vorschau);
     if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
     if (st === "sturm" && !vorschau) nachregen = true;
     anzeigen();
     /* 36: Riss und Systemausfall zahlen am Ende - nur wer bis hier
        dabei war, und nur, wenn der Admin etwas eingestellt hat. */
-    if ((st === "riss" || st === "ende" || st === "herz" || st === "zeit" || st === "nukes" || st === "reise") && hatPreis(st)) {
+    if ((st === "riss" || st === "ende" || st === "herz" || st === "zeit" || st === "nukes" || st === "reise" || st === "liebeslied") && hatPreis(st)) {
       belohnungAbholen(id, "abschluss", 0, vorschau, st).then(function (erg) {
         const teile = belohnungsTeile(erg);
         if (!teile.length) return;
@@ -1429,8 +1445,9 @@
           : st === "zeit" ? t("story.zeit.reward", "Willkommen im Jahr 2100")
           : st === "nukes" ? t("story.nukes.reward", "Bsss. Die Mücke lässt grüßen")
           : st === "reise" ? t("story.reise.reward", "Danke, Crew der Arche")
+          : st === "liebeslied" ? t("story.lied.reward", "Danke fürs Zuhören")
           : t("story.end.reward", "Ein Trostpflaster für die Crew");
-        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : st === "zeit" ? "#7fe0ff" : st === "nukes" ? "#f0c96a" : st === "reise" ? "#b5abfc" : "#39ff14", st === "ende");
+        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : st === "zeit" ? "#7fe0ff" : st === "nukes" ? "#f0c96a" : st === "reise" ? "#b5abfc" : st === "liebeslied" ? "#a99cf0" : "#39ff14", st === "ende");
       });
     }
   }
@@ -1466,6 +1483,7 @@
     if (window.fhZeitFilm) window.fhZeitFilm.weg();
     if (window.fhNukesFilm) window.fhNukesFilm.weg();
     if (window.fhSternenreise) window.fhSternenreise.weg();
+    if (window.fhLiedFilm) window.fhLiedFilm.weg();
     if (window.fhStoryWetter) window.fhStoryWetter.weg();
     if (musikLaeuft) musikAus(0);
     lauf = null;

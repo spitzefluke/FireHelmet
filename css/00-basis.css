@@ -243,6 +243,12 @@ body.loaded {
   --fh-reise-rot-hell: #ff8a94;
   --fh-reise-auge: #ff2b3d;
   --fh-reise-auge-tief: #9a0716;
+  /* Liebeslied (scripts/liveevent/lied-film.js): Nacht in Indigo, Lila als Akzent. */
+  --fh-lied-nacht: #08061f;
+  --fh-lied-indigo: #1d1658;
+  --fh-lied-lila: #a99cf0;
+  --fh-lied-lila-tief: #5d50b8;
+  --fh-lied-licht: #f4f1ff;
   /* Saisons (scripts/saison/saison.js, css/98-saisons.css), je Saison:
      Akzent hell/tief, Zweitfarbe hell/tief, Flaechen, Rahmen, gedaempfter
      Text, Flamme fuer Logo und Symbole, Schein. Aus dem Entwurf

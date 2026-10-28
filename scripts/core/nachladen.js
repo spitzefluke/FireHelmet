@@ -12,6 +12,7 @@
      nukes    scripts/liveevent/nukes-film.js (nur "Hundert Atombomben gegen eine Mücke")
      drehbuch scripts/liveevent/drehbuch.js   (nur das Drehbuch im Admin-Bereich)
      reise    scripts/liveevent/sternenreise.js (Sternenreise und die Seite danach)
+     lied     scripts/liveevent/lied-film.js  (nur das Lyric-Video „Liebeslied“)
      zelle    scripts/liveevent/zelle.js      (Minispiel „Entkomme der Zelle“ in der Verwahrung)
 
    Die Adressen stehen fest hier in ADRESSEN - nicht im HTML, damit
@@ -28,7 +29,7 @@
   "use strict";
 
   const ADRESSEN = {
-    admin: "scripts/core/admin-gateway.js?v=5719089c34",
+    admin: "scripts/core/admin-gateway.js?v=738cf63d68",
     riss: "scripts/liveevent/riss-film.js?v=c60d9cac41",
     herz: "scripts/liveevent/herz-film.js?v=c6ba6293c5",
     zeit: "scripts/liveevent/zeit-film.js?v=8a4f71898d",
@@ -36,6 +37,7 @@
     wetter: "scripts/liveevent/story-wetter.js?v=d38bfcebe3",
     drehbuch: "scripts/liveevent/drehbuch.js?v=efff93b38f",
     reise: "scripts/liveevent/sternenreise.js?v=d3c6b7bf35",
+    lied: "scripts/liveevent/lied-film.js?v=1531f4d0a3",
     zelle: "scripts/liveevent/zelle.js?v=beb445fdf8",
     saisonAdmin: "scripts/saison/saison-admin.js?v=ece8909fef"
   };

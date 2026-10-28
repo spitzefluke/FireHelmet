@@ -55,6 +55,11 @@ let siteConfig = {
   wartung: false,
   wartungText: "",
 
+  // Liedtext der Story "Liebeslied" (scripts/liveevent/lied-film.js,
+  // Migration 70) mit Zeitmarken - der Admin traegt ihn im Gateway ein,
+  // im Code steht er bewusst nicht.
+  liedText: "",
+
   // Freigeschaltete Funktionen (Feature-Flags). Ein Objekt
   // { flagName: true }. Steht ein Flag NICHT auf true, ist die
   // Funktion fuer normale Besucher unsichtbar - der Admin sieht sie
@@ -92,6 +97,7 @@ function applySiteConfigSnapshot(data) {
     ankuendigung: typeof data.ankuendigung === "string" ? data.ankuendigung : "",
     wartung: data.wartung === true,
     wartungText: typeof data.wartungText === "string" ? data.wartungText : "",
+    liedText: typeof data.liedText === "string" ? data.liedText.slice(0, 8000) : "",
     featureFlags: (data.featureFlags && typeof data.featureFlags === "object" && !Array.isArray(data.featureFlags)) ? data.featureFlags : {},
   };
   markSiteConfigReady();

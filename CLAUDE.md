@@ -16,8 +16,8 @@ Datei, die du gerade anfasst.
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 130 `<script defer>`-Tags in fester
-Reihenfolge, davon 116 aus diesem Repo. Zehn große Skripte, die fast niemand braucht
-(`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `story-wetter.js`,
+Reihenfolge, davon 116 aus diesem Repo. Elf große Skripte, die fast niemand braucht
+(`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `lied-film.js`, `story-wetter.js`,
 `drehbuch.js`, `sternenreise.js`, `zelle.js`, `saison-admin.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
@@ -124,7 +124,7 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhLiedFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
 nach `fhNachladen(...)`. Das **Drehbuch** (Migration 65, `scripts/liveevent/drehbuch.js`) baut
 im Admin-Bereich ein Live-Event vorab aus Schritten (Text, Story, Story beenden, Effekt, Pause),
 gespeichert in `event_drehbuecher` (nur Admins per RLS); abgespielt wird im Browser des Admins
@@ -185,6 +185,17 @@ Hausordnung (Wörter je Regel, **aus den Texten der gerade gewählten Sprache** 
 `reise.welt.v.regel1..4` ändert, ändert den Code) → Tür nur bei geschlossenem Auge. Rein im Browser;
 einmal je Verwahrung 250 Dublonen über `addCurrency()`, danach zeigt die Seite dem Spieler keine
 Gitter mehr („Auf der Flucht“, `localStorage` „fhZelleEntkommen“). `#fh-zelle` steht in allen
+`:not`-Listen der Epochen.
+
+### Liebeslied
+
+Migration 70: die Story `liebeslied`, ein Lyric-Video (`scripts/liveevent/lied-film.js`, nachgeladen
+als `lied`, 77,4 s, fünf Teile Intro/Strophe/Refrain/Brücke/Outro). Hintergrund (Strahlen, Sterne,
+Bokeh, Ringe, Orb, Horizont, Blitz) im Canvas zu festen Zeitpunkten, der Text als DOM darüber.
+**Der Liedtext steht nicht im Repo**: Der Admin trägt ihn im Gateway unter „Liedtext: Liebeslied“
+ein (`siteConfig.liedText`, je Zeile `Sekunde | Text`, `/` bricht um, `*Wort*` betont, `# strophe`
+wechselt den Stil); „Zeitmarken einsetzen“ setzt die Einsätze des Vorbild-Videos vor. Die Musik
+kommt wie bei jeder Story über „Musik je Story“ (Datei `liebeslied`). `#fh-lied` steht in allen
 `:not`-Listen der Epochen.
 
 ### Saisons

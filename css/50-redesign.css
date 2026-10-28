@@ -1813,6 +1813,9 @@ body.lang-en .fh-audiobook-card-soon .fh-audiobook-button::after { content: " ·
 .gw-plan-schritt.ist-naechste .gw-story-info { color: var(--fh-gold-bright); }
 .gw-live-knopf.ist-klein { min-width: 34px; padding-left: 8px; padding-right: 8px; }
 .gw-live-knopf:disabled { opacity: .35; cursor: default; }
+/* Liedtext fuer "Liebeslied" (Gateway, Migration 70). */
+.gw-lied-text { display: block; width: 100%; min-height: 220px; margin: 0 0 8px; resize: vertical; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: left; }
+
 .gw-plan-ueberschrift {
   margin: 4px 0 8px;
   font-family: var(--fh-font-display);

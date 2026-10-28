@@ -558,6 +558,7 @@ const GW_STORYS = [
   ["zeit", "Zeitmaschine 2100", "5 min · Film: Auf dem Pergament zeichnet sich eine Zeitmaschine auf, Sprung durchs Zeittunnel, die Erde bricht auseinander, Menschen gegen Aliens – danach ist die ganze Seite für alle im All-Design (Jahr 2100), bis du oben zurückschaltest", "kalt"],
   ["reise", "Sternenreise", "≈ 7 min · Schlacht gegen das Mutterschiff, dann besetzt jeder Zuschauer eine Kanone der Arche und verteidigt seinen Sektor auf der Reise nach Terra Nova. Gemeinsame Hülle: Landet die Arche, wird die Seite für alle zu „Terra Nova“, fällt die Hülle auf 0, zur „Verwahrung“ – bis du sie unter Epoche zurückschaltest (Migration 67)", "violett"],
   ["nukes", "Hundert Atombomben gegen eine Mücke", "3 min · Film: Eine Mücke weckt Kapitän Ändii um 03:12 Uhr. Hand, Pfanne, Kanone – daneben. Dann der Notfallknopf und hundert Atombomben, bis die Erde zerbricht. Musik unten unter „Musik je Story“ hochladen (Migration 51)", "gold"],
+  ["liebeslied", "Liebeslied", "77 s · Lyric-Video: Sternenhimmel in Indigo, Lichtstrahlen, Ringe und ein leuchtender Orb, der Text baut sich Wort für Wort auf. Musik unten unter „Musik je Story“ hochladen, den Text darunter unter „Liedtext“ eintragen", "violett"],
 ];
 /* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
    stehen darum nicht in der Liste - hier nur ihre Namen fuer die
@@ -597,6 +598,8 @@ function buildGatewayStorysHtml() {
     ${buildGatewayPreiseHtml()}
 
     ${buildGatewayMusikHtml()}
+
+    ${buildGatewayLiedHtml()}
   `;
 }
 
@@ -1028,6 +1031,7 @@ const GW_PREISE = [
   ["herz", "Zwei Hälften eines Herzens", "violett", null, "am Ende des Films"],
   ["zeit", "Zeitmaschine 2100", "kalt", null, "am Ende des Films"],
   ["nukes", "Hundert Atombomben", "gold", null, "am Ende des Films"],
+  ["liebeslied", "Liebeslied", "violett", null, "am Ende des Lieds"],
   ["ende", "Systemausfall", "rot", null, "am Ende"],
 ];
 let gwPreise = {};
@@ -1826,6 +1830,76 @@ function gwSynthProbe(id) {
     if (!g || !g.classList.contains("active-page")) gwSynthProbeAus();
   }, 1000);
   gwLiveStatus("gw-musik-status", "Spielt die erzeugte Musik: " + gwMusikName(id) + " – nochmal „Anhören“ zum Anhalten.", false);
+}
+
+/* ------------------------------------------------------
+   LIEDTEXT FUER "LIEBESLIED" (Migration 70, lied-film.js)
+   ---------------------------------------------------
+   Der Text steht nicht im Code, sondern in site_config (liedText) -
+   eingetragen hier. "Zeitmarken einsetzen" fuellt das Feld mit den
+   Einsaetzen des Vorbild-Videos; dahinter fehlt nur noch der Text.
+------------------------------------------------------ */
+const GW_LIED_MARKEN = [
+  ["intro", [2.5, 7.5, 10, 12.5]],
+  ["strophe", [15, 17, 19.5, 22, 24]],
+  ["refrain", [26.5, 28.5, 31, 33, 35.5, 38, 40, 42, 44.5, 46.5]],
+  ["bruecke", [49, 50, 51.5, 53.5, 56, 58.5]],
+  ["outro", [59.5, 61.5, 63.5, 66, 68, 70.5]],
+];
+
+function buildGatewayLiedHtml() {
+  const text = (typeof siteConfig !== "undefined" && siteConfig.liedText) || "";
+  return `
+    <p class="gw-plan-ueberschrift">Liedtext: Liebeslied</p>
+    <textarea id="gw-lied-text" class="code-input gw-lied-text" rows="14" maxlength="8000" spellcheck="false"
+      aria-label="Liedtext mit Zeitmarken" placeholder="# strophe&#10;15.0 | Erste Zeile / zweite Zeile mit *Betonung*">${escapeHtml(text)}</textarea>
+    <div class="gw-story-knoepfe">
+      <button type="button" class="gw-live-knopf" onclick="gwLiedMarken()">Zeitmarken einsetzen</button>
+      <button type="button" class="gw-live-knopf" onclick="gwLiedPruefen()">Prüfen</button>
+      <button type="button" class="gw-live-knopf ist-alle" onclick="gwLiedSpeichern()">Speichern</button>
+    </div>
+    <p id="gw-lied-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <p class="gateway-status-sub">Eine Liedzeile je Zeile: Sekunde ab Storybeginn, dann „|“, dann der Text. „/“ bricht um, *Wort* wird größer und leuchtet. „# intro“, „# strophe“, „# refrain“, „# bruecke“ oder „# outro“ wechselt den Stil. Zeilen ohne Text werden übersprungen. Der Text liegt öffentlich lesbar in site_config, wie die Ankündigung.</p>
+  `;
+}
+
+function gwLiedMarken() {
+  const feld = document.getElementById("gw-lied-text");
+  if (!feld) return;
+  if (feld.value.trim() && !confirm("Das Feld ist nicht leer. Durch die Zeitmarken ersetzen?")) return;
+  feld.value = GW_LIED_MARKEN.map(([stil, zeiten]) =>
+    "# " + stil + "\n" + zeiten.map((z) => z.toFixed(1) + " | ").join("\n")).join("\n\n") + "\n";
+  gwLiveStatus("gw-lied-status", "Zeitmarken eingesetzt – jetzt hinter jedes „|“ den Text schreiben.", false);
+}
+
+/* Zaehlt, was lied-film.js aus dem Text liest (Film wird dafuer nachgeladen). */
+async function gwLiedPruefen() {
+  const feld = document.getElementById("gw-lied-text");
+  if (!feld) return null;
+  try {
+    if (!window.fhLiedFilm && window.fhNachladen) await window.fhNachladen("lied");
+  } catch (e) {
+    gwLiveStatus("gw-lied-status", "lied-film.js ließ sich nicht laden: " + ((e && e.message) || e), true);
+    return null;
+  }
+  if (!window.fhLiedFilm) return null;
+  const zeilen = window.fhLiedFilm.lesen(feld.value);
+  const leer = feld.value.split(/\r?\n/).filter((z) => z.indexOf("|") >= 0).length - zeilen.length;
+  gwLiveStatus("gw-lied-status", zeilen.length + " Zeilen erkannt" + (leer > 0 ? ", " + leer + " ohne Text oder mit ungültiger Zeit übersprungen" : "") + ".", false);
+  return zeilen;
+}
+
+async function gwLiedSpeichern() {
+  const feld = document.getElementById("gw-lied-text");
+  if (!feld) return;
+  const text = feld.value.slice(0, 8000);
+  gwLiveStatus("gw-lied-status", "Speichere …", false);
+  try {
+    await patchSupabaseSiteConfig({ liedText: text });
+    gwLiveStatus("gw-lied-status", "✓ Gespeichert. Gilt für jeden, der die Story ab jetzt sieht (Vorschau oben zum Ansehen).", false);
+  } catch (e) {
+    gwLiveStatus("gw-lied-status", "Speichern fehlgeschlagen: " + ((e && e.message) || e), true);
+  }
 }
 
 function gwMusikProbe(id) {
