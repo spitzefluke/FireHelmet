@@ -243,9 +243,18 @@ body.loaded {
   --fh-reise-rot-hell: #ff8a94;
   --fh-reise-auge: #ff2b3d;
   --fh-reise-auge-tief: #9a0716;
-  /* Liebeslied (scripts/liveevent/lied-film.js): Nacht in Indigo, Lila als Akzent. */
-  --fh-lied-nacht: #08061f;
-  --fh-lied-indigo: #1d1658;
+  /* Liebeslied (scripts/liveevent/lied-film.js), Farben der Vorlage:
+     Daemmerblau (Intro/Outro), sattes Blau (Strophe), Dunst (Refrain/
+     Bruecke) - je Mitte und Rand -, dunkle Flaechen, Lila als Akzent. */
+  --fh-lied-nacht: #0b0a1c;
+  --fh-lied-daemmer: #4b4893;
+  --fh-lied-daemmer-rand: #1a1938;
+  --fh-lied-blau: #3436b4;
+  --fh-lied-blau-rand: #11113c;
+  --fh-lied-dunst: #47427e;
+  --fh-lied-dunst-rand: #1b1935;
+  --fh-lied-flaeche: #27272f;
+  --fh-lied-linie: #6d6ae0;
   --fh-lied-lila: #a99cf0;
   --fh-lied-lila-tief: #5d50b8;
   --fh-lied-licht: #f4f1ff;

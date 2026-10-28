@@ -558,7 +558,7 @@ const GW_STORYS = [
   ["zeit", "Zeitmaschine 2100", "5 min · Film: Auf dem Pergament zeichnet sich eine Zeitmaschine auf, Sprung durchs Zeittunnel, die Erde bricht auseinander, Menschen gegen Aliens – danach ist die ganze Seite für alle im All-Design (Jahr 2100), bis du oben zurückschaltest", "kalt"],
   ["reise", "Sternenreise", "≈ 7 min · Schlacht gegen das Mutterschiff, dann besetzt jeder Zuschauer eine Kanone der Arche und verteidigt seinen Sektor auf der Reise nach Terra Nova. Gemeinsame Hülle: Landet die Arche, wird die Seite für alle zu „Terra Nova“, fällt die Hülle auf 0, zur „Verwahrung“ – bis du sie unter Epoche zurückschaltest (Migration 67)", "violett"],
   ["nukes", "Hundert Atombomben gegen eine Mücke", "3 min · Film: Eine Mücke weckt Kapitän Ändii um 03:12 Uhr. Hand, Pfanne, Kanone – daneben. Dann der Notfallknopf und hundert Atombomben, bis die Erde zerbricht. Musik unten unter „Musik je Story“ hochladen (Migration 51)", "gold"],
-  ["liebeslied", "Liebeslied", "77 s · Lyric-Video: Sternenhimmel in Indigo, Lichtstrahlen, Ringe und ein leuchtender Orb, der Text baut sich Wort für Wort auf. Musik unten unter „Musik je Story“ hochladen, den Text darunter unter „Liedtext“ eintragen", "violett"],
+  ["liebeslied", "Liebeslied", "5:23 min · Lyric-Video zu „I Don't Know Love“ im Look der Vorlage: Dämmerblau mit Sternenflug, Strophe mit dunklen Flächen und Orb, Refrain mit Bokeh und Ringen, Text Wort für Wort, kippt als 3D-Schrift weg. Musik unten unter „Musik je Story“ hochladen, den Text darunter unter „Liedtext“ (aus der MP3 lesen, mitklopfen)", "violett"],
 ];
 /* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
    stehen darum nicht in der Liste - hier nur ihre Namen fuer die
@@ -1836,40 +1836,247 @@ function gwSynthProbe(id) {
    LIEDTEXT FUER "LIEBESLIED" (Migration 70, lied-film.js)
    ---------------------------------------------------
    Der Text steht nicht im Code, sondern in site_config (liedText) -
-   eingetragen hier. "Zeitmarken einsetzen" fuellt das Feld mit den
-   Einsaetzen des Vorbild-Videos; dahinter fehlt nur noch der Text.
+   eingetragen hier. Zwei Helfer:
+   - "Text aus MP3 lesen": holt den Liedtext aus dem ID3-Tag (USLT)
+     einer MP3 auf deinem Rechner - Suno legt ihn dort ab. Die Datei
+     bleibt im Browser, hochgeladen wird nichts.
+   - "Mitklopfen": spielt die Musik (hochgeladene Story-Musik oder die
+     gewaehlte MP3) und setzt bei jedem Druck auf die Leertaste die
+     Zeit der naechsten Zeile. Tasten 1-5 setzen den Stil ab der
+     naechsten Zeile, Pfeil links nimmt den letzten Druck zurueck.
 ------------------------------------------------------ */
-const GW_LIED_MARKEN = [
-  ["intro", [2.5, 7.5, 10, 12.5]],
-  ["strophe", [15, 17, 19.5, 22, 24]],
-  ["refrain", [26.5, 28.5, 31, 33, 35.5, 38, 40, 42, 44.5, 46.5]],
-  ["bruecke", [49, 50, 51.5, 53.5, 56, 58.5]],
-  ["outro", [59.5, 61.5, 63.5, 66, 68, 70.5]],
-];
+const GW_LIED_STILE = ["intro", "strophe", "refrain", "bruecke", "outro"];
+const GW_LIED_VORLAUF = 0.15;   // Reaktionszeit beim Klopfen, in Sekunden
+let gwLiedDatei = null;         // zuletzt gewaehlte MP3 (nur im Browser)
+let gwLiedKlopfen = null;       // { audio, eintraege, gesetzt: [Index...], url }
 
 function buildGatewayLiedHtml() {
   const text = (typeof siteConfig !== "undefined" && siteConfig.liedText) || "";
   return `
     <p class="gw-plan-ueberschrift">Liedtext: Liebeslied</p>
-    <textarea id="gw-lied-text" class="code-input gw-lied-text" rows="14" maxlength="8000" spellcheck="false"
+    <textarea id="gw-lied-text" class="code-input gw-lied-text" rows="14" maxlength="12000" spellcheck="false"
       aria-label="Liedtext mit Zeitmarken" placeholder="# strophe&#10;15.0 | Erste Zeile / zweite Zeile mit *Betonung*">${escapeHtml(text)}</textarea>
     <div class="gw-story-knoepfe">
-      <button type="button" class="gw-live-knopf" onclick="gwLiedMarken()">Zeitmarken einsetzen</button>
+      <label class="gw-live-knopf gw-musik-datei">Text aus MP3 lesen<input type="file" accept="audio/mpeg,.mp3" onchange="gwLiedAusMp3(this)" hidden></label>
+      <button type="button" class="gw-live-knopf" onclick="gwLiedKlopfenStart()">Mitklopfen</button>
       <button type="button" class="gw-live-knopf" onclick="gwLiedPruefen()">Prüfen</button>
       <button type="button" class="gw-live-knopf ist-alle" onclick="gwLiedSpeichern()">Speichern</button>
     </div>
+    <div id="gw-lied-klopfen" class="gw-lied-klopfen" hidden>
+      <p class="gw-lied-klopfen-zeit"><span id="gw-lied-uhr">0:00</span> · Stil: <strong id="gw-lied-stil">intro</strong></p>
+      <p id="gw-lied-naechste" class="gw-lied-naechste"></p>
+      <div class="gw-story-knoepfe">
+        <button type="button" class="gw-live-knopf ist-alle" onclick="gwLiedKlopf()">Jetzt (Leertaste)</button>
+        <button type="button" class="gw-live-knopf" onclick="gwLiedKlopfZurueck()">Zurück (←)</button>
+        <button type="button" class="gw-live-knopf" onclick="gwLiedKlopfenStopp()">Fertig</button>
+      </div>
+      <p class="gateway-status-sub">Drück die Leertaste, sobald die angezeigte Zeile beginnt. Stil ab der nächsten Zeile: 1 Intro · 2 Strophe · 3 Refrain · 4 Brücke · 5 Outro.</p>
+    </div>
     <p id="gw-lied-status" class="gw-live-status" role="status" aria-live="polite"></p>
-    <p class="gateway-status-sub">Eine Liedzeile je Zeile: Sekunde ab Storybeginn, dann „|“, dann der Text. „/“ bricht um, *Wort* wird größer und leuchtet. „# intro“, „# strophe“, „# refrain“, „# bruecke“ oder „# outro“ wechselt den Stil. Zeilen ohne Text werden übersprungen. Der Text liegt öffentlich lesbar in site_config, wie die Ankündigung.</p>
+    <p class="gateway-status-sub">Je Zeile: Sekunde ab Storybeginn, „|“, Text. „/“ bricht um, *Wort* wird größer und leuchtet, „# intro“ / „# strophe“ / „# refrain“ / „# bruecke“ / „# outro“ wechselt den Stil. Effekte je Zeile: {ringe} {horizont} {orb} {blitz} {kippen} {blende} {ohne}. Zeilen ohne Zeit werden übersprungen. Der Text liegt öffentlich lesbar in site_config, wie die Ankündigung.</p>
   `;
 }
 
-function gwLiedMarken() {
+/* ID3v2: Text des ersten USLT-Rahmens (unsynchronisierter Liedtext). */
+function gwLiedId3Text(puffer) {
+  const b = new Uint8Array(puffer);
+  if (b.length < 10 || b[0] !== 0x49 || b[1] !== 0x44 || b[2] !== 0x33) return null;
+  const version = b[3];
+  const sicher = (i) => (b[i] << 21) | (b[i + 1] << 14) | (b[i + 2] << 7) | b[i + 3];
+  const ende = Math.min(b.length, 10 + sicher(6));
+  let pos = 10;
+  if (b[5] & 0x40) pos += version === 4 ? sicher(10) : 4 + ((b[10] << 24) | (b[11] << 16) | (b[12] << 8) | b[13]);
+  while (pos + 10 <= ende) {
+    const id = String.fromCharCode(b[pos], b[pos + 1], b[pos + 2], b[pos + 3]);
+    if (!/^[A-Z0-9]{4}$/.test(id)) break;
+    const groesse = version === 4 ? sicher(pos + 4) : ((b[pos + 4] << 24) | (b[pos + 5] << 16) | (b[pos + 6] << 8) | b[pos + 7]) >>> 0;
+    const start = pos + 10;
+    if (id === "USLT" && groesse > 4 && start + groesse <= ende) {
+      const kodierung = b[start];
+      const rest = b.subarray(start + 4, start + groesse);
+      const breit = kodierung === 1 || kodierung === 2;
+      let i = 0;
+      while (i < rest.length && !(breit ? rest[i] === 0 && rest[i + 1] === 0 && i % 2 === 0 : rest[i] === 0)) i += breit ? 2 : 1;
+      const daten = rest.subarray(i + (breit ? 2 : 1));
+      const name = kodierung === 0 ? "latin1" : kodierung === 3 ? "utf-8" : kodierung === 2 ? "utf-16be" : "utf-16";
+      return new TextDecoder(name).decode(daten).replace(/\u0000+$/, "");
+    }
+    pos = start + groesse;
+  }
+  return null;
+}
+
+async function gwLiedAusMp3(input) {
+  const datei = input.files && input.files[0];
+  input.value = "";
+  if (!datei) return;
+  gwLiedDatei = datei;
   const feld = document.getElementById("gw-lied-text");
-  if (!feld) return;
-  if (feld.value.trim() && !confirm("Das Feld ist nicht leer. Durch die Zeitmarken ersetzen?")) return;
-  feld.value = GW_LIED_MARKEN.map(([stil, zeiten]) =>
-    "# " + stil + "\n" + zeiten.map((z) => z.toFixed(1) + " | ").join("\n")).join("\n\n") + "\n";
-  gwLiveStatus("gw-lied-status", "Zeitmarken eingesetzt – jetzt hinter jedes „|“ den Text schreiben.", false);
+  try {
+    const text = gwLiedId3Text(await datei.arrayBuffer());
+    if (!text || !text.trim()) {
+      gwLiveStatus("gw-lied-status", "In „" + datei.name + "“ steht kein Liedtext. Die Datei bleibt fürs Mitklopfen gewählt.", true);
+      return;
+    }
+    if (feld.value.trim() && !confirm("Das Feld ist nicht leer. Durch den Text aus der MP3 ersetzen?")) return;
+    /* Suno-Abschnitte wie "[Verse 1]" oder "**[Chorus]**" werden zu
+       Stil-Marken, Fettschrift-Sternchen fallen weg. */
+    const ABSCHNITT = [[/intro/i, "intro"], [/verse|strophe/i, "strophe"], [/chorus|hook|refrain/i, "refrain"],
+      [/bridge|br(ü|ue)cke/i, "bruecke"], [/outro|ende/i, "outro"]];
+    const zeilen = text.split(/\r?\n/).map((z) => z.replace(/\*\*/g, "").trim()).filter(Boolean).map((z) => {
+      if (!/^\[.*\]$/.test(z)) return "| " + z.replace(/\|/g, "/");
+      const treffer = ABSCHNITT.find(([muster]) => muster.test(z));
+      return treffer ? "# " + treffer[1] : null;
+    }).filter(Boolean);
+    feld.value = (/^#/.test(zeilen[0] || "") ? "" : "# intro\n") + zeilen.join("\n") + "\n";
+    const anzahl = zeilen.filter((z) => z.charAt(0) === "|").length;
+    gwLiveStatus("gw-lied-status", anzahl + " Zeilen aus „" + datei.name + "“ gelesen – jetzt „Mitklopfen“, um die Zeiten zu setzen.", false);
+  } catch (e) {
+    gwLiveStatus("gw-lied-status", "Die MP3 ließ sich nicht lesen: " + ((e && e.message) || e), true);
+  }
+}
+
+/* Feld -> Eintraege { marke } oder { zeit, text }; Zeilen ohne "|" sind Text ohne Zeit. */
+function gwLiedEintraege(roh) {
+  return roh.split(/\r?\n/).map((z) => {
+    const marke = /^\s*#\s*([a-zäöü]+)\s*$/i.exec(z);
+    if (marke) return { marke: marke[1].toLowerCase().replace("ü", "ue") };
+    if (!z.trim()) return null;
+    const i = z.indexOf("|");
+    if (i < 0) return { zeit: "", text: z.trim() };
+    return { zeit: z.slice(0, i).trim(), text: z.slice(i + 1).trim() };
+  }).filter(Boolean);
+}
+
+function gwLiedZeitText(s) {
+  const m = Math.floor(s / 60);
+  return m + ":" + (s - m * 60).toFixed(1).padStart(4, "0");
+}
+
+function gwLiedSchreiben() {
+  const k = gwLiedKlopfen;
+  if (!k) return;
+  document.getElementById("gw-lied-text").value = k.eintraege.map((e) =>
+    e.marke ? "# " + e.marke : (e.zeit ? e.zeit + " | " : "| ") + e.text).join("\n") + "\n";
+}
+
+/* Naechster Texteintrag ohne Zeit, dazu der Stil, der dort gilt. */
+function gwLiedNaechste() {
+  const k = gwLiedKlopfen;
+  let stil = "intro";
+  for (let i = 0; i < k.eintraege.length; i++) {
+    const e = k.eintraege[i];
+    if (e.marke) { stil = e.marke; continue; }
+    if (k.gesetzt.indexOf(i) < 0) return { i: i, stil: stil };
+  }
+  return { i: -1, stil: stil };
+}
+
+function gwLiedAnzeige() {
+  const k = gwLiedKlopfen;
+  if (!k) return;
+  const n = gwLiedNaechste();
+  document.getElementById("gw-lied-naechste").textContent = n.i >= 0 ? k.eintraege[n.i].text : "Alle Zeilen haben eine Zeit.";
+  document.getElementById("gw-lied-stil").textContent = n.stil;
+}
+
+function gwLiedTaste(e) {
+  if (!gwLiedKlopfen) return;
+  if (e.key === " " || e.key === "Enter") { e.preventDefault(); gwLiedKlopf(); }
+  else if (e.key === "ArrowLeft" || e.key === "Backspace") { e.preventDefault(); gwLiedKlopfZurueck(); }
+  else if (/^[1-5]$/.test(e.key)) { e.preventDefault(); gwLiedStilSetzen(GW_LIED_STILE[Number(e.key) - 1]); }
+  else if (e.key === "Escape") gwLiedKlopfenStopp();
+}
+
+async function gwLiedKlopfenStart() {
+  if (gwLiedKlopfen) return;
+  const feld = document.getElementById("gw-lied-text");
+  const eintraege = gwLiedEintraege(feld.value);
+  if (!eintraege.some((e) => !e.marke)) { gwLiveStatus("gw-lied-status", "Erst Text eintragen oder „Text aus MP3 lesen“.", true); return; }
+  if (eintraege.some((e) => e.zeit) && !confirm("Alle Zeiten neu setzen? Die bisherigen gehen dabei verloren.")) return;
+  eintraege.forEach((e) => { if (!e.marke) e.zeit = ""; });
+  let url = null;
+  if (gwLiedDatei) url = URL.createObjectURL(gwLiedDatei);
+  else if (gwMusikVersion("liebeslied") && supabaseClient) {
+    url = supabaseClient.storage.from("live-musik").getPublicUrl("liebeslied").data.publicUrl + "?v=" + encodeURIComponent(gwMusikVersion("liebeslied"));
+  }
+  if (!url) { gwLiveStatus("gw-lied-status", "Keine Musik: erst unter „Musik je Story“ hochladen oder mit „Text aus MP3 lesen“ eine MP3 wählen.", true); return; }
+  gwSynthProbeAus();
+  if (gwMusikAudio) { gwMusikAudio.pause(); gwMusikAudio = null; }
+  const audio = new Audio(url);
+  gwLiedKlopfen = { audio: audio, eintraege: eintraege, gesetzt: [], url: gwLiedDatei ? url : null, uhr: 0 };
+  feld.readOnly = true;
+  document.getElementById("gw-lied-klopfen").hidden = false;
+  document.addEventListener("keydown", gwLiedTaste);
+  audio.addEventListener("ended", gwLiedKlopfenStopp);
+  gwLiedAnzeige();
+  gwLiedSchreiben();
+  const tick = () => {
+    if (!gwLiedKlopfen) return;
+    document.getElementById("gw-lied-uhr").textContent = gwLiedZeitText(audio.currentTime);
+    gwLiedKlopfen.uhr = requestAnimationFrame(tick);
+  };
+  try {
+    await audio.play();
+    tick();
+    gwLiveStatus("gw-lied-status", "Läuft – Leertaste, sobald die angezeigte Zeile beginnt.", false);
+  } catch (e) {
+    gwLiveStatus("gw-lied-status", "Musik startet nicht: " + ((e && e.message) || e), true);
+    gwLiedKlopfenStopp();
+  }
+}
+
+function gwLiedKlopf() {
+  const k = gwLiedKlopfen;
+  if (!k) return;
+  const n = gwLiedNaechste();
+  if (n.i < 0) return;
+  k.eintraege[n.i].zeit = Math.max(0, k.audio.currentTime - GW_LIED_VORLAUF).toFixed(1);
+  k.gesetzt.push(n.i);
+  gwLiedSchreiben();
+  gwLiedAnzeige();
+}
+
+function gwLiedKlopfZurueck() {
+  const k = gwLiedKlopfen;
+  if (!k || !k.gesetzt.length) return;
+  const i = k.gesetzt.pop();
+  /* Zwei Sekunden vor die zurueckgenommene Stelle - dann gleich nochmal klopfen. */
+  k.audio.currentTime = Math.max(0, Number(k.eintraege[i].zeit) - 2);
+  k.eintraege[i].zeit = "";
+  gwLiedSchreiben();
+  gwLiedAnzeige();
+}
+
+/* Stil ab der naechsten Zeile: Marke davor setzen (oder die vorhandene ersetzen). */
+function gwLiedStilSetzen(stil) {
+  const k = gwLiedKlopfen;
+  if (!k) return;
+  const n = gwLiedNaechste();
+  if (n.i < 0) return;
+  const vorher = k.eintraege[n.i - 1];
+  if (vorher && vorher.marke) vorher.marke = stil;
+  else {
+    k.eintraege.splice(n.i, 0, { marke: stil });
+    k.gesetzt = k.gesetzt.map((g) => (g >= n.i ? g + 1 : g));
+  }
+  gwLiedSchreiben();
+  gwLiedAnzeige();
+}
+
+function gwLiedKlopfenStopp() {
+  const k = gwLiedKlopfen;
+  if (!k) return;
+  gwLiedKlopfen = null;
+  cancelAnimationFrame(k.uhr);
+  k.audio.pause();
+  if (k.url) URL.revokeObjectURL(k.url);
+  document.removeEventListener("keydown", gwLiedTaste);
+  document.getElementById("gw-lied-text").readOnly = false;
+  document.getElementById("gw-lied-klopfen").hidden = true;
+  const mit = k.eintraege.filter((e) => !e.marke && e.zeit).length;
+  const alle = k.eintraege.filter((e) => !e.marke).length;
+  gwLiveStatus("gw-lied-status", mit + " von " + alle + " Zeilen haben eine Zeit. Prüfen, dann Speichern.", mit < alle);
 }
 
 /* Zaehlt, was lied-film.js aus dem Text liest (Film wird dafuer nachgeladen). */
@@ -1884,15 +2091,16 @@ async function gwLiedPruefen() {
   }
   if (!window.fhLiedFilm) return null;
   const zeilen = window.fhLiedFilm.lesen(feld.value);
-  const leer = feld.value.split(/\r?\n/).filter((z) => z.indexOf("|") >= 0).length - zeilen.length;
-  gwLiveStatus("gw-lied-status", zeilen.length + " Zeilen erkannt" + (leer > 0 ? ", " + leer + " ohne Text oder mit ungültiger Zeit übersprungen" : "") + ".", false);
+  const leer = gwLiedEintraege(feld.value).filter((e) => !e.marke).length - zeilen.length;
+  gwLiveStatus("gw-lied-status", zeilen.length + " Zeilen erkannt" + (leer > 0 ? ", " + leer + " ohne Zeit oder Text übersprungen" : "") + ".", leer > 0);
   return zeilen;
 }
 
 async function gwLiedSpeichern() {
   const feld = document.getElementById("gw-lied-text");
   if (!feld) return;
-  const text = feld.value.slice(0, 8000);
+  if (gwLiedKlopfen) gwLiedKlopfenStopp();
+  const text = feld.value.slice(0, 12000);
   gwLiveStatus("gw-lied-status", "Speichere …", false);
   try {
     await patchSupabaseSiteConfig({ liedText: text });
