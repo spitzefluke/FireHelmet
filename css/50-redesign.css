@@ -131,6 +131,15 @@
   }
 }
 
+/* Ohne Hover (Handy) erscheint der Hinweis nie - unsichtbar ragte er
+   beim aeusseren Chip aber ueber den Rand, und der Shop liess sich
+   seitwaerts schieben. Der Text steht weiter im title des Chips. */
+@media (hover: none) {
+  .fh-rarity-chip-desc {
+    display: none;
+  }
+}
+
 /* Seltenheits-Rand/-Glow + Badge je Shop-Artikel. Die konkrete
    Farbe kommt per Inline-Style (--rarity-color/--rarity-glow,
    siehe renderShopGrid in shop.js) direkt aus der zentralen

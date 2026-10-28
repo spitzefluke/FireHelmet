@@ -1,33 +1,2012 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FireHelmet</title>
-<script>
-(async function () {
-  const urls = [
-    'https://cdn.jsdelivr.net/gh/spitzefluke/FireHelmet@08e2d1efe4746c9e79f2047803847ff473c3379b/index.html',
-    'https://raw.githubusercontent.com/spitzefluke/FireHelmet/08e2d1efe4746c9e79f2047803847ff473c3379b/index.html'
-  ];
-  let html = null;
-  for (const url of urls) {
-    try {
-      const r = await fetch(url, { cache: 'no-store' });
-      if (r.ok) { html = await r.text(); break; }
-    } catch (e) {}
-  }
-  if (!html) {
-    document.body.innerHTML = '<p style="font-family:sans-serif;padding:2rem">Seite wird wiederhergestellt. Bitte in einer Minute neu laden.</p>';
-    return;
-  }
-  document.open();
-  document.write(html);
-  document.close();
-})();
-</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FireHelmet - Pirate Saga</title>
+
+  <!-- ============================================================
+       SEO / SOCIAL-VORSCHAU
+       Der Titel war bis hierhin noch der Projekt-Platzhalter
+       ("Countdown Project"), und es gab weder Beschreibung noch
+       Open-Graph-Daten - geteilte Links (Discord, WhatsApp, Twitter)
+       zeigten dadurch weder einen sinnvollen Titel noch ein Bild.
+       og:url/og:image brauchen absolute URLs, deshalb hier bewusst
+       der volle GitHub-Pages-Pfad statt der sonst ueblichen
+       relativen Pfade.
+  ============================================================ -->
+  <meta name="description" content="Interaktive Piraten-Saga rund um FireHelmet: Logbuecher lesen, Geheimcodes knacken, am Schatzrad drehen und mit der Crew den Community-Boss jagen.">
+  <meta name="theme-color" content="#05070b">
+  <link rel="canonical" href="https://spitzefluke.github.io/FireHelmet/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FireHelmet - Pirate Saga">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:title" content="FireHelmet - Pirate Saga">
+  <meta property="og:description" content="Logbuecher lesen, Geheimcodes knacken, am Schatzrad drehen und mit der Crew den Community-Boss jagen.">
+  <meta property="og:url" content="https://spitzefluke.github.io/FireHelmet/">
+  <meta property="og:image" content="https://spitzefluke.github.io/FireHelmet/assets/og/og-cover.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="FireHelmet Pirate Saga - Flammenwappen ueber naechtlichem Sternenhimmel">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FireHelmet - Pirate Saga">
+  <meta name="twitter:description" content="Logbuecher lesen, Geheimcodes knacken, am Schatzrad drehen und mit der Crew den Community-Boss jagen.">
+  <meta name="twitter:image" content="https://spitzefluke.github.io/FireHelmet/assets/og/og-cover.jpg">
+  <!-- Relative Pfade (kein fuehrender "/") - GitHub Pages liefert das
+       Projekt unter /FireHelmet/ aus, ein absoluter Root-Pfad wie
+       "/favicon.ico" wuerde dort ins Leere zeigen (404). -->
+  <link rel="icon" href="assets/favicon/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon/favicon-192.png">
+  <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
+  <!-- Selbst gehostete Schriften (Inter, Oswald) statt Google Fonts -
+       keine Besucher-IP mehr zu Google (DSGVO). Siehe assets/fonts/fonts.css. -->
+  <link rel="preload" href="assets/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/oswald-600.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/fonts/fonts.css?v=fc0cff563a">
+  <!-- Phosphor-Icons fuer die Icon-Rail (Entwurf 1c). Als eigenes
+       Stylesheet VOR style.css, damit dortige Regeln gewinnen. -->
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <!-- Das Stylesheet lag als EINE Datei mit 13.539 Zeilen vor. Es ist
+       jetzt nach Themen aufgeteilt, damit man beim Aendern nicht mehr
+       suchen muss.
+
+       DIE REIHENFOLGE IST TEIL DER GESTALTUNG: an mehreren Stellen
+       entscheidet allein sie, welche von zwei gleich starken Regeln
+       gewinnt (z.B. .fh-row nach .chapter-card, .fh-page-title nach
+       .page-content h1). Diese Liste darf daher weder umsortiert noch
+       um einen Eintrag verkuerzt werden. -->
+  <link rel="stylesheet" href="css/00-basis.css?v=0e021fe7b9">
+  <link rel="stylesheet" href="css/10-inhaltsseiten.css?v=1a230c2caa">
+  <link rel="stylesheet" href="css/20-spiele.css?v=2970bf6bc5">
+  <link rel="stylesheet" href="css/30-events.css?v=688de60593">
+  <link rel="stylesheet" href="css/40-shop.css?v=1af16124ab">
+  <link rel="stylesheet" href="css/50-redesign.css?v=4fa3dec499">
+  <link rel="stylesheet" href="css/60-fortschritt.css?v=a07788cdb5">
+  <link rel="stylesheet" href="css/65-startseite.css?v=e6eb9160d1">
+  <link rel="stylesheet" href="css/70-entwurf-1c.css?v=3a8f14a3ad">
+  <!-- 80 kommt bewusst zuletzt: die Datei vereinheitlicht Tempo,
+       Druckgefuehl und Tastaturfokus aller Bedienelemente und muss
+       dafuer die Regeln aus 00 bis 70 ueberschreiben koennen. -->
+  <link rel="stylesheet" href="css/80-interaktion.css?v=f333fbccb6">
+  <link rel="stylesheet" href="css/90-typografie.css?v=73aff913ba">
+  <link rel="stylesheet" href="css/95-epoche-1720.css?v=42bff7ab11">
+  <link rel="stylesheet" href="css/96-epoche-2100.css?v=b4e48508b1">
+  <link rel="stylesheet" href="css/97-sternenreise.css?v=9cff38fc2e">
 </head>
 <body>
-<p style="font-family:system-ui,sans-serif;padding:2rem;color:#ccc;background:#05070b;min-height:100vh">FireHelmet wird geladen …</p>
+
+  <!-- Tastatur-Einstieg: springt an der kompletten Navigation vorbei
+       direkt in den Seiteninhalt. Nur bei Tastatur-Fokus sichtbar. -->
+  <a class="fh-skip-link" href="#fh-main" data-i18n="a11y.skipToContent">Zum Inhalt springen</a>
+
+  <!-- Cloudflare-Turnstile-Widget fuer die anonyme Anmeldung (Bot-Schutz),
+       siehe scripts/supabase/turnstile-config.js + supabase-client.js.
+       Bleibt fuer die meisten Besucher unsichtbar (appearance:
+       "interaction-only"), muss aber schon im DOM stehen, bevor
+       supabase-client.js versucht, es zu rendern. -->
+  <div id="turnstile-widget" class="turnstile-widget"></div>
+
+  <!-- Update-Mitteilung: erscheint einmalig, Inhalt in scripts/core/update-notice-data.js -->
+  <div id="update-notice-overlay" class="update-notice-overlay"></div>
+
+  <!-- ABMELDEN-RUECKFRAGE
+       Ein echtes <dialog> und kein eigengebautes Overlay wie sonst
+       auf der Seite. Bei einem Schritt, der Daten vernichtet, sind
+       Fokusfalle, Esc und der inerte Hintergrund keine Zugabe,
+       sondern Pflicht - und die bringt <dialog> von sich aus mit.
+       Nachgebaut waeren das gut hundert Zeilen, die genau dann
+       falsch sind, wenn es darauf ankommt.
+
+       Er liegt hier und nicht in der Anmeldeseite: eine versteckte
+       .page nimmt ihren Inhalt aus dem Fluss, und ein Dialog darin
+       liesse sich nicht oeffnen. -->
+  <dialog id="fh-abmelden-dialog" class="fh-abmelde-dialog"
+          aria-labelledby="fh-abmelden-titel">
+    <h2 id="fh-abmelden-titel" class="fh-abmelde-titel" data-i18n="logout.titel">Wirklich abmelden?</h2>
+
+    <!-- Gastfall: Warnung und das Kennwort als Rettungsanker. -->
+    <div id="fh-abmelden-gast" hidden>
+      <p class="fh-abmelde-text" data-i18n="logout.anonText">Du spielst als Gast. Dein Fortschritt h&auml;ngt an diesem Browser &ndash; es gibt kein Passwort, mit dem du ihn zur&uuml;ckholen k&ouml;nntest.</p>
+      <p class="fh-abmelde-warnung" data-i18n="logout.anonWarnung">Wenn du dich abmeldest, wird dieses Gastkonto gel&ouml;scht: Dublonen, Level, Schiff, Turnier-Anmeldung und Boss-Schaden sind dann weg. Das l&auml;sst sich nicht r&uuml;ckg&auml;ngig machen.</p>
+
+      <p class="fh-abmelde-text" data-i18n="logout.kennwortAngebot">Du kannst deinen Fortschritt vorher sichern &ndash; schreib dir dieses Kennwort auf und l&ouml;se es sp&auml;ter auf einem anderen Ger&auml;t ein:</p>
+      <div class="fh-abmelde-kennwort">
+        <button type="button" class="code-button" id="fh-abmelden-kennwort-zeigen"
+                data-i18n="logout.kennwortZeigen">Kennwort anzeigen</button>
+        <code id="fh-abmelden-kennwort-wert" class="fh-kennwort-wert" hidden></code>
+      </div>
+    </div>
+
+    <!-- Angemeldeter Fall: nur die Feststellung, keine Warnung. -->
+    <div id="fh-abmelden-normal" hidden>
+      <p class="fh-abmelde-text" data-i18n="logout.normalText">Du wirst von diesem Ger&auml;t abgemeldet. Dein Konto und dein Fortschritt bleiben erhalten &ndash; du kannst dich jederzeit wieder anmelden.</p>
+    </div>
+
+    <p id="fh-abmelden-meldung" class="fh-abmelde-meldung" role="status" aria-live="polite"></p>
+
+    <div class="fh-abmelde-knoepfe">
+      <button type="button" class="code-button" id="fh-abmelden-abbrechen"
+              data-i18n="logout.abbrechen">Angemeldet bleiben</button>
+      <button type="button" class="code-button fh-abmelde-gefahr" id="fh-abmelden-bestaetigen"
+              data-i18n="logout.trotzdem">Abmelden und l&ouml;schen</button>
+    </div>
+  </dialog>
+
+  <!-- Hintergrund -->
+  <!-- Eine Leinwand statt dreier animierter Vollbild-Ebenen, siehe
+       scripts/fx/aurora-bg.js. Die drei <div> darunter bleiben als
+       Rueckfallebene fuer Geraete ohne WebGL - dort sieht man
+       weiterhin Sterne und Nebel, dann eben unbewegt. -->
+  <canvas class="fh-bg-canvas" id="fh-bg-canvas" aria-hidden="true"></canvas>
+  <div class="stars"></div>
+  <div class="stars2"></div>
+  <div class="nebula"></div>
+
+  <!-- Übergang -->
+  <div id="transition"></div>
+
+  <!-- Effekt-Layer, der beim erfolgreichen Einlösen eines NEUEN Codes aufblitzt -->
+  <div id="code-fx" class="code-fx"></div>
+
+  <!-- Hintergrundmusik: läuft nur auf der Home/Countdown-Seite (Playlist über main.js) -->
+  <audio id="bg-music"></audio>
+
+  <!-- Musik Mute-Button (nur sichtbar, wenn Musik läuft/laufen könnte) -->
+  <div class="music-toggle" id="music-toggle" onclick="toggleMusic()">🔊</div>
+
+  <!-- Menü Button -->
+  <div class="menu-button" onclick="openMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <!-- Abdunkelndes Overlay hinter dem Menü (zum Antippen-zum-Schließen) -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMenu()"></div>
+
+  <!-- Menü -->
+  <nav class="sidebar" id="sidebar">
+    <div class="close-button" onclick="closeMenu()">×</div>
+    <h2 data-i18n="menu.title">MENU</h2>
+
+    <button type="button" class="lang-switch" id="lang-switch" onclick="toggleLanguage()" aria-label="Sprache wechseln">
+      <span class="lang-switch-label lang-switch-label-de">🇩🇪 DE</span>
+      <span class="lang-switch-label lang-switch-label-en">🇬🇧 EN</span>
+      <span class="lang-switch-knob"></span>
+    </button>
+
+    <!-- Die Menuepunkte werden hier zur Laufzeit aus der
+         Desktop-Sidebar (.fh-sidebar-nav) eingesetzt, damit die
+         Liste nur EINMAL gepflegt werden muss.
+         Siehe scripts/nav/nav-sync.js. -->
+    <div data-fh-nav-slot hidden></div>
+
+    <a data-page="gateway" tabindex="0" onclick="changePage('gateway')" class="fh-gateway-link">⚙ Gateway</a>
+  </nav>
+
+  <!-- ============================================================
+       FESTE DESKTOP-SIDEBAR (v0-Design-Referenz)
+       Nur ab ca. 1024px sichtbar (siehe .fh-sidebar CSS). Auf
+       kleineren Bildschirmen bleibt das bestehende Hamburger-Menü
+       oben die einzige Navigation (wird in Phase 5 zusätzlich durch
+       eine untere Tab-Leiste ergänzt).
+  ============================================================ -->
+  <aside class="fh-sidebar" id="fh-sidebar">
+    <div class="fh-sidebar-logo">
+      <div class="fh-sidebar-flame" aria-hidden="true"><i class="ph ph-fire"></i></div>
+      <div class="fh-sidebar-brand">
+        <p class="fh-sidebar-title">FIRE<span>HELMET</span></p>
+        <p class="fh-sidebar-subtitle">Pirate Saga</p>
+      </div>
+    </div>
+
+
+    <nav class="fh-sidebar-nav">
+      <a class="fh-nav-item" tabindex="0" data-page="login" onclick="changePage('login')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-sign-in"></i></span><span class="fh-nav-label" data-i18n="menu.login">Anmelden</span></a>
+
+      <p class="fh-nav-section-label" data-i18n="menu.sectionExplore">Erkunden</p>
+      <a class="fh-nav-item" tabindex="0" data-page="home" onclick="changePage('home')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-house"></i></span><span class="fh-nav-label" data-i18n="menu.home">Home</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="stand" onclick="changePage('stand')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-chart-line-up"></i></span><span class="fh-nav-label" data-i18n="menu.stand">Dein Stand</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="story" onclick="changePage('story')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-book-open-text"></i></span><span class="fh-nav-label" data-i18n="menu.story">Stories</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="characters" onclick="changePage('characters')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-users-three"></i></span><span class="fh-nav-label" data-i18n="menu.characters">Characters</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="socials" onclick="changePage('socials')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-globe-hemisphere-west"></i></span><span class="fh-nav-label" data-i18n="menu.socials">Socials</span></a>
+
+      <p class="fh-nav-section-label" data-i18n="menu.sectionGames">Spiele</p>
+      <a class="fh-nav-item" tabindex="0" data-page="shop" onclick="changePage('shop')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-shopping-cart-simple"></i></span><span class="fh-nav-label" data-i18n="menu.shop">Shop</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="code" onclick="changePage('code')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-key"></i></span><span class="fh-nav-label" data-i18n="menu.code">Code</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="wheel" onclick="changePage('wheel')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-compass"></i></span><span class="fh-nav-label" data-i18n="menu.wheel">Schatzrad</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="spielothek" onclick="changePage('spielothek')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-dice-five"></i></span><span class="fh-nav-label" data-i18n="menu.spielothekShort">Spielothek</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="leaderboard" onclick="changePage('leaderboard')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-trophy"></i></span><span class="fh-nav-label" data-i18n="menu.leaderboard">Rangliste</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="tournament" onclick="changePage('tournament')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-crown-simple"></i></span><span class="fh-nav-label" data-i18n="menu.tournament">THE CHALLENGE</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="race" onclick="changePage('race')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-flag-checkered"></i></span><span class="fh-nav-label" data-i18n="menu.race">Wochenrennen</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="community-boss" onclick="changePage('community-boss')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-skull"></i></span><span class="fh-nav-label" data-i18n="menu.communityBoss">Community-Boss</span></a>
+      <!-- Nur sichtbar im Jahr 2100 (scripts/hangar/hangar.js) -->
+      <a class="fh-nav-item fh-flag-aus" tabindex="0" data-page="hangar" onclick="changePage('hangar')"><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></span><span class="fh-nav-label" data-i18n="menu.hangar">Hangar</span></a>
+      <!-- Nur sichtbar im Jahr 2100 (scripts/schlacht/schlacht.js) -->
+      <a class="fh-nav-item fh-flag-aus" tabindex="0" data-page="sternenschlacht" onclick="changePage('sternenschlacht')"><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></svg></span><span class="fh-nav-label" data-i18n="menu.sternenschlacht">Sternenschlacht</span></a>
+      <!-- Nur sichtbar, solange eine Gegenhack-Quest laeuft (scripts/liveevent/gegenhack.js) -->
+      <a class="fh-nav-item fh-flag-aus" tabindex="0" data-page="gegenhack" onclick="changePage('gegenhack')"><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"/><path d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5"/><circle cx="12" cy="9" r="2"/><path d="M16.2 4.8c2 2 2.26 5.11.8 7.47"/><path d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1"/><path d="M9.5 18h5"/><path d="m8 22 4-11 4 11"/></svg></span><span class="fh-nav-label" data-i18n="menu.gegenhack">Gegenhack</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="streamraetsel" onclick="changePage('streamraetsel')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-question"></i></span><span class="fh-nav-label" data-i18n="menu.streamraetselShort">???</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="skill-tree" data-fh-flag="skillTree" onclick="changePage('skill-tree')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-tree-structure"></i></span><span class="fh-nav-label" data-i18n="menu.skillTree">Skill-Baum</span></a>
+      <!-- Freigabe "gluecksmine" (Migration 61). Der Spind (60) hat bewusst keinen
+           Menueeintrag: Er oeffnet sich nur ueber das eigene Bild unten links (avatar-wahl.js). -->
+      <a class="fh-nav-item" tabindex="0" data-page="gluecksmine" data-fh-flag="gluecksmine" onclick="changePage('gluecksmine')"><span class="fh-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.531 12.469 6.619 20.38a1 1 0 1 1-3-3l7.912-7.912"/><path d="M15.686 4.314A12.5 12.5 0 0 0 5.461 2.958 1 1 0 0 0 5.58 4.71a22 22 0 0 1 6.318 3.393"/><path d="M17.7 3.7a1 1 0 0 0-1.4 0l-4.6 4.6a1 1 0 0 0 0 1.4l2.6 2.6a1 1 0 0 0 1.4 0l4.6-4.6a1 1 0 0 0 0-1.4z"/><path d="M19.686 8.314a12.501 12.501 0 0 1 1.356 10.225 1 1 0 0 1-1.751-.119 22 22 0 0 0-3.393-6.319"/></svg></span><span class="fh-nav-label" data-i18n="menu.gluecksmine">Glücksmine</span></a>
+
+      <p class="fh-nav-section-label" data-i18n="menu.sectionMore">Mehr</p>
+      <a class="fh-nav-item" tabindex="0" data-page="support" onclick="changePage('support')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-lifebuoy"></i></span><span class="fh-nav-label" data-i18n="menu.support">Support</span></a>
+      <a class="fh-nav-item" tabindex="0" data-page="rating" onclick="changePage('rating')"><span class="fh-nav-icon" aria-hidden="true"><i class="ph ph-star"></i></span><span class="fh-nav-label" data-i18n="menu.rating">Bewertung</span></a>
+    </nav>
+
+    <div class="fh-sidebar-footer-wrap">
+      <!-- Wird von renderPlayerCardHtml() in scripts/core/progression.js
+           befuellt (Avatar/Name/Level/XP-Balken) - ersetzt die vorher
+           statische "Crew Flitzpiepen · Online"-Anzeige. -->
+      <div class="fh-sidebar-footer" id="fh-sidebar-footer"></div>
+      <a class="fh-gateway-link fh-sidebar-gateway-link" tabindex="0" onclick="changePage('gateway')" title="Admin-Gateway">⚙</a>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       TOPBAR (Entwurf 1c)
+       ---------------------------------------------------
+       Sammelt, was vorher verstreut war: der Sucheinstieg sass in der
+       Sidebar, Sprachumschalter ebenfalls, Musik- und Teilen-Knopf
+       schwebten frei in der rechten oberen Ecke. Jetzt eine Leiste,
+       wie im Entwurf.
+
+       Nur ab 1024px sichtbar - darunter tragen die Kopfzeile des
+       Schubladen-Menues und die Bottom-Nav dieselben Funktionen.
+  ============================================================ -->
+  <div class="fh-topbar" id="fh-topbar">
+    <button type="button" class="fh-qs-trigger" onclick="fhQuickSearch.open()" aria-haspopup="dialog">
+      <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+      <span class="fh-qs-trigger-label" data-i18n="search.trigger">Seite suchen</span>
+      <kbd>Strg K</kbd>
+    </button>
+
+    <div class="fh-topbar-right">
+      <!-- Dublonenstand, gespeist aus derselben Quelle wie die Anzeige
+           im Shop (refreshShopCurrencyDisplay in shop.js). -->
+      <span class="fh-topbar-coins" id="fh-topbar-coins" hidden>
+        <i class="ph ph-coins" aria-hidden="true"></i>
+        <span class="shop-currency-amount" data-fh-currency>0</span>
+      </span>
+
+      <button type="button" class="lang-switch fh-topbar-lang" onclick="toggleLanguage()" aria-label="Sprache wechseln">
+        <span class="lang-switch-label lang-switch-label-de">DE</span>
+        <span class="lang-switch-label lang-switch-label-en">EN</span>
+      </button>
+
+      <button type="button" class="fh-topbar-btn" onclick="fhShareSite()"
+              data-i18n-aria-label="share.button" aria-label="Seite teilen"
+              data-i18n-title="share.button" title="Seite teilen">
+        <i class="ph ph-share-network" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="fh-topbar-btn fh-topbar-music" id="fh-topbar-music"
+              onclick="toggleMusic()" aria-label="Musik an/aus">
+        <i class="ph ph-speaker-high" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MOBILE UNTERER BEREICH (unter 1024px): Spielerkarte + Tableiste
+       ---------------------------------------------------
+       Beide Elemente stecken bewusst in EINEM gemeinsamen, fixierten
+       Wrapper und stapeln sich per normalem Flex-Layout - so muss die
+       tatsaechliche Hoehe der Tableiste nirgendwo als fester
+       Pixelwert geraten werden (das fuehrte vorher dazu, dass die
+       XP-Zeile der Spielerkarte teilweise hinter der Tableiste
+       verschwand). Die Spielerkarte wird von renderPlayerCardHtml()/
+       refreshPlayerCard() in scripts/core/progression.js befuellt -
+       dieselbe Quelle wie die Desktop-Sidebar-Karte, keine zweite
+       eigenstaendige Levellogik. Auf der Desktop-Sidebar (ab 1024px)
+       ist .fh-sidebar bereits sichtbar; hier zeigen wir die
+       identische Karte kompakt ueber der Tableiste, da .fh-sidebar
+       unterhalb 1024px display:none ist und der Levelbereich dort
+       sonst komplett unsichtbar bliebe.
+  ============================================================ -->
+  <div class="fh-mobile-bottom-stack" id="fh-mobile-bottom-stack">
+    <div class="fh-mobile-player-card" id="fh-mobile-player-card"></div>
+
+    <!-- Bestehendes Hamburger-Menü bleibt als "Mehr"-Schublade für
+         alle restlichen Seiten erhalten (openMenu()). -->
+    <nav class="fh-bottom-nav" id="fh-bottom-nav">
+      <a class="fh-bottom-nav-item" tabindex="0" data-page="home" onclick="changePage('home')">
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-house"></i></span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.home">Home</span>
+      </a>
+      <a class="fh-bottom-nav-item" tabindex="0" data-page="community-boss" onclick="changePage('community-boss')">
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-skull"></i></span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.bottomBoss">Boss</span>
+      </a>
+      <a class="fh-bottom-nav-item" tabindex="0" data-page="race" onclick="changePage('race')">
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-flag-checkered"></i></span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.bottomRace">Rennen</span>
+      </a>
+      <a class="fh-bottom-nav-item" tabindex="0" data-page="leaderboard" onclick="changePage('leaderboard')">
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-trophy"></i></span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.leaderboard">Rangliste</span>
+      </a>
+      <button type="button" class="fh-bottom-nav-item fh-bottom-nav-more" onclick="openMenu()">
+        <span class="fh-bottom-nav-icon" aria-hidden="true"><i class="ph ph-list"></i></span>
+        <span class="fh-bottom-nav-label" data-i18n="menu.bottomMore">Mehr</span>
+      </button>
+    </nav>
+  </div>
+
+  <main id="fh-main" tabindex="-1">
+
+    <!-- ============================================================
+         STARTSEITE: DIE OZEAN-REISE
+         ---------------------------------------------------
+         Eine lange Bahn (FH_START_WEG in
+         scripts/home/startseite.js, 8000px), eine klebende Buehne
+         und darauf eine 3D-Szene: das Schiff der Crew faehrt von
+         der offenen See bis zur Schatzinsel. Darueber liegen
+         sieben Kapiteltexte, die sich mit dem Scrollen abloesen.
+
+         Uebernommen aus dem Entwurf "Schatzinsel Scroll"
+         (Claude Design); die Szene zeichnet
+         scripts/home/ozean-szene.js mit three.js.
+
+         Alles haengt an EINER Variablen --fh-weg (0 bis 1), die
+         GSAP ScrollTrigger schreibt. Die Kapitel rechnen ihr
+         Ein- und Ausblenden in CSS daraus selbst aus - jedes
+         traegt sein Fenster als --von und --bis.
+
+         Der Countdown steht in Kapitel VII. Sichtbar ist dort der
+         3D-Countdown IN der Szene; das HTML darunter bleibt als
+         Datenquelle (countdown.js schreibt hinein, ozean-szene.js
+         liest daraus) und fuer Screenreader stehen.
+    ============================================================ -->
+    <section id="home" class="page active-page">
+      <h1 class="fh-visually-hidden" data-i18n="home.title">COUNTDOWN</h1>
+
+      <div class="fh-start" id="fh-start">
+        <!-- Die Buehne klebt und fuellt den Schirm; gescrollt wird
+             die Bahn darum herum. -->
+        <div class="fh-start-buehne" id="fh-start-buehne">
+
+          <!-- Die Szene. Rein dekorativ, deshalb aria-hidden. -->
+          <div class="fh-ozean" id="fh-ozean" aria-hidden="true">
+            <canvas class="fh-ozean-leinwand"></canvas>
+            <div class="fh-ozean-schleier fh-ozean-schleier-rund"></div>
+            <div class="fh-ozean-schleier fh-ozean-schleier-kante"></div>
+            <div class="fh-ozean-schleier fh-ozean-schleier-unten"></div>
+            <div class="fh-ozean-schleier fh-ozean-schleier-seiten"></div>
+          </div>
+
+          <div class="fh-ozean-balken fh-ozean-balken-oben" aria-hidden="true"></div>
+          <div class="fh-ozean-balken fh-ozean-balken-unten" aria-hidden="true"></div>
+
+          <!-- ---------- KAPITEL I ---------- -->
+          <div class="fh-kapitel" style="--von: -0.06; --bis: 0.10;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+              <span class="fh-kapitel-nr" data-i18n="home.kap1Nr">Kapitel I — Auslaufen</span>
+            </div>
+            <h1 data-i18n="home.kap1Titel">Romna liegt hinter uns</h1>
+            <p data-i18n="home.kap1Text">Ein rot bemaltes Schiff, eine Crew, die ihren Captain Fliezpiepenheimer nennt, und eine Fracht, die niemand öffnen darf.</p>
+          </div>
+
+          <!-- ---------- KAPITEL II ---------- -->
+          <div class="fh-kapitel" style="--von: 0.14; --bis: 0.26;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+              <span class="fh-kapitel-nr" data-i18n="home.kap2Nr">Kapitel II — Die Fracht</span>
+            </div>
+            <h2 data-i18n="home.kap2Titel">Fünf Schlösser, kein Schlüssel</h2>
+            <p data-i18n="home.kap2Text">Eine massive Metallbox steht unter Deck. Wer sie öffnet, stirbt — das war die einzige Anweisung.</p>
+          </div>
+
+          <!-- ---------- KAPITEL III ---------- -->
+          <div class="fh-kapitel" style="--von: 0.30; --bis: 0.42;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+              <span class="fh-kapitel-nr" data-i18n="home.kap3Nr">Kapitel III — Volle Fahrt</span>
+            </div>
+            <h2 data-i18n="home.kap3Titel">Sie hält direkt auf uns zu</h2>
+            <p data-i18n="home.kap3Text">Schwarze Flagge, alle Segel gesetzt. Dave gibt den Befehl, den keiner hören will.</p>
+          </div>
+
+          <!-- ---------- KAPITEL IV ----------
+               Das einzige rechtsbuendige Kapitel, genau an der
+               Stelle, an der das fremde Schiff vorbeizieht. -->
+          <div class="fh-kapitel fh-kapitel-rechts" style="--von: 0.46; --bis: 0.56;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-nr" data-i18n="home.kap4Nr">Kapitel IV — Vorbei</span>
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+            </div>
+            <h2 data-i18n="home.kap4Titel">Dreh bei. Wir folgen ihr.</h2>
+          </div>
+
+          <!-- ---------- KAPITEL V ---------- -->
+          <div class="fh-kapitel" style="--von: 0.60; --bis: 0.72;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+              <span class="fh-kapitel-nr" data-i18n="home.kap5Nr">Kapitel V — Im Kielwasser</span>
+            </div>
+            <h2 data-i18n="home.kap5Titel">Kurs nach Südwest</h2>
+            <p data-i18n="home.kap5Text">Der Nebel reißt auf. Vor dem Bug wird es hell — und es ist nicht die Sonne.</p>
+          </div>
+
+          <!-- ---------- KAPITEL VI ---------- -->
+          <div class="fh-kapitel" style="--von: 0.76; --bis: 0.86;">
+            <div class="fh-kapitel-marke">
+              <span class="fh-kapitel-strich" aria-hidden="true"></span>
+              <span class="fh-kapitel-nr" data-i18n="home.kap6Nr">Kapitel VI — Land in Sicht</span>
+            </div>
+            <h2 data-i18n="home.kap6Titel">Klippen, Dschungel, ein Licht</h2>
+          </div>
+
+          <!-- ---------- KAPITEL VII: DAS ZIEL ----------
+               Hier steht NUR der Countdown, eine Zeile darunter
+               und die zwei Knoepfe. Der grosse Titel "Die
+               Schatzinsel" und der Kicker sind bewusst weg: sie
+               haben mit der Zahl um die Aufmerksamkeit
+               gekaempft, und das Ziel der Reise ist die Zahl.
+               Welches Kapitel man sieht, sagt der Zaehler oben
+               rechts. -->
+          <div class="fh-kapitel fh-kapitel-mitte" style="--von: 0.89; --bis: 1.06;">
+
+            <!-- Sichtbar ist der 3D-Countdown in der Szene. Das
+                 hier ist die Datenquelle dafuer und gleichzeitig
+                 das, was ohne Szene uebrig bleibt. -->
+            <div class="fh-start-countdown">
+              <div class="countdown">
+                <div class="time-box">
+                  <span id="days">00</span>
+                  <small data-i18n="common.days">Tage</small>
+                </div>
+                <div class="time-box">
+                  <span id="hours">00</span>
+                  <small data-i18n="common.hours">Stunden</small>
+                </div>
+                <div class="time-box">
+                  <span id="minutes">00</span>
+                  <small data-i18n="common.minutes">Minuten</small>
+                </div>
+                <div class="time-box">
+                  <span id="seconds">00</span>
+                  <small data-i18n="common.seconds">Sekunden</small>
+                </div>
+              </div>
+            </div>
+
+            <p data-i18n="home.kap7Text">Noch so lange, bis die Crew auf der Schatzinsel an Land geht.</p>
+
+            <div class="fh-kapitel-knoepfe">
+              <button type="button" class="code-button" onclick="changePage('story')" data-i18n="home.kap7Logbuch">Logbuch lesen</button>
+              <button type="button" class="code-button fh-kapitel-knopf-still" onclick="changePage('stand')" data-i18n="home.kap7Land">An Land gehen</button>
+            </div>
+          </div>
+
+          <!-- ---------- RAHMEN ---------- -->
+          <div class="fh-ozean-marke" aria-hidden="true">
+            <span class="fh-ozean-raute"></span>
+            <span data-i18n="home.kicker">Logbuch der Crew</span>
+          </div>
+
+          <!-- Sieben Punkte statt "I / VII": das Kapitel, in dem man
+               gerade steht, leuchtet auf, die anderen stehen blass
+               daneben. Man sieht damit auf einen Blick, wieviel
+               Reise noch vor einem liegt - eine Bruchzahl muss man
+               dafuer erst lesen. Die roemische Ziffer bleibt
+               darunter, weil sie in den Kapitelmarken auftaucht. -->
+          <div class="fh-ozean-fortschritt" aria-hidden="true">
+            <div class="fh-ozean-punkte">
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+              <span class="fh-ozean-punkt"></span>
+            </div>
+            <span id="fh-kapitel-zaehler">I</span>
+          </div>
+
+          <!-- Erscheint erst nach drei Sekunden ohne Scrollen und
+               verschwindet beim ersten Scrollen fuer immer. -->
+          <button type="button" class="fh-start-wink" id="fh-start-wink" hidden
+                  onclick="fhStartWinkFolgen()">
+            <span class="fh-start-wink-rad" aria-hidden="true">
+              <span class="fh-start-wink-kugel"></span>
+            </span>
+            <span data-i18n="home.scrollCue">Sieben Kapitel voraus</span>
+          </button>
+
+          <div class="fh-ozean-korn" aria-hidden="true"></div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         STORY ARCHIV
+    ====================================================== -->
+    <section id="story" class="page">
+      <div class="story-library">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="story.kicker">Archiv der Crew</p>
+          <h1 class="fh-page-title" data-i18n="story.title">Logbücher</h1>
+          <p class="fh-page-lead" data-i18n="story.subtitle">Wähle ein Logbuch aus dem Archiv - jedes Kapitel bleibt offen, sobald du es einmal gelesen hast.</p>
+        </div>
+
+        <!-- Wird automatisch gefüllt -->
+        <div id="story-grid" class="story-grid"></div>
+
+        <span class="hidden-code-hint">AUSGUCK</span>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         STORY DETAILS
+    ====================================================== -->
+    <section id="story-detail" class="page">
+      <div class="story-detail-container">
+        <button class="back-button" onclick="changePage('story')" data-i18n="common.back">← Zurück</button>
+
+        <div class="story-header">
+          <img id="detail-cover" class="detail-cover" alt="">
+          <div>
+            <h1 id="detail-title"></h1>
+            <p id="detail-description"></p>
+          </div>
+        </div>
+
+        <!-- Expeditions-Fortschritt: wie viele der (nicht gesperrten)
+             Kapitel dieses Logbuchs dieser Besucher schon geöffnet hat -
+             rein lokal (localStorage), siehe loadChapters() in
+             scripts/stories/stories.js. -->
+        <div class="story-progress" id="story-progress"></div>
+
+        <p class="fh-section-label" data-i18n="story.chapterHeading">Kapitel</p>
+
+        <!-- Kapitel werden automatisch erzeugt -->
+        <div id="chapter-list" class="chapter-list fh-rows"></div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         BOOK READER
+    ====================================================== -->
+    <section id="book-reader" class="page">
+      <div class="book">
+        <button class="back-button" onclick="changePage('story-detail')" data-i18n="common.back">← Zurück</button>
+
+        <h1 id="book-title"></h1>
+        <h3 id="book-language"></h3>
+
+        <div class="book-content">
+          <p id="book-text"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         CHARACTERS
+    ===================== -->
+    <section id="characters" class="page">
+      <div class="page-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="characters.kicker">An Bord</p>
+          <h1 class="fh-page-title" data-i18n="characters.title">Die Crew</h1>
+          <p class="fh-page-lead" data-i18n="characters.lead">Alle Namen aus den Logbüchern. Tipp auf eine Karte, um Rolle, Zitat und Beschreibung zu sehen.</p>
+        </div>
+
+        <div class="character-container" id="character-container"></div>
+      </div>
+    </section>
+
+    <!-- =====================
+         SOCIALS
+    ===================== -->
+    <section id="socials" class="page">
+      <div class="page-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="socials.kicker">Folge der Crew</p>
+          <h1 class="fh-page-title" data-i18n="socials.title">Socials</h1>
+          <p class="fh-page-lead" data-i18n="socials.lead">Alle Kanäle der Crew an einer Stelle.</p>
+        </div>
+
+        <div class="social-container">
+          <a href="https://youtube.com" target="_blank" class="social-btn social-youtube">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M23.5 6.2c-.3-1.1-1.1-1.9-2.2-2.2C19.3 3.5 12 3.5 12 3.5s-7.3 0-9.3.5c-1.1.3-1.9 1.1-2.2 2.2C0 8.2 0 12 0 12s0 3.8.5 5.8c.3 1.1 1.1 1.9 2.2 2.2 2 .5 9.3.5 9.3.5s7.3 0 9.3-.5c1.1-.3 1.9-1.1 2.2-2.2.5-2 .5-5.8.5-5.8s0-3.8-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+            <span>YouTube</span>
+          </a>
+          <a href="https://tiktok.com" target="_blank" class="social-btn social-tiktok">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M16.6 5.8c-.9-.9-1.4-2.1-1.4-3.4h-3.3v13.6c0 1.5-1.2 2.7-2.7 2.7-1.5 0-2.7-1.2-2.7-2.7s1.2-2.7 2.7-2.7c.3 0 .5 0 .8.1V10c-.3 0-.5-.1-.8-.1-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6V9.1c1.3.9 2.8 1.5 4.5 1.5V7.3c-1 0-2-.4-2.6-1c-.2-.2-.3-.3-.5-.5z"/></svg>
+            <span>TikTok</span>
+          </a>
+          <a href="https://discord.com" target="_blank" class="social-btn social-discord">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M20.3 4.4c-1.5-.7-3.1-1.2-4.7-1.4-.2.4-.4.9-.6 1.3-1.7-.3-3.5-.3-5.2 0-.2-.4-.4-.9-.6-1.3-1.6.3-3.2.7-4.7 1.4C1.5 8.4.8 12.4 1.1 16.3c1.8 1.3 3.5 2.1 5.2 2.7.4-.6.8-1.2 1.1-1.9-.6-.2-1.2-.5-1.7-.8.1-.1.3-.2.4-.3 3.3 1.5 6.9 1.5 10.2 0 .1.1.3.2.4.3-.6.3-1.1.6-1.7.8.3.7.7 1.3 1.1 1.9 1.7-.5 3.4-1.4 5.2-2.7.4-4.5-.8-8.4-2.9-11.9zM8.7 13.9c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9zm6.6 0c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9z"/></svg>
+            <span>Discord</span>
+          </a>
+          <a href="https://instagram.com" target="_blank" class="social-btn social-instagram">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.9.3 2.3.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.3 1.1.4 2.3.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.9-.4 2.3-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1.1.3-2.3.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.9-.3-2.3-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.3-1.1-.4-2.3C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.9.4-2.3.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1.1-.3 2.3-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1 .1-1.6.2-1.9.4-.5.2-.8.4-1.2.8-.4.4-.6.7-.8 1.2-.1.3-.3.9-.4 1.9-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c.1 1 .2 1.6.4 1.9.2.5.4.8.8 1.2.4.4.7.6 1.2.8.3.1.9.3 1.9.4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1-.1 1.6-.2 1.9-.4.5-.2.8-.4 1.2-.8.4-.4.6-.7.8-1.2.1-.3.3-.9.4-1.9.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-1-.2-1.6-.4-1.9-.2-.5-.4-.8-.8-1.2-.4-.4-.7-.6-1.2-.8-.3-.1-.9-.3-1.9-.4-1.2-.1-1.6-.1-4.7-.1zm0 3.5c3 0 5.5 2.5 5.5 5.5s-2.5 5.5-5.5 5.5-5.5-2.5-5.5-5.5S9 7.5 12 7.5zm0 9.1c2 0 3.6-1.6 3.6-3.6S14 9.4 12 9.4 8.4 11 8.4 13s1.6 3.6 3.6 3.6zm5.7-9.3c0 .7-.6 1.3-1.3 1.3s-1.3-.6-1.3-1.3.6-1.3 1.3-1.3 1.3.6 1.3 1.3z"/></svg>
+            <span>Instagram</span>
+          </a>
+        </div>
+
+        <a class="fh-audiobook-card" id="fh-audiobook-card" href="#" target="_blank" rel="noopener noreferrer" aria-label="Fire Helmet Hörspiel auf Spotify anhören">
+          <span class="fh-audiobook-icon">🎧</span>
+          <span class="fh-audiobook-copy">
+            <span class="fh-audiobook-title" data-i18n="socials.audiobookTitle">Das Fire-Helmet-Hörspiel</span>
+            <span class="fh-audiobook-text" data-i18n="socials.audiobookText">Tauche noch tiefer in die Geschichte ein.</span>
+          </span>
+          <span class="fh-audiobook-button" data-i18n="socials.audiobookButton">Auf Spotify anhören</span>
+        </a>
+
+        <a class="fh-audiobook-card fh-audiobook-card-game" id="fh-game-card" href="https://rosebud.ai/play/andiis-schatzraub" target="_blank" rel="noopener noreferrer" aria-label="Andiis Schatzraub spielen">
+          <span class="fh-audiobook-icon">🎮</span>
+          <span class="fh-audiobook-copy">
+            <span class="fh-audiobook-title" data-i18n="socials.gameTitle">Andiis Schatzraub</span>
+            <span class="fh-audiobook-text" data-i18n="socials.gameText">Spiel das Schatzraub-Game und stell dein Glück auf die Probe.</span>
+          </span>
+          <span class="fh-audiobook-button" data-i18n="socials.gameButton">Jetzt spielen</span>
+        </a>
+
+        <h2 class="social-subheading" data-i18n="socials.daveHeading">🚂 Socials von Zugfahrer_DaveTV</h2>
+
+        <div class="social-container">
+          <a href="https://twitch.tv/zugfahrer_davetv" target="_blank" class="social-btn social-twitch">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M4.3 2 3 5.4v14.2h4.9V22h2.8l2.6-2.4h4L21 15.4V2H4.3zm14.9 12.4-3 2.9h-4l-2.6 2.4v-2.4H6.1V3.9h13.1v10.5z"/><path d="M15.5 7.1h1.9v5.2h-1.9zM10.4 7.1h1.9v5.2h-1.9z"/></svg>
+            <span>Twitch</span>
+          </a>
+          <a href="https://youtube.com" target="_blank" class="social-btn social-youtube">
+            <svg viewBox="0 0 24 24" class="social-icon"><path d="M23.5 6.2c-.3-1.1-1.1-1.9-2.2-2.2C19.3 3.5 12 3.5 12 3.5s-7.3 0-9.3.5c-1.1.3-1.9 1.1-2.2 2.2C0 8.2 0 12 0 12s0 3.8.5 5.8c.3 1.1 1.1 1.9 2.2 2.2 2 .5 9.3.5 9.3.5s7.3 0 9.3-.5c1.1-.3 1.9-1.1 2.2-2.2.5-2 .5-5.8.5-5.8s0-3.8-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+            <span>YouTube</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         DEIN STAND
+         Die fuenf Karten standen bis zum Umbau der Startseite
+         unter der Eroeffnungssequenz. Inhalt unveraendert, nur
+         jetzt mit eigener Seite - befuellt von
+         scripts/stand/stand.js aus den echten Quellen.
+    ===================== -->
+    <section id="stand" class="page">
+      <div class="page-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="stand.kicker">Logbuch</p>
+          <h1 class="fh-page-title" data-i18n="stand.title">Dein Stand</h1>
+          <p class="fh-page-lead" data-i18n="stand.subtitle">Wo du \u00fcberall stehengeblieben bist \u2013 auf einen Blick.</p>
+        </div>
+
+        <div class="fh-dash-grid">
+          <article class="fh-card fh-card-wide" id="fh-dash-read"></article>
+          <article class="fh-card fh-card-gold" id="fh-dash-wheel"></article>
+          <article class="fh-card" id="fh-dash-race"></article>
+          <article class="fh-card" id="fh-dash-code"></article>
+          <article class="fh-card" id="fh-dash-board"></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         ANMELDEN
+    ===================== -->
+    <section id="login" class="page">
+      <div class="page-content fh-anmelde-seite">
+        <div class="fh-page-head">
+          <!-- Die Buchstaben laufen beim Betreten EINMAL ein
+               (scripts/auth/anmelde-fx.js), nicht in einer Schleife.
+
+               Bewusst der KICKER und nicht die Ueberschrift: h1.fh-page-title
+               traegt den Lichtpunkt-Effekt aus css/90-typografie.css und
+               damit -webkit-text-fill-color: transparent. Einzelne
+               Buchstaben-Spans erben diese durchsichtige Fuellung, haben
+               aber keinen eigenen Farbverlauf - der Titel waere unsichtbar.
+               Er bekommt deshalb einen Auftritt als Ganzes. -->
+          <p class="fh-page-kicker fh-schrift-auftritt" data-i18n="login.kicker">Zugang</p>
+          <h1 class="fh-page-title fh-titel-auftritt" data-i18n="login.title">Anmeldung</h1>
+          <p class="fh-page-lead" data-i18n="login.subtitle">Melde dich an, um in Rangliste und Wochenrennen zu erscheinen</p>
+        </div>
+
+        <!-- Wer bin ich gerade? Wird von zeichneAnmeldeStatus()
+             (twitch-auth.js) gefuellt. Ohne Namen bleibt der Kasten leer
+             und faellt weg - dann sind die Karten darunter die Antwort. -->
+        <div id="fh-anmelde-status" class="fh-anmelde-status" hidden></div>
+
+        <!-- Wer schon angemeldet ist, braucht weder Registrieren-Formular
+             noch Gast-Karte. Beides sitzt deshalb in diesem Behaelter,
+             den updateLoginPage() dann ausblendet. -->
+        <div class="fh-anmelde-spalten" id="fh-anmelde-spalten">
+
+          <!-- KONTO - Umschalter zwischen Anmelden und Registrieren -->
+          <section class="fh-anmelde-karte">
+            <h2 class="fh-anmelde-titel" data-i18n="login.karteKonto">Anmelden oder Konto anlegen</h2>
+
+            <!-- role="tablist", damit Vorlesewerkzeuge und Pfeiltasten
+                 den Umschalter als das erkennen, was er ist. Der
+                 Laeufer darunter wandert animiert mit. -->
+            <div class="fh-anmelde-umschalter" role="tablist">
+              <span class="fh-anmelde-laeufer" aria-hidden="true"></span>
+              <button type="button" class="fh-anmelde-tab ist-aktiv" id="fh-tab-anmelden"
+                      role="tab" aria-selected="true" aria-controls="fh-feld-anmelden"
+                      onclick="fhAnmeldeTab('anmelden')" data-i18n="login.tabAnmelden">Anmelden</button>
+              <button type="button" class="fh-anmelde-tab" id="fh-tab-registrieren"
+                      role="tab" aria-selected="false" aria-controls="fh-feld-registrieren"
+                      onclick="fhAnmeldeTab('registrieren')" data-i18n="login.tabRegistrieren">Registrieren</button>
+            </div>
+
+            <div class="fh-anmelde-buehne">
+
+            <!-- ===== ANMELDEN ===== -->
+            <div id="fh-feld-anmelden" role="tabpanel" aria-labelledby="fh-tab-anmelden">
+              <div class="twitch-login-area">
+                <button id="twitch-login-btn" class="twitch-login-btn" data-anmeldung="twitch">
+                  <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M4.3 2 3 5.4v14.2h4.9V22h2.8l2.6-2.4h4L21 15.4V2H4.3zm14.9 12.4-3 2.9h-4l-2.6 2.4v-2.4H6.1V3.9h13.1v10.5z"/><path d="M15.5 7.1h1.9v5.2h-1.9zM10.4 7.1h1.9v5.2h-1.9z"/></svg>
+                  <span data-i18n="login.twitchButton">Mit Twitch anmelden</span>
+                </button>
+
+                <button id="discord-login-btn" class="twitch-login-btn discord-login-btn" data-anmeldung="discord">
+                  <svg viewBox="0 0 24 24" class="twitch-icon"><path d="M20.3 4.4c-1.5-.7-3.1-1.2-4.7-1.4-.2.4-.4.9-.6 1.3-1.7-.3-3.5-.3-5.2 0-.2-.4-.4-.9-.6-1.3-1.6.3-3.2.7-4.7 1.4C1.5 8.4.8 12.4 1.1 16.3c1.8 1.3 3.5 2.1 5.2 2.7.4-.6.8-1.2 1.1-1.9-.6-.2-1.2-.5-1.7-.8.1-.1.3-.2.4-.3 3.3 1.5 6.9 1.5 10.2 0 .1.1.3.2.4.3-.6.3-1.1.6-1.7.8.3.7.7 1.3 1.1 1.9 1.7-.5 3.4-1.4 5.2-2.7.4-4.5-.8-8.4-2.9-11.9zM8.7 13.9c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9zm6.6 0c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9z"/></svg>
+                  <span data-i18n="login.discordButton">Mit Discord anmelden</span>
+                </button>
+
+                <button id="google-login-btn" class="twitch-login-btn google-login-btn" data-anmeldung="google">
+                  <svg viewBox="0 0 24 24" class="twitch-icon" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.7h5.4c-.2 1.2-.9 2.3-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path d="M12 22c2.7 0 5-.9 6.6-2.5l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6C4.7 19.7 8.1 22 12 22z"/><path d="M6.4 13.9c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9V7.5H3.1C2.4 8.9 2 10.4 2 12s.4 3.1 1.1 4.5l3.3-2.6z"/><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 2.9 14.7 2 12 2 8.1 2 4.7 4.3 3.1 7.5l3.3 2.6C7.2 7.8 9.4 5.9 12 5.9z"/></svg>
+                  <span data-i18n="login.googleButton">Mit Google anmelden</span>
+                </button>
+
+                <p class="fh-anmelde-trenner"><span data-i18n="login.oder">oder</span></p>
+
+                <!-- Wer bei der Registrierung eine E-Mail hinterlegt hat,
+                     meldet sich MIT DIESER an - der Grund steht bei
+                     fhLoginAdresse() in scripts/auth/anmeldung.js.
+                     Deshalb nimmt das Feld beides entgegen. -->
+                <form id="fh-passwort-anmeldung" class="fh-anmelde-formular" autocomplete="on">
+                  <label class="fh-anmelde-feldname" for="fh-anmelden-name"
+                         data-i18n="login.pwLabel">Name oder E-Mail</label>
+                  <input id="fh-anmelden-name" class="fh-anmelde-feld" type="text"
+                         autocomplete="username" maxlength="254"
+                         placeholder="Kapit&auml;n Ahab"
+                         data-i18n-placeholder="login.pwNamePlatzhalter">
+
+                  <label class="fh-anmelde-feldname" for="fh-anmelden-passwort"
+                         data-i18n="login.pwFeldname">Passwort</label>
+                  <div class="fh-passwortfeld" data-fh-passwort>
+                    <input id="fh-anmelden-passwort" class="fh-anmelde-feld" type="password"
+                           autocomplete="current-password" maxlength="72">
+                    <button type="button" class="fh-passwort-auge" aria-pressed="false"
+                            data-i18n-title="login.pwZeigen" title="Passwort anzeigen">
+                      <svg viewBox="0 0 24 24" class="fh-auge-bild" aria-hidden="true"><path d="M12 5.5c-5 0-9 4-10 6.5 1 2.5 5 6.5 10 6.5s9-4 10-6.5c-1-2.5-5-6.5-10-6.5z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span class="fh-passwort-auge-zu" aria-hidden="true"></span>
+                    </button>
+                  </div>
+
+                  <button type="submit" class="code-button fh-anmelde-absenden"
+                          data-i18n="login.pwButton">Anmelden</button>
+                  <button type="button" class="fh-anmelde-link" onclick="fhPasswortVergessen()"
+                          data-i18n="login.pwVergessen">Passwort vergessen?</button>
+                </form>
+
+                <div id="twitch-logged-in" class="twitch-logged-in">
+                  <img id="twitch-avatar" class="twitch-avatar" alt="">
+                  <span>
+                    <span id="twitch-logged-in-name"></span>
+                    <small id="login-provider-label" class="login-provider-label"></small>
+                  </span>
+                  <button class="twitch-logout-btn" onclick="logoutTwitch()" data-i18n="common.logout">Abmelden</button>
+                </div>
+              </div>
+            </div><!-- /fh-feld-anmelden -->
+
+            <!-- ===== REGISTRIEREN ===== -->
+            <div id="fh-feld-registrieren" role="tabpanel" aria-labelledby="fh-tab-registrieren" hidden>
+              <p class="fh-anmelde-text" data-i18n="login.registrierenText">Nur ein Name und ein Passwort &ndash; keine Adresse n&ouml;tig. Die E-Mail ist freiwillig und dient allein dazu, dein Passwort zur&uuml;ckzusetzen.</p>
+
+              <form id="fh-registrieren-form" class="fh-anmelde-formular" autocomplete="on">
+                <label class="fh-anmelde-feldname" for="fh-reg-name"
+                       data-i18n="login.regNameLabel">Dein Name</label>
+                <input id="fh-reg-name" class="fh-anmelde-feld" type="text"
+                       autocomplete="username" maxlength="18"
+                       placeholder="Kapit&auml;n Ahab" data-i18n-placeholder="login.regNamePlatzhalter">
+
+                <label class="fh-anmelde-feldname" for="fh-reg-passwort"
+                       data-i18n="login.regPwLabel">Passwort (mindestens 8 Zeichen)</label>
+                <div class="fh-passwortfeld" data-fh-passwort>
+                  <input id="fh-reg-passwort" class="fh-anmelde-feld" type="password"
+                         autocomplete="new-password" maxlength="72" data-fh-staerke>
+                  <button type="button" class="fh-passwort-auge" aria-pressed="false"
+                          data-i18n-title="login.pwZeigen" title="Passwort anzeigen">
+                    <svg viewBox="0 0 24 24" class="fh-auge-bild" aria-hidden="true"><path d="M12 5.5c-5 0-9 4-10 6.5 1 2.5 5 6.5 10 6.5s9-4 10-6.5c-1-2.5-5-6.5-10-6.5z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span class="fh-passwort-auge-zu" aria-hidden="true"></span>
+                  </button>
+                </div>
+                <!-- Drei Dublonen, die sich fuellen. Sie messen NUR
+                     Laenge und Zeichenvielfalt, versprechen also nichts,
+                     was sie nicht wissen koennen. -->
+                <p class="fh-passwort-staerke" id="fh-reg-staerke" aria-live="polite">
+                  <span class="fh-staerke-muenze"></span>
+                  <span class="fh-staerke-muenze"></span>
+                  <span class="fh-staerke-muenze"></span>
+                  <span class="fh-staerke-wort"></span>
+                </p>
+
+                <label class="fh-anmelde-feldname" for="fh-reg-passwort2"
+                       data-i18n="login.regPw2Label">Passwort wiederholen</label>
+                <div class="fh-passwortfeld" data-fh-passwort>
+                  <input id="fh-reg-passwort2" class="fh-anmelde-feld" type="password"
+                         autocomplete="new-password" maxlength="72">
+                  <button type="button" class="fh-passwort-auge" aria-pressed="false"
+                          data-i18n-title="login.pwZeigen" title="Passwort anzeigen">
+                    <svg viewBox="0 0 24 24" class="fh-auge-bild" aria-hidden="true"><path d="M12 5.5c-5 0-9 4-10 6.5 1 2.5 5 6.5 10 6.5s9-4 10-6.5c-1-2.5-5-6.5-10-6.5z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span class="fh-passwort-auge-zu" aria-hidden="true"></span>
+                  </button>
+                </div>
+
+                <label class="fh-anmelde-feldname" for="fh-reg-mail"
+                       data-i18n="login.regMailLabel">E-Mail (freiwillig, nur zum Zur&uuml;cksetzen)</label>
+                <input id="fh-reg-mail" class="fh-anmelde-feld" type="email"
+                       inputmode="email" autocomplete="email" maxlength="254"
+                       placeholder="du@beispiel.de">
+
+                <button type="submit" class="code-button fh-anmelde-absenden"
+                        data-i18n="login.regButton">Konto anlegen</button>
+              </form>
+            </div><!-- /fh-feld-registrieren -->
+
+            </div><!-- /fh-anmelde-buehne -->
+
+            <!-- Meldungen beider Formulare. Bewusst NICHT
+                 #fh-anmelde-status: der Kasten oben gehoert
+                 zeichneAnmeldeStatus() und ist ohne Namen versteckt. -->
+            <p id="fh-login-meldung" class="fh-anmelde-meldung"
+               role="status" aria-live="polite"></p>
+          </section>
+
+          <!-- GAST - nur ein Name, kein Konto.
+               Das Avatarraster stand frueher hier und war auf dem Handy
+               396px hoch. Es sitzt jetzt hinter dem eigenen Bild unten
+               in der Menueleiste (fhAvatarWahlOeffnen()). -->
+          <section class="fh-anmelde-karte">
+            <h2 class="fh-anmelde-titel" data-i18n="login.karteGast">Oder einfach einen Namen w&auml;hlen</h2>
+            <p class="fh-anmelde-text" data-i18n="login.karteGastText">Ohne Konto, sofort dabei. Dein Fortschritt h&auml;ngt dann an diesem Browser &ndash; sichere ihn unten mit dem Kennwort.</p>
+
+            <div id="wheel-nickname-box" class="wheel-nickname-box">
+              <label class="fh-anmelde-feldname" for="wheel-nickname-input"
+                     data-i18n="login.nameLabel">Dein Name in der Crew</label>
+              <input
+                type="text"
+                id="wheel-nickname-input"
+                class="fh-anmelde-feld"
+                placeholder="Kapit&auml;n Ahab" data-i18n-placeholder="login.namePlaceholder"
+                maxlength="18"
+                data-fh-counter
+                autocomplete="off">
+              <button class="code-button fh-anmelde-absenden" onclick="saveNickname()" data-i18n="common.save">Speichern</button>
+              <p id="nickname-error" class="nickname-error"></p>
+              <div id="nickname-success" class="nickname-success">
+                <span class="nickname-success-check">&check;</span>
+                <span class="nickname-success-text"></span>
+              </div>
+              <p class="fh-anmelde-hinweis" data-i18n="login.avatarHinweis">Dein Bild w&auml;hlst du unten links im Men&uuml; &ndash; klick auf dein eigenes Bild.</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- WIEDERHERSTELLUNGS-KENNWORT
+             Rettet Dublonen, Level, Schiff und Turnier-Anmeldung ueber
+             einen Geraetewechsel oder einen geleerten Browserspeicher
+             hinweg. Zugeklappt, weil man es meist nur einmal braucht -
+             auf dem Handy waren das 515px, die dauerhaft im Weg standen.
+             <details> statt eigener Knopflogik: Tastatur und
+             Vorlesewerkzeuge koennen das von Haus aus. -->
+        <details class="fh-anmelde-karte fh-anmelde-klapp" id="fh-kennwort-box">
+          <summary class="fh-anmelde-klapp-kopf">
+            <span class="fh-anmelde-klapp-titel" data-i18n="kennwort.titel">Dein Wiederherstellungs-Kennwort</span>
+            <span class="fh-anmelde-klapp-zeichen" aria-hidden="true"></span>
+          </summary>
+
+          <div class="fh-anmelde-klapp-inhalt">
+            <p class="fh-anmelde-text" data-i18n="kennwort.erklaerung">Schreib dir das auf. Damit holst du deinen Fortschritt auf ein anderes Ger&auml;t &ndash; oder zur&uuml;ck, wenn dein Browser den Speicher geleert hat.</p>
+
+            <div class="fh-kennwort-anzeige">
+              <code id="fh-kennwort-wert" class="fh-kennwort-wert">&bull;&bull;&bull;&bull;-&bull;&bull;&bull;&bull;</code>
+              <button type="button" class="code-button fh-kennwort-knopf" id="fh-kennwort-zeigen"
+                      onclick="fhKennwortZeigen()" data-i18n="kennwort.zeigen">Anzeigen</button>
+              <button type="button" class="code-button fh-kennwort-knopf" id="fh-kennwort-kopieren"
+                      onclick="fhKennwortKopieren()" hidden data-i18n="kennwort.kopieren">Kopieren</button>
+            </div>
+
+            <p class="fh-anmelde-text fh-kennwort-trenner" data-i18n="kennwort.uebernehmenHinweis">Schon ein Kennwort von einem anderen Ger&auml;t? Hier eintragen:</p>
+            <div class="fh-kennwort-eingabezeile">
+              <label class="fh-visually-hidden" for="fh-kennwort-eingabe"
+                     data-i18n="kennwort.eingabeLabel">Wiederherstellungs-Kennwort</label>
+              <input type="text" id="fh-kennwort-eingabe" class="fh-anmelde-feld"
+                     placeholder="ABCD-2345" data-i18n-placeholder="kennwort.eingabePlatzhalter"
+                     maxlength="14" autocomplete="off" spellcheck="false">
+              <button type="button" class="code-button" id="fh-kennwort-einloesen"
+                      onclick="fhKennwortEinloesen()" data-i18n="kennwort.einloesen">Konto holen</button>
+            </div>
+            <p id="fh-kennwort-status" class="fh-kennwort-status" role="status"></p>
+          </div>
+        </details>
+
+        <!-- ABMELDEN
+             Bewusst ganz unten und ohne Hervorhebung: ein Weg
+             hinaus, den man findet, wenn man ihn sucht - und nicht
+             versehentlich trifft, wenn man sich gerade anmelden
+             wollte. -->
+        <section class="fh-anmelde-karte fh-abmelde-karte">
+          <h2 class="fh-anmelde-titel" data-i18n="logout.karteTitel">Abmelden</h2>
+          <p class="fh-anmelde-text" data-i18n="logout.karteText">Meldet dich von diesem Ger&auml;t ab. Danach spielst du wieder als Gast weiter.</p>
+          <button type="button" class="code-button" id="fh-abmelden-btn"
+                  data-i18n="logout.knopf">Abmelden</button>
+        </section>
+      </div>
+    </section>
+
+    <!-- =====================
+         SHOP
+    ===================== -->
+    <section id="shop" class="page">
+      <div id="shop-intro-overlay" class="fh-shop-intro-overlay" aria-hidden="true">
+        <div class="fh-shop-intro-rays"></div>
+        <div class="fh-shop-intro-fog"></div>
+        <div class="fh-shop-intro-parchment">
+          <span class="fh-shop-intro-compass">🧭</span>
+          <span class="fh-shop-intro-title" data-i18n="shop.introTitle">DER SCHWARZMARKT</span>
+        </div>
+        <div class="fh-shop-intro-particles" id="fh-shop-intro-particles"></div>
+      </div>
+
+      <div class="page-content shop-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="shop.kicker">Schwarzmarkt der Flitzpiepen</p>
+          <h1 class="fh-page-title" data-i18n="shop.title">Shop</h1>
+          <p class="fh-page-lead" data-i18n="shop.subtitle">Jede Stunde neue Ware - gib deine Dublonen für Rahmen und Extras aus</p>
+        </div>
+
+        <div class="shop-currency-bar">
+          <span class="shop-currency-icon">💰</span>
+          <span id="shop-currency-amount">0</span>
+          <span data-i18n="shop.currencyLabel">Dublonen</span>
+        </div>
+
+        <p class="shop-rotation-label">
+          <span data-i18n="shop.rotationLabel">Neuer Schwarzmarkt in</span>
+          <span id="shop-rotation-countdown" class="shop-rotation-countdown">00:00:00</span>
+        </p>
+
+        <p class="shop-earn-hint" data-i18n="shop.earnHint">
+          Dublonen bekommst du durchs Einlösen bestimmter Codes, gute Platzierungen beim Wochenrennen
+          und viel Schaden gegen den Community-Boss.
+        </p>
+
+        <h2 class="shop-rarities-heading" data-i18n="shop.raritiesHeading">Seltenheiten</h2>
+        <div id="shop-rarity-legend" class="fh-rarity-legend"></div>
+
+        <div id="shop-mystery" class="fh-mystery" hidden></div>
+
+        <div id="shop-grid" class="shop-grid"></div>
+
+        <p id="shop-status" class="wheel-status"></p>
+      </div>
+
+      <div id="shop-rotation-toast" class="currency-toast shop-rotation-toast">
+        <span class="currency-toast-icon">⚓</span>
+        <span data-i18n="shop.rotationToast">Der Schwarzmarkt hat neue Ware erhalten!</span>
+      </div>
+    </section>
+
+    <section id="code" class="page">
+      <div class="code-ambient-fx" id="code-ambient-fx"></div>
+      <div class="page-content code-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="code.kicker">Geheimnisse der Crew</p>
+          <h1 class="fh-page-title" data-i18n="code.title">Code</h1>
+          <p class="fh-page-lead" data-i18n="code.subtitle">Gib deinen geheimen Code ein</p>
+        </div>
+
+        <audio id="code-audio-player"></audio>
+
+        <div class="code-box">
+          <label class="fh-visually-hidden" for="code-input"
+                 data-i18n="code.inputLabel">Geheimcode</label>
+          <input
+            type="text"
+            id="code-input"
+            class="code-input"
+            placeholder="Code eingeben ..." data-i18n-placeholder="code.placeholder"
+            autocomplete="off"
+            onkeydown="if(event.key==='Enter') checkCode()">
+
+          <button id="code-confirm-btn" class="code-button" onclick="checkCode()" data-i18n="code.confirm">Bestätigen</button>
+
+          <p id="code-message" class="code-message"></p>
+          <img id="code-image" class="code-image" alt="">
+        </div>
+
+        <div id="code-history" class="code-history">
+          <h2 class="code-history-heading" data-i18n="code.history.heading">📜 Zuletzt eingelöst (letzte 7 Tage)</h2>
+          <ul id="code-history-list" class="code-history-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         GLÜCKSRAD
+    ===================== -->
+    <section id="wheel" class="page">
+      <div class="page-content wheel-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="wheel.kicker">Einmal am Tag</p>
+          <h1 class="fh-page-title" data-i18n="wheel.title">Schatzrad</h1>
+          <p class="fh-page-lead" data-i18n="wheel.subtitle">Einmal am Tag drehen und dein Glück bei der Schatzsuche versuchen</p>
+        </div>
+
+        <p id="wheel-login-hint" class="wheel-status wheel-login-hint">
+          <span data-i18n="wheel.loginHintPrefix">Noch nicht angemeldet? </span><a onclick="changePage('login')" tabindex="0" data-i18n="wheel.loginHintLink">Hier geht's zur Anmeldung</a>
+        </p>
+
+        <p id="wheel-theme-label" class="wheel-theme-label"></p>
+
+        <div class="wheel-wrapper">
+          <div id="wheel-bulbs" class="wheel-bulbs"></div>
+          <div class="wheel-pointer"></div>
+          <div id="wheel-disc" class="wheel-disc"></div>
+          <div class="wheel-disc-gloss"></div>
+          <div id="wheel-sparks" class="wheel-sparks"></div>
+        </div>
+
+        <button id="spin-button" class="code-button spin-button" onclick="spinWheel()" data-i18n="wheel.spinButton">Drehen</button>
+
+        <p id="wheel-status" class="wheel-status"></p>
+        <p id="wheel-countdown" class="wheel-countdown"></p>
+        <p id="wheel-result" class="code-message"></p>
+      </div>
+    </section>
+
+    <!-- =====================
+         ÄNDIIS SPIELOTHEK
+         Rein virtuelles Feature - nutzt ausschließlich die
+         bestehende Dublonen-Währung (players/{uid}.currency),
+         siehe scripts/spielothek/spielothek.js.
+    ===================== -->
+    <section id="spielothek" class="page">
+      <div class="page-content spielothek-page-content">
+        <!-- Das Zeichen der Spielothek: ein Automatenfenster mit drei
+             gleichen Symbolen auf der Mittellinie. Bewusst OHNE
+             Schriftzug - der steht als Messingschild auf dem Gehaeuse
+             weiter unten. Stuende er auch hier, saehe man das Wort
+             dreimal untereinander (Logo, Kicker, Ueberschrift).
+             Fest im HTML und nicht per JavaScript eingesetzt, damit
+             es auch dann da ist, wenn ein Skript nicht laedt. -->
+        <svg class="spielothek-logo" viewBox="0 0 48 32" fill="none"
+             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+             stroke-linejoin="round" role="img" aria-label="Ändiis Spielothek">
+          <rect x="3" y="4" width="42" height="24" rx="3.5"/>
+          <path d="M17 4.8v22.4M31 4.8v22.4"/>
+          <circle cx="10" cy="16" r="2.6"/>
+          <circle cx="24" cy="16" r="2.6"/>
+          <circle cx="38" cy="16" r="2.6"/>
+        </svg>
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="spielothek.kicker">Ändiis Ecke</p>
+          <h1 class="fh-page-title" data-i18n="spielothek.title">Spielothek</h1>
+          <p class="fh-page-lead" data-i18n="spielothek.subtitle">Jeden Monat ein anderes Spiel - rein spielerisch, nur mit Dublonen.</p>
+        </div>
+        <div id="spielothek-content" class="spielothek-content"></div>
+      </div>
+    </section>
+
+    <!-- =====================
+         RANGLISTE
+    ===================== -->
+    <section id="leaderboard" class="page">
+      <div class="page-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="leaderboard.kicker">Bestenliste</p>
+          <h1 class="fh-page-title" data-i18n="leaderboard.title">Rangliste</h1>
+          <p class="fh-page-lead" data-i18n="leaderboard.subtitle">Wer hat die meisten Geheimcodes geknackt?</p>
+        </div>
+
+        <div id="leaderboard-podium" class="fh-podium"></div>
+
+        <div id="leaderboard-list" class="leaderboard-list">
+          <p class="wheel-status" data-i18n="leaderboard.loading">Lade Rangliste ...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         WOCHENRENNEN
+    ===================== -->
+    <section id="race" class="page">
+      <!-- Epoche 2100 (Migration 47): das Rennen ruht, nur dieser
+           Hinweis ist sichtbar (css/50-redesign.css, race.js). -->
+      <div class="race-ruht" id="race-ruht">
+        <svg class="race-ruht-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+        <h2 class="race-ruht-titel" data-i18n="race.ruht.titel">Das Rennen ruht</h2>
+        <p class="race-ruht-text" data-i18n="race.ruht.text">Im Jahr 2100 sind alle Flotten im All. Das Wochenrennen geht weiter, sobald die Zeit wieder stimmt.</p>
+      </div>
+      <div class="race-fx" id="race-fx"></div>
+
+      <div class="race-fullpage">
+        <!-- Kopf im Entwurfs-Stil (2c): links Einordnung und Titel,
+             rechts die Handlung (Tagesbonus) und die verbleibende
+             Zeit. Vorher stand alles untereinander in der Mitte.
+             Alle IDs bleiben unveraendert - race.js schreibt weiter
+             in dieselben Elemente. -->
+        <div class="race-head">
+          <div class="fh-page-head race-head-text">
+            <p id="race-track-theme" class="fh-page-kicker race-track-theme"></p>
+            <h1 class="fh-page-title" data-i18n="race.title">Wochenrennen</h1>
+            <p class="fh-page-lead" data-i18n="race.subtitle">Jede Woche neu: Fortschritt durch Schatzrad-Drehen und Codes-Knacken</p>
+          </div>
+
+          <div class="race-head-actions">
+            <button id="race-daily-button" class="fh-cta" onclick="claimDailyRaceBonus()">
+              <i class="ph ph-gift" aria-hidden="true"></i><span data-i18n="race.dailyBonusButton">Tagesbonus abholen</span>
+            </button>
+            <p id="race-countdown" class="race-pill" style="display:block;"></p>
+          </div>
+        </div>
+
+        <div class="race-status-line">
+          <p id="race-own-progress" class="wheel-status"></p>
+          <p id="race-daily-status" class="wheel-status"></p>
+          <p id="race-last-winner" class="wheel-status" data-i18n="race.loadingWinner">Lade Sieger der letzten Woche ...</p>
+        </div>
+
+        <!-- Podest ueber der Strecke: es zeigt dieselben drei Namen
+             wie die ersten Zeilen der Liste und braucht die volle
+             Breite. Der Entwurf (2c) kennt es nicht, es bleibt aber
+             erhalten - nur nicht mehr zwischen Strecke und Liste. -->
+        <div id="race-leaderboard-podium" class="fh-podium"></div>
+
+        <!-- Strecke und Platzierungen nebeneinander (Entwurf 2c).
+             Vorher standen sie untereinander, wodurch die Liste bei
+             1440px erst nach ueber einer Bildschirmhoehe Scrollen
+             sichtbar wurde. -->
+        <div class="race-main">
+        <!-- EINE Spalte fuer Bahn UND Fahrzeugwahl.
+             Ohne diesen Behaelter waren es drei Rasterkinder statt
+             zwei: die Fahrzeugwahl nahm sich die zweite Spalte, und
+             die Ergebnisliste rutschte in eine neue Zeile UNTER die
+             Bahn. Das Raster hat zwei Spalten - also gehoert alles,
+             was in die linke soll, in einen gemeinsamen Behaelter. -->
+        <div class="race-bahn-spalte">
+        <div id="race-track-wrap" class="race-track-wrap">
+          <svg id="race-track-svg" class="race-track-svg" viewBox="0 0 600 300">
+            <defs>
+              <pattern id="race-checker" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(90)">
+                <rect width="5" height="5" fill="#111"></rect>
+                <rect x="5" y="5" width="5" height="5" fill="#111"></rect>
+                <rect x="5" width="5" height="5" fill="#eee"></rect>
+                <rect y="5" width="5" height="5" fill="#eee"></rect>
+              </pattern>
+
+              <!-- Kart-Verlaufsfarben (8 feste Slots, per colorIndex zugewiesen) -->
+              <radialGradient id="kart-grad-0" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff9b9b"/><stop offset="100%" stop-color="#ff5252"/></radialGradient>
+              <radialGradient id="kart-grad-1" cx="35%" cy="30%"><stop offset="0%" stop-color="#9ecfff"/><stop offset="100%" stop-color="#4da3ff"/></radialGradient>
+              <radialGradient id="kart-grad-2" cx="35%" cy="30%"><stop offset="0%" stop-color="#ffe9a8"/><stop offset="100%" stop-color="#ffd76b"/></radialGradient>
+              <radialGradient id="kart-grad-3" cx="35%" cy="30%"><stop offset="0%" stop-color="#c3b3ff"/><stop offset="100%" stop-color="#8a6bff"/></radialGradient>
+              <radialGradient id="kart-grad-4" cx="35%" cy="30%"><stop offset="0%" stop-color="#a6f4c1"/><stop offset="100%" stop-color="#4ade80"/></radialGradient>
+              <radialGradient id="kart-grad-5" cx="35%" cy="30%"><stop offset="0%" stop-color="#ffcda3"/><stop offset="100%" stop-color="#ff9f4d"/></radialGradient>
+              <radialGradient id="kart-grad-6" cx="35%" cy="30%"><stop offset="0%" stop-color="#ffb3d9"/><stop offset="100%" stop-color="#f472b6"/></radialGradient>
+              <radialGradient id="kart-grad-7" cx="35%" cy="30%"><stop offset="0%" stop-color="#a6e6ff"/><stop offset="100%" stop-color="#38bdf8"/></radialGradient>
+
+              <!-- Realistischer Reifen-Verlauf (dunkel außen, Felgen-Glanz innen) -->
+              <radialGradient id="kart-tire-grad" cx="50%" cy="50%">
+                <stop offset="0%" stop-color="#3a3a3a"/>
+                <stop offset="55%" stop-color="#1a1a1a"/>
+                <stop offset="100%" stop-color="#050505"/>
+              </radialGradient>
+              <radialGradient id="kart-rim-grad" cx="40%" cy="35%">
+                <stop offset="0%" stop-color="#eaeaea"/>
+                <stop offset="100%" stop-color="#8a8a8a"/>
+              </radialGradient>
+
+              <!-- Dunst am Horizont: laesst die Ebene nach hinten
+                   auslaufen, statt an einer harten Kante zu enden -->
+              <linearGradient id="race-horizont-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity=".22"/>
+              </linearGradient>
+            </defs>
+
+            <!-- ============================================================
+                 HIMMEL - bleibt UNGENEIGT
+                 Er ist der Horizont: die gekippte Ebene darunter hoert
+                 bei etwa einem Viertel der Hoehe auf, darueber steht
+                 der Himmel. Erst dieser Abschluss macht aus der
+                 gestauchten Draufsicht eine Schraegsicht - ohne ihn
+                 saehe es nur nach einer zu flachen Bahn aus.
+                 Die Farben setzt buildRaceTrack() nach Landschaft.
+            ============================================================ -->
+            <rect id="race-himmel" x="0" y="0" width="600" height="300" fill="#0a1420"></rect>
+            <rect id="race-horizont" x="0" y="64" width="600" height="26" fill="url(#race-horizont-grad)" opacity=".7"></rect>
+
+            <!-- ============================================================
+                 DIE GEKIPPTE EBENE
+                 Eine reine Stauchung in der Hoehe (matrix mit d=0.62),
+                 keine echte Perspektive. Bewusst so: eine Perspektiv-
+                 transformation gibt es in SVG nicht, und 3D-CSS auf
+                 SVG-Kindern ist von Browser zu Browser verschieden.
+                 Die Stauchung ist genau das, was eine orthografische
+                 Kamera sieht, die nach hinten gekippt ist - berechenbar
+                 und ueberall gleich.
+
+                 Die Bahn liegt MIT DARIN, also stimmen die Koordinaten
+                 aus getPointAtLength() weiterhin ohne Umrechnung. Nur
+                 die Fahrzeuge bekommen eine Gegenstauchung, damit sie
+                 aufrecht stehen (siehe .kart-neigung in race.js).
+            ============================================================ -->
+            <g id="race-neigung" transform="matrix(1,0,0,0.62,0,110)">
+              <!-- Untergrund: absichtlich groesser als das Sichtfeld,
+                   damit nach der Stauchung kein Streifen frei bleibt -->
+              <rect id="race-grass" x="-60" y="-36" width="720" height="480" fill="#173a1e"></rect>
+
+              <!-- Was HINTER der Bahn steht (Duenen, Palmen, Wolken) -->
+              <g id="race-deko-fern"></g>
+
+              <!-- Curb: zwei versetzt gestrichelte Linien uebereinander
+                   ergeben den rot-weissen Wechsel einer echten
+                   Randbegrenzung. Eine einfarbige Strichlinie sah aus
+                   wie ein Gummiband. -->
+              <path id="race-curb" fill="none" stroke="#4da3ff" stroke-width="62"
+                    stroke-linejoin="round" stroke-dasharray="14 14" opacity=".6"></path>
+              <path id="race-curb-hell" fill="none" stroke="#f2f2f2" stroke-width="62"
+                    stroke-linejoin="round" stroke-dasharray="14 14" stroke-dashoffset="14" opacity=".45"></path>
+
+              <!-- Fahrbahn -->
+              <path id="race-track-path" fill="none" stroke="#2b2b2b" stroke-width="54" stroke-linejoin="round"></path>
+              <path id="race-road-inner" fill="none" stroke="#3f3f3f" stroke-width="44" stroke-linejoin="round"></path>
+
+              <!-- Mittellinie -->
+              <path id="race-center-line" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-dasharray="10 14" opacity=".45"></path>
+
+              <!-- Sektorenmarken und Start-/Ziellinie liegen AUF der
+                   Bahn und werden deshalb aus dem Pfad berechnet, nicht
+                   fest gesetzt - eine neue Strecke bekommt sie damit an
+                   der richtigen Stelle. -->
+              <g id="race-sektoren"></g>
+              <g id="race-ziellinie"></g>
+
+              <!-- Was VOR der Bahn steht -->
+              <g id="race-deko-nah"></g>
+
+              <!-- Karts werden hier per JS eingefügt -->
+              <g id="race-karts-layer"></g>
+            </g>
+          </svg>
+
+          <p id="race-track-empty" class="wheel-status race-track-empty"></p>
+        </div>
+
+        <!-- Fahrzeugwahl: drei Fahrzeuge je Gelaende. Welches
+             Gelaende gefahren wird, bestimmt die Strecke; welches
+             der drei Fahrzeuge, jeder selbst. Rein optisch - auf
+             den Fortschritt hat es keinen Einfluss, es ist also
+             auch nichts abzusichern. Gefuellt von
+             renderRaceFahrzeugwahl() in race.js. -->
+        <div id="race-fahrzeugwahl" class="race-fahrzeugwahl"></div>
+        </div><!-- /.race-bahn-spalte -->
+
+        <div class="race-side">
+          <p class="fh-section-label" data-i18n="race.tableLabel">Diese Woche</p>
+          <div id="race-results-list" class="race-results-list fh-rows"></div>
+        </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Aufloesungs-/Glitch-Filter fuer den "???"-Titel (siehe
+         .streamraetsel-title-mystery in css/30-events.css) - rein statische
+         Turbulenz+Verschiebung, die Zeitsteuerung (wann sichtbar,
+         wie stark) kommt komplett aus der CSS-Keyframe-Animation, die
+         "filter: url(#streamGlitchDissolve) ..." nur kurz waehrend des
+         periodischen Glitch-Moments referenziert - kein eigener,
+         separat zu synchronisierender Animations-Takt hier noetig.
+         0x0-SVG, rein technisches Element, nichts davon ist sichtbar. -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <filter id="streamGlitchDissolve" x="-30%" y="-30%" width="160%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.015 0.9" numOctaves="2" seed="7" result="streamGlitchNoise" />
+        <feDisplacementMap in="SourceGraphic" in2="streamGlitchNoise" scale="55" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+
+    <!-- =====================
+         STREAMRÄTSEL
+    ===================== -->
+    <section id="streamraetsel" class="page">
+      <!-- Eigene, unabhängige Mystery-Hintergrundmusik für diese Seite.
+           Leg deine Audiodatei ab und trag den Pfad unten ein
+           (z.B. "scripts/streamraetsel/mystery-musik.mp3").
+           WICHTIG: kein "loop"-Attribut - sonst feuert der Browser nie
+           "ended" und loadStreamRaetselRandomTrack() (siehe
+           streamraetsel.js, startStreamRaetselMusic()) kommt beim
+           naechsten Song in der Playlist nie zum Zug, derselbe Track
+           liefe stattdessen die ganze Sitzung lang in Dauerschleife. -->
+      <audio id="streamraetsel-music"></audio>
+
+      <div class="streamraetsel-fx" id="streamraetsel-fx"></div>
+
+      <div id="streamraetsel-locked" class="streamraetsel-locked streamraetsel-mystery">
+        <span class="streamraetsel-live" data-i18n="stream.liveLabel">🔴 LIVE COUNTDOWN</span>
+        <h1 class="streamraetsel-title streamraetsel-title-mystery" data-i18n="stream.title">❓ ???</h1>
+        <p class="streamraetsel-subtitle" data-i18n="stream.subtitle">Etwas Großes braut sich zusammen ...</p>
+        <p class="streamraetsel-teaser" data-i18n="stream.teaser">🌫️ Niemand weiß, was hier erscheinen wird ...</p>
+
+        <div class="countdown streamraetsel-countdown">
+          <div class="time-box time-box-xl">
+            <span id="streamraetsel-days">00</span>
+            <small data-i18n="common.days">Tage</small>
+          </div>
+          <div class="time-box time-box-xl">
+            <span id="streamraetsel-hours">00</span>
+            <small data-i18n="common.hours">Stunden</small>
+          </div>
+          <div class="time-box time-box-xl">
+            <span id="streamraetsel-minutes">00</span>
+            <small data-i18n="common.minutes">Minuten</small>
+          </div>
+          <div class="time-box time-box-xl">
+            <span id="streamraetsel-seconds">00</span>
+            <small data-i18n="common.seconds">Sekunden</small>
+          </div>
+        </div>
+
+        <div class="fh-hero-loader">
+          <p class="loading-text"><span data-i18n="home.loadingText">Wird geladen</span><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></p>
+          <div class="loading-bar-background">
+            <div class="loading-bar">
+              <div class="white-bars-container">
+                <div class="white-bar"></div>
+                <div class="white-bar"></div>
+                <div class="white-bar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="streamraetsel-now-playing" id="streamraetsel-now-playing" hidden>
+          <span class="streamraetsel-now-playing-icon">🎵</span>
+          <span id="streamraetsel-now-playing-title"></span>
+        </p>
+      </div>
+
+      <!-- Sobald der Countdown oben abgelaufen ist, ersetzt
+           updateStreamRaetselView() (scripts/streamraetsel/
+           streamraetsel.js) diesen Bereich durch den Piratenpass
+           (renderPassPage() in scripts/piratenpass/piratenpass.js) -
+           kein eigener Menüpunkt, der "???"-Countdown IST der
+           Eingang zum Piratenpass. -->
+      <div id="streamraetsel-content" class="streamraetsel-unlocked"></div>
+    </section>
+
+
+    <!-- =====================
+         THE CHALLENGE (K.-o.-Turnier)
+         Komplett JS-gerendert (scripts/tournament/tournament.js),
+         analog zu "Repariere das Schiff" oben - die vielen
+         moeglichen Zustaende (Anmeldephase/aktiv/ausgeschieden/
+         Champion/...) lassen sich in reinem JS deutlich einfacher
+         pflegen als in statischem HTML mit CSS-Umschaltung.
+    ===================== -->
+    <section id="tournament" class="page">
+      <div class="page-content">
+        <div id="tournament-page-body"></div>
+      </div>
+    </section>
+
+    <!-- =====================
+         GEWINNSPIEL
+    ===================== -->
+    <!-- =====================
+         COMMUNITY-QUEST GEGENHACK (scripts/liveevent/gegenhack.js)
+    ===================== -->
+    <!-- Hangar im Jahr 2100 (Migration 48): Einheitentyp und Ausbau,
+         aufgebaut von scripts/hangar/hangar.js. -->
+    <section id="hangar" class="page">
+      <div class="page-content hg-seite">
+        <header class="hg-kopf">
+          <p class="hg-oberzeile" data-i18n="hangar.kicker">Jahr 2100</p>
+          <h1 class="fh-page-title" data-i18n="hangar.titel">Hangar</h1>
+          <p class="hg-lead" data-i18n="hangar.lead">Wähle deine Einheit und rüste sie für die Sternenschlacht auf.</p>
+        </header>
+        <div id="hangar-inhalt"></div>
+      </div>
+    </section>
+
+    <!-- Live-Sternenschlacht im Jahr 2100 (Migrationen 49/50). Die
+         Schlacht selbst laeuft im Vollbild (#fh-schlacht-buehne an
+         body), aufgebaut von scripts/schlacht/schlacht.js. -->
+    <section id="sternenschlacht" class="page">
+      <div class="page-content sl-seite">
+        <header class="hg-kopf">
+          <p class="hg-oberzeile" data-i18n="hangar.kicker">Jahr 2100</p>
+          <h1 class="fh-page-title" data-i18n="schlacht.titel">Sternenschlacht</h1>
+          <p class="hg-lead" data-i18n="schlacht.lead">Menschen gegen Aliens – jede Einheit zählt.</p>
+        </header>
+      </div>
+    </section>
+
+    <section id="gegenhack" class="page">
+      <div class="page-content fh-gh-seite">
+        <div id="gegenhack-inhalt"></div>
+      </div>
+    </section>
+
+    <section id="community-boss" class="page">
+      <!-- ============================================================
+           BOSS-ARENA-HINTERGRUND
+           Mehrere unabhängig langsam bewegte Ebenen (Himmel, Wolken,
+           Lichtkegel, Nebel, Glut) - rein dekorativ (aria-hidden),
+           rührt die bestehende Boss-Logik in community-boss.js nicht
+           an. Siehe .fh-boss-layer-* in css/30-events.css.
+      ============================================================ -->
+      <div class="fh-boss-arena-bg" id="fh-boss-arena-bg" aria-hidden="true">
+        <div class="fh-boss-layer fh-boss-layer-sky"></div>
+        <div class="fh-boss-layer fh-boss-layer-clouds"></div>
+        <div class="fh-boss-layer fh-boss-layer-rays"></div>
+        <div class="fh-boss-layer fh-boss-layer-fog-far"></div>
+        <div class="fh-boss-layer fh-boss-layer-embers" id="fh-boss-embers"></div>
+        <div class="fh-boss-layer fh-boss-layer-fog-near"></div>
+      </div>
+
+      <div class="page-content boss-content" id="boss-content-panel">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="boss.kicker">Alle gegen einen</p>
+          <h1 class="fh-page-title" data-i18n="boss.title">Community-Boss</h1>
+          <p class="fh-page-lead" data-i18n="boss.subtitle">Gemeinsam besiegen, bevor der Monat endet!</p>
+        </div>
+
+        <p id="boss-reset-countdown" class="boss-reset-countdown"></p>
+
+        <div class="fh-boss-stage-wrap" id="fh-boss-stage-wrap">
+          <div id="boss-stage" class="boss-stage"></div>
+        </div>
+
+        <h2 id="boss-name" class="boss-name"></h2>
+        <p id="boss-flavor" class="boss-flavor"></p>
+
+        <div class="fh-boss-panel" id="fh-boss-panel">
+          <div class="boss-hp-track">
+            <div id="boss-hp-ghost" class="boss-hp-ghost"></div>
+            <div id="boss-hp-fill" class="boss-hp-fill"></div>
+            <span id="boss-hp-text" class="boss-hp-text"></span>
+          </div>
+          <div class="boss-hp-meta">
+            <span id="boss-hp-numeric" class="boss-hp-numeric"></span>
+            <span id="boss-phase-badge" class="boss-phase-badge"></span>
+          </div>
+
+          <p id="boss-defeated-banner" class="boss-defeated-banner" style="display:none;"></p>
+
+          <!-- Angriffswahl und Geheimcode-Feld. Bleibt leer und
+               ausgeblendet, solange die Migration 10-boss-attacks.sql
+               nicht eingespielt ist - dann gibt es nur den einen
+               Knopf darunter, genau wie vorher. Gefuellt von
+               renderBossAngriffswahl() in community-boss.js. -->
+          <div id="boss-angriffswahl" class="fh-boss-angriffswahl" hidden></div>
+
+          <button id="boss-attack-btn" class="code-button boss-attack-btn" onclick="attackCommunityBoss()">⚔️ Angreifen</button>
+          <p id="boss-status" class="wheel-status"></p>
+
+          <div class="fh-boss-stats-row">
+            <div class="fh-boss-stat">
+              <span class="fh-boss-stat-value" id="boss-stat-damage">0</span>
+              <span class="fh-boss-stat-label" data-i18n="boss.statDamage">Schaden</span>
+            </div>
+            <div class="fh-boss-stat-divider"></div>
+            <div class="fh-boss-stat">
+              <span class="fh-boss-stat-value" id="boss-stat-attackers">–</span>
+              <span class="fh-boss-stat-label" data-i18n="boss.statAttackers">Angreifer</span>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="boss-leaderboard-title">🏅 Top-Angreifer diesen Monat</h2>
+        <p class="boss-leaderboard-hint">Die besten 3 am Monatsende erhalten einen exklusiven Avatar!</p>
+        <div id="boss-leaderboard" class="boss-leaderboard"></div>
+      </div>
+    </section>
+
+    <!-- Rot-Blitz-Overlay: der Boss schlägt alle paar Minuten zurück -->
+    <div id="boss-counter-flash" class="boss-counter-flash"></div>
+
+    <!-- =====================
+         SUPPORT
+    ===================== -->
+    <section id="support" class="page">
+      <div class="page-content support-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="support.kicker">Hilfe an Bord</p>
+          <h1 class="fh-page-title" data-i18n="support.title">Support</h1>
+          <p class="fh-page-lead" data-i18n="support.subtitle">Melde ein Problem oder ein Anliegen</p>
+        </div>
+
+        <div id="support-report-box" class="support-report-box">
+          <h2 data-i18n="support.reportTitle">🐞 Fehler melden / Anliegen</h2>
+          <label class="fh-visually-hidden" for="support-report-message"
+                 data-i18n="support.reportLabel">Beschreibung des Problems</label>
+          <!-- maxlength spiegelt die Datenbank-Grenze aus
+               supabase/game-migration/05-site-data.sql (1 bis 2000
+               Zeichen). Vorher wurde zu langer Text erst beim
+               Absenden abgewiesen. -->
+          <textarea id="support-report-message" class="support-report-textarea" placeholder="Beschreibe kurz, was los ist ..." data-i18n-placeholder="support.reportPlaceholder" maxlength="2000" data-fh-counter></textarea>
+          <button class="code-button" onclick="submitSupportReport()" data-i18n="support.reportSend">Absenden</button>
+          <p id="support-report-status" class="wheel-status"></p>
+        </div>
+      </div>
+    </section>
+    <!-- =====================
+         SKILL-BAUM (release-gegatet: data-fh-flag)
+         Sichtbar erst, wenn der Admin die Funktion im Live-Event
+         freigibt - vorher nur fuer den Admin als Vorschau. Inhalt
+         JS-gerendert (scripts/skilltree/skilltree.js).
+    ===================== -->
+    <section id="skill-tree" class="page" data-fh-flag="skillTree">
+      <div class="page-content">
+        <div id="skill-tree-content"></div>
+      </div>
+    </section>
+
+    <!-- =====================
+         SPIND (Freigabe "spind", Migration 60): Titel, Avatar, Rahmen,
+         Namensfarbe, Banner, Spruch - aufgebaut von scripts/spind/spind.js.
+    ===================== -->
+    <section id="spind" class="page" data-fh-flag="spind">
+      <div class="page-content sp-seite">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="spind.kicker">Dein Auftritt</p>
+          <h1 class="fh-page-title" data-i18n="spind.seitentitel">Spind</h1>
+          <p class="fh-page-lead" data-i18n="spind.lead">Titel, Avatar, Rahmen, Namensfarbe und Banner – so sehen dich die anderen.</p>
+        </div>
+        <div id="spind-inhalt" class="sp-inhalt"></div>
+      </div>
+    </section>
+
+    <!-- =====================
+         GLUECKSMINE (Freigabe "gluecksmine", Migration 61): Erz
+         schuerfen - aufgebaut von scripts/mine/gluecksmine.js.
+    ===================== -->
+    <section id="gluecksmine" class="page" data-fh-flag="gluecksmine">
+      <div class="page-content mn-seite">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="mine.kicker">Tief unter der Insel</p>
+          <h1 class="fh-page-title" data-i18n="mine.seitentitel">Glücksmine</h1>
+          <p class="fh-page-lead" data-i18n="mine.lead">Zerschlag Block um Block, finde Goldadern, Edelsteine und seltenes Raumerz – und bau damit Hangar und Schiff aus.</p>
+        </div>
+        <div id="mine-inhalt" class="mn-inhalt"></div>
+      </div>
+    </section>
+
+
+    <!-- =====================
+         BEWERTUNG
+    ===================== -->
+    <section id="rating" class="page">
+      <div class="page-content rating-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="rating.kicker">Deine Meinung</p>
+          <h1 class="fh-page-title" data-i18n="rating.title">Bewertung</h1>
+          <p class="fh-page-lead" data-i18n="rating.subtitle">Wie gefällt dir die Seite? Deine Meinung hilft uns weiter!</p>
+        </div>
+
+        <div class="rating-average" id="rating-average" style="display:none;">
+          <span id="rating-average-stars" class="rating-average-stars"></span>
+          <span id="rating-average-text" class="rating-average-text"></span>
+        </div>
+
+        <div class="rating-box">
+          <div id="rating-stars" class="rating-stars">
+            <span class="rating-star" data-value="1">★</span>
+            <span class="rating-star" data-value="2">★</span>
+            <span class="rating-star" data-value="3">★</span>
+            <span class="rating-star" data-value="4">★</span>
+            <span class="rating-star" data-value="5">★</span>
+          </div>
+
+          <label class="fh-visually-hidden" for="rating-comment"
+                 data-i18n="rating.commentLabel">Dein Kommentar (optional)</label>
+          <!-- maxlength spiegelt site_ratings_comment_len (max. 500). -->
+          <textarea id="rating-comment" class="support-report-textarea" placeholder="Was gefällt dir, was können wir besser machen? (optional)" data-i18n-placeholder="rating.commentPlaceholder" maxlength="500" data-fh-counter></textarea>
+
+          <button class="code-button" onclick="submitRating()" data-i18n="rating.submitButton">Bewertung abschicken</button>
+          <p id="rating-status" class="wheel-status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ADMIN-GATEWAY
+         Nicht in der Hauptnavigation prominent beworben, aber
+         auch nicht "versteckt" im Sinne von Security-through-
+         obscurity - der eigentliche Schutz ist die Google-Anmeldung
+         + E-Mail-Prüfung in scripts/core/admin-gateway.js, nicht
+         die Auffindbarkeit dieser Seite selbst.
+    ====================================================== -->
+    <section id="gateway" class="page">
+      <div class="page-content gateway-page-content">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker">Verwaltung</p>
+          <h1 class="fh-page-title">Admin-Gateway</h1>
+        </div>
+        <div id="gateway-content" class="gateway-content"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         IMPRESSUM / KONTAKT
+         Private, nicht-kommerzielle Website (Entscheidung des Betreibers):
+         keine Namen und keine Anschrift, Kontakt per E-Mail. Wird die Seite
+         geschaeftsmaessig betrieben, gilt § 5 DDG mit ladungsfaehiger
+         Anschrift - dann hier ergaenzen.
+    ============================================================ -->
+    <section id="impressum" class="page">
+      <div class="page-content fh-legal">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="legal.imprintKicker">Rechtliches</p>
+          <h1 class="fh-page-title" data-i18n="legal.imprintTitle">Impressum</h1>
+          <p class="fh-page-lead" data-i18n="legal.imprintLead">Private, nicht-kommerzielle Fan-Website.</p>
+        </div>
+
+        <div class="fh-legal-body">
+          <h2>Betreiber</h2>
+          <p>Stream Help – ein privates, nicht-kommerzielles Fan-Projekt rund um die Piratensaga
+             „FireHelmet“.</p>
+
+          <h2>Kontakt</h2>
+          <p>E-Mail: spitzefluke@gmail.com</p>
+
+          <h2>Haftung für Inhalte</h2>
+          <p>Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen
+             Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 DDG sind wir
+             als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde
+             Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige
+             Tätigkeit hinweisen. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von
+             Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt.</p>
+
+          <h2>Haftung für Links</h2>
+          <p>Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen
+             Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen.
+             Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der
+             Seiten verantwortlich. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links
+             umgehend entfernen.</p>
+
+          <h2>Urheberrecht</h2>
+          <p>Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen
+             dem deutschen Urheberrecht. „FireHelmet“ ist ein Fan-/Community-Projekt rund um die Saga
+             von Streamer Ändii. Marken- und Urheberrechte Dritter werden beachtet; sollte dennoch eine
+             Verletzung vorliegen, bitten wir um einen Hinweis an die oben genannte E-Mail-Adresse.</p>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         DATENSCHUTZERKLÄRUNG
+         Aus dem tatsaechlichen Technik-Stack geschrieben. Rechtlich
+         pruefen lassen (kein Ersatz fuer Rechtsberatung).
+    ============================================================ -->
+    <section id="datenschutz" class="page">
+      <div class="page-content fh-legal">
+        <div class="fh-page-head">
+          <p class="fh-page-kicker" data-i18n="legal.privacyKicker">Rechtliches</p>
+          <h1 class="fh-page-title" data-i18n="legal.privacyTitle">Datenschutzerklärung</h1>
+          <p class="fh-page-lead" data-i18n="legal.privacyLead">Wie diese Seite mit personenbezogenen Daten umgeht.</p>
+        </div>
+
+
+        <div class="fh-legal-body">
+          <h2>1. Verantwortlicher</h2>
+          <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist der Betreiber des
+             privaten Projekts „Stream Help“.<br>E-Mail: spitzefluke@gmail.com</p>
+
+          <h2>2. Grundsätzliches</h2>
+          <p>Diese Website ist ein Fan-/Community-Projekt zur Piratensaga „FireHelmet“. Sie lässt sich
+             ohne Anmeldung nutzen. Personenbezogene Daten werden nur verarbeitet, soweit das für den
+             Betrieb der Seite und ihrer Funktionen technisch nötig ist. Rechtsgrundlagen sind
+             Art. 6 Abs. 1 lit. b DSGVO (Nutzung der Funktionen) und lit. f DSGVO (berechtigtes Interesse
+             am sicheren, funktionsfähigen Betrieb).</p>
+
+          <h2>3. Hosting (GitHub Pages)</h2>
+          <p>Die Seite wird über <strong>GitHub Pages</strong> der GitHub, Inc. (88 Colin P. Kelly Jr.
+             Street, San Francisco, CA 94107, USA) bereitgestellt. Beim Aufruf überträgt dein Browser
+             technisch notwendige Daten (u. a. IP-Adresse, Datum/Uhrzeit, aufgerufene Datei, Browsertyp)
+             an GitHub, die diese in Server-Logfiles verarbeiten. Für Übermittlungen in die USA stützt
+             sich GitHub auf den EU-US Data Privacy Framework bzw. Standardvertragsklauseln. Weitere
+             Infos: <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">GitHub-Datenschutzerklärung</a>.</p>
+
+          <h2>4. Lokaler Speicher im Browser</h2>
+          <p>Zum Speichern deines Spielfortschritts (z. B. gewählter Name, freigeschaltete Inhalte,
+             Spracheinstellung) nutzt die Seite den lokalen Speicher deines Browsers
+             („localStorage“). Diese Daten bleiben auf deinem Gerät, werden nicht an uns zu Werbe- oder
+             Analysezwecken übertragen und lassen sich jederzeit über die Einstellungen deines Browsers
+             löschen. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO sowie § 25 Abs. 2 TDDDG (technisch
+             erforderliche Speicherung).</p>
+
+          <h2>5. Spieldaten (Supabase)</h2>
+          <p>Spielfortschritt, Bestenlisten und ähnliche Funktionen laufen über <strong>Supabase</strong>
+             (Supabase, Inc., 970 Toa Payoh North, Singapur / EU-Hosting). Dabei wird beim ersten Besuch
+             anonym eine zufällige Kennung vergeben; gespeichert werden der von dir gewählte Anzeigename
+             und dein Spielfortschritt. Eine Verbindung zu deiner echten Identität entsteht nur, wenn du
+             dich freiwillig anmeldest (siehe Punkt 6). Rechtsgrundlage: Art. 6 Abs. 1 lit. b und f DSGVO.</p>
+          <p>Erreichst du im Piratenpass die Kapitänsstufe 50 und forderst den Tanz an, speichern wir
+             zusätzlich deinen <strong>Epic-Namen</strong> und den gewünschten Tanz, damit er dir über Epic
+             Games geschenkt werden kann. Beides sieht nur der Betreiber. Der Epic-Name wird gelöscht,
+             sobald der Tanz verschenkt ist; mit deinem Spielkonto wird alles gelöscht. Die Angabe ist
+             freiwillig. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.</p>
+
+          <h2>6. Anmeldung über Twitch, Discord oder Google (optional)</h2>
+          <p>Du kannst dich freiwillig über Twitch, Discord oder Google anmelden, um deinen Fortschritt
+             zu sichern. Dabei werden von dem gewählten Anbieter ein verifizierter Anzeigename und ein
+             Profilbild an uns übermittelt und mit deinem Spielkonto verknüpft. Es werden keine Passwörter
+             übertragen. Für die Verarbeitung durch den jeweiligen Anbieter gelten dessen
+             Datenschutzbestimmungen (<a href="https://www.twitch.tv/p/legal/privacy-notice/" target="_blank" rel="noopener noreferrer">Twitch</a>,
+             <a href="https://discord.com/privacy" target="_blank" rel="noopener noreferrer">Discord</a>,
+             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google</a>).
+             Rechtsgrundlage: Art. 6 Abs. 1 lit. a und b DSGVO. Die Anmeldung ist optional; ohne sie
+             spielst du als Gast weiter.</p>
+
+          <h2>7. Spam- und Missbrauchsschutz (Cloudflare Turnstile)</h2>
+          <p>Zum Schutz vor automatisiertem Missbrauch kann beim Anmelden ein „Turnstile“-Prüfdienst der
+             Cloudflare, Inc. (101 Townsend St, San Francisco, CA 94107, USA) geladen werden. Er prüft im
+             Hintergrund, ob die Anfrage von einem Menschen stammt, und verarbeitet dabei technische Daten
+             (u. a. IP-Adresse). Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (Schutz vor Missbrauch).
+             <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Datenschutz bei Cloudflare</a>.</p>
+
+          <h2>8. Auslieferung von Skripten und Symbolen (CDN)</h2>
+          <p>Für Animationen und Symbole werden einzelne Programmbibliotheken über die Content-Delivery-
+             Netzwerke <strong>jsDelivr</strong> und <strong>unpkg</strong> geladen. Dabei wird deine
+             IP-Adresse technisch an den jeweiligen Anbieter übertragen. Rechtsgrundlage:
+             Art. 6 Abs. 1 lit. f DSGVO (effiziente, sichere Bereitstellung der Seite).</p>
+
+          <h2>9. Schriftarten</h2>
+          <p>Die verwendeten Schriftarten (Inter, Oswald, Pirata One, IM Fell English) werden <strong>lokal von dieser Website
+             ausgeliefert</strong>. Es besteht dabei keine Verbindung zu Google-Servern, es werden
+             insbesondere keine Daten an Google übertragen.</p>
+
+          <h2>10. Cookies</h2>
+          <p>Diese Seite setzt <strong>keine Tracking- oder Werbe-Cookies</strong> und bindet keine
+             Analyse-Dienste ein. Verwendet werden ausschließlich technisch notwendige Speichermechanismen
+             (siehe Punkte 4–7), etwa um deine Anmeldung aufrechtzuerhalten. Deshalb ist kein
+             Einwilligungsbanner erforderlich.</p>
+
+          <h2>11. Deine Rechte</h2>
+          <p>Du hast im Rahmen der gesetzlichen Vorgaben das Recht auf Auskunft (Art. 15 DSGVO),
+             Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18),
+             Datenübertragbarkeit (Art. 20) sowie Widerspruch (Art. 21). Eine erteilte Einwilligung
+             kannst du jederzeit mit Wirkung für die Zukunft widerrufen. Wende dich dafür an die unter
+             Punkt 1 genannte E-Mail-Adresse. Dein Spielkonto kannst du zudem in den Einstellungen der Seite
+             selbst löschen.</p>
+
+          <h2>12. Beschwerderecht</h2>
+          <p>Dir steht ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde zu, insbesondere in dem
+             Mitgliedstaat deines Aufenthaltsorts oder des Orts des mutmaßlichen Verstoßes.</p>
+
+          <p class="fh-legal-stand">Stand: dieser Text wird bei Änderungen der eingesetzten Dienste aktualisiert.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Rechts-Fußzeile: von jeder Seite erreichbar -->
+  <footer class="fh-legal-footer">
+    <a href="#" onclick="changePage('impressum');return false;" data-i18n="legal.imprintTitle">Impressum</a>
+    <span aria-hidden="true">·</span>
+    <a href="#" onclick="changePage('datenschutz');return false;" data-i18n="legal.privacyTitle">Datenschutzerklärung</a>
+  </footer>
+
+  <!-- Supabase (Anmeldung UND Spieler-Datenbank, siehe supabase/game-migration/README.md - Firebase wurde komplett entfernt,
+       nachdem sich die Firebase<->Supabase-Bruecke ("Third-Party Auth") auf dem echten Projekt als nicht zuverlaessig erwiesen hat).
+       Version bewusst fest gepinnt (nicht "@2" o.ä.), damit ein Update der CDN-Version nicht ungetestet auf der Live-Seite landet. -->
+  <!-- ============================================================
+       ALLE SKRIPTE MIT defer
+       ---------------------------------------------------
+       Vorher blockierten alle 86 <script>-Tags den Seitenaufbau:
+       der Browser musste jedes einzelne laden und ausfuehren,
+       bevor er weiterzeichnen durfte.
+
+       defer aendert NICHTS an der Reihenfolge - deferred Skripte
+       laufen weiterhin exakt in Dokumentreihenfolge, nur eben erst
+       nach dem Parsen und noch vor DOMContentLoaded. Beides ist
+       hier Voraussetzung: gsap-init.js braucht die GSAP-Tags davor,
+       supabase-client.js braucht turnstile-config.js, und 20 Dateien
+       haengen an DOMContentLoaded.
+
+       Die Inline-Handler im Markup (onclick="changePage(...)")
+       brauchen ihre Funktionen erst beim Klick, also lange nachdem
+       alle Skripte gelaufen sind.
+  ============================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js" defer></script>
+
+  <!-- GSAP (Animationen). Kein Bundler hier, daher als globale
+       <script>-Tags statt "import { gsap } from 'gsap'" - jedes
+       Plugin haengt sich als globale Variable an window, die
+       registerPlugin()-Aufrufe stehen in scripts/fx/gsap-init.js. -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/MotionPathPlugin.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/MorphSVGPlugin.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollSmoother.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js" defer></script>
+
+  <!-- Seit GSAP 3.13 sind alle frueheren Club-Plugins frei nutzbar.
+       Diese vier kommen neu dazu:
+       SplitText     - Titel buchstabenweise einblenden
+       DrawSVGPlugin - Rennstrecke zeichnen (race.js)
+       Flip          - Ranglisten-Plaetze umsortieren (wheel.js)
+       CustomEase    - eigene Auslauf-Kurve fuers Schatzrad (wheel.js)
+       Jedes davon wird einzeln geprueft, siehe gsap-init.js -
+       faellt eines aus, laufen die anderen weiter. -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/DrawSVGPlugin.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/Flip.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/CustomEase.min.js" defer></script>
+
+  <!-- Motion (npm-Paket "motion", siehe package.json) - UMD-Build wie
+       oben bei GSAP, haengt sich global als "Motion" an window (kein
+       Bundler vorhanden, daher kein "import { animate } from 'motion'").
+       Version fest gepinnt, muss zu "motion" in package.json passen. -->
+  <script src="https://cdn.jsdelivr.net/npm/motion@14.6.0/dist/motion.js" defer></script>
+  <script src="scripts/fx/motion-fx.js?v=5766caf862" defer></script>
+  <script src="scripts/fx/gsap-init.js?v=1350093cf7" defer></script>
+
+  <!-- three.js (WebGL-Flaechen: scripts/fx/fh-webgl.js und darauf
+       aufbauend seiten-fx-szenen.js, aurora-bg.js,
+       celebration-burst-3d.js, sidebar-ambient-3d.js). Bewusst auf
+       0.160.0 statt "latest" gepinnt: neuere Versionen liefern keinen
+       klassischen globalen UMD-Build ("build/three.min.js") mehr,
+       nur noch ES-Module - 0.160.0 ist die letzte Version mit dem
+       klassischen <script>-Tag-Build, der zu Supabase/GSAP/Motion hier
+       passt (kein Bundler, kein Import-Map-Pattern im restlichen Projekt). -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
+  <script src="scripts/fx/fh-webgl.js?v=7516a195d5" defer></script>
+
+  <!-- Water und Sky aus three.js/examples. Es gibt sie nur als
+       ES-Module; hier liegen sie als klassische Skripte, die sich
+       an den THREE-Globalen oben haengen. Die Alternative waere,
+       three.js ein zweites Mal als Modul zu laden (670 KB) -
+       diese beiden Dateien kosten zusammen 18 KB. Siehe Kopf von
+       scripts/vendor/three-water.js. -->
+  <script src="scripts/vendor/three-water.js?v=5096ca9394" defer></script>
+  <script src="scripts/vendor/three-sky.js?v=94c5724368" defer></script>
+  <script src="scripts/fx/aurora-bg.js?v=c3bafa323c" defer></script>
+  <script src="scripts/fx/celebration-burst-3d.js?v=269541d893" defer></script>
+  <script src="scripts/fx/sidebar-ambient-3d.js?v=d7872cf6e7" defer></script>
+
+  <!-- SCRIPTS -->
+  <!-- Muss vor allen Skripten stehen, die fhNotice() aufrufen
+       (discord-auth.js, twitch-auth.js, stories.js). -->
+  <script src="scripts/core/notice.js?v=7526a5f4b4" defer></script>
+  <!-- Ladeplatzhalter, genutzt von wheel.js (Rangliste). -->
+  <script src="scripts/fx/skeleton.js?v=228cc45f42" defer></script>
+  <script src="scripts/core/field-counter.js?v=439dfa0838" defer></script>
+  <script src="scripts/nav/nav-sync.js?v=7bb522e580" defer></script>
+  <script src="scripts/nav/rail-flyout.js?v=d25ae49fe6" defer></script>
+  <script src="scripts/nav/nav-keys.js?v=838d82d96c" defer></script>
+  <script src="scripts/nav/seitenwechsel.js?v=ba30d3630c" defer></script>
+  <script src="scripts/fx/schrift-licht.js?v=f34244176d" defer></script>
+  <script src="scripts/fx/zaehler.js?v=f28a9b6052" defer></script>
+  <!-- Erst die Szenen, dann die Flaeche: seiten-fx.js liest
+       window.fhSeitenSzenen beim ersten Seitenbesuch. -->
+  <script src="scripts/fx/seiten-fx-szenen.js?v=a428448470" defer></script>
+  <script src="scripts/fx/seiten-fx.js?v=f5919195ed" defer></script>
+  <script src="scripts/fx/path-draw.js?v=5d4d69c831" defer></script>
+  <script src="scripts/nav/quick-search.js?v=3d1d43014e" defer></script>
+  <script src="scripts/core/share.js?v=afae2a5ba3" defer></script>
+  <script src="scripts/core/fire-helmet-config.js?v=5beaa7a1a9" defer></script>
+  <script src="scripts/core/nachladen.js?v=bd9974269f" defer></script>
+  <script src="scripts/core/i18n.js?v=c49d2c9a5e" defer></script>
+  <script src="scripts/core/audiobook-link.js?v=5ab730a9b0" defer></script>
+  <script src="scripts/core/update-notice-data.js?v=158096cddf" defer></script>
+  <script src="scripts/core/update-notice.js?v=15d517ed67" defer></script>
+  <script src="scripts/codes/codes-data.js?v=044c2364b9" defer></script>
+  <script src="scripts/music/music-data.js?v=70e2cc0cc7" defer></script>
+  <script src="scripts/music/music-player.js?v=ccffbd43b3" defer></script>
+  <script src="scripts/wheel/wheel-data.js?v=801674a79e" defer></script>
+  <script src="scripts/wheel/avatars-data.js?v=4ed9b41c65" defer></script>
+  <script src="scripts/core/progression-data.js?v=186a565aa0" defer></script>
+  <script src="scripts/wheel/nickname-filter-data.js?v=c17982c5ff" defer></script>
+  <script src="scripts/wheel/nickname-filter.js?v=5fa0c18636" defer></script>
+  <script src="scripts/race/race-data.js?v=6bfe336fb6" defer></script>
+  <script src="scripts/community-boss/community-boss-data.js?v=6f77b31557" defer></script>
+  <script src="scripts/community-boss/boss-attacks-data.js?v=39f74a0f93" defer></script>
+  <script src="scripts/community-boss/boss-spezial-fx.js?v=9894dde7fd" defer></script>
+  <script src="scripts/streamraetsel/streamraetsel-data.js?v=ad372b2aa1" defer></script>
+  <script src="scripts/auth/twitch-config.js?v=2a29ec2561" defer></script>
+  <script src="scripts/auth/anmeldung.js?v=58475923c4" defer></script>
+  <script src="scripts/auth/anmelde-fx.js?v=b2397a9b43" defer></script>
+  <script src="scripts/auth/twitch-auth.js?v=529cc3519b" defer></script>
+  <script src="scripts/auth/discord-config.js?v=f3a331e202" defer></script>
+  <script src="scripts/auth/discord-auth.js?v=aea76db756" defer></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
+  <script src="scripts/supabase/turnstile-config.js?v=02c0e6d9e3" defer></script>
+  <script src="scripts/supabase/supabase-config.js?v=70ff2ba109" defer></script>
+  <script src="scripts/supabase/supabase-proxy-data.js?v=7e251334d5" defer></script>
+  <script src="scripts/supabase/supabase-client.js?v=42-admin-security" defer></script>
+  <script src="scripts/core/spieler-kennwort.js?v=5193f07587" defer></script>
+  <script src="scripts/core/hinweisband.js?v=63c0489cde" defer></script>
+  <script src="scripts/core/avatar-wahl.js?v=99cc2413fb" defer></script>
+  <script src="scripts/supabase/supabase-players.js?v=65c36142ed" defer></script>
+  <script src="scripts/tournament/tournament-api.js?v=01513802aa" defer></script>
+  <script src="scripts/tournament/tournament-data.js?v=0edd8b0596" defer></script>
+  <script src="scripts/tournament/tournament-bracket.js?v=ed01fd9bad" defer></script>
+  <script src="scripts/tournament/games/reaction-game.js?v=2fef3480c8" defer></script>
+  <script src="scripts/tournament/tournament.js?v=27f7b5f127" defer></script>
+  <script src="scripts/supabase/supabase-games.js?v=6b4b7b629c" defer></script>
+  <script src="scripts/supabase/supabase-statistics.js?v=45cf0cc929" defer></script>
+  <script src="scripts/core/site-config.js?v=bea37fc622" defer></script>
+  <script src="scripts/core/feature-flags.js?v=3e7e628f44" defer></script>
+  <script src="scripts/core/seiten-sperre.js?v=6eda8f8173" defer></script>
+  <script src="scripts/liveevent/live-event.js?v=5db63b9d6a" defer></script>
+  <script src="scripts/liveevent/event-titel.js?v=afc5b6b4cf" defer></script>
+  <script src="scripts/liveevent/nordlicht-wunsch.js?v=21ca63e433" defer></script>
+  <script src="scripts/liveevent/live-storys.js?v=b225c99665" defer></script>
+  <script src="scripts/liveevent/live-zuschauer.js?v=59b7e265a4" defer></script>
+  <script src="scripts/liveevent/werbungsflut.js?v=da5a0ccc55" defer></script>
+  <script src="scripts/liveevent/gegenhack.js?v=ffc68e0b46" defer></script>
+  <script src="scripts/core/discord-notify-data.js?v=e0fdc8d435" defer></script>
+  <script src="scripts/core/discord-notify.js?v=aad2217ad4" defer></script>
+  <script src="scripts/core/countdown.js?v=ddbc62363d" defer></script>
+  <script src="scripts/fx/reveal.js?v=b8f9971b93" defer></script>
+  <script src="scripts/home/startseite.js?v=207933b961" defer></script>
+  <!-- Die Ozean-Reise. Braucht three.js, fh-webgl.js und die
+       beiden vendor-Dateien (alle weiter oben) sowie countdown.js,
+       aus dessen Feldern sie die Zahlen fuer den 3D-Countdown
+       liest. Liest --fh-weg, das startseite.js schreibt. -->
+  <script src="scripts/home/ozean-szene.js?v=4e804856b1" defer></script>
+  <script src="scripts/stand/stand.js?v=576a0f65d3" defer></script>
+  <script src="scripts/stories/stories-data.js?v=73c784316f" defer></script>
+  <script src="scripts/characters/characters-data.js?v=f71edfe488" defer></script>
+  <script src="scripts/stories/stories.js?v=3efc94339b" defer></script>
+  <script src="scripts/characters/characters.js?v=9b277fc541" defer></script>
+  <script src="scripts/race/race.js?v=7f27662ac5" defer></script>
+  <script src="scripts/community-boss/community-boss.js?v=8ed8b9d19e" defer></script>
+  <script src="scripts/wheel/wheel.js?v=aa5185b02b" defer></script>
+  <script src="scripts/core/progression.js?v=acc45bab83" defer></script>
+  <script src="scripts/core/level-path.js?v=d138110544" defer></script>
+  <script src="scripts/piratenpass/piratenpass.js?v=fbbab9811d" defer></script>
+  <script src="scripts/piratenpass/schatzkarte.js?v=981ca3cb04" defer></script>
+  <script src="scripts/piratenpass/pass2.js?v=ebaaa3c8a4" defer></script>
+  <script src="scripts/spielothek/spielothek-data.js?v=3de3bc21cc" defer></script>
+  <script src="scripts/spielothek/games/slot.js?v=a5baf8663e" defer></script>
+  <script src="scripts/spielothek/spielothek.js?v=21a5120cfd" defer></script>
+  <script src="scripts/shop/shop-data.js?v=8e1e49e1ad" defer></script>
+  <script src="scripts/shop/shop-rotation.js?v=d5d15e7218" defer></script>
+  <script src="scripts/shop/shop.js?v=bb3c93bb74" defer></script>
+  <script src="scripts/shop/mystery-gift.js?v=a6c48a9de6" defer></script>
+  <script src="scripts/streamraetsel/streamraetsel.js?v=46de70f427" defer></script>
+  <script src="scripts/skilltree/skilltree-data.js?v=cacda48de0" defer></script>
+  <script src="scripts/skilltree/skilltree.js?v=03e2251c84" defer></script>
+  <script src="scripts/hangar/schiffe.js?v=1532ffad2d" defer></script>
+  <script src="scripts/schlacht/schlacht-fx.js?v=e771e89701" defer></script>
+  <script src="scripts/schlacht/schlacht-klang.js?v=be626cd2eb" defer></script>
+  <script src="scripts/schlacht/schlacht-orte.js?v=43538b9baf" defer></script>
+  <script src="scripts/schlacht/schlacht-kampf.js?v=ea982bcfbd" defer></script>
+  <script src="scripts/schlacht/schlacht-front.js?v=72e84f5fcc" defer></script>
+  <script src="scripts/hangar/hangar-data.js?v=7ce872f298" defer></script>
+  <script src="scripts/schlacht/schlacht.js?v=8ed262c5e5" defer></script>
+  <script src="scripts/spind/spind.js?v=7e336ff6d6" defer></script>
+  <script src="scripts/mine/gluecksmine.js?v=79bd96f98c" defer></script>
+  <script src="scripts/hangar/hangar.js?v=8ad3d59831" defer></script>
+  <script src="scripts/seiten/seiten.js?v=f44617a279" defer></script>
+  <script src="scripts/core/admin-zugang.js?v=676fb09072" defer></script>
+  <script src="scripts/support/support.js?v=ffbe30a325" defer></script>
+  <script src="scripts/rating/rating.js?v=a06c7d42b8" defer></script>
+  <script src="scripts/core/main.js?v=df57d500c8" defer></script>
+  <script src="scripts/codes/code-button-effect.js?v=12af905b26" defer></script>
+  <script src="scripts/codes/code-ambient-fx.js?v=61b476b1dd" defer></script>
+  <script src="scripts/codes/code-history.js?v=2530fa82ec" defer></script>
+
+  <!-- Ganz zum Schluss: die Startseiten-Uebersicht liest aus stories.js,
+       wheel.js, race.js und codes-data.js und muss daher nach allen
+       vieren stehen. -->
+
 </body>
 </html>
