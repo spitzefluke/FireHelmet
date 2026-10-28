@@ -93,12 +93,10 @@ function getChapterGroupsForGateway() {
 ------------------------------------------------------ */
 async function saveGatewayCountdowns() {
   const statusEl = document.getElementById("gateway-save-status");
-  const mainInput = document.getElementById("gateway-main-countdown");
   const shipInput = document.getElementById("gateway-ship-countdown");
   if (!supabaseClient) return;
 
   const update = {};
-  if (mainInput && mainInput.value) update.mainCountdownTarget = new Date(mainInput.value).toISOString().slice(0, 19);
   if (shipInput && shipInput.value) update.shipEventUnlockDate = new Date(shipInput.value).toISOString().slice(0, 19);
 
   try {
@@ -148,7 +146,6 @@ function formatDateForInput(isoOrConfigValue) {
 }
 
 function buildGatewayStatusHtml() {
-  const mainTarget = (siteConfig.mainCountdownTarget) || FIRE_HELMET_CONFIG.mainCountdownFallback;
   // Dieses Datum steuert nur die "???"-Seite (siehe scripts/
   // streamraetsel/streamraetsel.js), trotz des historischen Namens
   // shipEventUnlockDate.
@@ -157,10 +154,6 @@ function buildGatewayStatusHtml() {
 
   return `
     <div class="gateway-status-grid">
-      <div class="gateway-status-card">
-        <p class="gateway-status-label">Haupt-Countdown</p>
-        <p class="gateway-status-value">${new Date(mainTarget).toLocaleString("de-DE")}</p>
-      </div>
       <div class="gateway-status-card">
         <p class="gateway-status-label">„???“-Freischaltung</p>
         <p class="gateway-status-value">${streamTarget ? streamTarget.toLocaleString("de-DE") : "-"} ${streamTarget && typeof isStreamRaetselUnlocked === "function" && isStreamRaetselUnlocked() ? "(bereits freigeschaltet)" : ""}</p>
@@ -226,7 +219,7 @@ async function toggleGatewaySpielothekGame(gameId, disabled) {
    siehst nur du (gedimmt, roter Punkt).
 ------------------------------------------------------ */
 function gwSeitenListe() {
-  const nie = window.fhSeitenNieAus || ["home", "gateway", "impressum", "datenschutz"];
+  const nie = window.fhSeitenNieAus || ["stand", "gateway", "impressum", "datenschutz"];
   const gesehen = new Set();
   const liste = [];
   document.querySelectorAll(".fh-sidebar-nav .fh-nav-item[data-page]").forEach((a) => {
@@ -1425,6 +1418,24 @@ function gwDrehbuchStarten() {
 }
 
 /* ------------------------------------------------------
+   SAISONS (Migration 69)
+   ---------------------------------------------------
+   Zeitfenster, Suchspiel, Adventskalender, Neujahrsgeschenk.
+   Die Oberflaeche steckt in scripts/saison/saison-admin.js und
+   wird erst hier nachgeladen.
+------------------------------------------------------ */
+function gwSaisonStarten() {
+  const wurzel = document.getElementById("gw-saison-wurzel");
+  if (!wurzel || typeof window.fhNachladen !== "function") return;
+  window.fhNachladen("saisonAdmin").then(function () {
+    if (window.fhSaisonAdmin) window.fhSaisonAdmin.montieren(wurzel);
+  }).catch(function (err) {
+    console.error("Saisons nicht ladbar:", err);
+    wurzel.textContent = "Saisons ließen sich nicht laden.";
+  });
+}
+
+/* ------------------------------------------------------
    ABLAUFPLAN JE EVENT (Migration 33)
    ---------------------------------------------------
    Vorab geplante Events mit ihren Storys in fester Reihenfolge.
@@ -2178,6 +2189,7 @@ const GW_MENUE = [
       { id: "seiten", kurz: "Seiten", titel: "Seiten ein-/ausschalten" },
       { id: "pass2", kurz: "Piratenpass 2", titel: "Piratenpass #2 freischalten" },
       { id: "band", kurz: "Ankündigung", titel: "Ankündigung & Wartung" },
+      { id: "saisons", kurz: "Saisons", titel: "Saisons" },
     ] },
   { id: "spiele", titel: "Spiele",
     icon: GW_SVG('<line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/>'),
@@ -2306,7 +2318,6 @@ async function renderGatewayPage() {
      Funktionen ohne Neuladen erscheint. */
   window.dispatchEvent(new CustomEvent("fhAdminStatusGeaendert"));
 
-  const mainTarget = siteConfig.mainCountdownTarget || FIRE_HELMET_CONFIG.mainCountdownFallback;
   const shipTarget = siteConfig.shipEventUnlockDate || FIRE_HELMET_CONFIG.shipEventUnlockDate;
 
   const inhalte = {
@@ -2321,9 +2332,6 @@ async function renderGatewayPage() {
     freigaben: buildGatewayFreigabenHtml(),
     countdown: `
       <div class="gateway-form-row">
-        <label>Haupt-Countdown Endzeit<br>
-          <input type="datetime-local" id="gateway-main-countdown" class="code-input" value="${formatDateForInput(mainTarget)}">
-        </label>
         <label>„???“-Freischaltung Endzeit<br>
           <input type="datetime-local" id="gateway-ship-countdown" class="code-input" value="${formatDateForInput(shipTarget)}">
         </label>
@@ -2334,6 +2342,7 @@ async function renderGatewayPage() {
     seiten: buildGatewaySeitenHtml(),
     pass2: buildGatewayPass2Html(),
     band: buildGatewayBandHtml(),
+    saisons: `<div id="gw-saison-wurzel"></div>`,
     spielothek: buildGatewaySpielothekHtml(),
     turnier: `<div id="gateway-tournament-sub">Lade Turnierstatus...</div>`,
     rennen: buildGatewayRennenHtml(),
@@ -2370,6 +2379,7 @@ async function renderGatewayPage() {
   gwCodeListeLaden();
   gwStoryLageLaden();
   gwDrehbuchStarten();
+  gwSaisonStarten();
 
   buildGatewayTournamentHtml().then((html) => {
     const sub = document.getElementById("gateway-tournament-sub");

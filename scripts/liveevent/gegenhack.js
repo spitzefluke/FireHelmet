@@ -142,7 +142,7 @@
 
   function hinweisZeichnen() {
     let karte = document.getElementById("fh-gegenhack-hinweis");
-    const aufHome = !!document.querySelector("#home.active-page");
+    const aufHome = !!document.querySelector("#stand.active-page");
     const zeigen = istAktiv() && aufHome && !hinweisWeg(questId) && !!stand;
     if (!zeigen) { if (karte) karte.remove(); return; }
     if (!karte) {
@@ -234,7 +234,7 @@
     if (!w) return;
     w.replaceChildren(aus('<div class="fh-gh-leer"><p class="fh-gh-kicker">' + svg(IC.funk, "") + '<span>' + T("teaserKicker", "Community-Quest") + '</span></p>' +
       '<p class="fh-gh-leer-text">' + T("none", "Gerade läuft keine Quest. Die nächste kündigt Ändii im Stream an.") + '</p>' +
-      '<button type="button" class="fh-gh-knopf" onclick="changePage(\'home\')">' + T("toHome", "Zur Startseite") + '</button></div>'));
+      '<button type="button" class="fh-gh-knopf" onclick="changePage(\'stand\')">' + T("toHome", "Zur Startseite") + '</button></div>'));
   }
 
   function zeichnen() {

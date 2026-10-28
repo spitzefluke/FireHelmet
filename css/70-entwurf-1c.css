@@ -1948,13 +1948,9 @@ h1.fh-page-title,
    Inhaltsbereich entsprechend, die vorhandene Zentrierung bleibt
    unveraendert - der Inhalt kann nur nicht mehr unter die Leiste
    rutschen.
-
-   Home ist ausgenommen: dort ist .page der Scroll-Container der
-   Cinematic-Sequenz, deren Bild bewusst bis an den oberen Rand
-   laeuft.
 ===================================================== */
 @media (min-width: 1024px) {
-  .page:not(#home) {
+  .page {
     padding-top: var(--fh-topbar-h);
   }
 }

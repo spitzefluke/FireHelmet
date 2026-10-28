@@ -42,8 +42,9 @@
     const out = [];
 
     nodes.forEach((node) => {
-      // Ausgeblendete Punkte (Feature-Flag aus, keine Quest) nicht anbieten.
-      if (node.classList.contains("fh-flag-aus") || node.classList.contains("fh-seite-aus")) return;
+      // Ausgeblendete Punkte (Feature-Flag aus, keine Quest, Saison
+      // vorbei) nicht anbieten.
+      if (node.hidden || node.classList.contains("fh-flag-aus") || node.classList.contains("fh-seite-aus")) return;
       const label = (node.querySelector(".fh-nav-label")?.textContent || "").trim();
       if (!label) return;
 
