@@ -16,8 +16,9 @@ Datei, die du gerade anfasst.
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 130 `<script defer>`-Tags in fester
-Reihenfolge, davon 116 aus diesem Repo. Elf große Skripte, die fast niemand braucht
-(`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `lied-film.js`, `story-wetter.js`,
+Reihenfolge, davon 116 aus diesem Repo. Zwölf große Skripte, die fast niemand braucht
+(`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `lied-film.js`,
+`lied-film-klassisch.js`, `story-wetter.js`,
 `drehbuch.js`, `sternenreise.js`, `zelle.js`, `saison-admin.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
@@ -124,7 +125,7 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhLiedFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhLiedFilm`, `window.fhLiedFilmKlassisch`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
 nach `fhNachladen(...)`. Das **Drehbuch** (Migration 65, `scripts/liveevent/drehbuch.js`) baut
 im Admin-Bereich ein Live-Event vorab aus Schritten (Text, Story, Story beenden, Effekt, Pause),
 gespeichert in `event_drehbuecher` (nur Admins per RLS); abgespielt wird im Browser des Admins
@@ -189,14 +190,19 @@ Gitter mehr („Auf der Flucht“, `localStorage` „fhZelleEntkommen“). `#fh-
 
 ### Liebeslied
 
-Migration 70: die Story `liebeslied`, ein Lyric-Video zum Song „I Don't Know Love“
-(`scripts/liveevent/lied-film.js`, nachgeladen als `lied`). Der Film läuft über den **ganzen Song**
-(`DAUER` 323,1 s = `STORYS.liebeslied` in `live-storys.js`); die 77-s-Vorlage aus Claude Design war
-nur ein Zusammenschnitt. Der Look folgt ihr je Stil: Intro/Outro Dämmerblau mit Sternenflug und
-Versalien aus der Tiefe, Strophe sattes Blau mit dunklen Flächen, Orb und einfliegenden Buchstaben,
-Refrain/Brücke Dunst mit Bokeh und Ringen; am Zeilenende kippt der Text als 3D-Schrift weg.
-Hintergrund im Canvas, Ringe und Text als DOM. Alle Effekte hängen an den **Zeilen**, nicht an
-festen Zeiten.
+Migration 70: die Story `liebeslied`, ein Lyric-Video zum Song „I Don't Know Love“. Der Film läuft
+über den **ganzen Song** (`DAUER` 323,1 s = `STORYS.liebeslied` in `live-storys.js`).
+
+`scripts/liveevent/lied-film.js` (nachgeladen als `lied`) ist der Entwurf „Liebeslied 3D“ aus
+Claude Design, fast wörtlich: eine three.js-Kamerafahrt durch je Liedteil eigene Welten
+(Lichtring-Tunnel, Kristalle, Nebel, Galaxien, Riesen-Gitterkörper); die Zeilen stehen als
+Schrift im Raum, setzen sich aus Partikeln zusammen und zerfallen in Funken, wenn die Kamera
+hindurchfliegt. Jeder Ort hat eine eigene Schrift – die acht Familien liegen selbst gehostet in
+`assets/fonts/lied-fonts.css` (der Entwurf lud Google Fonts; das widerspräche der
+Datenschutzerklärung) und werden erst beim Filmstart geladen. Ohne WebGL oder bei
+Software-Grafik (`fhWebGL.rendererErzeugen()` gibt dann `null`) übernimmt die frühere 2D-Fassung
+`lied-film-klassisch.js` (nachgeladen als `liedKlassisch`, `window.fhLiedFilmKlassisch`) mit
+derselben API und demselben Textformat.
 
 **Der Liedtext steht nicht im Repo**: Der Admin trägt ihn im Gateway unter „Liedtext: Liebeslied“
 ein (`siteConfig.liedText`, je Zeile `Sekunde | Text`, `/` bricht um, `*Wort*` betont,
