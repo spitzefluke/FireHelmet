@@ -3285,3 +3285,137 @@
   .p2-spuren { width: 74px; }
   .p2-spur-name { font-size: 17px; }
 }
+
+/* ======================================================
+   RUBBELLOSE (scripts/spielothek/games/rubbellose.js)
+   ------------------------------------------------------
+   Vier Lose zur Wahl, darunter auf dem Spieltisch das gekaufte Los
+   mit 3 x 3 Feldern. Die silberne Schicht ist ein Canvas ueber den
+   Feldern; die Felder selbst sind Knoepfe (Tastatur, Screenreader).
+   Jedes Los hat seinen Grundton (--fh-rubbel-*), der Rest bleibt im
+   Messing der Spielothek.
+====================================================== */
+.rubbel-vorschau {
+  max-width: 640px;
+  margin: 0 auto 14px;
+  padding: 8px 12px;
+  border: 1px dashed rgba(190,150,84,.45);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--fh-muted-fg);
+  text-align: center;
+}
+.rubbel-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--spielo-messing-hell, #e2c48a);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.rubbel-link:hover, .rubbel-link:focus-visible { color: var(--fh-gold-bright); }
+
+.rubbel-wahlen {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 760px;
+  margin: 18px auto 0;
+}
+.rubbel-wahl {
+  --rubbel-ton: var(--fh-rubbel-schatzkiste);
+  --rubbel-tief: var(--fh-rubbel-schatzkiste-tief);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--rubbel-ton) 45%, transparent);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--rubbel-ton) 30%, var(--rubbel-tief)), var(--rubbel-tief));
+  color: var(--fh-fg);
+  font: inherit;
+  cursor: pointer;
+  transition: transform .2s var(--fh-ease), border-color .2s var(--fh-ease), box-shadow .2s var(--fh-ease);
+}
+.rubbel-wahl:hover { transform: translateY(-2px); }
+.rubbel-wahl:focus-visible { outline: 2px solid var(--fh-gold-bright); outline-offset: 2px; }
+.rubbel-wahl.ist-gewaehlt {
+  border-color: var(--spielo-messing-hell, #e2c48a);
+  box-shadow: 0 0 0 1px var(--spielo-messing-hell, #e2c48a), 0 8px 24px color-mix(in srgb, var(--rubbel-ton) 35%, transparent);
+}
+.rubbel-wahl.ist-flaschenpost, .rubbel-los.ist-flaschenpost { --rubbel-ton: var(--fh-rubbel-flaschenpost); --rubbel-tief: var(--fh-rubbel-flaschenpost-tief); }
+.rubbel-wahl.ist-schatzkiste, .rubbel-los.ist-schatzkiste { --rubbel-ton: var(--fh-rubbel-schatzkiste); --rubbel-tief: var(--fh-rubbel-schatzkiste-tief); }
+.rubbel-wahl.ist-kraken, .rubbel-los.ist-kraken { --rubbel-ton: var(--fh-rubbel-kraken); --rubbel-tief: var(--fh-rubbel-kraken-tief); }
+.rubbel-wahl.ist-galeone, .rubbel-los.ist-galeone { --rubbel-ton: var(--fh-rubbel-galeone); --rubbel-tief: var(--fh-rubbel-galeone-tief); }
+.rubbel-wahl-zeichen { width: 30px; height: 30px; color: var(--rubbel-ton); }
+.rubbel-wahl-name { font: 600 14px/1.2 var(--fh-font-display); letter-spacing: .06em; text-transform: uppercase; text-align: center; }
+.rubbel-wahl-preis { font: 600 18px/1.1 var(--fh-font-display); color: var(--spielo-messing-hell, #e2c48a); font-variant-numeric: tabular-nums; }
+.rubbel-wahl-top { font-size: 11px; color: var(--fh-muted-fg); }
+
+.rubbel-tisch { display: flex; justify-content: center; padding: 6px 0 4px; }
+.rubbel-los {
+  --rubbel-ton: var(--fh-rubbel-schatzkiste);
+  --rubbel-tief: var(--fh-rubbel-schatzkiste-tief);
+  width: min(100%, 420px);
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--rubbel-ton) 55%, transparent);
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--rubbel-ton) 38%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--rubbel-ton) 18%, var(--rubbel-tief)), var(--rubbel-tief));
+  box-shadow: 0 14px 34px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.rubbel-kopf { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 10px; margin-bottom: 12px; }
+.rubbel-kopf-zeichen { grid-row: span 2; width: 34px; height: 34px; color: var(--rubbel-ton); }
+.rubbel-kopf-name { font: 600 20px/1.1 var(--fh-font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--fh-fg); }
+.rubbel-kopf-regel { font-size: 12px; color: var(--fh-muted-fg); }
+.rubbel-feld-wrap { position: relative; }
+.rubbel-felder { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.rubbel-feld {
+  aspect-ratio: 5 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(8,6,4,.55);
+  color: var(--spielo-messing-hell, #e2c48a);
+  font: 600 clamp(15px, 4.4vw, 22px)/1 var(--fh-font-display);
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+  cursor: pointer;
+}
+.rubbel-feld:focus-visible { outline: 2px solid var(--fh-gold-bright); outline-offset: 2px; position: relative; z-index: 2; }
+.rubbel-betrag { display: inline-flex; align-items: center; gap: 5px; }
+.rubbel-muenze { width: .9em; height: .9em; opacity: .8; }
+.rubbel-los.ist-muster .rubbel-feld { color: var(--fh-muted-fg); cursor: default; }
+.rubbel-schicht { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; border-radius: 10px; }
+.rubbel-schicht:active { cursor: grabbing; }
+.rubbel-feld.ist-treffer {
+  border-color: var(--fh-gold-bright);
+  color: var(--fh-gold-bright);
+  box-shadow: 0 0 0 1px var(--fh-gold-bright), 0 0 22px color-mix(in srgb, var(--fh-gold-bright) 45%, transparent);
+  animation: rubbelTreffer 1.2s var(--fh-ease) both;
+}
+@keyframes rubbelTreffer {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.rubbel-los.ist-niete .rubbel-feld:not(.ist-treffer) { opacity: .62; }
+.rubbel-fuss { display: flex; justify-content: center; min-height: 22px; margin-top: 10px; font-size: 12px; color: var(--fh-muted-fg); }
+
+@media (max-width: 640px) {
+  .rubbel-wahlen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Schmale Handys: fuenfstellige Betraege brauchen den Platz der Muenze. */
+@media (max-width: 420px) {
+  .rubbel-muenze { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rubbel-wahl, .rubbel-wahl:hover { transition: none; transform: none; }
+  .rubbel-feld.ist-treffer { animation: none; }
+}

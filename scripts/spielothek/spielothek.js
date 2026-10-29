@@ -713,6 +713,13 @@ async function renderSpielothekPage() {
   const container = document.getElementById("spielothek-content");
   if (!container) return;
 
+  /* Rubbellose (games/rubbellose.js): mit der Freigabe "rubbellose"
+     ersetzen sie den Banditen; vorher sieht sie nur der Admin. */
+  if (window.fhRubbellose && window.fhRubbellose.aktiv()) {
+    window.fhRubbellose.zeigen(container);
+    return;
+  }
+
   const game = getCurrentSpielothekGame();
   const handler = getSpielothekHandler(game);
   const lang = typeof getCurrentLang === "function" ? getCurrentLang() : "de";
@@ -784,6 +791,14 @@ async function renderSpielothekPage() {
       ${handler.getRulesHtml(lang)}
     </details>
   `;
+
+  /* Admin in der Vorschau, gerade beim Banditen: zurueck zu den Losen. */
+  if (window.fhRubbellose && typeof window.fhFeatureNurVorschau === "function" && window.fhFeatureNurVorschau("rubbellose")) {
+    container.insertAdjacentHTML("afterbegin", '<p class="rubbel-vorschau">'
+      + (typeof t === "function" ? t("rubbel.vorschauBandit", "Die Rubbellose sind noch nicht freigegeben.") : "Die Rubbellose sind noch nicht freigegeben.")
+      + ' <button type="button" class="rubbel-link" onclick="fhRubbellose.vorschauUmschalten(false)">'
+      + (typeof t === "function" ? t("rubbel.zuDenLosen", "Rubbellose ansehen") : "Rubbellose ansehen") + "</button></p>");
+  }
 
   if (typeof applyTranslations === "function") applyTranslations();
   refreshSpielothekCurrencyDisplay();
@@ -893,4 +908,14 @@ window.addEventListener("siteConfigUpdated", () => {
   if (document.getElementById("spielothek")?.classList.contains("active-page")) {
     renderSpielothekPage();
   }
+});
+
+/* Freigaben und Admin-Erkennung kommen spaeter als die Seite: die
+   Rubbellose koennen erst dann den Banditen ersetzen. Nur neu
+   aufbauen, wenn sich dadurch das Spiel aendert. */
+window.addEventListener("fhFlagsUpdated", () => {
+  const seite = document.getElementById("spielothek");
+  if (!seite || !seite.classList.contains("active-page") || !window.fhRubbellose) return;
+  const zeigtLose = !!document.getElementById("rubbel-buehne");
+  if (zeigtLose !== window.fhRubbellose.aktiv()) renderSpielothekPage();
 });

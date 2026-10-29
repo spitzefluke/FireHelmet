@@ -435,7 +435,7 @@ const GATEWAY_FEATURE_FLAGS = [
   { key: "schlachtBoss", label: "Sternenschlacht: Boss-Mutterschiff", hinweis: "Schaltet „Boss-Mutterschiff starten“ frei: alle Spieler gemeinsam gegen ein Mutterschiff mit drei Phasen, Salven und Schild (Migration 59)." },
   { key: "schlachtFront", label: "Sternenschlacht: Front (alle 10 s passiert was)", hinweis: "Beide Seiten drängen um eine Front; jeder wählt Angriff oder Verteidigung, sammelt Kampfpunkte und verbessert sich im Kampf; die kleinere Seite bekommt einen Ausgleich (Migration 62). Gilt ab der nächsten gestarteten Schlacht; die Regler stehen unter Sternenschlacht." },
   { key: "spind", label: "Spind", hinweis: "Öffnet sich per Klick aufs eigene Bild unten links (kein Menüeintrag): Titel tragen, Avatar und Rahmen, Namensfarbe, Banner, Spruch; Profilkarte per Klick auf Namen in der Rangliste (Migration 60)." },
-  { key: "gluecksmine", label: "Glücksmine (Erz)", hinweis: "Neue Seite: Erz schürfen mit Spitzhacke, Bohrer, Lore und Grubenlampe. Mit Erz geht der Hangar bis Stufe 10, dazu Schiffssysteme (Migration 61)." },
+  { key: "gluecksmine", label: "Glücksmine (Erz)", hinweis: "Neue Seite: Erz schürfen mit Spitzhacke, Bohrer, Lore und Grubenlampe. Mit Erz geht der Hangar bis Stufe 10, dazu Schiffssysteme (Migration 61)." },  { key: "rubbellose", label: "Spielothek: Rubbellose", hinweis: "Ersetzt den Einarmigen Banditen in Ändiis Ecke durch vier Rubbellose (Flaschenpost 25, Schatzkiste 100, Krakenschlund 250, Goldene Galeone 1.000 Dublonen) – selbst aufrubbeln, drei gleiche Beträge gewinnen. Keine Migration nötig." },
 ];
 
 /* Aufgeteilt in drei Teile des Menues (Steuerung, Geschenke,
