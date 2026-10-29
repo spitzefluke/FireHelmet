@@ -258,6 +258,19 @@ body.loaded {
   --fh-lied-lila: #a99cf0;
   --fh-lied-lila-tief: #5d50b8;
   --fh-lied-licht: #f4f1ff;
+  /* Rubbellose der Spielothek (scripts/spielothek/games/rubbellose.js):
+     je Los Grundton und Tiefe, dazu die silberne Rubbelschicht. */
+  --fh-rubbel-flaschenpost: #2f8f8a;
+  --fh-rubbel-flaschenpost-tief: #0f3640;
+  --fh-rubbel-schatzkiste: #c9893a;
+  --fh-rubbel-schatzkiste-tief: #4a2c10;
+  --fh-rubbel-kraken: #7a4fc0;
+  --fh-rubbel-kraken-tief: #22123d;
+  --fh-rubbel-galeone: #f0c96a;
+  --fh-rubbel-galeone-tief: #6b4a12;
+  --fh-rubbel-silber: #9aa4b1;
+  --fh-rubbel-silber-hell: #d9dee5;
+  --fh-rubbel-silber-tief: #5c6673;
   /* Saisons (scripts/saison/saison.js, css/98-saisons.css), je Saison:
      Akzent hell/tief, Zweitfarbe hell/tief, Flaechen, Rahmen, gedaempfter
      Text, Flamme fuer Logo und Symbole, Schein. Aus dem Entwurf

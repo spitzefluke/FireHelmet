@@ -15,8 +15,8 @@ Datei, die du gerade anfasst.
 ## Es gibt keinen Build, keinen Linter, keine Testsuite
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
-HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 130 `<script defer>`-Tags in fester
-Reihenfolge, davon 116 aus diesem Repo. Zwölf große Skripte, die fast niemand braucht
+HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 131 `<script defer>`-Tags in fester
+Reihenfolge, davon 117 aus diesem Repo. Zwölf große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `lied-film.js`,
 `lied-film-klassisch.js`, `story-wetter.js`,
 `drehbuch.js`, `sternenreise.js`, `zelle.js`, `saison-admin.js`), stehen stattdessen in der Tabelle
@@ -310,6 +310,19 @@ Tempo, Akkorde, Muster, Erkennungszeichen) oder eine hochgeladene Datei `schlach
 nötig). `fhSchlachtKlang.ort(id)` schaltet um; die Schlacht setzt den Ort der laufenden Schlacht,
 der Hangar den der letzten Schlacht oder den dort gewählten (`localStorage` „fhHangarMusik“).
 Ein neuer Ort braucht ein Stück in `STUECKE` und eine Zeile in `GW_MUSIK_STORYS`.
+
+### Spielothek und Rubbellose
+
+Die Spielothek („Ändiis Ecke“, `scripts/spielothek/`) zeigt je Monat ein Spiel aus
+`SPIELOTHEK_GAMES` (bisher nur der Einarmige Bandit, `games/slot.js`). Mit der Freigabe
+`rubbellose` ersetzen die **Rubbellose** (`games/rubbellose.js`, `window.fhRubbellose`) den
+Banditen: vier Lose (Flaschenpost 25, Schatzkiste 100, Krakenschlund 250, Goldene Galeone 1.000
+Dublonen), 3 × 3 Felder unter einer Canvas-Rubbelschicht, drei gleiche Beträge gewinnen genau
+diesen Betrag. Vorher sieht sie nur der Admin als Vorschau (Umschalter zum Banditen per
+`sessionStorage`). Abgerechnet wird wie beim Banditen: der Browser zieht, **ein** Update auf
+`players` bucht Einsatz und Gewinn beim Kauf, die Datenbank prüft Deckel, Tagesdeckel (41) und die
+4-s-Sperre (`last_spielothek_play_at`) – keine eigene Migration. Die Gewinntabellen (`RUBBELLOSE`)
+sind auf rund 95 % Auszahlung gerechnet; wer sie ändert, rechnet die Quote neu.
 
 ### Spind und Glücksmine
 
