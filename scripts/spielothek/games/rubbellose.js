@@ -742,13 +742,21 @@
 
   function zeigerBinden(c, spielbar) {
     let letzter = null, uhr = 0, lt = 0;
-    function punkt(e) { const r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) * fx.W / r.width, y: (e.clientY - r.top) * fx.H / r.height }; }
+    /* Ist die Folie ausgeblendet (Los fertig), hat sie keine Breite – dann gibt es keinen Punkt.
+       Ohne diese Pruefung wurden die Koordinaten unendlich und die Pinselschleife endlos. */
+    function punkt(e) {
+      const r = c.getBoundingClientRect();
+      if (!(r.width > 0) || !(r.height > 0)) return null;
+      return { x: (e.clientX - r.left) * fx.W / r.width, y: (e.clientY - r.top) * fx.H / r.height };
+    }
+    function darfRubbeln() { return spielbar && S.runde && !S.runde.fertig && fx.mctx; }
     function wischen(p, e) {
+      if (!p || !darfRubbeln()) return;
       const now = performance.now(), a = letzter || p, dx = p.x - a.x, dy = p.y - a.y, d = Math.hypot(dx, dy);
       const v = d / Math.max(1, now - lt) * 16;
       lt = now;
       const druck = e && e.pointerType === "pen" && e.pressure ? 0.6 + e.pressure * 0.8 : 1;
-      const r = OPT.pinsel / 2 * Math.min(1.15, Math.max(0.75, 1.15 - v * 0.012)) * druck, n = Math.max(1, Math.ceil(d / 3));
+      const r = OPT.pinsel / 2 * Math.min(1.15, Math.max(0.75, 1.15 - v * 0.012)) * druck, n = Math.min(200, Math.max(1, Math.ceil(d / 3)));
       const m = fx.mctx;
       m.globalCompositeOperation = "destination-out"; m.fillStyle = "#000";
       for (let k = 0; k <= n; k++) {
@@ -771,17 +779,19 @@
     c.onpointerenter = c.onpointermove = function (e) {
       if (!lebt()) return;
       const p = punkt(e);
+      if (!p) { fx.maus = null; fx.cursor = null; fx.dirty = true; kick(); return; }
       fx.maus = p; fx.dirty = true;
       if (spielbar) cursorSetzen(p, fx.zieht);
-      if (fx.zieht && spielbar) wischen(p, e); else kick();
+      if (fx.zieht && darfRubbeln()) wischen(p, e); else kick();
     };
     c.onpointerleave = function () { if (!lebt()) return; fx.maus = null; fx.cursor = null; fx.dirty = true; kick(); };
     c.onpointerdown = function (e) {
-      if (!spielbar || !lebt()) return;
+      if (!lebt() || !darfRubbeln()) return;
+      const p = punkt(e);
+      if (!p) return;
       if (tonAn()) klang.ensure();
       fx.zieht = true; letzter = null; lt = performance.now(); flach();
       try { c.setPointerCapture(e.pointerId); } catch (x) { /* aeltere Browser */ }
-      const p = punkt(e);
       cursorSetzen(p, true); wischen(p, e); e.preventDefault();
     };
     c.onpointerup = c.onpointercancel = function () {
@@ -858,7 +868,9 @@
     }
     if (fertig) {
       r.fertig = true;
-      if (fx) fx.spannung = false;
+      /* Laufendes Rubbeln beenden – die Folie verschwindet gleich. */
+      if (fx) { fx.spannung = false; fx.zieht = false; fx.cursor = null; }
+      klang.still();
       setTimeout(function () { abschluss(r); }, 340 + liste.length * st);
     }
   }
