@@ -719,6 +719,9 @@ async function renderSpielothekPage() {
     window.fhRubbellose.zeigen(container);
     return;
   }
+  /* Beim Banditen: die Ansicht der Lose abbauen und den Seitenkopf zeigen. */
+  document.getElementById("spielothek")?.classList.remove("ist-rubbellose");
+  if (window.fhRubbellose) window.fhRubbellose.abbauen();
 
   const game = getCurrentSpielothekGame();
   const handler = getSpielothekHandler(game);

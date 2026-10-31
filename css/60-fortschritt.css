@@ -3289,17 +3289,49 @@
 /* ======================================================
    RUBBELLOSE (scripts/spielothek/games/rubbellose.js)
    ------------------------------------------------------
-   Vier Lose zur Wahl, darunter auf dem Spieltisch das gekaufte Los
-   mit 3 x 3 Feldern. Die silberne Schicht ist ein Canvas ueber den
-   Feldern; die Felder selbst sind Knoepfe (Tastatur, Screenreader).
-   Jedes Los hat seinen Grundton (--fh-rubbel-*), der Rest bleibt im
-   Messing der Spielothek.
+   Entwurf "Rubbellose Redesign v2" aus Claude Design (Nocturne).
+   Eigene Flaeche statt der Messing-Bühne des Banditen: links Loswahl,
+   Gewinnplan und Ändii, rechts das Los. Die Nocturne-Stufen stehen als
+   --fh-nocturne-* in 00-basis.css; --rb-ton ist der Ton des Loses
+   (--fh-rubbel-*), gesetzt vom Skript. Mit den Losen versteckt die
+   Seite ihren eigenen Kopf - der Kopf der Lose ersetzt ihn.
 ====================================================== */
+#spielothek.ist-rubbellose .spielothek-logo,
+#spielothek.ist-rubbellose .fh-page-head { display: none; }
+
+.rubbel {
+  --rb-bg: var(--fh-nocturne-grund);
+  --rb-flaeche: var(--fh-nocturne-flaeche);
+  --rb-text: var(--fh-nocturne-text);
+  --rb-akzent: var(--fh-nocturne);
+  --rb-akzent-300: var(--fh-nocturne-akzent-300);
+  --rb-schatten-sm: 0 0 0 1px var(--fh-nocturne-n800);
+  --rb-schatten-md: 0 0 0 1px var(--fh-nocturne-n700), 0 6px 18px rgba(0,0,0,.55);
+  --rb-ton: var(--fh-rubbel-schatzkiste);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 40px clamp(16px, 4vw, 48px) 48px;
+  border-radius: 14px;
+  background: radial-gradient(90% 60% at 15% -10%, var(--rb-flaeche), var(--rb-bg) 70%);
+  color: var(--rb-text);
+  font-family: var(--fh-font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  text-align: left;
+}
+.rubbel h1, .rubbel h6 { font-family: var(--fh-font-sans); font-weight: 500; line-height: 1.12; letter-spacing: -.015em; margin: 0; color: var(--rb-text); }
+.rubbel .rubbel-h1 { font-size: 42px; }
+.rubbel .rubbel-h6 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--fh-nocturne-n500); }
+.rubbel-unter { margin: 0; color: var(--fh-nocturne-n400); text-wrap: pretty; }
+.rubbel-klein { font-size: 12px; color: var(--fh-nocturne-n500); font-variant-numeric: tabular-nums; }
 .rubbel-vorschau {
-  max-width: 640px;
+  max-width: 1120px;
   margin: 0 auto 14px;
   padding: 8px 12px;
-  border: 1px dashed rgba(190,150,84,.45);
+  border: 1px dashed color-mix(in srgb, var(--fh-nocturne) 55%, transparent);
   border-radius: 8px;
   font-size: 13px;
   color: var(--fh-muted-fg);
@@ -3308,114 +3340,183 @@
 .rubbel-link {
   background: none;
   border: 0;
-  padding: 0;
-  color: var(--spielo-messing-hell, #e2c48a);
-  font: inherit;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  padding: 2px 4px;
+  border-radius: 8px;
+  color: var(--fh-nocturne);
+  font: 500 13px/1.2 var(--fh-font-sans);
   cursor: pointer;
 }
-.rubbel-link:hover, .rubbel-link:focus-visible { color: var(--fh-gold-bright); }
+.rubbel-link:hover { background: color-mix(in srgb, var(--fh-nocturne) 10%, transparent); }
+.rubbel-link:focus-visible, .rubbel button:focus-visible { outline: 2px solid var(--fh-nocturne); outline-offset: 2px; }
 
-.rubbel-wahlen {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  max-width: 760px;
-  margin: 18px auto 0;
-}
+/* Kopf: Titel links, Anzeigen und Ton rechts. */
+.rubbel-kopf { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.rubbel-kopf-text { display: flex; flex-direction: column; gap: 4px; }
+.rubbel-kopf-rechts { display: flex; align-items: center; gap: 12px; }
+.rubbel-anzeigen { display: flex; border-radius: 8px; box-shadow: var(--rb-schatten-sm); background: color-mix(in srgb, var(--rb-flaeche) 60%, transparent); }
+.rubbel-anzeige { display: flex; flex-direction: column; gap: 2px; padding: 10px 18px; min-width: 96px; }
+.rubbel-anzeige.ist-breit { min-width: 120px; }
+.rubbel-anzeige-trenner { width: 1px; background: var(--fh-nocturne-n800); margin: 10px 0; }
+.rubbel-anzeige-titel { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--fh-nocturne-n500); }
+.rubbel-anzeige-wert { font-size: 25px; font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--rb-text); }
+.rubbel-anzeige-wert.ist-plus { color: var(--rb-akzent-300); }
+.rubbel-anzeige-wert.ist-leer { color: var(--fh-nocturne-n500); }
+.rubbel-laut { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--fh-nocturne); cursor: pointer; }
+.rubbel-laut:hover { background: color-mix(in srgb, var(--fh-nocturne) 10%, transparent); }
+.rubbel-laut svg { width: 20px; height: 20px; }
+
+.rubbel-spalten { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+.rubbel-seite { flex: 1 1 260px; max-width: 340px; display: flex; flex-direction: column; gap: 28px; }
+.rubbel-gruppe { display: flex; flex-direction: column; gap: 8px; }
+.rubbel-gruppe > .rubbel-h6 { margin-bottom: 4px; }
+.rubbel-wahlen { display: flex; flex-direction: column; gap: 8px; }
 .rubbel-wahl {
-  --rubbel-ton: var(--fh-rubbel-schatzkiste);
-  --rubbel-tief: var(--fh-rubbel-schatzkiste-tief);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 3px 24px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 4px;
-  padding: 14px 8px 12px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--rubbel-ton) 45%, transparent);
-  background: linear-gradient(160deg, color-mix(in srgb, var(--rubbel-ton) 30%, var(--rubbel-tief)), var(--rubbel-tief));
-  color: var(--fh-fg);
+  gap: 12px;
+  padding: 10px 14px 10px 10px;
+  border: 0;
+  border-radius: 8px;
   font: inherit;
+  text-align: left;
+  color: var(--rb-text);
+  background: transparent;
+  box-shadow: var(--rb-schatten-sm);
   cursor: pointer;
-  transition: transform .2s var(--fh-ease), border-color .2s var(--fh-ease), box-shadow .2s var(--fh-ease);
+  transition: background .2s, box-shadow .2s;
 }
-.rubbel-wahl:hover { transform: translateY(-2px); }
-.rubbel-wahl:focus-visible { outline: 2px solid var(--fh-gold-bright); outline-offset: 2px; }
-.rubbel-wahl.ist-gewaehlt {
-  border-color: var(--spielo-messing-hell, #e2c48a);
-  box-shadow: 0 0 0 1px var(--spielo-messing-hell, #e2c48a), 0 8px 24px color-mix(in srgb, var(--rubbel-ton) 35%, transparent);
+.rubbel-wahl:hover { background: color-mix(in srgb, var(--rb-text) 5%, var(--rb-flaeche)); }
+.rubbel-wahl.ist-an { background: var(--rb-flaeche); box-shadow: var(--rb-schatten-md); }
+.rubbel-wahl:disabled { opacity: .45; cursor: not-allowed; }
+.rubbel-wahl-marke { width: 3px; height: 28px; border-radius: 2px; background: var(--rb-ton); opacity: .55; transition: opacity .2s, box-shadow .2s; }
+.rubbel-wahl.ist-an .rubbel-wahl-marke { opacity: 1; box-shadow: 0 0 12px var(--rb-ton); }
+.rubbel-wahl-zeichen { width: 24px; height: 24px; color: var(--rb-ton); }
+.rubbel-wahl-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.rubbel-wahl-name { font-size: 15px; font-weight: 500; }
+.rubbel-wahl-top { font-size: 12px; color: var(--fh-nocturne-n500); }
+.rubbel-wahl-preis { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--fh-nocturne-n300); }
+.rubbel-plan-kopf { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.rubbel-plan-zeile {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 6px 10px; border-radius: 4px; font-size: 14px; font-variant-numeric: tabular-nums;
+  color: var(--fh-nocturne-n300); transition: background .3s, color .3s;
 }
-.rubbel-wahl.ist-flaschenpost, .rubbel-los.ist-flaschenpost { --rubbel-ton: var(--fh-rubbel-flaschenpost); --rubbel-tief: var(--fh-rubbel-flaschenpost-tief); }
-.rubbel-wahl.ist-schatzkiste, .rubbel-los.ist-schatzkiste { --rubbel-ton: var(--fh-rubbel-schatzkiste); --rubbel-tief: var(--fh-rubbel-schatzkiste-tief); }
-.rubbel-wahl.ist-kraken, .rubbel-los.ist-kraken { --rubbel-ton: var(--fh-rubbel-kraken); --rubbel-tief: var(--fh-rubbel-kraken-tief); }
-.rubbel-wahl.ist-galeone, .rubbel-los.ist-galeone { --rubbel-ton: var(--fh-rubbel-galeone); --rubbel-tief: var(--fh-rubbel-galeone-tief); }
-.rubbel-wahl-zeichen { width: 30px; height: 30px; color: var(--rubbel-ton); }
-.rubbel-wahl-name { font: 600 14px/1.2 var(--fh-font-display); letter-spacing: .06em; text-transform: uppercase; text-align: center; }
-.rubbel-wahl-preis { font: 600 18px/1.1 var(--fh-font-display); color: var(--spielo-messing-hell, #e2c48a); font-variant-numeric: tabular-nums; }
-.rubbel-wahl-top { font-size: 11px; color: var(--fh-muted-fg); }
+.rubbel-plan-zeile.ist-treffer { color: color-mix(in srgb, var(--rb-ton) 55%, var(--rb-text)); background: color-mix(in srgb, var(--rb-ton) 14%, transparent); box-shadow: inset 2px 0 0 var(--rb-ton); }
+.rubbel-andi { display: flex; gap: 12px; align-items: flex-start; }
+.rubbel-andi img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; box-shadow: var(--rb-schatten-sm); flex: none; }
+.rubbel-andi p { margin: 0; padding: 10px 14px; border-radius: 8px; border-top-left-radius: 4px; background: var(--rb-flaeche); box-shadow: var(--rb-schatten-sm); font-size: 14px; color: var(--fh-nocturne-n300); text-wrap: pretty; }
 
-.rubbel-tisch { display: flex; justify-content: center; padding: 6px 0 4px; }
+/* Das Los mit Stapel dahinter, Neigung zur Maus und Effekt-Canvas. */
+.rubbel-haupt { flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+.rubbel-wrap { position: relative; width: min(100%, 520px); perspective: 1400px; }
+.rubbel-stapel { position: absolute; inset: 0; border-radius: 14px; background: var(--rb-flaeche); box-shadow: var(--rb-schatten-sm); transform: translateY(8px) scale(.96); opacity: .55; }
+.rubbel-stapel.ist-hinten { transform: translateY(16px) scale(.92); opacity: .3; }
+.rubbel-kipp { position: relative; transition: transform .4s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+.rubbel-fx { position: absolute; left: -80px; top: -80px; width: calc(100% + 160px); height: calc(100% + 160px); pointer-events: none; z-index: 5; }
 .rubbel-los {
-  --rubbel-ton: var(--fh-rubbel-schatzkiste);
-  --rubbel-tief: var(--fh-rubbel-schatzkiste-tief);
-  width: min(100%, 420px);
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--rubbel-ton) 55%, transparent);
-  background:
-    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--rubbel-ton) 38%, transparent), transparent 70%),
-    linear-gradient(180deg, color-mix(in srgb, var(--rubbel-ton) 18%, var(--rubbel-tief)), var(--rubbel-tief));
-  box-shadow: 0 14px 34px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+  position: relative;
+  border-radius: 14px;
+  background: radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--rb-ton) 22%, transparent), transparent 60%),
+              linear-gradient(180deg, var(--rb-flaeche), color-mix(in srgb, var(--rb-bg) 70%, var(--rb-flaeche)));
+  box-shadow: var(--rb-schatten-md);
+  outline: 1px solid color-mix(in srgb, var(--rb-ton) 35%, transparent);
+  outline-offset: -1px;
 }
-.rubbel-kopf { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 10px; margin-bottom: 12px; }
-.rubbel-kopf-zeichen { grid-row: span 2; width: 34px; height: 34px; color: var(--rubbel-ton); }
-.rubbel-kopf-name { font: 600 20px/1.1 var(--fh-font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--fh-fg); }
-.rubbel-kopf-regel { font-size: 12px; color: var(--fh-muted-fg); }
-.rubbel-feld-wrap { position: relative; }
+.rubbel-zacken { position: absolute; top: -4px; left: 18px; right: 18px; height: 8px; background: radial-gradient(circle at 5px 4px, var(--rb-bg) 2.6px, transparent 3.2px) 0 0 / 12px 8px repeat-x; }
+.rubbel-los-kopf { display: flex; align-items: center; gap: 12px; padding: 20px 22px 16px; }
+.rubbel-los-zeichen { width: 34px; height: 34px; flex: none; color: var(--rb-ton); }
+.rubbel-los-titel { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.rubbel-los-name { font-size: 20px; font-weight: 500; line-height: 1.15; }
+.rubbel-los-regel { font-size: 12px; color: var(--fh-nocturne-n400); }
+.rubbel-los-nr { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--fh-nocturne-n300); }
+.rubbel-perfo { position: relative; height: 0; margin: 0 22px; border-top: 1px dashed color-mix(in srgb, var(--rb-text) 18%, transparent); }
+.rubbel-perfo span { position: absolute; top: -10px; width: 20px; height: 20px; border-radius: 50%; background: var(--rb-bg); }
+.rubbel-perfo span:first-child { left: -32px; }
+.rubbel-perfo span:last-child { right: -32px; }
+.rubbel-felder-rahmen { padding: 18px 22px 0; }
+.rubbel-felder-pos { position: relative; }
 .rubbel-felder { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .rubbel-feld {
+  position: relative;
   aspect-ratio: 5 / 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(8,6,4,.55);
-  color: var(--spielo-messing-hell, #e2c48a);
-  font: 600 clamp(15px, 4.4vw, 22px)/1 var(--fh-font-display);
-  font-variant-numeric: tabular-nums;
+  display: flex; align-items: center; justify-content: center;
   padding: 0;
-  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--fh-nocturne-n900);
+  background: var(--rb-bg);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,.45);
+  color: var(--rb-text);
+  font: 500 clamp(17px, 3.2vw, 24px)/1 var(--fh-font-sans);
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+  transition: opacity .4s, border-color .3s, box-shadow .4s, background .4s;
 }
-.rubbel-feld:focus-visible { outline: 2px solid var(--fh-gold-bright); outline-offset: 2px; position: relative; z-index: 2; }
-.rubbel-betrag { display: inline-flex; align-items: center; gap: 5px; }
-.rubbel-muenze { width: .9em; height: .9em; opacity: .8; }
-.rubbel-los.ist-muster .rubbel-feld { color: var(--fh-muted-fg); cursor: default; }
-.rubbel-schicht { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; border-radius: 10px; }
-.rubbel-schicht:active { cursor: grabbing; }
-.rubbel-feld.ist-treffer {
-  border-color: var(--fh-gold-bright);
-  color: var(--fh-gold-bright);
-  box-shadow: 0 0 0 1px var(--fh-gold-bright), 0 0 22px color-mix(in srgb, var(--fh-gold-bright) 45%, transparent);
-  animation: rubbelTreffer 1.2s var(--fh-ease) both;
+.rubbel-feld.ist-spielbar { cursor: pointer; }
+.rubbel-feld.ist-muster { color: var(--fh-nocturne-n700); }
+.rubbel-feld.ist-paar { border-color: color-mix(in srgb, var(--rb-ton) 70%, transparent); }
+.rubbel-feld.ist-treffer { color: color-mix(in srgb, var(--rb-ton) 55%, var(--rb-text)); background: color-mix(in srgb, var(--rb-ton) 16%, var(--rb-bg)); border-color: var(--rb-ton); box-shadow: 0 0 0 1px var(--rb-ton), 0 0 24px color-mix(in srgb, var(--rb-ton) 45%, transparent); }
+.rubbel-feld.ist-dim { opacity: .4; }
+.rubbel-zahl { display: inline-flex; align-items: center; gap: 6px; }
+.rubbel-feld-muenze { width: .8em; height: .8em; opacity: .7; }
+.rubbel-paar { position: absolute; top: 6px; right: 6px; padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: .04em; color: var(--rb-bg); background: var(--rb-ton); }
+.rubbel-folie { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: default; z-index: 2; }
+.rubbel-folie.ist-spielbar { cursor: none; }
+.rubbel-stempel {
+  position: absolute; right: -4px; bottom: -20px; z-index: 3; pointer-events: none;
+  transform: rotate(-8deg); padding: 5px 12px; border-radius: 4px;
+  font: 600 15px/1 var(--fh-font-sans); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--fh-nocturne-n300); border: 2px solid var(--fh-nocturne-n500);
+  background: color-mix(in srgb, var(--rb-bg) 78%, transparent); backdrop-filter: blur(3px); box-shadow: var(--rb-schatten-sm);
 }
-@keyframes rubbelTreffer {
-  0% { transform: scale(1); }
-  35% { transform: scale(1.08); }
-  100% { transform: scale(1); }
+.rubbel-stempel.ist-gewinn { color: color-mix(in srgb, var(--rb-ton) 60%, var(--rb-text)); border-color: var(--rb-ton); }
+.rubbel-los-fuss { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 10px 22px 16px; }
+.rubbel-fortschritt { display: flex; align-items: center; gap: 10px; }
+.rubbel-balken { width: 96px; height: 3px; border-radius: 2px; background: var(--fh-nocturne-n800); overflow: hidden; }
+.rubbel-balken > div { height: 100%; background: var(--rb-ton); transition: width .3s cubic-bezier(.2,.8,.2,1); }
+.rubbel-ergebnis { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.rubbel-ergebnis-wert { font-size: 25px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--fh-nocturne-n400); }
+.rubbel-ergebnis-wert.ist-gewinn { color: color-mix(in srgb, var(--rb-ton) 55%, var(--rb-text)); }
+
+.rubbel-aktion { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; width: min(100%, 520px); margin-top: 8px; }
+.rubbel-knopf {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 200px; padding: 12px 22px;
+  border: 1px solid var(--fh-nocturne); border-radius: 8px;
+  background: transparent; color: var(--fh-nocturne);
+  font: 500 15px/1.2 var(--fh-font-sans); cursor: pointer;
 }
-.rubbel-los.ist-niete .rubbel-feld:not(.ist-treffer) { opacity: .62; }
-.rubbel-fuss { display: flex; justify-content: center; min-height: 22px; margin-top: 10px; font-size: 12px; color: var(--fh-muted-fg); }
+.rubbel-knopf:hover { background: color-mix(in srgb, var(--fh-nocturne) 12%, transparent); }
+.rubbel-knopf:active { background: color-mix(in srgb, var(--fh-nocturne) 22%, transparent); }
+.rubbel-knopf:disabled { opacity: .45; cursor: not-allowed; background: transparent; }
+.rubbel-status { margin: 0; font-size: 13px; color: var(--fh-nocturne-n400); flex: 1; min-width: 180px; text-wrap: pretty; }
+.rubbel-verlauf { display: flex; flex-direction: column; gap: 8px; width: min(100%, 520px); }
+.rubbel-verlauf[hidden] { display: none; }
+.rubbel-verlauf-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.rubbel-verlauf-kopf .ist-plus { color: var(--rb-akzent-300); }
+.rubbel-verlauf-liste { display: flex; flex-wrap: wrap; gap: 6px; }
+.rubbel-chip { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--fh-nocturne-n500); background: var(--fh-nocturne-n900); box-shadow: inset 2px 0 0 color-mix(in srgb, var(--rb-ton) 45%, transparent); }
+.rubbel-chip.ist-gewinn { color: color-mix(in srgb, var(--rb-ton) 55%, var(--rb-text)); background: color-mix(in srgb, var(--rb-ton) 16%, transparent); box-shadow: inset 2px 0 0 var(--rb-ton); }
+.rubbel-hinweis { margin: 0; font-size: 12px; color: var(--fh-nocturne-n600); max-width: 520px; text-wrap: pretty; }
 
 @media (max-width: 640px) {
-  .rubbel-wahlen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rubbel { padding: 24px 14px 32px; gap: 24px; }
+  .rubbel .rubbel-h1 { font-size: 32px; }
+  .rubbel-kopf-rechts { width: 100%; }
+  .rubbel-anzeigen { flex: 1; }
+  .rubbel-anzeige, .rubbel-anzeige.ist-breit { min-width: 0; flex: 1; padding: 8px 10px; }
+  .rubbel-anzeige-wert { font-size: 19px; }
+  .rubbel-seite { max-width: none; }
+  .rubbel-felder-rahmen { padding: 14px 14px 0; }
+  .rubbel-los-kopf { padding: 18px 14px 14px; }
+  .rubbel-los-fuss { padding: 10px 14px 14px; }
+  .rubbel-perfo { margin: 0 14px; }
+  .rubbel-perfo span:first-child { left: -24px; }
+  .rubbel-perfo span:last-child { right: -24px; }
 }
-/* Schmale Handys: fuenfstellige Betraege brauchen den Platz der Muenze. */
 @media (max-width: 420px) {
-  .rubbel-muenze { display: none; }
+  .rubbel-feld-muenze { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rubbel-wahl, .rubbel-wahl:hover { transition: none; transform: none; }
-  .rubbel-feld.ist-treffer { animation: none; }
+  .rubbel-kipp, .rubbel-wahl, .rubbel-feld { transition: none; }
 }

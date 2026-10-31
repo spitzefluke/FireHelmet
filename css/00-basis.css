@@ -236,6 +236,18 @@ body.loaded {
   --fh-nocturne-dunkel: #2b2741;
   --fh-nocturne-karte: #1d1e2c;
   --fh-nocturne-grund: #161826;
+  /* Weitere Stufen des Nocturne-Systems (Claude Design), z. B. fuer die
+     Rubbellose: Flaeche, Text, Akzent hell und die neutrale Rampe. */
+  --fh-nocturne-flaeche: #232532;
+  --fh-nocturne-text: #e9e9ed;
+  --fh-nocturne-akzent-300: #d2cefd;
+  --fh-nocturne-n300: #cfd3e5;
+  --fh-nocturne-n400: #b2b6ca;
+  --fh-nocturne-n500: #9397ab;
+  --fh-nocturne-n600: #75798c;
+  --fh-nocturne-n700: #595d6c;
+  --fh-nocturne-n800: #3f424d;
+  --fh-nocturne-n900: #292b31;
   /* Sternenreise (scripts/liveevent/sternenreise.js, css/97-sternenreise.css):
      das Violett der Kanonen, das rote Auge von Terra Nova. */
   --fh-reise-violett: #b5abfc;
