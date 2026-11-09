@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "gsap": "^3.15.0",
-    "motion": "14.8.0",
+    "motion": "14.9.1",
     "three": "0.160.0"
   }
 }
