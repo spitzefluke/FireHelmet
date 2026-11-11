@@ -103,13 +103,26 @@
        ueber den ganzen Song (5:23 min = DAUER dort); die fuenf Szenen
        sind nur gleich lange Abschnitte fuer den spaeten Einstieg. */
     liebeslied: { szenen: [64620, 64620, 64620, 64620, 64620] },
+    /* Migration 71: "Funkspruch" - die runde Tonspur aus funk-film.js.
+       Eine Szene so lang wie die Aufnahme plus 1 s; die Laenge steht im
+       Gateway (siteConfig.funkDauer) und wird bei jedem Start neu
+       gesetzt (funkLaengeSetzen). 61 s gilt nur ohne Angabe. */
+    funkspruch: { szenen: [61000] },
   };
   const ZEITEN_IN_SZENE = {};  // Summe der Dauer bis zum Beginn jeder Szene
-  Object.keys(STORYS).forEach(function (st) {
+  function zeitenRechnen(st) {
     let summe = 0;
     ZEITEN_IN_SZENE[st] = STORYS[st].szenen.map(function (ms) { const beginn = summe; summe += ms; return beginn; });
     STORYS[st].gesamt = summe;
-  });
+  }
+  Object.keys(STORYS).forEach(zeitenRechnen);
+
+  /* Funkspruch: Laenge der Aufnahme (Sekunden, aus dem Gateway) + 1 s. */
+  function funkLaengeSetzen() {
+    const s = typeof siteConfig !== "undefined" && siteConfig ? Number(siteConfig.funkDauer) : 0;
+    STORYS.funkspruch.szenen = [Math.round((s > 0 && s < 3600 ? s : 60) * 1000) + 1000];
+    zeitenRechnen("funkspruch");
+  }
 
   /* ------------------------------------------------------
      ZUSTAND
@@ -1063,17 +1076,20 @@
   /* abMs: wie weit die Story schon ist - die Musik springt an die
      Stelle (bei kurzen Stuecken modulo Laenge, sie laeuft ja im
      Kreis), sobald der Browser die Laenge kennt. */
-  function musikStart(src, abMs) {
+  /* einmal: nicht im Kreis (Funkspruch - eine Aufnahme wiederholt
+     sich nicht); wer nach ihrem Ende dazukommt, hoert nichts mehr. */
+  function musikStart(src, abMs, einmal) {
     if (!src) return;
     if (!audio) audio = new Audio();
     clearInterval(fadeUhr);
     if (audio.getAttribute("src") !== src) audio.src = src;
-    audio.loop = true;
+    audio.loop = !einmal;
     daempfung = 1;
-    audio.volume = MUSIK_LAUT;
+    audio.volume = einmal ? 1 : MUSIK_LAUT;
     const ab = Math.max(0, (abMs || 0) / 1000);
     const springen = function () {
       const d = audio.duration;
+      if (einmal && isFinite(d) && ab >= d) { audio.pause(); return; }
       try { audio.currentTime = isFinite(d) && d > 0 ? ab % d : 0; } catch (e) { /* dann von vorn */ }
     };
     if (ab > 0.5 && !(audio.readyState >= 1)) audio.addEventListener("loadedmetadata", springen, { once: true });
@@ -1288,6 +1304,18 @@
       else if (window.fhNachladen) window.fhNachladen("lied").then(liedStart, function (e) { console.warn(e); });
     }
 
+    /* Funkspruch (71): genauso, funk-film.js. Woerter und Laenge
+       liest der Film selbst aus siteConfig (funkText, funkDauer). */
+    if (st === "funkspruch" && !lauf.funkGestartet) {
+      lauf.funkGestartet = true;
+      const funkStart = function () {
+        if (!lauf || lauf.id !== id || lauf.story !== "funkspruch" || !window.fhFunkFilm) return;
+        window.fhFunkFilm.start({ ab: ZEITEN_IN_SZENE.funkspruch[lauf.n - 1] + imSzeneMs(), vorschau: vorschau });
+      };
+      if (window.fhFunkFilm) funkStart();
+      else if (window.fhNachladen) window.fhNachladen("funk").then(funkStart, function (e) { console.warn(e); });
+    }
+
     if (st === "hacked" && n === 5) spaeter(beben, 2500);
     if (st === "hacked" && n === 7) {
       const p = hatPreis("hacked") ? belohnungAbholen(id, "hacked", 0, vorschau) : Promise.resolve(null);
@@ -1431,13 +1459,14 @@
     if (st === "nukes" && window.fhNukesFilm) window.fhNukesFilm.ende();
     if (st === "reise" && window.fhSternenreise) window.fhSternenreise.ende();
     if (st === "liebeslied" && window.fhLiedFilm) window.fhLiedFilm.ende();
+    if (st === "funkspruch" && window.fhFunkFilm) window.fhFunkFilm.ende();
     if (st === "hacked") loecherSpawnen(id, vorschau);
     if (st === "ende" || st === "gegenhack_niederlage") gehackt = true;
     if (st === "sturm" && !vorschau) nachregen = true;
     anzeigen();
     /* 36: Riss und Systemausfall zahlen am Ende - nur wer bis hier
        dabei war, und nur, wenn der Admin etwas eingestellt hat. */
-    if ((st === "riss" || st === "ende" || st === "herz" || st === "zeit" || st === "nukes" || st === "reise" || st === "liebeslied") && hatPreis(st)) {
+    if ((st === "riss" || st === "ende" || st === "herz" || st === "zeit" || st === "nukes" || st === "reise" || st === "liebeslied" || st === "funkspruch") && hatPreis(st)) {
       belohnungAbholen(id, "abschluss", 0, vorschau, st).then(function (erg) {
         const teile = belohnungsTeile(erg);
         if (!teile.length) return;
@@ -1447,8 +1476,9 @@
           : st === "nukes" ? t("story.nukes.reward", "Bsss. Die Mücke lässt grüßen")
           : st === "reise" ? t("story.reise.reward", "Danke, Crew der Arche")
           : st === "liebeslied" ? t("story.lied.reward", "Danke fürs Zuhören")
+          : st === "funkspruch" ? t("story.funk.reward", "Funkspruch empfangen")
           : t("story.end.reward", "Ein Trostpflaster für die Crew");
-        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : st === "zeit" ? "#7fe0ff" : st === "nukes" ? "#f0c96a" : st === "reise" ? "#b5abfc" : st === "liebeslied" ? "#a99cf0" : "#39ff14", st === "ende");
+        banderole(text + belohnungsText(erg), st === "ende" ? "???" : "Ändii", st === "riss" ? "#e8d5a8" : st === "herz" ? "#d2cefd" : st === "zeit" ? "#7fe0ff" : st === "nukes" ? "#f0c96a" : st === "reise" ? "#b5abfc" : st === "liebeslied" ? "#a99cf0" : st === "funkspruch" ? "#ff3b30" : "#39ff14", st === "ende");
       });
     }
   }
@@ -1460,6 +1490,7 @@
     nachregen = false;
     if (st === "hacked") loecherWeg();
     if (st === "schatz") schatz = null;   // neuer Regen, neue Beute - auch beim spaeten Einstieg
+    if (st === "funkspruch") funkLaengeSetzen();
     lauf = { story: st, id: id, vorschau: !!vorschau, n: 0, ausklingen: !!endeMs, beginn: Date.now() - ms };
     const pos = position(st, ms, endeMs);
     if (!pos) {
@@ -1471,7 +1502,7 @@
       return;
     }
     szeneBetreten(pos.n, pos.rest);
-    if (st !== "disco" && lauf) musikStart(musikUrl(st), ms);
+    if (st !== "disco" && lauf) musikStart(musikUrl(st), ms, st === "funkspruch");
   }
 
   function stoppen() {
@@ -1485,6 +1516,7 @@
     if (window.fhNukesFilm) window.fhNukesFilm.weg();
     if (window.fhSternenreise) window.fhSternenreise.weg();
     if (window.fhLiedFilm) window.fhLiedFilm.weg();
+    if (window.fhFunkFilm) window.fhFunkFilm.weg();
     if (window.fhStoryWetter) window.fhStoryWetter.weg();
     if (musikLaeuft) musikAus(0);
     lauf = null;

@@ -16,9 +16,9 @@ Datei, die du gerade anfasst.
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 131 `<script defer>`-Tags in fester
-Reihenfolge, davon 117 aus diesem Repo. Zwölf große Skripte, die fast niemand braucht
+Reihenfolge, davon 117 aus diesem Repo. Dreizehn große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `lied-film.js`,
-`lied-film-klassisch.js`, `story-wetter.js`,
+`lied-film-klassisch.js`, `funk-film.js`, `story-wetter.js`,
 `drehbuch.js`, `sternenreise.js`, `zelle.js`, `saison-admin.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
@@ -125,7 +125,7 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhLiedFilm`, `window.fhLiedFilmKlassisch`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhLiedFilm`, `window.fhLiedFilmKlassisch`, `window.fhFunkFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
 nach `fhNachladen(...)`. Das **Drehbuch** (Migration 65, `scripts/liveevent/drehbuch.js`) baut
 im Admin-Bereich ein Live-Event vorab aus Schritten (Text, Story, Story beenden, Effekt, Pause),
 gespeichert in `event_drehbuecher` (nur Admins per RLS); abgespielt wird im Browser des Admins
@@ -210,6 +210,28 @@ ein (`siteConfig.liedText`, je Zeile `Sekunde | Text`, `/` bricht um, `*Wort*` b
 dem ID3-Tag (USLT) der eigenen MP3 im Browser, „Mitklopfen“ setzt die Zeiten zur Musik. Die Musik
 kommt wie bei jeder Story über „Musik je Story“ (Datei `liebeslied`). `#fh-lied` steht in allen
 `:not`-Listen der Epochen.
+
+### Funkspruch
+
+Migration 71: die Story `funkspruch`, eine Sprachaufnahme als „runde Tonspur“, hochkant 1080 × 1920
+wie eine Instagram-Story (`scripts/liveevent/funk-film.js`, nachgeladen als `funk`). Ein Ring aus 120
+Balken folgt dem Spektrum der Stimme, innen steht die Hüllkurve der ganzen Aufnahme mit Abspielkopf,
+in der Mitte ein Funk-Symbol, oben die gesprochenen Wörter auf ihrem Einsatz. Jeder Browser liest die
+Aufnahme selbst (`fetch` + `decodeAudioData`, FFT 2048, 30 Spektren je Sekunde); danach ist jedes Bild
+eine Funktion der Zeit. Schriften (Anton, Inter Tight, JetBrains Mono) liegen selbst gehostet in
+`assets/fonts/funk-fonts.css` und laden erst beim Start; Farben sind die Tokens `--fh-funk-*`.
+
+- **Aufnahme:** „Musik je Story“ → `funkspruch`. Sie läuft **einmal**, nicht in Schleife
+  (`musikStart(…, einmal)`). Liegt Musik unter der Stimme, dürfen getrennte Spuren (z. B. aus Demucs)
+  als `funkspruch_stimme` und `funkspruch_musik` dazu – die werden nur gelesen: Spektrum und
+  Hüllkurve folgen der Stimme, Puls und Beats der Musik. Ohne Spuren kommt der Puls aus den Tiefen
+  unter 160 Hz.
+- **Wörter und Länge:** Gateway → „Funkspruch: Wörter und Länge“ (`siteConfig.funkText`, je Zeile
+  `Sekunde | Wort`; `siteConfig.funkDauer` in Sekunden). Die Story läuft `funkDauer` + 1 s
+  (`funkLaengeSetzen()` in `live-storys.js`, ohne Angabe 61 s). Die Wortzeiten kommen z. B. aus
+  whisper.cpp mit Wort-Zeitstempeln, die Schreibweise aus dem eigenen Text.
+- Belohnung „abschluss“ ab 10 s (die Länge kennt die Datenbank nicht). `#fh-funk` steht in allen
+  `:not`-Listen der Epochen.
 
 ### Saisons
 

@@ -1,0 +1,30 @@
+/* ======================================================
+   SCHRIFTEN FUER DEN FUNKSPRUCH (funk-film.js, Migration 71)
+   ------------------------------------------------------
+   Anton (Woerter, Versalien), Inter Tight (Text) und JetBrains Mono
+   (Labels). Selbst gehostet wie Inter und Oswald (keine Besucher-IP
+   zu Google, DSGVO); SIL Open Font License, lateinischer Subset.
+   Inter Tight ist eine variable Schrift (eine Datei fuer 400-600).
+   Geladen wird diese Datei erst, wenn die Story startet.
+====================================================== */
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('anton-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter Tight';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('inter-tight-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('jetbrains-mono-500.woff2') format('woff2');
+}
