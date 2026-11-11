@@ -60,6 +60,12 @@ let siteConfig = {
   // im Code steht er bewusst nicht.
   liedText: "",
 
+  // Story "Funkspruch" (scripts/liveevent/funk-film.js, Migration 71):
+  // die gesprochenen Woerter mit Einsatz ("Sekunde | Wort" je Zeile)
+  // und die Laenge der Aufnahme in Sekunden - beides im Gateway.
+  funkText: "",
+  funkDauer: 0,
+
   // Freigeschaltete Funktionen (Feature-Flags). Ein Objekt
   // { flagName: true }. Steht ein Flag NICHT auf true, ist die
   // Funktion fuer normale Besucher unsichtbar - der Admin sieht sie
@@ -98,6 +104,8 @@ function applySiteConfigSnapshot(data) {
     wartung: data.wartung === true,
     wartungText: typeof data.wartungText === "string" ? data.wartungText : "",
     liedText: typeof data.liedText === "string" ? data.liedText.slice(0, 8000) : "",
+    funkText: typeof data.funkText === "string" ? data.funkText.slice(0, 12000) : "",
+    funkDauer: typeof data.funkDauer === "number" && data.funkDauer > 0 && data.funkDauer < 3600 ? data.funkDauer : 0,
     featureFlags: (data.featureFlags && typeof data.featureFlags === "object" && !Array.isArray(data.featureFlags)) ? data.featureFlags : {},
   };
   markSiteConfigReady();

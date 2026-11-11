@@ -559,6 +559,7 @@ const GW_STORYS = [
   ["reise", "Sternenreise", "≈ 7 min · Schlacht gegen das Mutterschiff, dann besetzt jeder Zuschauer eine Kanone der Arche und verteidigt seinen Sektor auf der Reise nach Terra Nova. Gemeinsame Hülle: Landet die Arche, wird die Seite für alle zu „Terra Nova“, fällt die Hülle auf 0, zur „Verwahrung“ – bis du sie unter Epoche zurückschaltest (Migration 67)", "violett"],
   ["nukes", "Hundert Atombomben gegen eine Mücke", "3 min · Film: Eine Mücke weckt Kapitän Ändii um 03:12 Uhr. Hand, Pfanne, Kanone – daneben. Dann der Notfallknopf und hundert Atombomben, bis die Erde zerbricht. Musik unten unter „Musik je Story“ hochladen (Migration 51)", "gold"],
   ["liebeslied", "Liebeslied", "5:23 min · Lyric-Video zu „I Don't Know Love“ als 3D-Kamerafahrt: Lichtring-Tunnel, Kristalle, Nebel und Galaxien, je Liedteil eine eigene Welt und Schrift; jede Zeile setzt sich aus Partikeln zusammen und zerfällt in Funken (ohne WebGL die 2D-Fassung). Musik unten unter „Musik je Story“ hochladen, den Text darunter unter „Liedtext“ (aus der MP3 lesen, mitklopfen)", "violett"],
+  ["funkspruch", "Funkspruch", "Länge der Aufnahme + 1 s · Runde Tonspur: Ring aus 120 Balken, der auf die Stimme reagiert, innen die Hüllkurve der ganzen Aufnahme mit Abspielkopf, in der Mitte ein Funk-Symbol, oben die gesprochenen Wörter auf ihrem Einsatz. Aufnahme unten unter „Musik je Story“ hochladen, Wörter und Länge darunter unter „Funkspruch“ (Migration 71)", "rot"],
 ];
 /* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
    stehen darum nicht in der Liste - hier nur ihre Namen fuer die
@@ -600,6 +601,8 @@ function buildGatewayStorysHtml() {
     ${buildGatewayMusikHtml()}
 
     ${buildGatewayLiedHtml()}
+
+    ${buildGatewayFunkHtml()}
   `;
 }
 
@@ -1032,6 +1035,7 @@ const GW_PREISE = [
   ["zeit", "Zeitmaschine 2100", "kalt", null, "am Ende des Films"],
   ["nukes", "Hundert Atombomben", "gold", null, "am Ende des Films"],
   ["liebeslied", "Liebeslied", "violett", null, "am Ende des Lieds"],
+  ["funkspruch", "Funkspruch", "rot", null, "am Ende der Aufnahme"],
   ["ende", "Systemausfall", "rot", null, "am Ende"],
 ];
 let gwPreise = {};
@@ -1144,6 +1148,9 @@ async function gwPreisSpeichern(id) {
 ------------------------------------------------------ */
 const GW_MUSIK_STORYS = GW_STORYS.map(([id, name, , ton]) => [id, name, ton])
   .concat([["gegenhack_sieg", "Gegenhack: Sieg", "neon"], ["gegenhack_niederlage", "Gegenhack: Niederlage", "rot"],
+    /* Funkspruch (71): getrennte Spuren nur fuer die Analyse (z. B. aus
+       Demucs) - gespielt wird immer "funkspruch". */
+    ["funkspruch_stimme", "Funkspruch: nur Stimme (Analyse)", "rot"], ["funkspruch_musik", "Funkspruch: nur Musik (Analyse)", "rot"],
     /* Sternenschlacht (scripts/schlacht/schlacht-klang.js): ohne Datei
        spielt die Schlacht ihre im Browser erzeugte Synth-Musik - je
        Kampfort ein eigenes Stueck. "schlacht" gilt nur ohne Kampfort. */
@@ -1187,6 +1194,7 @@ function gwMusikStandZeigen() {
     else el.textContent = id === "disco" ? "Standard: music/disco.mp3"
       : id === "schlacht" ? "Keine Datei – es läuft die erzeugte Synth-Musik"
       : id.indexOf("schlacht_") === 0 ? "Keine Datei – es läuft die erzeugte Musik dieses Kampforts"
+      : id.indexOf("funkspruch_") === 0 ? "Keine Datei – die Analyse nutzt die Aufnahme „Funkspruch“"
       : "Keine Musik – die Story läuft still";
   });
 }
@@ -1875,6 +1883,83 @@ function buildGatewayLiedHtml() {
     <p id="gw-lied-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <p class="gateway-status-sub">Je Zeile: Sekunde ab Storybeginn, „|“, Text. „/“ bricht um, *Wort* wird größer und leuchtet, „# intro“ / „# strophe“ / „# refrain“ / „# bruecke“ / „# outro“ wechselt den Stil. Effekte je Zeile: {ringe} {horizont} {orb} {blitz} {kippen} {blende} {ohne}. Zeilen ohne Zeit werden übersprungen. Der Text liegt öffentlich lesbar in site_config, wie die Ankündigung.</p>
   `;
+}
+
+/* ------------------------------------------------------
+   WOERTER UND LAENGE FUER "FUNKSPRUCH" (Migration 71, funk-film.js)
+   ---------------------------------------------------
+   Wie der Liedtext in site_config (funkText, funkDauer). Je Zeile
+   "Sekunde | Wort"; mehrere Woerter auf einer Zeile folgen im Abstand
+   von 0,28 s, "/" oder eine Leerzeile beginnt einen neuen Block. Die
+   Laenge der Aufnahme bestimmt, wie lange die Story laeuft (+ 1 s) -
+   "Länge aus Datei" liest sie aus der hochgeladenen Aufnahme.
+------------------------------------------------------ */
+function buildGatewayFunkHtml() {
+  const c = typeof siteConfig !== "undefined" ? siteConfig : {};
+  const dauer = Number(c.funkDauer) > 0 ? String(c.funkDauer) : "";
+  return `
+    <p class="gw-plan-ueberschrift">Funkspruch: Wörter und Länge</p>
+    <label class="gateway-status-sub" for="gw-funk-dauer">Länge der Aufnahme in Sekunden</label>
+    <input id="gw-funk-dauer" class="code-input" type="number" min="1" max="3599" step="0.1" inputmode="decimal" value="${escapeHtml(dauer)}" placeholder="z. B. 48.6">
+    <textarea id="gw-funk-text" class="code-input gw-lied-text" rows="12" maxlength="12000" spellcheck="false"
+      aria-label="Gesprochene Wörter mit Einsatz" placeholder="0.42 | Ahoi&#10;0.80 | Crew,&#10;/&#10;2.10 | hier">${escapeHtml(c.funkText || "")}</textarea>
+    <div class="gw-story-knoepfe">
+      <button type="button" class="gw-live-knopf" onclick="gwFunkDauerAusDatei()">Länge aus Datei</button>
+      <button type="button" class="gw-live-knopf" onclick="gwFunkPruefen()">Prüfen</button>
+      <button type="button" class="gw-live-knopf ist-alle" onclick="gwFunkSpeichern()">Speichern</button>
+    </div>
+    <p id="gw-funk-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <p class="gateway-status-sub">Je Zeile: Sekunde ab Storybeginn, „|“, Wort. Mehrere Wörter auf einer Zeile erscheinen im Abstand von 0,28 s. Eine Zeile mit „/“ oder eine Leerzeile beginnt einen neuen Block; sonst beginnt einer nach einem Satzende, nach einem Komma ab 4 Wörtern, nach einer Pause über 1,6 s oder spätestens nach 8 Wörtern. Die Wörter liegen öffentlich lesbar in site_config.</p>
+  `;
+}
+
+function gwFunkDauerAusDatei() {
+  const v = gwMusikVersion("funkspruch");
+  if (!v || !supabaseClient) { gwLiveStatus("gw-funk-status", "Erst unter „Musik je Story“ die Aufnahme für den Funkspruch hochladen.", true); return; }
+  const audio = new Audio();
+  audio.preload = "metadata";
+  audio.addEventListener("loadedmetadata", () => {
+    if (!isFinite(audio.duration) || audio.duration <= 0) { gwLiveStatus("gw-funk-status", "Die Länge der Datei ist nicht lesbar.", true); return; }
+    document.getElementById("gw-funk-dauer").value = audio.duration.toFixed(1);
+    gwLiveStatus("gw-funk-status", "Länge gelesen: " + audio.duration.toFixed(1) + " s – Story läuft " + (audio.duration + 1).toFixed(1) + " s. Speichern nicht vergessen.", false);
+  }, { once: true });
+  audio.addEventListener("error", () => gwLiveStatus("gw-funk-status", "Die Aufnahme ließ sich nicht laden.", true), { once: true });
+  audio.src = supabaseClient.storage.from("live-musik").getPublicUrl("funkspruch").data.publicUrl + "?v=" + encodeURIComponent(v);
+}
+
+async function gwFunkPruefen() {
+  const feld = document.getElementById("gw-funk-text");
+  if (!feld) return null;
+  try {
+    if (!window.fhFunkFilm && window.fhNachladen) await window.fhNachladen("funk");
+  } catch (e) {
+    gwLiveStatus("gw-funk-status", "funk-film.js ließ sich nicht laden: " + ((e && e.message) || e), true);
+    return null;
+  }
+  if (!window.fhFunkFilm) return null;
+  const erg = window.fhFunkFilm.lesen(feld.value);
+  const dauer = Number(document.getElementById("gw-funk-dauer").value);
+  const zuSpaet = dauer > 0 ? erg.woerter.filter((w) => w.t > dauer).length : 0;
+  gwLiveStatus("gw-funk-status", erg.woerter.length + " Wörter in " + erg.bloecke.length + " Blöcken erkannt"
+    + (zuSpaet ? ", " + zuSpaet + " davon nach dem Ende der Aufnahme" : "") + (dauer > 0 ? "." : ". Die Länge fehlt noch – ohne sie läuft die Story 61 s."), zuSpaet > 0 || !(dauer > 0));
+  return erg;
+}
+
+async function gwFunkSpeichern() {
+  const feld = document.getElementById("gw-funk-text");
+  if (!feld) return;
+  const dauer = Number(document.getElementById("gw-funk-dauer").value);
+  if (document.getElementById("gw-funk-dauer").value && !(dauer > 0 && dauer < 3600)) {
+    gwLiveStatus("gw-funk-status", "Die Länge muss zwischen 1 und 3599 Sekunden liegen.", true);
+    return;
+  }
+  gwLiveStatus("gw-funk-status", "Speichere …", false);
+  try {
+    await patchSupabaseSiteConfig({ funkText: feld.value.slice(0, 12000), funkDauer: dauer > 0 ? Math.round(dauer * 10) / 10 : 0 });
+    gwLiveStatus("gw-funk-status", "✓ Gespeichert. Gilt für jeden, der die Story ab jetzt sieht (Vorschau oben zum Ansehen).", false);
+  } catch (e) {
+    gwLiveStatus("gw-funk-status", "Speichern fehlgeschlagen: " + ((e && e.message) || e), true);
+  }
 }
 
 /* ID3v2: Text des ersten USLT-Rahmens (unsynchronisierter Liedtext). */

@@ -270,6 +270,15 @@ body.loaded {
   --fh-lied-lila: #a99cf0;
   --fh-lied-lila-tief: #5d50b8;
   --fh-lied-licht: #f4f1ff;
+  /* Funkspruch (scripts/liveevent/funk-film.js), runde Tonspur:
+     fast schwarzer Grund, warmes Weiss, Signalrot als Akzent, leise
+     Balken grau-blau, ungespielte Huellkurve dunkelgrau. */
+  --fh-funk-grund: #07080c;
+  --fh-funk-text: #f2efea;
+  --fh-funk-akzent: #ff3b30;
+  --fh-funk-leise: #8a93a8;
+  --fh-funk-dunkel: #2a2f3a;
+  --fh-funk-flaeche: #0e1016;
   /* Rubbellose der Spielothek (scripts/spielothek/games/rubbellose.js):
      je Los Grundton und Tiefe, dazu die silberne Rubbelschicht. */
   --fh-rubbel-flaschenpost: #2f8f8a;
