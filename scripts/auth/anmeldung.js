@@ -68,12 +68,49 @@ const FH_ANMELDE_RUECKKEHR = (function () {
 })();
 
 /* Welcher Anbieter zuletzt angefragt wurde - fuer die Meldung und
-   fuer den zweiten Anlauf, falls das Konto schon woanders haengt. */
-function fhAnbieterMerken(provider) {
-  try { sessionStorage.setItem("fhAnmeldeAnbieter", provider); } catch (e) { /* Privatmodus */ }
+   fuer den zweiten Anlauf, falls das Konto schon woanders haengt.
+
+   WARUM NICHT NUR sessionStorage
+   sessionStorage gilt je Tab. Auf dem Handy oeffnet der Discord-Knopf
+   oft die Discord-App, und die schickt den Nutzer in einem NEUEN Tab
+   (oder einem anderen Browser) zurueck. Dort war der Merker leer, der
+   Anbieter unbekannt - und der Umweg "dort anmelden" fiel aus. Uebrig
+   blieb die englische Rohmeldung "Identity is already linked to
+   another user". Deshalb zusaetzlich in localStorage, mit Ablaufzeit,
+   damit ein alter Merker keinen spaeteren Fehler falsch zuordnet. */
+const FH_MERKER_GUELTIG_MS = 15 * 60 * 1000;
+
+function fhMerkerSetzen(schluessel, wert) {
+  try { sessionStorage.setItem(schluessel, wert); } catch (e) { /* Privatmodus */ }
+  try { localStorage.setItem(schluessel, JSON.stringify({ w: wert, t: Date.now() })); } catch (e) { /* Privatmodus */ }
 }
-function fhAnbieterGemerkt() {
-  try { return sessionStorage.getItem("fhAnmeldeAnbieter") || ""; } catch (e) { return ""; }
+function fhMerkerLesen(schluessel) {
+  try { const w = sessionStorage.getItem(schluessel); if (w) return w; } catch (e) { /* weiter */ }
+  try {
+    const roh = JSON.parse(localStorage.getItem(schluessel) || "null");
+    if (roh && roh.w && Date.now() - Number(roh.t || 0) < FH_MERKER_GUELTIG_MS) return String(roh.w);
+  } catch (e) { /* kaputter Eintrag - wie leer */ }
+  return "";
+}
+function fhMerkerLoeschen(schluessel) {
+  try { sessionStorage.removeItem(schluessel); } catch (e) { /* egal */ }
+  try { localStorage.removeItem(schluessel); } catch (e) { /* egal */ }
+}
+
+function fhAnbieterMerken(provider) { fhMerkerSetzen("fhAnmeldeAnbieter", provider); }
+function fhAnbieterGemerkt() { return fhMerkerLesen("fhAnmeldeAnbieter"); }
+
+/* Haengt das Konto beim Anbieter schon an einem anderen Spielstand?
+   Zwei Wege fuehren dorthin:
+   - identity_already_exists: genau dieses Discord-/Twitch-Konto ist
+     schon mit einem anderen Spielstand verknuepft.
+   - email_exists: das Anbieter-Konto ist neu, aber seine E-Mail
+     gehoert schon einem anderen Spielstand (z. B. frueher mit Google
+     oder Name + E-Mail angemeldet). Supabase verknuepft beim
+     normalen Anmelden ueber dieselbe bestaetigte Adresse selbst. */
+function fhKontoHaengtWoanders(r, text) {
+  return r.code === "identity_already_exists" || r.code === "email_exists" ||
+    /already linked|already been registered/i.test(text);
 }
 
 /* Eine Meldung ueber das Neuladen hinweg (nach Anmelden/Registrieren
@@ -101,18 +138,29 @@ async function fhRueckkehrAuswerten() {
      (z. B. auf dem ersten Geraet angemeldet). Dann ist nicht
      Verknuepfen richtig, sondern ganz normal dort anmelden. Nur
      einmal versuchen, damit es keine Schleife gibt. */
-  if ((r.code === "identity_already_exists" || /already linked/i.test(text)) && FH_ANMELDE_WEGE[anbieter]) {
-    let schonVersucht = false;
-    try { schonVersucht = sessionStorage.getItem("fhAnmeldeUmweg") === anbieter; sessionStorage.setItem("fhAnmeldeUmweg", anbieter); } catch (e) {}
+  const woanders = fhKontoHaengtWoanders(r, text);
+  if (woanders && FH_ANMELDE_WEGE[anbieter]) {
+    const schonVersucht = fhMerkerLesen("fhAnmeldeUmweg") === anbieter;
+    fhMerkerSetzen("fhAnmeldeUmweg", anbieter);
     if (!schonVersucht && supabaseClient) {
       fhAnmeldeStatus(t("login.errLinked", "Dieses Konto hat schon einen Spielstand – du wirst dort angemeldet …"));
-      const { error } = await supabaseClient.auth.signInWithOAuth({ provider: anbieter, options: { redirectTo: fhAnmeldeZiel() } });
-      if (!error) return;
+      try {
+        const { error } = await supabaseClient.auth.signInWithOAuth({ provider: anbieter, options: { redirectTo: fhAnmeldeZiel() } });
+        if (!error) return;
+        console.warn("Umweg-Anmeldung fehlgeschlagen:", error);
+      } catch (err) {
+        console.warn("Umweg-Anmeldung fehlgeschlagen:", err);
+      }
     }
   }
 
   let meldung;
-  if (/email/i.test(text) && /provider/i.test(text)) {
+  if (woanders) {
+    /* Statt der englischen Rohmeldung sagen, was los ist und was hilft. */
+    meldung = FH_ANMELDE_WEGE[anbieter]
+      ? t("login.errWoanders", "Dieses {anbieter}-Konto gehört schon zu einem anderen Spielstand. Tipp noch einmal auf „{anbieter}“ – dann wirst du dort angemeldet.").replace(/\{anbieter\}/g, name)
+      : t("login.errWoandersOhne", "Dieses Konto gehört schon zu einem anderen Spielstand. Tipp noch einmal auf denselben Anmelde-Knopf – dann wirst du dort angemeldet.");
+  } else if (/email/i.test(text) && /provider/i.test(text)) {
     meldung = t("login.errNoEmail", "{anbieter} hat uns keine E-Mail-Adresse geschickt. Bestätige deine E-Mail in den {anbieter}-Einstellungen und versuch es noch einmal – oder melde dich anders an.").replace(/\{anbieter\}/g, name);
   } else if (r.fehler === "access_denied") {
     meldung = t("login.errDenied", "Anmeldung über {anbieter} abgebrochen.").replace(/\{anbieter\}/g, name);
@@ -436,7 +484,7 @@ async function fhAnmeldenMit(provider) {
   }
   if (!FH_ANMELDE_WEGE[provider]) return;
   fhAnbieterMerken(provider);
-  try { sessionStorage.removeItem("fhAnmeldeUmweg"); } catch (e) {}
+  fhMerkerLoeschen("fhAnmeldeUmweg");
 
   try {
     const { data: sitzung } = await supabaseClient.auth.getSession();
@@ -753,7 +801,8 @@ async function fhAnmeldungUebernehmen() {
     try { await supabaseClient.rpc("anmeldeart_festhalten"); }
     catch (err) { /* Migration noch nicht eingespielt - unkritisch */ }
   }
-  try { sessionStorage.removeItem("fhAnmeldeUmweg"); } catch (e) {}
+  fhMerkerLoeschen("fhAnmeldeUmweg");
+  fhMerkerLoeschen("fhAnmeldeAnbieter");
 }
 
 /* ------------------------------------------------------
