@@ -1150,7 +1150,7 @@ const GW_MUSIK_STORYS = GW_STORYS.map(([id, name, , ton]) => [id, name, ton])
   .concat([["gegenhack_sieg", "Gegenhack: Sieg", "neon"], ["gegenhack_niederlage", "Gegenhack: Niederlage", "rot"],
     /* Funkspruch (71): getrennte Spuren nur fuer die Analyse (z. B. aus
        Demucs) - gespielt wird immer "funkspruch". */
-    ["funkspruch_stimme", "Funkspruch: nur Stimme (Analyse)", "rot"], ["funkspruch_musik", "Funkspruch: nur Musik (Analyse)", "rot"],
+    ["funkspruch_stimme", "Funkspruch – nur bei Musik darunter: getrennte Stimmspur", "rot"], ["funkspruch_musik", "Funkspruch – nur bei Musik darunter: getrennte Musikspur", "rot"],
     /* Sternenschlacht (scripts/schlacht/schlacht-klang.js): ohne Datei
        spielt die Schlacht ihre im Browser erzeugte Synth-Musik - je
        Kampfort ein eigenes Stueck. "schlacht" gilt nur ohne Kampfort. */
@@ -1194,7 +1194,8 @@ function gwMusikStandZeigen() {
     else el.textContent = id === "disco" ? "Standard: music/disco.mp3"
       : id === "schlacht" ? "Keine Datei – es läuft die erzeugte Synth-Musik"
       : id.indexOf("schlacht_") === 0 ? "Keine Datei – es läuft die erzeugte Musik dieses Kampforts"
-      : id.indexOf("funkspruch_") === 0 ? "Keine Datei – die Analyse nutzt die Aufnahme „Funkspruch“"
+      : id === "funkspruch" ? "Keine Datei – hier gehört die Aufnahme hin (nur Stimme genügt)"
+      : id.indexOf("funkspruch_") === 0 ? "Keine Datei – nicht nötig, wenn die Aufnahme nur Stimme ist (die gehört in die Zeile „Funkspruch“)"
       : "Keine Musik – die Story läuft still";
   });
 }

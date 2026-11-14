@@ -579,7 +579,10 @@
   function quellenAusStory() {
     const ls = window.fhLiveStorys;
     const url = function (id) { return ls && ls.musikUrl ? ls.musikUrl(id) : null; };
-    return { haupt: url("funkspruch"), stimme: url("funkspruch_stimme"), musik: url("funkspruch_musik") };
+    const haupt = url("funkspruch"), stimme = url("funkspruch_stimme");
+    /* Nur die Stimmspur hochgeladen: sie ist dann die Aufnahme (live-storys.js
+       spielt sie auch ab). */
+    return { haupt: haupt || stimme, stimme: haupt ? stimme : null, musik: url("funkspruch_musik") };
   }
 
   function statusSetzen(l, text) { l.statusEl.textContent = text || ""; l.statusEl.hidden = !text; }
