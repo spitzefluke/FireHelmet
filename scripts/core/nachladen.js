@@ -42,8 +42,8 @@
     lied: "scripts/liveevent/lied-film.js?v=6dccf51243",
     liedKlassisch: "scripts/liveevent/lied-film-klassisch.js?v=5e49903571",
     funk: "scripts/liveevent/funk-film.js?v=1c74edffa1",
-    zelle: "scripts/liveevent/zelle.js?v=107460e236",
-    zelleRaeume: "scripts/liveevent/zelle-raeume.js?v=fad072e97d",
+    zelle: "scripts/liveevent/zelle.js?v=6022dc822b",
+    zelleRaeume: "scripts/liveevent/zelle-raeume.js?v=a0e743e787",
     saisonAdmin: "scripts/saison/saison-admin.js?v=ece8909fef"
   };
 

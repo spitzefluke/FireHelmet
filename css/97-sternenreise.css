@@ -471,7 +471,8 @@ html.fh-verwahrung #fh-reise-welt::before {
 }
 @keyframes zl-kegel { from { left: -40%; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { left: 110%; opacity: 0; } }
 .zl.ist-versteckt .zl-szene { filter: brightness(.45) saturate(.6); transition: filter .4s var(--fh-ease); }
-.zl-versteck-knopf { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 6; min-width: 200px; animation: zl-puls .5s ease-in-out infinite alternate; }
+.zl-versteck-knopf { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 6; min-width: 200px; animation: zl-ring .6s ease-in-out infinite alternate; }
+@keyframes zl-ring { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--fh-reise-rot) 60%, transparent); } to { box-shadow: 0 0 0 10px color-mix(in srgb, var(--fh-reise-rot) 0%, transparent); } }
 
 /* Szene: klickbare Teile */
 .zl-teil { cursor: pointer; transition: filter .16s var(--fh-ease); }
@@ -485,6 +486,7 @@ html.fh-verwahrung #fh-reise-welt::before {
 .zl-naht { fill: none; stroke: var(--fh-zelle-papier); stroke-width: 2; stroke-dasharray: 4 3; }
 .zl-papier { fill: var(--fh-zelle-papier); }
 .zl-papier-kopf { fill: var(--fh-zelle-tinte); font-size: 16px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.zl-papier-kopf.ist-klein { font-size: 11px; letter-spacing: .04em; }
 .zl-papier-text { fill: var(--fh-zelle-tinte); font-size: 13px; }
 .zl-papier-gross { fill: var(--fh-zelle-tinte); font-size: 18px; font-weight: 700; font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; }
 .zl-gluehbirne { fill: var(--fh-zelle-licht); filter: drop-shadow(0 0 14px var(--fh-zelle-licht)); animation: zl-flackern 5s steps(1) infinite; }
@@ -649,7 +651,14 @@ html.fh-verwahrung #fh-reise-welt::before {
 .zl-zettel .rs-knopf.ist-leise { color: var(--fh-zelle-tinte); justify-self: end; }
 
 /* Ende und Bestenliste */
-.zl-ende { position: absolute; inset: 0; display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: center; padding: clamp(16px, 4vw, 48px); overflow-y: auto; }
+.zl-ende {
+  position: absolute; inset: 0; z-index: 8; display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: center;
+  padding: clamp(16px, 4vw, 48px); overflow-y: auto;
+  background: radial-gradient(70% 60% at 30% 40%, color-mix(in srgb, var(--fh-reise-auge-tief) 18%, transparent), transparent 70%),
+    color-mix(in srgb, var(--fh-zelle-nacht) 92%, transparent);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  animation: rs-rein .6s var(--fh-ease) both;
+}
 .zl-ende-text { display: grid; gap: 12px; justify-items: start; }
 .zl-belohnung { margin: 0; font-size: 20px; font-weight: 600; color: var(--fh-gold); }
 .zl-titel-neu { margin: 0; font-size: 15px; color: var(--fh-reise-rot-hell); }

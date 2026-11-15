@@ -582,6 +582,10 @@
     clearInterval(lauf.uhrId); clearTimeout(lauf.kontrollUhr);
     lauf.ref.wurzel.classList.remove("ist-kontrolle", "ist-licht", "ist-versteckt");
     lauf.ref.versteckKnopf.hidden = true;
+    /* Raum anhalten, offene Panels und Zettel weg - sonst liegen sie über dem Ende. */
+    if (lauf.raumAbbau) { lauf.raumAbbau(); lauf.raumAbbau = null; }
+    lauf.ref.buehne.querySelectorAll(".zl-panel").forEach(function (p) { p.hidden = true; });
+    lauf.ref.zettel.hidden = true;
     merken("fhZelleEntkommen", lauf.opt.schluessel);
     try { localStorage.removeItem("fhZelle2:" + lauf.id); } catch (e) { /* egal */ }
     lauf.ref.zeit.textContent = zeitText(d.zeit_sek * 1000);

@@ -348,9 +348,10 @@
     /* Kerbe mit dem Frequenz-Anfang */
     const km = mitte(lab.kerbe);
     const kg = api.sv("g", { class: "zl-schacht-kerbe" }, svg);
-    const kt = api.sv("text", { x: km[0], y: km[1] + 18, "text-anchor": "middle" }, kg);
+    /* Zahl und Welle oben und unten in der Zelle - die Figur steht in der Mitte. */
+    const kt = api.sv("text", { x: km[0], y: km[1] + 34, "text-anchor": "middle" }, kg);
     kt.textContent = d.kerbe + "…";
-    form(api, kg, "welle", km[0] - 12, km[1] - 30, 24, "");
+    form(api, kg, "welle", km[0] - 10, km[1] - 36, 20, "");
     /* Sensoren */
     const strahlen = lab.sensoren.map(function (s) {
       const m = mitte(s.c);
@@ -493,7 +494,7 @@
     const brett = api.sv("g", {}, svg);
     api.sv("rect", { x: 580, y: 70, width: 160, height: 210, rx: 6, class: "zl-brett" }, brett);
     api.sv("rect", { x: 595, y: 92, width: 130, height: 170, class: "zl-papier" }, brett);
-    const bk = api.sv("text", { x: 660, y: 120, "text-anchor": "middle", class: "zl-papier-kopf" }, brett);
+    const bk = api.sv("text", { x: 660, y: 120, "text-anchor": "middle", class: "zl-papier-kopf ist-klein" }, brett);
     bk.textContent = t("zelle.rundgang.titel", "Rundgang Nacht");
     const rz = api.sv("text", { x: 660, y: 170, "text-anchor": "middle", class: "zl-papier-gross" }, brett);
     rz.textContent = (d.rundgang || []).map(function (n) { return "K" + n; }).join(" → ");
