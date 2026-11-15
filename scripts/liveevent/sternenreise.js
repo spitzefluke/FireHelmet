@@ -1133,7 +1133,7 @@
   ====================================================== */
   const welt = { art: null, fin: null, wurzel: null, auge: null, uhren: [], maus: null, x: -1, y: -1, schluessel: null, vorschau: false, nr: 0, opt: null, vorschauFrei: false };
 
-  /* „Entkomme der Zelle“: Wer ausgebrochen ist, sieht keine Gitter mehr
+  /* „Ausbruch aus der Verwahrung“: Wer ausgebrochen ist, sieht keine Gitter mehr
      (je Verwahrung; in der Admin-Vorschau nur bis zum Neuladen). */
   function entkommenSchon() {
     return welt.vorschau ? welt.vorschauFrei : !!welt.schluessel && gemerkt("fhZelleEntkommen") === welt.schluessel;
@@ -1364,7 +1364,8 @@
       zeile(leiste, "rsw-leiste-teil", [tf("reise.welt.v.zelleNr", "Zelle {n}", { n: "C-17" })]);
       uhr = el("span", "rs-ziffern ist-rot", "00:59");
       zeile(leiste, "rsw-leiste-teil", [t("reise.welt.v.kontrolle", "Nächste Kontrolle") + " ", uhr]);
-      if (!flucht) leiste.appendChild(knopf(t("reise.welt.v.ausbruch", "Ausbruch versuchen"), "ist-leise rsw-ausbruch", zelleOeffnen, "schloss"));
+      /* Auch auf der Flucht: noch einmal ausbrechen - für die Bestenliste (Migration 72). */
+      leiste.appendChild(knopf(flucht ? t("reise.welt.v.nochmal", "Noch einmal ausbrechen") : t("reise.welt.v.ausbruch", "Ausbruch versuchen"), "ist-leise rsw-ausbruch", zelleOeffnen, "schloss"));
     } else {
       zeile(leiste, "rsw-leiste-teil", [t("reise.welt.t.netz", "Kolonialnetz Terra Nova")]);
       uhr = el("span", "rs-ziffern", "00:00:00");

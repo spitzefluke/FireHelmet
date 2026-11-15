@@ -16,10 +16,10 @@ Datei, die du gerade anfasst.
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 131 `<script defer>`-Tags in fester
-Reihenfolge, davon 117 aus diesem Repo. Dreizehn große Skripte, die fast niemand braucht
+Reihenfolge, davon 117 aus diesem Repo. Vierzehn große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `lied-film.js`,
 `lied-film-klassisch.js`, `funk-film.js`, `story-wetter.js`,
-`drehbuch.js`, `sternenreise.js`, `zelle.js`, `saison-admin.js`), stehen stattdessen in der Tabelle
+`drehbuch.js`, `sternenreise.js`, `zelle.js`, `zelle-raeume.js`, `saison-admin.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
 meldet CodeQL das als hohe Sicherheitslücke. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
@@ -125,7 +125,7 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhLiedFilm`, `window.fhLiedFilmKlassisch`, `window.fhFunkFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhLiedFilm`, `window.fhLiedFilmKlassisch`, `window.fhFunkFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhZelleRaeume`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
 nach `fhNachladen(...)`. Das **Drehbuch** (Migration 65, `scripts/liveevent/drehbuch.js`) baut
 im Admin-Bereich ein Live-Event vorab aus Schritten (Text, Story, Story beenden, Effekt, Pause),
 gespeichert in `event_drehbuecher` (nur Admins per RLS); abgespielt wird im Browser des Admins
@@ -179,13 +179,23 @@ setzt `reise_abschluss()` nach der Reise „gelandet“. Das Ergebnis schreibt `
 (unabhängig von 1720/2100), der Admin per `admin_reise_welt()` (Live-Event → Epoche) zurück oder
 direkt. Die Vorschau-Knöpfe dort wirken weiter nur im eigenen Browser.
 
-**Entkomme der Zelle** (`scripts/liveevent/zelle.js`, nachgeladen als `zelle`) ist ein Escape Room,
-den es nur in der Verwahrung gibt (Knopf „Zelle verlassen“ auf der Akte, „Ausbruch versuchen“ in
-der Statusleiste): Löffel → Stein → Blechstück → Lüftungsgitter → Notiz → Türcode aus der
-Hausordnung (Wörter je Regel, **aus den Texten der gerade gewählten Sprache** – wer
-`reise.welt.v.regel1..4` ändert, ändert den Code) → Tür nur bei geschlossenem Auge. Rein im Browser;
-einmal je Verwahrung 250 Dublonen über `addCurrency()`, danach zeigt die Seite dem Spieler keine
-Gitter mehr („Auf der Flucht“, `localStorage` „fhZelleEntkommen“). `#fh-zelle` steht in allen
+**Ausbruch aus der Verwahrung** (Migration 72, `scripts/liveevent/zelle.js`, nachgeladen als `zelle`;
+die Räume in `zelle-raeume.js`, nachgeladen als `zelleRaeume`, `window.fhZelleRaeume`) ist ein Escape
+Room über vier Räume, den es nur in der Verwahrung gibt (Knopf auf der Akte, „Ausbruch versuchen“ bzw.
+„Noch einmal ausbrechen“ in der Statusleiste): **Zelle C-17** (Kerben → Türcode), **Lüftungsschacht**
+(Labyrinth mit Sensoren → Sicherung), **Wachraum** (Kameras → Spind → Karte, Uhr + Klebezettel →
+Passwort, Sicherungskasten → Kamera aus) und **Asservatenkammer** (Funkfrequenz senden). Dazu
+Inventar mit Kombinieren, Notizbuch, Kontrollen mit Verstecken und drei Tipps je Raum.
+
+Die Datenbank würfelt die Rätsel je Lauf (`app.zelle_raetsel()`), zeigt einem Lauf nur die Hinweise
+der Räume, die er erreicht hat (`zelle_start()`), und prüft jede Antwort (`zelle_loesen()`) mit
+Mindestzeiten, Sperre gegen Durchprobieren und Strafsekunden (`zelle_strafe()`). Wer ausbricht,
+bekommt einmal je Verwahrung 1.500 / 1.000 / 500 Dublonen (bis 25 / 40 Minuten / länger) und den
+Titel `zelle-ausbrecher`; die Zeiten stehen in `zelle_bestenliste()`. Ein Lauf liegt in
+`zelle_laeufe`, die der Browser nicht direkt lesen kann; der Trigger `zelle_konto_aufraeumen`
+räumt sie mit dem Konto ab. Der Stand im Raum (was offen ist, Taschen, Notizen) liegt nur im
+Browser (`localStorage` „fhZelle2:<lauf>“). Nach dem Ausbruch zeigt die Seite keine Gitter mehr
+(„Auf der Flucht“, `localStorage` „fhZelleEntkommen“). `#fh-zelle` steht in allen
 `:not`-Listen der Epochen.
 
 ### Liebeslied

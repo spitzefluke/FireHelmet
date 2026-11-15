@@ -1502,7 +1502,10 @@
       return;
     }
     szeneBetreten(pos.n, pos.rest);
-    if (st !== "disco" && lauf) musikStart(musikUrl(st), ms, st === "funkspruch");
+    /* Funkspruch: Liegt die Aufnahme nur als Stimmspur vor (im Gateway in
+       der falschen Zeile hochgeladen), wird eben die gespielt. */
+    const quelle = st === "funkspruch" ? musikUrl("funkspruch") || musikUrl("funkspruch_stimme") : musikUrl(st);
+    if (st !== "disco" && lauf) musikStart(quelle, ms, st === "funkspruch");
   }
 
   function stoppen() {
