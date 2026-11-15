@@ -255,6 +255,12 @@ body.loaded {
   --fh-reise-rot-hell: #ff8a94;
   --fh-reise-auge: #ff2b3d;
   --fh-reise-auge-tief: #9a0716;
+  /* Ausbruch aus der Verwahrung (Migration 72): Zelle, Schacht, Wachraum, Kammer */
+  --fh-zelle-nacht: #0d0e16; --fh-zelle-dunkel: #07070b; --fh-zelle-wand: #23242e; --fh-zelle-boden: #17161d;
+  --fh-zelle-stein: #34353f; --fh-zelle-metall: #44454f; --fh-zelle-stahl: #8b8c98; --fh-zelle-stoff: #5c584b;
+  --fh-zelle-papier: #d8d2c2; --fh-zelle-tinte: #2b2a30; --fh-zelle-kratzer: #c9c3b6; --fh-zelle-licht: #ffe1aa;
+  --fh-zelle-holz: #5a4632; --fh-zelle-spind: #3e4a52; --fh-zelle-klebe: #f2dd6e;
+  --fh-zelle-schirm: #0b1a12; --fh-zelle-schirmlicht: #7dffb0;
   /* Liebeslied (scripts/liveevent/lied-film.js), Farben der Vorlage:
      Daemmerblau (Intro/Outro), sattes Blau (Strophe), Dunst (Refrain/
      Bruecke) - je Mitte und Rand -, dunkle Flaechen, Lila als Akzent. */

@@ -14,7 +14,8 @@
      reise    scripts/liveevent/sternenreise.js (Sternenreise und die Seite danach)
      lied     scripts/liveevent/lied-film.js  (nur das Lyric-Video „Liebeslied“, 3D)
      liedKlassisch scripts/liveevent/lied-film-klassisch.js (Liebeslied ohne WebGL)
-     zelle    scripts/liveevent/zelle.js      (Minispiel „Entkomme der Zelle“ in der Verwahrung)
+     zelle    scripts/liveevent/zelle.js      (Escape Room „Ausbruch aus der Verwahrung“)
+     zelleRaeume scripts/liveevent/zelle-raeume.js (die vier Räume dazu, lädt zelle.js selbst)
 
    Die Adressen stehen fest hier in ADRESSEN - nicht im HTML, damit
    keine Skriptadresse aus dem DOM gelesen wird (CodeQL: "DOM text
@@ -37,11 +38,12 @@
     nukes: "scripts/liveevent/nukes-film.js?v=5a18110731",
     wetter: "scripts/liveevent/story-wetter.js?v=d38bfcebe3",
     drehbuch: "scripts/liveevent/drehbuch.js?v=efff93b38f",
-    reise: "scripts/liveevent/sternenreise.js?v=d3c6b7bf35",
+    reise: "scripts/liveevent/sternenreise.js?v=257da37766",
     lied: "scripts/liveevent/lied-film.js?v=6dccf51243",
     liedKlassisch: "scripts/liveevent/lied-film-klassisch.js?v=5e49903571",
     funk: "scripts/liveevent/funk-film.js?v=1c74edffa1",
-    zelle: "scripts/liveevent/zelle.js?v=beb445fdf8",
+    zelle: "scripts/liveevent/zelle.js?v=107460e236",
+    zelleRaeume: "scripts/liveevent/zelle-raeume.js?v=fad072e97d",
     saisonAdmin: "scripts/saison/saison-admin.js?v=ece8909fef"
   };
 
