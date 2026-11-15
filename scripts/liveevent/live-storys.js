@@ -108,6 +108,11 @@
        Gateway (siteConfig.funkDauer) und wird bei jedem Start neu
        gesetzt (funkLaengeSetzen). 61 s gilt nur ohne Angabe. */
     funkspruch: { szenen: [61000] },
+    /* Migration 73: "Explosion" - die Seite explodiert, danach Countdown
+       bis live_event.explosion_ziel (explosion.js). Gesteuert wird allein
+       ueber den Zustand in live_event (explosionFolgen) - die Szene hier
+       ist nur Platzhalter, damit die Story startbar ist. */
+    explosion: { szenen: [6000] },
   };
   const ZEITEN_IN_SZENE = {};  // Summe der Dauer bis zum Beginn jeder Szene
   function zeitenRechnen(st) {
@@ -1488,6 +1493,16 @@
     stoppen();
     gehackt = false;
     nachregen = false;
+    /* Explosion (73): fuer alle traegt explosionFolgen() den Film; die
+       Vorschau spielt Explosion + 20 s nur hier, ohne Folgen. */
+    if (st === "explosion") {
+      if (vorschau) {
+        const an = function () { if (window.fhExplosion) window.fhExplosion.vorschau(); };
+        if (window.fhExplosion) an();
+        else if (window.fhNachladen) window.fhNachladen("explosion").then(an, function (e) { console.warn(e); });
+      }
+      return;
+    }
     if (st === "hacked") loecherWeg();
     if (st === "schatz") schatz = null;   // neuer Regen, neue Beute - auch beim spaeten Einstieg
     if (st === "funkspruch") funkLaengeSetzen();
@@ -1671,6 +1686,7 @@
   ------------------------------------------------------ */
   function zustand(z, erstesMal) {
     if (!z) return;
+    explosionFolgen(z);
     musikVersion = z.musik_version || null;
     musikVersionen = z.musik_versionen && typeof z.musik_versionen === "object" ? z.musik_versionen : {};
     if (z.story_preise && typeof z.story_preise === "object" && Object.keys(z.story_preise).length) preise = z.story_preise;
@@ -1702,6 +1718,74 @@
     }
   }
 
+  /* ------------------------------------------------------
+     EXPLOSION (Migration 73): Countdown fuer alle, bei 0 sind
+     dreizehn Features weg. Massgeblich ist die Datenbank -
+     explosion_ausloesen() loescht nach ihrer Uhr genau einmal.
+     Der Browser blendet ab dem Ziel die Seiten aus
+     (window.fhExplodiert, seiten-sperre.js) und fragt nach, bis
+     live_event.explosion_weg_ab gesetzt ist.
+  ------------------------------------------------------ */
+  let explosionZeile = null, explosionUhr = 0, explosionNaechsteFrage = 0, explosionFragen = 0;
+
+  function explodiertSetzen(an) {
+    if (window.fhExplodiert === an) return;
+    window.fhExplodiert = an;
+    document.documentElement.classList.toggle("fh-explodiert", an);
+    if (typeof window.fhSeitenSperreAnwenden === "function") window.fhSeitenSperreAnwenden();
+  }
+
+  async function explosionAusloesen() {
+    if (!dbDa() || Date.now() < explosionNaechsteFrage || explosionFragen >= 40) return;
+    explosionNaechsteFrage = Date.now() + 3000;
+    explosionFragen++;
+    try {
+      if (typeof wheelAuthReady !== "undefined") await wheelAuthReady;
+      const { data, error } = await withSupabaseRlsColdStartRetry(function () { return supabaseClient.rpc("explosion_ausloesen"); });
+      if (error) throw error;
+      if (data && data.ok) return;  // live_event meldet explosion_weg_ab gleich selbst
+      /* Die Uhr dieses Geraets geht vor, oder das Loeschen ist
+         gescheitert (steht dann im Gateway): spaeter nochmal. */
+      clearTimeout(explosionUhr);
+      explosionUhr = setTimeout(function () { if (explosionZeile) explosionFolgen(explosionZeile); }, 3200);
+    } catch (err) {
+      console.warn("Explosion: Auslösen fehlgeschlagen", err);
+    }
+  }
+
+  function explosionFolgen(z) {
+    if (!("explosion_ziel" in z)) return;  // ohne Migration 73
+    explosionZeile = z;
+    clearTimeout(explosionUhr);
+    const ziel = z.explosion_ziel ? Date.parse(z.explosion_ziel) : null;
+    const scharf = z.explosion_scharf_am ? Date.parse(z.explosion_scharf_am) : null;
+    if (z.explosion_weg_ab) {
+      explodiertSetzen(true);
+      if (window.fhExplosion) window.fhExplosion.ende();
+      return;
+    }
+    if (!scharf || !ziel) {
+      explodiertSetzen(false);
+      if (window.fhExplosion) window.fhExplosion.weg();  // abgebrochen
+      return;
+    }
+    if (Date.now() >= ziel) {
+      explodiertSetzen(true);
+      if (window.fhExplosion && !window.fhExplosion.laeuft()) window.fhExplosion.ende();
+      explosionAusloesen();
+      return;
+    }
+    explodiertSetzen(false);
+    const zeigen = function () {
+      if (window.fhExplosion) window.fhExplosion.zeigen({ ziel: ziel, scharfAm: scharf, beiNull: function () { explosionFolgen(explosionZeile); } });
+    };
+    if (window.fhExplosion) zeigen();
+    else if (window.fhNachladen) window.fhNachladen("explosion").then(zeigen, function (e) { console.warn(e); });
+    /* Auch ohne Film (Admin hat ihn ausgeblendet): zum Ziel nachsehen.
+       setTimeout traegt hoechstens ~24 Tage - dann einfach neu rechnen. */
+    explosionUhr = setTimeout(function () { explosionFolgen(z); }, Math.min(2000000000, ziel - Date.now() + 250));
+  }
+
   window.fhLiveStorys = {
     zustand: zustand,
     /* Admin: nur im eigenen Browser, ohne Belohnung */
@@ -1709,7 +1793,7 @@
     vorschauAusklingen: ausklingen,
     /* Nach einer Admin-Vorschau von Terra Nova/Verwahrung: wieder wie bei allen */
     reiseWeltAuffrischen: function () { if (reiseWeltZuletzt) reiseWeltSetzen.apply(null, reiseWeltZuletzt); },
-    vorschauStopp: function () { gehackt = false; loecherWeg(); stoppen(); },
+    vorschauStopp: function () { gehackt = false; loecherWeg(); stoppen(); if (window.fhExplosion) window.fhExplosion.vorschauStopp(); },
     laeuft: function () { return lauf ? { story: lauf.story, szene: lauf.n, szenen: STORYS[lauf.story].szenen.length, vorschau: lauf.vorschau } : null; },
     istGehackt: function () { return gehackt; },
     /* live-zuschauer.js: ein neues Event beendet den Nachregen. */

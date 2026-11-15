@@ -16,10 +16,10 @@ Datei, die du gerade anfasst.
 
 Das ist Absicht und keine Lücke, die man füllen soll. Die Seite ist **statisches
 HTML/CSS/Vanilla-JS ohne Bundler**: `index.html` lädt 131 `<script defer>`-Tags in fester
-Reihenfolge, davon 117 aus diesem Repo. Vierzehn große Skripte, die fast niemand braucht
+Reihenfolge, davon 117 aus diesem Repo. Fünfzehn große Skripte, die fast niemand braucht
 (`admin-gateway.js`, `riss-film.js`, `herz-film.js`, `zeit-film.js`, `nukes-film.js`, `lied-film.js`,
 `lied-film-klassisch.js`, `funk-film.js`, `story-wetter.js`,
-`drehbuch.js`, `sternenreise.js`, `zelle.js`, `zelle-raeume.js`, `saison-admin.js`), stehen stattdessen in der Tabelle
+`drehbuch.js`, `sternenreise.js`, `zelle.js`, `zelle-raeume.js`, `explosion.js`, `saison-admin.js`), stehen stattdessen in der Tabelle
 `ADRESSEN` in `scripts/core/nachladen.js` und kommen erst bei Bedarf über `fhNachladen(name)`.
 Die Adressen gehören **nicht** ins HTML: Aus dem DOM gelesen und als `script.src` gesetzt,
 meldet CodeQL das als hohe Sicherheitslücke. `package.json` hat keine Skripte; die Abhängigkeiten (gsap, three, motion) werden
@@ -125,7 +125,7 @@ Alles Übrige unter `scripts/` gehört je einem Bereich (`shop/`, `race/`, `whee
 Stelle, an der seine Abhängigkeiten schon geladen sind, nicht ans Ende.
 
 Nachgeladene Skripte sind beim Seitenstart **nicht** da: `window.fhRissFilm`,
-`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhLiedFilm`, `window.fhLiedFilmKlassisch`, `window.fhFunkFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhZelleRaeume`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
+`window.fhHerzFilm`, `window.fhZeitFilm`, `window.fhNukesFilm`, `window.fhLiedFilm`, `window.fhLiedFilmKlassisch`, `window.fhFunkFilm`, `window.fhStoryWetter`, `window.fhDrehbuch`, `window.fhSternenreise`, `window.fhZelle`, `window.fhZelleRaeume`, `window.fhExplosion`, `window.fhSaisonAdmin` und alles aus `admin-gateway.js` (z. B. `renderGatewayPage`) erst
 nach `fhNachladen(...)`. Das **Drehbuch** (Migration 65, `scripts/liveevent/drehbuch.js`) baut
 im Admin-Bereich ein Live-Event vorab aus Schritten (Text, Story, Story beenden, Effekt, Pause),
 gespeichert in `event_drehbuecher` (nur Admins per RLS); abgespielt wird im Browser des Admins
@@ -241,6 +241,34 @@ eine Funktion der Zeit. Schriften (Anton, Inter Tight, JetBrains Mono) liegen se
   (`funkLaengeSetzen()` in `live-storys.js`, ohne Angabe 61 s). Die Wortzeiten kommen z. B. aus
   whisper.cpp mit Wort-Zeitstempeln, die Schreibweise aus dem eigenen Text.
 - Belohnung „abschluss“ ab 10 s (die Länge kennt die Datenbank nicht). `#fh-funk` steht in allen
+  `:not`-Listen der Epochen.
+
+### Explosion
+
+Migration 73, Entwurf „Seite explodiert – Countdown“ aus Claude Design: die Story `explosion`
+(`scripts/liveevent/explosion.js`, nachgeladen als `explosion`). Die Seite zittert, explodiert und
+fliegt auseinander, danach sehen alle nur noch einen Countdown bis zum Ziel (Musik: „Musik je Story“
+→ `explosion`, sonst `music/countdown-4.mp3`). **Bei 0 löscht die Datenbank dreizehn Features für
+alle** – nicht rückgängig zu machen.
+
+- **Ablauf:** Gateway → „Explosion: Countdown bis“ setzt das Ziel (`admin_explosion_ziel()`, 2 min
+  bis 30 Tage voraus). Erst „Für alle“ bei der Story macht es scharf (`admin_live_story('explosion')`,
+  im Gateway nur nach eingetipptem „EXPLOSION“). Solange es scharf ist und das Ziel nicht erreicht,
+  startet und endet keine andere Story; abbrechen geht über `admin_explosion_abbrechen()`.
+- **Auslösen:** Ab dem Ziel fragt jeder Browser `explosion_ausloesen()`; die Datenbank entscheidet
+  nach ihrer Uhr und löscht genau einmal (`app.explosion_loeschen()`): `TRUNCATE` aller Tabellen aus
+  `app.explosion_tabellen()` in **einem** Befehl ohne `CASCADE` (ein fremder Verweis bricht alles ab,
+  der Fehler steht dann im Gateway), dazu `players.last_wheel_spin_at` und die Skill-Spalten in
+  `player_progression`; die Funktionen aus `app.explosion_funktionen()` und das Schreiben in die
+  Tabellen sind danach gesperrt. Die leeren Tabellen bleiben stehen – Konto löschen, Pass 2, Spind und
+  die Aufräum-Trigger verweisen darauf. **Wer eine Tabelle oder Funktion zu einem der Features neu
+  anlegt, trägt sie in diese Listen ein.**
+- **Browser:** Massgeblich ist `public.explosion` (ohne Policies); `live_event` trägt eine Kopie
+  (`explosion_ziel`, `explosion_scharf_am`, `explosion_weg_ab`). `explosionFolgen()` in
+  `live-storys.js` steuert den Film und setzt ab dem Ziel `window.fhExplodiert` und
+  `html.fh-explodiert` – `seiten-sperre.js` blendet dann die Seiten aus `EXPLOSION_WEG` für **alle**
+  aus, auch für den Admin. Wer später kommt, sieht sofort Trümmer und Countdown. Der Admin kann den
+  Countdown für sich ausblenden, um im Gateway abzubrechen. `#fh-explosion` steht in allen
   `:not`-Listen der Epochen.
 
 ### Saisons
