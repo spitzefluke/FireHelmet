@@ -5123,6 +5123,8 @@ body.fh-story-wunsch .fh-stern.ist-frei .fh-stern-kern {
 .fhx-ziffern[data-tage="ja"] { font-size: clamp(52px, 11vw, 220px); }
 .fhx-cd.ist-knapp .fhx-ziffern { color: var(--fh-gold-bright); text-shadow: 0 0 .25em var(--fh-explosion-schein-knapp); }
 .fhx-gruppe { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+/* Der *-Schriftreset in 00-basis.css traefe sonst jede Ebene dazwischen. */
+.fhx-gruppe, .fhx-doppel { font-family: inherit; }
 .fhx-zahl { display: inline-block; font-family: inherit; }
 .fhx-einheit {
   padding-left: .3em; font-family: var(--fh-font-sans); font-size: 12px; font-weight: 500; line-height: 1;
