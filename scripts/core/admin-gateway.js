@@ -560,6 +560,7 @@ const GW_STORYS = [
   ["nukes", "Hundert Atombomben gegen eine Mücke", "3 min · Film: Eine Mücke weckt Kapitän Ändii um 03:12 Uhr. Hand, Pfanne, Kanone – daneben. Dann der Notfallknopf und hundert Atombomben, bis die Erde zerbricht. Musik unten unter „Musik je Story“ hochladen (Migration 51)", "gold"],
   ["liebeslied", "Liebeslied", "5:23 min · Lyric-Video zu „I Don't Know Love“ als 3D-Kamerafahrt: Lichtring-Tunnel, Kristalle, Nebel und Galaxien, je Liedteil eine eigene Welt und Schrift; jede Zeile setzt sich aus Partikeln zusammen und zerfällt in Funken (ohne WebGL die 2D-Fassung). Musik unten unter „Musik je Story“ hochladen, den Text darunter unter „Liedtext“ (aus der MP3 lesen, mitklopfen)", "violett"],
   ["funkspruch", "Funkspruch", "Länge der Aufnahme + 1 s · Runde Tonspur: Ring aus 120 Balken, der auf die Stimme reagiert, innen die Hüllkurve der ganzen Aufnahme mit Abspielkopf, in der Mitte ein Funk-Symbol, oben die gesprochenen Wörter auf ihrem Einsatz. Aufnahme unten unter „Musik je Story“ hochladen, Wörter und Länge darunter unter „Funkspruch“ (Migration 71)", "rot"],
+  ["explosion", "Explosion", "bis zum Ziel unten · Die Seite zittert, explodiert und fliegt auseinander, danach sehen alle nur noch den Countdown (Musik: eigene Datei unter „Musik je Story“, sonst music/countdown-4.mp3). Bei 0 löscht die Datenbank 13 Features samt Daten für alle – NICHT rückgängig zu machen (Migration 73). Erst unten unter „Explosion“ das Ziel setzen; „Vorschau“ ist harmlos", "rot"],
 ];
 /* Die beiden Finale-Storys laufen nur ueber "Finale auslösen" und
    stehen darum nicht in der Liste - hier nur ihre Namen fuer die
@@ -603,6 +604,8 @@ function buildGatewayStorysHtml() {
     ${buildGatewayLiedHtml()}
 
     ${buildGatewayFunkHtml()}
+
+    ${buildGatewayExplosionHtml()}
   `;
 }
 
@@ -1681,6 +1684,7 @@ async function gwPlanStart(i) {
 
 async function gwStoryLageLaden() {
   gwEventLageLaden();
+  gwExplosionLaden();
   gwGegenhackLageLaden();
   gwPlaeneLaden();
   const ziel = document.getElementById("gw-story-jetzt");
@@ -1720,6 +1724,11 @@ function gwStoryVorschauStopp() {
 async function gwStoryStart(id) {
   if (!supabaseClient) return false;
   if (id === "ende" && !confirm("Systemausfall für alle starten? Die Seite bleibt danach für alle gehackt, bis die nächste Story startet oder du wiederherstellst.")) return false;
+  /* Explosion (73): scharf schalten heisst, bei 0 sind Daten weg - nur mit eingetipptem Wort. */
+  if (id === "explosion") {
+    const wort = prompt("Explosion SCHARF schalten?\n\nBei 0 löscht die Datenbank für alle: Schatzrad, Wochenrennen, Community-Boss, THE CHALLENGE, ???, Skill-Baum, Hangar + Sternenschlacht, Glücksmine, Gegenhack, Rangliste, Characters, Socials, Bewertung – mit ihren Daten. Das ist nicht rückgängig zu machen. Bis zum Ziel kannst du unter „Explosion“ abbrechen.\n\nVorher eine Sicherung im Supabase-Dashboard ziehen.\n\nZum Bestätigen EXPLOSION eintippen:");
+    if (wort !== "EXPLOSION") { gwLiveStatus("gw-story-status", "Nicht gestartet.", false); return false; }
+  }
   gwLiveStatus("gw-story-status", "Starte …", false);
   try {
     const { error } = await supabaseClient.rpc("admin_live_story", { p_story: id });
@@ -1730,7 +1739,11 @@ async function gwStoryStart(id) {
     return true;
   } catch (err) {
     console.error("Story starten fehlgeschlagen:", err);
-    gwLiveStatus("gw-story-status", "Starten fehlgeschlagen: " + ((err && err.message) || err), true);
+    const m = (err && err.message) || String(err);
+    gwLiveStatus("gw-story-status", /explosion-laeuft/.test(m) ? "Die Explosion ist scharf – andere Storys erst nach 0 oder nach „Abbrechen“ unter „Explosion“."
+      : /explosion-ohne-ziel/.test(m) ? "Erst unten unter „Explosion“ ein Ziel setzen."
+      : /ziel-zu-knapp/.test(m) ? "Das Ziel ist weniger als 1 Minute entfernt – unten ein späteres setzen."
+      : /schon-explodiert/.test(m) ? "Die Explosion ist schon passiert." : "Starten fehlgeschlagen: " + m, true);
     return false;
   }
 }
@@ -1763,7 +1776,8 @@ async function gwStoryAufraeumen() {
     gwLiveStatus("gw-story-status", "✓ Story abgebrochen, Seite bei allen wiederhergestellt.", false);
     gwStoryLageLaden();
   } catch (err) {
-    gwLiveStatus("gw-story-status", "Fehlgeschlagen: " + ((err && err.message) || err), true);
+    const m = (err && err.message) || String(err);
+    gwLiveStatus("gw-story-status", /explosion-laeuft/.test(m) ? "Die Explosion ist scharf – abbrechen geht nur unter „Explosion“." : "Fehlgeschlagen: " + m, true);
   }
 }
 
@@ -1912,6 +1926,90 @@ function buildGatewayFunkHtml() {
     <p id="gw-funk-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <p class="gateway-status-sub">Je Zeile: Sekunde ab Storybeginn, „|“, Wort. Mehrere Wörter auf einer Zeile erscheinen im Abstand von 0,28 s. Eine Zeile mit „/“ oder eine Leerzeile beginnt einen neuen Block; sonst beginnt einer nach einem Satzende, nach einem Komma ab 4 Wörtern, nach einer Pause über 1,6 s oder spätestens nach 8 Wörtern. Die Wörter liegen öffentlich lesbar in site_config.</p>
   `;
+}
+
+/* ------------------------------------------------------
+   LIVE-EVENT: EXPLOSION (Migration 73, explosion.js)
+   ---------------------------------------------------
+   Ziel setzen (Datum + Uhrzeit, 2 min bis 30 Tage voraus), dann oben
+   die Story „Explosion“ für alle starten - erst damit ist sie scharf.
+   Bis zum Ziel lässt sie sich hier abbrechen. Bei 0 löscht die
+   Datenbank (explosion_ausloesen) - nicht rückgängig zu machen.
+------------------------------------------------------ */
+function buildGatewayExplosionHtml() {
+  return `
+    <p class="gw-plan-ueberschrift">Explosion: Countdown bis</p>
+    <label class="gateway-status-sub" for="gw-explosion-ziel">Datum und Uhrzeit (deine Ortszeit)</label>
+    <input id="gw-explosion-ziel" class="code-input" type="datetime-local" step="60">
+    <div class="gw-story-knoepfe">
+      <button type="button" class="gw-live-knopf" onclick="gwExplosionZielSpeichern()">Ziel speichern</button>
+      <button type="button" class="gw-live-knopf" onclick="gwExplosionAbbrechen()">Abbrechen (vor 0)</button>
+      <button type="button" class="gw-live-knopf" onclick="gwExplosionLaden()">Stand laden</button>
+    </div>
+    <p id="gw-explosion-status" class="gw-live-status" role="status" aria-live="polite"></p>
+    <p class="gateway-status-sub">Das Ziel allein tut nichts. Scharf wird es erst mit „Für alle“ bei der Story „Explosion“ oben. Bei 0 sind für alle weg: Schatzrad, Wochenrennen, Community-Boss, THE CHALLENGE, ??? (Streamrätsel), Skill-Baum, Hangar + Sternenschlacht, Glücksmine, Gegenhack, Rangliste, Characters, Socials, Bewertung – mit ihren Daten in Supabase. Dublonen, Codes, Shop, Spielothek, Piratenpass, Spind und Storys bleiben. Vorher eine Sicherung ziehen (Supabase → Database → Backups).</p>
+  `;
+}
+
+function gwExplosionText(d) {
+  if (!d) return "Kein Stand.";
+  const zeit = (x) => new Date(x).toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  if (d.ausgeloest_am) {
+    const b = d.bericht || {};
+    const zeilen = Object.values(b.tabellen || {}).reduce((a, n) => a + Number(n || 0), 0);
+    return "Ausgelöst am " + zeit(d.ausgeloest_am) + " · " + zeilen + " Zeilen gelöscht, " + (b.funktionen_gesperrt || 0) + " Funktionen gesperrt.";
+  }
+  if (d.fehler) return "Löschen gescheitert, nichts gelöscht: " + d.fehler;
+  if (d.scharf_am) return "SCHARF – Countdown läuft bis " + zeit(d.ziel) + ".";
+  if (d.ziel) return "Ziel " + zeit(d.ziel) + " gesetzt – noch nicht scharf (Story „Explosion“ oben starten).";
+  return "Kein Ziel gesetzt.";
+}
+
+async function gwExplosionLaden() {
+  if (!supabaseClient || !document.getElementById("gw-explosion-status")) return;
+  try {
+    const { data, error } = await withSupabaseRlsColdStartRetry(() => supabaseClient.rpc("admin_explosion_stand"));
+    if (error) throw error;
+    gwLiveStatus("gw-explosion-status", gwExplosionText(data), !!(data && data.fehler));
+    const feld = document.getElementById("gw-explosion-ziel");
+    if (feld && data && data.ziel && !feld.value) {
+      const d = new Date(data.ziel);
+      feld.value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    }
+  } catch (err) {
+    gwLiveStatus("gw-explosion-status", "Stand nicht lesbar – ist Migration 73 eingespielt?", true);
+  }
+}
+
+async function gwExplosionZielSpeichern() {
+  const feld = document.getElementById("gw-explosion-ziel");
+  if (!feld || !supabaseClient) return;
+  const ziel = feld.value ? new Date(feld.value) : null;
+  if (!ziel || isNaN(ziel.getTime())) { gwLiveStatus("gw-explosion-status", "Bitte Datum und Uhrzeit eintragen.", true); return; }
+  try {
+    const { data, error } = await withSupabaseRlsColdStartRetry(() => supabaseClient.rpc("admin_explosion_ziel", { p_ziel: ziel.toISOString() }));
+    if (error) throw error;
+    gwLiveStatus("gw-explosion-status", "✓ " + gwExplosionText(data), false);
+  } catch (err) {
+    const m = (err && err.message) || String(err);
+    gwLiveStatus("gw-explosion-status",
+      /ziel-ungueltig/.test(m) ? "Das Ziel muss 2 Minuten bis 30 Tage in der Zukunft liegen."
+      : /explosion-laeuft/.test(m) ? "Die Explosion ist scharf – erst abbrechen, dann ein neues Ziel setzen."
+      : /schon-explodiert/.test(m) ? "Die Explosion ist schon passiert." : "Speichern fehlgeschlagen: " + m, true);
+  }
+}
+
+async function gwExplosionAbbrechen() {
+  if (!supabaseClient || !confirm("Explosion abbrechen? Der Countdown verschwindet bei allen, die Seite kommt zurück. Gelöscht wird nichts.")) return;
+  try {
+    const { data, error } = await withSupabaseRlsColdStartRetry(() => supabaseClient.rpc("admin_explosion_abbrechen"));
+    if (error) throw error;
+    gwLiveStatus("gw-explosion-status", "✓ Abgebrochen. " + gwExplosionText(data), false);
+    gwStoryLageLaden();
+  } catch (err) {
+    const m = (err && err.message) || String(err);
+    gwLiveStatus("gw-explosion-status", /zu-spaet/.test(m) ? "Zu spät – das Ziel ist schon erreicht." : /schon-explodiert/.test(m) ? "Die Explosion ist schon passiert." : "Abbrechen fehlgeschlagen: " + m, true);
+  }
 }
 
 function gwFunkDauerAusDatei() {

@@ -261,6 +261,17 @@ body.loaded {
   --fh-zelle-papier: #d8d2c2; --fh-zelle-tinte: #2b2a30; --fh-zelle-kratzer: #c9c3b6; --fh-zelle-licht: #ffe1aa;
   --fh-zelle-holz: #5a4632; --fh-zelle-spind: #3e4a52; --fh-zelle-klebe: #f2dd6e;
   --fh-zelle-schirm: #0b1a12; --fh-zelle-schirmlicht: #7dffb0;
+  /* Explosion (Migration 73, scripts/liveevent/explosion.js): Farben aus dem Entwurf */
+  --fh-explosion-blitz: rgba(255, 244, 220, .95); --fh-explosion-blitz-mitte: rgba(240, 201, 106, .55); --fh-explosion-blitz-rand: rgba(255, 106, 42, .15);
+  --fh-explosion-glut: rgba(255, 214, 140, .55); --fh-explosion-glut-mitte: rgba(255, 106, 42, .32); --fh-explosion-glut-rand: rgba(217, 67, 30, .12);
+  --fh-explosion-rest: rgba(255, 106, 42, .16); --fh-explosion-rest-rand: rgba(214, 168, 79, .07);
+  --fh-explosion-ring-schein: rgba(255, 106, 42, .55); --fh-explosion-ring-innen: rgba(255, 214, 140, .35); --fh-explosion-ring2: rgba(255, 106, 42, .18);
+  --fh-explosion-kern: rgba(255, 250, 235, 1); --fh-explosion-kern-mitte: rgba(255, 226, 150, .95); --fh-explosion-kern-rand: rgba(255, 150, 60, .5);
+  --fh-explosion-feuer-hell: rgba(255, 214, 140, .95); --fh-explosion-feuer: rgba(255, 120, 40, .85); --fh-explosion-feuer-tief: rgba(190, 50, 20, .55);
+  --fh-explosion-rauch: rgba(42, 44, 60, .85); --fh-explosion-rauch-rand: rgba(34, 36, 50, .5);
+  --fh-explosion-staub: rgba(214, 168, 79, .55); --fh-explosion-splitter: rgba(214, 168, 79, .55); --fh-explosion-splitter-dunkel: rgba(20, 26, 40, .95);
+  --fh-explosion-linie: rgba(240, 201, 106, .7); --fh-explosion-doppel: rgba(214, 168, 79, .45);
+  --fh-explosion-schein: rgba(240, 201, 106, .22); --fh-explosion-schein-knapp: rgba(255, 106, 42, .55);
   /* Liebeslied (scripts/liveevent/lied-film.js), Farben der Vorlage:
      Daemmerblau (Intro/Outro), sattes Blau (Strophe), Dunst (Refrain/
      Bruecke) - je Mitte und Rand -, dunkle Flaechen, Lila als Akzent. */

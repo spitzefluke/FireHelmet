@@ -16,6 +16,7 @@
      liedKlassisch scripts/liveevent/lied-film-klassisch.js (Liebeslied ohne WebGL)
      zelle    scripts/liveevent/zelle.js      (Escape Room „Ausbruch aus der Verwahrung“)
      zelleRaeume scripts/liveevent/zelle-raeume.js (die vier Räume dazu, lädt zelle.js selbst)
+     explosion scripts/liveevent/explosion.js  (Story „Explosion“ mit Countdown, Migration 73)
 
    Die Adressen stehen fest hier in ADRESSEN - nicht im HTML, damit
    keine Skriptadresse aus dem DOM gelesen wird (CodeQL: "DOM text
@@ -31,7 +32,7 @@
   "use strict";
 
   const ADRESSEN = {
-    admin: "scripts/core/admin-gateway.js?v=947d757798",
+    admin: "scripts/core/admin-gateway.js?v=fa9baaa4ab",
     riss: "scripts/liveevent/riss-film.js?v=c60d9cac41",
     herz: "scripts/liveevent/herz-film.js?v=c6ba6293c5",
     zeit: "scripts/liveevent/zeit-film.js?v=8a4f71898d",
@@ -44,6 +45,7 @@
     funk: "scripts/liveevent/funk-film.js?v=1c74edffa1",
     zelle: "scripts/liveevent/zelle.js?v=6022dc822b",
     zelleRaeume: "scripts/liveevent/zelle-raeume.js?v=a0e743e787",
+    explosion: "scripts/liveevent/explosion.js?v=06a6261a04",
     saisonAdmin: "scripts/saison/saison-admin.js?v=ece8909fef"
   };
 

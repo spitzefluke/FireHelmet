@@ -22,6 +22,7 @@
      vorschau()                   nur hier: Explosion + 20 s, ohne Folgen
      ende()                       nach 0: Seite wieder aufbauen
      weg()                        sofort alles zuruecksetzen (Abbruch)
+     vorschauStopp()              nur eine laufende Vorschau beenden
      laeuft()                     true, solange etwas zu sehen ist
 ====================================================== */
 
@@ -64,6 +65,7 @@
     const cd = R.cd = w.appendChild(el("div", "fhx-cd"));
     cd.setAttribute("role", "timer");
     cd.setAttribute("aria-live", "off");
+    cd.setAttribute("aria-label", t("explosion.aria", "Live-Story: Explosion mit Countdown"));
     R.kicker = cd.appendChild(el("p", "fhx-kicker", t("explosion.gleich", "Gleich geht’s los")));
     R.ziffern = cd.appendChild(el("div", "fhx-ziffern"));
     R.teile = {};
@@ -514,6 +516,7 @@
     vorschau: function () { gemerkt = null; starten({ ziel: Date.now() + 600 + 2500 + 1900 + 20000, vorschau: true }); },
     ende: function () { if (lauf && !lauf.vorschau) ende(); },
     weg: function () { if (lauf && !lauf.vorschau) zuruecksetzen(); },
+    vorschauStopp: function () { if (lauf && lauf.vorschau) zuruecksetzen(); },
     laeuft: function () { return !!lauf; },
   };
 })();

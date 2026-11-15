@@ -5082,3 +5082,72 @@ body.fh-story-wunsch .fh-stern.ist-frei .fh-stern-kern {
 @media (max-width: 560px) {
   .fh-wunsch-stern { width: calc(50% - 8px); }
 }
+
+
+/* ======================================================
+   EXPLOSION (Migration 73, scripts/liveevent/explosion.js)
+   Entwurf „Seite explodiert – Countdown“ aus Claude Design.
+   #fh-explosion steht in allen :not-Listen der Epochen.
+====================================================== */
+.fhx { position: fixed; inset: 0; z-index: 9000; pointer-events: none; }
+.fhx-fx { position: absolute; inset: 0; overflow: hidden; }
+.fhx-glow, .fhx-ring1, .fhx-ring2, .fhx-rest { position: absolute; left: 50%; top: 45%; border-radius: 50%; opacity: 0; }
+.fhx-glow {
+  width: 70vmax; height: 70vmax; margin: -35vmax 0 0 -35vmax; transform: scale(.2);
+  background: radial-gradient(circle, var(--fh-explosion-glut) 0%, var(--fh-explosion-glut-mitte) 22%, var(--fh-explosion-glut-rand) 45%, transparent 68%);
+}
+.fhx-ring1 { width: 10px; height: 10px; border: 3px solid var(--fh-gold-bright); box-shadow: 0 0 40px 6px var(--fh-explosion-ring-schein), inset 0 0 40px 4px var(--fh-explosion-ring-innen); }
+.fhx-ring2 { width: 10px; height: 10px; border: 18px solid var(--fh-explosion-ring2); filter: blur(6px); }
+.fhx-rest {
+  width: 90vmax; height: 90vmax; margin: -45vmax 0 0 -45vmax;
+  background: radial-gradient(circle, var(--fh-explosion-rest) 0%, var(--fh-explosion-rest-rand) 30%, transparent 62%);
+}
+.fhx-blitz { position: absolute; inset: 0; opacity: 0; }
+
+.fhx-cd {
+  position: absolute; inset: 0; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px;
+  padding: 24px; text-align: center; opacity: 0;
+}
+.fhx-cd.ist-an { pointer-events: auto; }
+.fhx-kicker {
+  margin: 0; padding-left: .44em; font-family: var(--fh-font-display); font-size: 15px; font-weight: 500;
+  letter-spacing: .44em; text-transform: uppercase; color: var(--fh-gold-bright);
+}
+.fhx-cd.ist-null .fhx-kicker { color: var(--fh-fire); }
+.fhx-ziffern {
+  display: flex; align-items: flex-start; justify-content: center; gap: clamp(6px, 1.6vw, 24px);
+  font-family: var(--fh-font-display); font-weight: 600; font-variant-numeric: tabular-nums; line-height: .86;
+  font-size: clamp(64px, 15vw, 300px); color: var(--fh-fg); text-shadow: 0 0 .25em var(--fh-explosion-schein);
+}
+.fhx-ziffern[data-tage="ja"] { font-size: clamp(52px, 11vw, 220px); }
+.fhx-cd.ist-knapp .fhx-ziffern { color: var(--fh-gold-bright); text-shadow: 0 0 .25em var(--fh-explosion-schein-knapp); }
+.fhx-gruppe { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.fhx-zahl { display: inline-block; font-family: inherit; }
+.fhx-einheit {
+  padding-left: .3em; font-family: var(--fh-font-sans); font-size: 12px; font-weight: 500; line-height: 1;
+  letter-spacing: .3em; text-transform: uppercase; color: var(--fh-muted-fg); text-shadow: none;
+}
+.fhx-doppel { color: var(--fh-explosion-doppel); text-shadow: none; }
+/* Tage nur, wenn es mehr als einen gibt; Stunden nur, wenn es welche gibt (wie im Entwurf). */
+.fhx-ziffern[data-tage="nein"] [data-teil="tage"], .fhx-ziffern[data-tage="nein"] [data-vor="stunden"],
+.fhx-ziffern[data-stunden="nein"] [data-teil="stunden"], .fhx-ziffern[data-stunden="nein"] [data-vor="minuten"] { display: none; }
+.fhx-linie {
+  width: min(640px, 72vw); height: 1px;
+  background: linear-gradient(90deg, transparent, var(--fh-explosion-linie) 48px, var(--fh-explosion-linie) calc(100% - 48px), transparent);
+}
+.fhx-ziel { margin: 0; font-size: 14px; letter-spacing: .04em; color: var(--fh-muted-fg); }
+.fhx-knoepfe { position: fixed; right: 24px; bottom: 24px; z-index: 2; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; pointer-events: auto; }
+.fhx-knoepfe:empty { display: none; }
+
+/* Truemmer: Wer spaeter dazukommt (oder nach dem Knall), sieht die Seite nicht mehr. */
+html.fh-explosion-truemmer :is(#fh-sidebar, #fh-topbar, #fh-main, #fh-mobile-bottom-stack, .menu-button, .music-toggle) { visibility: hidden; }
+
+/* Nach der Explosion (Migration 73): Karten der geloeschten Features auf „Dein Stand“ */
+html.fh-explodiert :is(#fh-dash-wheel, #fh-dash-race, #fh-dash-board) { display: none !important; }
+
+@media (max-width: 560px) {
+  .fhx-cd { gap: 18px; }
+  .fhx-einheit { font-size: 10px; letter-spacing: .2em; }
+  .fhx-knoepfe { right: 16px; bottom: 16px; left: 16px; }
+}

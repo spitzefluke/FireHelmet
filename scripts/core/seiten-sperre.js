@@ -33,6 +33,11 @@
   const NIE_AUS = ["stand", "gateway", "impressum", "datenschutz"];
   const UNTERSEITEN = { "story-detail": "story", "book-reader": "story" };
   const LINK_MUSTER = /changePage\('([^']+)'\)/;
+  /* Nach der Explosion (Migration 73, window.fhExplodiert aus
+     live-storys.js) sind diese Seiten fuer ALLE weg - auch fuer den
+     Admin, und der Admin kann sie nicht wieder einschalten. */
+  const EXPLOSION_WEG = ["wheel", "race", "community-boss", "tournament", "streamraetsel", "skill-tree",
+    "hangar", "sternenschlacht", "gluecksmine", "gegenhack", "leaderboard", "characters", "socials", "rating"];
 
   function t(key, fallback) { return typeof window.t === "function" ? window.t(key, fallback) : fallback; }
 
@@ -46,15 +51,19 @@
     return typeof window.fhViewerIstAdmin === "function" && window.fhViewerIstAdmin();
   }
 
+  function explodiert(id) {
+    return window.fhExplodiert === true && EXPLOSION_WEG.indexOf(hauptseite(id)) !== -1;
+  }
+
   /* Ist die Seite abgeschaltet (egal fuer wen)? */
   window.fhSeiteAus = function (id) {
     const haupt = hauptseite(id);
-    return NIE_AUS.indexOf(haupt) === -1 && abgeschaltet().indexOf(haupt) !== -1;
+    return explodiert(id) || (NIE_AUS.indexOf(haupt) === -1 && abgeschaltet().indexOf(haupt) !== -1);
   };
 
   /* Darf der aktuelle Betrachter die Seite NICHT oeffnen? */
   window.fhSeiteGesperrt = function (id) {
-    return window.fhSeiteAus(id) && !viewerIstAdmin();
+    return explodiert(id) || (window.fhSeiteAus(id) && !viewerIstAdmin());
   };
 
   window.fhSeitenNieAus = NIE_AUS.slice();
@@ -71,8 +80,9 @@
     document.querySelectorAll("[data-page], [onclick*=\"changePage('\"]").forEach(function (el) {
       const id = zielVon(el);
       if (!id) return;
-      const aus = window.fhSeiteAus(id);
-      el.classList.toggle("fh-seite-aus", aus && !admin);
+      const weg = explodiert(id);
+      const aus = !weg && window.fhSeiteAus(id);
+      el.classList.toggle("fh-seite-aus", weg || (aus && !admin));
       el.classList.toggle("fh-seite-vorschau", aus && admin);
       /* Hinweis als title; ein eigener title des Elements kommt danach zurueck. */
       if (aus && admin) {
