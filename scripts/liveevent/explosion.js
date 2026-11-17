@@ -496,6 +496,15 @@
         zuruecksetzen();
         if (war && !war.vorschau) gemerkt = war.ziel;
       }));
+      /* Was hinter dem Countdown kommt: die Seite ohne die Features, nur hier. */
+      if (!opt.vorschau) {
+        lauf.R.knoepfe.appendChild(knopf(t("explosion.danach.ansehen", "So sieht es danach aus"), function () {
+          const war = lauf;
+          zuruecksetzen();
+          if (war) gemerkt = war.ziel;
+          if (window.fhLiveStorys && window.fhLiveStorys.explosionDanach) window.fhLiveStorys.explosionDanach(true);
+        }));
+      }
     }
     const frisch = opt.vorschau || (opt.scharfAm && Date.now() - opt.scharfAm < EXPLOSION_DAUER);
     if (!frisch) { ruhigWeg(); return; }

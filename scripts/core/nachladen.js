@@ -32,7 +32,7 @@
   "use strict";
 
   const ADRESSEN = {
-    admin: "scripts/core/admin-gateway.js?v=fa9baaa4ab",
+    admin: "scripts/core/admin-gateway.js?v=d1eb9a8253",
     riss: "scripts/liveevent/riss-film.js?v=c60d9cac41",
     herz: "scripts/liveevent/herz-film.js?v=c6ba6293c5",
     zeit: "scripts/liveevent/zeit-film.js?v=8a4f71898d",
@@ -45,7 +45,7 @@
     funk: "scripts/liveevent/funk-film.js?v=1c74edffa1",
     zelle: "scripts/liveevent/zelle.js?v=6022dc822b",
     zelleRaeume: "scripts/liveevent/zelle-raeume.js?v=a0e743e787",
-    explosion: "scripts/liveevent/explosion.js?v=06a6261a04",
+    explosion: "scripts/liveevent/explosion.js?v=03e023123b",
     saisonAdmin: "scripts/saison/saison-admin.js?v=ece8909fef"
   };
 

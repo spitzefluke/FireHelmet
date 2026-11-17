@@ -268,8 +268,10 @@ alle** – nicht rückgängig zu machen.
   `live-storys.js` steuert den Film und setzt ab dem Ziel `window.fhExplodiert` und
   `html.fh-explodiert` – `seiten-sperre.js` blendet dann die Seiten aus `EXPLOSION_WEG` für **alle**
   aus, auch für den Admin. Wer später kommt, sieht sofort Trümmer und Countdown. Der Admin kann den
-  Countdown für sich ausblenden, um im Gateway abzubrechen. `#fh-explosion` steht in allen
-  `:not`-Listen der Epochen.
+  Countdown für sich ausblenden, um im Gateway abzubrechen, und **vorher ansehen, wie die Seite nach
+  0 aussieht** (Knopf im Countdown oder Gateway → Explosion; `fhLiveStorys.explosionDanach(true)`,
+  nur im eigenen Browser, ohne Datenbank, Hinweis `#fh-explosion-danach`). `#fh-explosion` und
+  `#fh-explosion-danach` stehen in allen `:not`-Listen der Epochen.
 
 ### Saisons
 
