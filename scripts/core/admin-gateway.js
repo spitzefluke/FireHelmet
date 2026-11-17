@@ -1945,6 +1945,7 @@ function buildGatewayExplosionHtml() {
       <button type="button" class="gw-live-knopf" onclick="gwExplosionZielSpeichern()">Ziel speichern</button>
       <button type="button" class="gw-live-knopf" onclick="gwExplosionAbbrechen()">Abbrechen (vor 0)</button>
       <button type="button" class="gw-live-knopf" onclick="gwExplosionLaden()">Stand laden</button>
+      <button type="button" class="gw-live-knopf" onclick="gwExplosionDanach()">So sieht es danach aus (nur bei dir)</button>
     </div>
     <p id="gw-explosion-status" class="gw-live-status" role="status" aria-live="polite"></p>
     <p class="gateway-status-sub">Das Ziel allein tut nichts. Scharf wird es erst mit „Für alle“ bei der Story „Explosion“ oben. Bei 0 sind für alle weg: Schatzrad, Wochenrennen, Community-Boss, THE CHALLENGE, ??? (Streamrätsel), Skill-Baum, Hangar + Sternenschlacht, Glücksmine, Gegenhack, Rangliste, Characters, Socials, Bewertung – mit ihren Daten in Supabase. Dublonen, Codes, Shop, Spielothek, Piratenpass, Spind und Storys bleiben. Vorher eine Sicherung ziehen (Supabase → Database → Backups).</p>
@@ -1997,6 +1998,18 @@ async function gwExplosionZielSpeichern() {
       : /explosion-laeuft/.test(m) ? "Die Explosion ist scharf – erst abbrechen, dann ein neues Ziel setzen."
       : /schon-explodiert/.test(m) ? "Die Explosion ist schon passiert." : "Speichern fehlgeschlagen: " + m, true);
   }
+}
+
+/* Die Seite so ansehen, wie sie nach 0 aussieht - nur in diesem Browser,
+   ohne Datenbank. Nochmal klicken (oder unten „Vorschau beenden“) schaltet zurück. */
+function gwExplosionDanach() {
+  const ls = window.fhLiveStorys;
+  if (!ls || !ls.explosionDanach) { gwLiveStatus("gw-explosion-status", "live-storys.js ist nicht geladen.", true); return; }
+  const an = !ls.explosionDanachAn();
+  ls.explosionDanach(an);
+  gwLiveStatus("gw-explosion-status", an
+    ? "Vorschau an: Im Menü fehlen jetzt die 13 Features, „Dein Stand“ zeigt nur noch, was bleibt – nur bei dir. Unten „Vorschau beenden“ oder hier nochmal klicken."
+    : "Vorschau aus – die Seite ist wieder wie bei allen.", false);
 }
 
 async function gwExplosionAbbrechen() {

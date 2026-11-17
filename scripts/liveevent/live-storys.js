@@ -1728,11 +1728,46 @@
   ------------------------------------------------------ */
   let explosionZeile = null, explosionUhr = 0, explosionNaechsteFrage = 0, explosionFragen = 0;
 
+  /* Admin-Vorschau "danach": die Seite so, wie sie nach 0 aussieht -
+     nur in diesem Browser, ohne Datenbank. */
+  let danachVorschau = false, explosionEcht = false;
+
   function explodiertSetzen(an) {
-    if (window.fhExplodiert === an) return;
-    window.fhExplodiert = an;
-    document.documentElement.classList.toggle("fh-explodiert", an);
+    explosionEcht = !!an;
+    const zeigen = explosionEcht || danachVorschau;
+    danachHinweis(danachVorschau && !explosionEcht);
+    if (window.fhExplodiert === zeigen) return;
+    window.fhExplodiert = zeigen;
+    document.documentElement.classList.toggle("fh-explodiert", zeigen);
     if (typeof window.fhSeitenSperreAnwenden === "function") window.fhSeitenSperreAnwenden();
+  }
+
+  /* Hinweis unten, solange die Vorschau laeuft (#fh-explosion-danach
+     steht in allen :not-Listen der Epochen). */
+  function danachHinweis(an) {
+    let el = document.getElementById("fh-explosion-danach");
+    if (!an) { if (el) el.remove(); return; }
+    if (el) return;
+    el = document.createElement("div");
+    el.id = "fh-explosion-danach";
+    el.className = "fhx-danach";
+    el.setAttribute("role", "status");
+    const text = document.createElement("span");
+    text.textContent = t("explosion.danach.hinweis", "Vorschau nur bei dir: So sieht die Seite nach der Explosion aus.");
+    const knopf = document.createElement("button");
+    knopf.type = "button";
+    knopf.className = "fh-cta";
+    knopf.textContent = t("explosion.danach.ende", "Vorschau beenden");
+    knopf.addEventListener("click", function () { explosionDanach(false); });
+    el.appendChild(text);
+    el.appendChild(knopf);
+    document.body.appendChild(el);
+  }
+
+  function explosionDanach(an) {
+    if (an && !(typeof window.fhViewerIstAdmin === "function" && window.fhViewerIstAdmin())) return;
+    danachVorschau = !!an;
+    explodiertSetzen(explosionEcht);
   }
 
   async function explosionAusloesen() {
@@ -1794,6 +1829,9 @@
     /* Nach einer Admin-Vorschau von Terra Nova/Verwahrung: wieder wie bei allen */
     reiseWeltAuffrischen: function () { if (reiseWeltZuletzt) reiseWeltSetzen.apply(null, reiseWeltZuletzt); },
     vorschauStopp: function () { gehackt = false; loecherWeg(); stoppen(); if (window.fhExplosion) window.fhExplosion.vorschauStopp(); },
+    /* Admin (73): die Seite wie nach der Explosion ansehen - nur hier. */
+    explosionDanach: explosionDanach,
+    explosionDanachAn: function () { return danachVorschau; },
     laeuft: function () { return lauf ? { story: lauf.story, szene: lauf.n, szenen: STORYS[lauf.story].szenen.length, vorschau: lauf.vorschau } : null; },
     istGehackt: function () { return gehackt; },
     /* live-zuschauer.js: ein neues Event beendet den Nachregen. */
